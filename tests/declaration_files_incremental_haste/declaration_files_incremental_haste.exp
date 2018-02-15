@@ -4,84 +4,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: node_modules/qux/docblock.js:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Implementation` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: external/_d3/min.js:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: node_modules/qux/corge/lib/index.js:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ImplicitProvidesModule.js:7
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ExplicitProvidesModuleSameName.js:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ExplicitProvidesModuleDifferentName.js:7
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -90,84 +42,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/docblock.js.flow:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: external/_d3/min.js.flow:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/corge/lib/index.js.flow:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ImplicitProvidesModule.js.flow:2
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    7: declare export var fun: () => Declaration;
-                                     ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleSameName.js.flow:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    6: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -176,84 +80,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: node_modules/qux/docblock.js:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Implementation` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: external/_d3/min.js:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: node_modules/qux/corge/lib/index.js:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ImplicitProvidesModule.js:7
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ExplicitProvidesModuleSameName.js:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ExplicitProvidesModuleDifferentName.js:7
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -265,84 +121,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/docblock.js.flow:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: external/_d3/min.js.flow:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/corge/lib/index.js.flow:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ImplicitProvidesModule.js.flow:2
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    7: declare export var fun: () => Declaration;
-                                     ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleSameName.js.flow:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    6: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -351,84 +159,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: node_modules/qux/docblock.js:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Implementation` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: external/_d3/min.js:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    2: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: node_modules/qux/corge/lib/index.js:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Implementation` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ImplicitProvidesModule.js:7
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ExplicitProvidesModuleSameName.js:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
-  References:
-    7: module.exports.fun = (): Implementation => new Implementation;
-                                ^^^^^^^^^^^^^^ [1]: `Implementation`. See: ExplicitProvidesModuleDifferentName.js:7
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -437,84 +197,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/docblock.js.flow:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: external/_d3/min.js.flow:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/corge/lib/index.js.flow:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ImplicitProvidesModule.js.flow:2
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    7: declare export var fun: () => Declaration;
-                                     ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleSameName.js.flow:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    6: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -526,78 +238,35 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/docblock.js.flow:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: external/_d3/min.js.flow:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/corge/lib/index.js.flow:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:3:24
 
 Cannot resolve module `ImplicitProvidesModule`.
 
-Error: test.js:3
-  3: var Implicit = require('ImplicitProvidesModule');
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `ImplicitProvidesModule`.
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    7: declare export var fun: () => Declaration;
-                                     ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleSameName.js.flow:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    6: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -606,84 +275,36 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/docblock.js.flow:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: external/_d3/min.js.flow:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/corge/lib/index.js.flow:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: test.js:4
-  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ImplicitProvidesModule.js.flow:2
-    4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    7: declare export var fun: () => Declaration;
-                                     ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleSameName.js.flow:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    6: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors
@@ -692,78 +313,35 @@ Error ----------------------------------------------- foo/bar/nested_test.js:7:2
 Cannot cast `docblock.fun()` to boolean because `Declaration` is incompatible
 with boolean.
 
-Error: foo/bar/nested_test.js:7
-  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/docblock.js.flow:2
-    7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                        ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:8:2
 
 Cannot cast `min.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:8
-  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^ Cannot cast `min.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: external/_d3/min.js.flow:2
-    8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------- foo/bar/nested_test.js:9:2
 
 Cannot cast `corge.fun()` to boolean because `Declaration` is incompatible with
 boolean.
 
-Error: foo/bar/nested_test.js:9
-  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    2: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: node_modules/qux/corge/lib/index.js.flow:2
-    9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                     ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:3:24
 
 Cannot resolve module `ImplicitProvidesModule`.
 
-Error: test.js:3
-  3: var Implicit = require('ImplicitProvidesModule');
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `ImplicitProvidesModule`.
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    7: declare export var fun: () => Declaration;
-                                     ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleSameName.js.flow:7
-    7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` is
 incompatible with boolean.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2].
-  References:
-    6: declare export function fun(): Declaration;
-                                      ^^^^^^^^^^^ [1]: `Declaration`. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:6
-   10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
-                                     ^^^^^^^ [2]: boolean
 
 
 Found 6 errors

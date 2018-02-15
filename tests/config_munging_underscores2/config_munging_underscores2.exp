@@ -3,64 +3,24 @@ Error ----------------------------------------------------------- chain.js:20:15
 Cannot extend `A` with `B` because in property `_property1`, string is
 incompatible with number.
 
-Error: chain.js:20
- 20:   _property1: string;
-                   ^^^^^^ Cannot extend `A` [1] with `B` because in property `_property1`, string [2] is incompatible with number [3].
-  References:
-   19: class B extends A {
-                       ^ [1]: `A`
-   20:   _property1: string;
-                     ^^^^^^ [2]: string
-    4:   _property1: number;
-                     ^^^^^^ [3]: number
 
 Error ----------------------------------------------------------- chain.js:21:22
 
 Cannot extend `A` with `B` because in property `_sProperty`, string is
 incompatible with number.
 
-Error: chain.js:21
- 21:   static _sProperty: string;
-                          ^^^^^^ Cannot extend `A` [1] with `B` because in property `_sProperty`, string [2] is incompatible with number [3].
-  References:
-   19: class B extends A {
-                       ^ [1]: `A`
-   21:   static _sProperty: string;
-                            ^^^^^^ [2]: string
-    5:   static _sProperty: number;
-                            ^^^^^^ [3]: number
 
 Error ----------------------------------------------------------- chain.js:27:15
 
 Cannot extend `A` with `B` because in property `_method1` and then the return
 value, string is incompatible with number.
 
-Error: chain.js:27
- 27:   _method1(): string {
-                   ^^^^^^ Cannot extend `A` [1] with `B` because in property `_method1` and then the return value, string [2] is incompatible with number [3].
-  References:
-   19: class B extends A {
-                       ^ [1]: `A`
-   27:   _method1(): string {
-                     ^^^^^^ [2]: string
-   10:   _method1(): number {
-                     ^^^^^^ [3]: number
 
 Error ----------------------------------------------------------- chain.js:30:22
 
 Cannot extend `A` with `B` because in property `_sMethod` and then the return
 value, number is incompatible with string.
 
-Error: chain.js:30
- 30:   static _sMethod(): number {
-                          ^^^^^^ Cannot extend `A` [1] with `B` because in property `_sMethod` and then the return value, number [2] is incompatible with string [3].
-  References:
-   19: class B extends A {
-                       ^ [1]: `A`
-   30:   static _sMethod(): number {
-                            ^^^^^^ [2]: number
-   13:   static _sMethod(): string {
-                            ^^^^^^ [3]: string
 
 
 Found 4 errors

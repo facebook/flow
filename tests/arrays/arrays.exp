@@ -3,27 +3,11 @@ Error ----------------------------------------------------------- Arrays.js:10:5
 Cannot call `foo` with `a[1]` bound to `x` because number is incompatible with
 string.
 
-Error: Arrays.js:10
- 10: foo(a[1]);
-         ^^^^ Cannot call `foo` with `a[1]` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    7: a[0] = 1;
-              ^ [1]: number
-    4: function foo(x:string) { }
-                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------------ numeric_elem.js:7:2
 
 Cannot cast `arr[day]` to string because number is incompatible with string.
 
-Error: numeric_elem.js:7
-  7: (arr[day]: string); // error: number ~> string
-      ^^^^^^^^ Cannot cast `arr[day]` to string because number [1] is incompatible with string [2].
-  References:
-    6: arr[day] = 0;
-                  ^ [1]: number
-    7: (arr[day]: string); // error: number ~> string
-                  ^^^^^^ [2]: string
 
 
 Found 2 errors

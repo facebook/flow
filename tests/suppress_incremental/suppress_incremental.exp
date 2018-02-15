@@ -6,14 +6,6 @@ Error -------------------------------------------------------------- test.js:3:2
 
 Cannot cast `123` to string because number is incompatible with string.
 
-Error: test.js:3
-  3: (123: string); // error
-      ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
-  References:
-    3: (123: string); // error
-        ^^^ [1]: number
-    3: (123: string); // error
-             ^^^^^^ [2]: string
 
 
 Found 1 error
@@ -26,9 +18,6 @@ Warning ------------------------------------------------------------ test.js:3:1
 
 Unused suppression comment.
 
-Warning: test.js:3
-  3: // $FlowIssue
-     ^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 1 warning

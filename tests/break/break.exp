@@ -2,197 +2,77 @@ Error ------------------------------------------------------------ break.js:6:24
 
 Cannot assign `x` to `y` because boolean is incompatible with number.
 
-Error: break.js:6
-  6:         var y:number = x; // error: boolean !~> number
-                            ^ Cannot assign `x` to `y` because boolean [1] is incompatible with number [2].
-  References:
-    2:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-    6:         var y:number = x; // error: boolean !~> number
-                     ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ break.js:8:20
 
 Cannot assign `z` to `w` because possibly uninitialized variable is incompatible
 with number.
 
-Error: break.js:8
-  8:     var w:number = z; // 2 errors: ?string !~> number
-                        ^ Cannot assign `z` to `w` because possibly uninitialized variable [1] is incompatible with number [2].
-  References:
-    3:     var z;
-               ^ [1]: possibly uninitialized variable
-    8:     var w:number = z; // 2 errors: ?string !~> number
-                 ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ break.js:8:20
 
 Cannot assign `z` to `w` because string is incompatible with number.
 
-Error: break.js:8
-  8:     var w:number = z; // 2 errors: ?string !~> number
-                        ^ Cannot assign `z` to `w` because string [1] is incompatible with number [2].
-  References:
-    5:         if (x == null) { z = ""; break; }
-                                    ^^ [1]: string
-    8:     var w:number = z; // 2 errors: ?string !~> number
-                 ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:16:24
 
 Cannot assign `x` to `y` because boolean is incompatible with number.
 
-Error: break.js:16
- 16:         var y:number = x; // error: boolean !~> number
-                            ^ Cannot assign `x` to `y` because boolean [1] is incompatible with number [2].
-  References:
-   12:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-   16:         var y:number = x; // error: boolean !~> number
-                     ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:19:24
 
 Cannot assign `x` to `z` because boolean is incompatible with number.
 
-Error: break.js:19
- 19:         var z:number = x; // 2 errors: (boolean | string) !~> number
-                            ^ Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
-  References:
-   12:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-   19:         var z:number = x; // 2 errors: (boolean | string) !~> number
-                     ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:19:24
 
 Cannot assign `x` to `z` because string is incompatible with number.
 
-Error: break.js:19
- 19:         var z:number = x; // 2 errors: (boolean | string) !~> number
-                            ^ Cannot assign `x` to `z` because string [1] is incompatible with number [2].
-  References:
-   17:         x = "";
-                   ^^ [1]: string
-   19:         var z:number = x; // 2 errors: (boolean | string) !~> number
-                     ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:23:20
 
 Cannot assign `x` to `w` because boolean is incompatible with number.
 
-Error: break.js:23
- 23:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                        ^ Cannot assign `x` to `w` because boolean [1] is incompatible with number [2].
-  References:
-   12:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-   23:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                 ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:23:20
 
 Cannot assign `x` to `w` because string is incompatible with number.
 
-Error: break.js:23
- 23:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                        ^ Cannot assign `x` to `w` because string [1] is incompatible with number [2].
-  References:
-   17:         x = "";
-                   ^^ [1]: string
-   23:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                 ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:31:22
 
 Cannot assign `x` to `y` because boolean is incompatible with number.
 
-Error: break.js:31
- 31:       let y:number = x; // error: boolean !~> number
-                          ^ Cannot assign `x` to `y` because boolean [1] is incompatible with number [2].
-  References:
-   27:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-   31:       let y:number = x; // error: boolean !~> number
-                   ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:35:22
 
 Cannot assign `x` to `z` because boolean is incompatible with number.
 
-Error: break.js:35
- 35:       let z:number = x; // 2 errors: (boolean | string) !~> number
-                          ^ Cannot assign `x` to `z` because boolean [1] is incompatible with number [2].
-  References:
-   27:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-   35:       let z:number = x; // 2 errors: (boolean | string) !~> number
-                   ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:35:22
 
 Cannot assign `x` to `z` because string is incompatible with number.
 
-Error: break.js:35
- 35:       let z:number = x; // 2 errors: (boolean | string) !~> number
-                          ^ Cannot assign `x` to `z` because string [1] is incompatible with number [2].
-  References:
-   32:       x = "";
-                 ^^ [1]: string
-   35:       let z:number = x; // 2 errors: (boolean | string) !~> number
-                   ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:40:20
 
 Cannot assign `x` to `w` because boolean is incompatible with number.
 
-Error: break.js:40
- 40:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                        ^ Cannot assign `x` to `w` because boolean [1] is incompatible with number [2].
-  References:
-   27:     var x = b ? null: false;
-                             ^^^^^ [1]: boolean
-   40:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                 ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:40:20
 
 Cannot assign `x` to `w` because string is incompatible with number.
 
-Error: break.js:40
- 40:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                        ^ Cannot assign `x` to `w` because string [1] is incompatible with number [2].
-  References:
-   32:       x = "";
-                 ^^ [1]: string
-   40:     var w:number = x; // 2 errors: (boolean | string) !~> number
-                 ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:46:24
 
 Cannot assign `z` to `y` because string is incompatible with number.
 
-Error: break.js:46
- 46:         var y:number = z;
-                            ^ Cannot assign `z` to `y` because string [1] is incompatible with number [2].
-  References:
-   47:         if (b) { z = ""; continue; } // error: string !~> number
-                            ^^ [1]: string
-   46:         var y:number = z;
-                     ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- break.js:50:20
 
 Cannot assign `z` to `w` because string is incompatible with number.
 
-Error: break.js:50
- 50:     var w:number = z; // error: string !~> number
-                        ^ Cannot assign `z` to `w` because string [1] is incompatible with number [2].
-  References:
-   47:         if (b) { z = ""; continue; } // error: string !~> number
-                            ^^ [1]: string
-   50:     var w:number = z; // error: string !~> number
-                 ^^^^^^ [2]: number
 
 
 Found 15 errors

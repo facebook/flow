@@ -3,12 +3,6 @@ Error ------------------------------------------------------------- dupe2.js:1:1
 Duplicate module provider for `Dupe`. Change either this module provider or the
 current module provider.
 
-Error: dupe2.js:1
-  1: /**
-     ^ Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
-  References:
-    1: /**
-       ^ [1]: current module provider. See: dupe1.js:1
 
 
 Found 1 error

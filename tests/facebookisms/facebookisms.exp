@@ -2,63 +2,32 @@ Error ---------------------------------------------------- copyProperties.js:6:6
 
 Cannot resolve name `copyProperties`.
 
-Error: copyProperties.js:6
-  6:     (copyProperties()); // error, unknown global
-          ^^^^^^^^^^^^^^ Cannot resolve name `copyProperties`.
 
 Error -------------------------------------------------- copyProperties.js:31:28
 
 Cannot cast `copyProperties(...)` to object type because in property `foo`,
 string is incompatible with number.
 
-Error: copyProperties.js:31
- 31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                ^^^ Cannot cast `copyProperties(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
-  References:
-   31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                  ^^^ [1]: string
-   31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                                 ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- invariant.js:6:5
 
 Cannot resolve name `invariant`.
 
-Error: invariant.js:6
-  6:     invariant(x, 'truthy only'); // error, forgot to require invariant
-         ^^^^^^^^^ Cannot resolve name `invariant`.
 
 Error --------------------------------------------------------- mergeInto.js:6:6
 
 Cannot resolve name `mergeInto`.
 
-Error: mergeInto.js:6
-  6:     (mergeInto()); // error, unknown global
-          ^^^^^^^^^ Cannot resolve name `mergeInto`.
 
 Error ------------------------------------------------------------- test.js:6:21
 
 Cannot assign `this.x` to `x` because number is incompatible with string.
 
-Error: test.js:6
-  6:     var x: string = this.x;
-                         ^^^^^^ Cannot assign `this.x` to `x` because number [1] is incompatible with string [2].
-  References:
-    1: var Bar = { x: 0 };
-                      ^ [1]: number. See: Bar.js:1
-    6:     var x: string = this.x;
-                  ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:7:10
 
 Cannot assign empty string to `this.y` because property `y` is missing in `Foo`.
 
-Error: test.js:7
-  7:     this.y = "";
-              ^ Cannot assign empty string to `this.y` because property `y` is missing in `Foo` [1].
-  References:
-    4: class Foo extends mixin(Bar) {
-             ^^^ [1]: `Foo`
 
 
 Found 6 errors

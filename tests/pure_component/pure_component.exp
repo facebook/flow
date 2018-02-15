@@ -3,14 +3,6 @@ Error -------------------------------------------------------------- test.js:4:3
 Cannot create `C` element because property `x` is missing in props but exists in
 object type.
 
-Error: test.js:4
-  4: (<C />); // error (`x` is a required prop)
-       ^ Cannot create `C` element because property `x` is missing in props [1] but exists in object type [2].
-  References:
-    4: (<C />); // error (`x` is a required prop)
-        ^^^^^ [1]: props
-    3: class C extends React.PureComponent<{ x: number }> {}
-                                           ^^^^^^^^^^^^^ [2]: object type
 
 
 Found 1 error

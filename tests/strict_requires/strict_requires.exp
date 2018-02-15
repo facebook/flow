@@ -2,40 +2,16 @@ Error ---------------------------------------------------------------- D.js:3:17
 
 Cannot assign `C.foo` to `x` because string is incompatible with number.
 
-Error: D.js:3
-  3: var x: number = C.foo;
-                     ^^^^^ Cannot assign `C.foo` to `x` because string [1] is incompatible with number [2].
-  References:
-    2: module.exports = { foo: "" }
-                               ^^ [1]: string. See: B.js:2
-    3: var x: number = C.foo;
-              ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------------- D.js:4:17
 
 Cannot assign `C.A` to `y` because number is incompatible with string.
 
-Error: D.js:4
-  4: var y: string = C.A;
-                     ^^^ Cannot assign `C.A` to `y` because number [1] is incompatible with string [2].
-  References:
-    2: module.exports = 0;
-                        ^ [1]: number. See: A.js:2
-    4: var y: string = C.A;
-              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------------- D.js:5:7
 
 Cannot assign `false` to `C.A` because boolean is incompatible with number.
 
-Error: D.js:5
-  5: C.A = false;
-           ^^^^^ Cannot assign `false` to `C.A` because boolean [1] is incompatible with number [2].
-  References:
-    5: C.A = false;
-             ^^^^^ [1]: boolean
-    2: module.exports = 0;
-                        ^ [2]: number. See: A.js:2
 
 
 Found 3 errors

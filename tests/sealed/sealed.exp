@@ -2,73 +2,31 @@ Error ------------------------------------------------------------ proto.js:3:16
 
 Cannot assign `o.x` to `x` because string is incompatible with number.
 
-Error: proto.js:3
-  3: var x:number = o.x;
-                    ^^^ Cannot assign `o.x` to `x` because string [1] is incompatible with number [2].
-  References:
-    8: o.x = "...";
-             ^^^^^ [1]: string
-    3: var x:number = o.x;
-             ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ proto.js:7:16
 
 Cannot assign `o.m()` to `y` because boolean is incompatible with number.
 
-Error: proto.js:7
-  7: var y:number = o.m();
-                    ^^^^^ Cannot assign `o.m()` to `y` because boolean [1] is incompatible with number [2].
-  References:
-   10: Foo.prototype = { m: function() { return false; } }
-                                                ^^^^^ [1]: boolean
-    7: var y:number = o.m();
-             ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ proto.js:7:16
 
 Cannot assign `o.m()` to `y` because string is incompatible with number.
 
-Error: proto.js:7
-  7: var y:number = o.m();
-                    ^^^^^ Cannot assign `o.m()` to `y` because string [1] is incompatible with number [2].
-  References:
-    8: o.x = "...";
-             ^^^^^ [1]: string
-    7: var y:number = o.m();
-             ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ sealed.js:3:3
 
 Cannot assign `0` to `o.z` because property `z` is missing in object type.
 
-Error: sealed.js:3
-  3: o.z = 0;
-       ^ Cannot assign `0` to `o.z` because property `z` is missing in object type [1].
-  References:
-   12: var export_o: { x:any; } = o; // awkward type cast
-                     ^^^^^^^^^^ [1]: object type. See: proto.js:12
 
 Error ------------------------------------------------------------ sealed.js:8:3
 
 Cannot assign `123` to `a.x` because property `x` is missing in new object.
 
-Error: sealed.js:8
-  8: a.x = 123;
-       ^ Cannot assign `123` to `a.x` because property `x` is missing in new object [1].
-  References:
-    7: var a = new Bar(234);
-               ^^^^^^^^^^^^ [1]: new object
 
 Error ------------------------------------------------------------ sealed.js:9:3
 
 Cannot assign `'abc'` to `a.y` because property `y` is missing in new object.
 
-Error: sealed.js:9
-  9: a.y = 'abc'; // error, needs to be declared in Bar's constructor
-       ^ Cannot assign `'abc'` to `a.y` because property `y` is missing in new object [1].
-  References:
-    7: var a = new Bar(234);
-               ^^^^^^^^^^^^ [1]: new object
 
 
 Found 6 errors

@@ -3,106 +3,47 @@ Error --------------------------------------------------------------- A.js:13:10
 Cannot return object literal because in the indexer property's key, string `foo`
 is incompatible with number.
 
-Error: A.js:13
- 13:   return { foo: "bar" }
-              ^^^^^^^^^^^^^^ Cannot return object literal because in the indexer property's key, string `foo` [1] is incompatible with number [2].
-  References:
-   13:   return { foo: "bar" }
-                ^^^^^^^^^^^^^^ [1]: string `foo`
-   12: function foo2(): {[key: number]: string} {
-                               ^^^^^^ [2]: number
 
 Error --------------------------------------------------------------- A.js:18:17
 
 Cannot return object literal because in property `foo`, string is incompatible
 with number.
 
-Error: A.js:18
- 18:   return { foo: "bar" }
-                     ^^^^^ Cannot return object literal because in property `foo`, string [1] is incompatible with number [2].
-  References:
-   18:   return { foo: "bar" }
-                       ^^^^^ [1]: string
-   17: function foo3(): {[key: string]: number} {
-                                        ^^^^^^ [2]: number
 
 Error --------------------------------------------------------------- A.js:23:10
 
 Cannot return object literal because in the indexer property's key, string `foo`
 is incompatible with number.
 
-Error: A.js:23
- 23:   return { foo: "bar" }
-              ^^^^^^^^^^^^^^ Cannot return object literal because in the indexer property's key, string `foo` [1] is incompatible with number [2].
-  References:
-   23:   return { foo: "bar" }
-                ^^^^^^^^^^^^^^ [1]: string `foo`
-   22: function foo4(): {[key: number]: number} {
-                               ^^^^^^ [2]: number
 
 Error --------------------------------------------------------------- A.js:23:17
 
 Cannot return object literal because in property `foo`, string is incompatible
 with number.
 
-Error: A.js:23
- 23:   return { foo: "bar" }
-                     ^^^^^ Cannot return object literal because in property `foo`, string [1] is incompatible with number [2].
-  References:
-   23:   return { foo: "bar" }
-                       ^^^^^ [1]: string
-   22: function foo4(): {[key: number]: number} {
-                                        ^^^^^^ [2]: number
 
 Error --------------------------------------------------------------- A.js:38:17
 
 Cannot return object literal because in property `foo`, string is incompatible
 with number.
 
-Error: A.js:38
- 38:   return { foo: "bar" }
-                     ^^^^^ Cannot return object literal because in property `foo`, string [1] is incompatible with number [2].
-  References:
-   38:   return { foo: "bar" }
-                       ^^^^^ [1]: string
-   37: function foo7(): {[key: string]: number; foo: number} {
-                                                     ^^^^^^ [2]: number
 
 Error -------------------------------------------------------------- call.js:4:2
 
 Cannot cast `y` to object type because object type is incompatible with function
 prototype.
 
-Error: call.js:4
-  4: (y: {(number): string});
-      ^ Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2].
-  References:
-    3: declare var y: {[string]: boolean};
-                      ^^^^^^^^^^^^^^^^^^^ [1]: object type
-    4: (y: {(number): string});
-           ^^^^^^^^^^^^^^^^^^ [2]: function prototype
 
 Error -------------------------------------------------------------- call.js:4:2
 
 Cannot cast `y` to object type because a callable signature is missing in object
 type but exists in object type.
 
-Error: call.js:4
-  4: (y: {(number): string});
-      ^ Cannot cast `y` to object type because a callable signature is missing in object type [1] but exists in object type [2].
-  References:
-    3: declare var y: {[string]: boolean};
-                      ^^^^^^^^^^^^^^^^^^^ [1]: object type
-    4: (y: {(number): string});
-           ^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ---------------------------------------------------------- multiple.js:7:7
 
 Multiple indexers are not supported.
 
-Error: multiple.js:7
-  7:       [k2: number]: number, // error: not supported (yet)
-           ^^^^^^^^^^^^^^^^^^^^ Multiple indexers are not supported.
 
 
 Found 8 errors

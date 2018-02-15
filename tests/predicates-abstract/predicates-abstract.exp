@@ -3,42 +3,18 @@ Error ---------------------------------------------- sanity-filter-union.js:6:71
 object with property `kind` that matches string literal `A` is incompatible with
 string literal `B`.
 
-Error: sanity-filter-union.js:6
-  6: declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                           ^^^^^^^^^^^^^^ object with property `kind` that matches string literal `A` [1] is incompatible with string literal `B` [2].
-  References:
-    6: declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                             ^^^^^^^^^^^^^^ [1]: object with property `kind` that matches string literal `A`
-    9: type B = { kind: 'B', v: string }
-                        ^^^ [2]: string literal `B`
 
 Error ---------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because in type argument `T` and then
 property `kind`, string literal `A` is incompatible with string literal `B`.
 
-Error: sanity-filter-union.js:16
- 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `my_filter(...)` to array type because in type argument `T` and then property `kind`, string literal `A` [1] is incompatible with string literal `B` [2].
-  References:
-    8: type A = { kind: 'A', u: number }
-                        ^^^ [1]: string literal `A`
-    9: type B = { kind: 'B', v: string }
-                        ^^^ [2]: string literal `B`
 
 Error ---------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because in type argument `T`,
 property `v` is missing in `A` but exists in `B`.
 
-Error: sanity-filter-union.js:16
- 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `my_filter(...)` to array type because in type argument `T`, property `v` is missing in `A` [1] but exists in `B` [2].
-  References:
-   14: declare var ab: Array<A|B|C>;
-                             ^ [1]: `A`
-   16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                             ^ [2]: `B`
 
 Error: sanity-filter-union.js:17
  17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
@@ -82,14 +58,6 @@ Error ----------------------------------------------------- sanity-filter.js:8:2
 Cannot cast `b` to array type because in type argument `T`, string is
 incompatible with number.
 
-Error: sanity-filter.js:8
-  8: (b: Array<number>);
-      ^ Cannot cast `b` to array type because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-    6: declare var a: Array<mixed>;
-                            ^^^^^ [1]: string
-    8: (b: Array<number>);
-                 ^^^^^^ [2]: number
 
 Error: sanity-filter.js:13
  13: const d = my_filter(c, is_string_regular);
@@ -102,14 +70,6 @@ Error ---------------------------------------------------- sanity-filter.js:14:2
 Cannot cast `d` to array type because in type argument `T`, mixed is
 incompatible with string.
 
-Error: sanity-filter.js:14
- 14: (d: Array<string>);
-      ^ Cannot cast `d` to array type because in type argument `T`, mixed [1] is incompatible with string [2].
-  References:
-   12: declare var c: Array<mixed>;
-                            ^^^^^ [1]: mixed
-   14: (d: Array<string>);
-                 ^^^^^^ [2]: string
 
 Error: sanity-refine.js:4
   4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
@@ -121,14 +81,6 @@ Error ----------------------------------------------------- sanity-refine.js:8:2
 
 Cannot cast `b` to string because mixed is incompatible with string.
 
-Error: sanity-refine.js:8
-  8: (b: string);
-      ^ Cannot cast `b` to string because mixed [1] is incompatible with string [2].
-  References:
-    6: declare var a: mixed;
-                      ^^^^^ [1]: mixed
-    8: (b: string);
-           ^^^^^^ [2]: string
 
 Error: sanity-refine.js:19
  19: var e = refine3(c, d, e, is_string_and_number);
@@ -146,14 +98,6 @@ Error ---------------------------------------------------- sanity-refine.js:30:2
 
 Cannot cast `e` to number because mixed is incompatible with number.
 
-Error: sanity-refine.js:30
- 30: (e: number);
-      ^ Cannot cast `e` to number because mixed [1] is incompatible with number [2].
-  References:
-    6: declare var a: mixed;
-                      ^^^^^ [1]: mixed
-   30: (e: number);
-           ^^^^^^ [2]: number
 
 
 Found 12 errors

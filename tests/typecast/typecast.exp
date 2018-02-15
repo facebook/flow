@@ -2,14 +2,6 @@ Error --------------------------------------------------------- typecast.js:7:14
 
 Cannot cast `"hey"` to number because string is incompatible with number.
 
-Error: typecast.js:7
-  7:     var n = ("hey" : number);
-                  ^^^^^ Cannot cast `"hey"` to number because string [1] is incompatible with number [2].
-  References:
-    7:     var n = ("hey" : number);
-                    ^^^^^ [1]: string
-    7:     var n = ("hey" : number);
-                            ^^^^^^ [2]: number
 
 
 Found 1 error

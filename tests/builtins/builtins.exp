@@ -2,40 +2,16 @@ Error ------------------------------------------------------------ array.js:3:17
 
 Cannot assign `b[0]` to `c` because number is incompatible with string.
 
-Error: array.js:3
-  3: var c: string = b[0]; // error: number !~> string
-                     ^^^^ Cannot assign `b[0]` to `c` because number [1] is incompatible with string [2].
-  References:
-    2: var b = a.map (function (x) { return 0; });
-                                            ^ [1]: number
-    3: var c: string = b[0]; // error: number !~> string
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ array.js:8:20
 
 Cannot assign `array[0]` to `x` because string is incompatible with number.
 
-Error: array.js:8
-  8:     var x:number = array[0]; // error: string !~> number
-                        ^^^^^^^^ Cannot assign `array[0]` to `x` because string [1] is incompatible with number [2].
-  References:
-    7:     array = array.map (function () { return "..."; });
-                                                   ^^^^^ [1]: string
-    8:     var x:number = array[0]; // error: string !~> number
-                 ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- array.js:15:20
 
 Cannot assign `foo1.get()` to `x` because string is incompatible with number.
 
-Error: array.js:15
- 15:     var x:number = foo1.get(); // error: string !~> number
-                        ^^^^^^^^^^ Cannot assign `foo1.get()` to `x` because string [1] is incompatible with number [2].
-  References:
-   14:     var foo1 = foo.map (function() { return "..."; });
-                                                   ^^^^^ [1]: string
-   15:     var x:number = foo1.get(); // error: string !~> number
-                 ^^^^^^ [2]: number
 
 
 Found 3 errors

@@ -2,154 +2,62 @@ Error ---------------------------------------------------------- switch.js:28:13
 
 Cannot perform arithmetic operation because string is not a number.
 
-Error: switch.js:28
- 28:         x = x*x;
-                 ^ Cannot perform arithmetic operation because string [1] is not a number.
-  References:
-   23:     var x = b? 0: "";
-                         ^^ [1]: string
 
 Error ---------------------------------------------------------- switch.js:28:15
 
 Cannot perform arithmetic operation because string is not a number.
 
-Error: switch.js:28
- 28:         x = x*x;
-                   ^ Cannot perform arithmetic operation because string [1] is not a number.
-  References:
-   23:     var x = b? 0: "";
-                         ^^ [1]: string
 
 Error --------------------------------------- switch_default_fallthrough.js:16:6
 
 Cannot cast `a` to string because number is incompatible with string.
 
-Error: switch_default_fallthrough.js:16
- 16:     (a : string); // error, string | number ~/> string
-          ^ Cannot cast `a` to string because number [1] is incompatible with string [2].
-  References:
-   10:         a = 0;
-                   ^ [1]: number
-   16:     (a : string); // error, string | number ~/> string
-                ^^^^^^ [2]: string
 
 Error --------------------------------------- switch_default_fallthrough.js:17:6
 
 Cannot cast `a` to number because string is incompatible with number.
 
-Error: switch_default_fallthrough.js:17
- 17:     (a : number); // error, string | number ~/> number
-          ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
-  References:
-    5:     var a = "";
-                   ^^ [1]: string
-   17:     (a : number); // error, string | number ~/> number
-                ^^^^^^ [2]: number
 
 Error -------------------------------------- switch_default_fallthrough.js:21:12
 
 Cannot return `b` because number is incompatible with string.
 
-Error: switch_default_fallthrough.js:21
- 21:     return b; // error, number ~/> string
-                ^ Cannot return `b` because number [1] is incompatible with string [2].
-  References:
-   12:         b = 0;
-                   ^ [1]: number
-    4: function foo(x : mixed): string {
-                                ^^^^^^ [2]: string
 
 Error --------------------------------------- switch_default_fallthrough.js:39:6
 
 Cannot cast `a` to string because number is incompatible with string.
 
-Error: switch_default_fallthrough.js:39
- 39:     (a : string); // error, string | number ~/> string
-          ^ Cannot cast `a` to string because number [1] is incompatible with string [2].
-  References:
-   30:         a = 0;
-                   ^ [1]: number
-   39:     (a : string); // error, string | number ~/> string
-                ^^^^^^ [2]: string
 
 Error --------------------------------------- switch_default_fallthrough.js:40:6
 
 Cannot cast `a` to number because string is incompatible with number.
 
-Error: switch_default_fallthrough.js:40
- 40:     (a : number); // error, string | number ~/> number
-          ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
-  References:
-   25:     var a = "";
-                   ^^ [1]: string
-   40:     (a : number); // error, string | number ~/> number
-                ^^^^^^ [2]: number
 
 Error --------------------------------------- switch_default_fallthrough.js:43:6
 
 Cannot cast `b` to string because number is incompatible with string.
 
-Error: switch_default_fallthrough.js:43
- 43:     (b : string); // error, string | number ~/> string
-          ^ Cannot cast `b` to string because number [1] is incompatible with string [2].
-  References:
-   35:         b = 0;
-                   ^ [1]: number
-   43:     (b : string); // error, string | number ~/> string
-                ^^^^^^ [2]: string
 
 Error --------------------------------------- switch_default_fallthrough.js:44:6
 
 Cannot cast `b` to number because string is incompatible with number.
 
-Error: switch_default_fallthrough.js:44
- 44:     (b : number); // error, string | number ~/> number
-          ^ Cannot cast `b` to number because string [1] is incompatible with number [2].
-  References:
-   26:     var b = "";
-                   ^^ [1]: string
-   44:     (b : number); // error, string | number ~/> number
-                ^^^^^^ [2]: number
 
 Error -------------------------------------- switch_default_fallthrough.js:46:12
 
 Cannot return `a + b` because string is incompatible with number.
 
-Error: switch_default_fallthrough.js:46
- 46:     return a+b; // error, string ~/> number
-                ^^^ Cannot return `a + b` because string [1] is incompatible with number [2].
-  References:
-   46:     return a+b; // error, string ~/> number
-                  ^^^ [1]: string
-   24: function baz(x: mixed): number {
-                               ^^^^^^ [2]: number
 
 Error -------------------------------------------------- trailing_cases.js:23:18
 
 Cannot assign `x` to `y` because string is incompatible with number.
 
-Error: trailing_cases.js:23
- 23:   var y:number = x; // error, number | string ~/> number
-                      ^ Cannot assign `x` to `y` because string [1] is incompatible with number [2].
-  References:
-   19:     x = "2";
-               ^^^ [1]: string
-   23:   var y:number = x; // error, number | string ~/> number
-               ^^^^^^ [2]: number
 
 Error -------------------------------------------------- trailing_cases.js:39:18
 
 Cannot assign `x` to `y` because possibly uninitialized variable is incompatible
 with number.
 
-Error: trailing_cases.js:39
- 39:   var y:number = x; // error, number | uninitialized ~/> number
-                      ^ Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
-  References:
-   27:   var x;
-             ^ [1]: possibly uninitialized variable
-   39:   var y:number = x; // error, number | uninitialized ~/> number
-               ^^^^^^ [2]: number
 
 
 Found 12 errors

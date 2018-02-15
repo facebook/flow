@@ -25,80 +25,36 @@ Error --------------------------------------------------------- overload.js:7:18
 Cannot assign `"".match(...)[0]` to `x1` because string is incompatible with
 number.
 
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2].
-  References:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                                  ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:301
-    7: var x1: number = "".match(0)[0];
-               ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- overload.js:7:30
 
 Cannot get `"".match(...)[0]` because an indexer property is missing in null or
 undefined.
 
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                                  ^ Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
-  References:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                           ^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/core.js:301
 
 Error --------------------------------------------------------- overload.js:7:27
 
 Cannot call `"".match` with `0` bound to `regexp` because number is incompatible
 with string.
 
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                               ^ Cannot call `"".match` with `0` bound to `regexp` because number [1] is incompatible with string [2].
-  References:
-    7: var x1: number = "".match(0)[0];
-                                 ^ [1]: number
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ [2]: string. See lib: <BUILTINS>/core.js:301
 
 Error --------------------------------------------------------- overload.js:8:18
 
 Cannot assign `"".match(...)[0]` to `x2` because string is incompatible with
 number.
 
-Error: overload.js:8
-  8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2].
-  References:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                                  ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:301
-    8: var x2: number = "".match(/pattern/)[0];
-               ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- overload.js:8:38
 
 Cannot get `"".match(...)[0]` because an indexer property is missing in null or
 undefined.
 
-Error: overload.js:8
-  8: var x2: number = "".match(/pattern/)[0];
-                                          ^ Cannot get `"".match(...)[0]` because an indexer property is missing in null or undefined [1].
-  References:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                           ^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/core.js:301
 
 Error -------------------------------------------------------- overload.js:10:18
 
 Cannot assign `"".split(...)[0]` to `x4` because string is incompatible with
 number.
 
-Error: overload.js:10
- 10: var x4: number = "".split(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2].
-  References:
-  309:     split(separator?: string | RegExp, limit?: number): Array<string>;
-                                                                     ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:309
-   10: var x4: number = "".split(/pattern/)[0];
-               ^^^^^^ [2]: number
 
 Error: overload.js:24
  24: a.foo(true); // error, function cannot be called on intersection type
@@ -194,14 +150,6 @@ Error ------------------------------------------------------------- test2.js:7:2
 
 Cannot cast `foo.bar(...)` to number because string is incompatible with number.
 
-Error: test2.js:7
-  7: (foo.bar('hmmm'): number); // error
-      ^^^^^^^^^^^^^^^ Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3:   bar(x: string): string;
-                         ^^^^^^ [1]: string
-    7: (foo.bar('hmmm'): number); // error
-                         ^^^^^^ [2]: number
 
 
 Found 11 errors

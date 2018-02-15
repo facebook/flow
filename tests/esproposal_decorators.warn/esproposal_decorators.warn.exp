@@ -4,9 +4,6 @@ Experimental decorator usage. Decorators are an early stage proposal that may
 change. Additionally, Flow does not account for the type implications of
 decorators at this time.
 
-Error: test.js:3
-  3: @decorator4
-      ^^^^^^^^^^ Experimental decorator usage. Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
 
 Error -------------------------------------------------------------- test.js:5:4
 
@@ -14,9 +11,6 @@ Experimental decorator usage. Decorators are an early stage proposal that may
 change. Additionally, Flow does not account for the type implications of
 decorators at this time.
 
-Error: test.js:5
-  5:   @decorator1
-        ^^^^^^^^^^ Experimental decorator usage. Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
 
 Error -------------------------------------------------------------- test.js:8:4
 
@@ -24,11 +18,6 @@ Experimental decorator usage. Decorators are an early stage proposal that may
 change. Additionally, Flow does not account for the type implications of
 decorators at this time.
 
-Error: test.js:8
-        v---------
-  8:   @decorator2
-  9:   @decorator3
-       ----------^ Experimental decorator usage. Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
 
 
 Found 3 errors

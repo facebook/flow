@@ -2,27 +2,11 @@ Error ------------------------------------------------------------- dest.js:6:17
 
 Cannot assign `source.num` to `b` because number is incompatible with string.
 
-Error: dest.js:6
-  6: var b: string = source.num; // Error: num ~> string
-                     ^^^^^^^^^^ Cannot assign `source.num` to `b` because number [1] is incompatible with string [2].
-  References:
-    4: export var num = 42;
-                        ^^ [1]: number. See: source.js:4
-    6: var b: string = source.num; // Error: num ~> string
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- dest.js:9:17
 
 Cannot assign `source.str` to `d` because string is incompatible with number.
 
-Error: dest.js:9
-  9: var d: number = source.str; // Error: num ~> string
-                     ^^^^^^^^^^ Cannot assign `source.str` to `d` because string [1] is incompatible with number [2].
-  References:
-    3: export var str = 'asdf';
-                        ^^^^^^ [1]: string. See: source.js:3
-    9: var d: number = source.str; // Error: num ~> string
-              ^^^^^^ [2]: number
 
 
 Found 2 errors

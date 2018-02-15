@@ -3,28 +3,12 @@
 [0m[0mSketchy[0m[0m [0m[0mnull[0m[0m [0m[0mcheck[0m[0m [0m[0mon[0m[0m [0m[0m[0m[0;4mnumber[0m[0m[0m[0m [0m[0m[0m[0mwhich[0m[0m [0m[0mis[0m[0m [0m[0mpotentially[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m [0m[0mPerhaps[0m[0m [0m[0myou[0m[0m [0m[0mmeant[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mcheck[0m[0m
 [0m[0mfor[0m[0m [0m[0m[0m[0;4mnull[0m[0;4m [0m[0;4mor[0m[0;4m [0m[0;4mundefined[0m[0m?[0m[0m[0m[0m [0m[0m([0m[0;1msketchy-null-number[0m[0m)[0m[0m
 
-[0m[31;1mError:[0m[0m [0m[0;4mtest.js:13[0m[0m
-[0m[0;1m 13: [0m[0mif ([0m[31mx[0m[0m) {} //appears as an error[0m[0;1m
-         ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)[0m[0m[0m[0m
-[0m[0;1m  References:[0m[0m
-[0m[0;1m    5: [0m[0mvar x: ?[0m[31mnumber[0m[0m = 0;[0m[0;1m
-               ^^^^^^ [1]: number[0m[0m[0m[0m
-[0m[0;1m    5: [0m[0mvar x: [0m[31m?number[0m[0m = 0;[0m[0;1m
-              ^^^^^^^ [2]: null or undefined[0m[0m[0m[0m
 [0m[0m
 [0m[33mWarning ----------------------------------------------------------- test.js:10:5[0m[0m
 
 [0m[0mSketchy[0m[0m [0m[0mnull[0m[0m [0m[0mcheck[0m[0m [0m[0mon[0m[0m [0m[0m[0m[0;4mnumber[0m[0m[0m[0m [0m[0m[0m[0mwhich[0m[0m [0m[0mis[0m[0m [0m[0mpotentially[0m[0m [0m[0m[0m[0m0[0m[0m.[0m[0m [0m[0mPerhaps[0m[0m [0m[0myou[0m[0m [0m[0mmeant[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mcheck[0m[0m
 [0m[0mfor[0m[0m [0m[0m[0m[0;4mnull[0m[0;4m [0m[0;4mor[0m[0;4m [0m[0;4mundefined[0m[0m?[0m[0m[0m[0m [0m[0m([0m[0;1msketchy-null-number[0m[0m)[0m[0m
 
-[0m[33;1mWarning:[0m[0m [0m[0;4mtest.js:10[0m[0m
-[0m[0;1m 10: [0m[0mif ([0m[33mx[0m[0m) {} //appears as a warning[0m[0;1m
-         ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)[0m[0m[0m[0m
-[0m[0;1m  References:[0m[0m
-[0m[0;1m    5: [0m[0mvar x: ?[0m[33mnumber[0m[0m = 0;[0m[0;1m
-               ^^^^^^ [1]: number[0m[0m[0m[0m
-[0m[0;1m    5: [0m[0mvar x: [0m[33m?number[0m[0m = 0;[0m[0;1m
-              ^^^^^^^ [2]: null or undefined[0m[0m[0m[0m
 [0m[0m
 [0m
 Found 1 error and 1 warning

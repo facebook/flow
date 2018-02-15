@@ -2,17 +2,11 @@ Error ------------------------------------------------------------- index.js:3:9
 
 Cannot resolve module `module_completely_absent`.
 
-Error: index.js:3
-  3: require('module_completely_absent');
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `module_completely_absent`.
 
 Error ------------------------------------------------------------- index.js:7:9
 
 Cannot resolve module `module_outside_of_root`.
 
-Error: index.js:7
-  7: require('module_outside_of_root');
-             ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot resolve module `module_outside_of_root`.
 
 
 Found 2 errors

@@ -2,88 +2,39 @@ Error ------------------------------------------------------------- maybe.js:9:2
 
 Cannot cast `'foo'` to `typeof x` because string is incompatible with number.
 
-Error: maybe.js:9
-  9: ('foo': typeof x); // error: string ~> number
-      ^^^^^ Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2].
-  References:
-    9: ('foo': typeof x); // error: string ~> number
-        ^^^^^ [1]: string
-    8: var x = f(42);
-                 ^^ [2]: number
 
 Error ---------------------------------------------------------- optional.js:9:2
 
 Cannot cast `null` to `typeof x` because null is incompatible with number.
 
-Error: optional.js:9
-  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
-      ^^^^ Cannot cast `null` to `typeof x` because null [1] is incompatible with number [2].
-  References:
-    9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
-        ^^^^ [1]: null
-    8: var x = f(42).p;
-                 ^^ [2]: number
 
 Error ---------------------------------------------------------- typeof.js:43:19
 
 Cannot assign `MyClass1` to `b` because statics of `MyClass1` is incompatible
 with `MyClass1`.
 
-Error: typeof.js:43
- 43: var b: MyClass1 = MyClass1;
-                       ^^^^^^^^ Cannot assign `MyClass1` to `b` because statics of `MyClass1` [1] is incompatible with `MyClass1` [2].
-  References:
-   11: class MyClass1 {
-             ^^^^^^^^ [1]: statics of `MyClass1`
-   43: var b: MyClass1 = MyClass1;
-              ^^^^^^^^ [2]: `MyClass1`
 
 Error ---------------------------------------------------------- typeof.js:53:26
 
 Cannot assign `new MyClass2()` to `c` because `MyClass2` is incompatible with
 `typeof MyClass2`.
 
-Error: typeof.js:53
- 53: var c: typeof MyClass2 = new MyClass2();
-                              ^^^^^^^^^^^^^^ Cannot assign `new MyClass2()` to `c` because `MyClass2` [1] is incompatible with `typeof MyClass2` [2].
-  References:
-   53: var c: typeof MyClass2 = new MyClass2();
-                                ^^^^^^^^^^^^^^ [1]: `MyClass2`
-   53: var c: typeof MyClass2 = new MyClass2();
-              ^^^^^^^^^^^^^^^ [2]: `typeof MyClass2`
 
 Error ---------------------------------------------------------- typeof.js:61:26
 
 Cannot assign `'asdf'` to `e` because string is incompatible with number.
 
-Error: typeof.js:61
- 61: var e: typeof numValue = 'asdf'; // Error: string ~> number
-                              ^^^^^^ Cannot assign `'asdf'` to `e` because string [1] is incompatible with number [2].
-  References:
-   61: var e: typeof numValue = 'asdf'; // Error: string ~> number
-                                ^^^^^^ [1]: string
-   59: var numValue:number = 42;
-                    ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- typeof.js:73:15
 
 Cannot reference type `numberAlias` from a value position.
 
-Error: typeof.js:73
- 73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
-                   ^^^^^^^^^^^ Cannot reference type `numberAlias` [1] from a value position.
-  References:
-   67: type numberAlias = number;
-            ^^^^^^^^^^^ [1]: `numberAlias`
 
 Error ---------------------------------------------------------- typeof.js:82:18
 
 Cannot use object literal as a type because object literal is a value. To get
 the type of a value use `typeof`.
 
-Error: typeof.js:82
- 82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
-                      ^^^ Cannot use object literal as a type because object literal is a value. To get the type of a value use `typeof`.
 
 Error: union.js:9
   9: (null: typeof x); // error: null ~> number|string

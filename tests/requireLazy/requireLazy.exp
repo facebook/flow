@@ -3,99 +3,52 @@ Error ------------------------------------------------------ requireLazy.js:8:22
 Cannot assign `A.stringValueA` to `num2` because string is incompatible with
 number.
 
-Error: requireLazy.js:8
-  8:   var num2: number = A.stringValueA; // Error: string ~> number
-                          ^^^^^^^^^^^^^^ Cannot assign `A.stringValueA` to `num2` because string [1] is incompatible with number [2].
-  References:
-    8:   stringValueA: "someString"
-                       ^^^^^^^^^^^^ [1]: string. See: A.js:8
-    8:   var num2: number = A.stringValueA; // Error: string ~> number
-                   ^^^^^^ [2]: number
 
 Error ------------------------------------------------------ requireLazy.js:9:22
 
 Cannot assign `A.numberValueA` to `str2` because number is incompatible with
 string.
 
-Error: requireLazy.js:9
-  9:   var str2: string = A.numberValueA; // Error: number ~> string
-                          ^^^^^^^^^^^^^^ Cannot assign `A.numberValueA` to `str2` because number [1] is incompatible with string [2].
-  References:
-    7:   numberValueA: 1,
-                       ^ [1]: number. See: A.js:7
-    9:   var str2: string = A.numberValueA; // Error: number ~> string
-                   ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- requireLazy.js:13:22
 
 Cannot assign `B.stringValueB` to `num4` because string is incompatible with
 number.
 
-Error: requireLazy.js:13
- 13:   var num4: number = B.stringValueB; // Error: string ~> number
-                          ^^^^^^^^^^^^^^ Cannot assign `B.stringValueB` to `num4` because string [1] is incompatible with number [2].
-  References:
-    8:   stringValueB: "someString"
-                       ^^^^^^^^^^^^ [1]: string. See: B.js:8
-   13:   var num4: number = B.stringValueB; // Error: string ~> number
-                   ^^^^^^ [2]: number
 
 Error ----------------------------------------------------- requireLazy.js:14:22
 
 Cannot assign `B.numberValueB` to `str4` because number is incompatible with
 string.
 
-Error: requireLazy.js:14
- 14:   var str4: string = B.numberValueB; // Error: number ~> string
-                          ^^^^^^^^^^^^^^ Cannot assign `B.numberValueB` to `str4` because number [1] is incompatible with string [2].
-  References:
-    7:   numberValueB: 1,
-                       ^ [1]: number. See: B.js:7
-   14:   var str4: string = B.numberValueB; // Error: number ~> string
-                   ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- requireLazy.js:17:20
 
 Cannot resolve name `A`.
 
-Error: requireLazy.js:17
- 17: var notA: Object = A;
-                        ^ Cannot resolve name `A`.
 
 Error ----------------------------------------------------- requireLazy.js:18:20
 
 Cannot resolve name `B`.
 
-Error: requireLazy.js:18
- 18: var notB: Object = B;
-                        ^ Cannot resolve name `B`.
 
 Error ------------------------------------------------------ requireLazy.js:20:1
 
 The first argument to `requireLazy` must be an array literal of string literals
 and the second argument must be a callback.
 
-Error: requireLazy.js:20
- 20: requireLazy(); // Error: No args
-     ^^^^^^^^^^^^^ The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a callback.
 
 Error ------------------------------------------------------ requireLazy.js:21:1
 
 The first argument to `requireLazy` must be an array literal of string literals
 and the second argument must be a callback.
 
-Error: requireLazy.js:21
- 21: requireLazy([nope], function() {}); // Error: Non-stringliteral args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a callback.
 
 Error ------------------------------------------------------ requireLazy.js:22:1
 
 The first argument to `requireLazy` must be an array literal of string literals
 and the second argument must be a callback.
 
-Error: requireLazy.js:22
- 22: requireLazy(['A']); // Error: No callback expression
-     ^^^^^^^^^^^^^^^^^^ The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a callback.
 
 
 Found 9 errors

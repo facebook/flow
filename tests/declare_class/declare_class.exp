@@ -3,71 +3,28 @@ Error --------------------------------------------------------- lib/test.js:8:10
 Cannot extend mixins `_module.C` with `D` because in property `foo` and then the
 return value, string is incompatible with number.
 
-Library type error:
-lib/test.js:8
-  8:   foo(): string;
-              ^^^^^^ Cannot extend mixins `_module.C` [1] with `D` because in property `foo` and then the return value, string [2] is incompatible with number [3].
-  References:
-    7: declare class D extends _module.C {
-                               ^^^^^^^^^ [1]: mixins `_module.C`
-    8:   foo(): string;
-                ^^^^^^ [2]: string
-    2:   foo(): number;
-                ^^^^^^ [3]: number
 
 Error ----------------------------------------------------- declare_class.js:8:7
 
 Cannot assign empty string to `C.x` because string is incompatible with number.
 
-Error: declare_class.js:8
-  8: C.x = "";
-           ^^ Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
-  References:
-    8: C.x = "";
-             ^^ [1]: string
-    2:     static x: number;
-                     ^^^^^^ [2]: number
 
 Error ----------------------------------------------------- declare_class.js:9:7
 
 Cannot call `C.foo` with empty string bound to `x` because string is
 incompatible with number.
 
-Error: declare_class.js:9
-  9: C.foo("");
-           ^^ Cannot call `C.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-  References:
-    9: C.foo("");
-             ^^ [1]: string
-    3:     static foo(x: number): void;
-                         ^^^^^^ [2]: number
 
 Error ---------------------------------------------------- declare_class.js:12:2
 
 Cannot cast `C.name` to number because string is incompatible with number.
 
-Error: declare_class.js:12
- 12: (C.name: number); // error, it's a string
-      ^^^^^^ Cannot cast `C.name` to number because string [1] is incompatible with number [2].
-  References:
-    1: declare class C {
-                     ^ [1]: string
-   12: (C.name: number); // error, it's a string
-                ^^^^^^ [2]: number
 
 Error ---------------------------------------------------- declare_class.js:15:7
 
 Cannot call `D` with `123` bound to `x` because number is incompatible with
 string.
 
-Error: declare_class.js:15
- 15: new D(123); // error, number ~> string
-           ^^^ Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2].
-  References:
-   15: new D(123); // error, number ~> string
-             ^^^ [1]: number
-    5:     constructor(x: string): void;
-                          ^^^^^^ [2]: string
 
 
 Found 5 errors

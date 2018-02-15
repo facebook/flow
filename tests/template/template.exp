@@ -3,92 +3,42 @@ Error ---------------------------------------------------------- template.js:5:2
 Cannot cast template string to number because string is incompatible with
 number.
 
-Error: template.js:5
-  5: (`baz`: number); // error
-      ^^^^^ Cannot cast template string to number because string [1] is incompatible with number [2].
-  References:
-    5: (`baz`: number); // error
-        ^^^^^ [1]: string
-    5: (`baz`: number); // error
-               ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- template.js:8:8
 
 Cannot coerce object literal to string because object literal should not be
 coerced.
 
-Error: template.js:8
-  8: `foo ${{bar: 123}} baz`; // error, object can't be appended
-            ^^^^^^^^^^ Cannot coerce object literal to string because object literal [1] should not be coerced.
-  References:
-    8: `foo ${{bar: 123}} baz`; // error, object can't be appended
-              ^^^^^^^^^^ [1]: object literal
 
 Error -------------------------------------------------------- template.js:22:12
 
 Cannot coerce `x` to string because boolean should not be coerced.
 
-Error: template.js:22
- 22:     `foo ${x}`; // error
-                ^ Cannot coerce `x` to string because boolean [1] should not be coerced.
-  References:
-   21:   function(x: boolean) {
-                     ^^^^^^^ [1]: boolean
 
 Error --------------------------------------------------------- template.js:23:8
 
 Cannot coerce `x` to string because boolean should not be coerced.
 
-Error: template.js:23
- 23:     `${x} bar`; // error
-            ^ Cannot coerce `x` to string because boolean [1] should not be coerced.
-  References:
-   21:   function(x: boolean) {
-                     ^^^^^^^ [1]: boolean
 
 Error -------------------------------------------------------- template.js:24:21
 
 Cannot coerce `x` to string because boolean should not be coerced.
 
-Error: template.js:24
- 24:     `foo ${'bar'} ${x}`; // error
-                         ^ Cannot coerce `x` to string because boolean [1] should not be coerced.
-  References:
-   21:   function(x: boolean) {
-                     ^^^^^^^ [1]: boolean
 
 Error -------------------------------------------------------- template.js:27:12
 
 Cannot coerce `x` to string because mixed should not be coerced.
 
-Error: template.js:27
- 27:     `foo ${x}`; // error
-                ^ Cannot coerce `x` to string because mixed [1] should not be coerced.
-  References:
-   26:   function(x: mixed) {
-                     ^^^^^ [1]: mixed
 
 Error --------------------------------------------------------- template.js:28:8
 
 Cannot coerce `x` to string because mixed should not be coerced.
 
-Error: template.js:28
- 28:     `${x} bar`; // error
-            ^ Cannot coerce `x` to string because mixed [1] should not be coerced.
-  References:
-   26:   function(x: mixed) {
-                     ^^^^^ [1]: mixed
 
 Error -------------------------------------------------------- template.js:29:21
 
 Cannot coerce `x` to string because mixed should not be coerced.
 
-Error: template.js:29
- 29:     `foo ${'bar'} ${x}`; // error
-                         ^ Cannot coerce `x` to string because mixed [1] should not be coerced.
-  References:
-   26:   function(x: mixed) {
-                     ^^^^^ [1]: mixed
 
 
 Found 8 errors

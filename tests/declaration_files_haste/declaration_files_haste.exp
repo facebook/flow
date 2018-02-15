@@ -2,105 +2,46 @@ Error --------------------------------------------- foo/bar/nested_test.js:10:27
 
 Cannot resolve module `annotation`.
 
-Error: foo/bar/nested_test.js:10
- 10: var unreachable = require('annotation');
-                               ^^^^^^^^^^^^ Cannot resolve module `annotation`.
 
 Error ---------------------------------------------- foo/bar/nested_test.js:12:2
 
 Cannot cast `docblock.fun()` to string because number is incompatible with
 string.
 
-Error: foo/bar/nested_test.js:12
- 12: (docblock.fun(): string);
-      ^^^^^^^^^^^^^^ Cannot cast `docblock.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/qux/docblock.js.flow:1
-   12: (docblock.fun(): string);
-                        ^^^^^^ [2]: string
 
 Error ---------------------------------------------- foo/bar/nested_test.js:13:2
 
 Cannot cast `min.fun()` to string because number is incompatible with string.
 
-Error: foo/bar/nested_test.js:13
- 13: (min.fun(): string);
-      ^^^^^^^^^ Cannot cast `min.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: external/_d3/min.js.flow:1
-   13: (min.fun(): string);
-                   ^^^^^^ [2]: string
 
 Error ---------------------------------------------- foo/bar/nested_test.js:14:2
 
 Cannot cast `corge.fun()` to string because number is incompatible with string.
 
-Error: foo/bar/nested_test.js:14
- 14: (corge.fun(): string);
-      ^^^^^^^^^^^ Cannot cast `corge.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/qux/corge/lib/index.js.flow:1
-   14: (corge.fun(): string);
-                     ^^^^^^ [2]: string
 
 Error ---------------------------------------------- foo/bar/nested_test.js:15:2
 
 Cannot cast `SomeOtherModule.fun()` to string because number is incompatible
 with string.
 
-Error: foo/bar/nested_test.js:15
- 15: (SomeOtherModule.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^ Cannot cast `SomeOtherModule.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    2: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/qux/corge2/lib/foo.js.flow:2
-   15: (SomeOtherModule.fun(): string);
-                               ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- test.js:4:2
 
 Cannot cast `Implicit.fun()` to string because number is incompatible with
 string.
 
-Error: test.js:4
-  4: (Implicit.fun(): string);
-      ^^^^^^^^^^^^^^ Cannot cast `Implicit.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: ImplicitProvidesModule.js.flow:1
-    4: (Implicit.fun(): string);
-                        ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- test.js:7:2
 
 Cannot cast `ExplicitSameName.fun()` to string because number is incompatible
 with string.
 
-Error: test.js:7
-  7: (ExplicitSameName.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitSameName.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    6: declare export var fun: () => number;
-                                     ^^^^^^ [1]: number. See: ExplicitProvidesModuleSameName.js.flow:6
-    7: (ExplicitSameName.fun(): string);
-                                ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:10:2
 
 Cannot cast `ExplicitDifferentName.fun()` to string because number is
 incompatible with string.
 
-Error: test.js:10
- 10: (ExplicitDifferentName.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `ExplicitDifferentName.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    5: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: ExplicitProvidesModuleDifferentNameDefinitions.js.flow:5
-   10: (ExplicitDifferentName.fun(): string);
-                                     ^^^^^^ [2]: string
 
 
 Found 8 errors

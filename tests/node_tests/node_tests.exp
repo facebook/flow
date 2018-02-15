@@ -3,143 +3,59 @@ Error --------------------------------------------------- buffer/buffer.js:57:22
 Cannot call `Buffer.from` with array literal bound to `value` because array
 literal is incompatible with `ArrayBuffer`.
 
-Error: buffer/buffer.js:57
- 57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call `Buffer.from` with array literal bound to `value` because array literal [1] is incompatible with `ArrayBuffer` [2].
-  References:
-   57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: array literal
-  110:   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
-                            ^^^^^^^^^^^ [2]: `ArrayBuffer`. See lib: <BUILTINS>/node.js:110
 
 Error ------------------------------------------- child_process/execSync.js:8:27
 
 Cannot call `execSync` with object literal bound to `options` because in
 property `timeout`, string is incompatible with number.
 
-Error: child_process/execSync.js:8
-  8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                               ^^^^^ Cannot call `execSync` with object literal bound to `options` because in property `timeout`, string [1] is incompatible with number [2].
-  References:
-    8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                 ^^^^^ [1]: string
-  149:   timeout?: number;
-                   ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:149
 
 Error ---------------------------------------------------- crypto/crypto.js:12:8
 
 Cannot cast `hmac.read()` to number because `Buffer` is incompatible with
 number.
 
-Error: crypto/crypto.js:12
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because `Buffer` [1] is incompatible with number [2].
-  References:
-  1428:   read(size?: number): ?(string | Buffer);
-                                          ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:1428
-   12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                           ^^^^^^ [2]: number
 
 Error ---------------------------------------------------- crypto/crypto.js:12:8
 
 Cannot cast `hmac.read()` to number because null or undefined is incompatible
 with number.
 
-Error: crypto/crypto.js:12
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because null or undefined [1] is incompatible with number [2].
-  References:
-  1428:   read(size?: number): ?(string | Buffer);
-                               ^^^^^^^^^^^^^^^^^^ [1]: null or undefined. See lib: <BUILTINS>/node.js:1428
-   12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                           ^^^^^^ [2]: number
 
 Error ---------------------------------------------------- crypto/crypto.js:12:8
 
 Cannot cast `hmac.read()` to number because string is incompatible with number.
 
-Error: crypto/crypto.js:12
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ Cannot cast `hmac.read()` to number because string [1] is incompatible with number [2].
-  References:
-  1428:   read(size?: number): ?(string | Buffer);
-                                 ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:1428
-   12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                           ^^^^^^ [2]: number
 
 Error --------------------------------------------------- crypto/crypto.js:16:16
 
 Cannot call `hmac.write` with `123` bound to `chunk` because number is
 incompatible with string.
 
-Error: crypto/crypto.js:16
- 16:     hmac.write(123); // 2 errors: not a string or a Buffer
-                    ^^^ Cannot call `hmac.write` with `123` bound to `chunk` because number [1] is incompatible with string [2].
-  References:
-   16:     hmac.write(123); // 2 errors: not a string or a Buffer
-                      ^^^ [1]: number
-  1479:     chunk: Buffer | string,
-                            ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1479
 
 Error --------------------------------------------------- crypto/crypto.js:26:24
 
 Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because
 string is incompatible with string enum.
 
-Error: crypto/crypto.js:26
- 26:     hmac.update('foo', 'bogus'); // 1 error
-                            ^^^^^^^ Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with string enum [2].
-  References:
-   26:     hmac.update('foo', 'bogus'); // 1 error
-                              ^^^^^^^ [1]: string
-                                                        v----------------------------
-  441:   update(data: string | Buffer, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-  442:   'binary'): crypto$Hmac;
-         -------^ [2]: string enum. See lib: <BUILTINS>/node.js:441
 
 Error --------------------------------------------------- crypto/crypto.js:29:22
 
 Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because
 string is incompatible with string enum.
 
-Error: crypto/crypto.js:29
- 29:     hmac.update(buf, 'bogus'); // 1 error
-                          ^^^^^^^ Cannot call `hmac.update` with `'bogus'` bound to `input_encoding` because string [1] is incompatible with string enum [2].
-  References:
-   29:     hmac.update(buf, 'bogus'); // 1 error
-                            ^^^^^^^ [1]: string
-                                                        v----------------------------
-  441:   update(data: string | Buffer, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-  442:   'binary'): crypto$Hmac;
-         -------^ [2]: string enum. See lib: <BUILTINS>/node.js:441
 
 Error ---------------------------------------------------- crypto/crypto.js:36:6
 
 Cannot cast `hmac.digest(...)` to undefined because string is incompatible with
 undefined.
 
-Error: crypto/crypto.js:36
- 36:     (hmac.digest('hex'): void); // 1 error
-          ^^^^^^^^^^^^^^^^^^ Cannot cast `hmac.digest(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-  438:   digest(encoding: 'hex' | 'latin1' | 'binary' | 'base64'): string;
-                                                                   ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:438
-   36:     (hmac.digest('hex'): void); // 1 error
-                                ^^^^ [2]: undefined
 
 Error ---------------------------------------------------- crypto/crypto.js:37:6
 
 Cannot cast `hmac.digest()` to undefined because `Buffer` is incompatible with
 undefined.
 
-Error: crypto/crypto.js:37
- 37:     (hmac.digest(): void); // 1 error
-          ^^^^^^^^^^^^^ Cannot cast `hmac.digest()` to undefined because `Buffer` [1] is incompatible with undefined [2].
-  References:
-  440:   digest(encoding: void): Buffer;
-                                 ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:440
-   37:     (hmac.digest(): void); // 1 error
-                           ^^^^ [2]: undefined
 
 Error: fs/fs.js:13
      v-----------------------------------------------------------
@@ -176,112 +92,48 @@ Error ------------------------------------------------------------ fs/fs.js:28:2
 Cannot cast `fs.readFileSync(...)` to string because `Buffer` is incompatible
 with string.
 
-Error: fs/fs.js:28
- 28: (fs.readFileSync("file.exp") : string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to string because `Buffer` [1] is incompatible with string [2].
-  References:
-  921:   ): Buffer;
-            ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:921
-   28: (fs.readFileSync("file.exp") : string); // error
-                                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ fs/fs.js:31:2
 
 Cannot cast `fs.readFileSync(...)` to `Buffer` because string is incompatible
 with `Buffer`.
 
-Error: fs/fs.js:31
- 31: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to `Buffer` because string [1] is incompatible with `Buffer` [2].
-  References:
-  925:   ): string;
-            ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:925
-   31: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-                                              ^^^^^^ [2]: `Buffer`
 
 Error ------------------------------------------------------------ fs/fs.js:34:2
 
 Cannot cast `fs.readFileSync(...)` to `Buffer` because string is incompatible
 with `Buffer`.
 
-Error: fs/fs.js:34
- 34: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to `Buffer` because string [1] is incompatible with `Buffer` [2].
-  References:
-  926:   declare function readFileSync(path: string | Buffer | URL | number, options: { encoding: string, flag?: string }): string;
-                                                                                                                            ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:926
-   34: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-                                                            ^^^^^^ [2]: `Buffer`
 
 Error ------------------------------------------------------------ fs/fs.js:37:2
 
 Cannot cast `fs.readFileSync(...)` to string because `Buffer` is incompatible
 with string.
 
-Error: fs/fs.js:37
- 37: (fs.readFileSync("file.exp", {}) : string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `fs.readFileSync(...)` to string because `Buffer` [1] is incompatible with string [2].
-  References:
-  927:   declare function readFileSync(path: string | Buffer | URL | number, options: { encoding?: void, flag?: string }): Buffer;
-                                                                                                                           ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:927
-   37: (fs.readFileSync("file.exp", {}) : string); // error
-                                          ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- http/server.js:67:25
 
 Cannot call `server.listen` with object literal bound to `callback` because a
 callable signature is missing in object literal but exists in function type.
 
-Error: http/server.js:67
- 67: server.listen(() => {}, {});
-                             ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
-  References:
-   67: server.listen(() => {}, {});
-                               ^^ [1]: object literal
-  1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error ----------------------------------------------------- http/server.js:68:30
 
 Cannot call `server.listen` with object literal bound to `callback` because a
 callable signature is missing in object literal but exists in function type.
 
-Error: http/server.js:68
- 68: server.listen(function() {}, {});
-                                  ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
-  References:
-   68: server.listen(function() {}, {});
-                                    ^^ [1]: object literal
-  1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error ----------------------------------------------------- http/server.js:69:15
 
 Cannot call `server.listen` with object literal bound to `port` because object
 literal is incompatible with number.
 
-Error: http/server.js:69
- 69: server.listen({}, () => {}, 'localhost', 123);
-                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
-  References:
-   69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ [1]: object literal
-  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1093
 
 Error ----------------------------------------------------- http/server.js:70:15
 
 Cannot call `server.listen` with object literal bound to `port` because object
 literal is incompatible with number.
 
-Error: http/server.js:70
- 70: server.listen({}, function() {}, 'localhost', 123);
-                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
-  References:
-   70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ [1]: object literal
-  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1093
 
 Error: http/server.js:71
  71: server.listen({}, () => {}, 123);
@@ -348,28 +200,12 @@ Error ----------------------------------------------------- http/server.js:73:25
 Cannot call `server.listen` with `123` bound to `callback` because number is
 incompatible with function type.
 
-Error: http/server.js:73
- 73: server.listen(() => {}, 123);
-                             ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
-  References:
-   73: server.listen(() => {}, 123);
-                               ^^^ [1]: number
-  1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error ----------------------------------------------------- http/server.js:74:30
 
 Cannot call `server.listen` with `123` bound to `callback` because number is
 incompatible with function type.
 
-Error: http/server.js:74
- 74: server.listen(function() {}, 123);
-                                  ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
-  References:
-   74: server.listen(function() {}, 123);
-                                    ^^^ [1]: number
-  1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error: http/server.js:75
  75: server.listen(() => {}, 'localhost', 123);
@@ -436,56 +272,24 @@ Error ----------------------------------------------------- http/server.js:77:25
 Cannot call `server.listen` with `'localhost'` bound to `callback` because
 string is incompatible with function type.
 
-Error: http/server.js:77
- 77: server.listen(() => {}, 'localhost');
-                             ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
-  References:
-   77: server.listen(() => {}, 'localhost');
-                               ^^^^^^^^^^^ [1]: string
-  1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error ----------------------------------------------------- http/server.js:78:30
 
 Cannot call `server.listen` with `'localhost'` bound to `callback` because
 string is incompatible with function type.
 
-Error: http/server.js:78
- 78: server.listen(function() {}, 'localhost');
-                                  ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
-  References:
-   78: server.listen(function() {}, 'localhost');
-                                    ^^^^^^^^^^^ [1]: string
-  1099:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1099
 
 Error ----------------------------------------------------- http/server.js:79:21
 
 Cannot call `server.listen` with function bound to `hostname` because function
 is incompatible with string.
 
-Error: http/server.js:79
- 79: server.listen(8080, () => {}, 'localhost', 123);
-                         ^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
-  References:
-   79: server.listen(8080, () => {}, 'localhost', 123);
-                           ^^^^^^^^ [1]: function
-  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1093
 
 Error ----------------------------------------------------- http/server.js:80:21
 
 Cannot call `server.listen` with function bound to `hostname` because function
 is incompatible with string.
 
-Error: http/server.js:80
- 80: server.listen(8080, function() {}, 'localhost', 123);
-                         ^^^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
-  References:
-   80: server.listen(8080, function() {}, 'localhost', 123);
-                           ^^^^^^^^^^ [1]: function
-  1093:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1093
 
 Error: http/server.js:81
  81: server.listen(8080, () => {}, 123);
@@ -612,56 +416,24 @@ Error ---------------------------------------------------- https/server.js:67:25
 Cannot call `server.listen` with object literal bound to `callback` because a
 callable signature is missing in object literal but exists in function type.
 
-Error: https/server.js:67
- 67: server.listen(() => {}, {});
-                             ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
-  References:
-   67: server.listen(() => {}, {});
-                               ^^ [1]: object literal
-  1138:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error ---------------------------------------------------- https/server.js:68:30
 
 Cannot call `server.listen` with object literal bound to `callback` because a
 callable signature is missing in object literal but exists in function type.
 
-Error: https/server.js:68
- 68: server.listen(function() {}, {});
-                                  ^^ Cannot call `server.listen` with object literal bound to `callback` because a callable signature is missing in object literal [1] but exists in function type [2].
-  References:
-   68: server.listen(function() {}, {});
-                                    ^^ [1]: object literal
-  1138:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error ---------------------------------------------------- https/server.js:69:15
 
 Cannot call `server.listen` with object literal bound to `port` because object
 literal is incompatible with number.
 
-Error: https/server.js:69
- 69: server.listen({}, () => {}, 'localhost', 123);
-                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
-  References:
-   69: server.listen({}, () => {}, 'localhost', 123);
-                     ^^ [1]: object literal
-  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1132
 
 Error ---------------------------------------------------- https/server.js:70:15
 
 Cannot call `server.listen` with object literal bound to `port` because object
 literal is incompatible with number.
 
-Error: https/server.js:70
- 70: server.listen({}, function() {}, 'localhost', 123);
-                   ^^ Cannot call `server.listen` with object literal bound to `port` because object literal [1] is incompatible with number [2].
-  References:
-   70: server.listen({}, function() {}, 'localhost', 123);
-                     ^^ [1]: object literal
-  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                          ^^^^^^ [2]: number. See lib: <BUILTINS>/node.js:1132
 
 Error: https/server.js:71
  71: server.listen({}, () => {}, 123);
@@ -728,28 +500,12 @@ Error ---------------------------------------------------- https/server.js:73:25
 Cannot call `server.listen` with `123` bound to `callback` because number is
 incompatible with function type.
 
-Error: https/server.js:73
- 73: server.listen(() => {}, 123);
-                             ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
-  References:
-   73: server.listen(() => {}, 123);
-                               ^^^ [1]: number
-  1138:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error ---------------------------------------------------- https/server.js:74:30
 
 Cannot call `server.listen` with `123` bound to `callback` because number is
 incompatible with function type.
 
-Error: https/server.js:74
- 74: server.listen(function() {}, 123);
-                                  ^^^ Cannot call `server.listen` with `123` bound to `callback` because number [1] is incompatible with function type [2].
-  References:
-   74: server.listen(function() {}, 123);
-                                    ^^^ [1]: number
-  1138:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error: https/server.js:75
  75: server.listen(() => {}, 'localhost', 123);
@@ -816,56 +572,24 @@ Error ---------------------------------------------------- https/server.js:77:25
 Cannot call `server.listen` with `'localhost'` bound to `callback` because
 string is incompatible with function type.
 
-Error: https/server.js:77
- 77: server.listen(() => {}, 'localhost');
-                             ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
-  References:
-   77: server.listen(() => {}, 'localhost');
-                               ^^^^^^^^^^^ [1]: string
-  1138:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error ---------------------------------------------------- https/server.js:78:30
 
 Cannot call `server.listen` with `'localhost'` bound to `callback` because
 string is incompatible with function type.
 
-Error: https/server.js:78
- 78: server.listen(function() {}, 'localhost');
-                                  ^^^^^^^^^^^ Cannot call `server.listen` with `'localhost'` bound to `callback` because string [1] is incompatible with function type [2].
-  References:
-   78: server.listen(function() {}, 'localhost');
-                                    ^^^^^^^^^^^ [1]: string
-  1138:     listen(handle: Object, callback?: Function): Server;
-                                              ^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1138
 
 Error ---------------------------------------------------- https/server.js:79:21
 
 Cannot call `server.listen` with function bound to `hostname` because function
 is incompatible with string.
 
-Error: https/server.js:79
- 79: server.listen(8443, () => {}, 'localhost', 123);
-                         ^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
-  References:
-   79: server.listen(8443, () => {}, 'localhost', 123);
-                           ^^^^^^^^ [1]: function
-  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1132
 
 Error ---------------------------------------------------- https/server.js:80:21
 
 Cannot call `server.listen` with function bound to `hostname` because function
 is incompatible with string.
 
-Error: https/server.js:80
- 80: server.listen(8443, function() {}, 'localhost', 123);
-                         ^^^^^^^^^^ Cannot call `server.listen` with function bound to `hostname` because function [1] is incompatible with string [2].
-  References:
-   80: server.listen(8443, function() {}, 'localhost', 123);
-                           ^^^^^^^^^^ [1]: function
-  1132:     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [2]: string. See lib: <BUILTINS>/node.js:1132
 
 Error: https/server.js:81
  81: server.listen(8443, () => {}, 123);
@@ -991,285 +715,124 @@ Error ------------------------------------ invalid_package_file/package.json:1:1
 
 Unexpected end of input
 
-Error: invalid_package_file/package.json:1
-  1: 
-     ^ Unexpected end of input
 
 Error ------------------------------------------ json_file/json_invalid.json:1:1
 
 Unexpected token :
 
-Error: json_file/json_invalid.json:1
-  1: :derp
-     ^ Unexpected token :
 
 Error ---------------------------------------------------- json_file/test.js:4:2
 
 Cannot cast `data.foo` to undefined because object literal is incompatible with
 undefined.
 
-Error: json_file/test.js:4
-  4: (data.foo: void); // error, should be object literal
-      ^^^^^^^^ Cannot cast `data.foo` to undefined because object literal [1] is incompatible with undefined [2].
-  References:
-                v
-    2:   "foo": {
-    3:     "bar": true
-    4:   },
-         ^ [1]: object literal. See: json_file/package/index.json:2
-    4: (data.foo: void); // error, should be object literal
-                  ^^^^ [2]: undefined
 
 Error ---------------------------------------------------- json_file/test.js:5:2
 
 Cannot cast `data.foo.bar` to undefined because boolean is incompatible with
 undefined.
 
-Error: json_file/test.js:5
-  5: (data.foo.bar: void); // error, should be boolean
-      ^^^^^^^^^^^^ Cannot cast `data.foo.bar` to undefined because boolean [1] is incompatible with undefined [2].
-  References:
-    3:     "bar": true
-                  ^^^^ [1]: boolean. See: json_file/package/index.json:3
-    5: (data.foo.bar: void); // error, should be boolean
-                      ^^^^ [2]: undefined
 
 Error ---------------------------------------------------- json_file/test.js:6:2
 
 Cannot cast `data.abc` to boolean because null or undefined is incompatible with
 boolean.
 
-Error: json_file/test.js:6
-  6: (data.abc: boolean); // error, should be ?string
-      ^^^^^^^^ Cannot cast `data.abc` to boolean because null or undefined [1] is incompatible with boolean [2].
-  References:
-    6:   "abc": (null: ?string)
-                       ^^^^^^^ [1]: null or undefined. See: json_file/package/index.json:6
-    6: (data.abc: boolean); // error, should be ?string
-                  ^^^^^^^ [2]: boolean
 
 Error ---------------------------------------------------- json_file/test.js:6:2
 
 Cannot cast `data.abc` to boolean because string is incompatible with boolean.
 
-Error: json_file/test.js:6
-  6: (data.abc: boolean); // error, should be ?string
-      ^^^^^^^^ Cannot cast `data.abc` to boolean because string [1] is incompatible with boolean [2].
-  References:
-    6:   "abc": (null: ?string)
-                        ^^^^^^ [1]: string. See: json_file/package/index.json:6
-    6: (data.abc: boolean); // error, should be ?string
-                  ^^^^^^^ [2]: boolean
 
 Error ---------------------------------------------------- json_file/test.js:9:2
 
 Cannot cast `data2.baz` to undefined because string is incompatible with
 undefined.
 
-Error: json_file/test.js:9
-  9: (data2.baz: void); // error, should be string
-      ^^^^^^^^^ Cannot cast `data2.baz` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    5:   "baz": "hello world",
-                ^^^^^^^^^^^^^ [1]: string. See: json_file/package/index.json:5
-    9: (data2.baz: void); // error, should be string
-                   ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:12:2
 
 Cannot cast `data3.foo` to undefined because number is incompatible with
 undefined.
 
-Error: json_file/test.js:12
- 12: (data3.foo: void); // error, should be number (not string! index.js wins)
-      ^^^^^^^^^ Cannot cast `data3.foo` to undefined because number [1] is incompatible with undefined [2].
-  References:
-    4:   foo: 123
-              ^^^ [1]: number. See: json_file/package2/index.js:4
-   12: (data3.foo: void); // error, should be number (not string! index.js wins)
-                   ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:16:2
 
 Cannot cast `data4` to undefined because array literal is incompatible with
 undefined.
 
-Error: json_file/test.js:16
- 16: (data4: void); // error, should be Array<number>
-      ^^^^^ Cannot cast `data4` to undefined because array literal [1] is incompatible with undefined [2].
-  References:
-    1: [1, 2]
-       ^^^^^^ [1]: array literal. See: json_file/json_array.json:1
-   16: (data4: void); // error, should be Array<number>
-               ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:18:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: json_file/test.js:18
- 18: (require('./json_string'): void); // error, should be string
-      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    1: "foo"
-       ^^^^^ [1]: string. See: json_file/json_string.json:1
-   18: (require('./json_string'): void); // error, should be string
-                                  ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:19:2
 
 Cannot cast `require(...)` to undefined because number is incompatible with
 undefined.
 
-Error: json_file/test.js:19
- 19: (require('./json_number'): void); // error, should be number
-      ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because number [1] is incompatible with undefined [2].
-  References:
-    1: 1
-       ^ [1]: number. See: json_file/json_number.json:1
-   19: (require('./json_number'): void); // error, should be number
-                                  ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:20:2
 
 Cannot cast `require(...)` to undefined because boolean is incompatible with
 undefined.
 
-Error: json_file/test.js:20
- 20: (require('./json_true'): void); // error, should be true
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because boolean [1] is incompatible with undefined [2].
-  References:
-    1: true
-       ^^^^ [1]: boolean. See: json_file/json_true.json:1
-   20: (require('./json_true'): void); // error, should be true
-                                ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:21:2
 
 Cannot cast `require(...)` to undefined because boolean is incompatible with
 undefined.
 
-Error: json_file/test.js:21
- 21: (require('./json_false'): void); // error, should be false
-      ^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because boolean [1] is incompatible with undefined [2].
-  References:
-    1: false
-       ^^^^^ [1]: boolean. See: json_file/json_false.json:1
-   21: (require('./json_false'): void); // error, should be false
-                                 ^^^^ [2]: undefined
 
 Error --------------------------------------------------- json_file/test.js:22:2
 
 Cannot cast `require(...)` to undefined because null is incompatible with
 undefined.
 
-Error: json_file/test.js:22
- 22: (require('./json_null'): void); // error, should be null
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because null [1] is incompatible with undefined [2].
-  References:
-    1: null
-       ^^^^ [1]: null. See: json_file/json_null.json:1
-   22: (require('./json_null'): void); // error, should be null
-                                ^^^^ [2]: undefined
 
 Error ------------------------------------------------------- os/userInfo.js:7:2
 
 Cannot cast `u1.username` to `Buffer` because string is incompatible with
 `Buffer`.
 
-Error: os/userInfo.js:7
-  7: (u1.username: Buffer); // error
-      ^^^^^^^^^^^ Cannot cast `u1.username` to `Buffer` because string [1] is incompatible with `Buffer` [2].
-  References:
-  1295:   username: string,
-                    ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:1295
-    7: (u1.username: Buffer); // error
-                     ^^^^^^ [2]: `Buffer`
 
 Error ------------------------------------------------------ os/userInfo.js:11:2
 
 Cannot cast `u2.username` to `Buffer` because string is incompatible with
 `Buffer`.
 
-Error: os/userInfo.js:11
- 11: (u2.username: Buffer); // error
-      ^^^^^^^^^^^ Cannot cast `u2.username` to `Buffer` because string [1] is incompatible with `Buffer` [2].
-  References:
-  1295:   username: string,
-                    ^^^^^^ [1]: string. See lib: <BUILTINS>/node.js:1295
-   11: (u2.username: Buffer); // error
-                     ^^^^^^ [2]: `Buffer`
 
 Error ------------------------------------------------------ os/userInfo.js:14:2
 
 Cannot cast `u3.username` to string because `Buffer` is incompatible with
 string.
 
-Error: os/userInfo.js:14
- 14: (u3.username: string); // error
-      ^^^^^^^^^^^ Cannot cast `u3.username` to string because `Buffer` [1] is incompatible with string [2].
-  References:
-  1287:   username: Buffer,
-                    ^^^^^^ [1]: `Buffer`. See lib: <BUILTINS>/node.js:1287
-   14: (u3.username: string); // error
-                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------- process/nextTick.js:14:3
 
 Cannot call `process.nextTick` because in the rest argument and then the first
 argument, number is incompatible with string.
 
-Error: process/nextTick.js:14
- 14:   0, // Error: number ~> string
-       ^ Cannot call `process.nextTick` because in the rest argument and then the first argument, number [1] is incompatible with string [2].
-  References:
-   14:   0, // Error: number ~> string
-         ^ [1]: number
-   13:   (a: string, b: number, c: boolean) => {},
-             ^^^^^^ [2]: string
 
 Error ------------------------------------------------- process/nextTick.js:16:3
 
 Cannot call `process.nextTick` because in the rest argument and then the third
 argument, null is incompatible with boolean.
 
-Error: process/nextTick.js:16
- 16:   null // Error: null ~> boolean
-       ^^^^ Cannot call `process.nextTick` because in the rest argument and then the third argument, null [1] is incompatible with boolean [2].
-  References:
-   16:   null // Error: null ~> boolean
-         ^^^^ [1]: null
-   13:   (a: string, b: number, c: boolean) => {},
-                                   ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------- process/nextTick.js:22:3
 
 Cannot call `process.nextTick` because in the rest argument and then the second
 argument, string is incompatible with number.
 
-Error: process/nextTick.js:22
- 22:   'y', // Error: string ~> number
-       ^^^ Cannot call `process.nextTick` because in the rest argument and then the second argument, string [1] is incompatible with number [2].
-  References:
-   22:   'y', // Error: string ~> number
-         ^^^ [1]: string
-   20:   (a: string, b: number, c: boolean) => {},
-                        ^^^^^^ [2]: number
 
 Error ------------------------------------------------- process/nextTick.js:26:9
 
 Cannot call `process.nextTick` because in the rest argument, function requires
 another argument from function type.
 
-Error: process/nextTick.js:26
- 26: process.nextTick(
-             ^^^^^^^^ Cannot call `process.nextTick` because in the rest argument, function [1] requires another argument from function type [2].
-  References:
-   27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function
-  1961:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                            ^^^^^^^^^^^^^^^ [2]: function type. See lib: <BUILTINS>/node.js:1961
 
 Error: process/process.js:10
  10: process.emitWarning(); // error
@@ -1429,14 +992,6 @@ Error -------------------------------------------------- process/process.js:14:2
 Cannot cast `process.emitWarning(...)` to string because undefined is
 incompatible with string.
 
-Error: process/process.js:14
- 14: (process.emitWarning("blah"): string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incompatible with string [2].
-  References:
-  1933:   emitWarning(warning: string | Error): void;
-                                                ^^^^ [1]: undefined. See lib: <BUILTINS>/node.js:1933
-   14: (process.emitWarning("blah"): string); // error
-                                     ^^^^^^ [2]: string
 
 
 Found 77 errors

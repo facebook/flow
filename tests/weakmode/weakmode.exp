@@ -2,12 +2,6 @@ Error ----------------------------------------- should_fail_without_weak.js:9:10
 
 Cannot perform arithmetic operation because string is not a number.
 
-Error: should_fail_without_weak.js:9
-  9:   return returns_a_string() * 10;
-              ^^^^^^^^^^^^^^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
-  References:
-    5:   return "Hello";
-                ^^^^^^^ [1]: string
 
 
 Found 1 error

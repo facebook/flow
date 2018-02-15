@@ -3,14 +3,6 @@ Error ----------------------------------------------------- issue-1462-i.js:21:9
 Cannot call `print` with `val.foo` bound to `x` because array type is
 incompatible with number.
 
-Error: issue-1462-i.js:21
- 21:   print(val.foo);  // <--- foo could be an array
-             ^^^^^^^ Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
-  References:
-   11:   foo: Array<number>
-              ^^^^^^^^^^^^^ [1]: array type
-   16: function print(x: number) {
-                         ^^^^^^ [2]: number
 
 Error: issue-824.js:21
  21:     return this.foo(p);
@@ -163,14 +155,6 @@ Error ----------------------------------------------------------- test11.js:12:8
 Cannot call `length` with object literal bound to `list` because property `next`
 is missing in object literal but exists in `Cons`.
 
-Error: test11.js:12
- 12: length({ kind: "cons" }); // missing `next`
-            ^^^^^^^^^^^^^^^^ Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but exists in `Cons` [2].
-  References:
-   12: length({ kind: "cons" }); // missing `next`
-              ^^^^^^^^^^^^^^^^ [1]: object literal
-   16: type List = Nil | Cons;
-                         ^^^^ [2]: `Cons`
 
 Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
@@ -254,50 +238,22 @@ Error ------------------------------------------------------------ test17.js:7:2
 Cannot cast `[].concat(...)[1]` to string because number is incompatible with
 string.
 
-Error: test17.js:7
-  7: ([].concat([0,1])[1]: string)
-      ^^^^^^^^^^^^^^^^^^^ Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
-  References:
-    7: ([].concat([0,1])[1]: string)
-                   ^ [1]: number
-    7: ([].concat([0,1])[1]: string)
-                             ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ test17.js:7:2
 
 Cannot cast `[].concat(...)[1]` to string because number is incompatible with
 string.
 
-Error: test17.js:7
-  7: ([].concat([0,1])[1]: string)
-      ^^^^^^^^^^^^^^^^^^^ Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2].
-  References:
-    7: ([].concat([0,1])[1]: string)
-                     ^ [1]: number
-    7: ([].concat([0,1])[1]: string)
-                             ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- test20.js:14:26
 
 Cannot perform arithmetic operation because string is not a number.
 
-Error: test20.js:14
- 14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^ Cannot perform arithmetic operation because string [1] is not a number.
-  References:
-   14: [""].reduce((acc,str) => acc * str.length);
-        ^^ [1]: string
 
 Error ---------------------------------------------------------- test20.js:14:36
 
 Cannot get `str.length` because property `length` is missing in `Number`.
 
-Error: test20.js:14
- 14: [""].reduce((acc,str) => acc * str.length);
-                                        ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
-  References:
-   14: [""].reduce((acc,str) => acc * str.length);
-                                ^^^^^^^^^^^^^^^^ [1]: `Number`
 
 Error: test21.js:11
  11: ({ type: bar(), x: str() }: T);
@@ -349,14 +305,6 @@ Error ---------------------------------------------------------- test26.js:20:25
 Cannot call `new Record().set` with `"42"` bound to `y` because string is
 incompatible with number.
 
-Error: test26.js:20
- 20: new Record().set('foo', "42");
-                             ^^^^ Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is incompatible with number [2].
-  References:
-   20: new Record().set('foo', "42");
-                               ^^^^ [1]: string
-   16:   set(x: 'foo', y: number): void;
-                          ^^^^^^ [2]: number
 
 Error: test33.js:7
   7: foo(bar); // error: ambiguous speculation
@@ -377,27 +325,11 @@ Error ------------------------------------------------------------ test33.js:8:2
 
 Cannot cast `bar()` to string because number is incompatible with string.
 
-Error: test33.js:8
-  8: (bar(): string); // error: number ~> string
-      ^^^^^ Cannot cast `bar()` to string because number [1] is incompatible with string [2].
-  References:
-    6: function bar() { return 0 }
-                               ^ [1]: number
-    8: (bar(): string); // error: number ~> string
-               ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- test34.js:10:6
 
 Cannot cast `x.foo` to empty because string is incompatible with empty.
 
-Error: test34.js:10
- 10:     (x.foo: empty); // error: string ~> empty
-          ^^^^^ Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2].
-  References:
-   16: type A = {| foo: string |};
-                        ^^^^^^ [1]: string
-   10:     (x.foo: empty); // error: string ~> empty
-                   ^^^^^ [2]: empty
 
 Error: test5.js:14
  14: fun(a1);
@@ -435,23 +367,11 @@ Error ----------------------------------------------------------- test9.js:12:10
 
 Cannot perform arithmetic operation because null or undefined is not a number.
 
-Error: test9.js:12
- 12:   return x * x;
-              ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
-  References:
-   15: function foo(f: ((_: ?number) => ?number) | (() => void)) { }
-                            ^^^^^^^ [1]: null or undefined
 
 Error ----------------------------------------------------------- test9.js:12:14
 
 Cannot perform arithmetic operation because null or undefined is not a number.
 
-Error: test9.js:12
- 12:   return x * x;
-                  ^ Cannot perform arithmetic operation because null or undefined [1] is not a number.
-  References:
-   15: function foo(f: ((_: ?number) => ?number) | (() => void)) { }
-                            ^^^^^^^ [1]: null or undefined
 
 
 Found 27 errors

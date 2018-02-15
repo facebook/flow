@@ -2,23 +2,11 @@ Error --------------------------------------------------------- example1.js:3:23
 
 Cannot call `f` because null is not a function.
 
-Error: example1.js:3
-  3: function pipe(x, f) { f(x); }
-                           ^ Cannot call `f` because null [1] is not a function.
-  References:
-    6: pipe("hello", null); // error
-                     ^^^^ [1]: null
 
 Error -------------------------------------------------------- example5.js:12:12
 
 Cannot get `x.kind` because property `kind` is missing in null.
 
-Error: example5.js:12
- 12:   return x.kind; // error
-                ^^^^ Cannot get `x.kind` because property `kind` is missing in null [1].
-  References:
-    9:   let reset = () => { x = null; }
-                                 ^^^^ [1]: null
 
 Error: example6.js:9
   9: onString(id);
@@ -42,14 +30,6 @@ Error -------------------------------------------------------- example7.js:14:39
 Cannot call `stringIsString` with object literal bound to `x` because in
 property `val`, number is incompatible with string.
 
-Error: example7.js:14
- 14: stringIsString({ type: "string", val: 0 }); // error
-                                           ^ Cannot call `stringIsString` with object literal bound to `x` because in property `val`, number [1] is incompatible with string [2].
-  References:
-   14: stringIsString({ type: "string", val: 0 }); // error
-                                             ^ [1]: number
-    6:   | { type: "string", val: string }
-                                  ^^^^^^ [2]: string
 
 
 Found 4 errors

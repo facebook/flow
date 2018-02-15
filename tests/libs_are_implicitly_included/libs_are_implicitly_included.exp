@@ -7,14 +7,6 @@ Error ------------------------------------------------------------ src/a.js:3:17
 
 Cannot assign `123` to `x` because number is incompatible with string.
 
-Error: src/a.js:3
-  3: let x: string = 123;
-                     ^^^ Cannot assign `123` to `x` because number [1] is incompatible with string [2].
-  References:
-    3: let x: string = 123;
-                       ^^^ [1]: number
-    3: let x: string = 123;
-              ^^^^^^ [2]: string
 
 
 Found 1 error

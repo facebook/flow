@@ -5,17 +5,11 @@ Warning ------------------------------------------------------ dependency.js:5:1
 
 Unused suppression comment.
 
-Warning: dependency.js:5
-  5: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning --------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
 
-Warning: focused.js:7
-  7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 warnings
@@ -25,17 +19,11 @@ Warning ------------------------------------------------------ dependency.js:5:1
 
 Unused suppression comment.
 
-Warning: dependency.js:5
-  5: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning --------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
 
-Warning: focused.js:7
-  7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 warnings
@@ -45,9 +33,6 @@ Warning --------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
 
-Warning: focused.js:7
-  7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 1 warning
@@ -60,17 +45,11 @@ Warning ------------------------------------------------------ dependency.js:5:1
 
 Unused suppression comment.
 
-Warning: dependency.js:5
-  5: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 Warning --------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
 
-Warning: focused.js:7
-  7: // $FlowFixMe - Unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unused suppression comment.
 
 
 Found 2 warnings

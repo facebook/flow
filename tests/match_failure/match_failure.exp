@@ -68,14 +68,6 @@ Error ------------------------------------------------------------- enum.js:8:25
 
 number literal `2` is incompatible with number enum.
 
-Error: enum.js:8
-  8:   } else if (binary === 2) { // oops
-                             ^ number literal `2` [1] is incompatible with number enum [2].
-  References:
-    8:   } else if (binary === 2) { // oops
-                               ^ [1]: number literal `2`
-    5: function stringifyBinary(binary: Binary): string {
-                                        ^^^^^^ [2]: number enum
 
 
 Found 4 errors

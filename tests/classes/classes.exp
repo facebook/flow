@@ -2,241 +2,105 @@ Error ----------------------------------------------------------------- B.js:6:2
 
 Cannot cast `b.foo` to number because function is incompatible with number.
 
-Error: B.js:6
-  6: (b.foo: number); // error, number !~> function
-      ^^^^^ Cannot cast `b.foo` to number because function [1] is incompatible with number [2].
-  References:
-    2:   foo(x:number):void { }
-         ^^^^^^^^^^^^^^^^^^^^^^ [1]: function. See: A.js:2
-    6: (b.foo: number); // error, number !~> function
-               ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------------- C.js:4:9
 
 Cannot extend `B` with `C` because in property `foo` and then the first
 argument, string is incompatible with number.
 
-Error: C.js:4
-  4:   foo(x:string):void { }
-             ^^^^^^ Cannot extend `B` [1] with `C` because in property `foo` and then the first argument, string [2] is incompatible with number [3].
-  References:
-    3: class C extends B {
-                       ^ [1]: `B`
-    4:   foo(x:string):void { }
-               ^^^^^^ [2]: string
-    2:   foo(x:number):void { }
-               ^^^^^^ [3]: number. See: A.js:2
 
 Error ----------------------------------------------------------------- C.js:8:2
 
 Cannot cast `c.foo` to number because function is incompatible with number.
 
-Error: C.js:8
-  8: (c.foo: number); // error, number !~> function
-      ^^^^^ Cannot cast `c.foo` to number because function [1] is incompatible with number [2].
-  References:
-    4:   foo(x:string):void { }
-         ^^^^^^^^^^^^^^^^^^^^^^ [1]: function
-    8: (c.foo: number); // error, number !~> function
-               ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------------- D.js:3:9
 
 Cannot get `new E().x` because property `x` is missing in `E`.
 
-Error: D.js:3
-  3: new E().x
-             ^ Cannot get `new E().x` because property `x` is missing in `E` [1].
-  References:
-    3: new E().x
-       ^^^^^^^ [1]: `E`
 
 Error ----------------------------------------------------- class_shapes.js:18:3
 
 Cannot get `x.b` because property `b` is missing in `TestClass`.
 
-Error: class_shapes.js:18
- 18: x.b; // error, TestClass has no b
-       ^ Cannot get `x.b` because property `b` is missing in `TestClass` [1].
-  References:
-   15: var x = new TestClass();
-               ^^^^^^^^^^^^^^^ [1]: `TestClass`
 
 Error ----------------------------------------------------- class_shapes.js:20:3
 
 Cannot get `x.d` because property `d` is missing in `TestClass`.
 
-Error: class_shapes.js:20
- 20: x.d; // error, TestClass has no d
-       ^ Cannot get `x.d` because property `d` is missing in `TestClass` [1].
-  References:
-   15: var x = new TestClass();
-               ^^^^^^^^^^^^^^^ [1]: `TestClass`
 
 Error ---------------------------------------------------- class_shapes.js:22:15
 
 Cannot assign `x` to `y` because property `b` is missing in `TestClass` but
 exists in `Foo`.
 
-Error: class_shapes.js:22
- 22: var y : Foo = x;
-                   ^ Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2].
-  References:
-   15: var x = new TestClass();
-               ^^^^^^^^^^^^^^^ [1]: `TestClass`
-   22: var y : Foo = x;
-               ^^^ [2]: `Foo`
 
 Error ---------------------------------------------------- class_shapes.js:35:15
 
 Cannot assign `z` to `w` because in property `a`, number is incompatible with
 string.
 
-Error: class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Cannot assign `z` to `w` because in property `a`, number [1] is incompatible with string [2].
-  References:
-   27:   a: number;  // conflicts with cast to Foo
-            ^^^^^^ [1]: number
-    4:   a: string;    // exists in TestClass
-            ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- class_shapes.js:35:15
 
 Cannot assign `z` to `w` because in property `b`, number is incompatible with
 string.
 
-Error: class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Cannot assign `z` to `w` because in property `b`, number [1] is incompatible with string [2].
-  References:
-   31:   b: number;  // conflicts with cast to Foo
-            ^^^^^^ [1]: number
-    5:   b: string;    // doesn't exist
-            ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- class_shapes.js:35:15
 
 Cannot assign `z` to `w` because in property `c`, number is incompatible with
 string.
 
-Error: class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Cannot assign `z` to `w` because in property `c`, number [1] is incompatible with string [2].
-  References:
-   28:   c: ?number; // conflicts with cast to Foo
-             ^^^^^^ [1]: number
-    6:   c?: ?string;  // exists in TestClass, optional
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ expr.js:14:13
 
 Cannot resolve name `Baz`.
 
-Error: expr.js:14
- 14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
-                 ^^^ Cannot resolve name `Baz`.
 
 Error ------------------------------------------------------------- expr.js:17:8
 
 Cannot resolve name `Qux`.
 
-Error: expr.js:17
- 17: var c: Qux = new C(); // error: Qux is not a type in this scope
-            ^^^ Cannot resolve name `Qux`.
 
 Error ------------------------------------------------------------ expr.js:29:21
 
 Cannot assign `new _Alias()` to `alias1` because `Alias` is incompatible with
 `Alias`.
 
-Error: expr.js:29
- 29: var alias1: Alias = new _Alias(); // error: bad pun
-                         ^^^^^^^^^^^^ Cannot assign `new _Alias()` to `alias1` because `Alias` [1] is incompatible with `Alias` [2].
-  References:
-   29: var alias1: Alias = new _Alias(); // error: bad pun
-                           ^^^^^^^^^^^^ [1]: `Alias`
-   29: var alias1: Alias = new _Alias(); // error: bad pun
-                   ^^^^^ [2]: `Alias`
 
 Error ------------------------------------------------------------ expr.js:30:21
 
 Cannot assign `_Alias.factory()` to `alias2` because `Alias` is incompatible
 with `Alias`.
 
-Error: expr.js:30
- 30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                         ^^^^^^^^^^^^^^^^ Cannot assign `_Alias.factory()` to `alias2` because `Alias` [1] is incompatible with `Alias` [2].
-  References:
-   25:   static factory(): Alias {
-                           ^^^^^ [1]: `Alias`
-   30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                   ^^^^^ [2]: `Alias`
 
 Error --------------------------------------------------------------- loc.js:5:7
 
 Cannot declare `Foo` because the name is already bound.
 
-Error: loc.js:5
-  5: class Foo {} // error, shadows type Foo
-           ^^^ Cannot declare `Foo` [1] because the name is already bound.
-  References:
-    3: type Foo = number
-            ^^^ [1]: `Foo`
 
 Error ---------------------------------------------------------- statics.js:10:2
 
 Cannot cast `C` to object type because in property `p`, string is incompatible
 with number.
 
-Error: statics.js:10
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ Cannot cast `C` to object type because in property `p`, string [1] is incompatible with number [2].
-  References:
-    4:   static p: string;
-                   ^^^^^^ [1]: string
-   10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-              ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- statics.js:13:2
 
 Cannot cast `o` to statics of `C` because object type is incompatible with
 statics of `C`.
 
-Error: statics.js:13
- 13: (o: Class<C>); // error, object type incompatible with class type
-      ^ Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2].
-  References:
-   12: declare var o: {p:number};
-                      ^^^^^^^^^^ [1]: object type
-   13: (o: Class<C>); // error, object type incompatible with class type
-           ^^^^^^^^ [2]: statics of `C`
 
 Error ---------------------------------------------------------- statics.js:19:2
 
 Cannot cast `Dup1.x` to empty because function is incompatible with empty.
 
-Error: statics.js:19
- 19: (Dup1.x: empty); // function ~> empty
-      ^^^^^^ Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2].
-  References:
-   17:   static x() {}
-         ^^^^^^^^^^^^^ [1]: function
-   19: (Dup1.x: empty); // function ~> empty
-                ^^^^^ [2]: empty
 
 Error ---------------------------------------------------------- statics.js:25:2
 
 Cannot cast `Dup2.x` to empty because string is incompatible with empty.
 
-Error: statics.js:25
- 25: (Dup2.x: empty); // string ~> empty
-      ^^^^^^ Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2].
-  References:
-   23:   static x: string;
-                   ^^^^^^ [1]: string
-   25: (Dup2.x: empty); // string ~> empty
-                ^^^^^ [2]: empty
 
 
 Found 19 errors

@@ -2,101 +2,41 @@ Error --------------------------------------------------------- undefined.js:3:7
 
 Cannot call `x.foo` because property `foo` is missing in uninitialized variable.
 
-Error: undefined.js:3
-  3:     x.foo();
-           ^^^ Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1].
-  References:
-    2:     var x;
-               ^ [1]: uninitialized variable
 
 Error -------------------------------------------------------- undefined2.js:7:6
 
 Cannot cast `name` to boolean because string is incompatible with boolean.
 
-Error: undefined2.js:7
-  7:     (name: boolean); // error, string or void
-          ^^^^ Cannot cast `name` to boolean because string [1] is incompatible with boolean [2].
-  References:
-    6:     var name = id ? 'John' : undefined;
-                           ^^^^^^ [1]: string
-    7:     (name: boolean); // error, string or void
-                  ^^^^^^^ [2]: boolean
 
 Error -------------------------------------------------------- undefined2.js:7:6
 
 Cannot cast `name` to boolean because undefined is incompatible with boolean.
 
-Error: undefined2.js:7
-  7:     (name: boolean); // error, string or void
-          ^^^^ Cannot cast `name` to boolean because undefined [1] is incompatible with boolean [2].
-  References:
-    6:     var name = id ? 'John' : undefined;
-                                    ^^^^^^^^^ [1]: undefined
-    7:     (name: boolean); // error, string or void
-                  ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------- undefined2.js:13:6
 
 Cannot cast `bar[x]` to boolean because string is incompatible with boolean.
 
-Error: undefined2.js:13
- 13:     (bar[x]: boolean); // error, string or void
-          ^^^^^^ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   11:       'bar',
-             ^^^^^ [1]: string
-   13:     (bar[x]: boolean); // error, string or void
-                    ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------- undefined2.js:13:6
 
 Cannot cast `bar[x]` to boolean because undefined is incompatible with boolean.
 
-Error: undefined2.js:13
- 13:     (bar[x]: boolean); // error, string or void
-          ^^^^^^ Cannot cast `bar[x]` to boolean because undefined [1] is incompatible with boolean [2].
-  References:
-   13: declare var undefined: void;
-                              ^^^^ [1]: undefined. See lib: <BUILTINS>/core.js:13
-   13:     (bar[x]: boolean); // error, string or void
-                    ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------- undefined2.js:22:7
 
 Cannot get `x[0]` because an indexer property is missing in `Number`.
 
-Error: undefined2.js:22
- 22:       x[0]; // should error, could be void
-           ^^^^ Cannot get `x[0]` because an indexer property is missing in `Number` [1].
-  References:
-   16:   function(x: number) {
-                     ^^^^^^ [1]: `Number`
 
 Error ------------------------------------------------------- undefined2.js:29:6
 
 Cannot cast `bar[x]` to boolean because string is incompatible with boolean.
 
-Error: undefined2.js:29
- 29:     (bar[x]: boolean); // error, string only
-          ^^^^^^ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   17:     var undefined = 'foo';
-                           ^^^^^ [1]: string
-   29:     (bar[x]: boolean); // error, string only
-                    ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------- undefined2.js:29:6
 
 Cannot cast `bar[x]` to boolean because string is incompatible with boolean.
 
-Error: undefined2.js:29
- 29:     (bar[x]: boolean); // error, string only
-          ^^^^^^ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   27:       'bar',
-             ^^^^^ [1]: string
-   29:     (bar[x]: boolean); // error, string only
-                    ^^^^^^^ [2]: boolean
 
 
 Found 8 errors

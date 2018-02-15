@@ -3,61 +3,40 @@ Error ----------------------------------------------------------- imports.js:4:9
 Importing from an untyped module makes it `any` and is not safe! Did you mean to
 add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
-Error: imports.js:4
-  4: import {FooObj} from './untyped_exports.js'; //Error
-             ^^^^^^ Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
 Error ----------------------------------------------------------- imports.js:5:1
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to
 add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
-Error: imports.js:5
-  5: import * as All from './untyped_exports.js'; //Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
 Error ----------------------------------------------------------- imports.js:8:8
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to
 add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
-Error: imports.js:8
-  8: import BarObj from './untyped_exports.js'; //Error
-            ^^^^^^ Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
 Error ---------------------------------------------------------- imports.js:11:9
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to
 add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
-Error: imports.js:11
- 11: import {BazObj} from './untyped_exports.js'; //Error
-             ^^^^^^ Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`? (`untyped-import`)
 
 Error --------------------------------------------------------- imports.js:14:17
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to
 add `// @flow` to the top of `./untyped_exports`? (`untyped-import`)
 
-Error: imports.js:14
- 14: const BarObj2 = require("./untyped_exports"); //Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports`? (`untyped-import`)
 
 Error --------------------------------------------------------- imports.js:22:23
 
 Cannot resolve module `./nonexistent.js`.
 
-Error: imports.js:22
- 22: import {BeepObj} from './nonexistent.js';
-                           ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 Error --------------------------------------------------------- imports.js:23:21
 
 Cannot resolve module `./nonexistent.js`.
 
-Error: imports.js:23
- 23: import BoopObj from './nonexistent.js';
-                         ^^^^^^^^^^^^^^^^^^ Cannot resolve module `./nonexistent.js`.
 
 
 Found 7 errors

@@ -3,107 +3,43 @@ Error ------------------------------------------------------------- test.js:18:2
 Cannot cast `new C().foo()` to boolean because string is incompatible with
 boolean.
 
-Error: test.js:18
- 18: ((new C).foo(): boolean); // last wins
-      ^^^^^^^^^^^^^ Cannot cast `new C().foo()` to boolean because string [1] is incompatible with boolean [2].
-  References:
-    7:   foo(): string { return "hello" } // last wins
-                ^^^^^^ [1]: string
-   18: ((new C).foo(): boolean); // last wins
-                       ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:19:2
 
 Cannot cast `new C().x` to boolean because string is incompatible with boolean.
 
-Error: test.js:19
- 19: ((new C).x: boolean); // last wins
-      ^^^^^^^^^ Cannot cast `new C().x` to boolean because string [1] is incompatible with boolean [2].
-  References:
-    9:   x: string; // last wins
-            ^^^^^^ [1]: string
-   19: ((new C).x: boolean); // last wins
-                   ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:20:2
 
 Cannot cast `new C().bar` to boolean because string is incompatible with
 boolean.
 
-Error: test.js:20
- 20: ((new C).bar: boolean); // last wins
-      ^^^^^^^^^^^ Cannot cast `new C().bar` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   11:   bar: string; // field wins over method
-              ^^^^^^ [1]: string
-   20: ((new C).bar: boolean); // last wins
-                     ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:21:2
 
 Cannot cast `new C().qux` to boolean because number is incompatible with
 boolean.
 
-Error: test.js:21
- 21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
-      ^^^^^^^^^^^ Cannot cast `new C().qux` to boolean because number [1] is incompatible with boolean [2].
-  References:
-   12:   qux: number;
-              ^^^^^^ [1]: number
-   21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
-                     ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:38:2
 
 Cannot cast `o.foo()` to boolean because string is incompatible with boolean.
 
-Error: test.js:38
- 38: (o.foo(): boolean); // last wins
-      ^^^^^^^ Cannot cast `o.foo()` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   27:   foo(): string { return "hello" }, // last wins
-                ^^^^^^ [1]: string
-   38: (o.foo(): boolean); // last wins
-                 ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:39:2
 
 Cannot cast `o.x` to boolean because string is incompatible with boolean.
 
-Error: test.js:39
- 39: (o.x: boolean); // last wins
-      ^^^ Cannot cast `o.x` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   29:   x: "hello", // last wins
-            ^^^^^^^ [1]: string
-   39: (o.x: boolean); // last wins
-             ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:40:2
 
 Cannot cast `o.bar` to boolean because string is incompatible with boolean.
 
-Error: test.js:40
- 40: (o.bar: boolean); // last wins
-      ^^^^^ Cannot cast `o.bar` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   31:   bar: "hello", // last wins
-              ^^^^^^^ [1]: string
-   40: (o.bar: boolean); // last wins
-               ^^^^^^^ [2]: boolean
 
 Error ------------------------------------------------------------- test.js:41:2
 
 Cannot cast `o.qux()` to boolean because string is incompatible with boolean.
 
-Error: test.js:41
- 41: (o.qux(): boolean); // last wins
-      ^^^^^^^ Cannot cast `o.qux()` to boolean because string [1] is incompatible with boolean [2].
-  References:
-   33:   qux(): string { return "hello" }, // last wins
-                ^^^^^^ [1]: string
-   41: (o.qux(): boolean); // last wins
-                 ^^^^^^^ [2]: boolean
 
 
 Found 8 errors

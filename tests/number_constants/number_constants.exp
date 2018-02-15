@@ -3,83 +3,35 @@ Error ------------------------------------------------- number_constants.js:2:17
 Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number is incompatible
 with string.
 
-Error: number_constants.js:2
-  2: var b: string = Number.MAX_SAFE_INTEGER;
-                     ^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because number [1] is incompatible with string [2].
-  References:
-  125:     static MAX_SAFE_INTEGER: number;
-                                    ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:125
-    2: var b: string = Number.MAX_SAFE_INTEGER;
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------- number_constants.js:4:17
 
 Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number is incompatible
 with string.
 
-Error: number_constants.js:4
-  4: var d: string = Number.MIN_SAFE_INTEGER;
-                     ^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because number [1] is incompatible with string [2].
-  References:
-  127:     static MIN_SAFE_INTEGER: number;
-                                    ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:127
-    4: var d: string = Number.MIN_SAFE_INTEGER;
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------- number_constants.js:6:17
 
 Cannot assign `Number.MAX_VALUE` to `f` because number is incompatible with
 string.
 
-Error: number_constants.js:6
-  6: var f: string = Number.MAX_VALUE;
-                     ^^^^^^^^^^^^^^^^ Cannot assign `Number.MAX_VALUE` to `f` because number [1] is incompatible with string [2].
-  References:
-  126:     static MAX_VALUE: number;
-                             ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:126
-    6: var f: string = Number.MAX_VALUE;
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------- number_constants.js:8:17
 
 Cannot assign `Number.MIN_VALUE` to `h` because number is incompatible with
 string.
 
-Error: number_constants.js:8
-  8: var h: string = Number.MIN_VALUE;
-                     ^^^^^^^^^^^^^^^^ Cannot assign `Number.MIN_VALUE` to `h` because number [1] is incompatible with string [2].
-  References:
-  128:     static MIN_VALUE: number;
-                             ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:128
-    8: var h: string = Number.MIN_VALUE;
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------ number_constants.js:10:17
 
 Cannot assign `Number.NaN` to `j` because number is incompatible with string.
 
-Error: number_constants.js:10
- 10: var j: string = Number.NaN;
-                     ^^^^^^^^^^ Cannot assign `Number.NaN` to `j` because number [1] is incompatible with string [2].
-  References:
-  129:     static NaN: number;
-                       ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:129
-   10: var j: string = Number.NaN;
-              ^^^^^^ [2]: string
 
 Error ------------------------------------------------ number_constants.js:12:17
 
 Cannot assign `Number.EPSILON` to `l` because number is incompatible with
 string.
 
-Error: number_constants.js:12
- 12: var l: string = Number.EPSILON;
-                     ^^^^^^^^^^^^^^ Cannot assign `Number.EPSILON` to `l` because number [1] is incompatible with string [2].
-  References:
-  124:     static EPSILON: number;
-                           ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:124
-   12: var l: string = Number.EPSILON;
-              ^^^^^^ [2]: string
 
 
 Found 6 errors

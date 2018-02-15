@@ -3,28 +3,12 @@ Error ------------------------------------------------------------- main.js:12:4
 Cannot assign `<CustomComponent />` to `b` because in property `type`,
 `CustomComponent` is incompatible with `CustomComponentNope`.
 
-Error: main.js:12
- 12:   <CustomComponent prop="asdf" />; // Error: Bad class type
-        ^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `b` because in property `type`, `CustomComponent` [1] is incompatible with `CustomComponentNope` [2].
-  References:
-    6: class CustomComponent extends React.Component<{prop: string}, void> {}
-             ^^^^^^^^^^^^^^^ [1]: `CustomComponent`
-    7: class CustomComponentNope extends React.Component<{prop: string}, void> {}
-             ^^^^^^^^^^^^^^^^^^^ [2]: `CustomComponentNope`
 
 Error ------------------------------------------------------------- main.js:14:3
 
 Cannot assign `<CustomComponent />` to `c` because in property `props`, property
 `prop1` is missing in object type but exists in object type.
 
-Error: main.js:14
- 14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `c` because in property `props`, property `prop1` is missing in object type [1] but exists in object type [2].
-  References:
-    6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                     ^^^^^^^^^^^^^^ [1]: object type
-   13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                            ^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------- main.js:14:4
 
@@ -32,14 +16,6 @@ Cannot assign `<CustomComponent />` to `c` because in property `type` and then
 type argument `Props`, property `prop` is missing in object type but exists in
 object type.
 
-Error: main.js:14
- 14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-        ^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `c` because in property `type` and then type argument `Props`, property `prop` is missing in object type [1] but exists in object type [2].
-  References:
-   13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                            ^^^^^^^^^^^^^^^ [1]: object type
-    6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                     ^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------- main.js:14:4
 
@@ -47,28 +23,12 @@ Cannot assign `<CustomComponent />` to `c` because in property `type` and then
 type argument `Props`, property `prop1` is missing in object type but exists in
 object type.
 
-Error: main.js:14
- 14:   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-        ^^^^^^^^^^^^^^^ Cannot assign `<CustomComponent />` to `c` because in property `type` and then type argument `Props`, property `prop1` is missing in object type [1] but exists in object type [2].
-  References:
-    6: class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                     ^^^^^^^^^^^^^^ [1]: object type
-   13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
-                                            ^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------ main.js:21:27
 
 Cannot assign `<div />` to `e` because in property `type`, `div` is incompatible
 with string literal `span`.
 
-Error: main.js:21
- 21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                               ^^^ Cannot assign `<div />` to `e` because in property `type`, `div` [1] is incompatible with string literal `span` [2].
-  References:
-   21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                                 ^^^ [1]: `div`
-   21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
-                      ^^^^^^ [2]: string literal `span`
 
 
 Found 5 errors

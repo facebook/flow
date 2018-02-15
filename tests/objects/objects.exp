@@ -3,262 +3,112 @@ Error ----------------------------------------------------- compatibility.js:3:9
 Cannot assign `y` to `x` because in property `x`, property `bar` is missing in
 object type but exists in object type.
 
-Error: compatibility.js:3
-  3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-             ^ Cannot assign `y` to `x` because in property `x`, property `bar` is missing in object type [1] but exists in object type [2].
-  References:
-    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                          ^^^^^^^^^^^^^^^ [1]: object type
-    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                     ^^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------- compatibility.js:3:9
 
 Cannot assign `y` to `x` because in property `x`, property `foo` is missing in
 object type but exists in object type.
 
-Error: compatibility.js:3
-  3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-             ^ Cannot assign `y` to `x` because in property `x`, property `foo` is missing in object type [1] but exists in object type [2].
-  References:
-    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                     ^^^^^^^^^^^^^^^ [1]: object type
-    2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                          ^^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------- compatibility.js:7:9
 
 Cannot assign `y` to `x` because in property `foo`, number is incompatible with
 string.
 
-Error: compatibility.js:7
-  7:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ Cannot assign `y` to `x` because in property `foo`, number [1] is incompatible with string [2].
-  References:
-    6:   function(x: { foo: string }, y: { foo: number }) {
-                                                ^^^^^^ [1]: number
-    6:   function(x: { foo: string }, y: { foo: number }) {
-                            ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- compatibility.js:11:9
 
 Cannot assign `y` to `x` because in property `x.foo`, number is incompatible
 with string.
 
-Error: compatibility.js:11
- 11:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ Cannot assign `y` to `x` because in property `x.foo`, number [1] is incompatible with string [2].
-  References:
-   10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                                            ^^^^^^ [1]: number
-   10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                 ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- compatibility.js:15:9
 
 Cannot assign `y` to `x` because in property `foo`, number is incompatible with
 string.
 
-Error: compatibility.js:15
- 15:     x = y; // 1 error: number !~> string
-             ^ Cannot assign `y` to `x` because in property `foo`, number [1] is incompatible with string [2].
-  References:
-   14:   function(x: { +foo: string }, y: { +foo: number }) {
-                                                  ^^^^^^ [1]: number
-   14:   function(x: { +foo: string }, y: { +foo: number }) {
-                             ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- compatibility.js:19:9
 
 Cannot assign `y` to `x` because in property `x.foo`, number is incompatible
 with string.
 
-Error: compatibility.js:19
- 19:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ Cannot assign `y` to `x` because in property `x.foo`, number [1] is incompatible with string [2].
-  References:
-   18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                                              ^^^^^^ [1]: number
-   18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                  ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- compatibility.js:23:9
 
 Cannot assign `y` to `x` because in property `foo`, string is incompatible with
 number.
 
-Error: compatibility.js:23
- 23:     x = y; // 1 error: string !~> number
-             ^ Cannot assign `y` to `x` because in property `foo`, string [1] is incompatible with number [2].
-  References:
-   22:   function(x: { -foo: string }, y: { -foo: number }) {
-                             ^^^^^^ [1]: string
-   22:   function(x: { -foo: string }, y: { -foo: number }) {
-                                                  ^^^^^^ [2]: number
 
 Error ---------------------------------------------------- compatibility.js:27:9
 
 Cannot assign `y` to `x` because in property `x.foo`, number is incompatible
 with string.
 
-Error: compatibility.js:27
- 27:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ Cannot assign `y` to `x` because in property `x.foo`, number [1] is incompatible with string [2].
-  References:
-   26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                                              ^^^^^^ [1]: number
-   26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                  ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- conversion.js:10:2
 
 Cannot cast `Object(...)` to `Number` because object type is incompatible with
 `Number`.
 
-Error: conversion.js:10
- 10: (Object(undefined): Number); // error
-      ^^^^^^^^^^^^^^^^^ Cannot cast `Object(...)` to `Number` because object type [1] is incompatible with `Number` [2].
-  References:
-   26:     static (o: ?void): {[key: any]: any};
-                              ^^^^^^^^^^^^^^^^^ [1]: object type. See lib: <BUILTINS>/core.js:26
-   10: (Object(undefined): Number); // error
-                           ^^^^^^ [2]: `Number`
 
 Error ------------------------------------------------------- conversion.js:19:4
 
 Cannot call `z.charAt` because property `charAt` is missing in `Number`.
 
-Error: conversion.js:19
- 19: (z.charAt(0): string);
-        ^^^^^^ Cannot call `z.charAt` because property `charAt` is missing in `Number` [1].
-  References:
-   28:     static (o: number): Number;
-                               ^^^^^^ [1]: `Number`. See lib: <BUILTINS>/core.js:28
 
 Error ----------------------------------------------------------- objects.js:4:4
 
 Cannot get `x.foo` because property `foo` is missing in object type.
 
-Error: objects.js:4
-  4: (x.foo : string);     // error, key doesn't exist
-        ^^^ Cannot get `x.foo` because property `foo` is missing in object type [1].
-  References:
-    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ----------------------------------------------------------- objects.js:5:4
 
 Cannot get `x['foo']` because property `foo` is missing in object type.
 
-Error: objects.js:5
-  5: (x['foo'] : string);  // error, key doesn't exist
-        ^^^^^ Cannot get `x['foo']` because property `foo` is missing in object type [1].
-  References:
-    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error ----------------------------------------------------------- objects.js:7:2
 
 Cannot cast `x.bar` to boolean because string is incompatible with boolean.
 
-Error: objects.js:7
-  7: (x.bar: boolean);     // error, string !~> boolean
-      ^^^^^ Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2].
-  References:
-    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-                                    ^^^^^^ [1]: string
-    7: (x.bar: boolean);     // error, string !~> boolean
-               ^^^^^^^ [2]: boolean
 
 Error ----------------------------------------------------------- objects.js:8:2
 
 Cannot cast `x['123']` to boolean because string is incompatible with boolean.
 
-Error: objects.js:8
-  8: (x['123'] : boolean); // error, string !~> boolean
-      ^^^^^^^^ Cannot cast `x['123']` to boolean because string [1] is incompatible with boolean [2].
-  References:
-    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-                       ^^^^^^ [1]: string
-    8: (x['123'] : boolean); // error, string !~> boolean
-                   ^^^^^^^ [2]: boolean
 
 Error ---------------------------------------------------------- objects.js:9:12
 
 Cannot assign `false` to `x['123']` because boolean is incompatible with string.
 
-Error: objects.js:9
-  9: x['123'] = false;     // error, boolean !~> string
-                ^^^^^ Cannot assign `false` to `x['123']` because boolean [1] is incompatible with string [2].
-  References:
-    9: x['123'] = false;     // error, boolean !~> string
-                  ^^^^^ [1]: boolean
-    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-                       ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- objects.js:12:4
 
 Cannot get `x[`...`]` because property `foo` is missing in object type.
 
-Error: objects.js:12
- 12: (x[`foo`]: string);   // error, key doesn't exist
-        ^^^^^ Cannot get `x[`...`]` because property `foo` is missing in object type [1].
-  References:
-    3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object type
 
 Error --------------------------------------------------------- objects.js:15:12
 
 Cannot assign `123` to `y['foo']` because number is incompatible with string.
 
-Error: objects.js:15
- 15: y['foo'] = 123; // error, number !~> string
-                ^^^ Cannot assign `123` to `y['foo']` because number [1] is incompatible with string [2].
-  References:
-   15: y['foo'] = 123; // error, number !~> string
-                  ^^^ [1]: number
-   14: var y : {foo: string} = {foo: 'bar'};
-                     ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- objects.js:16:3
 
 Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in object
 type.
 
-Error: objects.js:16
- 16: y['bar'] = 'abc'; // error, property not found
-       ^^^^^ Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in object type [1].
-  References:
-   14: var y : {foo: string} = {foo: 'bar'};
-               ^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------------- objects.js:18:2
 
 Cannot cast `y['hasOwnProperty']` to string because function type is
 incompatible with string.
 
-Error: objects.js:18
- 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-      ^^^^^^^^^^^^^^^^^^^ Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompatible with string [2].
-  References:
-   50:     hasOwnProperty(prop: any): boolean;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function type. See lib: <BUILTINS>/core.js:50
-   18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-                             ^^^^^^ [2]: string
 
 Error ------------------------------------------------ unaliased_assign.js:20:10
 
 Cannot assign `obj` to `glob` because in property `x`, number is incompatible
 with string.
 
-Error: unaliased_assign.js:20
- 20:   glob = obj;    // error: subsequent assignment might make glob.x a number
-              ^^^ Cannot assign `obj` to `glob` because in property `x`, number [1] is incompatible with string [2].
-  References:
-   18:   var obj: { x: string | number };
-                                ^^^^^^ [1]: number
-   15: var glob: { x: string } = { x: "hey" };
-                      ^^^^^^ [2]: string
 
 
 Found 20 errors

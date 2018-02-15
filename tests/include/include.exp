@@ -3,27 +3,11 @@ Error ------------------------------------------------ ../foo/batman/baz.js:3:17
 Cannot assign `"not a number"` to `x` because string is incompatible with
 number.
 
-Error: ../foo/batman/baz.js:3
-  3: var x: number = "not a number" // Error string ~> number
-                     ^^^^^^^^^^^^^^ Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2].
-  References:
-    3: var x: number = "not a number" // Error string ~> number
-                       ^^^^^^^^^^^^^^ [1]: string
-    3: var x: number = "not a number" // Error string ~> number
-              ^^^^^^ [2]: number
 
 Error -------------------------------------------------- ../included/test.js:1:2
 
 Cannot cast `123` to string because number is incompatible with string.
 
-Error: ../included/test.js:1
-  1: (123: string);
-      ^^^ Cannot cast `123` to string because number [1] is incompatible with string [2].
-  References:
-    1: (123: string);
-        ^^^ [1]: number
-    1: (123: string);
-             ^^^^^^ [2]: string
 
 
 Found 2 errors

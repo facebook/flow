@@ -3,28 +3,12 @@ Error -------------------------------------------------------------- cli2.js:5:3
 Cannot call `f` with `"..."` bound to `x` because string is incompatible with
 number.
 
-Error: cli2.js:5
-  5: f("...");
-       ^^^^^ Cannot call `f` with `"..."` bound to `x` because string [1] is incompatible with number [2].
-  References:
-    5: f("...");
-         ^^^^^ [1]: string
-    7: function f(x:number):number { g(x); return x; }
-                    ^^^^^^ [2]: number. See: lib.js:7
 
 Error -------------------------------------------------------------- lib.js:7:33
 
 Cannot call `g` with `x` bound to `x` because number is incompatible with
 string.
 
-Error: lib.js:7
-  7: function f(x:number):number { g(x); return x; }
-                                     ^ Cannot call `g` with `x` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    7: function f(x:number):number { g(x); return x; }
-                    ^^^^^^ [1]: number
-    3: function g(x:string) { }
-                    ^^^^^^ [2]: string
 
 
 Found 2 errors

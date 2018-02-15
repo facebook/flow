@@ -2,82 +2,34 @@ Error -------------------------------------------------------------- test.js:3:7
 
 Cannot assign `M(...)` to `N.x` because string is incompatible with number.
 
-Error: test.js:3
-  3: N.x = M(N.x);
-           ^^^^^^ Cannot assign `M(...)` to `N.x` because string [1] is incompatible with number [2].
-  References:
-    2:     declare module.exports: (x: string) => string;
-                                                  ^^^^^^ [1]: string. See lib: lib/lib.js:2
-    5:     declare var x: number;
-                          ^^^^^^ [2]: number. See lib: lib/lib.js:5
 
 Error -------------------------------------------------------------- test.js:3:9
 
 Cannot call `M` with `N.x` bound to `x` because number is incompatible with
 string.
 
-Error: test.js:3
-  3: N.x = M(N.x);
-             ^^^ Cannot call `M` with `N.x` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    5:     declare var x: number;
-                          ^^^^^^ [1]: number. See lib: lib/lib.js:5
-    2:     declare module.exports: (x: string) => string;
-                                       ^^^^^^ [2]: string. See lib: lib/lib.js:2
 
 Error -------------------------------------------------------------- test.js:5:7
 
 Cannot assign `P(...)` to `N.y` because string is incompatible with number.
 
-Error: test.js:5
-  5: N.y = P(N.y);
-           ^^^^^^ Cannot assign `P(...)` to `N.y` because string [1] is incompatible with number [2].
-  References:
-    2:     declare module.exports: (x: string) => string;
-                                                  ^^^^^^ [1]: string. See lib: lib/lib.js:2
-    6:     declare var y: number;
-                          ^^^^^^ [2]: number. See lib: lib/lib.js:6
 
 Error -------------------------------------------------------------- test.js:5:9
 
 Cannot call `P` with `N.y` bound to `x` because number is incompatible with
 string.
 
-Error: test.js:5
-  5: N.y = P(N.y);
-             ^^^ Cannot call `P` with `N.y` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    6:     declare var y: number;
-                          ^^^^^^ [1]: number. See lib: lib/lib.js:6
-    2:     declare module.exports: (x: string) => string;
-                                       ^^^^^^ [2]: string. See lib: lib/lib.js:2
 
 Error -------------------------------------------------------------- test.js:7:7
 
 Cannot assign `Q(...)` to `N.z` because string is incompatible with number.
 
-Error: test.js:7
-  7: N.z = Q(N.z);
-           ^^^^^^ Cannot assign `Q(...)` to `N.z` because string [1] is incompatible with number [2].
-  References:
-    2:     declare module.exports: (x: string) => string;
-                                                  ^^^^^^ [1]: string. See lib: lib/lib.js:2
-    7:     declare var z: number;
-                          ^^^^^^ [2]: number. See lib: lib/lib.js:7
 
 Error -------------------------------------------------------------- test.js:7:9
 
 Cannot call `Q` with `N.z` bound to `x` because number is incompatible with
 string.
 
-Error: test.js:7
-  7: N.z = Q(N.z);
-             ^^^ Cannot call `Q` with `N.z` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    7:     declare var z: number;
-                          ^^^^^^ [1]: number. See lib: lib/lib.js:7
-    2:     declare module.exports: (x: string) => string;
-                                       ^^^^^^ [2]: string. See lib: lib/lib.js:2
 
 
 Found 6 errors

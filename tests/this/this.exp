@@ -2,129 +2,55 @@ Error ------------------------------------------------------------ This.js:29:15
 
 Cannot get `this.x` because property `x` is missing in global object.
 
-Error: This.js:29
- 29:   return this.x
-                   ^ Cannot get `this.x` because property `x` is missing in global object [1].
-  References:
-   29:   return this.x
-                ^^^^ [1]: global object
 
 Error ------------------------------------------------------------ This.js:29:10
 
 Cannot return `this.x` because string is incompatible with number.
 
-Error: This.js:29
- 29:   return this.x
-              ^^^^^^ Cannot return `this.x` because string [1] is incompatible with number [2].
-  References:
-   34: var f1_3 = f1.bind({x: ""})();           // error, string -> number
-                              ^^ [1]: string
-   28: function f1() : number {
-                       ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ This.js:33:21
 
 Cannot assign `f1.bind(...)()` to `f1_2` because number is incompatible with
 string.
 
-Error: This.js:33
- 33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
-                         ^^^^^^^^^^^^^^^^^ Cannot assign `f1.bind(...)()` to `f1_2` because number [1] is incompatible with string [2].
-  References:
-   28: function f1() : number {
-                       ^^^^^^ [1]: number
-   33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
-                  ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ This.js:41:15
 
 Cannot get `this.x` because property `x` is missing in global object.
 
-Error: This.js:41
- 41:   return this.x
-                   ^ Cannot get `this.x` because property `x` is missing in global object [1].
-  References:
-   41:   return this.x
-                ^^^^ [1]: global object
 
 Error ------------------------------------------------------------ This.js:48:34
 
 Cannot get `this.x` because property `x` is missing in global object.
 
-Error: This.js:48
- 48:     var a2 = () => { return this.x };
-                                      ^ Cannot get `this.x` because property `x` is missing in global object [1].
-  References:
-   48:     var a2 = () => { return this.x };
-                                   ^^^^ [1]: global object
 
 Error ------------------------------------------------------------ This.js:49:12
 
 Cannot return `a2()` because string is incompatible with number.
 
-Error: This.js:49
- 49:     return a2()
-                ^^^^ Cannot return `a2()` because string [1] is incompatible with number [2].
-  References:
-   54: var f2_3 = f2.bind({x: ""})();           // error, string -> number
-                              ^^ [1]: string
-   47: function f2() : number {
-                       ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ This.js:53:21
 
 Cannot assign `f2.bind(...)()` to `f2_2` because number is incompatible with
 string.
 
-Error: This.js:53
- 53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
-                         ^^^^^^^^^^^^^^^^^ Cannot assign `f2.bind(...)()` to `f2_2` because number [1] is incompatible with string [2].
-  References:
-   47: function f2() : number {
-                       ^^^^^^ [1]: number
-   53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
-                  ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- This.js:58:2
 
 Cannot cast `this` to undefined because global object is incompatible with
 undefined.
 
-Error: This.js:58
- 58: (this: void);
-      ^^^^ Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2].
-  References:
-   58: (this: void);
-        ^^^^ [1]: global object
-   58: (this: void);
-              ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------- arrows.js:16:2
 
 Cannot cast `j` to `D` because `C` is incompatible with `D`.
 
-Error: arrows.js:16
- 16: (j: D); // error, since return type of bar is C, not the type of `this`
-      ^ Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2].
-  References:
-    1: class C {
-             ^ [1]: `C`
-   16: (j: D); // error, since return type of bar is C, not the type of `this`
-           ^ [2]: `D`
 
 Error ---------------------------------------------------------- arrows.js:24:17
 
 Cannot call `super.foo` with empty string bound to `x` because string is
 incompatible with number.
 
-Error: arrows.js:24
- 24:       super.foo(""); // find super method, error due to incorrect arg
-                     ^^ Cannot call `super.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-  References:
-   24:       super.foo(""); // find super method, error due to incorrect arg
-                       ^^ [1]: string
-   19:   foo(x: number) { }
-                ^^^^^^ [2]: number
 
 
 Found 10 errors

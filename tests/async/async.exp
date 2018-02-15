@@ -3,170 +3,79 @@ Error ----------------------------------------------------------- async.js:12:10
 Cannot return `1` because in type argument `R`, number is incompatible with
 boolean.
 
-Error: async.js:12
- 12:   return 1;  // error, number != bool
-              ^ Cannot return `1` because in type argument `R`, number [1] is incompatible with boolean [2].
-  References:
-   12:   return 1;  // error, number != bool
-                ^ [1]: number
-   11: async function f1(): Promise<bool> {
-                                    ^^^^ [2]: boolean
 
 Error ----------------------------------------------------------- async.js:31:10
 
 Cannot return `await p` because in type argument `R`, number is incompatible
 with boolean.
 
-Error: async.js:31
- 31:   return await p; // error, number != bool
-              ^^^^^^^ Cannot return `await p` because in type argument `R`, number [1] is incompatible with boolean [2].
-  References:
-   30: async function f4(p: Promise<number>): Promise<bool> {
-                                    ^^^^^^ [1]: number
-   30: async function f4(p: Promise<number>): Promise<bool> {
-                                                      ^^^^ [2]: boolean
 
 Error ----------------------------------------------------------- async.js:45:22
 
 Cannot expect undefined as the return type of async function because undefined
 is incompatible with implicitly-returned `Promise`.
 
-Error: async.js:45
- 45:   static async m(a): void { await a; } // error, void != Promise<void>
-                          ^^^^ Cannot expect undefined as the return type of async function because undefined [1] is incompatible with implicitly-returned `Promise`.
-  References:
-   45:   static async m(a): void { await a; } // error, void != Promise<void>
-                            ^^^^ [1]: undefined
 
 Error ---------------------------------------------------------- async2.js:13:21
 
 Cannot assign `a` to `c` because number is incompatible with string.
 
-Error: async2.js:13
- 13:     var c: string = a; // Error: number ~> string
-                         ^ Cannot assign `a` to `c` because number [1] is incompatible with string [2].
-  References:
-    7:     return 42;
-                  ^^ [1]: number
-   13:     var c: string = a; // Error: number ~> string
-                  ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- async2.js:32:30
 
 Cannot assign `voidoid1` to `voidoid3` because in the return value, `Promise` is
 incompatible with undefined.
 
-Error: async2.js:32
- 32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
-                                  ^^^^^^^^ Cannot assign `voidoid1` to `voidoid3` because in the return value, `Promise` [1] is incompatible with undefined [2].
-  References:
-   26:   async function voidoid1() {
-                                  ^ [1]: `Promise`
-   32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
-                             ^^^^ [2]: undefined
 
 Error ---------------------------------------------------------- async2.js:50:30
 
 Cannot expect undefined as the return type of async function because undefined
 is incompatible with implicitly-returned `Promise`.
 
-Error: async2.js:50
- 50:   async function voidoid5(): void { // error, void != Promise<void>
-                                  ^^^^ Cannot expect undefined as the return type of async function because undefined [1] is incompatible with implicitly-returned `Promise`.
-  References:
-   50:   async function voidoid5(): void { // error, void != Promise<void>
-                                    ^^^^ [1]: undefined
 
 Error ---------------------------------------------------------- async2.js:57:13
 
 Cannot expect `Promise` as the return type of async function because in type
 argument `R`, number is incompatible with implicitly-returned undefined.
 
-Error: async2.js:57
- 57:   : Promise<number> { // error, number != void
-                 ^^^^^^ Cannot expect `Promise` as the return type of async function because in type argument `R`, number [1] is incompatible with implicitly-returned undefined.
-  References:
-   57:   : Promise<number> { // error, number != void
-                   ^^^^^^ [1]: number
 
 Error ---------------------------------------------------------- async3.js:31:19
 
 Cannot assign `a` to `c` because number is incompatible with string.
 
-Error: async3.js:31
- 31:   var c: string = a;
-                       ^ Cannot assign `a` to `c` because number [1] is incompatible with string [2].
-  References:
-   12:   return 42;
-                ^^ [1]: number
-   31:   var c: string = a;
-                ^^^^^^ [2]: string
 
 Error ------------------------------------------------- async_return_void.js:4:3
 
 Cannot return undefined because in type argument `R`, undefined is incompatible
 with string.
 
-Error: async_return_void.js:4
-  4:   return;
-       ^^^^^^^ Cannot return undefined because in type argument `R`, undefined [1] is incompatible with string [2].
-  References:
-    4:   return;
-         ^^^^^^^ [1]: undefined
-    3: async function foo1(): Promise<string> {
-                                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------ async_return_void.js:8:10
 
 Cannot return `undefined` because in type argument `R`, undefined is
 incompatible with string.
 
-Error: async_return_void.js:8
-  8:   return undefined;
-              ^^^^^^^^^ Cannot return `undefined` because in type argument `R`, undefined [1] is incompatible with string [2].
-  References:
-    8:   return undefined;
-                ^^^^^^^^^ [1]: undefined
-    7: async function foo2(): Promise<string> {
-                                      ^^^^^^ [2]: string
 
 Error ----------------------------------------------- async_return_void.js:13:10
 
 Cannot return `bar()` because in type argument `R`, undefined is incompatible
 with string.
 
-Error: async_return_void.js:13
- 13:   return bar();
-              ^^^^^ Cannot return `bar()` because in type argument `R`, undefined [1] is incompatible with string [2].
-  References:
-   12:   function bar() { }
-                       ^ [1]: undefined
-   11: async function foo3(): Promise<string> {
-                                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------ await_not_in_async.js:5:9
 
 Unexpected number
 
-Error: await_not_in_async.js:5
-  5:   await 1;
-             ^ Unexpected number
 
 Error ----------------------------------------------- await_not_in_async2.js:6:9
 
 Unexpected number
 
-Error: await_not_in_async2.js:6
-  6: f(await 1);
-             ^ Unexpected number
 
 Error ----------------------------------------------- await_not_in_async3.js:6:9
 
 Unexpected number
 
-Error: await_not_in_async3.js:6
-  6: f(await 1);
-             ^ Unexpected number
 
 
 Found 14 errors

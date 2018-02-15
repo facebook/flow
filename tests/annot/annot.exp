@@ -3,110 +3,46 @@ Error ------------------------------------------------------------ annot.js:4:44
 Cannot assign `foo` to `bar` because in the first argument, string is
 incompatible with number.
 
-Error: annot.js:4
-  4: var bar: (str:number, i:number)=> string = foo;
-                                                ^^^ Cannot assign `foo` to `bar` because in the first argument, string [1] is incompatible with number [2].
-  References:
-    1: function foo(str:string, i:number):string {
-                        ^^^^^^ [1]: string
-    4: var bar: (str:number, i:number)=> string = foo;
-                     ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ annot.js:6:58
 
 Cannot return `foo(...)` because string is incompatible with number.
 
-Error: annot.js:6
-  6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                                              ^^^^^^^^^^ Cannot return `foo(...)` because string [1] is incompatible with number [2].
-  References:
-    1: function foo(str:string, i:number):string {
-                                          ^^^^^^ [1]: string
-    6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                                ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ annot.js:8:46
 
 Cannot assign object literal to `obj` because property `j` is missing in object
 literal but exists in object type.
 
-Error: annot.js:8
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign object literal to `obj` because property `j` is missing in object literal [1] but exists in object type [2].
-  References:
-    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: object literal
-    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------------------ annot.js:8:62
 
 Cannot assign object literal to `obj` because in property `i`, string is
 incompatible with number.
 
-Error: annot.js:8
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                                  ^^^^^ Cannot assign object literal to `obj` because in property `i`, string [1] is incompatible with number [2].
-  References:
-    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                                    ^^^^^ [1]: string
-    8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                               ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- annot.js:10:31
 
 Cannot assign array literal to `arr` because in type argument `T`, string is
 incompatible with number.
 
-Error: annot.js:10
- 10: var arr: Array<number> = [1,2,"..."];
-                                   ^^^^^ Cannot assign array literal to `arr` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   10: var arr: Array<number> = [1,2,"..."];
-                                     ^^^^^ [1]: string
-   10: var arr: Array<number> = [1,2,"..."];
-                      ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- annot.js:13:28
 
 Cannot assign array literal to `array` because in type argument `T`, string is
 incompatible with number.
 
-Error: annot.js:13
- 13: var array: number[] = [1,2,"..."];
-                                ^^^^^ Cannot assign array literal to `array` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   13: var array: number[] = [1,2,"..."];
-                                  ^^^^^ [1]: string
-   13: var array: number[] = [1,2,"..."];
-                  ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- annot.js:27:25
 
 Cannot assign object literal to `test_obj` because property `foo-bar` is missing
 in object literal but exists in `ObjType`.
 
-Error: annot.js:27
- 27: var test_obj: ObjType = { 'bar-foo': '23' };
-                             ^^^^^^^^^^^^^^^^^^^ Cannot assign object literal to `test_obj` because property `foo-bar` is missing in object literal [1] but exists in `ObjType` [2].
-  References:
-   27: var test_obj: ObjType = { 'bar-foo': '23' };
-                               ^^^^^^^^^^^^^^^^^^^ [1]: object literal
-   27: var test_obj: ObjType = { 'bar-foo': '23' };
-                     ^^^^^^^ [2]: `ObjType`
 
 Error ------------------------------------------------------------ annot.js:31:7
 
 Cannot assign `"hey"` to `n` because string is incompatible with number.
 
-Error: annot.js:31
- 31:   n = "hey"; // error
-           ^^^^^ Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2].
-  References:
-   31:   n = "hey"; // error
-             ^^^^^ [1]: string
-   30: function param_anno(n:number):void {
-                             ^^^^^^ [2]: number
 
 Error ----------------------------------------------------------- annot.js:46:14
 
@@ -114,64 +50,22 @@ Cannot assign `batchRequests.map(...)` to `batchRequests` because in type
 argument `T`, property `path` is missing in object literal but exists in object
 type.
 
-Error: annot.js:46
-                  v
- 46:       return {
- 47:         method: request.method,
- 48:         params: request.params,
- 49:         relative_url: request.path,
- 50:       };
-           ^ Cannot assign `batchRequests.map(...)` to `batchRequests` because in type argument `T`, property `path` is missing in object literal [1] but exists in object type [2].
-  References:
-                    v
-   46:       return {
-   47:         method: request.method,
-   48:         params: request.params,
-   49:         relative_url: request.path,
-   50:       };
-             ^ [1]: object literal
-   37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------------------------- annot.js:55:18
 
 Cannot assign `3` to `toz` because number is incompatible with null.
 
-Error: annot.js:55
- 55: var toz : null = 3;
-                      ^ Cannot assign `3` to `toz` because number [1] is incompatible with null [2].
-  References:
-   55: var toz : null = 3;
-                        ^ [1]: number
-   55: var toz : null = 3;
-                 ^^^^ [2]: null
 
 Error ------------------------------------------------------ forward_ref.js:1:32
 
 Cannot assign `null` to `myClassInstance` because null is incompatible with
 `MyClass`.
 
-Error: forward_ref.js:1
-  1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                                    ^^^^ Cannot assign `null` to `myClassInstance` because null [1] is incompatible with `MyClass` [2].
-  References:
-    1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                                      ^^^^ [1]: null
-    1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                            ^^^^^^^ [2]: `MyClass`
 
 Error ------------------------------------------------------ forward_ref.js:4:10
 
 Cannot return `null` because null is incompatible with `MyClass`.
 
-Error: forward_ref.js:4
-  4:   return null; // forward ref ok, null ~> class error
-              ^^^^ Cannot return `null` because null [1] is incompatible with `MyClass` [2].
-  References:
-    4:   return null; // forward ref ok, null ~> class error
-                ^^^^ [1]: null
-    3: function bar(): MyClass {
-                       ^^^^^^^ [2]: `MyClass`
 
 
 Found 12 errors

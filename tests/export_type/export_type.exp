@@ -2,118 +2,48 @@ Error -------------------------------------------------------- importer.js:11:23
 
 Cannot assign `'asdf'` to `b` because string is incompatible with number.
 
-Error: importer.js:11
- 11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-                           ^^^^^^ Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
-  References:
-   11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-                             ^^^^^^ [1]: string
-   11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-              ^^^^^^^^^^^^ [2]: number
 
 Error -------------------------------------------------------- importer.js:14:26
 
 Cannot assign `'asdf'` to `d` because string is incompatible with number.
 
-Error: importer.js:14
- 14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
-                              ^^^^^^ Cannot assign `'asdf'` to `d` because string [1] is incompatible with number [2].
-  References:
-   14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
-                                ^^^^^^ [1]: string
-   14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
-              ^^^^^^^^^^^^^^^ [2]: number
 
 Error -------------------------------------------------------- importer.js:17:18
 
 Cannot assign `'asdf'` to `f` because string is incompatible with number.
 
-Error: importer.js:17
- 17: var f: talias1 = 'asdf'; // Error: string ~> number
-                      ^^^^^^ Cannot assign `'asdf'` to `f` because string [1] is incompatible with number [2].
-  References:
-   17: var f: talias1 = 'asdf'; // Error: string ~> number
-                        ^^^^^^ [1]: string
-   17: var f: talias1 = 'asdf'; // Error: string ~> number
-              ^^^^^^^ [2]: number
 
 Error -------------------------------------------------------- importer.js:20:18
 
 Cannot assign `'asdf'` to `h` because string is incompatible with number.
 
-Error: importer.js:20
- 20: var h: talias3 = 'asdf'; // Error: string ~> number
-                      ^^^^^^ Cannot assign `'asdf'` to `h` because string [1] is incompatible with number [2].
-  References:
-   20: var h: talias3 = 'asdf'; // Error: string ~> number
-                        ^^^^^^ [1]: string
-   20: var h: talias3 = 'asdf'; // Error: string ~> number
-              ^^^^^^^ [2]: number
 
 Error -------------------------------------------------------- importer.js:24:18
 
 Cannot assign `'asdf'` to `j` because string is incompatible with number.
 
-Error: importer.js:24
- 24: var j: talias4 = 'asdf'; // Error: string ~> number
-                      ^^^^^^ Cannot assign `'asdf'` to `j` because string [1] is incompatible with number [2].
-  References:
-   24: var j: talias4 = 'asdf'; // Error: string ~> number
-                        ^^^^^^ [1]: string
-   24: var j: talias4 = 'asdf'; // Error: string ~> number
-              ^^^^^^^ [2]: number
 
 Error -------------------------------------------------------- importer.js:29:22
 
 Cannot assign object literal to `l` because in property `prop`, string is
 incompatible with number.
 
-Error: importer.js:29
- 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
-                          ^^^^^^ Cannot assign object literal to `l` because in property `prop`, string [1] is incompatible with number [2].
-  References:
-   29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
-                            ^^^^^^ [1]: string
-   15: export interface IFoo { prop: number };
-                                     ^^^^^^ [2]: number. See: types_only.js:15
 
 Error -------------------------------------------------------- importer.js:32:23
 
 Cannot assign object literal to `n` because in property `prop`, number is
 incompatible with string.
 
-Error: importer.js:32
- 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
-                           ^^ Cannot assign object literal to `n` because in property `prop`, number [1] is incompatible with string [2].
-  References:
-   32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
-                             ^^ [1]: number
-    5: export interface IFoo2 { prop: string };
-                                      ^^^^^^ [2]: string. See: types_only2.js:5
 
 Error ------------------------------------------------------- types_only.js:5:23
 
 Cannot assign `'asdf'` to `b` because string is incompatible with number.
 
-Error: types_only.js:5
-  5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-                           ^^^^^^ Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2].
-  References:
-    5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-                             ^^^^^^ [1]: string
-    5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
-              ^^^^^^^^^^^^ [2]: number
 
 Error ------------------------------------------------------- types_only.js:11:9
 
 Cannot reference type `standaloneType2` from a value position.
 
-Error: types_only.js:11
- 11: export {standaloneType2}; // Error: Missing `type` keyword
-             ^^^^^^^^^^^^^^^ Cannot reference type `standaloneType2` [1] from a value position.
-  References:
-   10: type standaloneType2 = number;
-            ^^^^^^^^^^^^^^^ [1]: `standaloneType2`
 
 
 Found 9 errors

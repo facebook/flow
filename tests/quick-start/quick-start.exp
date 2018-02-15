@@ -11,14 +11,6 @@ Error ----------------------------------------------------------------- a.js:4:2
 
 Cannot cast `0` to string because number is incompatible with string.
 
-Error: a.js:4
-  4: (0: string);
-      ^ Cannot cast `0` to string because number [1] is incompatible with string [2].
-  References:
-    4: (0: string);
-        ^ [1]: number
-    4: (0: string);
-           ^^^^^^ [2]: string
 
 
 Found 1 error
@@ -31,14 +23,6 @@ Error ----------------------------------------------------------------- a.js:4:2
 
 Cannot cast `0` to string because number is incompatible with string.
 
-Error: a.js:4
-  4: (0: string);
-      ^ Cannot cast `0` to string because number [1] is incompatible with string [2].
-  References:
-    4: (0: string);
-        ^ [1]: number
-    4: (0: string);
-           ^^^^^^ [2]: string
 
 
 Found 1 error

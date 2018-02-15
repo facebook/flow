@@ -3,84 +3,36 @@ Error ----------------------------------------------------------------- a.js:6:2
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: a.js:6
-  6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'B';
-                        ^^^ [1]: string. See: b.js:9
-    6: (require('./b'): void);
-                        ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- a.js:7:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: a.js:7
-  7: (require('C'): void);
-      ^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'C';
-                        ^^^ [1]: string. See: c.js:9
-    7: (require('C'): void);
-                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- b.js:6:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: b.js:6
-  6: (require('A'): void);
-      ^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'A';
-                        ^^^ [1]: string. See: a.js:9
-    6: (require('A'): void);
-                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- b.js:7:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: b.js:7
-  7: (require('D'): void);
-      ^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    8: module.exports = 'D';
-                        ^^^ [1]: string. See: d.js:8
-    7: (require('D'): void);
-                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- c.js:7:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: c.js:7
-  7: (require('./b'): void);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'B';
-                        ^^^ [1]: string. See: b.js:9
-    7: (require('./b'): void);
-                        ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- d.js:6:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: d.js:6
-  6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'B';
-                        ^^^ [1]: string. See: b.js:9
-    6: (require('./b'): void);
-                        ^^^^ [2]: undefined
 
 
 Found 6 errors
@@ -89,84 +41,36 @@ Error ----------------------------------------------------------------- a.js:6:2
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: a.js:6
-  6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'B';
-                        ^^^ [1]: string. See: b.js:9
-    6: (require('./b'): void);
-                        ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- a.js:7:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: a.js:7
-  7: (require('C'): void);
-      ^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'C';
-                        ^^^ [1]: string. See: c.js:9
-    7: (require('C'): void);
-                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- b.js:6:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: b.js:6
-  6: (require('A'): void);
-      ^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'A';
-                        ^^^ [1]: string. See: a.js:9
-    6: (require('A'): void);
-                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- b.js:7:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: b.js:7
-  7: (require('D'): void);
-      ^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    8: module.exports = 'D';
-                        ^^^ [1]: string. See: d.js:8
-    7: (require('D'): void);
-                      ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- c.js:7:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: c.js:7
-  7: (require('./b'): void);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'B';
-                        ^^^ [1]: string. See: b.js:9
-    7: (require('./b'): void);
-                        ^^^^ [2]: undefined
 
 Error ----------------------------------------------------------------- d.js:6:2
 
 Cannot cast `require(...)` to undefined because string is incompatible with
 undefined.
 
-Error: d.js:6
-  6: (require('./b'): void);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    9: module.exports = 'B';
-                        ^^^ [1]: string. See: b.js:9
-    6: (require('./b'): void);
-                        ^^^^ [2]: undefined
 
 
 Found 6 errors

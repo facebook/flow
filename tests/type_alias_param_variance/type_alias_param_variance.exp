@@ -3,48 +3,24 @@ Error ------------------------------------------------------------- test.js:7:18
 Cannot use `T` in an input/output position because `T` is expected to occur only
 in input positions.
 
-Error: test.js:7
-  7: type A<-T> = Foo<T>; // Error, Foo expects invariant type
-                      ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
-  References:
-    7: type A<-T> = Foo<T>; // Error, Foo expects invariant type
-               ^ [1]: `T`
 
 Error ------------------------------------------------------------- test.js:8:18
 
 Cannot use `T` in an input/output position because `T` is expected to occur only
 in output positions.
 
-Error: test.js:8
-  8: type B<+T> = Foo<T>; // Error, Foo expects invariant type
-                      ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
-  References:
-    8: type B<+T> = Foo<T>; // Error, Foo expects invariant type
-               ^ [1]: `T`
 
 Error ------------------------------------------------------------ test.js:10:18
 
 Cannot use `T` in an output position because `T` is expected to occur only in
 input positions.
 
-Error: test.js:10
- 10: type D<-T> = Bar<T>; // Error, Bar expects covariant type
-                      ^ Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
-  References:
-   10: type D<-T> = Bar<T>; // Error, Bar expects covariant type
-               ^ [1]: `T`
 
 Error ------------------------------------------------------------ test.js:15:18
 
 Cannot use `T` in an input position because `T` is expected to occur only in
 output positions.
 
-Error: test.js:15
- 15: type I<+T> = Baz<T>; // Error, Baz expects contravariant type
-                      ^ Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
-  References:
-   15: type I<+T> = Baz<T>; // Error, Baz expects contravariant type
-               ^ [1]: `T`
 
 
 Found 4 errors

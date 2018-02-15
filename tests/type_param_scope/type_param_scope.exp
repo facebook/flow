@@ -2,40 +2,16 @@ Error ------------------------------------------------------------ class.js:4:12
 
 Cannot call `this.b` with `a` bound to `x` because `A` is incompatible with `T`.
 
-Error: class.js:4
-  4:     this.b(a); // error: A ~> incompatible instance of T
-                ^ Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2].
-  References:
-    2:   a<A>(x:T, a:A) {
-                     ^ [1]: `A`
-    1: class C<T> {
-               ^ [2]: `T`
 
 Error ---------------------------------------------------- default_params.js:6:7
 
 Cannot call `h` with `c` bound to `d` because `T` is incompatible with `U`.
 
-Error: default_params.js:6
-  6:     h(c); // err, T ~> U
-           ^ Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2].
-  References:
-    2:   function g<U>(b:U, c:T = a) {
-                              ^ [1]: `T`
-    3:     function h(d:U = b) {}
-                        ^ [2]: `U`
 
 Error --------------------------------------------------- default_params.js:10:7
 
 Cannot call `g` with `0` bound to `c` because number is incompatible with `T`.
 
-Error: default_params.js:10
- 10:   g(0,0); // error: number ~> T
-           ^ Cannot call `g` with `0` bound to `c` because number [1] is incompatible with `T` [2].
-  References:
-   10:   g(0,0); // error: number ~> T
-             ^ [1]: number
-    2:   function g<U>(b:U, c:T = a) {
-                              ^ [2]: `T`
 
 Error: method_shadow.js:42
  42: g.m(true); // err, bool ~> number|string
@@ -64,27 +40,11 @@ Error ---------------------------------------------------- method_shadow.js:43:6
 Cannot cast `g.m(...)` to `G` because in type argument `T`, string is
 incompatible with number.
 
-Error: method_shadow.js:43
- 43: (g.m(""): G<number>); // err, string ~> number
-          ^^ Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   43: (g.m(""): G<number>); // err, string ~> number
-            ^^ [1]: string
-   43: (g.m(""): G<number>); // err, string ~> number
-                   ^^^^^^ [2]: number
 
 Error --------------------------------------------------- method_shadow.js:51:18
 
 Cannot assign `x` to `this.x` because `T` is incompatible with `T`.
 
-Error: method_shadow.js:51
- 51:         this.x = x; // err, m's T != H's T
-                      ^ Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2].
-  References:
-   50:     m<T>(x:T) {
-                  ^ [1]: `T`
-   49:     x:T;
-             ^ [2]: `T`
 
 
 Found 6 errors

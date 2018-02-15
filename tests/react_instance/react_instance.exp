@@ -2,100 +2,46 @@ Error ----------------------------------------------------------- class.js:11:37
 
 Cannot get `any.yep2` because property `yep2` is missing in `Foo`.
 
-Error: class.js:11
- 11: (any: React$ElementRef<Class<Foo>>).yep2; // Error
-                                         ^^^^ Cannot get `any.yep2` because property `yep2` is missing in `Foo` [1].
-  References:
-   11: (any: React$ElementRef<Class<Foo>>).yep2; // Error
-                                    ^^^ [1]: `Foo`
 
 Error ----------------------------------------------------------- class.js:12:37
 
 Cannot get `any.nope` because property `nope` is missing in `Foo`.
 
-Error: class.js:12
- 12: (any: React$ElementRef<Class<Foo>>).nope; // Error
-                                         ^^^^ Cannot get `any.nope` because property `nope` is missing in `Foo` [1].
-  References:
-   12: (any: React$ElementRef<Class<Foo>>).nope; // Error
-                                    ^^^ [1]: `Foo`
 
 Error ----------------------------------------------------------- class.js:13:37
 
 Cannot get `any.yep1` because property `yep1` is missing in `Bar`.
 
-Error: class.js:13
- 13: (any: React$ElementRef<Class<Bar>>).yep1; // Error
-                                         ^^^^ Cannot get `any.yep1` because property `yep1` is missing in `Bar` [1].
-  References:
-   13: (any: React$ElementRef<Class<Bar>>).yep1; // Error
-                                    ^^^ [1]: `Bar`
 
 Error ----------------------------------------------------------- class.js:15:37
 
 Cannot get `any.nope` because property `nope` is missing in `Bar`.
 
-Error: class.js:15
- 15: (any: React$ElementRef<Class<Bar>>).nope; // Error
-                                         ^^^^ Cannot get `any.nope` because property `nope` is missing in `Bar` [1].
-  References:
-   15: (any: React$ElementRef<Class<Bar>>).nope; // Error
-                                    ^^^ [1]: `Bar`
 
 Error --------------------------------------------------------- function.js:7:37
 
 Cannot get `any.nope` because property `nope` is missing in undefined.
 
-Error: function.js:7
-  7: (any: React$ElementRef<typeof Foo>).nope; // Error
-                                         ^^^^ Cannot get `any.nope` because property `nope` is missing in undefined [1].
-  References:
-    7: (any: React$ElementRef<typeof Foo>).nope; // Error
-                              ^^^^^^^^^^ [1]: undefined
 
 Error -------------------------------------------------------- intrinsic.js:6:32
 
 Cannot get `any.yep2` because property `yep2` is missing in object type.
 
-Error: intrinsic.js:6
-  6: (any: React$ElementRef<'foo'>).yep2; // Error
-                                    ^^^^ Cannot get `any.yep2` because property `yep2` is missing in object type [1].
-  References:
-    4:     instance: {yep1: true},
-                     ^^^^^^^^^^^^ [1]: object type. See lib: lib/jsx.js:4
 
 Error -------------------------------------------------------- intrinsic.js:7:32
 
 Cannot get `any.nope` because property `nope` is missing in object type.
 
-Error: intrinsic.js:7
-  7: (any: React$ElementRef<'foo'>).nope; // Error
-                                    ^^^^ Cannot get `any.nope` because property `nope` is missing in object type [1].
-  References:
-    4:     instance: {yep1: true},
-                     ^^^^^^^^^^^^ [1]: object type. See lib: lib/jsx.js:4
 
 Error -------------------------------------------------------- intrinsic.js:8:32
 
 Cannot get `any.yep1` because property `yep1` is missing in object type.
 
-Error: intrinsic.js:8
-  8: (any: React$ElementRef<'bar'>).yep1; // Error
-                                    ^^^^ Cannot get `any.yep1` because property `yep1` is missing in object type [1].
-  References:
-    8:     instance: {yep2: true},
-                     ^^^^^^^^^^^^ [1]: object type. See lib: lib/jsx.js:8
 
 Error ------------------------------------------------------- intrinsic.js:10:32
 
 Cannot get `any.nope` because property `nope` is missing in object type.
 
-Error: intrinsic.js:10
- 10: (any: React$ElementRef<'bar'>).nope; // Error
-                                    ^^^^ Cannot get `any.nope` because property `nope` is missing in object type [1].
-  References:
-    8:     instance: {yep2: true},
-                     ^^^^^^^^^^^^ [1]: object type. See lib: lib/jsx.js:8
 
 
 Found 9 errors

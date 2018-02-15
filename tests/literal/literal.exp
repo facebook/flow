@@ -2,66 +2,28 @@ Error ------------------------------------------------------- enum_client.js:6:5
 
 Property `LOCATION` is missing in object literal.
 
-Error: enum_client.js:6
-  6: foo("LOCATION"); // error
-         ^^^^^^^^^^ Property `LOCATION` is missing in object literal [1].
-  References:
-                     v
-    1: var APIKeys = {
-    2:     AGE: 'age',
-    3:     NAME: 'name',
-    4: };
-       ^ [1]: object literal. See: enum.js:1
 
 Error ------------------------------------------------------ enum_client.js:10:5
 
 Property `name` is missing in object type.
 
-Error: enum_client.js:10
- 10: bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
-         ^^^^^^^^^^^^ Property `name` is missing in object type [1].
-  References:
-    8: function bar(x: $Keys<{age: number}>) { }
-                             ^^^^^^^^^^^^^ [1]: object type
 
 Error ----------------------------------------------------- enum_client.js:17:19
 
 Cannot assign `object[APIKeys.NAME]` to `name` because string is incompatible
 with number.
 
-Error: enum_client.js:17
- 17: var name:number = object[APIKeys.NAME]; // error: object.name is a string
-                       ^^^^^^^^^^^^^^^^^^^^ Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is incompatible with number [2].
-  References:
-   14: object[APIKeys.NAME] = "FOO"; // i.e., object.name = "FOO"
-                              ^^^^^ [1]: string
-   17: var name:number = object[APIKeys.NAME]; // error: object.name is a string
-                ^^^^^^ [2]: number
 
 Error ----------------------------------------------------- enum_client.js:21:18
 
 Cannot assign `tuple[indices.red]` to `red` because number is incompatible with
 string.
 
-Error: enum_client.js:21
- 21: var red:string = tuple[indices.red]; // error: tuple[0] is a number
-                      ^^^^^^^^^^^^^^^^^^ Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2].
-  References:
-   20: var tuple = [42, "hello", false];
-                    ^^ [1]: number
-   21: var red:string = tuple[indices.red]; // error: tuple[0] is a number
-               ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- number.js:6:10
 
 string is not a number.
 
-Error: number.js:6
-  6:   return -x;
-              ^^ string [1] is not a number.
-  References:
-    5: function test2(x: string): number {
-                         ^^^^^^ [1]: string
 
 
 Found 5 errors

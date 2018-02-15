@@ -3,90 +3,36 @@ Error -------------------------------------------- createclass-callsite.js:20:10
 Cannot create `Hello` element because property `name` is missing in props but
 exists in propTypes of React component.
 
-Error: createclass-callsite.js:20
- 20:         <Hello />
-              ^^^^^ Cannot create `Hello` element because property `name` is missing in props [1] but exists in propTypes of React component [2].
-  References:
-   20:         <Hello />
-               ^^^^^^^^^ [1]: props
-                    v
-    6:   propTypes: {
-    7:     name: React.PropTypes.string.isRequired,
-    8:   },
-         ^ [2]: propTypes of React component. See: createclass-module.js:6
 
 Error -------------------------------------------- createclass-callsite.js:21:10
 
 Cannot create `HelloLocal` element because property `name` is missing in props
 but exists in propTypes of React component.
 
-Error: createclass-callsite.js:21
- 21:         <HelloLocal />
-              ^^^^^^^^^^ Cannot create `HelloLocal` element because property `name` is missing in props [1] but exists in propTypes of React component [2].
-  References:
-   21:         <HelloLocal />
-               ^^^^^^^^^^^^^^ [1]: props
-                    v
-    7:   propTypes: {
-    8:     name: React.PropTypes.string.isRequired,
-    9:   },
-         ^ [2]: propTypes of React component
 
 Error ------------------------------------- es6class-proptypes-callsite.js:20:10
 
 Cannot create `Hello` element because property `name` is missing in props but
 exists in object type.
 
-Error: es6class-proptypes-callsite.js:20
- 20:         <Hello />
-              ^^^^^ Cannot create `Hello` element because property `name` is missing in props [1] but exists in object type [2].
-  References:
-   20:         <Hello />
-               ^^^^^^^^^ [1]: props
-    5: class Hello extends React.Component<{name: string}> {
-                                           ^^^^^^^^^^^^^^ [2]: object type. See: es6class-proptypes-module.js:5
 
 Error ------------------------------------- es6class-proptypes-callsite.js:21:10
 
 Cannot create `HelloLocal` element because property `name` is missing in props
 but exists in object type.
 
-Error: es6class-proptypes-callsite.js:21
- 21:         <HelloLocal />
-              ^^^^^^^^^^ Cannot create `HelloLocal` element because property `name` is missing in props [1] but exists in object type [2].
-  References:
-   21:         <HelloLocal />
-               ^^^^^^^^^^^^^^ [1]: props
-    6: class HelloLocal extends React.Component<{name: string}> {
-                                                ^^^^^^^^^^^^^^ [2]: object type
 
 Error ----------------------------------------- es6class-types-callsite.js:18:10
 
 Cannot create `Hello` element because property `name` is missing in props but
 exists in `Props`.
 
-Error: es6class-types-callsite.js:18
- 18:         <Hello />
-              ^^^^^ Cannot create `Hello` element because property `name` is missing in props [1] but exists in `Props` [2].
-  References:
-   18:         <Hello />
-               ^^^^^^^^^ [1]: props
-    7: class Hello extends React.Component<Props> {
-                                           ^^^^^ [2]: `Props`. See: es6class-types-module.js:7
 
 Error ----------------------------------------- es6class-types-callsite.js:19:10
 
 Cannot create `HelloLocal` element because property `name` is missing in props
 but exists in `Props`.
 
-Error: es6class-types-callsite.js:19
- 19:         <HelloLocal />
-              ^^^^^^^^^^ Cannot create `HelloLocal` element because property `name` is missing in props [1] but exists in `Props` [2].
-  References:
-   19:         <HelloLocal />
-               ^^^^^^^^^^^^^^ [1]: props
-    8: class HelloLocal extends React.Component<Props> {
-                                                ^^^^^ [2]: `Props`
 
 
 Found 6 errors

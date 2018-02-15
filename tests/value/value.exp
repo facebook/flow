@@ -2,28 +2,12 @@ Error ------------------------------------------------------------ value.js:3:16
 
 Cannot assign `o["x"]` to `y` because number is incompatible with string.
 
-Error: value.js:3
-  3: var y:string = o["x"];
-                    ^^^^^^ Cannot assign `o["x"]` to `y` because number [1] is incompatible with string [2].
-  References:
-    2: o["x"] = 4;
-                ^ [1]: number
-    3: var y:string = o["x"];
-             ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ value.js:6:14
 
 Cannot assign `"hello"` to `table["x"]` because string is incompatible with
 number.
 
-Error: value.js:6
-  6: table["x"] = "hello";
-                  ^^^^^^^ Cannot assign `"hello"` to `table["x"]` because string [1] is incompatible with number [2].
-  References:
-    6: table["x"] = "hello";
-                    ^^^^^^^ [1]: string
-    5: var table: { [_: string]: number } = {};
-                                 ^^^^^^ [2]: number
 
 
 Found 2 errors

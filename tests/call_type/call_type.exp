@@ -2,134 +2,56 @@ Error ---------------------------------------------------- intersection.js:10:32
 
 Cannot return `x` because `B` is incompatible with `A`.
 
-Error: intersection.js:10
- 10: function foo(x: X): A { return x; } // error
-                                    ^ Cannot return `x` because `B` [1] is incompatible with `A` [2].
-  References:
-   10: function foo(x: X): A { return x; } // error
-                       ^ [1]: `B`
-   10: function foo(x: X): A { return x; } // error
-                           ^ [2]: `A`
 
 Error ---------------------------------------------------- intersection.js:11:32
 
 Cannot return `x` because `A` is incompatible with `B`.
 
-Error: intersection.js:11
- 11: function bar(x: X): B { return x; } // error
-                                    ^ Cannot return `x` because `A` [1] is incompatible with `B` [2].
-  References:
-   11: function bar(x: X): B { return x; } // error
-                       ^ [1]: `A`
-   11: function bar(x: X): B { return x; } // error
-                           ^ [2]: `B`
 
 Error ------------------------------------------------------------- test.js:7:10
 
 Cannot use type without at least 1 type argument.
 
-Error: test.js:7
-  7: type A = $Call; // Error: one or more arguments are required.
-              ^^^^^ Cannot use type without at least 1 type argument.
 
 Error ------------------------------------------------------------- test.js:8:10
 
 Cannot use type without at least 1 type argument.
 
-Error: test.js:8
-  8: type B = $Call<>; // Error: one or more arguments are required.
-              ^^^^^^^ Cannot use type without at least 1 type argument.
 
 Error ------------------------------------------------------------- test.js:13:9
 
 Cannot cast `null` to `C` because mixed is incompatible with number.
 
-Error: test.js:13
- 13: ((null: mixed): C); // Error: mixed ~> number
-             ^^^^^ Cannot cast `null` to `C` because mixed [1] is incompatible with number [2].
-  References:
-   13: ((null: mixed): C); // Error: mixed ~> number
-               ^^^^^ [1]: mixed
-   13: ((null: mixed): C); // Error: mixed ~> number
-                       ^ [2]: number
 
 Error ------------------------------------------------------------- test.js:15:2
 
 Cannot cast `c` to empty because number is incompatible with empty.
 
-Error: test.js:15
- 15: (c: empty); // Error: number ~> empty
-      ^ Cannot cast `c` to empty because number [1] is incompatible with empty [2].
-  References:
-   11: declare var c: C;
-                      ^ [1]: number
-   15: (c: empty); // Error: number ~> empty
-           ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------- test.js:19:2
 
 Cannot cast `42` to `D` because number is incompatible with undefined.
 
-Error: test.js:19
- 19: (42: D); // Error: number ~> undefined
-      ^^ Cannot cast `42` to `D` because number [1] is incompatible with undefined [2].
-  References:
-   19: (42: D); // Error: number ~> undefined
-        ^^ [1]: number
-   19: (42: D); // Error: number ~> undefined
-            ^ [2]: undefined
 
 Error ------------------------------------------------------------- test.js:24:9
 
 Cannot cast `null` to `E` because mixed is incompatible with number.
 
-Error: test.js:24
- 24: ((null: mixed): E); // Error: mixed ~> number
-             ^^^^^ Cannot cast `null` to `E` because mixed [1] is incompatible with number [2].
-  References:
-   24: ((null: mixed): E); // Error: mixed ~> number
-               ^^^^^ [1]: mixed
-   24: ((null: mixed): E); // Error: mixed ~> number
-                       ^ [2]: number
 
 Error ------------------------------------------------------------- test.js:26:2
 
 Cannot cast `e` to empty because number is incompatible with empty.
 
-Error: test.js:26
- 26: (e: empty); // Error: number ~> empty
-      ^ Cannot cast `e` to empty because number [1] is incompatible with empty [2].
-  References:
-   22: declare var e: E;
-                      ^ [1]: number
-   26: (e: empty); // Error: number ~> empty
-           ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------- test.js:31:9
 
 Cannot cast `null` to `F` because mixed is incompatible with number.
 
-Error: test.js:31
- 31: ((null: mixed): F); // Error: mixed ~> number
-             ^^^^^ Cannot cast `null` to `F` because mixed [1] is incompatible with number [2].
-  References:
-   31: ((null: mixed): F); // Error: mixed ~> number
-               ^^^^^ [1]: mixed
-   31: ((null: mixed): F); // Error: mixed ~> number
-                       ^ [2]: number
 
 Error ------------------------------------------------------------- test.js:33:2
 
 Cannot cast `f` to empty because number is incompatible with empty.
 
-Error: test.js:33
- 33: (f: empty); // Error: number ~> empty
-      ^ Cannot cast `f` to empty because number [1] is incompatible with empty [2].
-  References:
-   29: declare var f: F;
-                      ^ [1]: number
-   33: (f: empty); // Error: number ~> empty
-           ^^^^^ [2]: empty
 
 Error: test.js:38
  38: ((null: mixed): G); // Error: mixed ~> number | string
@@ -157,40 +79,16 @@ Error ------------------------------------------------------------- test.js:39:2
 
 Cannot cast `g` to number because string is incompatible with number.
 
-Error: test.js:39
- 39: (g: number); // Error: number | string ~> number
-      ^ Cannot cast `g` to number because string [1] is incompatible with number [2].
-  References:
-   36: declare var g: G;
-                      ^ [1]: string
-   39: (g: number); // Error: number | string ~> number
-           ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- test.js:41:2
 
 Cannot cast `g` to empty because number is incompatible with empty.
 
-Error: test.js:41
- 41: (g: empty); // Error: number | string ~> empty
-      ^ Cannot cast `g` to empty because number [1] is incompatible with empty [2].
-  References:
-   36: declare var g: G;
-                      ^ [1]: number
-   41: (g: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------- test.js:41:2
 
 Cannot cast `g` to empty because string is incompatible with empty.
 
-Error: test.js:41
- 41: (g: empty); // Error: number | string ~> empty
-      ^ Cannot cast `g` to empty because string [1] is incompatible with empty [2].
-  References:
-   36: declare var g: G;
-                      ^ [1]: string
-   41: (g: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error: union.js:6
   6: ((null: mixed): A); // Error: mixed ~> number | string
@@ -218,40 +116,16 @@ Error ------------------------------------------------------------- union.js:7:2
 
 Cannot cast `a` to number because string is incompatible with number.
 
-Error: union.js:7
-  7: (a: number); // Error: number | string ~> number
-      ^ Cannot cast `a` to number because string [1] is incompatible with number [2].
-  References:
-    4: declare var a: A;
-                      ^ [1]: string
-    7: (a: number); // Error: number | string ~> number
-           ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- union.js:9:2
 
 Cannot cast `a` to empty because number is incompatible with empty.
 
-Error: union.js:9
-  9: (a: empty); // Error: number | string ~> empty
-      ^ Cannot cast `a` to empty because number [1] is incompatible with empty [2].
-  References:
-    4: declare var a: A;
-                      ^ [1]: number
-    9: (a: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------- union.js:9:2
 
 Cannot cast `a` to empty because string is incompatible with empty.
 
-Error: union.js:9
-  9: (a: empty); // Error: number | string ~> empty
-      ^ Cannot cast `a` to empty because string [1] is incompatible with empty [2].
-  References:
-    4: declare var a: A;
-                      ^ [1]: string
-    9: (a: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error: union.js:14
  14: ((null: mixed): B); // Error: mixed ~> number | string
@@ -279,40 +153,16 @@ Error ------------------------------------------------------------ union.js:15:2
 
 Cannot cast `b` to number because string is incompatible with number.
 
-Error: union.js:15
- 15: (b: number); // Error: number | string ~> number
-      ^ Cannot cast `b` to number because string [1] is incompatible with number [2].
-  References:
-   12: declare var b: B;
-                      ^ [1]: string
-   15: (b: number); // Error: number | string ~> number
-           ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ union.js:17:2
 
 Cannot cast `b` to empty because number is incompatible with empty.
 
-Error: union.js:17
- 17: (b: empty); // Error: number | string ~> empty
-      ^ Cannot cast `b` to empty because number [1] is incompatible with empty [2].
-  References:
-   12: declare var b: B;
-                      ^ [1]: number
-   17: (b: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------ union.js:17:2
 
 Cannot cast `b` to empty because string is incompatible with empty.
 
-Error: union.js:17
- 17: (b: empty); // Error: number | string ~> empty
-      ^ Cannot cast `b` to empty because string [1] is incompatible with empty [2].
-  References:
-   12: declare var b: B;
-                      ^ [1]: string
-   17: (b: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error: union.js:22
  22: ((null: mixed): C); // Error: mixed ~> number | string
@@ -340,40 +190,16 @@ Error ------------------------------------------------------------ union.js:23:2
 
 Cannot cast `c` to number because string is incompatible with number.
 
-Error: union.js:23
- 23: (c: number); // Error: number | string ~> number
-      ^ Cannot cast `c` to number because string [1] is incompatible with number [2].
-  References:
-   20: declare var c: C;
-                      ^ [1]: string
-   23: (c: number); // Error: number | string ~> number
-           ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ union.js:25:2
 
 Cannot cast `c` to empty because number is incompatible with empty.
 
-Error: union.js:25
- 25: (c: empty); // Error: number | string ~> empty
-      ^ Cannot cast `c` to empty because number [1] is incompatible with empty [2].
-  References:
-   20: declare var c: C;
-                      ^ [1]: number
-   25: (c: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------ union.js:25:2
 
 Cannot cast `c` to empty because string is incompatible with empty.
 
-Error: union.js:25
- 25: (c: empty); // Error: number | string ~> empty
-      ^ Cannot cast `c` to empty because string [1] is incompatible with empty [2].
-  References:
-   20: declare var c: C;
-                      ^ [1]: string
-   25: (c: empty); // Error: number | string ~> empty
-           ^^^^^ [2]: empty
 
 
 Found 27 errors

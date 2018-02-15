@@ -3,74 +3,35 @@ Error -------------------------------------------------- flow-typed/libs.js:21:3
 Deprecated syntax. Use `declare module.exports` instead.
 (`deprecated-declare-exports`)
 
-Library lint error (deprecated-declare-exports):
-flow-typed/libs.js:21
- 21:   declare var exports: number;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deprecated syntax. Use `declare module.exports` instead. (`deprecated-declare-exports`)
 
 Error -------------------------------------------------------------- main.js:5:2
 
 Cannot cast `declare_module_exports` to string because number is incompatible
 with string.
 
-Error: main.js:5
-  5: (declare_module_exports: string); // Error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `declare_module_exports` to string because number [1] is incompatible with string [2].
-  References:
-    2:   declare module.exports: number;
-                                 ^^^^^^ [1]: number. See lib: flow-typed/libs.js:2
-    5: (declare_module_exports: string); // Error: number ~> string
-                                ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- main.js:8:9
 
 Cannot import `str` because there is no `str` export in
 `declare_m_e_with_other_value_declares`. Did you mean `import str from "..."`?
 
-Error: main.js:8
-  8: import {str} from "declare_m_e_with_other_value_declares";
-             ^^^ Cannot import `str` because there is no `str` export in `declare_m_e_with_other_value_declares`. Did you mean `import str from "..."`?
 
 Error ------------------------------------------------------------- main.js:12:2
 
 Cannot cast `42` to `str2` because number is incompatible with string.
 
-Error: main.js:12
- 12: (42: str2); // Error: number ~> string
-      ^^ Cannot cast `42` to `str2` because number [1] is incompatible with string [2].
-  References:
-   12: (42: str2); // Error: number ~> string
-        ^^ [1]: number
-   12: (42: str2); // Error: number ~> string
-            ^^^^ [2]: string
 
 Error ------------------------------------------------------------- main.js:21:2
 
 Cannot cast `DEPRECATED__declare_var_exports` to string because number is
 incompatible with string.
 
-Error: main.js:21
- 21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `DEPRECATED__declare_var_exports` to string because number [1] is incompatible with string [2].
-  References:
-   21:   declare var exports: number;
-                              ^^^^^^ [1]: number. See lib: flow-typed/libs.js:21
-   21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
-                                         ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- main.js:25:2
 
 Cannot cast `declare_m_e_with_declare_var_e` to string because number is
 incompatible with string.
 
-Error: main.js:25
- 25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast `declare_m_e_with_declare_var_e` to string because number [1] is incompatible with string [2].
-  References:
-   28:   declare module.exports: number;
-                                 ^^^^^^ [1]: number. See lib: flow-typed/libs.js:28
-   25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string
-                                        ^^^^^^ [2]: string
 
 
 Found 6 errors

@@ -6,28 +6,12 @@ Error ------------------------------------------------------------- test.js:10:5
 Sketchy null check on number which is potentially 0. Perhaps you meant to check
 for null or undefined? (`sketchy-null-number`)
 
-Error: test.js:10
- 10: if (b){} //warning included by --include-suppressed (reported as an error)
-         ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
-  References:
-    9: var b: ?number = 0;
-               ^^^^^^ [1]: number
-    9: var b: ?number = 0;
-              ^^^^^^^ [2]: null or undefined
 
 Error ------------------------------------------------------------- test.js:15:5
 
 Sketchy null check on number which is potentially 0. Perhaps you meant to check
 for null or undefined? (`sketchy-null-number`)
 
-Error: test.js:15
- 15: if (c){} //error included by --include-suppressed
-         ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
-  References:
-   14: var c: ?number = 0;
-               ^^^^^^ [1]: number
-   14: var c: ?number = 0;
-              ^^^^^^^ [2]: null or undefined
 
 
 Found 2 errors

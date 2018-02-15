@@ -2,33 +2,21 @@ Error -------------------------------------------------------------- test.js:5:1
 
 Cannot resolve name `React$Element`.
 
-Error: test.js:5
-  5: <div />;
-     ^^^^^^^ Cannot resolve name `React$Element`.
 
 Error -------------------------------------------------------------- test.js:5:1
 
 Cannot resolve name `React$Key`.
 
-Error: test.js:5
-  5: <div />;
-     ^^^^^^^ Cannot resolve name `React$Key`.
 
 Error -------------------------------------------------------------- test.js:5:1
 
 Cannot resolve name `React$Ref`.
 
-Error: test.js:5
-  5: <div />;
-     ^^^^^^^ Cannot resolve name `React$Ref`.
 
 Error -------------------------------------------------------------- test.js:5:2
 
 Cannot resolve name `$JSXIntrinsics`.
 
-Error: test.js:5
-  5: <div />;
-      ^^^ Cannot resolve name `$JSXIntrinsics`.
 
 
 Found 4 errors

@@ -2,14 +2,6 @@ Error ------------------------------------------------------------- basic.js:6:2
 
 Cannot cast `null` to empty because null is incompatible with empty.
 
-Error: basic.js:6
-  6: (null: empty); // Error: null ~> empty
-      ^^^^ Cannot cast `null` to empty because null [1] is incompatible with empty [2].
-  References:
-    6: (null: empty); // Error: null ~> empty
-        ^^^^ [1]: null
-    6: (null: empty); // Error: null ~> empty
-              ^^^^^ [2]: empty
 
 Error ------------------------------------------------------------ wrap.js:21:64
 
@@ -18,14 +10,6 @@ index 0, property `to.be.a.really`, index 0, property
 `long.error.message.that.hopefully`, index 0, and then property
 `breaks.on.multiple.lines`; number is incompatible with string.
 
-Error: wrap.js:21
- 21:                               {breaks: {on: {multiple: {lines: 42}}}},
-                                                                    ^^ Cannot cast object literal to object type because in property `this.is.going`, index 0, property `to.be.a.really`, index 0, property `long.error.message.that.hopefully`, index 0, and then property `breaks.on.multiple.lines`; number [1] is incompatible with string [2].
-  References:
-   21:                               {breaks: {on: {multiple: {lines: 42}}}},
-                                                                      ^^ [1]: number
-   51:                               {breaks: {on: {multiple: {lines: string}}}},
-                                                                      ^^^^^^ [2]: string
 
 
 Found 2 errors

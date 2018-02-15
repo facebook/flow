@@ -3,68 +3,28 @@ Error -------------------------------------------------------------- test.js:2:8
 Cannot instantiate `CovArrayVerbose` because in type argument `Y`, string is
 incompatible with number.
 
-Error: test.js:2
-  2: var b: CovArrayVerbose<number,*> = [];
-            ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot instantiate `CovArrayVerbose` because in type argument `Y`, string [1] is incompatible with number [2].
-  References:
-    4: y[0] = ""; // error
-              ^^ [1]: string
-    2: var b: CovArrayVerbose<number,*> = [];
-                              ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- test.js:3:35
 
 Cannot assign `b` to `y` because in type argument `X`, number is incompatible
 with mixed.
 
-Error: test.js:3
-  3: var y: CovArrayVerbose<mixed,*> = b;
-                                       ^ Cannot assign `b` to `y` because in type argument `X`, number [1] is incompatible with mixed [2].
-  References:
-    2: var b: CovArrayVerbose<number,*> = [];
-                              ^^^^^^ [1]: number
-    3: var y: CovArrayVerbose<mixed,*> = b;
-                              ^^^^^ [2]: mixed
 
 Error ------------------------------------------------------------- test.js:8:46
 
 Cannot return `this.x` because in type argument `X`, `E` is incompatible with
 mixed.
 
-Error: test.js:8
-  8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
-                                                  ^^^^^^ Cannot return `this.x` because in type argument `X`, `E` [1] is incompatible with mixed [2].
-  References:
-    7:     x: CovArrayVerbose<E,I>;
-                              ^ [1]: `E`
-    8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
-                                  ^^^^^ [2]: mixed
 
 Error ------------------------------------------------------------- test.js:13:2
 
 Cannot cast `nv.x[0]` to string because number is incompatible with string.
 
-Error: test.js:13
- 13: (nv.x[0]: string); // error
-      ^^^^^^^ Cannot cast `nv.x[0]` to string because number [1] is incompatible with string [2].
-  References:
-   12: nv.x = [0];
-               ^ [1]: number
-   13: (nv.x[0]: string); // error
-                 ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:14:2
 
 Cannot cast `nv.foo()[0]` to string because number is incompatible with string.
 
-Error: test.js:14
- 14: (nv.foo()[0]: string); // error
-      ^^^^^^^^^^^ Cannot cast `nv.foo()[0]` to string because number [1] is incompatible with string [2].
-  References:
-   12: nv.x = [0];
-               ^ [1]: number
-   14: (nv.foo()[0]: string); // error
-                     ^^^^^^ [2]: string
 
 
 Found 5 errors

@@ -2,27 +2,11 @@ Error ----------------------------------------------------------- import.js:3:17
 
 Cannot assign `e.x` to `x` because number is incompatible with string.
 
-Error: import.js:3
-  3: var x: string = e.x;
-                     ^^^ Cannot assign `e.x` to `x` because number [1] is incompatible with string [2].
-  References:
-    2: exports.x = 1;
-                   ^ [1]: number. See: export.js:2
-    3: var x: string = e.x;
-              ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- import.js:4:17
 
 Cannot assign `e.y` to `y` because string is incompatible with number.
 
-Error: import.js:4
-  4: var y: number = e.y;
-                     ^^^ Cannot assign `e.y` to `y` because string [1] is incompatible with number [2].
-  References:
-    3: exports.y = "";
-                   ^^ [1]: string. See: export.js:3
-    4: var y: number = e.y;
-              ^^^^^^ [2]: number
 
 
 Found 2 errors

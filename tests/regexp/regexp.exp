@@ -3,14 +3,6 @@ Error ----------------------------------------------------------- regexp.js:2:20
 Cannot assign `patt.test(...)` to `match` because boolean is incompatible with
 number.
 
-Error: regexp.js:2
-  2: var match:number = patt.test("Hello world!");
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot assign `patt.test(...)` to `match` because boolean [1] is incompatible with number [2].
-  References:
-  345:     test(string: string): boolean;
-                                 ^^^^^^^ [1]: boolean. See lib: <BUILTINS>/core.js:345
-    2: var match:number = patt.test("Hello world!");
-                 ^^^^^^ [2]: number
 
 
 Found 1 error

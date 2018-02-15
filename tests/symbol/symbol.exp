@@ -3,12 +3,6 @@ Error ----------------------------------------------------------- symbol.js:4:25
 Cannot call `Symbol` because no more than 1 argument is expected by function
 type.
 
-Error: symbol.js:4
-  4: var WAT = Symbol('foo', 'bar'); // Error - unused argument
-                             ^^^^^ Cannot call `Symbol` because no more than 1 argument is expected by function type [1].
-  References:
-   73:   static (value?:any): Symbol;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: function type. See lib: <BUILTINS>/core.js:73
 
 
 Found 1 error

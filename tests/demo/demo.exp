@@ -2,42 +2,22 @@ Error -------------------------------------------------------------- 1/f.js:3:27
 
 Cannot perform arithmetic operation because null is not a number.
 
-Error: 1/f.js:3
-  3: function f(x) { return 42/x; }
-                               ^ Cannot perform arithmetic operation because null [1] is not a number.
-  References:
-    5: var x = null;
-               ^^^^ [1]: null
 
 Error -------------------------------------------------------------- 2/A.js:5:15
 
 Missing type annotation for `x`.
 
-Error: 2/A.js:5
-  5:   constructor(x) { this.x = x; }
-                   ^ Missing type annotation for `x`.
 
 Error -------------------------------------------------------------- 2/A.js:9:10
 
 Missing type annotation for `callback`.
 
-Error: 2/A.js:9
-  9:   onLoad(callback) {
-              ^^^^^^^^ Missing type annotation for `callback`.
 
 Error ------------------------------------------------------------- 2/A.js:10:21
 
 Cannot call `callback` with `this.getX()` bound to `x` because number is
 incompatible with string.
 
-Error: 2/A.js:10
- 10:     return callback(this.getX());
-                         ^^^^^^^^^^^ Cannot call `callback` with `this.getX()` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    4:   x: number; // instance field declaration
-            ^^^^^^ [1]: number
-   14: function callback(x: string) { return x.length; }
-                            ^^^^^^ [2]: string
 
 
 Found 4 errors

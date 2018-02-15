@@ -2,55 +2,23 @@ Error ---------------------------------------------------------- libtest.js:1:16
 
 Cannot assign `NaN` to `x` because number is incompatible with string.
 
-Error: libtest.js:1
-  1: var x:string = NaN
-                    ^^^ Cannot assign `NaN` to `x` because number [1] is incompatible with string [2].
-  References:
-   11: declare var NaN: number;
-                        ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:11
-    1: var x:string = NaN
-             ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- libtest.js:2:16
 
 Cannot assign `Number.MAX_VALUE` to `y` because number is incompatible with
 string.
 
-Error: libtest.js:2
-  2: var y:string = Number.MAX_VALUE;
-                    ^^^^^^^^^^^^^^^^ Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with string [2].
-  References:
-  126:     static MAX_VALUE: number;
-                             ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:126
-    2: var y:string = Number.MAX_VALUE;
-             ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- libtest.js:3:16
 
 Cannot assign `new TypeError().name` to `z` because string is incompatible with
 number.
 
-Error: libtest.js:3
-  3: var z:number = new TypeError().name;
-                    ^^^^^^^^^^^^^^^^^^^^ Cannot assign `new TypeError().name` to `z` because string [1] is incompatible with number [2].
-  References:
-  442:     name: string;
-                 ^^^^^^ [1]: string. See lib: <BUILTINS>/core.js:442
-    3: var z:number = new TypeError().name;
-             ^^^^^^ [2]: number
 
 Error ---------------------------------------------------------- libtest.js:4:16
 
 Cannot assign `parseInt(...)` to `w` because number is incompatible with string.
 
-Error: libtest.js:4
-  4: var w:string = parseInt("...");
-                    ^^^^^^^^^^^^^^^ Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with string [2].
-  References:
-   15: declare function parseInt(string: mixed, radix?: number): number;
-                                                                 ^^^^^^ [1]: number. See lib: <BUILTINS>/core.js:15
-    4: var w:string = parseInt("...");
-             ^^^^^^ [2]: string
 
 
 Found 4 errors

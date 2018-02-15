@@ -2,51 +2,21 @@ Error ------------------------------------------------------------- test.js:18:2
 
 Cannot cast `new Foo().x` to number because string is incompatible with number.
 
-Error: test.js:18
- 18: ((new Foo).x: number); // error: Qux wins
-      ^^^^^^^^^^^ Cannot cast `new Foo().x` to number because string [1] is incompatible with number [2].
-  References:
-    1: declare class Foo extends Qux<string> mixins Bar<number> {
-                                     ^^^^^^ [1]: string
-   18: ((new Foo).x: number); // error: Qux wins
-                     ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- test.js:19:2
 
 Cannot cast `new Foo().y` to string because number is incompatible with string.
 
-Error: test.js:19
- 19: ((new Foo).y: string); // error: Bar wins
-      ^^^^^^^^^^^ Cannot cast `new Foo().y` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare class Foo extends Qux<string> mixins Bar<number> {
-                                                        ^^^^^^ [1]: number
-   19: ((new Foo).y: string); // error: Bar wins
-                     ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:20:2
 
 Cannot cast `new Foo().z` to number because string is incompatible with number.
 
-Error: test.js:20
- 20: ((new Foo).z: number); // error: Qux wins
-      ^^^^^^^^^^^ Cannot cast `new Foo().z` to number because string [1] is incompatible with number [2].
-  References:
-    1: declare class Foo extends Qux<string> mixins Bar<number> {
-                                     ^^^^^^ [1]: string
-   20: ((new Foo).z: number); // error: Qux wins
-                     ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ test2.js:2:24
 
 Cannot reference type `I` from a value position.
 
-Error: test2.js:2
-  2: declare class C mixins I { }
-                            ^ Cannot reference type `I` [1] from a value position.
-  References:
-    1: declare interface I { }
-                         ^ [1]: `I`
 
 
 Found 4 errors

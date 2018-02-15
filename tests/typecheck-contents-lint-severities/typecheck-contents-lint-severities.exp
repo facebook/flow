@@ -3,14 +3,6 @@ Error ------------------------------------------------------------- test.js:11:7
 Sketchy null check on number which is potentially 0. Perhaps you meant to check
 for null or undefined? (`sketchy-null-number`)
 
-Error: test.js:11
- 11:   if (x) {}
-           ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
-  References:
-    3: export function f(cb: ?number => void): void {}
-                              ^^^^^^ [1]: number. See: dep.js:3
-    3: export function f(cb: ?number => void): void {}
-                             ^^^^^^^ [2]: null or undefined. See: dep.js:3
 
 
 Found 1 error

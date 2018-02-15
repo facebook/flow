@@ -3,62 +3,28 @@ Error -------------------------------------------------- function_return.js:7:16
 Cannot expect number as the return type of function because number is
 incompatible with implicitly-returned undefined.
 
-Error: function_return.js:7
-  7: function f(x): number {
-                    ^^^^^^ Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned undefined.
-  References:
-    7: function f(x): number {
-                      ^^^^^^ [1]: number
 
 Error -------------------------------------------------- function_return.js:23:3
 
 Cannot return undefined because undefined is incompatible with number.
 
-Error: function_return.js:23
- 23:   return;
-       ^^^^^^^ Cannot return undefined because undefined [1] is incompatible with number [2].
-  References:
-   23:   return;
-         ^^^^^^^ [1]: undefined
-   19: function h(x): number {
-                      ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- implicit.js:6:22
 
 Cannot expect number as the return type of async function because number is
 incompatible with implicitly-returned `Promise`.
 
-Error: implicit.js:6
-  6: async function g1(): number {}
-                          ^^^^^^ Cannot expect number as the return type of async function because number [1] is incompatible with implicitly-returned `Promise`.
-  References:
-    6: async function g1(): number {}
-                            ^^^^^^ [1]: number
 
 Error --------------------------------------------------------- implicit.js:7:30
 
 Cannot expect `Promise` as the return type of async function because in type
 argument `R`, number is incompatible with implicitly-returned undefined.
 
-Error: implicit.js:7
-  7: async function g2(): Promise<number> {}
-                                  ^^^^^^ Cannot expect `Promise` as the return type of async function because in type argument `R`, number [1] is incompatible with implicitly-returned undefined.
-  References:
-    7: async function g2(): Promise<number> {}
-                                    ^^^^^^ [1]: number
 
 Error ------------------------------------------------------------- void.js:12:2
 
 Cannot cast `f(...)` to undefined because string is incompatible with undefined.
 
-Error: void.js:12
- 12: (f(true): void); // error: string ~> void
-      ^^^^^^^ Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2].
-  References:
-    8:     return "nope";
-                  ^^^^^^ [1]: string
-   12: (f(true): void); // error: string ~> void
-                 ^^^^ [2]: undefined
 
 
 Found 5 errors

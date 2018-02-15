@@ -4,28 +4,12 @@ Error --------------------------------------------------------------- a1.js:3:42
 
 Cannot return `5` because number is incompatible with string.
 
-Error: a1.js:3
-  3: function foo(x: number): string { return 5; }
-                                              ^ Cannot return `5` because number [1] is incompatible with string [2].
-  References:
-    3: function foo(x: number): string { return 5; }
-                                                ^ [1]: number
-    3: function foo(x: number): string { return 5; }
-                                ^^^^^^ [2]: string
 
 Error --------------------------------------------------------------- a2.js:5:22
 
 Cannot call `foo` with empty string bound to `x` because string is incompatible
 with number.
 
-Error: a2.js:5
-  5: module.exports = foo("");
-                          ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-  References:
-    5: module.exports = foo("");
-                            ^^ [1]: string
-    3: function foo(x: number): string { return 5; }
-                       ^^^^^^ [2]: number. See: a1.js:3
 
 
 Found 2 errors
@@ -34,27 +18,11 @@ Error --------------------------------------------------------------- a2.js:5:22
 Cannot call `foo` with empty string bound to `x` because string is incompatible
 with number.
 
-Error: a2.js:5
-  5: module.exports = foo("");
-                          ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-  References:
-    5: module.exports = foo("");
-                            ^^ [1]: string
-    3: function foo(x: number): number { return 5; }
-                       ^^^^^^ [2]: number. See: a1.js:3
 
 Error ---------------------------------------------------------------- a3.js:5:2
 
 Cannot cast `five + five` to string because number is incompatible with string.
 
-Error: a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ Cannot cast `five + five` to string because number [1] is incompatible with string [2].
-  References:
-    5: (five + five: string);
-        ^^^^^^^^^^^ [1]: number
-    5: (five + five: string);
-                     ^^^^^^ [2]: string
 
 
 Found 2 errors
@@ -63,41 +31,17 @@ Error ---------------------------------------------------------------- a1.js:5:5
 Cannot call `foo` with empty string bound to `x` because string is incompatible
 with number.
 
-Error: a1.js:5
-  5: foo("");
-         ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-  References:
-    5: foo("");
-           ^^ [1]: string
-    3: function foo(x: number): number { return 5; }
-                       ^^^^^^ [2]: number
 
 Error --------------------------------------------------------------- a2.js:5:22
 
 Cannot call `foo` with empty string bound to `x` because string is incompatible
 with number.
 
-Error: a2.js:5
-  5: module.exports = foo("");
-                          ^^ Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-  References:
-    5: module.exports = foo("");
-                            ^^ [1]: string
-    3: function foo(x: number): number { return 5; }
-                       ^^^^^^ [2]: number. See: a1.js:3
 
 Error ---------------------------------------------------------------- a3.js:5:2
 
 Cannot cast `five + five` to string because number is incompatible with string.
 
-Error: a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ Cannot cast `five + five` to string because number [1] is incompatible with string [2].
-  References:
-    5: (five + five: string);
-        ^^^^^^^^^^^ [1]: number
-    5: (five + five: string);
-                     ^^^^^^ [2]: string
 
 
 Found 3 errors
@@ -107,14 +51,6 @@ Error ---------------------------------------------------------------- b3.js:5:2
 
 Cannot cast `new D()` to `C` because `D` is incompatible with `C`.
 
-Error: b3.js:5
-  5: (new D: C);
-      ^^^^^ Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
-  References:
-    5: (new D: C);
-        ^^^^^ [1]: `D`
-    5: (new D: C);
-               ^ [2]: `C`
 
 
 Found 1 error
@@ -126,28 +62,12 @@ Error ---------------------------------------------------------------- c2.js:6:7
 Cannot call `foo` with object literal bound to `props` because property `x` is
 missing in object literal but exists in object type.
 
-Error: c2.js:6
-  6:   foo({ y: 0 });
-           ^^^^^^^^ Cannot call `foo` with object literal bound to `props` because property `x` is missing in object literal [1] but exists in object type [2].
-  References:
-    6:   foo({ y: 0 });
-             ^^^^^^^^ [1]: object literal
-    3: export function foo(props: { x: number }) { }
-                                  ^^^^^^^^^^^^^ [2]: object type. See: c1.js:3
 
 Error ---------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is
 missing in object literal but exists in object type.
 
-Error: c3.js:5
-  5: bar({ x: 0 });
-         ^^^^^^^^ Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists in object type [2].
-  References:
-    5: bar({ x: 0 });
-           ^^^^^^^^ [1]: object literal
-    5: export function bar(props: { y: number }) {
-                                  ^^^^^^^^^^^^^ [2]: object type. See: c2.js:5
 
 
 Found 2 errors
@@ -156,14 +76,6 @@ Error ---------------------------------------------------------------- c3.js:5:5
 Cannot call `bar` with object literal bound to `props` because property `y` is
 missing in object literal but exists in object type.
 
-Error: c3.js:5
-  5: bar({ x: 0 });
-         ^^^^^^^^ Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists in object type [2].
-  References:
-    5: bar({ x: 0 });
-           ^^^^^^^^ [1]: object literal
-    5: export function bar(props: { y: number }) {
-                                  ^^^^^^^^^^^^^ [2]: object type. See: c2.js:5
 
 
 Found 1 error
@@ -173,14 +85,6 @@ Error --------------------------------------------------------------- d2.js:4:19
 
 Cannot assign `x` to `y` because `B` is incompatible with `A`.
 
-Error: d2.js:4
-  4: export var y: A = x;
-                       ^ Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2].
-  References:
-    5: export var x = new B;
-                      ^^^^^ [1]: `B`. See: d1.js:5
-    4: export var y: A = x;
-                     ^ [2]: `A`
 
 
 Found 1 error
@@ -229,14 +133,6 @@ Error ---------------------------------------------------------------- f2.js:4:2
 Cannot cast `c` to object type because in property `x`, string is incompatible
 with number.
 
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
-  References:
-    4: type S = { x: string };
-                     ^^^^^^ [1]: string. See: f1.js:4
-    4: (c: { x: number });
-                ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -247,14 +143,6 @@ Error ---------------------------------------------------------------- f2.js:4:2
 Cannot cast `c` to object type because in property `x`, string is incompatible
 with number.
 
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
-  References:
-    4: type S = { x: string };
-                     ^^^^^^ [1]: string. See: f1.js:4
-    4: (c: { x: number });
-                ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -267,9 +155,6 @@ Error --------------------------------------------------------------- h2.js:3:15
 
 Cannot import `Foo` because there is no `Foo` export in `./h1`.
 
-Error: h2.js:3
-  3: import type { Foo } from './h1';
-                   ^^^ Cannot import `Foo` because there is no `Foo` export in `./h1`.
 
 
 Found 1 error
@@ -279,9 +164,6 @@ Error ---------------------------------------------------------------- i2.js:5:5
 
 Cannot assign `0` to `foo.p` because property `p` is not writable.
 
-Error: i2.js:5
-  5: foo.p = 0;
-         ^ Cannot assign `0` to `foo.p` because property `p` is not writable.
 
 
 Found 1 error
@@ -291,9 +173,6 @@ Error ---------------------------------------------------------------- j2.js:5:5
 
 Cannot assign `0` to `foo.p` because property `p` is not writable.
 
-Error: j2.js:5
-  5: foo.p = 0;
-         ^ Cannot assign `0` to `foo.p` because property `p` is not writable.
 
 
 Found 1 error
@@ -307,14 +186,6 @@ Error ---------------------------------------------------------------- m3.js:6:2
 Cannot cast `x` to `T` because in type argument `X`, string is incompatible with
 number.
 
-Error: m3.js:6
-  6: (x: T<number>);
-      ^ Cannot cast `x` to `T` because in type argument `X`, string [1] is incompatible with number [2].
-  References:
-    5: export var x: T<string> = null;
-                       ^^^^^^ [1]: string. See: m1.js:5
-    6: (x: T<number>);
-             ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -324,12 +195,6 @@ Error ----------------------------------------------------------------- k.js:4:4
 
 Cannot get `x.p` because property `p` is missing in `LibK`.
 
-Error: k.js:4
-  4: (x.p: string);
-        ^ Cannot get `x.p` because property `p` is missing in `LibK` [1].
-  References:
-    3: declare var x: LibK;
-                      ^^^^ [1]: `LibK`
 
 
 Found 1 error
@@ -338,12 +203,6 @@ Error ----------------------------------------------------------------- k.js:4:4
 
 Cannot get `x.p` because property `p` is missing in `LibK`.
 
-Error: k.js:4
-  4: (x.p: string);
-        ^ Cannot get `x.p` because property `p` is missing in `LibK` [1].
-  References:
-    3: declare var x: LibK;
-                      ^^^^ [1]: `LibK`
 
 
 Found 1 error

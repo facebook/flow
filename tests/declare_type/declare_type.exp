@@ -2,54 +2,22 @@ Error --------------------------------------------- import_declare_type.js:11:15
 
 Cannot assign `"shab"` to `k2` because string is incompatible with number.
 
-Error: import_declare_type.js:11
- 11: var k2: baz = "shab"; // Error: string to int
-                   ^^^^^^ Cannot assign `"shab"` to `k2` because string [1] is incompatible with number [2].
-  References:
-   11: var k2: baz = "shab"; // Error: string to int
-                     ^^^^^^ [1]: string
-   11: var k2: baz = "shab"; // Error: string to int
-               ^^^ [2]: number
 
 Error ---------------------------------------------- import_declare_type.js:26:2
 
 Cannot cast object literal to `Foo` because object literal is incompatible with
 string.
 
-Error: import_declare_type.js:26
- 26: ({toz:3} : Foo); // error : {toz : number} ~> string
-      ^^^^^^^ Cannot cast object literal to `Foo` because object literal [1] is incompatible with string [2].
-  References:
-   26: ({toz:3} : Foo); // error : {toz : number} ~> string
-        ^^^^^^^ [1]: object literal
-   26: ({toz:3} : Foo); // error : {toz : number} ~> string
-                  ^^^ [2]: string
 
 Error ---------------------------------------------- import_declare_type.js:28:2
 
 Cannot cast `3` to `Bar` because number is incompatible with `A`.
 
-Error: import_declare_type.js:28
- 28: (3 : Bar); // error : number ~> A
-      ^ Cannot cast `3` to `Bar` because number [1] is incompatible with `A` [2].
-  References:
-   28: (3 : Bar); // error : number ~> A
-        ^ [1]: number
-   28: (3 : Bar); // error : number ~> A
-            ^^^ [2]: `A`
 
 Error ---------------------------------------------- import_declare_type.js:30:2
 
 Cannot cast `"lol"` to `Id` because string is incompatible with number.
 
-Error: import_declare_type.js:30
- 30: ("lol" : Id<number>); // error : string ~> number
-      ^^^^^ Cannot cast `"lol"` to `Id` because string [1] is incompatible with number [2].
-  References:
-   30: ("lol" : Id<number>); // error : string ~> number
-        ^^^^^ [1]: string
-   30: ("lol" : Id<number>); // error : string ~> number
-                ^^^^^^^^^^ [2]: number
 
 
 Found 4 errors

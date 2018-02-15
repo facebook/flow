@@ -3,40 +3,18 @@ Error ------------------------------------------------------ constructor.js:6:19
 Cannot expect number as the return type of function because number is
 incompatible with implicitly-returned undefined.
 
-Error: constructor.js:6
-  6:     constructor():number { }
-                       ^^^^^^ Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned undefined.
-  References:
-    6:     constructor():number { }
-                         ^^^^^^ [1]: number
 
 Error ----------------------------------------------------- constructor.js:15:10
 
 Cannot cast `new Foo(...)` to `Bar` because in type argument `T`, number is
 incompatible with string.
 
-Error: constructor.js:15
- 15: (new Foo(123): Bar<string>); // error, number !~> string
-              ^^^ Cannot cast `new Foo(...)` to `Bar` because in type argument `T`, number [1] is incompatible with string [2].
-  References:
-   15: (new Foo(123): Bar<string>); // error, number !~> string
-                ^^^ [1]: number
-   15: (new Foo(123): Bar<string>); // error, number !~> string
-                          ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- constructor.js:22:10
 
 Cannot cast `new Baz(...)` to `Baz` because in type argument `T`, number is
 incompatible with string.
 
-Error: constructor.js:22
- 22: (new Baz(123): Baz<string>); // error, number !~> string
-              ^^^ Cannot cast `new Baz(...)` to `Baz` because in type argument `T`, number [1] is incompatible with string [2].
-  References:
-   22: (new Baz(123): Baz<string>); // error, number !~> string
-                ^^^ [1]: number
-   22: (new Baz(123): Baz<string>); // error, number !~> string
-                          ^^^^^^ [2]: string
 
 
 Found 3 errors

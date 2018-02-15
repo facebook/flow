@@ -7,9 +7,6 @@ Error ----------------------------------------------------------------- B.js:5:9
 
 Cannot resolve module `A`.
 
-Error: B.js:5
-  5: require('A');
-             ^^^ Cannot resolve module `A`.
 
 
 Found 1 error

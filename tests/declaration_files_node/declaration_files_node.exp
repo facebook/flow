@@ -2,118 +2,46 @@ Error ----------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to string because number is incompatible with string.
 
-Error: test_absolute.js:5
-  5: (B1.fun(): string); // Error number ~> string
-      ^^^^^^^^ Cannot cast `B1.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/B.js.flow:1
-    5: (B1.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- test_absolute.js:9:2
 
 Cannot cast `B2.fun()` to string because number is incompatible with string.
 
-Error: test_absolute.js:9
-  9: (B2.fun(): string); // Error number ~> string
-      ^^^^^^^^ Cannot cast `B2.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/B.js.flow:1
-    9: (B2.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- test_absolute.js:12:2
 
 Cannot cast `C.fun()` to string because number is incompatible with string.
 
-Error: test_absolute.js:12
- 12: (C.fun(): string); // Error number ~> string
-      ^^^^^^^ Cannot cast `C.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    3: declare var fun: () => number;
-                              ^^^^^^ [1]: number. See: node_modules/package_with_full_main/code.js.flow:3
-   12: (C.fun(): string); // Error number ~> string
-                 ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- test_absolute.js:15:2
 
 Cannot cast `D.fun()` to string because number is incompatible with string.
 
-Error: test_absolute.js:15
- 15: (D.fun(): string); // Error number ~> string
-      ^^^^^^^ Cannot cast `D.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/package_with_partial_main/code.js.flow:1
-   15: (D.fun(): string); // Error number ~> string
-                 ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- test_absolute.js:18:2
 
 Cannot cast `E.fun()` to string because number is incompatible with string.
 
-Error: test_absolute.js:18
- 18: (E.fun(): string); // Error number ~> string
-      ^^^^^^^ Cannot cast `E.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    1: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: node_modules/package_with_no_package_json/index.js.flow:1
-   18: (E.fun(): string); // Error number ~> string
-                 ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- test_absolute.js:21:2
 
 Cannot cast `F.fun()` to string because number is incompatible with string.
 
-Error: test_absolute.js:21
- 21: (F.fun(): string); // Error number ~> string
-      ^^^^^^^ Cannot cast `F.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    3: declare export var fun: () => number;
-                                     ^^^^^^ [1]: number. See: node_modules/package_with_dir_main/dir/index.js.flow:3
-   21: (F.fun(): string); // Error number ~> string
-                 ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- test_relative.js:5:2
 
 Cannot cast `A1.fun()` to string because number is incompatible with string.
 
-Error: test_relative.js:5
-  5: (A1.fun(): string); // Error number ~> string
-      ^^^^^^^^ Cannot cast `A1.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    3: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: A.js.flow:3
-    5: (A1.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]: string
 
 Error ----------------------------------------------------- test_relative.js:9:2
 
 Cannot cast `A2.fun()` to string because number is incompatible with string.
 
-Error: test_relative.js:9
-  9: (A2.fun(): string); // Error number ~> string
-      ^^^^^^^^ Cannot cast `A2.fun()` to string because number [1] is incompatible with string [2].
-  References:
-    3: declare export function fun(): number;
-                                      ^^^^^^ [1]: number. See: A.js.flow:3
-    9: (A2.fun(): string); // Error number ~> string
-                  ^^^^^^ [2]: string
 
 Error ---------------------------------------------------- test_relative.js:13:2
 
 Cannot cast `CJS` to number because string is incompatible with number.
 
-Error: test_relative.js:13
- 13: (CJS: number); // Error: string ~> number
-      ^^^ Cannot cast `CJS` to number because string [1] is incompatible with number [2].
-  References:
-    1: declare module.exports: string;
-                               ^^^^^^ [1]: string. See: CJS.js.flow:1
-   13: (CJS: number); // Error: string ~> number
-             ^^^^^^ [2]: number
 
 
 Found 9 errors

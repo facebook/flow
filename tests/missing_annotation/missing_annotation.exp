@@ -2,25 +2,16 @@ Error ------------------------------------------------------------ infer.js:4:15
 
 Missing type annotation for `arg`.
 
-Error: infer.js:4
-  4:   a: function(arg) {  // missing arg annotation
-                   ^^^ Missing type annotation for `arg`.
 
 Error ------------------------------------------------------------ infer.js:8:15
 
 Missing type annotation for `arg`.
 
-Error: infer.js:8
-  8:   b: function(arg) {  // missing arg annotation
-                   ^^^ Missing type annotation for `arg`.
 
 Error ----------------------------------------------------------- infer.js:32:21
 
 Missing type annotation for `x`.
 
-Error: infer.js:32
- 32:     return function(x) {  // missing param annotation
-                         ^ Missing type annotation for `x`.
 
 
 Found 3 errors

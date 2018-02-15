@@ -3,12 +3,6 @@ Error ------------------------------------------------------------- test.js:5:23
 Cannot use `T` in an input/output position because `T` is expected to occur only
 in output positions.
 
-Error: test.js:5
-  5: class B<+T> extends A<T> {} // Error: T used invariantly.
-                           ^ Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
-  References:
-    5: class B<+T> extends A<T> {} // Error: T used invariantly.
-                ^ [1]: `T`
 
 
 Found 1 error

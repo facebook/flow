@@ -2,77 +2,45 @@ Error ----------------------------------------------------- object_freeze.js:4:5
 
 Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable.
 
-Error: object_freeze.js:4
-  4: foo.bar = '23456'; // error
-         ^^^ Cannot assign `'23456'` to `foo.bar` because property `bar` is not writable.
 
 Error ----------------------------------------------------- object_freeze.js:6:1
 
 Property `bar` is not writable.
 
-Error: object_freeze.js:6
-  6: Object.assign(foo, {bar: '12345'}); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Property `bar` is not writable.
 
 Error ---------------------------------------------------- object_freeze.js:10:8
 
 Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable.
 
-Error: object_freeze.js:10
- 10: bliffl.bar = '23456'; // error
-            ^^^ Cannot assign `'23456'` to `bliffl.bar` because property `bar` is not writable.
 
 Error ---------------------------------------------------- object_freeze.js:11:8
 
 Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable.
 
-Error: object_freeze.js:11
- 11: bliffl.baz = 3456; // error
-            ^^^ Cannot assign `3456` to `bliffl.baz` because property `baz` is not writable.
 
 Error ---------------------------------------------------- object_freeze.js:12:8
 
 Cannot get `bliffl.corge` because property `corge` is missing in frozen object
 literal.
 
-Error: object_freeze.js:12
- 12: bliffl.corge; // error
-            ^^^^^ Cannot get `bliffl.corge` because property `corge` is missing in frozen object literal [1].
-  References:
-    9: var bliffl = Object.freeze({bar: '12345', ...baz});
-                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]: frozen object literal
 
 Error ---------------------------------------------------- object_freeze.js:13:8
 
 Cannot assign `baz` to `bliffl.constructor` because property `constructor` is
 not writable.
 
-Error: object_freeze.js:13
- 13: bliffl.constructor = baz; // error
-            ^^^^^^^^^^^ Cannot assign `baz` to `bliffl.constructor` because property `constructor` is not writable.
 
 Error ---------------------------------------------------- object_freeze.js:14:8
 
 Cannot assign function to `bliffl.toString` because property `toString` is not
 writable.
 
-Error: object_freeze.js:14
- 14: bliffl.toString = function() {}; // error
-            ^^^^^^^^ Cannot assign function to `bliffl.toString` because property `toString` is not writable.
 
 Error --------------------------------------------------- object_freeze.js:20:45
 
 Cannot assign `Object.freeze(...)` to `xx` because in property `x`, string is
 incompatible with number.
 
-Error: object_freeze.js:20
- 20: var xx : { x: number } = Object.freeze({ x: "error" })
-                                                 ^^^^^^^ Cannot assign `Object.freeze(...)` to `xx` because in property `x`, string [1] is incompatible with number [2].
-  References:
-   20: var xx : { x: number } = Object.freeze({ x: "error" })
-                                                   ^^^^^^^ [1]: string
-   20: var xx : { x: number } = Object.freeze({ x: "error" })
-                     ^^^^^^ [2]: number
 
 
 Found 8 errors

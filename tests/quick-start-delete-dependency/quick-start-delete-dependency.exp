@@ -11,9 +11,6 @@ Error ----------------------------------------------------------------- b.js:2:9
 
 Cannot resolve module `./a`.
 
-Error: b.js:2
-  2: require('./a');
-             ^^^^^ Cannot resolve module `./a`.
 
 
 Found 1 error

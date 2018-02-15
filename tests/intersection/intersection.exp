@@ -4,25 +4,11 @@ Cannot return
 `options.objectMode || options.readableObjectMode || options.writableObjectMode`
 because undefined is incompatible with boolean.
 
-Error: pred.js:17
- 17:     || options.writableObjectMode; // error, undefined ~> boolean
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot return `options.objectMode || options.readableObjectMode || options.writableObjectMode` because undefined [1] is incompatible with boolean [2].
-  References:
-   11:   writableObjectMode? : boolean
-                               ^^^^^^^ [1]: undefined
-   14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
-                                                                 ^^^^^^^ [2]: boolean
 
 Error ---------------------------------------------------- proper_blaming.js:9:3
 
 Cannot get `x.nope` because property `nope` is missing in null.
 
-Error: proper_blaming.js:9
-  9: x.nope; // error here
-       ^^^^ Cannot get `x.nope` because property `nope` is missing in null [1].
-  References:
-    5: type O = {p: null} & E;
-                    ^^^^ [1]: null
 
 Error: test_obj.js:29
  29: var e: E = c; // error

@@ -5,53 +5,21 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
 Cannot assign `3 + "string"` to `x` because string is incompatible with number.
 
-Error: dir/test2.foo:4
-  4: x = 3 + "string";
-         ^^^^^^^^^^^^ Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
-  References:
-    4: x = 3 + "string";
-           ^^^^^^^^^^^^ [1]: string
-    3: var x: number = 3;
-              ^^^^^^ [2]: number
 
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
 Cannot assign `123` to `x` because number is incompatible with string.
 
-Error: other_root/other_root_file.js:3
-  3: var x: string = 123; // Error
-                     ^^^ Cannot assign `123` to `x` because number [1] is incompatible with string [2].
-  References:
-    3: var x: string = 123; // Error
-                       ^^^ [1]: number
-    3: var x: string = 123; // Error
-              ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- test.js:3:2
 
 Cannot cast empty string to number because string is incompatible with number.
 
-Error: test.js:3
-  3: ("": number);
-      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
-  References:
-    3: ("": number);
-        ^^ [1]: string
-    3: ("": number);
-            ^^^^^^ [2]: number
 
 
 Found 4 errors
@@ -61,53 +29,21 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
 Cannot assign `3 + "string"` to `x` because string is incompatible with number.
 
-Error: dir/test2.foo:4
-  4: x = 3 + "string";
-         ^^^^^^^^^^^^ Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
-  References:
-    4: x = 3 + "string";
-           ^^^^^^^^^^^^ [1]: string
-    3: var x: number = 3;
-              ^^^^^^ [2]: number
 
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
 Cannot assign `123` to `x` because number is incompatible with string.
 
-Error: other_root/other_root_file.js:3
-  3: var x: string = 123; // Error
-                     ^^^ Cannot assign `123` to `x` because number [1] is incompatible with string [2].
-  References:
-    3: var x: string = 123; // Error
-                       ^^^ [1]: number
-    3: var x: string = 123; // Error
-              ^^^^^^ [2]: string
 
 Error -------------------------------------------------------------- test.js:3:2
 
 Cannot cast empty string to number because string is incompatible with number.
 
-Error: test.js:3
-  3: ("": number);
-      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
-  References:
-    3: ("": number);
-        ^^ [1]: string
-    3: ("": number);
-            ^^^^^^ [2]: number
 
 
 Found 4 errors
@@ -117,14 +53,6 @@ Error -------------------------------------------------------------- test.js:3:2
 
 Cannot cast empty string to number because string is incompatible with number.
 
-Error: test.js:3
-  3: ("": number);
-      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
-  References:
-    3: ("": number);
-        ^^ [1]: string
-    3: ("": number);
-            ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -134,14 +62,6 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -151,14 +71,6 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -168,14 +80,6 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -185,27 +89,11 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 Error -------------------------------------------------------------- test.js:3:2
 
 Cannot cast empty string to number because string is incompatible with number.
 
-Error: test.js:3
-  3: ("": number);
-      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
-  References:
-    3: ("": number);
-        ^^ [1]: string
-    3: ("": number);
-            ^^^^^^ [2]: number
 
 
 Found 2 errors
@@ -215,27 +103,11 @@ Error -------------------------------------------------------- dir/test2.foo:4:5
 
 Cannot assign `3 + "string"` to `x` because string is incompatible with number.
 
-Error: dir/test2.foo:4
-  4: x = 3 + "string";
-         ^^^^^^^^^^^^ Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
-  References:
-    4: x = 3 + "string";
-           ^^^^^^^^^^^^ [1]: string
-    3: var x: number = 3;
-              ^^^^^^ [2]: number
 
 Error -------------------------------------------------------------- test.js:3:2
 
 Cannot cast empty string to number because string is incompatible with number.
 
-Error: test.js:3
-  3: ("": number);
-      ^^ Cannot cast empty string to number because string [1] is incompatible with number [2].
-  References:
-    3: ("": number);
-        ^^ [1]: string
-    3: ("": number);
-            ^^^^^^ [2]: number
 
 
 Found 2 errors
@@ -245,27 +117,11 @@ Error ----------------------------------------------------------------- a.js:3:2
 
 Cannot cast `require(...)` to number because string is incompatible with number.
 
-Error: a.js:3
-  3: (require('./b'): number);
-      ^^^^^^^^^^^^^^ Cannot cast `require(...)` to number because string [1] is incompatible with number [2].
-  References:
-    3: module.exports = "";
-                        ^^ [1]: string. See: b.js:3
-    3: (require('./b'): number);
-                        ^^^^^^ [2]: number
 
 Error -------------------------------------------------------- dir/test2.foo:4:5
 
 Cannot assign `3 + "string"` to `x` because string is incompatible with number.
 
-Error: dir/test2.foo:4
-  4: x = 3 + "string";
-         ^^^^^^^^^^^^ Cannot assign `3 + "string"` to `x` because string [1] is incompatible with number [2].
-  References:
-    4: x = 3 + "string";
-           ^^^^^^^^^^^^ [1]: string
-    3: var x: number = 3;
-              ^^^^^^ [2]: number
 
 
 Found 2 errors
@@ -275,27 +131,11 @@ Error ----------------------------------- other_root/other_root_dependent.js:5:2
 
 Cannot cast `foo` to string because number is incompatible with string.
 
-Error: other_root/other_root_dependent.js:5
-  5: (foo: string); // Error
-      ^^^ Cannot cast `foo` to string because number [1] is incompatible with string [2].
-  References:
-    5: export default 123;
-                      ^^^ [1]: number. See: other_root/other_root_file.js:5
-    5: (foo: string); // Error
-             ^^^^^^ [2]: string
 
 Error --------------------------------------- other_root/other_root_file.js:3:17
 
 Cannot assign `123` to `x` because number is incompatible with string.
 
-Error: other_root/other_root_file.js:3
-  3: var x: string = 123; // Error
-                     ^^^ Cannot assign `123` to `x` because number [1] is incompatible with string [2].
-  References:
-    3: var x: string = 123; // Error
-                       ^^^ [1]: number
-    3: var x: string = 123; // Error
-              ^^^^^^ [2]: string
 
 
 Found 2 errors
@@ -305,14 +145,6 @@ Error --------------------------------------- other_root/other_root_file.js:3:17
 
 Cannot assign `123` to `x` because number is incompatible with string.
 
-Error: other_root/other_root_file.js:3
-  3: var x: string = 123; // Error
-                     ^^^ Cannot assign `123` to `x` because number [1] is incompatible with string [2].
-  References:
-    3: var x: string = 123; // Error
-                       ^^^ [1]: number
-    3: var x: string = 123; // Error
-              ^^^^^^ [2]: string
 
 
 Found 1 error

@@ -4,9 +4,6 @@ Error ------------------------------------------------------------- test.js:4:20
 
 Cannot resolve module `./data`.
 
-Error: test.js:4
-  4: var data = require('./data');
-                        ^^^^^^^^ Cannot resolve module `./data`.
 
 
 Found 1 error
@@ -19,14 +16,6 @@ Error ------------------------------------------------------------- test.js:5:17
 
 Cannot assign `data.x` to `x` because string is incompatible with number.
 
-Error: test.js:5
-  5: var x: number = data.x;
-                     ^^^^^^ Cannot assign `data.x` to `x` because string [1] is incompatible with number [2].
-  References:
-    2:   x: "",
-            ^^ [1]: string. See: data.json:2
-    5: var x: number = data.x;
-              ^^^^^^ [2]: number
 
 
 Found 1 error
@@ -36,9 +25,6 @@ Error ------------------------------------------------------------- test.js:4:20
 
 Cannot resolve module `./data`.
 
-Error: test.js:4
-  4: var data = require('./data');
-                        ^^^^^^^^ Cannot resolve module `./data`.
 
 
 Found 1 error

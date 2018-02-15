@@ -2,27 +2,11 @@ Error ------------------------------------------------------------ equals.js:7:2
 
 Cannot compare number to string.
 
-Error: equals.js:7
-  7: (1 == ""); // error
-      ^ Cannot compare number [1] to string [2].
-  References:
-    7: (1 == ""); // error
-        ^ [1]: number
-    7: (1 == ""); // error
-             ^^ [2]: string
 
 Error ------------------------------------------------------------ equals.js:8:2
 
 Cannot compare string to number.
 
-Error: equals.js:8
-  8: ("" == 1); // error
-      ^^ Cannot compare string [1] to number [2].
-  References:
-    8: ("" == 1); // error
-        ^^ [1]: string
-    8: ("" == 1); // error
-              ^ [2]: number
 
 
 Found 2 errors

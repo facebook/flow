@@ -2,51 +2,23 @@ Error ------------------------------------------------------------ class.js:3:15
 
 Cannot get `A.bar` because property `bar` is missing in statics of `A`.
 
-Error: class.js:3
-  3: var test1 = A.bar; // Error bar doesn't exist
-                   ^^^ Cannot get `A.bar` because property `bar` is missing in statics of `A` [1].
-  References:
-    1: class A {}
-             ^ [1]: statics of `A`
 
 Error ------------------------------------------------------------ class.js:5:21
 
 Cannot assign `A.name` to `test3` because string is incompatible with number.
 
-Error: class.js:5
-  5: var test3: number = A.name; // Error string ~> number
-                         ^^^^^^ Cannot assign `A.name` to `test3` because string [1] is incompatible with number [2].
-  References:
-    1: class A {}
-             ^ [1]: string
-    5: var test3: number = A.name; // Error string ~> number
-                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ class.js:8:27
 
 Cannot get `a.constructor.bar` because property `bar` is missing in statics of
 `A`.
 
-Error: class.js:8
-  8: var test4 = a.constructor.bar; // Error bar doesn't exist
-                               ^^^ Cannot get `a.constructor.bar` because property `bar` is missing in statics of `A` [1].
-  References:
-    7: var a = new A();
-               ^^^^^^^ [1]: statics of `A`
 
 Error ----------------------------------------------------------- class.js:10:21
 
 Cannot assign `a.constructor.name` to `test6` because string is incompatible
 with number.
 
-Error: class.js:10
- 10: var test6: number = a.constructor.name; // Error string ~> number
-                         ^^^^^^^^^^^^^^^^^^ Cannot assign `a.constructor.name` to `test6` because string [1] is incompatible with number [2].
-  References:
-    1: class A {}
-             ^ [1]: string
-   10: var test6: number = a.constructor.name; // Error string ~> number
-                  ^^^^^^ [2]: number
 
 
 Found 4 errors

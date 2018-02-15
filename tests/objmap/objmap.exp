@@ -3,153 +3,65 @@ Error --------------------------------------------------------- identity.js:20:6
 Cannot cast object literal to `Foo` because in property `a`, string is
 incompatible with number.
 
-Error: identity.js:20
- 20:   a: 'asd', // Error: string ~> number
-          ^^^^^ Cannot cast object literal to `Foo` because in property `a`, string [1] is incompatible with number [2].
-  References:
-   20:   a: 'asd', // Error: string ~> number
-            ^^^^^ [1]: string
-    7:     a: number,
-              ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- identity.js:21:6
 
 Cannot cast object literal to `Foo` because in property `b`, string is
 incompatible with number.
 
-Error: identity.js:21
- 21:   b: 'asd', // Error: string ~> number
-          ^^^^^ Cannot cast object literal to `Foo` because in property `b`, string [1] is incompatible with number [2].
-  References:
-   21:   b: 'asd', // Error: string ~> number
-            ^^^^^ [1]: string
-    8:     b: number,
-              ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- identity.js:25:6
 
 Cannot cast `any` to `Foo` because in property `a`, string is incompatible with
 number.
 
-Error: identity.js:25
- 25:   a: string, // Error: string ~> number
-          ^^^^^^ Cannot cast `any` to `Foo` because in property `a`, string [1] is incompatible with number [2].
-  References:
-   25:   a: string, // Error: string ~> number
-            ^^^^^^ [1]: string
-    7:     a: number,
-              ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- identity.js:26:6
 
 Cannot cast `any` to `Foo` because in property `b`, string is incompatible with
 number.
 
-Error: identity.js:26
- 26:   b: string, // Error: string ~> number
-          ^^^^^^ Cannot cast `any` to `Foo` because in property `b`, string [1] is incompatible with number [2].
-  References:
-   26:   b: string, // Error: string ~> number
-            ^^^^^^ [1]: string
-    8:     b: number,
-              ^^^^^^ [2]: number
 
 Error --------------------------------------------------------- identity.js:29:2
 
 Cannot cast object literal to `Foo` because property `a` is missing in object
 literal but exists in object type.
 
-Error: identity.js:29
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ Cannot cast object literal to `Foo` because property `a` is missing in object literal [1] but exists in object type [2].
-  References:
-   29: ({}: Foo); // Error: `a` and `b` are not defined.
-        ^^ [1]: object literal
-   29: ({}: Foo); // Error: `a` and `b` are not defined.
-            ^^^ [2]: object type
 
 Error --------------------------------------------------------- identity.js:29:2
 
 Cannot cast object literal to `Foo` because property `b` is missing in object
 literal but exists in object type.
 
-Error: identity.js:29
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ Cannot cast object literal to `Foo` because property `b` is missing in object literal [1] but exists in object type [2].
-  References:
-   29: ({}: Foo); // Error: `a` and `b` are not defined.
-        ^^ [1]: object literal
-   29: ({}: Foo); // Error: `a` and `b` are not defined.
-            ^^^ [2]: object type
 
 Error --------------------------------------------------------- identity.js:31:8
 
 Cannot cast `any` to `Foo` because property `a` is missing in object type but
 exists in object type.
 
-Error: identity.js:31
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in object type [2].
-  References:
-   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-              ^^ [1]: object type
-   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                   ^^^ [2]: object type
 
 Error --------------------------------------------------------- identity.js:31:8
 
 Cannot cast `any` to `Foo` because property `b` is missing in object type but
 exists in object type.
 
-Error: identity.js:31
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in object type [2].
-  References:
-   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-              ^^ [1]: object type
-   31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                   ^^^ [2]: object type
 
 Error --------------------------------------------------------- identity.js:38:2
 
 Cannot cast `foo` to object type because in property `a`, number is incompatible
 with string.
 
-Error: identity.js:38
- 38: (foo: {
-      ^^^ Cannot cast `foo` to object type because in property `a`, number [1] is incompatible with string [2].
-  References:
-    7:     a: number,
-              ^^^^^^ [1]: number
-   39:   a: string, // Error: number ~> string
-            ^^^^^^ [2]: string
 
 Error --------------------------------------------------------- identity.js:38:2
 
 Cannot cast `foo` to object type because in property `b`, number is incompatible
 with string.
 
-Error: identity.js:38
- 38: (foo: {
-      ^^^ Cannot cast `foo` to object type because in property `b`, number [1] is incompatible with string [2].
-  References:
-    8:     b: number,
-              ^^^^^^ [1]: number
-   40:   b: string, // Error: number ~> string
-            ^^^^^^ [2]: string
 
 Error --------------------------------------------------------- identity.js:43:2
 
 Cannot cast `foo.a` to empty because number is incompatible with empty.
 
-Error: identity.js:43
- 43: (foo.a: empty); // Error: number ~> empty
-      ^^^^^ Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2].
-  References:
-    7:     a: number,
-              ^^^^^^ [1]: number
-   43: (foo.a: empty); // Error: number ~> empty
-               ^^^^^ [2]: empty
 
 Error: identity.js:61
       v
@@ -285,139 +197,59 @@ Error -------------------------------------------------------- issue-2674.js:7:2
 Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` is
 incompatible with string literal `BAR`.
 
-Error: issue-2674.js:7
-  7: (a.FOO: 'BAR'); // error
-      ^^^^^ Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
-  References:
-    3: type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string literal `FOO`
-    7: (a.FOO: 'BAR'); // error
-               ^^^^^ [2]: string literal `BAR`
 
 Error -------------------------------------------------------- issue-2674.js:8:9
 
 Cannot assign `'BAR'` to `a.FOO` because string is incompatible with string
 literal `FOO`.
 
-Error: issue-2674.js:8
-  8: a.FOO = 'BAR'; // error
-             ^^^^^ Cannot assign `'BAR'` to `a.FOO` because string [1] is incompatible with string literal `FOO` [2].
-  References:
-    8: a.FOO = 'BAR'; // error
-               ^^^^^ [1]: string
-    3: type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: string literal `FOO`
 
 Error ------------------------------------------------------- issue-2674.js:14:2
 
 Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` is
 incompatible with string literal `BAR`.
 
-Error: issue-2674.js:14
- 14: (b.FOO : 'BAR'); // error
-      ^^^^^ Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
-  References:
-   10: type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
-                                                    ^^^^^ [1]: string literal `FOO`
-   14: (b.FOO : 'BAR'); // error
-                ^^^^^ [2]: string literal `BAR`
 
 Error ------------------------------------------------------- issue-2674.js:15:9
 
 Cannot assign `'BAR'` to `b.FOO` because string is incompatible with string
 literal `FOO`.
 
-Error: issue-2674.js:15
- 15: b.FOO = 'BAR'; // error
-             ^^^^^ Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2].
-  References:
-   15: b.FOO = 'BAR'; // error
-               ^^^^^ [1]: string
-   10: type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
-                                                    ^^^^^ [2]: string literal `FOO`
 
 Error ------------------------------------------------------- issue-2674.js:21:2
 
 Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` is
 incompatible with string literal `BAR`.
 
-Error: issue-2674.js:21
- 21: (c[0]: 'BAR'); // error
-      ^^^^ Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
-  References:
-   17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
-                                                       ^^^^^ [1]: string literal `FOO`
-   21: (c[0]: 'BAR'); // error
-              ^^^^^ [2]: string literal `BAR`
 
 Error ------------------------------------------------------- issue-2674.js:22:8
 
 Cannot assign `'BAR'` to `c[0]` because string is incompatible with string
 literal `FOO`.
 
-Error: issue-2674.js:22
- 22: c[0] = 'BAR'; // error
-            ^^^^^ Cannot assign `'BAR'` to `c[0]` because string [1] is incompatible with string literal `FOO` [2].
-  References:
-   22: c[0] = 'BAR'; // error
-              ^^^^^ [1]: string
-   17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
-                                                       ^^^^^ [2]: string literal `FOO`
 
 Error ----------------------------------------------------------- objmap.js:10:2
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` is
 incompatible with string literal `BAR`.
 
-Error: objmap.js:10
- 10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-      ^^^^^ Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal `BAR` [2].
-  References:
-    2: declare function keyMirror<O>(o: O): $ObjMapi<O, <K>(k:K) => K>;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: string literal `FOO`
-   10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-                ^^^^^ [2]: string literal `BAR`
 
 Error ----------------------------------------------------------- objmap.js:16:4
 
 Cannot cast `o.foo` to string because number is incompatible with string.
 
-Error: objmap.js:16
- 16:   (o.foo: string); // error, number ~> string
-        ^^^^^ Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
-  References:
-   13:   foo: Promise.resolve(0),
-                              ^ [1]: number
-   16:   (o.foo: string); // error, number ~> string
-                 ^^^^^^ [2]: string
 
 Error --------------------------------------------------------- optional.js:13:2
 
 Cannot cast `o3.b` to array type because undefined is incompatible with array
 type.
 
-Error: optional.js:13
- 13: (o3.b: Array<number | void>); // Error: void ~> array
-      ^^^^ Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
-  References:
-    5: declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
-   13: (o3.b: Array<number | void>); // Error: void ~> array
-              ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 Error --------------------------------------------------------- optional.js:17:2
 
 Cannot cast `o6.b` to array type because undefined is incompatible with array
 type.
 
-Error: optional.js:17
- 17: (o6.b: Array<number | void>); // Error: void ~> array
-      ^^^^ Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2].
-  References:
-    9: declare var o6: $ObjMapi<{a: number, b?: number}, <T>(any, T) => Array<T>>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]: undefined
-   17: (o6.b: Array<number | void>); // Error: void ~> array
-              ^^^^^^^^^^^^^^^^^^^^ [2]: array type
 
 
 Found 23 errors

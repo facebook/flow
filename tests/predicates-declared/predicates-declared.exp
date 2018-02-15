@@ -2,103 +2,47 @@ Error ----------------------------------------------- sanity-conditional.js:5:50
 
 Unexpected token =
 
-Error: sanity-conditional.js:5
-  5: declare function foo(x: string): mixed %checks(x = "1");
-                                                      ^ Unexpected token =
 
 Error --------------------------------------------- sanity-fall-through.js:12:10
 
 Cannot return `1` because number is incompatible with string.
 
-Error: sanity-fall-through.js:12
- 12:   return 1;
-              ^ Cannot return `1` because number [1] is incompatible with string [2].
-  References:
-   12:   return 1;
-                ^ [1]: number
-    8: function foo(s: Array<string>): string {
-                                       ^^^^^^ [2]: string
 
 Error --------------------------------------------- sanity-invalid-calls.js:10:8
 
 Cannot call `1` because number is not a function.
 
-Error: sanity-invalid-calls.js:10
- 10:   if ((1)(s)) {
-            ^ Cannot call `1` because number [1] is not a function.
-  References:
-   10:   if ((1)(s)) {
-              ^ [1]: number
 
 Error --------------------------------------------- sanity-invalid-calls.js:14:8
 
 Cannot call `pred + 1` because number is not a function.
 
-Error: sanity-invalid-calls.js:14
- 14:   if ((pred + 1)("s")) {
-            ^^^^^^^^ Cannot call `pred + 1` because number [1] is not a function.
-  References:
-   14:   if ((pred + 1)("s")) {
-              ^^^^^^^^ [1]: number
 
 Error --------------------------------------------- sanity-invalid-calls.js:14:8
 
 Cannot add `pred` and `1` because function type is incompatible with number.
 
-Error: sanity-invalid-calls.js:14
- 14:   if ((pred + 1)("s")) {
-            ^^^^ Cannot add `pred` and `1` because function type [1] is incompatible with number [2].
-  References:
-    6: declare function pred<T>(x: T): boolean;
-                            ^^^^^^^^^^^^^^^^^^ [1]: function type
-   14:   if ((pred + 1)("s")) {
-                     ^ [2]: number
 
 Error -------------------------------------------- sanity-is-string-bug.js:13:14
 
 Cannot call `x.join` because property `join` is missing in `String`.
 
-Error: sanity-is-string-bug.js:13
- 13:     return x.join();    // error: both string and Array<string> can flow to x
-                  ^^^^ Cannot call `x.join` because property `join` is missing in `String` [1].
-  References:
-    9: function bar(x: string | Array<string>): string {
-                       ^^^^^^ [1]: `String`
 
 Error ---------------------------------------- sanity-parameter-mismatch.js:10:8
 
 Cannot call `foo` with `3` bound to `types` because number is incompatible with
 string.
 
-Error: sanity-parameter-mismatch.js:10
- 10: foo(3, 3);
-            ^ Cannot call `foo` with `3` bound to `types` because number [1] is incompatible with string [2].
-  References:
-   10: foo(3, 3);
-              ^ [1]: number
-    7:   types: string | Array<string>
-                ^^^^^^ [2]: string
 
 Error -------------------------------------------- sanity-pred-with-body.js:6:34
 
 Cannot declare predicate when a function body is present.
 
-Error: sanity-pred-with-body.js:6
-  6: function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
 Error ----------------------------------------------- sanity-return-type.js:3:47
 
 Cannot return `Array.isArray(...)` because boolean is incompatible with string.
 
-Error: sanity-return-type.js:3
-  3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                                   ^^^^^^^^^^^^^^^^ Cannot return `Array.isArray(...)` because boolean [1] is incompatible with string [2].
-  References:
-    3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                                     ^^^^^^^^^^^^^^^^ [1]: boolean
-    3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                      ^^^^^^ [2]: string
 
 
 Found 9 errors

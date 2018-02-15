@@ -7,9 +7,6 @@ Error ------------------------------------------------------------- index.js:2:9
 
 Cannot resolve module `A`.
 
-Error: index.js:2
-  2: require('A');
-             ^^^ Cannot resolve module `A`.
 
 
 Found 1 error

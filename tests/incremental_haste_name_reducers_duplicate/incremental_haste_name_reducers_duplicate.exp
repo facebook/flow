@@ -8,12 +8,6 @@ Error ----------------------------------------------------------------- B.js:1:1
 Duplicate module provider for `A`. Change either this module provider or the
 current module provider.
 
-Error: B.js:1
-  1: /* @flow */
-     ^ Duplicate module provider for `A`. Change either this module provider or the current module provider [1].
-  References:
-    1: /* @flow */
-       ^ [1]: current module provider. See: A.js:1
 
 
 Found 1 error

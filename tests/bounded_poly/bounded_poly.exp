@@ -2,95 +2,39 @@ Error ------------------------------------------------------------- test.js:3:21
 
 Cannot assign `x` to `y` because number is incompatible with string.
 
-Error: test.js:3
-  3:     var y: string = x; // error
-                         ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
-  References:
-    1: function foo<T: number>(x: T): T {
-                                  ^ [1]: number
-    3:     var y: string = x; // error
-                  ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:9:16
 
 Cannot return `x` because number is incompatible with `T`.
 
-Error: test.js:9
-  9:         return x; // error, since T: number and U: number does not imply U: T
-                    ^ Cannot return `x` because number [1] is incompatible with `T` [2].
-  References:
-    8:     bar<U: number>(x: U): T {
-                             ^ [1]: number
-    8:     bar<U: number>(x: U): T {
-                                 ^ [2]: `T`
 
 Error ------------------------------------------------------------ test.js:13:25
 
 Cannot assign `x` to `y` because number is incompatible with string.
 
-Error: test.js:13
- 13:         var y: string = x; // error
-                             ^ Cannot assign `x` to `y` because number [1] is incompatible with string [2].
-  References:
-   11:     qux<U: T>(x: U): T {
-                        ^ [1]: number
-   13:         var y: string = x; // error
-                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ test.js:22:10
 
 Cannot instantiate `C` because in type argument `T`, string is incompatible with
 number.
 
-Error: test.js:22
- 22: var c: C<string> = new C; // error, since T = string is incompatible with number
-              ^^^^^^ Cannot instantiate `C` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                ^^^^^^ [1]: string
-    7: class C<T: number> {
-                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ test.js:22:20
 
 Cannot assign `new C()` to `c` because in type argument `T`, string is
 incompatible with number.
 
-Error: test.js:22
- 22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                        ^^^^^ Cannot assign `new C()` to `c` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                ^^^^^^ [1]: string
-    7: class C<T: number> {
-                  ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ test.js:23:17
 
 Cannot assign `c.qux(...)` to `q` because string is incompatible with number.
 
-Error: test.js:23
- 23: var q: number = c.qux(0);
-                     ^^^^^^^^ Cannot assign `c.qux(...)` to `q` because string [1] is incompatible with number [2].
-  References:
-   22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                ^^^^^^ [1]: string
-   23: var q: number = c.qux(0);
-              ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------ test.js:23:23
 
 Cannot call `c.qux` because in type argument `U`, number is incompatible with
 string.
 
-Error: test.js:23
- 23: var q: number = c.qux(0);
-                           ^ Cannot call `c.qux` because in type argument `U`, number [1] is incompatible with string [2].
-  References:
-   23: var q: number = c.qux(0);
-                             ^ [1]: number
-   22: var c: C<string> = new C; // error, since T = string is incompatible with number
-                ^^^^^^ [2]: string
 
 
 Found 7 errors

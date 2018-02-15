@@ -3,75 +3,38 @@ Error ---------------------------------------------------------- require.js:9:14
 Cannot call `takesAString` with `A.numberValue` bound to `str` because number is
 incompatible with string.
 
-Error: require.js:9
-  9: takesAString(A.numberValue);
-                  ^^^^^^^^^^^^^ Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
-  References:
-    6: exports.numberValue = 42;
-                             ^^ [1]: number. See: ProvidesModuleA.js:6
-    4: function takesAString(str: string): void {}
-                                  ^^^^^^ [2]: string
 
 Error --------------------------------------------------------- require.js:14:14
 
 Cannot call `takesAString` with `B.numberValue` bound to `str` because number is
 incompatible with string.
 
-Error: require.js:14
- 14: takesAString(B.numberValue);
-                  ^^^^^^^^^^^^^ Cannot call `takesAString` with `B.numberValue` bound to `str` because number [1] is incompatible with string [2].
-  References:
-    3: exports.numberValue = 42;
-                             ^^ [1]: number. See: B.js:3
-    4: function takesAString(str: string): void {}
-                                  ^^^^^^ [2]: string
 
 Error ---------------------------------------------------------- require.js:17:9
 
 Cannot resolve module `C`.
 
-Error: require.js:17
- 17: require("C");
-             ^^^ Cannot resolve module `C`.
 
 Error ---------------------------------------------------------- require.js:20:9
 
 Cannot resolve module `./D`.
 
-Error: require.js:20
- 20: require("./D");
-             ^^^^^ Cannot resolve module `./D`.
 
 Error ---------------------------------------------------------- require.js:25:3
 
 Cannot get `E.stringValue` because property `stringValue` is missing in object
 literal.
 
-Error: require.js:25
- 25: E.stringValue; // Error: The E exports obj has no 'stringValue' property
-       ^^^^^^^^^^^ Cannot get `E.stringValue` because property `stringValue` is missing in object literal [1].
-  References:
-                        v
-    6: module.exports = {
-    7:   numberValue: 42
-    8: };
-       ^ [1]: object literal. See: E.js:6
 
 Error ---------------------------------------------------------- require.js:30:1
 
 The parameter passed to `require` must be a string literal.
 
-Error: require.js:30
- 30: require(a); // Error: Param must be string literal
-     ^^^^^^^^^^ The parameter passed to `require` must be a string literal.
 
 Error ---------------------------------------------------------- require.js:32:1
 
 The parameter passed to `require` must be a string literal.
 
-Error: require.js:32
- 32: require(`${'./E'}`); // error: but only if they have no expressions
-     ^^^^^^^^^^^^^^^^^^^ The parameter passed to `require` must be a string literal.
 
 
 Found 7 errors

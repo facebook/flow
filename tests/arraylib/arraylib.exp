@@ -3,143 +3,65 @@ Error -------------------------------------------------------- array_lib.js:5:34
 Cannot call `foo` with `x` bound to `x` because number is incompatible with
 string.
 
-Error: array_lib.js:5
-  5: var b = a.map(function (x) { foo(x); return "" + x; });
-                                      ^ Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with string [2].
-  References:
-    4: var a = [0];
-                ^ [1]: number
-    2: function foo(x:string) { }
-                      ^^^^^^ [2]: string
 
 Error -------------------------------------------------------- array_lib.js:8:17
 
 Cannot assign `b[0]` to `d` because string is incompatible with number.
 
-Error: array_lib.js:8
-  8: var d: number = b[0];
-                     ^^^^ Cannot assign `b[0]` to `d` because string [1] is incompatible with number [2].
-  References:
-    5: var b = a.map(function (x) { foo(x); return "" + x; });
-                                                   ^^^^^^ [1]: string
-    8: var d: number = b[0];
-              ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- array_lib.js:10:23
 
 Cannot assign `a.reverse()` to `e` because in type argument `T`, number is
 incompatible with string.
 
-Error: array_lib.js:10
- 10: var e:Array<string> = a.reverse();
-                           ^^^^^^^^^^^ Cannot assign `a.reverse()` to `e` because in type argument `T`, number [1] is incompatible with string [2].
-  References:
-    4: var a = [0];
-                ^ [1]: number
-   10: var e:Array<string> = a.reverse();
-                   ^^^^^^ [2]: string
 
 Error ------------------------------------------------------- array_lib.js:21:33
 
 Cannot assign `h.concat(...)` to `n` because in type argument `T`, string is
 incompatible with number.
 
-Error: array_lib.js:21
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                     ^^^ Cannot assign `h.concat(...)` to `n` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                       ^^^ [1]: string
-   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- array_lib.js:21:38
 
 Cannot assign `h.concat(...)` to `n` because in type argument `T`, string is
 incompatible with number.
 
-Error: array_lib.js:21
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                          ^^^ Cannot assign `h.concat(...)` to `n` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                            ^^^ [1]: string
-   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- array_lib.js:21:43
 
 Cannot assign `h.concat(...)` to `n` because in type argument `T`, string is
 incompatible with number.
 
-Error: array_lib.js:21
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                               ^^^ Cannot assign `h.concat(...)` to `n` because in type argument `T`, string [1] is incompatible with number [2].
-  References:
-   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                                 ^^^ [1]: string
-   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------------- array_lib.js:46:29
 
 Cannot perform arithmetic operation because string is not a number.
 
-Error: array_lib.js:46
- 46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                 ^^^ Cannot perform arithmetic operation because string [1] is not a number.
-  References:
-   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-          ^^ [1]: string
 
 Error ------------------------------------------------------- array_lib.js:46:39
 
 Cannot get `str.length` because property `length` is missing in `Number`.
 
-Error: array_lib.js:46
- 46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                           ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
-  References:
-   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                   ^^^^^^^^^^^^^^^^ [1]: `Number`
 
 Error ------------------------------------------------------- array_lib.js:47:34
 
 Cannot perform arithmetic operation because string is not a number.
 
-Error: array_lib.js:47
- 47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                      ^^^ Cannot perform arithmetic operation because string [1] is not a number.
-  References:
-   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-          ^^ [1]: string
 
 Error ------------------------------------------------------- array_lib.js:47:44
 
 Cannot get `str.length` because property `length` is missing in `Number`.
 
-Error: array_lib.js:47
- 47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                                ^^^^^^ Cannot get `str.length` because property `length` is missing in `Number` [1].
-  References:
-   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                        ^^^^^^^^^^^^^^^^ [1]: `Number`
 
 Error ------------------------------------------------------------ length.js:7:3
 
 Cannot assign `6` to `r.length` because property `length` is not writable.
 
-Error: length.js:7
-  7: r.length = 6; //ng
-       ^^^^^^ Cannot assign `6` to `r.length` because property `length` is not writable.
 
 Error ----------------------------------------------------------- length.js:10:3
 
 Cannot assign `7` to `t.length` because property `length` is not writable.
 
-Error: length.js:10
- 10: t.length = 7; //ng
-       ^^^^^^ Cannot assign `7` to `t.length` because property `length` is not writable.
 
 
 Found 12 errors

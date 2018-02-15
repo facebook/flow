@@ -3,117 +3,51 @@ Error ------------------------------------------------------------- test.js:2:27
 Cannot assign `x` to `y` because property `foo` is missing in object type but
 exists in object type.
 
-Error: test.js:2
-  2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                               ^ Cannot assign `x` to `y` because property `foo` is missing in object type [1] but exists in object type [2].
-  References:
-    1: var x: { } = { foo: 0 };
-              ^^^ [1]: object type
-    2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-              ^^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------------------- test.js:8:9
 
 Cannot assign `0` to `o.foo` because number is incompatible with string.
 
-Error: test.js:8
-  8: o.foo = 0; // future widening is constrained
-             ^ Cannot assign `0` to `o.foo` because number [1] is incompatible with string [2].
-  References:
-    8: o.foo = 0; // future widening is constrained
-               ^ [1]: number
-    2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                      ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------ test.js:12:11
 
 Cannot call `bar` with object literal bound to `config` because in property
 `foo`, string is incompatible with number.
 
-Error: test.js:12
- 12: bar({foo: ""});
-               ^^ Cannot call `bar` with object literal bound to `config` because in property `foo`, string [1] is incompatible with number [2].
-  References:
-   12: bar({foo: ""});
-                 ^^ [1]: string
-   10: function bar(config: { foo?: number }) {}
-                                    ^^^^^^ [2]: number
 
 Error ------------------------------------------------------------- test2.js:3:9
 
 Cannot assign `null` to `a.foo` because null is incompatible with string.
 
-Error: test2.js:3
-  3: a.foo = null; // But this is an error
-             ^^^^ Cannot assign `null` to `a.foo` because null [1] is incompatible with string [2].
-  References:
-    3: a.foo = null; // But this is an error
-               ^^^^ [1]: null
-    1: var a: { foo?: string } = {};
-                      ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- test2.js:10:34
 
 Cannot assign object literal to `d` because in property `foo`, null is
 incompatible with string.
 
-Error: test2.js:10
- 10: var d: { foo?: string } = { foo: null }; // But this is an error
-                                      ^^^^ Cannot assign object literal to `d` because in property `foo`, null [1] is incompatible with string [2].
-  References:
-   10: var d: { foo?: string } = { foo: null }; // But this is an error
-                                        ^^^^ [1]: null
-   10: var d: { foo?: string } = { foo: null }; // But this is an error
-                      ^^^^^^ [2]: string
 
 Error ----------------------------------------------------------- test3.js:54:16
 
 Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object
 literal.
 
-Error: test3.js:54
- 54:         this.x.b = 'hello';
-                    ^ Cannot assign `'hello'` to `this.x.b` because property `b` is missing in object literal [1].
-  References:
-   53:         this.x = { a: 123 };
-                        ^^^^^^^^^^ [1]: object literal
 
 Error ------------------------------------------------ test3_exact_annot.js:5:38
 
 Cannot assign `a` to `b` because property `b` is missing in object type but
 exists in object type.
 
-Error: test3_exact_annot.js:5
-  5: const b: { a: number, b?: number } = a; // error: property `b` not found
-                                          ^ Cannot assign `a` to `b` because property `b` is missing in object type [1] but exists in object type [2].
-  References:
-    4: const a: {| a: number |} = { a: 1 };
-                ^^^^^^^^^^^^^^^ [1]: object type
-    5: const b: { a: number, b?: number } = a; // error: property `b` not found
-                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]: object type
 
 Error ------------------------------------------------- test3_exact_annot.js:7:4
 
 Cannot get `a.b` because property `b` is missing in object type.
 
-Error: test3_exact_annot.js:7
-  7: (a.b: number); // error: property `b` not found
-        ^ Cannot get `a.b` because property `b` is missing in object type [1].
-  References:
-    4: const a: {| a: number |} = { a: 1 };
-                ^^^^^^^^^^^^^^^ [1]: object type
 
 Error ---------------------------------------------------- test3_failure.js:7:14
 
 Cannot assign `'hello'` to `this.o.x.b` because property `b` is missing in
 object literal.
 
-Error: test3_failure.js:7
-  7:     this.o.x.b = 'hello'; // this is a spurious error (see test3.js for details)
-                  ^ Cannot assign `'hello'` to `this.o.x.b` because property `b` is missing in object literal [1].
-  References:
-    6:     this.o.x = { a: 123 };
-                      ^^^^^^^^^^ [1]: object literal
 
 
 Found 9 errors

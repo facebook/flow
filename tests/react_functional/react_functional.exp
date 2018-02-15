@@ -3,47 +3,22 @@ Error -------------------------------------------------------------- test.js:4:2
 Cannot create `F` element because property `foo` is missing in props but exists
 in object type.
 
-Error: test.js:4
-  4: <F />; // error: missing `foo`
-      ^ Cannot create `F` element because property `foo` is missing in props [1] but exists in object type [2].
-  References:
-    4: <F />; // error: missing `foo`
-       ^^^^^ [1]: props
-    3: function F(props: { foo: string }) {}
-                         ^^^^^^^^^^^^^^^ [2]: object type
 
 Error -------------------------------------------------------------- test.js:5:9
 
 Cannot create `F` element because in property `foo`, number is incompatible with
 string.
 
-Error: test.js:5
-  5: <F foo={0} />; // error: number ~> string
-             ^ Cannot create `F` element because in property `foo`, number [1] is incompatible with string [2].
-  References:
-    5: <F foo={0} />; // error: number ~> string
-               ^ [1]: number
-    3: function F(props: { foo: string }) {}
-                                ^^^^^^ [2]: string
 
 Error ------------------------------------------------------------- test.js:9:33
 
 Cannot resolve name `numner`.
 
-Error: test.js:9
-  9: function G(props: { foo: string|numner }) {}
-                                     ^^^^^^ Cannot resolve name `numner`.
 
 Error ------------------------------------------------------------- test.js:13:2
 
 Cannot create `Z` element because number is not a React component.
 
-Error: test.js:13
- 13: <Z />; // error, expected React component
-      ^ Cannot create `Z` element because number [1] is not a React component.
-  References:
-   12: var Z = 0;
-               ^ [1]: number
 
 
 Found 4 errors
