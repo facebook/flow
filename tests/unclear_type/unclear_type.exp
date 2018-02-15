@@ -1,30 +1,30 @@
 Error: index.js:3
   3: const a: any = 5;
-              ^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+              ^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 Error: index.js:7
   7: const c: Object = {a: 5};
-              ^^^^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+              ^^^^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 Error: index.js:9
   9: const d: Function = () => 0;
-              ^^^^^^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+              ^^^^^^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 Error: index.js:11
  11: const e: () => any = () => 0;
-                    ^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+                    ^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 Error: index.js:13
  13: const f: (Object) => Function = ({}) => function() {};
-               ^^^^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+               ^^^^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 Error: index.js:13
  13: const f: (Object) => Function = ({}) => function() {};
-                          ^^^^^^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+                          ^^^^^^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 Error: index.js:15
  15: type f2 = <T: Object>(x: T) => T;
-                   ^^^^^^ unclear-type: Unclear type. Using `any`, `Object` or `Function` types is not safe!
+                   ^^^^^^ Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
 
 Found 7 errors

@@ -1,34 +1,34 @@
 Error: cycle_b.js:5
   5: import type {N} from './cycle_a.js'; // Error
-                  ^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+                  ^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:4
   4: import {FooObj} from './nonstrict_exports.js'; // Error
-             ^^^^^^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+             ^^^^^^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:5
   5: import * as All from './nonstrict_exports.js'; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:8
   8: import BarObj from './nonstrict_exports.js'; // Error
-            ^^^^^^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+            ^^^^^^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:11
  11: const BarObj2 = require("./nonstrict_exports"); // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:20
  20: import NonstrictLib from './nonstrict_lib.js'; // Error
-            ^^^^^^^^^^^^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+            ^^^^^^^^^^^^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:27
  27: import type {S} from './nonstrict_exports.js'; // Error
-                  ^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+                  ^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 Error: imports.js:31
  31: import typeof {FooObj as FooObjType} from './nonstrict_exports.js'; // Error
-                    ^^^^^^ nonstrict-import: Dependencies of a `@flow strict` module must also be `@flow strict`
+                    ^^^^^^ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
 
 Found 8 errors

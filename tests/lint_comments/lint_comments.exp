@@ -1,6 +1,6 @@
 Error: simple_sketchies.js:5
   5: /*flowlint not-a-real-lint : not-a-real-setting   ,
-                ^^^^^^^^^^^^^^^ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?
+                ^^^^^^^^^^^^^^^ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`?
 
 Error: simple_sketchies.js:5
   5: /*flowlint not-a-real-lint : not-a-real-setting   ,
@@ -8,51 +8,57 @@ Error: simple_sketchies.js:5
 
 Error: simple_sketchies.js:13
  13:   if (x) {/* sketchy */}/* flowlint sketchy-null:off */
-           ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+           ^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
+  References:
    11: function f(x: ?number) {
-                     ^^^^^^^ Potentially null/undefined value.
+                      ^^^^^^ [1]: number
    11: function f(x: ?number) {
-                      ^^^^^^ Potentially 0 value.
+                     ^^^^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:44
  44: if (x1) { /* sketchy */ }
-         ^^ sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
+         ^^ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)
+  References:
    43: var x1: ?bool = false;
-               ^^^^^ Potentially null/undefined value.
+                ^^^^ [1]: boolean
    43: var x1: ?bool = false;
-                ^^^^ Potentially false value.
+               ^^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:67
  67: if (x3) { /* sketchy */ }
-         ^^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+         ^^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
+  References:
    66: var x3: ?string = "";
-               ^^^^^^^ Potentially null/undefined value.
+                ^^^^^^ [1]: string
    66: var x3: ?string = "";
-                ^^^^^^ Potentially "" value.
+               ^^^^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:77
  77:   if (x) { /* sketchy because of calls */ }
-           ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
-   79: r(null);
-         ^^^^ Potentially null/undefined value.
+           ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
+  References:
    80: r("")
-         ^^ Potentially "" value.
+         ^^ [1]: string
+   79: r(null);
+         ^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:89
  89:   if (x) { /* sketchy because of calls */ }
-           ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+           ^ Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-string`)
+  References:
+   92: declare var unknown_str: string;
+                                ^^^^^^ [1]: string
    91: s(null);
-         ^^^^ Potentially null/undefined value.
-   93: s(unknown_str); // possibly falsey, sketchy
-         ^^^^^^^^^^^ Potentially "" value.
+         ^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:112
 112:   if (o.p) { /* sketchy */ }
-           ^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-  112:   if (o.p) { /* sketchy */ }
-             ^^^ Potentially null/undefined value.
-  112:   if (o.p) { /* sketchy */ }
-             ^^^ Potentially 0 value.
+           ^^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
+  References:
+  109: function n(o: { p: number|null|void }) {
+                          ^^^^^^ [1]: number
+  109: function n(o: { p: number|null|void }) {
+                                      ^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:129
 129:   //flowlint-next-line sketchy-null:off
@@ -64,35 +70,37 @@ Error: simple_sketchies.js:142
 
 Error: simple_sketchies.js:146
 146: var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:error*/ /* flowlint-line sketchy-null:error */
-                        ^^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+                        ^^^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
+  References:
   143: var val2: ?number = 0;
-                 ^^^^^^^ Potentially null/undefined value.
+                  ^^^^^^ [1]: number
   143: var val2: ?number = 0;
-                  ^^^^^^ Potentially 0 value.
+                 ^^^^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:147
 147: var sketchyTrue = val2 || true; /* sketchy */
-                       ^^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+                       ^^^^ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)
+  References:
   143: var val2: ?number = 0;
-                 ^^^^^^^ Potentially null/undefined value.
+                  ^^^^^^ [1]: number
   143: var val2: ?number = 0;
-                  ^^^^^^ Potentially 0 value.
+                 ^^^^^^^ [2]: null or undefined
 
 Error: simple_sketchies.js:152
 152: // flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
-                 ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+                 ^ Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
 
 Error: simple_sketchies.js:152
 152: // flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
-                                          ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+                                          ^ Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
 
 Error: simple_sketchies.js:152
 152: // flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
-                                                                    ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+                                                                    ^ Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
 
 Error: simple_sketchies.js:155
 155: // flowlint sketchy-null-bool:error sketchy-null-mixed:off
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Malformed lint rule. Properly formed rules contain a single `:` character. Perhaps you have a missing/extra `,`?
 
 Warning: simple_sketchies.js:2
   2: /*flowlint sketchy-null:off*/ //unused suppression

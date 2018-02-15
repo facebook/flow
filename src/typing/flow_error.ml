@@ -2398,88 +2398,83 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     in
     mk_error ~kind:ParseError [loc, [msg]]
 
-  (* TODO: friendlify *)
   | EUntypedTypeImport (loc, module_name) ->
-    mk_error
-      ~kind:(LintError Lints.UntypedTypeImport)
-      [loc, [spf (
-        "Importing a type from an untyped module makes it `any` and is not safe! "^^
-        "Did you mean to add `// @flow` to the top of `%s`?"
-      ) module_name]]
+    mk_friendly_error ~trace_infos ~kind:(LintError Lints.UntypedTypeImport) loc [
+      text "Importing a type from an untyped module makes it "; code "any"; text " ";
+      text "and is not safe! Did you mean to add "; code "// @flow"; text " to ";
+      text "the top of "; code module_name; text "?";
+    ]
 
-  (* TODO: friendlify *)
   | EUntypedImport (loc, module_name) ->
-    mk_error
-      ~kind:(LintError Lints.UntypedImport)
-      [loc, [spf (
-        "Importing from an untyped module makes it `any` and is not safe! "^^
-        "Did you mean to add `// @flow` to the top of `%s`?"
-      ) module_name]]
+    mk_friendly_error ~trace_infos ~kind:(LintError Lints.UntypedImport) loc [
+      text "Importing from an untyped module makes it "; code "any"; text " ";
+      text "and is not safe! Did you mean to add "; code "// @flow"; text " ";
+      text "to the top of "; code module_name; text "?";
+    ]
 
-  (* TODO: friendlify *)
   | ENonstrictImport loc ->
-    mk_error
-      ~kind:(LintError Lints.NonstrictImport)
-      [loc, ["Dependencies of a `@flow strict` module must also be `@flow strict`"]]
+    mk_friendly_error ~trace_infos ~kind:(LintError Lints.NonstrictImport) loc [
+      text "Dependencies of a "; code "@flow strict"; text " module must ";
+      text "also be "; code "@flow strict"; text "!"
+    ]
 
-  (* TODO: friendlify *)
   | EUnclearType loc ->
-    mk_error
-      ~kind:(LintError Lints.UnclearType)
-      [loc, ["Unclear type. Using `any`, `Object` or `Function` types is not safe!"]]
+    mk_friendly_error ~trace_infos ~kind:(LintError Lints.UnclearType) loc [
+      text "Unclear type. Using "; code "any"; text ", "; code "Object"; text ", or ";
+      code "Function"; text " types is not safe!"
+    ]
 
-  (* TODO: friendlify *)
   | EUnsafeGettersSetters loc ->
-    mk_error
-      ~kind:(LintError Lints.UnsafeGettersSetters)
-      [loc, ["Getters and Setters can have side effects and are unsafe"]]
+    mk_friendly_error ~trace_infos ~kind:(LintError Lints.UnsafeGettersSetters) loc
+      [text "Getters and setters can have side effects and are unsafe."]
 
-  (* TODO: friendlify *)
   | EDeprecatedDeclareExports loc ->
-    mk_error
-      ~kind:(LintError Lints.DeprecatedDeclareExports)
-      [loc, ["Deprecated syntax. Use `declare module.exports` instead."]]
+    mk_friendly_error ~trace_infos ~kind:(LintError Lints.DeprecatedDeclareExports) loc
+      [text "Deprecated syntax. Use "; code "declare module.exports"; text " instead."]
 
   (* TODO: friendlify *)
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
 
-  (* TODO: friendlify *)
   | ELintSetting (loc, kind) ->
     let msg = match kind with
-    | LintSettings.Redundant_argument ->
-      "Redundant argument. This argument doesn't change any lint settings."
-    | LintSettings.Overwritten_argument ->
-      "Redundant argument. "
-        ^ "The values set by this argument are overwritten later in this comment."
-    | LintSettings.Naked_comment ->
-      "Malformed lint rule. At least one argument is required."
-    | LintSettings.Nonexistent_rule ->
-      "Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?"
-    | LintSettings.Invalid_setting ->
-      "Invalid setting. Valid settings are error, warn, and off."
-    | LintSettings.Malformed_argument ->
-      "Malformed lint rule. Properly formed rules contain a single ':' character. " ^
-        "Perhaps you have a missing/extra ','?"
+    | LintSettings.Redundant_argument -> [
+        text "Redundant argument. This argument doesn't change any lint settings."
+      ]
+    | LintSettings.Overwritten_argument -> [
+        text "Redundant argument. The values set by this argument are ";
+        text "overwritten later in this comment.";
+      ]
+    | LintSettings.Naked_comment -> [
+        text "Malformed lint rule. At least one argument is required."
+      ]
+    | LintSettings.Nonexistent_rule -> [
+        text "Nonexistent/misspelled lint rule. Perhaps you have a ";
+        text "missing/extra "; code ","; text "?";
+      ]
+    | LintSettings.Invalid_setting -> [
+        text "Invalid setting. Valid settings are error, warn, and off."
+      ]
+    | LintSettings.Malformed_argument -> [
+        text "Malformed lint rule. Properly formed rules contain a single ";
+        code ":"; text " character. Perhaps you have a missing/extra ";
+        code ","; text "?";
+      ]
     in
-    mk_error ~kind: ParseError [loc, [msg]]
+    mk_friendly_error ~trace_infos ~kind:ParseError loc msg
 
-  (* TODO: friendlify *)
-  | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+  | ESketchyNullLint { kind; loc; falsy_loc; null_loc } ->
     let type_str, value_str = match kind with
-    | Lints.SketchyBool -> "boolean", "Potentially false"
-    | Lints.SketchyNumber -> "number", "Potentially 0"
-    | Lints.SketchyString -> "string", "Potentially \"\""
-    | Lints.SketchyMixed -> "mixed", "Mixed"
+    | Lints.SketchyBool -> "boolean", "false"
+    | Lints.SketchyNumber -> "number", "0"
+    | Lints.SketchyString -> "string", "an empty string"
+    | Lints.SketchyMixed -> "mixed", "false"
     in
-    mk_error
-      ~kind:(LintError (Lints.SketchyNull kind))
-      [loc, [(spf "Sketchy null check on %s value." type_str)
-        ^ " Perhaps you meant to check for null instead of for existence?"]]
-      ~extra:[InfoLeaf [
-        null_loc, ["Potentially null/undefined value."];
-        falsy_loc, [spf "%s value." value_str]
-      ]]
+    mk_friendly_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) loc [
+      text "Sketchy null check on "; ref (mk_reason (RCustom type_str) falsy_loc); text " ";
+      text "which is potentially "; text value_str; text ". Perhaps you meant to ";
+      text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
+    ]
 
   (* TODO: friendlify *)
   | EInvalidPrototype reason ->
