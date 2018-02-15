@@ -7,7 +7,12 @@
 
 
 type t = {
+  (* This stores type information about expressions. Every expression in the program should have a
+   * type here. This means that there is some nesting, e.g. in the expression `5 + 4` there will be
+   * a type for `5`, a type for `4`, and a type for the entire addition expression. *)
   coverage: (Loc.t, Type.t) Hashtbl.t;
+  (* This stores type information about identifiers only. There should be no overlap or nesting of
+   * locations here. *)
   type_info: (Loc.t, Type.t) Hashtbl.t;
 }
 
