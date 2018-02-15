@@ -145,3 +145,5 @@ class ['a] t :
     method use_type :
       Context.t -> 'a -> Type.UseTypeMap.key -> Type.UseTypeMap.key
 end
+
+val union_flatten: Context.t -> Type.t list -> Type.t list

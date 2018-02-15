@@ -1387,8 +1387,8 @@ and UnionRep : sig
 
   (** build a rep from list of members *)
   val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
-  val optimize: TypeTerm.t list -> t -> unit
-  val is_optimized: t -> bool
+  val optimize: ?flatten:(TypeTerm.t list -> TypeTerm.t list) -> t -> unit
+  val is_optimized_finally: t -> bool
 
   (** replace reason with enum desc, if any *)
   val enum_reason: reason -> t -> reason
@@ -1403,7 +1403,8 @@ and UnionRep : sig
 
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
       returns the physically-identical rep. *)
-  val ident_map: (TypeTerm.t -> TypeTerm.t) -> t -> t
+  val ident_map: (TypeTerm.t -> TypeTerm.t) ->
+    ?flatten:(TypeTerm.t list -> TypeTerm.t list) -> t -> t
 
   (** quick membership test: Some true/false or None = needs full check *)
   val quick_mem: TypeTerm.t -> t -> bool option
@@ -1447,6 +1448,10 @@ end = struct
     let compare = Pervasives.compare
   end)
 
+  type finally_optimized_rep =
+    | Enum of base_t * EnumSet.t
+    | Unoptimized (* TODO: should record why optimization failed *)
+
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
       - if union is an enum (set of singletons over a common base)
@@ -1455,7 +1460,7 @@ end = struct
    *)
   type t =
     TypeTerm.t * TypeTerm.t * TypeTerm.t list *
-    (base_t * EnumSet.t) option ref
+    finally_optimized_rep option ref
 
   (* helper: add t to enum set if base matches *)
   let acc_enum (base, tset) t =
@@ -1464,7 +1469,10 @@ end = struct
       Some (base, EnumSet.add tcanon tset)
     | _ -> None
 
-  let optimize ts (_, _, _, enum_ref) =
+  let optimize ?flatten (t0, t1, ts, enum_ref) =
+    let ts, default = match flatten with
+      | Some f -> f (t0::t1::ts), Some Unoptimized
+      | None -> t0::t1::ts, None in
     (* TODO: Since ts might be derived through flattening, it might have 0 or 1 elements, in which
        case the union should be considered degenerate and optimized further. *)
     match ts with
@@ -1475,24 +1483,30 @@ end = struct
             let enum = EnumSet.singleton tcanon in
             ListUtils.fold_left_opt acc_enum (tbase, enum) ts
         in
+        let enum = match enum with
+          | None -> default
+          | Some (tbase, enum) -> Some (Enum (tbase, enum)) in
         enum_ref := enum
       | [] -> ()
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
-  let make t0 t1 ts =
-    let enum_ref = ref None in
-    let rep = t0, t1, ts, enum_ref in
-    optimize (t0::t1::ts) rep;
+  let make_optimized ?flatten t0 t1 ts =
+    let rep = t0, t1, ts, ref None in
+    optimize ?flatten rep;
     rep
 
-  let is_optimized (_, _, _, enum_ref) =
+  let make t0 t1 ts =
+    make_optimized t0 t1 ts
+
+  let is_optimized_finally (_, _, _, enum_ref) =
     !enum_ref <> None
 
-  let enum_reason r (_, _, _, enum) =
-    match !enum with
+  let enum_reason r (_, _, _, enum_ref) =
+    match !enum_ref with
     | None -> r
-    | Some (b, _) ->
+    | Some Unoptimized -> r
+    | Some (Enum (b, _)) ->
       replace_reason_const (desc_of_base b) r
 
   let members (t0, t1, ts, _) = t0::t1::ts
@@ -1506,20 +1520,34 @@ end = struct
     | t0::t1::ts -> make t0 t1 ts
     | _ -> failwith "impossible"
 
-  let ident_map f ((t0, t1, ts, _) as rep) =
+  let ident_map f ?flatten ((t0, t1, ts, _) as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
     let ts_ = ListUtils.ident_map f ts in
     let changed = t0_ != t0 || t1_ != t1 || ts_ != ts in
-    if changed then make t0_ t1_ ts_ else rep
+    if changed then
+      (* NOTE: The ideal thing to do here would be to call make, which does not do a final
+         optimization (since we don't know whether this is an appropriate time to do so). However,
+         since ident_map is often used to change a type in place, and such types can easily
+         participate in constraint cycles, we do a final optimization to avoid creating an unbounded
+         number of optimization states. This is not ideal, because it prevents union types from
+         getting optimized post-mapping if the optimization is not immediately possible. The
+         alternatives are (1) to let the user decide when a map does not change the structure of a
+         type substantially enough to create a fresh optimization state, which seems brittle (2) to
+         place a cache from union types to optimization states, which enable automatic reuse of
+         optimization states. *)
+      make_optimized ?flatten t0_ t1_ ts_
+    else rep
 
-  let quick_mem t (t0, t1, ts, enum) =
-    match Option.both (canon t) !enum with
-    | None ->
+  let quick_mem t (t0, t1, ts, enum_ref) =
+    match canon t, !enum_ref with
+    | _, (None | Some Unoptimized) ->
       if List.mem t (t0::t1::ts)
       then Some true
-      else Option.map ~f:(Fn.const false) !enum
-    | Some (tcanon, (base, tset)) ->
+      else None
+    | None, Some (Enum _) ->
+      Some false
+    | Some tcanon, Some (Enum (base, tset)) ->
       if (base_of_canon tcanon) = base
       then Some (EnumSet.mem tcanon tset)
       else Some false
