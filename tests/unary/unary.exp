@@ -98,15 +98,17 @@ Error: update.js:26
 
 Error: update.js:31
  31:     y++; // error, can't update const
-         ^ y. const cannot be reassigned
- 30:     const y = 123;
-               ^ const y
+         ^ Cannot reassign constant `y` [1].
+  References:
+   30:     const y = 123;
+                 ^ [1]: `y`
 
 Error: update.js:32
  32:     y--; // error, can't update const
-         ^ y. const cannot be reassigned
- 30:     const y = 123;
-               ^ const y
+         ^ Cannot reassign constant `y` [1].
+  References:
+   30:     const y = 123;
+                 ^ [1]: `y`
 
 
 Found 14 errors

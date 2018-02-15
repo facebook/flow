@@ -363,11 +363,11 @@ Error: destructuring.js:4
 
 Error: destructuring.js:10
  10: ({n: obj.x} = {n:3});
-          ^^^^^ unsupported expression pattern in destructuring
+          ^^^^^ Unsupported expression pattern in destructuring.
 
 Error: destructuring.js:11
  11: [obj.x] = ['foo'];
-      ^^^^^ unsupported expression pattern in destructuring
+      ^^^^^ Unsupported expression pattern in destructuring.
 
 Error: destructuring.js:14
  14:     a = p;

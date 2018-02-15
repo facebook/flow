@@ -72,9 +72,10 @@ Error: types_only.js:5
 
 Error: types_only.js:11
  11: export {standaloneType2}; // Error: Missing `type` keyword
-             ^^^^^^^^^^^^^^^ standaloneType2. type referenced from value position
- 10: type standaloneType2 = number;
-          ^^^^^^^^^^^^^^^ type standaloneType2
+             ^^^^^^^^^^^^^^^ Cannot reference type `standaloneType2` [1] from a value position.
+  References:
+   10: type standaloneType2 = number;
+            ^^^^^^^^^^^^^^^ [1]: `standaloneType2`
 
 
 Found 9 errors

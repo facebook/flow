@@ -123,6 +123,11 @@ module Friendly = struct
         else Code s
     ) (split_on_char '`' s)
 
+  (* Converts a string into a message. e.g.:
+   * "hello `world`" becomes a message where "world" is styled as inline code. *)
+  let message_of_string s =
+    [Inline (message_inlines_of_string s)]
+
   (* Converts a message_inline list into a string. e.g.:
    * [Text "hello "; Code "world"] becomes: "hello `world`"
    *

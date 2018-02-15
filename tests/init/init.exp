@@ -206,9 +206,10 @@ Error: let.js:17
 
 Error: let.js:24
  24:   let x = x;  // 'x' not initialized!
-               ^ x. let referenced before declaration, or after skipped declaration
- 24:   let x = x;  // 'x' not initialized!
-           ^ let x
+               ^ Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+  References:
+   24:   let x = x;  // 'x' not initialized!
+             ^ [1]: `x`
 
 Error: let.js:33
  33:   var y:number = x; // error, possibly uninitialized
@@ -230,9 +231,10 @@ Error: let.js:58
 
 Error: let.js:83
  83:       let y:number = x; // error, skipped declaration
-                          ^ x. let referenced before declaration, or after skipped declaration
- 81:       let x:number;
-               ^ let x
+                          ^ Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+  References:
+   81:       let x:number;
+                 ^ [1]: `x`
 
 Error: let.js:93
  93:   var y:number = x; // error

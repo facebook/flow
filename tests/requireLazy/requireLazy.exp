@@ -44,15 +44,15 @@ Error: requireLazy.js:18
 
 Error: requireLazy.js:20
  20: requireLazy(); // Error: No args
-     ^^^^^^^^^^^^^ The first arg to requireLazy() must be a literal array of string literals!
+     ^^^^^^^^^^^^^ The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a callback.
 
 Error: requireLazy.js:21
  21: requireLazy([nope], function() {}); // Error: Non-stringliteral args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ The first arg to requireLazy() must be a literal array of string literals!
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a callback.
 
 Error: requireLazy.js:22
  22: requireLazy(['A']); // Error: No callback expression
-     ^^^^^^^^^^^^^^^^^^ The first arg to requireLazy() must be a literal array of string literals!
+     ^^^^^^^^^^^^^^^^^^ The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a callback.
 
 
 Found 9 errors

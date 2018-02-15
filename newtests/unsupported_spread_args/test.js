@@ -16,7 +16,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8: idx(...arr, obj => obj.foo)
-                      ^^^ A spread argument is unsupported here
+                      ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('idx({}, ...arr)')
@@ -24,7 +24,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:10
            10: idx({}, ...arr)
-                          ^^^ A spread argument is unsupported here
+                          ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('idx(...arr, ...arr)')
@@ -32,11 +32,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: idx(...arr, ...arr)
-                      ^^^ A spread argument is unsupported here
+                      ^^^ A spread argument is unsupported here.
 
           test.js:12
            12: idx(...arr, ...arr)
-                              ^^^ A spread argument is unsupported here
+                              ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -98,7 +98,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function (...args) { return this.bar; }).call(...arr);
-                                                                 ^^^ A spread argument is unsupported here
+                                                                 ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -109,7 +109,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function () { return this.bar; }).apply(...arr);
-                                                           ^^^ A spread argument is unsupported here
+                                                           ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('(function () { return this.bar; }).apply(({}: any), ...arr);')
@@ -117,7 +117,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: (function () { return this.bar; }).apply(({}: any), ...arr);
-                                                                      ^^^ A spread argument is unsupported here
+                                                                      ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('(function () { return this.bar; }).apply(...arr, ...arr);')
@@ -125,11 +125,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                           ^^^ A spread argument is unsupported here
+                                                           ^^^ A spread argument is unsupported here.
 
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                                   ^^^ A spread argument is unsupported here
+                                                                   ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -139,7 +139,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: Object.getPrototypeOf(...arr)
-                                        ^^^ A spread argument is unsupported here
+                                        ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -153,7 +153,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       const o1 = Object.assign(...objArr);
-                                                 ^^^^^^ A spread argument is unsupported here
+                                                 ^^^^^^ A spread argument is unsupported here.
         `,
       ),
     addCode(`
@@ -182,7 +182,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: mergeInto(...arr, ...arr)
-                            ^^^ A spread argument is unsupported here
+                            ^^^ A spread argument is unsupported here.
         `,
       )
       .because('First arg cant be a spread, second can'),

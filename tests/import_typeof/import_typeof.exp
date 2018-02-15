@@ -9,9 +9,10 @@ Error: import_typeof.js:13
 
 Error: import_typeof.js:14
  14: new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
-         ^^^^^^^^^^ ClassFoo1T. type referenced from value position
-  9: import typeof ClassFoo1T from "./ExportDefault_Class";
-                   ^^^^^^^^^^ type ClassFoo1T
+         ^^^^^^^^^^ Cannot reference type `ClassFoo1T` [1] from a value position.
+  References:
+    9: import typeof ClassFoo1T from "./ExportDefault_Class";
+                     ^^^^^^^^^^ [1]: `ClassFoo1T`
 
 Error: import_typeof.js:24
  24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
@@ -24,9 +25,10 @@ Error: import_typeof.js:24
 
 Error: import_typeof.js:25
  25: new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
-         ^^^^^^^^^^ ClassFoo2T. type referenced from value position
- 20: import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
-                    ^^^^^^^^^^^^^^^^^^^^^^^ type ClassFoo2T
+         ^^^^^^^^^^ Cannot reference type `ClassFoo2T` [1] from a value position.
+  References:
+   20: import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
+                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]: `ClassFoo2T`
 
 Error: import_typeof.js:35
  35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)

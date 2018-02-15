@@ -9,11 +9,11 @@ Error: class.js:11
 
 Error: class.js:34
  34:   set [z](x: string) {}
-       ^^^^^^^^^^^^^^^^^^^^^ computed property keys not supported
+       ^^^^^^^^^^^^^^^^^^^^^ Computed property keys not supported.
 
 Error: class.js:35
  35:   get [z](): string { return string; }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ computed property keys not supported
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Computed property keys not supported.
 
 Error: class.js:44
  44: var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
@@ -125,11 +125,11 @@ Error: object.js:15
 
 Error: object.js:34
  34:   set [z](x: string) {},
-       ^^^^^^^^^^^^^^^^^^^^^ computed getters and setters are not yet supported
+       ^^^^^^^^^^^^^^^^^^^^^ Computed getters and setters are not yet supported.
 
 Error: object.js:35
  35:   get [z](): string { return string; },
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ computed getters and setters are not yet supported
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Computed getters and setters are not yet supported.
 
 Error: object.js:47
  47: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string

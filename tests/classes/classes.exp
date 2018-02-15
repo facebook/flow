@@ -112,9 +112,10 @@ Error: expr.js:30
 
 Error: loc.js:5
   5: class Foo {} // error, shadows type Foo
-           ^^^ Foo. name is already bound
-  3: type Foo = number
-          ^^^ type Foo
+           ^^^ Cannot declare `Foo` [1] because the name is already bound.
+  References:
+    3: type Foo = number
+            ^^^ [1]: `Foo`
 
 Error: statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)

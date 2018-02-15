@@ -4,9 +4,10 @@ Error: test.js:3
 
 Error: test.js:8
   8:   x = 1;
-       ^ x. const param cannot be reassigned
-  7: function f(x) {
-                ^ const param x
+       ^ Cannot reassign constant `x` [1].
+  References:
+    7: function f(x) {
+                  ^ [1]: `x`
 
 
 Found 2 errors
