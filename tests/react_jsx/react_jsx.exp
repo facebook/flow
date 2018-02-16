@@ -172,12 +172,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:144:54
    144|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:144:54
-   144|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:143:11
    143|   number={42}
                   ^^ [2]
@@ -304,12 +301,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:206:54
    206|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:206:54
-   206|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:205:11
    205|   number={42}
                   ^^ [2]
@@ -552,12 +546,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:268:54
    268|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:268:54
-   268|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:267:11
    267|   number={42}
                   ^^ [2]
@@ -684,12 +675,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:330:54
    330|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:330:54
-   330|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:329:11
    329|   number={42}
                   ^^ [2]
@@ -816,12 +804,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:392:54
    392|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:392:54
-   392|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:391:11
    391|   number={42}
                   ^^ [2]
@@ -1068,12 +1053,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:454:54
    454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:454:54
-   454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:453:11
    453|   number={42}
                   ^^ [2]
@@ -1200,12 +1182,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:516:54
    516|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:516:54
-   516|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:515:11
    515|   number={42}
                   ^^ [2]
@@ -1452,12 +1431,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:579:54
    579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:579:54
-   579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:578:11
    578|   number={42}
                   ^^ [2]
@@ -1584,12 +1560,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:641:54
    641|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:641:54
-   641|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:640:11
    640|   number={42}
                   ^^ [2]
@@ -1716,12 +1689,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:703:54
    703|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:703:54
-   703|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:702:11
    702|   number={42}
                   ^^ [2]
@@ -1848,12 +1818,9 @@ null or undefined [1] is incompatible with number [2].
 
    test.js:765:54
    765|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^
+                                                             ^^^^^^^ [1]
 
 References:
-   test.js:765:54
-   765|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
    test.js:764:11
    764|   number={42}
                   ^^ [2]

@@ -2352,19 +2352,20 @@ let dump_flow_error =
         lower = (reason_lower, _lower_kind);
         upper = (reason_upper, upper_kind);
         use_op;
-        extras = _;
+        branches = _;
       } ->
-        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; extras = _ }"
+        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; branches = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
           (dump_upper_kind upper_kind)
           (match use_op with
           | None -> "None"
           | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))
-    | EIncompatibleDefs { reason_lower; reason_upper; extras = _ } ->
-        spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
+    | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches = _ } ->
+        spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; use_op = %s; branches = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
+          (string_of_use_op use_op)
     | EIncompatibleProp { reason_prop; reason_obj; special=_; prop=_; use_op=_ } ->
         spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
           (dump_reason cx reason_prop)
@@ -2455,8 +2456,10 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (dump_reason cx reason)
-          (match x with Some x -> spf "Some %S" x | None -> "None")
-          (match use_op with Some _ -> "Some use_op" | None -> "None")
+          (match x with Some x -> spf "Some(%S)" x | None -> "None")
+          (match use_op with
+          | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
+          | None -> "None")
     | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
         spf "EPrivateLookupFailed ((%s, %s), %s, %s)"
           (dump_reason cx reason1)

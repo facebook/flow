@@ -38,49 +38,43 @@ References:
                                 ^ [3]
 
 
-Error: headers.js:3
-  3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
-886:     constructor(init?: HeadersInit): void;
-                            ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:886
-  Member 1:
-  879: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-  Error:
-    3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  879: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-  Member 2:
-  879: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
-  Error:
-    3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  879: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
+Error -------------------------------------------------------------------------------------------------- headers.js:3:23
 
-Error: headers.js:4
-  4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
-886:     constructor(init?: HeadersInit): void;
-                            ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:886
-  Member 1:
-  879: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-  Error:
-    4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
-  879: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-  Member 2:
-  879: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
-  Error:
-    4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
-  879: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
+Cannot call `Headers` with `''Content-T...'` bound to `init` because:
+ - Either string [1] is incompatible with `Headers` [2].
+ - Or string [1] is incompatible with object type [3].
+
+   headers.js:3:23
+     3| const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:879:20
+   879| type HeadersInit = Headers | {[key: string]: string};
+                           ^^^^^^^ [2]
+   <BUILTINS>/bom.js:879:30
+   879| type HeadersInit = Headers | {[key: string]: string};
+                                     ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- headers.js:4:23
+
+Cannot call `Headers` with array literal bound to `init` because:
+ - Either array literal [1] is incompatible with `Headers` [2].
+ - Or array literal [1] is incompatible with object type [3].
+
+   headers.js:4:23
+     4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:879:20
+   879| type HeadersInit = Headers | {[key: string]: string};
+                           ^^^^^^^ [2]
+   <BUILTINS>/bom.js:879:30
+   879| type HeadersInit = Headers | {[key: string]: string};
+                                     ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
 
 Error --------------------------------------------------------------------------------------------------- headers.js:9:1
 
@@ -216,16 +210,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:2:20
 
-Cannot call `Request` because function [1] requires another argument.
+Cannot call `Request` because undefined [1] is incompatible with string [2].
 
    request.js:2:20
      2| const a: Request = new Request(); // incorrect
-                           ^^^^^^^^^^^^^
+                           ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:977:5
-   977|     constructor(input: RequestInfo, init?: RequestOptions): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:926:36
+   926| type RequestInfo = Request | URL | string;
+                                           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
@@ -303,27 +297,24 @@ References:
                              ^^^^^^^^^^^^^^^^^^ [18]
 
 
-Error: request.js:8
-  8: const f: Request = new Request({}) // incorrect
-                                    ^^ object literal. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                            ^^^^^^^^^^^ union: `Request` | `URL` | string. See lib: <BUILTINS>/bom.js:977
-  Member 1:
-  926: type RequestInfo = Request | URL | string;
-                          ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:926
-  Error:
-    8: const f: Request = new Request({}) // incorrect
-                                      ^^ object literal. This type is incompatible with
-  926: type RequestInfo = Request | URL | string;
-                          ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:926
-  Member 2:
-  926: type RequestInfo = Request | URL | string;
-                                    ^^^ URL. See lib: <BUILTINS>/bom.js:926
-  Error:
-    8: const f: Request = new Request({}) // incorrect
-                                      ^^ object literal. This type is incompatible with
-  926: type RequestInfo = Request | URL | string;
-                                    ^^^ URL. See lib: <BUILTINS>/bom.js:926
+Error -------------------------------------------------------------------------------------------------- request.js:8:32
+
+Cannot call `Request` with object literal bound to `input` because:
+ - Either object literal [1] is incompatible with `Request` [2].
+ - Or object literal [1] is incompatible with `URL` [3].
+
+   request.js:8:32
+     8| const f: Request = new Request({}) // incorrect
+                                       ^^ [1]
+
+References:
+   <BUILTINS>/bom.js:926:20
+   926| type RequestInfo = Request | URL | string;
+                           ^^^^^^^ [2]
+   <BUILTINS>/bom.js:926:30
+   926| type RequestInfo = Request | URL | string;
+                                     ^^^ [3]
+
 
 Error ------------------------------------------------------------------------------------------------- request.js:24:15
 
@@ -361,37 +352,33 @@ References:
                                   ^^^^^^ [2]
 
 
-Error: request.js:54
-                                                          v
- 54: const l: Request = new Request('http://example.org', {
- 55:   method: 'GET',
- 56:   headers: 'Content-Type: image/jpeg',
-...:
- 59: }) // incorrect - headers is string
-     ^ object literal. This type is incompatible with the expected param type of
-977:     constructor(input: RequestInfo, init?: RequestOptions): void;
-                                                ^^^^^^^^^^^^^^ RequestOptions. See lib: <BUILTINS>/bom.js:977
-  Property `headers` is incompatible:
-     56:   headers: 'Content-Type: image/jpeg',
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-    933:     headers?: HeadersInit;
-                       ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:933
-      Member 1:
-      879: type HeadersInit = Headers | {[key: string]: string};
-                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-      Error:
-       56:   headers: 'Content-Type: image/jpeg',
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-      879: type HeadersInit = Headers | {[key: string]: string};
-                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-      Member 2:
-      879: type HeadersInit = Headers | {[key: string]: string};
-                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
-      Error:
-       56:   headers: 'Content-Type: image/jpeg',
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-      879: type HeadersInit = Headers | {[key: string]: string};
-                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
+Error ------------------------------------------------------------------------------------------------- request.js:54:54
+
+Cannot call `Request` with object literal bound to `init` because in property `headers`:
+ - Either string [1] is incompatible with `Headers` [2].
+ - Or string [1] is incompatible with object type [3].
+
+   request.js:54:54
+                                                             v
+    54| const l: Request = new Request('http://example.org', {
+    55|   method: 'GET',
+    56|   headers: 'Content-Type: image/jpeg',
+    57|   mode: 'cors',
+    58|   cache: 'default'
+    59| }) // incorrect - headers is string
+        ^
+
+References:
+   request.js:56:12
+    56|   headers: 'Content-Type: image/jpeg',
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:879:20
+   879| type HeadersInit = Headers | {[key: string]: string};
+                           ^^^^^^^ [2]
+   <BUILTINS>/bom.js:879:30
+   879| type HeadersInit = Headers | {[key: string]: string};
+                                     ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
 
 Error ------------------------------------------------------------------------------------------------- request.js:63:18
 
@@ -447,138 +434,72 @@ References:
                      ^^^^^^ [2]
 
 
-Error: response.js:11
-                                                      v
- 11: const f: Response = new Response("responsebody", {
- 12:     status: 404,
- 13:     headers: "'Content-Type': 'image/jpeg'"
- 14: }); // incorrect
-     ^ object literal. This type is incompatible with the expected param type of
-951:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
-                                               ^^^^^^^^^^^^^^^ ResponseOptions. See lib: <BUILTINS>/bom.js:951
-  Property `headers` is incompatible:
-     13:     headers: "'Content-Type': 'image/jpeg'"
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-    947:     headers?: HeadersInit
-                       ^^^^^^^^^^^ union: `Headers` | object type. See lib: <BUILTINS>/bom.js:947
-      Member 1:
-      879: type HeadersInit = Headers | {[key: string]: string};
-                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-      Error:
-       13:     headers: "'Content-Type': 'image/jpeg'"
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-      879: type HeadersInit = Headers | {[key: string]: string};
-                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:879
-      Member 2:
-      879: type HeadersInit = Headers | {[key: string]: string};
-                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
-      Error:
-       13:     headers: "'Content-Type': 'image/jpeg'"
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-      879: type HeadersInit = Headers | {[key: string]: string};
-                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
+Error ------------------------------------------------------------------------------------------------ response.js:11:50
 
-Error: response.js:30
-                                      v
- 30: const i: Response = new Response({
- 31:     status: 404,
- 32:     headers: new Headers({
-...:
- 35: }); // incorrect
-     ^ object literal. This type is incompatible with the expected param type of
-951:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
-                              ^^^^^^^^ union: string | `URLSearchParams` | `FormData` | `Blob` | `ArrayBuffer` | `$ArrayBufferView`. See lib: <BUILTINS>/bom.js:951
-  Member 2:
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:924
-  Error:
-                                        v
-   30: const i: Response = new Response({
-   31:     status: 404,
-   32:     headers: new Headers({
-  ...:
-   35: }); // incorrect
-       ^ object literal. This type is incompatible with
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:924
-  Member 3:
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                  ^^^^^^^^ FormData. See lib: <BUILTINS>/bom.js:924
-  Error:
-                                        v
-   30: const i: Response = new Response({
-   31:     status: 404,
-   32:     headers: new Headers({
-  ...:
-   35: }); // incorrect
-       ^ object literal. This type is incompatible with
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                  ^^^^^^^^ FormData. See lib: <BUILTINS>/bom.js:924
-  Member 4:
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                             ^^^^ Blob. See lib: <BUILTINS>/bom.js:924
-  Error:
-                                        v
-   30: const i: Response = new Response({
-   31:     status: 404,
-   32:     headers: new Headers({
-  ...:
-   35: }); // incorrect
-       ^ object literal. This type is incompatible with
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                             ^^^^ Blob. See lib: <BUILTINS>/bom.js:924
-  Member 5:
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                                    ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:924
-  Error:
-                                        v
-   30: const i: Response = new Response({
-   31:     status: 404,
-   32:     headers: new Headers({
-  ...:
-   35: }); // incorrect
-       ^ object literal. This type is incompatible with
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                                    ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:924
-  Member 6:
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                                                  ^^^^^^^^^^^^^^^^ $ArrayBufferView. See lib: <BUILTINS>/bom.js:924
-  Error:
-                                        v
-   30: const i: Response = new Response({
-   31:     status: 404,
-   32:     headers: new Headers({
-  ...:
-   35: }); // incorrect
-       ^ object literal. This type is incompatible with
-  924: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
-                                                                                  ^^^^^^^^^^^^^^^^ union: `$TypedArray` | `DataView`. See lib: <BUILTINS>/bom.js:924
-    Member 1:
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:628
-    Error:
-                                          v
-     30: const i: Response = new Response({
-     31:     status: 404,
-     32:     headers: new Headers({
-    ...:
-     35: }); // incorrect
-         ^ object literal. This type is incompatible with
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:628
-    Member 2:
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:628
-    Error:
-                                          v
-     30: const i: Response = new Response({
-     31:     status: 404,
-     32:     headers: new Headers({
-    ...:
-     35: }); // incorrect
-         ^ object literal. This type is incompatible with
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:628
+Cannot call `Response` with object literal bound to `init` because in property `headers`:
+ - Either string [1] is incompatible with `Headers` [2].
+ - Or string [1] is incompatible with object type [3].
+
+   response.js:11:50
+                                                         v
+    11| const f: Response = new Response("responsebody", {
+    12|     status: 404,
+    13|     headers: "'Content-Type': 'image/jpeg'"
+    14| }); // incorrect
+        ^
+
+References:
+   response.js:13:14
+    13|     headers: "'Content-Type': 'image/jpeg'"
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:879:20
+   879| type HeadersInit = Headers | {[key: string]: string};
+                           ^^^^^^^ [2]
+   <BUILTINS>/bom.js:879:30
+   879| type HeadersInit = Headers | {[key: string]: string};
+                                     ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ response.js:30:34
+
+Cannot call `Response` with object literal bound to `input` because:
+ - Either object literal [1] is incompatible with `URLSearchParams` [2].
+ - Or object literal [1] is incompatible with `FormData` [3].
+ - Or object literal [1] is incompatible with `Blob` [4].
+ - Or object literal [1] is incompatible with `ArrayBuffer` [5].
+ - Or object literal [1] is incompatible with `$TypedArray` [6].
+ - Or object literal [1] is incompatible with `DataView` [7].
+
+   response.js:30:34
+                                         v
+    30| const i: Response = new Response({
+    31|     status: 404,
+    32|     headers: new Headers({
+    33|         'Content-Type': 'image/jpeg'
+    34|     })
+    35| }); // incorrect
+        ^ [1]
+
+References:
+   <BUILTINS>/bom.js:924:26
+   924| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+                                 ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:924:44
+   924| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+                                                   ^^^^^^^^ [3]
+   <BUILTINS>/bom.js:924:55
+   924| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+                                                              ^^^^ [4]
+   <BUILTINS>/bom.js:924:62
+   924| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+                                                                     ^^^^^^^^^^^ [5]
+   <BUILTINS>/core.js:628:25
+   628| type $ArrayBufferView = $TypedArray | DataView;
+                                ^^^^^^^^^^^ [6]
+   <BUILTINS>/core.js:628:39
+   628| type $ArrayBufferView = $TypedArray | DataView;
+                                              ^^^^^^^^ [7]
+
 
 Error ------------------------------------------------------------------------------------------------ response.js:42:15
 
@@ -758,3 +679,6 @@ References:
 
 
 Found 45 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

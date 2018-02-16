@@ -226,7 +226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value.
+Cannot return `x` because string [1] is incompatible with number [2] in the return value of the callable signature.
 
    D.js:21:10
    21|   return x;
@@ -309,3 +309,6 @@ References:
 
 
 Found 19 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

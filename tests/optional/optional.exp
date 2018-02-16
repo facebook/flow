@@ -4,12 +4,9 @@ number [1] is incompatible with `T` [2].
 
    generic.js:1:22
    1| function x<T>(x: T = 0) {}
-                           ^
+                           ^ [1]
 
 References:
-   generic.js:1:22
-   1| function x<T>(x: T = 0) {}
-                           ^ [1]
    generic.js:1:18
    1| function x<T>(x: T = 0) {}
                        ^ [2]
@@ -21,12 +18,9 @@ number [1] is incompatible with `T` [2].
 
    generic.js:4:15
    4|   x<T>(x: T = 0) {}
-                    ^
+                    ^ [1]
 
 References:
-   generic.js:4:15
-   4|   x<T>(x: T = 0) {}
-                    ^ [1]
    generic.js:4:11
    4|   x<T>(x: T = 0) {}
                 ^ [2]

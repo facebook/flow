@@ -957,12 +957,9 @@ string [1] is incompatible with number [2].
 
    element_config.js:15:29
    15|   static defaultProps = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^
+                                   ^^^^^ [1]
 
 References:
-   element_config.js:15:29
-   15|   static defaultProps = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^ [1]
    element_config.js:14:38
    14| class B extends React.Component<{p: ?number}> {
                                             ^^^^^^ [2]
@@ -974,12 +971,9 @@ Property `p` is missing in object literal [1] but exists in object type [2].
 
    element_config.js:31:25
    31|   static defaultProps = {p: 42}; // Error: extra property `p`
-                               ^^^^^^^
+                               ^^^^^^^ [1]
 
 References:
-   element_config.js:31:25
-   31|   static defaultProps = {p: 42}; // Error: extra property `p`
-                               ^^^^^^^ [1]
    element_config.js:30:33
    30| class F extends React.Component<{||}> {
                                        ^^^^ [2]
@@ -991,12 +985,9 @@ string [1] is incompatible with number [2].
 
    element_config.js:39:29
    39|   static defaultProps = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^
+                                   ^^^^^ [1]
 
 References:
-   element_config.js:39:29
-   39|   static defaultProps = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^ [1]
    element_config.js:38:39
    38| class H extends React.Component<{p?: ?number}> {
                                              ^^^^^^ [2]
@@ -1008,12 +999,9 @@ string [1] is incompatible with number [2].
 
    element_config.js:47:35
    47|   static defaultProps = ({}: {p?: string}); // Error: string ~> number
-                                         ^^^^^^
+                                         ^^^^^^ [1]
 
 References:
-   element_config.js:47:35
-   47|   static defaultProps = ({}: {p?: string}); // Error: string ~> number
-                                         ^^^^^^ [1]
    element_config.js:46:39
    46| class J extends React.Component<{p?: ?number}> {
                                              ^^^^^^ [2]
@@ -1335,7 +1323,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc2.js:17:1
 
-Property `a` is missing in object type [1] but exists in object type [2].
+Property `a` is missing in object type [1] but exists in object type [2] in the first argument.
 
    hoc2.js:17:1
        v-------------------------------------
@@ -1362,7 +1350,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc2.js:17:1
 
-Property `b` is missing in object type [1] but exists in object type [2].
+Property `b` is missing in object type [1] but exists in object type [2] in the first argument.
 
    hoc2.js:17:1
        v-------------------------------------
@@ -1389,39 +1377,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc2.js:18:6
 
-number [1] is incompatible with string [2].
+number [1] is incompatible with string [2] in property `a` of the first argument.
 
-   hoc2.js:18:6
-   18|   a: number,
-            ^^^^^^
-
-References:
    hoc2.js:18:6
    18|   a: number,
             ^^^^^^ [1]
+
+References:
    hoc2.js:32:32
    32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                       ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
-
-number [1] is incompatible with string [2] in type argument `Props` [3].
-
-   hoc2.js:23:37
-   23| const MyEnhancedComponent = connect(MyComponent);
-                                           ^^^^^^^^^^^
-
-References:
-   hoc2.js:12:6
-   12|   a: number,
-            ^^^^^^ [1]
-   hoc2.js:28:24
-   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                              ^^^^^ [2]
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
@@ -1469,6 +1434,26 @@ References:
    14|   prop: number,
    15| |}> {}
        -^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
+
+number [1] is incompatible with string [2] in property `a` of type argument `Props` [3].
+
+   hoc2.js:23:37
+   23| const MyEnhancedComponent = connect(MyComponent);
+                                           ^^^^^^^^^^^
+
+References:
+   hoc2.js:12:6
+   12|   a: number,
+            ^^^^^^ [1]
+   hoc2.js:28:24
+   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                              ^^^^^ [2]
    <BUILTINS>/react.js:26:31
    26| declare class React$Component<Props, State = void> {
                                      ^^^^^ [3]
@@ -1865,49 +1850,49 @@ References:
                                            ^^^^^^ [2]
 
 
-Error: key.js:12
- 12: <Foo key={true} />; // Error
-               ^^^^ boolean. This type is incompatible with
- 12: <Foo key={true} />; // Error
-     ^^^^^^^^^^^^^^^^^^ union: string | number
-  Member 1:
-  168: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
-  Error:
-   12: <Foo key={true} />; // Error
-                 ^^^^ boolean. This type is incompatible with
-  168: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
-  Member 2:
-  168: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
-  Error:
-   12: <Foo key={true} />; // Error
-                 ^^^^ boolean. This type is incompatible with
-  168: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
+Error ------------------------------------------------------------------------------------------------------ key.js:12:1
 
-Error: key.js:21
- 21: <FooExact key={true} />; // Error
-                    ^^^^ boolean. This type is incompatible with
- 21: <FooExact key={true} />; // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^ union: string | number
-  Member 1:
-  168: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
-  Error:
-   21: <FooExact key={true} />; // Error
-                      ^^^^ boolean. This type is incompatible with
-  168: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
-  Member 2:
-  168: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
-  Error:
-   21: <FooExact key={true} />; // Error
-                      ^^^^ boolean. This type is incompatible with
-  168: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
+Cannot create `Foo` element because in property `key`:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   key.js:12:1
+    12| <Foo key={true} />; // Error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   key.js:12:11
+    12| <Foo key={true} />; // Error
+                  ^^^^ [1]
+   <BUILTINS>/react.js:168:26
+   168| declare type React$Key = string | number;
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:168:35
+   168| declare type React$Key = string | number;
+                                          ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ key.js:21:1
+
+Cannot create `FooExact` element because in property `key`:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   key.js:21:1
+    21| <FooExact key={true} />; // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   key.js:21:16
+    21| <FooExact key={true} />; // Error
+                       ^^^^ [1]
+   <BUILTINS>/react.js:168:26
+   168| declare type React$Key = string | number;
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:168:35
+   168| declare type React$Key = string | number;
+                                          ^^^^^^ [3]
+
 
 Error -------------------------------------------------------------------------------------------------- portals.js:12:7
 
@@ -2035,12 +2020,6 @@ Error --------------------------------------------------------------------------
 
 number [1] is not a React propType.
 
-   proptype_arrayOf.js:43:34
-   43|     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
-                                        ^
-
-References:
-   proptype_arrayOf.js:43:34
    43|     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
                                         ^ [1]
 
@@ -2136,12 +2115,6 @@ Error --------------------------------------------------------------------------
 
 number [1] is not a React propType.
 
-   proptype_incompatible.js:5:10
-   5|     foo: 0, // error: `0` is not a prop type
-               ^
-
-References:
-   proptype_incompatible.js:5:10
    5|     foo: 0, // error: `0` is not a prop type
                ^ [1]
 
@@ -2304,12 +2277,6 @@ Error --------------------------------------------------------------------------
 
 number [1] is not a React propType.
 
-   proptype_objectOf.js:43:35
-   43|     obj: React.PropTypes.objectOf(0), // error: number not a prop type
-                                         ^
-
-References:
-   proptype_objectOf.js:43:35
    43|     obj: React.PropTypes.objectOf(0), // error: number not a prop type
                                          ^ [1]
 
@@ -2365,45 +2332,31 @@ References:
                                         ^^^^ [2]
 
 
-Error: proptype_oneOf.js:24
- 24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     str: React.PropTypes.oneOf(["foo", "bar"]),
-  7:     num: React.PropTypes.oneOf([0, 1, 2]),
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `mixed` is incompatible:
-     24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
-                          ^^^^^ string. This type is incompatible with
-      9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: string literal `foo` | number literal `0` | boolean literal `true`
-      Member 1:
-        9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
-      Error:
-       24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
-                            ^^^^^ string. Expected string literal `foo`, got `baz` instead
-        9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
-      Member 2:
-        9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `0`
-      Error:
-       24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
-                            ^^^^^ string. This type is incompatible with
-        9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `0`
-      Member 3:
-        9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
-      Error:
-       24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
-                            ^^^^^ string. This type is incompatible with
-        9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
+Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:24:2
+
+Cannot create `Example` element because in property `mixed`:
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with number literal `0` [3].
+ - Or string [1] is incompatible with boolean literal `true` [4].
+
+   proptype_oneOf.js:24:2
+   24| (<Example mixed={"baz"} />); // error: 'baz' not in enum
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_oneOf.js:24:18
+   24| (<Example mixed={"baz"} />); // error: 'baz' not in enum
+                        ^^^^^ [1]
+   proptype_oneOf.js:9:35
+    9|     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                                         ^^^^^ [2]
+   proptype_oneOf.js:9:42
+    9|     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                                                ^ [3]
+   proptype_oneOf.js:9:45
+    9|     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                                                   ^^^^ [4]
+
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:32:2
 
@@ -2444,12 +2397,6 @@ Error --------------------------------------------------------------------------
 
 number [1] is not an array.
 
-   proptype_oneOf.js:76:30
-   76|     p: React.PropTypes.oneOf(0), // error: expected array, got 0
-                                    ^
-
-References:
-   proptype_oneOf.js:76:30
    76|     p: React.PropTypes.oneOf(0), // error: expected array, got 0
                                     ^ [1]
 
@@ -2475,109 +2422,49 @@ References:
          ^ [2]
 
 
-Error: proptype_oneOfType.js:24
- 24: var fail_bool = <Example prop={true} />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     prop: React.PropTypes.oneOfType([
-  7:       React.PropTypes.string,
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `prop` is incompatible:
-     24: var fail_bool = <Example prop={true} />;
-                                        ^^^^ boolean. This type is incompatible with
-                   v--------------------------
-      6:     prop: React.PropTypes.oneOfType([
-      7:       React.PropTypes.string,
-      8:       React.PropTypes.number
-      9:     ]).isRequired
-             ------------^ union: string | number
-      Member 1:
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ string
-      Error:
-       24: var fail_bool = <Example prop={true} />;
-                                          ^^^^ boolean. This type is incompatible with
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ string
-      Member 2:
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ number
-      Error:
-       24: var fail_bool = <Example prop={true} />;
-                                          ^^^^ boolean. This type is incompatible with
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ number
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:24:17
 
-Error: proptype_oneOfType.js:29
- 29: var todo_required = <Example prop={null} />;
-                         ^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
-                  v
-  5:   propTypes: {
-  6:     prop: React.PropTypes.oneOfType([
-  7:       React.PropTypes.string,
-...:
- 10:   },
-       ^ propTypes of React component
-  Property `prop` is incompatible:
-     29: var todo_required = <Example prop={null} />;
-                                            ^^^^ null. This type is incompatible with
-                   v--------------------------
-      6:     prop: React.PropTypes.oneOfType([
-      7:       React.PropTypes.string,
-      8:       React.PropTypes.number
-      9:     ]).isRequired
-             ------------^ union: string | number
-      Member 1:
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ string
-      Error:
-       29: var todo_required = <Example prop={null} />;
-                                              ^^^^ null. This type is incompatible with
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ string
-      Member 2:
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ number
-      Error:
-       29: var todo_required = <Example prop={null} />;
-                                              ^^^^ null. This type is incompatible with
-                     v--------------------------
-        6:     prop: React.PropTypes.oneOfType([
-        7:       React.PropTypes.string,
-        8:       React.PropTypes.number
-        9:     ]).isRequired
-               ------------^ number
+Cannot create `Example` element because in property `prop`:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   proptype_oneOfType.js:24:17
+    24| var fail_bool = <Example prop={true} />;
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_oneOfType.js:24:32
+    24| var fail_bool = <Example prop={true} />;
+                                       ^^^^ [1]
+   <BUILTINS>/react.js:296:36
+   296|   string: React$PropType$Primitive<string>;
+                                           ^^^^^^ [2]
+   <BUILTINS>/react.js:294:36
+   294|   number: React$PropType$Primitive<number>;
+                                           ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:29:21
+
+Cannot create `Example` element because in property `prop`:
+ - Either null [1] is incompatible with string [2].
+ - Or null [1] is incompatible with number [3].
+
+   proptype_oneOfType.js:29:21
+    29| var todo_required = <Example prop={null} />;
+                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proptype_oneOfType.js:29:36
+    29| var todo_required = <Example prop={null} />;
+                                           ^^^^ [1]
+   <BUILTINS>/react.js:296:36
+   296|   string: React$PropType$Primitive<string>;
+                                           ^^^^^^ [2]
+   <BUILTINS>/react.js:294:36
+   294|   number: React$PropType$Primitive<number>;
+                                           ^^^^^^ [3]
+
 
 Error --------------------------------------------------------------------------------------- proptype_oneOfType.js:41:2
 
@@ -2617,12 +2504,6 @@ Error --------------------------------------------------------------------------
 
 number [1] is not an array.
 
-   proptype_oneOfType.js:91:34
-   91|     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
-                                        ^
-
-References:
-   proptype_oneOfType.js:91:34
    91|     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
                                         ^ [1]
 
@@ -2631,12 +2512,6 @@ Error --------------------------------------------------------------------------
 
 object literal [1] is not a React propType.
 
-   proptype_oneOfType.js:99:35
-   99|     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
-                                         ^^
-
-References:
-   proptype_oneOfType.js:99:35
    99|     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
                                          ^^ [1]
 
@@ -2852,13 +2727,13 @@ References:
          ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:12:17
+Error ------------------------------------------------------------------------------------------------------ ref.js:12:1
 
-number [1] is incompatible with `Foo` [2].
+Cannot create `Foo` element because number [1] is incompatible with `Foo` [2] in the first argument of property `ref`.
 
-   ref.js:12:17
+   ref.js:12:1
    12| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
-                       ^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ref.js:12:17
@@ -2903,13 +2778,14 @@ References:
                               ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:23:22
+Error ------------------------------------------------------------------------------------------------------ ref.js:23:1
 
-number [1] is incompatible with `FooExact` [2].
+Cannot create `FooExact` element because number [1] is incompatible with `FooExact` [2] in the first argument of
+property `ref`.
 
-   ref.js:23:22
+   ref.js:23:1
    23| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
-                            ^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ref.js:23:22
@@ -3153,3 +3029,6 @@ References:
 
 
 Found 188 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

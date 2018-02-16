@@ -213,12 +213,6 @@ Error --------------------------------------------------------------------------
 
 Cannot use number [1] as a prototype. Expected an object or null.
 
-   annot.js:40:31
-   40| type O_invalid = { __proto__: number }; // error: number is not a valid proto
-                                     ^^^^^^
-
-References:
-   annot.js:40:31
    40| type O_invalid = { __proto__: number }; // error: number is not a valid proto
                                      ^^^^^^ [1]
 
@@ -384,12 +378,6 @@ Error --------------------------------------------------------------------------
 
 Cannot use number [1] as a prototype. Expected an object or null.
 
-   literal.js:27:30
-   27| var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
-                                    ^
-
-References:
-   literal.js:27:30
    27| var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
                                     ^ [1]
 

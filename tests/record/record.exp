@@ -25,12 +25,9 @@ string `qux` [1] is incompatible with string enum [2].
 
    test.js:7:1
    7| o1.qux; // error: qux not found
-      ^^^^^^
+      ^^^^^^ [1]
 
 References:
-   test.js:7:1
-   7| o1.qux; // error: qux not found
-      ^^^^^^ [1]
    test.js:2:16
    2| var o1: {[key: Key1]: number} = {
                      ^^^^ [2]

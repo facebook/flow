@@ -197,37 +197,27 @@ References:
 Found 1 error
 
 Test e:
-Error: e2.js:6
-  6:   return { type: 'QUX' };
-              ^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
-  5: const f = (): Action => {
-                   ^^^^^^ union: object type(s)
-  Member 1:
-    4:   | { type: 'FOO' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:4
-  Error:
-    6:   return { type: 'QUX' };
-                ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    4:   | { type: 'FOO' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:4
-    Property `type` is incompatible:
-        6:   return { type: 'QUX' };
-                            ^^^^^ string. Expected string literal `FOO`, got `QUX` instead
-        4:   | { type: 'FOO' }
-                       ^^^^^ string literal `FOO`. See: e1.js:4
-  Member 2:
-    5:   | { type: 'BAR' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:5
-  Error:
-    6:   return { type: 'QUX' };
-                ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    5:   | { type: 'BAR' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:5
-    Property `type` is incompatible:
-        6:   return { type: 'QUX' };
-                            ^^^^^ string. Expected string literal `BAR`, got `QUX` instead
-        5:   | { type: 'BAR' }
-                       ^^^^^ string literal `BAR`. See: e1.js:5
+Error ------------------------------------------------------------------------------------------------------- e2.js:6:10
+
+Cannot return object literal because:
+ - Either string [1] is incompatible with string literal `FOO` [2] in property `type`.
+ - Or string [1] is incompatible with string literal `BAR` [3] in property `type`.
+
+   e2.js:6:10
+   6|   return { type: 'QUX' };
+               ^^^^^^^^^^^^^^^
+
+References:
+   e2.js:6:18
+   6|   return { type: 'QUX' };
+                       ^^^^^ [1]
+   e1.js:4:13
+   4|   | { type: 'FOO' }
+                  ^^^^^ [2]
+   e1.js:5:13
+   5|   | { type: 'BAR' }
+                  ^^^^^ [3]
+
 
 
 Found 1 error

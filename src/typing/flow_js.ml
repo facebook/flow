@@ -679,6 +679,7 @@ module Cache = struct
            to just their top-level structure. *)
         let u = mod_use_op_of_use_t (function
         | Frame (frame, use_op) when use_op <> unknown_use -> Frame (frame, unknown_use)
+        | Op (Speculation use_op) when use_op <> unknown_use -> Op (Speculation unknown_use)
         | use_op -> use_op) u in
         let found = FlowSet.cache (l, u) cache in
         if found && Context.is_verbose cx then
@@ -6162,7 +6163,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         lower = (reason_of_t l, flow_error_kind_of_lower l);
         upper = (reason_of_use_t u, flow_error_kind_of_upper u);
         use_op = use_op_of_use_t u;
-        extras = [];
+        branches = [];
       })
   )
 
@@ -7990,59 +7991,36 @@ and long_path_speculative_matches cx trace r speculation_id spec = Speculation.C
        error found for each alternative *)
     let ts = choices_of_spec spec in
     assert (List.length ts = List.length msgs);
-    (* Get the root use_op we expect for all the speculation messages. If any
-     * speculation messages have a different root then they likely weren't the
-     * branch the user wanted to match. *)
-    let root_use_op = match spec with
-    | UnionCases _ -> UnknownUse
-    | IntersectionCases (_, u) ->
-      root_of_use_op (Option.value (use_op_of_use_t u) ~default:unknown_use)
-    in
-    (* Instead of spewing out all possible branches, we only show the messages
-     * with the highest "score." If there are multiple messages with the same
-     * score then we show all messages with an equivalent score while throwing
-     * away messages with a lower score. *)
-    let (_, _, branches) = List.fold_left (fun (i, high_score, branches) msg ->
+    let branches = List.mapi (fun i msg ->
       let reason = reason_of_t (List.nth ts i) in
-      let score = Flow_error.score_of_msg ~root_use_op msg in
-      if score > high_score then
-        (i - 1, score, [(i, reason, msg)])
-      else if score = high_score then
-        (i - 1, high_score, (i, reason, msg)::branches)
-      else
-        (i - 1, high_score, branches)
-    ) (List.length msgs - 1, min_int, []) msgs in
+      (reason, msg)
+    ) msgs in
     (* Add the error. *)
     begin match spec with
       | UnionCases (use_op, l, _rep, us) ->
         let reason = reason_of_t l in
         let reason_op = mk_union_reason r us in
-        add_output cx ~trace (
-          match branches with
-          | (_, _, msg)::[] -> Flow_error.add_use_op_to_msg use_op msg
-          | _ -> Flow_error.EUnionSpeculationFailed { use_op; reason; reason_op; branches }
-        )
+        add_output cx ~trace
+          (Flow_error.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
 
       | IntersectionCases (ls, upper) ->
         let err =
-          match branches with
-          | (_, _, msg)::[] -> msg
+          let reason_lower = mk_intersection_reason r ls in
+          match upper with
+          | UseT (use_op, t) ->
+            Flow_error.EIncompatibleDefs {
+              use_op;
+              reason_lower;
+              reason_upper = reason_of_t t;
+              branches;
+            }
           | _ ->
-            let reason_lower = mk_intersection_reason r ls in
-            match upper with
-            | UseT (_, t) ->
-              Flow_error.EIncompatibleDefs {
-                reason_lower;
-                reason_upper = reason_of_t t;
-                extras = branches;
-              }
-            | _ ->
-              Flow_error.EIncompatible {
-                lower = (reason_lower, Some Flow_error.Incompatible_intersection);
-                upper = (reason_of_use_t upper, flow_error_kind_of_upper upper);
-                use_op = use_op_of_use_t upper;
-                extras = branches;
-              }
+            Flow_error.EIncompatible {
+              use_op = use_op_of_use_t upper;
+              lower = (reason_lower, Some Flow_error.Incompatible_intersection);
+              upper = (reason_of_use_t upper, flow_error_kind_of_upper upper);
+              branches;
+            }
         in
         add_output cx ~trace err
     end
@@ -8076,13 +8054,14 @@ and blame_unresolved cx trace prev_i i cases case_r r tvars =
   ))
 
 and trials_of_spec = function
-  | UnionCases (_use_op, l, _rep, us) ->
+  | UnionCases (use_op, l, _rep, us) ->
     (* NB: Even though we know the use_op for the original constraint, don't
        embed it in the nested constraints to avoid unnecessary verbosity. We
        will unwrap the original use_op once in EUnionSpeculationFailed. *)
-    List.mapi (fun i u -> (i, reason_of_t l, l, UseT (unknown_use, u))) us
+    List.mapi (fun i u -> (i, reason_of_t l, l, UseT (Op (Speculation use_op), u))) us
   | IntersectionCases (ls, u) ->
-    List.mapi (fun i l -> (i, reason_of_use_t u, l, u)) ls
+    List.mapi (fun i l -> (i, reason_of_use_t u, l,
+      mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u)) ls
 
 and choices_of_spec = function
   | UnionCases (_, _, _, ts)
@@ -8202,18 +8181,29 @@ and enum_optimize cx rep =
  * an UnknownUse. *)
 and fire_actions cx trace spec = List.iter (function
   | _, Speculation.Action.Flow (l, u) -> (match spec with
-    | IntersectionCases (_, _) ->
-      rec_flow cx trace (l, u)
+    | IntersectionCases (_, u') ->
+      let use_op = use_op_of_use_t u' in
+      (match use_op with
+      | None -> rec_flow cx trace (l, u)
+      | Some use_op ->
+        rec_flow cx trace (l,
+          mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u))
     | UnionCases (use_op, _, _, _) ->
       rec_flow cx trace (l,
-        mod_use_op_of_use_t (replace_unknown_root_use_op use_op) u)
+        mod_use_op_of_use_t (replace_speculation_root_use_op use_op) u)
     )
   | _, Speculation.Action.Unify (use_op, t1, t2) -> (match spec with
-    | IntersectionCases (_, _) ->
-      rec_unify cx trace t1 t2 ~use_op
+    | IntersectionCases (_, u') ->
+      let use_op' = use_op_of_use_t u' in
+      (match use_op' with
+      | None -> rec_unify cx trace t1 t2 ~use_op
+      | Some use_op' ->
+        rec_unify cx trace t1 t2
+          ~use_op:(replace_speculation_root_use_op use_op' use_op)
+      )
     | UnionCases (use_op', _, _, _) ->
       rec_unify cx trace t1 t2
-        ~use_op:(replace_unknown_root_use_op use_op' use_op)
+        ~use_op:(replace_speculation_root_use_op use_op' use_op)
     )
 )
 
@@ -9021,14 +9011,23 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 (*******************************************************************)
 
 and flow_use_op op1 u =
+  let ignore_root = function
+  | UnknownUse -> true
+  (* If we are speculating then a Speculation use_op should be considered
+   * "opaque". If we are not speculating then Speculation use_ops that escaped
+   * (through benign tvars) should be ignored.
+   *
+   * Ideally we could replace the Speculation use_ops on benign tvars with their
+   * underlying use_op after speculation ends. *)
+  | Speculation _ -> not (Speculation.speculating ())
+  | _ -> false
+  in
   mod_use_op_of_use_t (fun op2 ->
     let alt = fold_use_op
-      (function
-        (* If the root of the previous use_op is UnknownUse and our alternate
-         * use_op does not have an UnknownUse root then we use our
-         * alternate use_op. *)
-        | UnknownUse -> true
-        | _ -> false)
+      (* If the root of the previous use_op is UnknownUse and our alternate
+       * use_op does not have an UnknownUse root then we use our
+       * alternate use_op. *)
+      ignore_root
       (fun alt -> function
         (* If the use was added to an implicit type param then we want to use
          * our alternate if the implicit type param use_op chain is inside
@@ -9048,7 +9047,7 @@ and flow_use_op op1 u =
         | _ -> alt)
       op2
     in
-    if alt && root_of_use_op op1 <> UnknownUse then op1 else op2
+    if alt && not (ignore_root (root_of_use_op op1)) then op1 else op2
   ) u
 
 (***********************)

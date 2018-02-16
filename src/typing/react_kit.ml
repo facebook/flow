@@ -378,7 +378,13 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input key type to the key type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
-      let action = LookupProp (unknown_use, Field (None, key_t, Positive)) in
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some "key";
+        lower = reason_of_t config;
+        upper = reason_key;
+        is_sentinel = false;
+      }, use_op) in
+      let action = LookupProp (use_op, Field (None, key_t, Positive)) in
       rec_flow cx trace (config,
         LookupT (reason_key, kind, [], propref, action))
     in
@@ -397,7 +403,13 @@ let run cx trace ~use_op reason_op l u
       (* Flow the config input ref type to the ref type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
-      let action = LookupProp (unknown_use, Field (None, ref_t, Positive)) in
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some "ref";
+        lower = reason_of_t config;
+        upper = reason_ref;
+        is_sentinel = false;
+      }, use_op) in
+      let action = LookupProp (use_op, Field (None, ref_t, Positive)) in
       rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in

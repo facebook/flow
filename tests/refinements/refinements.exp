@@ -78,12 +78,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because boolean [1] is not a number.
 
-   bool.js:24:13
-   24|   if (100 * false) {
-                   ^^^^^
-
-References:
-   bool.js:24:13
    24|   if (100 * false) {
                    ^^^^^ [1]
 
@@ -92,12 +86,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because boolean [1] is not a number.
 
-   bool.js:27:7
-   27|   if (false * 100) {
-             ^^^^^
-
-References:
-   bool.js:27:7
    27|   if (false * 100) {
              ^^^^^ [1]
 
@@ -130,50 +118,31 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error: cond_prop.js:11
- 11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                             ^^^^^^^^^^^^ BadType. This type is incompatible with the expected param type of
-  9: function getTypeASTName(typeAST: Type): string {
-                                      ^^^^ union: `Name` | `ListType` | `NonNullType`
-  Member 1:
-    3: type Type = Name | ListType | NonNullType;
-                   ^^^^ Name
-  Error:
-   11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ BadType. This type is incompatible with
-    3: type Type = Name | ListType | NonNullType;
-                   ^^^^ Name
-    Property `kind` is incompatible:
-        3: type Type = Name | ListType | NonNullType;
-                       ^^^^ property `kind`. Property not found in
-       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                                   ^^^^^^^^^^^^ BadType
-  Member 2:
-    3: type Type = Name | ListType | NonNullType;
-                          ^^^^^^^^ ListType
-  Error:
-   11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ BadType. This type is incompatible with
-    3: type Type = Name | ListType | NonNullType;
-                          ^^^^^^^^ ListType
-    Property `kind` is incompatible:
-        3: type Type = Name | ListType | NonNullType;
-                              ^^^^^^^^ property `kind`. Property not found in
-       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                                   ^^^^^^^^^^^^ BadType
-  Member 3:
-    3: type Type = Name | ListType | NonNullType;
-                                     ^^^^^^^^^^^ NonNullType
-  Error:
-   11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ BadType. This type is incompatible with
-    3: type Type = Name | ListType | NonNullType;
-                                     ^^^^^^^^^^^ NonNullType
-    Property `kind` is incompatible:
-        3: type Type = Name | ListType | NonNullType;
-                                         ^^^^^^^^^^^ property `kind`. Property not found in
-       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                                   ^^^^^^^^^^^^ BadType
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
+
+Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because:
+ - Either property `kind` is missing in `BadType` [1] but exists in `Name` [2].
+ - Or property `kind` is missing in `BadType` [1] but exists in `ListType` [3].
+ - Or property `kind` is missing in `BadType` [1] but exists in `NonNullType` [4].
+
+   cond_prop.js:11:25
+   11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                               ^^^^^^^^^^^^
+
+References:
+   cond_prop.js:6:66
+    6| type NonNullType = {kind: 'NonNullType', type: Name | ListType | BadType};
+                                                                        ^^^^^^^ [1]
+   cond_prop.js:3:13
+    3| type Type = Name | ListType | NonNullType;
+                   ^^^^ [2]
+   cond_prop.js:3:20
+    3| type Type = Name | ListType | NonNullType;
+                          ^^^^^^^^ [3]
+   cond_prop.js:3:31
+    3| type Type = Name | ListType | NonNullType;
+                                     ^^^^^^^^^^^ [4]
+
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:12
 
@@ -904,12 +873,9 @@ number [1] is incompatible with boolean [2].
 
    not.js:5:5
    5|     x++; // should error for null, void and bool (false)
-          ^^^
+          ^^^ [1]
 
 References:
-   not.js:5:5
-   5|     x++; // should error for null, void and bool (false)
-          ^^^ [1]
    not.js:3:18
    3| function foo(x: ?bool) {
                        ^^^^ [2]
@@ -994,12 +960,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because null [1] is not a number.
 
-   null.js:4:13
-   4|   if (100 * null) {
-                  ^^^^
-
-References:
-   null.js:4:13
    4|   if (100 * null) {
                   ^^^^ [1]
 
@@ -1008,12 +968,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because null [1] is not a number.
 
-   null.js:7:7
-   7|   if (null * 100) {
-            ^^^^
-
-References:
-   null.js:7:7
    7|   if (null * 100) {
             ^^^^ [1]
 
@@ -1092,12 +1046,9 @@ number literal `0` [1] is incompatible with number literal `1` [2].
 
    number.js:21:15
    21|     if (x === 0) {
-                     ^
+                     ^ [1]
 
 References:
-   number.js:21:15
-   21|     if (x === 0) {
-                     ^ [1]
    number.js:20:15
    20|   function(x: 1): 0 {
                      ^ [2]
@@ -1109,12 +1060,9 @@ number literal `1` [1] is incompatible with number literal `0` [2].
 
    number.js:28:15
    28|     if (x === 1) {
-                     ^
+                     ^ [1]
 
 References:
-   number.js:28:15
-   28|     if (x === 1) {
-                     ^ [1]
    number.js:27:15
    27|   function(x: 0): number {
                      ^ [2]
@@ -1126,12 +1074,9 @@ number literal `1` [1] is incompatible with number literal `0` [2].
 
    number.js:35:15
    35|     if (x !== 1) {
-                     ^
+                     ^ [1]
 
 References:
-   number.js:35:15
-   35|     if (x !== 1) {
-                     ^ [1]
    number.js:34:15
    34|   function(x: 0) {
                      ^ [2]
@@ -1496,12 +1441,9 @@ string literal `foo` [1] is incompatible with string literal `bar` [2].
 
    string.js:21:15
    21|     if (x === 'foo') {
-                     ^^^^^
+                     ^^^^^ [1]
 
 References:
-   string.js:21:15
-   21|     if (x === 'foo') {
-                     ^^^^^ [1]
    string.js:20:15
    20|   function(x: 'bar'): 'foo' {
                      ^^^^^ [2]
@@ -1513,12 +1455,9 @@ string literal `bar` [1] is incompatible with string literal `foo` [2].
 
    string.js:28:15
    28|     if (x === 'bar') {
-                     ^^^^^
+                     ^^^^^ [1]
 
 References:
-   string.js:28:15
-   28|     if (x === 'bar') {
-                     ^^^^^ [1]
    string.js:27:15
    27|   function(x: 'foo'): string {
                      ^^^^^ [2]
@@ -1530,12 +1469,9 @@ string literal `bar` [1] is incompatible with string literal `foo` [2].
 
    string.js:35:15
    35|     if (x !== 'bar') {
-                     ^^^^^
+                     ^^^^^ [1]
 
 References:
-   string.js:35:15
-   35|     if (x !== 'bar') {
-                     ^^^^^ [1]
    string.js:34:15
    34|   function(x: 'foo') {
                      ^^^^^ [2]
@@ -2773,12 +2709,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because undefined [1] is not a number.
 
-   void.js:82:13
-   82|   if (100 * void(0)) {
-                   ^^^^^^^
-
-References:
-   void.js:82:13
    82|   if (100 * void(0)) {
                    ^^^^^^^ [1]
 
@@ -2787,12 +2717,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because undefined [1] is not a number.
 
-   void.js:85:7
-   85|   if (void(0) * 100) {
-             ^^^^^^^
-
-References:
-   void.js:85:7
    85|   if (void(0) * 100) {
              ^^^^^^^ [1]
 

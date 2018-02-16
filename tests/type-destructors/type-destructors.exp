@@ -680,71 +680,65 @@ References:
                ^^ [1]
 
 
-Error: union.js:2
-  2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                                            ^^^^ boolean. This type is incompatible with
-  2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `$NonMaybeType`(s)
-  Member 1:
-    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
-  Error:
-    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                                              ^^^^ boolean. This type is incompatible with
-    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
-  Member 2:
-    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $NonMaybeType
-  Error:
-    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                                              ^^^^ boolean. This type is incompatible with
-    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+Error ---------------------------------------------------------------------------------------------------- union.js:2:40
 
-Error: union.js:4
-  4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-                                                        ^^^^ boolean. This type is incompatible with
-  4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: `$PropertyType`(s)
-  Member 1:
-    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $PropertyType
-  Error:
-    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-                                                          ^^^^ boolean. This type is incompatible with
-    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
-  Member 2:
-    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ $PropertyType
-  Error:
-    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-                                                          ^^^^ boolean. This type is incompatible with
-    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+Cannot assign `true` to `x1` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
 
-Error: union.js:10
- 10: (null: P2); // err, null ~> string|number
-      ^^^^ null. This type is incompatible with
- 10: (null: P2); // err, null ~> string|number
-            ^^ union: `P2`(s)
-  Member 1:
-    7: type P2 = $PropertyType<T, 'p'>; // NB: T is not resolved yet
-                 ^^^^^^^^^^^^^^^^^^^^^ P2
-  Error:
-   10: (null: P2); // err, null ~> string|number
-        ^^^^ null. This type is incompatible with
-    7: type P2 = $PropertyType<T, 'p'>; // NB: T is not resolved yet
-                 ^^^^^^^^^^^^^^^^^^^^^ string
-  Member 2:
-    7: type P2 = $PropertyType<T, 'p'>; // NB: T is not resolved yet
-                 ^^^^^^^^^^^^^^^^^^^^^ P2
-  Error:
-   10: (null: P2); // err, null ~> string|number
-        ^^^^ null. This type is incompatible with
-    7: type P2 = $PropertyType<T, 'p'>; // NB: T is not resolved yet
-                 ^^^^^^^^^^^^^^^^^^^^^ number
+   union.js:2:40
+   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                                             ^^^^ [1]
+
+References:
+   union.js:2:23
+   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                            ^^^^^^ [2]
+   union.js:2:30
+   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                                   ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:4:52
+
+Cannot assign `true` to `x3` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   union.js:4:52
+   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                                                         ^^^^ [1]
+
+References:
+   union.js:4:26
+   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                               ^^^^^^ [2]
+   union.js:4:37
+   4| var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                                          ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:10:2
+
+Cannot cast `null` to `P2` because:
+ - Either null [1] is incompatible with string [2].
+ - Or null [1] is incompatible with number [3].
+
+   union.js:10:2
+   10| (null: P2); // err, null ~> string|number
+        ^^^^ [1]
+
+References:
+   union.js:11:14
+   11| type T = {p: string} | {p: number}; // NB: T resolved here
+                    ^^^^^^ [2]
+   union.js:11:28
+   11| type T = {p: string} | {p: number}; // NB: T resolved here
+                                  ^^^^^^ [3]
+
 
 
 Found 49 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

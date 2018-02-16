@@ -164,8 +164,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
 Cannot instantiate `React.Element` because:
- - number [1] is incompatible with string [2] in type argument `ElementType`.
  - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
 
    classes.js:39:25
     39| var foo: $jsx<number> = <Foo/>;
@@ -305,8 +305,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
 Cannot instantiate `React.Element` because:
- - number [1] is incompatible with string [2] in type argument `ElementType`.
  - number [1] is not a React component.
+ - number [1] is incompatible with string [2] in type argument `ElementType`.
 
    classes.js:79:32
     79| var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -936,3 +936,6 @@ References:
 
 
 Found 60 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

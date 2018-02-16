@@ -441,12 +441,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because null [1] is not a number.
 
-   mult.js:5:5
-   5| num(null * 1);
-          ^^^^
-
-References:
-   mult.js:5:5
    5| num(null * 1);
           ^^^^ [1]
 
@@ -455,12 +449,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because null [1] is not a number.
 
-   mult.js:6:9
-   6| num(1 * null);
-              ^^^^
-
-References:
-   mult.js:6:9
    6| num(1 * null);
               ^^^^ [1]
 
@@ -499,12 +487,9 @@ Cannot compare number [1] to string [2].
 
    relational.js:4:2
    4| (1 < "foo"); // error
-       ^
+       ^ [1]
 
 References:
-   relational.js:4:2
-   4| (1 < "foo"); // error
-       ^ [1]
    relational.js:4:6
    4| (1 < "foo"); // error
            ^^^^^ [2]
@@ -516,12 +501,9 @@ Cannot compare string [1] to number [2].
 
    relational.js:5:2
    5| ("foo" < 1); // error
-       ^^^^^
+       ^^^^^ [1]
 
 References:
-   relational.js:5:2
-   5| ("foo" < 1); // error
-       ^^^^^ [1]
    relational.js:5:10
    5| ("foo" < 1); // error
                ^ [2]
@@ -533,12 +515,9 @@ Cannot compare number [1] to object literal [2].
 
    relational.js:7:2
    7| (1 < {foo: 1}); // error
-       ^
+       ^ [1]
 
 References:
-   relational.js:7:2
-   7| (1 < {foo: 1}); // error
-       ^ [1]
    relational.js:7:6
    7| (1 < {foo: 1}); // error
            ^^^^^^^^ [2]
@@ -550,12 +529,9 @@ Cannot compare object literal [1] to number [2].
 
    relational.js:8:2
    8| ({foo: 1} < 1); // error
-       ^^^^^^^^
+       ^^^^^^^^ [1]
 
 References:
-   relational.js:8:2
-   8| ({foo: 1} < 1); // error
-       ^^^^^^^^ [1]
    relational.js:8:13
    8| ({foo: 1} < 1); // error
                   ^ [2]
@@ -567,12 +543,9 @@ Cannot compare object literal [1] to object literal [2].
 
    relational.js:9:2
    9| ({foo: 1} < {foo: 1}); // error
-       ^^^^^^^^
+       ^^^^^^^^ [1]
 
 References:
-   relational.js:9:2
-   9| ({foo: 1} < {foo: 1}); // error
-       ^^^^^^^^ [1]
    relational.js:9:13
    9| ({foo: 1} < {foo: 1}); // error
                   ^^^^^^^^ [2]
@@ -584,12 +557,9 @@ Cannot compare string [1] to object literal [2].
 
    relational.js:10:2
    10| ("foo" < {foo: 1}); // error
-        ^^^^^
+        ^^^^^ [1]
 
 References:
-   relational.js:10:2
-   10| ("foo" < {foo: 1}); // error
-        ^^^^^ [1]
    relational.js:10:10
    10| ("foo" < {foo: 1}); // error
                 ^^^^^^^^ [2]
@@ -601,12 +571,9 @@ Cannot compare object literal [1] to string [2].
 
    relational.js:11:2
    11| ({foo: 1} < "foo"); // error
-        ^^^^^^^^
+        ^^^^^^^^ [1]
 
 References:
-   relational.js:11:2
-   11| ({foo: 1} < "foo"); // error
-        ^^^^^^^^ [1]
    relational.js:11:13
    11| ({foo: 1} < "foo"); // error
                    ^^^^^ [2]
@@ -618,12 +585,9 @@ Cannot compare number [1] to null or undefined [2].
 
    relational.js:14:2
    14| (1 < x); // 2 errors: null !~> number; undefined !~> number
-        ^
+        ^ [1]
 
 References:
-   relational.js:14:2
-   14| (1 < x); // 2 errors: null !~> number; undefined !~> number
-        ^ [1]
    relational.js:13:17
    13| var x = (null : ?number);
                        ^^^^^^^ [2]
@@ -652,12 +616,9 @@ Cannot compare null [1] to null [2].
 
    relational.js:17:2
    17| (null < null); // error
-        ^^^^
+        ^^^^ [1]
 
 References:
-   relational.js:17:2
-   17| (null < null); // error
-        ^^^^ [1]
    relational.js:17:9
    17| (null < null); // error
                ^^^^ [2]
@@ -686,12 +647,9 @@ Cannot compare null [1] to undefined [2].
 
    relational.js:19:2
    19| (null < undefined); // error
-        ^^^^
+        ^^^^ [1]
 
 References:
-   relational.js:19:2
-   19| (null < undefined); // error
-        ^^^^ [1]
    <BUILTINS>/core.js:13:24
    13| declare var undefined: void;
                               ^^^^ [2]

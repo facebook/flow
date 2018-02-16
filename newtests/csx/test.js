@@ -113,7 +113,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Foo>{...x}</Foo>;
-                            ^ Property \`@@iterator\` is missing in number [1] but exists in \`$Iterable\` [2].
+                            ^ property \`@@iterator\` is missing in number [1] but exists in \`$Iterable\` [2].
           References:
             7:       const x = 42;
                                ^^ [1]
@@ -214,21 +214,21 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar {...params} />;
-                    ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
-          References:
-            7:       const params = {x: 23};
-                                        ^^ [1]
-            5:       type Props = {|x: string|};
-                                       ^^^^^^ [2]
-
-        test.js:8
-          8:       <Bar {...params} />;
                     ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
           References:
             8:       <Bar {...params} />;
                      ^^^^^^^^^^^^^^^^^^^ [1]
             6:       function Bar(props: Props) {}
                                          ^^^^^ [2]
+
+        test.js:8
+          8:       <Bar {...params} />;
+                    ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
+          References:
+            7:       const params = {x: 23};
+                                        ^^ [1]
+            5:       type Props = {|x: string|};
+                                       ^^^^^^ [2]
       `,
     ),
   ]),

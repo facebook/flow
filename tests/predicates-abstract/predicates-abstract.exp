@@ -4,12 +4,9 @@ object with property `kind` that matches string literal `A` [1] is incompatible 
 
    sanity-filter-union.js:6:71
    6| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                            ^^^^^^^^^^^^^^
+                                                                            ^^^^^^^^^^^^^^ [1]
 
 References:
-   sanity-filter-union.js:6:71
-   6| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                                                            ^^^^^^^^^^^^^^ [1]
    sanity-filter-union.js:9:18
    9| type B = { kind: 'B', v: string }
                        ^^^ [2]
@@ -18,64 +15,49 @@ References:
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because:
- - string literal `A` [1] is incompatible with string literal `B` [2] in property `kind` of array element.
- - property `v` is missing in `A` [3] but exists in `B` [4] in array element.
+ - property `v` is missing in `A` [1] but exists in `B` [2] in array element.
+ - string literal `A` [3] is incompatible with string literal `B` [4] in property `kind` of array element.
 
    sanity-filter-union.js:16:2
    16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   sanity-filter-union.js:8:18
-    8| type A = { kind: 'A', u: number }
-                        ^^^ [1]
-   sanity-filter-union.js:9:18
-    9| type B = { kind: 'B', v: string }
-                        ^^^ [2]
    sanity-filter-union.js:14:23
    14| declare var ab: Array<A|B|C>;
-                             ^ [3]
+                             ^ [1]
    sanity-filter-union.js:16:55
    16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                             ^ [4]
+                                                             ^ [2]
+   sanity-filter-union.js:8:18
+    8| type A = { kind: 'A', u: number }
+                        ^^^ [3]
+   sanity-filter-union.js:9:18
+    9| type B = { kind: 'B', v: string }
+                        ^^^ [4]
 
 
-Error: sanity-filter-union.js:17
- 17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                     ^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     14: declare var ab: Array<A|B|C>;
-                                 ^ B. This type is incompatible with
-     17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                               ^^^ union: `A` | `C`
-      Member 1:
-       17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                                 ^ A
-      Error:
-       14: declare var ab: Array<A|B|C>;
-                                   ^ B. This type is incompatible with
-       17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                                 ^ A
-        Property `kind` is incompatible:
-            9: type B = { kind: 'B', v: string }
-                                ^^^ string literal `B`. Expected string literal `A`, got `B` instead
-            8: type A = { kind: 'A', u: number }
-                                ^^^ string literal `A`
-      Member 2:
-       17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                                   ^ C
-      Error:
-       14: declare var ab: Array<A|B|C>;
-                                   ^ B. This type is incompatible with
-       17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                                   ^ C
-        Property `kind` is incompatible:
-            9: type B = { kind: 'B', v: string }
-                                ^^^ string literal `B`. Expected string literal `C`, got `B` instead
-           10: type C = { kind: 'C', y: boolean }
-                                ^^^ string literal `C`
+Error -------------------------------------------------------------------------------------- sanity-filter-union.js:17:2
+
+Cannot cast `my_filter(...)` to array type because in array element:
+ - Either string literal `B` [1] is incompatible with string literal `A` [2] in property `kind`.
+ - Or string literal `B` [1] is incompatible with string literal `C` [3] in property `kind`.
+
+   sanity-filter-union.js:17:2
+   17| (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   sanity-filter-union.js:9:18
+    9| type B = { kind: 'B', v: string }
+                        ^^^ [1]
+   sanity-filter-union.js:8:18
+    8| type A = { kind: 'A', u: number }
+                        ^^^ [2]
+   sanity-filter-union.js:10:18
+   10| type C = { kind: 'C', y: boolean }
+                        ^^^ [3]
+
 
 Error --------------------------------------------------------------------------------------------- sanity-filter.js:8:2
 

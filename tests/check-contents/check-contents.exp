@@ -28,12 +28,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
-   not_flow.js:1:5
-   1| 1 * 'foo';
-          ^^^^^
-
-References:
-   not_flow.js:1:5
    1| 1 * 'foo';
           ^^^^^ [1]
 
@@ -48,12 +42,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
-   not_flow.js:1:5
-   1| 1 * 'foo';
-          ^^^^^
-
-References:
-   not_flow.js:1:5
    1| 1 * 'foo';
           ^^^^^ [1]
 
@@ -73,12 +61,6 @@ Error --------------------------------------------------------------------------
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
-   not_flow.js:1:5
-   1| 1 * 'foo';
-          ^^^^^
-
-References:
-   not_flow.js:1:5
    1| 1 * 'foo';
           ^^^^^ [1]
 

@@ -290,12 +290,9 @@ string [1] is incompatible with number [2].
 
    classes.js:49:12
    49| class E<S: string, T: number = S> {} // Error: string ~> number
-                  ^^^^^^
+                  ^^^^^^ [1]
 
 References:
-   classes.js:49:12
-   49| class E<S: string, T: number = S> {} // Error: string ~> number
-                  ^^^^^^ [1]
    classes.js:49:23
    49| class E<S: string, T: number = S> {} // Error: string ~> number
                              ^^^^^^ [2]
@@ -307,12 +304,9 @@ number [1] is incompatible with string [2].
 
    classes.js:50:27
    50| class F<S: string, T: S = number> {} // Error: number ~> string
-                                 ^^^^^^
+                                 ^^^^^^ [1]
 
 References:
-   classes.js:50:27
-   50| class F<S: string, T: S = number> {} // Error: number ~> string
-                                 ^^^^^^ [1]
    classes.js:50:12
    50| class F<S: string, T: S = number> {} // Error: number ~> string
                   ^^^^^^ [2]

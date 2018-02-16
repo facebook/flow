@@ -1,24 +1,24 @@
-Error: annot.js:6
-  6: f(x); // error should point to `x` here, not at type alias
-     ^^^^ call of `f`. Function cannot be called on any member of intersection type
-  6: f(x); // error should point to `x` here, not at type alias
-     ^ intersection
-  Member 1:
-    1: declare function f(x: string): void;
-                         ^^^^^^^^^^^^^^^^^ function type
-  Error:
-    6: f(x); // error should point to `x` here, not at type alias
-         ^ null. This type is incompatible with the expected param type of
-    1: declare function f(x: string): void;
-                             ^^^^^^ string
-  Member 2:
-    2: declare function f(x: number): void;
-                         ^^^^^^^^^^^^^^^^^ function type
-  Error:
-    6: f(x); // error should point to `x` here, not at type alias
-         ^ null. This type is incompatible with the expected param type of
-    2: declare function f(x: number): void;
-                             ^^^^^^ number
+Error ----------------------------------------------------------------------------------------------------- annot.js:6:1
+
+Cannot call `f` because:
+ - Either null [1] is incompatible with string [2].
+ - Or null [1] is incompatible with number [3].
+
+   annot.js:6:1
+   6| f(x); // error should point to `x` here, not at type alias
+      ^^^^
+
+References:
+   annot.js:4:10
+   4| type T = null;
+               ^^^^ [1]
+   annot.js:1:23
+   1| declare function f(x: string): void;
+                            ^^^^^^ [2]
+   annot.js:2:23
+   2| declare function f(x: number): void;
+                            ^^^^^^ [3]
+
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:18
 
@@ -113,95 +113,71 @@ References:
                 ^^^^^^ [2]
 
 
-Error: overload.js:24
- 24: a.foo(true); // error, function cannot be called on intersection type
-     ^^^^^^^^^^^ call of method `foo`. Function cannot be called on any member of intersection type
- 24: a.foo(true); // error, function cannot be called on intersection type
-     ^^^^^ intersection
-  Member 1:
-   13:     foo(x:number): number;
-           ^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   24: a.foo(true); // error, function cannot be called on intersection type
-             ^^^^ boolean. This type is incompatible with the expected param type of
-   13:     foo(x:number): number;
-                 ^^^^^^ number
-  Member 2:
-   14:     foo(x:string): string;
-           ^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   24: a.foo(true); // error, function cannot be called on intersection type
-             ^^^^ boolean. This type is incompatible with the expected param type of
-   14:     foo(x:string): string;
-                 ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------- overload.js:24:1
 
-Error: overload.js:28
- 28: a.bar({ a: true }); // error, function cannot be called on intersection type
-     ^^^^^^^^^^^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
- 28: a.bar({ a: true }); // error, function cannot be called on intersection type
-     ^^^^^ intersection
-  Member 1:
-   16:     bar(x: { a: number }): number;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   28: a.bar({ a: true }); // error, function cannot be called on intersection type
-             ^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-   16:     bar(x: { a: number }): number;
-                  ^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                      ^^^^ boolean. This type is incompatible with
-       16:     bar(x: { a: number }): number;
-                           ^^^^^^ number
-  Member 2:
-   17:     bar(x: { a: string }): string;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   28: a.bar({ a: true }); // error, function cannot be called on intersection type
-             ^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-   17:     bar(x: { a: string }): string;
-                  ^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                      ^^^^ boolean. This type is incompatible with
-       17:     bar(x: { a: string }): string;
-                           ^^^^^^ string
+Cannot call `a.foo` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
 
-Error: overload.js:32
- 32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-     ^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
- 32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-     ^^^^^ intersection
-  Member 1:
-   16:     bar(x: { a: number }): number;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-             ^ intersection type
-   30: declare var x: { a: boolean; } & { b: string };
-                      ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
-   16:     bar(x: { a: number }): number;
-                  ^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       30: declare var x: { a: boolean; } & { b: string };
-                               ^^^^^^^ boolean. This type is incompatible with
-       16:     bar(x: { a: number }): number;
-                           ^^^^^^ number
-  Member 2:
-   17:     bar(x: { a: string }): string;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-             ^ intersection type
-   30: declare var x: { a: boolean; } & { b: string };
-                      ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
-   17:     bar(x: { a: string }): string;
-                  ^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       30: declare var x: { a: boolean; } & { b: string };
-                               ^^^^^^^ boolean. This type is incompatible with
-       17:     bar(x: { a: string }): string;
-                           ^^^^^^ string
+   overload.js:24:1
+   24| a.foo(true); // error, function cannot be called on intersection type
+       ^^^^^^^^^^^
+
+References:
+   overload.js:24:7
+   24| a.foo(true); // error, function cannot be called on intersection type
+             ^^^^ [1]
+   overload.js:13:11
+   13|     foo(x:number): number;
+                 ^^^^^^ [2]
+   overload.js:14:11
+   14|     foo(x:string): string;
+                 ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- overload.js:28:1
+
+Cannot call `a.bar` because:
+ - Either boolean [1] is incompatible with number [2] in property `a`.
+ - Or boolean [1] is incompatible with string [3] in property `a`.
+
+   overload.js:28:1
+   28| a.bar({ a: true }); // error, function cannot be called on intersection type
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   overload.js:28:12
+   28| a.bar({ a: true }); // error, function cannot be called on intersection type
+                  ^^^^ [1]
+   overload.js:16:17
+   16|     bar(x: { a: number }): number;
+                       ^^^^^^ [2]
+   overload.js:17:17
+   17|     bar(x: { a: string }): string;
+                       ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- overload.js:32:1
+
+Cannot call `a.bar` because:
+ - Either boolean [1] is incompatible with number [2] in property `a`.
+ - Or boolean [1] is incompatible with string [3] in property `a`.
+
+   overload.js:32:1
+   32| a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+       ^^^^^^^^
+
+References:
+   overload.js:30:21
+   30| declare var x: { a: boolean; } & { b: string };
+                           ^^^^^^^ [1]
+   overload.js:16:17
+   16|     bar(x: { a: number }): number;
+                       ^^^^^^ [2]
+   overload.js:17:17
+   17|     bar(x: { a: string }): string;
+                       ^^^^^^ [3]
+
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:2
 
@@ -222,3 +198,6 @@ References:
 
 
 Found 11 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

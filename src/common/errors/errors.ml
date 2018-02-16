@@ -74,15 +74,19 @@ module Friendly = struct
    * merge errors with the same root cause into a single block.
    *)
   type 'a t' = {
-    root: 'a error_root option;
     loc: Loc.t;
-    message: 'a message;
+    root: 'a error_root option;
+    message: 'a error_message;
   }
 
   and 'a error_root = {
     root_loc: Loc.t;
     root_message: 'a message;
   }
+
+  and 'a error_message =
+    | Normal of { message: 'a message; frames: 'a message list option }
+    | Speculation of { frames: 'a message list; branches: (int * 'a t') list }
 
   and 'a message = 'a message_feature list
 
@@ -93,6 +97,17 @@ module Friendly = struct
   and message_inline =
     | Text of string
     | Code of string
+
+  (* The composition of some root error message and a list of associated
+   * error messages. This structure is used in two contexts:
+   *
+   * 1. Grouping errors with the same error_root.
+   * 2. Grouping errors from speculation_branches.
+   *)
+  type 'a message_group = {
+    group_message: 'a message;
+    group_message_list: 'a message_group list;
+  }
 
   type t = Loc.t t'
 
@@ -191,10 +206,243 @@ module Friendly = struct
   | (Inline ((Text s)::xs))::message -> (Inline ((Text (String.capitalize_ascii s))::xs))::message
   | message -> message
 
-  (* The intermediate fold extract_references uses. Returns both a loc_to_id map
-   * and an id_to_loc map. These maps are the inverses of one another. Also
-   * returns a transformed message. *)
-  let extract_references_intermediate next_id loc_to_id id_to_loc message =
+  (* Uncapitalizes the first letter in the message. Does not uncapitalize code
+   * or text in references. *)
+  let uncapitalize = function
+  | [] -> []
+  | (Inline ((Text s)::xs))::message -> (Inline ((Text (String.uncapitalize_ascii s))::xs))::message
+  | message -> message
+
+  (* Adds some message to the beginning of a group message. *)
+  let append_group_message message {
+    group_message;
+    group_message_list;
+  } = {
+    group_message = message @ (text " " :: uncapitalize group_message);
+    group_message_list;
+  }
+
+  (* Creates a message group from the error_message type. If show_all_branches
+   * is false then we will hide speculation branches with a lower score. If any
+   * speculation branches are hidden then the boolean we return will be true. *)
+  let message_group_of_error =
+    let message_of_frames frames acc_frames =
+      let frames = List.concat (List.rev (frames :: acc_frames)) in
+      List.concat (intersperse [text " of "] (List.rev frames))
+    in
+    let rec flatten_speculation_branches
+      ~show_all_branches
+      ~hidden_branches
+      ~high_score
+      acc_frames
+      acc
+    =
+    function
+    | [] -> (hidden_branches, high_score, acc)
+    | (score, error) :: branches -> (
+      match error.message with
+      (* If we have a speculation error with no frames and no root then we want
+       * to flatten the branches of that error.
+       *
+       * We ignore the score for these errors. Instead propagating the
+       * high_score we already have. *)
+      | Speculation { branches = nested_branches; frames } when Option.is_none error.root ->
+        (* We don't perform tail-call recursion here, but it's unlikely that
+         * speculations will be so deeply nested that we blow the stack. *)
+        let (hidden_branches, high_score, acc) =
+          flatten_speculation_branches
+            ~show_all_branches
+            ~hidden_branches
+            ~high_score
+            (frames :: acc_frames)
+            acc
+            nested_branches
+        in
+        (* Resume recursion in our branches list. *)
+        flatten_speculation_branches
+          ~show_all_branches
+          ~hidden_branches
+          ~high_score
+          acc_frames
+          acc
+          branches
+
+      (* We add every other error if it has an appropriate score. *)
+      | _ ->
+        let (high_score, hidden_branches, acc) = (
+          if show_all_branches then (
+            (* If we are configured to show all branches then always add our
+             * error to acc. *)
+            (high_score, hidden_branches, (acc_frames, error) :: acc)
+          ) else (
+            (* If this message has a better score then throw away all old
+             * messages. We are now hiding some messages. *)
+            if score > high_score then
+              (score, hidden_branches || acc <> [], [(acc_frames, error)])
+            (* If this message has the same score as our high score then add
+             * it to acc and keep our high score. *)
+            else if score = high_score then
+              (high_score, hidden_branches, (acc_frames, error) :: acc)
+            (* If this message has a lower score then our high score we skip
+             * the error. We are now hiding at least one message. *)
+            else
+              (high_score, true, acc)
+          )
+        ) in
+        (* Recurse... *)
+        flatten_speculation_branches
+          ~show_all_branches
+          ~hidden_branches
+          ~high_score
+          acc_frames
+          acc
+          branches
+    ) in
+    let rec loop
+      ~show_root
+      ~show_all_branches
+      ~hidden_branches
+      acc_frames
+      error
+    =
+      match error.message with
+      (* Create normal error messages. *)
+      | Normal { message; frames = Some frames } ->
+        (* Add the frames to our error message. *)
+        let frames = message_of_frames frames acc_frames in
+        let message = (
+          if frames = [] then (
+            message
+          ) else (
+            message @ (text " in " :: frames)
+          )
+        ) in
+        (* Add the root to our error message when we are configured to show
+         * the root. *)
+        let message = match error.root with
+        | Some { root_message; _ } when show_root ->
+          root_message @ (text " " :: message)
+        | _ ->
+          message
+        in
+        (* Finish our error message with a period. But only if frames
+         * is empty! *)
+        let message = message @ [text "."] in
+        (* Get the primary location. It is the root location if error.loc is
+         * outside of the root location. *)
+        let primary_loc = match error.root with
+        | None -> error.loc
+        | Some { root_loc; _ } ->
+          if Loc.contains root_loc error.loc then error.loc else root_loc
+        in
+        (hidden_branches, primary_loc, {
+          group_message = message;
+          group_message_list = [];
+        })
+      (* If there are no frames then we only want to add the root message (if we
+       * have one) and return. We can safely ignore acc_frames. If a message has
+       * frames set to None then the message is not equipped to handle
+       * extra frames. *)
+      | Normal { message; frames = None } ->
+        (* Add the root to our error message when we are configured to show
+         * the root. *)
+        let message = match error.root with
+        | Some { root_message; _ } when show_root ->
+          root_message @ (text " " :: message)
+        | _ ->
+          message
+        in
+        (hidden_branches, error.loc, {
+          group_message = message;
+          group_message_list = [];
+        })
+      (* When we have a speculation error, do some work to create a message
+       * group. Flatten out nested speculation errors with no frames. Hide
+       * frames with low scores. Use a single message_group if we hide all but
+       * one branches. *)
+      | Speculation { frames; branches } -> (
+        (* Loop through our speculation branches. We will flatten out relevant
+         * union branches and hide branches with a low score in this loop. *)
+        let (hidden_branches, _, speculation_errors_rev) =
+          flatten_speculation_branches
+            ~show_all_branches
+            ~high_score:min_int
+            ~hidden_branches:false
+            []
+            []
+            branches
+        in
+        match speculation_errors_rev with
+        (* When there is only one branch in acc (we had one branch with a
+         * "high score") and this error does not have a root then loop while
+         * adding the frames from this speculation error message. *)
+        | (acc_frames', speculation_error) :: [] when Option.is_none speculation_error.root ->
+          loop
+            ~show_root
+            ~show_all_branches
+            ~hidden_branches
+            (frames :: (acc_frames' @ acc_frames))
+            { speculation_error with root = error.root }
+        (* If there were more then one branches with high scores add them all
+         * together in an error message group. *)
+        | _ ->
+          (* Get the message from the frames. *)
+          let frames = message_of_frames frames acc_frames in
+          let message =
+            (* If we don't have an error root _and_ we don't have any frames
+             * then use a mock error message. (We should always have a root
+             * for speculation errors in theory, but as long as there are
+             * UnknownUses it's possible we won't get a root.) *)
+            if (Option.is_none error.root || not show_root) && frames = [] then
+              [text "all branches are incompatible:"]
+            else
+              (* Otherwise create a message with our frames and optionally the
+               * error message root. *)
+              let message = if frames = [] then [] else text "in " :: frames in
+              (* Add the root to our error message when we are configured to
+               * show the root. *)
+              let message = match error.root with
+              | Some { root_message; _ } when show_root ->
+                if message = [] then
+                  root_message
+                else
+                  root_message @ (text " " :: message)
+              | _ ->
+                message
+              in
+              (* Finish our error message with a colon. *)
+              let message = message @ [text ":"] in
+              message
+          in
+          (* Get the message group for all of our speculation errors. *)
+          let (hidden_branches, group_message_list) =
+            List.fold_left (fun (hidden_branches, group_message_list) (acc_frames', error) ->
+              let (hidden_branches, _, message_group) =
+                loop
+                  ~show_root:true
+                  ~show_all_branches
+                  ~hidden_branches
+                  acc_frames'
+                  error
+              in
+              (hidden_branches, message_group :: group_message_list)
+            ) (hidden_branches, []) (List.rev speculation_errors_rev)
+          in
+          (hidden_branches, error.loc, {
+            group_message = message;
+            group_message_list = List.mapi (fun i message_group ->
+              append_group_message
+                (if i = 0 then [text "Either"] else [text "Or"])
+                message_group
+            ) group_message_list;
+          })
+      )
+    in
+    (* Partially apply loop with the state it needs. Have fun! *)
+    loop ~hidden_branches:false []
+
+  let extract_references_message_intermediate
+    ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =
       List.fold_left (fun (next_id, loc_to_id, id_to_loc, message) message_feature ->
         match message_feature with
@@ -214,25 +462,65 @@ module Friendly = struct
     in
     (next_id, loc_to_id, id_to_loc, List.rev message)
 
+  (* The intermediate fold extract_references uses. Returns both a loc_to_id map
+   * and an id_to_loc map. These maps are the inverses of one another. Also
+   * returns a transformed message. *)
+  let rec extract_references_intermediate
+    ~next_id ~loc_to_id ~id_to_loc ~message_group =
+    let (next_id, loc_to_id, id_to_loc, group_message) =
+      extract_references_message_intermediate
+        ~next_id ~loc_to_id ~id_to_loc
+        ~message:(message_group.group_message)
+    in
+    let (next_id, loc_to_id, id_to_loc, group_message_list_rev) =
+      List.fold_left (fun (next_id, loc_to_id, id_to_loc, group_message_list_rev) message_group ->
+        let (next_id, loc_to_id, id_to_loc, message_group) =
+          extract_references_intermediate
+            ~next_id ~loc_to_id ~id_to_loc ~message_group
+        in
+        (next_id, loc_to_id, id_to_loc, message_group :: group_message_list_rev)
+      ) (next_id, loc_to_id, id_to_loc, []) message_group.group_message_list
+    in
+    (next_id, loc_to_id, id_to_loc, {
+      group_message;
+      group_message_list = List.rev group_message_list_rev;
+    })
+
   (* Extracts common location references from a message. In order, each location
    * will be replaced with an integer reference starting at 1. If some reference
    * has the same location as another then they will share an id. *)
-  let extract_references : Loc.t message -> (Loc.t IMap.t * int message) =
-    fun message ->
+  let extract_references : Loc.t message_group -> (Loc.t IMap.t * int message_group) =
+    fun message_group ->
       let (_, _, id_to_loc, message) =
         extract_references_intermediate
-          1 LocMap.empty IMap.empty message in
+          ~next_id:1
+          ~loc_to_id:LocMap.empty
+          ~id_to_loc:IMap.empty
+          ~message_group
+      in
       (id_to_loc, message)
 
-  (* Converts our friendly error to a classic error message. *)
-  let to_classic { root; loc; message } =
-    (* Add our root to the message... *)
-    let message = match root with
-    | Some { root_message; _ } -> root_message @ [Inline [Text " "]] @ message
-    | None -> message
+  (* Turns a group_message back into a message. We do this by adding all the
+   * messages together. We don't insert newlines. This is a suboptimal
+   * representation of a grouped message, but it works for our purposes. *)
+  let message_of_group_message =
+    let rec loop acc { group_message; group_message_list } =
+      List.fold_left loop (group_message :: acc) group_message_list
     in
+    fun message_group ->
+      let acc = loop [] message_group in
+      List.concat (intersperse [text " "] (List.rev acc))
+
+  (* Converts our friendly error to a classic error message. *)
+  let to_classic error =
+    let (_, loc, message) =
+      message_group_of_error ~show_all_branches:false ~show_root:true error in
     (* Extract the references from the message. *)
     let (references, message) = extract_references message in
+    (* We use a basic strategy that concatenates all group messages together.
+     * This isn't the most attractive approach, but it works for consumers of
+     * the classic format. *)
+    let message = message_of_group_message message in
     (* Turn the message into a string. *)
     let message = List.fold_left (fun message -> function
     | Inline inlines ->
@@ -288,6 +576,8 @@ let mk_error ?(kind=InferError) ?trace_infos ?(extra=[]) infos =
 let mk_friendly_error
   ?(kind=InferError)
   ?trace_infos
+  ?root
+  ?frames
   loc
   message
 =
@@ -298,27 +588,34 @@ let mk_friendly_error
   | _ -> message
   in
   (kind, trace, Friendly {
-    root = None;
     loc;
-    message;
+    root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
+    message = Normal { message; frames };
   })
 
-let mk_friendly_error_with_root
+let empty_friendly_error = Friendly.(
+  { root = None; loc = Loc.none; message = Normal { frames = None; message = [] } }
+)
+
+let mk_friendly_speculation_error
   ?(kind=InferError)
   ?trace_infos
-  (root_loc, root_message)
-  (loc, message)
+  ~loc
+  ~root
+  ~frames
+  ~speculation_errors
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
-  let message = match kind with
-  | LintError kind -> message @ [text " ("; code (Lints.string_of_kind kind); text ")"]
-  | _ -> message
-  in
+  let branches = List.map (fun (score, (_, _, error)) ->
+    (score, match error with
+    | Classic _ -> empty_friendly_error
+    | Friendly error -> error)
+  ) speculation_errors in
   (kind, trace, Friendly {
-    root = Some { root_loc; root_message };
     loc;
-    message;
+    root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
+    message = Speculation { frames; branches };
   })
 
 (*******************************)
@@ -488,8 +785,40 @@ let locs_of_error =
   | InfoNode (infos, branches) -> locs_of_extra (locs_of_info_list acc infos) branches
 
   and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
+  in
 
-  in fun ((_, _, err): error) ->
+  let locs_of_message locs message = Friendly.(
+    List.fold_left (fun locs feature ->
+      match feature with
+      | Inline _ -> locs
+      | Reference (_, loc) -> loc :: locs
+    ) locs message
+  ) in
+
+  let rec locs_of_friendly_error locs error = Friendly.(
+    let { loc; root; message } = error in
+    let locs =
+      Option.value_map root
+        ~default:locs
+        ~f:(fun { root_message; root_loc } ->
+          root_loc :: locs_of_message locs root_message)
+    in
+    let locs = match message with
+    | Normal { frames; message } ->
+      let locs = Option.value_map frames ~default:locs ~f:(List.fold_left locs_of_message locs) in
+      let locs = locs_of_message locs message in
+      locs
+    | Speculation { frames; branches } ->
+      let locs = List.fold_left locs_of_message locs frames in
+      let locs = List.fold_left (fun locs (_, error) ->
+        locs_of_friendly_error locs error) locs branches in
+      locs
+    in
+    let locs = loc :: locs in
+    locs
+  ) in
+
+  fun ((_, _, err): error) ->
     match err with
     | Classic { messages; extra; _ } ->
       let extra_locs = locs_of_extra [] extra in
@@ -497,18 +826,8 @@ let locs_of_error =
         let loc, _ = to_pp message in
         loc::acc
       ) extra_locs messages
-    | Friendly { Friendly.loc; root; message; } -> Friendly.(
-      let message =
-        (match root with Some { root_message; _ } -> root_message | None -> []) @
-        message
-      in
-      let acc = loc ::
-        (match root with Some { root_loc; _ } -> [root_loc] | None -> []) in
-      (List.fold_left (fun acc feature ->
-        match feature with
-        | Inline _ -> acc
-        | Reference (_, loc) -> loc :: acc
-      ) acc message))
+    | Friendly error ->
+      locs_of_friendly_error [] error
 
 let infos_of_error (_, _, error) =
   match error with
@@ -557,7 +876,7 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
    friendly errors go before classic errors when the kind is the same and the
    friendly error's location is the same as the classic error's first
    location. *)
-let compare =
+let rec compare =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
        errors, then recursion limit errors. then both infer warnings and errors
@@ -590,6 +909,13 @@ let compare =
     | hd1::tl1, hd2::tl2 ->
         let k = f hd1 hd2 in
         if k = 0 then compare_lists f tl1 tl2 else k
+  in
+  let compare_option f o1 o2 =
+    match o1, o2 with
+    | Some x1, Some x2 -> f x1 x2
+    | Some _, None -> 1
+    | None, Some _ -> -1
+    | None, None -> 0
   in
   let compare_info (loc1, msgs1) (loc2, msgs2) =
     let k = Loc.compare loc1 loc2 in
@@ -626,6 +952,25 @@ let compare =
       let k = Loc.compare loc1 loc2 in
       if k = 0 then compare_lists compare_message_inline m1 m2 else k
   in
+  let compare_friendly_message m1 m2 =
+    let open Friendly in
+    match m1, m2 with
+    | Normal { frames=fs1; message=m1 }, Normal { frames=fs2; message=m2 } ->
+      let k = compare_option (compare_lists (compare_lists compare_message_feature)) fs1 fs2 in
+      if k = 0 then compare_lists compare_message_feature m1 m2 else k
+    | Normal _, Speculation _ -> -1
+    | Speculation _, Normal _ -> 1
+    | Speculation { frames=fs1; branches=b1 }, Speculation { frames=fs2; branches=b2 } ->
+      let k = compare_lists (compare_lists compare_message_feature) fs1 fs2 in
+      if k = 0 then
+        let k = List.length b1 - List.length b2 in
+        if k = 0 then
+          compare_lists (fun (_, err1) (_, err2) ->
+            compare (InferError, [], Friendly err1) (InferError, [], Friendly err2)
+          ) b1 b2
+        else k
+      else k
+  in
   fun err1 err2 ->
     let open Friendly in
     let loc1, loc2 = loc_of_error_for_compare err1, loc_of_error_for_compare err2 in
@@ -648,12 +993,12 @@ let compare =
         let k = compare_lists compare_message_feature rm1 rm2 in
         if k = 0 then
           let k = Loc.compare loc1 loc2 in
-          if k = 0 then compare_lists compare_message_feature m1 m2
+          if k = 0 then compare_friendly_message m1 m2
           else k
         else k
       | Friendly { root=None; message=m1; _ },
         Friendly { root=None; message=m2; _ } ->
-        compare_lists compare_message_feature m1 m2
+        compare_friendly_message m1 m2
       else k
     else k
 
@@ -672,11 +1017,12 @@ type error_group =
   (* Friendly errors without a root are never grouped. When traces are enabled
    * all friendly errors will never group. *)
   | FriendlySingleton of error_kind * message list * Friendly.t
-  (* Friendly errors that share a root are grouped together. *)
+  (* Friendly errors that share a root are grouped together. The errors list
+   * is reversed. *)
   | FriendlyGroup of {
       kind: error_kind;
       root: Loc.t Friendly.error_root;
-      messages: (Loc.t * Loc.t Friendly.message) Nel.t;
+      errors_rev: Friendly.t Nel.t;
       omitted: int;
     }
 
@@ -702,7 +1048,7 @@ let collect_errors_into_groups max set =
         if omit then raise (Interrupt_ErrorSet_fold acc);
         FriendlySingleton (kind, trace, error) :: acc
       (* Friendly errors with a root might need to be grouped. *)
-      | Friendly { loc; message; root = Some root } ->
+      | Friendly ({ root = Some root; _ } as error) ->
         (match acc with
         (* When the root location and message match the previous group, add our
          * friendly error to the group. We can do this by only looking at the last
@@ -711,7 +1057,7 @@ let collect_errors_into_groups max set =
          *
          * If we are now omitting errors then increment the omitted count
          * instead of adding a message. *)
-        | FriendlyGroup {kind = kind'; root = root'; messages = messages; omitted} :: acc' when (
+        | FriendlyGroup {kind = kind'; root = root'; errors_rev; omitted} :: acc' when (
             kind = kind' &&
             Loc.compare root.root_loc root'.root_loc = 0 &&
             root.root_message = root'.root_message
@@ -719,7 +1065,7 @@ let collect_errors_into_groups max set =
           FriendlyGroup {
             kind = kind';
             root = root';
-            messages = if omit then messages else Nel.cons (loc, message) messages;
+            errors_rev = if omit then errors_rev else Nel.cons error errors_rev;
             omitted = if omit then omitted + 1 else omitted;
           } :: acc'
         (* If the roots did not match then we have a friendly singleton. *)
@@ -728,7 +1074,7 @@ let collect_errors_into_groups max set =
           FriendlyGroup {
             kind = kind;
             root = root;
-            messages = Nel.one (loc, message);
+            errors_rev = Nel.one error;
             omitted = 0;
           } :: acc
         )
@@ -750,6 +1096,7 @@ module Cli_output = struct
     max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
+    show_all_branches: bool;
     unicode: bool;
     message_width: int;
   }
@@ -1125,7 +1472,7 @@ module Cli_output = struct
   module FileKeyMap = MyMap.Make(File_key)
 
   type tag_kind =
-    | Open
+    | Open of Loc.position
     | Close
 
   type tags = (Loc.position * int * tag_kind) list FileKeyMap.t
@@ -1202,14 +1549,24 @@ module Cli_output = struct
         let color = Option.value_map (IMap.get id custom_colors)
           ~f:(fun custom -> CustomColor custom) ~default:(Color 0) in
         let colors = IMap.add id color colors in
-        (colors, List.rev ((end', id, Close) :: (start, id, Open) :: tags_acc))
+        (colors, List.rev ((end', id, Close) :: (start, id, Open end') :: tags_acc))
       (* Search for the correct place where start should appear in our list.
+       *
+       * If pos and start are equal and the current tag ends _after_ the end
+       * position we are inserting then we want to open inside the current tag.
        *
        * Note that we may introduce an Open tag _before_ a Close tag at the same
        * position! This is intentional as it introduces overlapping. If we have
        * two tags that open/close at the same position we want them to be
        * different colors. Intersecting accomplishes this. *)
-      | ((pos, tag_id, tag_kind) as tag) :: tags when pos_cmp pos start < 0 ->
+      | ((pos, tag_id, tag_kind) as tag) :: tags when (
+          let k = pos_cmp pos start in
+          k < 0 || (k = 0 &&
+            match tag_kind with
+            | Close -> false
+            | Open tag_end -> pos_cmp end' tag_end < 0
+          )
+        ) ->
         (* Keep track of the ids which are opening and closing so that we can
          * increment their colors if start is inside them.
          *
@@ -1221,7 +1578,7 @@ module Cli_output = struct
         let opened = Opened (
           let Opened opened' = opened in
           match tag_kind with
-          | Open -> IMap.add tag_id opened opened'
+          | Open _ -> IMap.add tag_id opened opened'
           | Close -> IMap.remove tag_id opened'
         ) in
         add_tags colors opened id start end' tags (tag :: tags_acc)
@@ -1246,7 +1603,7 @@ module Cli_output = struct
         in
         (* Finish by adding an open tag. A corresponding closing tag will have
          * been added by add_close_tag. *)
-        (colors, List.rev_append ((start, id, Open) :: tags_acc) tags)
+        (colors, List.rev_append ((start, id, Open end') :: tags_acc) tags)
 
     and add_close_tag colors id end' tags color_acc tags_acc =
       match tags with
@@ -1263,7 +1620,7 @@ module Cli_output = struct
          * then the color of the opened tag. *)
         let color_acc = match tag_kind with
         | Close -> color_acc
-        | Open ->
+        | Open _ ->
           (match IMap.get tag_id colors with
           | None -> max color_acc (0 + 1)
           | Some (Color tag_color) -> max color_acc (tag_color + 1)
@@ -1343,10 +1700,11 @@ module Cli_output = struct
   | CustomColor `Primary -> Tty.Red
   | CustomColor `Root -> Tty.Default
   | Color rank ->
-    (match rank mod 3 with
+    (match rank mod 4 with
     | 0 -> Tty.Cyan
     | 1 -> Tty.Yellow
     | 2 -> Tty.Green
+    | 3 -> Tty.Magenta
     | _ -> failwith "unreachable"
     )
 
@@ -1601,7 +1959,7 @@ module Cli_output = struct
     | Code s -> (false, Tty.Bold Tty.Default, s)
     in
     (* Put it all together! *)
-    fun ~flags ~colors ?(bullet=false) message ->
+    fun ~flags ~colors ~indentation message ->
       let message = List.rev (List.fold_left (fun acc feature ->
         match feature with
         | Inline inlines ->
@@ -1620,23 +1978,30 @@ module Cli_output = struct
           in
           List.rev_append message acc
       ) [] message) in
-      (* Use [U+2022][1] for the bullet character if unicode is enabled.
-       *
-       * [1]: http://graphemica.com/%E2%80%A2 *)
-      let indentation_first =
-        if bullet then
-          Some [default_style (" " ^ bullet_char ~flags ^ " ")]
-        else
+      (* Create the indentation for our message. The first line of indentation
+       * will contain a bullet character. *)
+      let indentation_space =
+        if indentation <= 0 then
           None
+        else
+          Some (String.make ((indentation - 1) * 3) ' ')
+      in
+      let indentation_first =
+        Option.map indentation_space ~f:(fun space ->
+          [default_style (space ^ " " ^ bullet_char ~flags ^ " ")])
+      in
+      let indentation =
+        Option.map indentation_space ~f:(fun space ->
+          [default_style (space ^ "   ")])
       in
       let message =
         concat_words_into_lines
           ~line_length:flags.message_width
           ?indentation_first
-          ?indentation:(if bullet then Some [default_style "   "] else None)
+          ?indentation
           (split_into_words message)
       in
-      message
+      message @ [default_style "\n"]
 
   (* Shows 3 lines of context in both directions from the root location. *)
   let root_context_lines = 3
@@ -1864,7 +2229,7 @@ module Cli_output = struct
                * being well formed by layout_references! *)
               | (pos, tag_id, tag_kind) :: tags when pos.line = n ->
                 let opened = match tag_kind with
-                | Open -> tag_id :: opened
+                | Open _ -> tag_id :: opened
                 | Close -> List.filter (fun id -> tag_id <> id) opened
                 in
                 let split = pos.column - col in
@@ -2115,37 +2480,17 @@ module Cli_output = struct
    * We generally also provide a custom color to layout_references for these
    * "shadow references" so we don't use their default layout color. *)
   let layout_friendly_error_group
-    root
-    messages
+    ~root_loc
+    ~primary_locs
+    ~message_group
   =
     let open Friendly in
     (* Setup our initial loc_to_id and id_to_loc maps. *)
     let (next_id, loc_to_id, id_to_loc) = (1, LocMap.empty, IMap.empty) in
-    (* If we have a root then extract the references from that root message. *)
-    let (next_id, loc_to_id, id_to_loc, root_message) = match root with
-    | None -> (next_id, loc_to_id, id_to_loc, None)
-    | Some { root_message; _ } ->
-      let (next_id, loc_to_id, id_to_loc, root_message) =
-        extract_references_intermediate
-          next_id loc_to_id id_to_loc root_message in
-      (next_id, loc_to_id, id_to_loc, Some root_message)
-    in
-    (* Extract the references and primary locations from all of our messages.
-     * Messages is a non-empty list so we want to preserve that
-     * for messages_reversed. *)
-    let (next_id, loc_to_id, id_to_loc, messages_reversed, primary_locs) =
-      let ((first_loc, first_message), messages) = messages in
-      let (next_id, loc_to_id, id_to_loc, first_message) =
-        extract_references_intermediate
-          next_id loc_to_id id_to_loc first_message in
-      let primary_locs = LocSet.add first_loc LocSet.empty in
-      List.fold_left (fun (next_id, loc_to_id, id_to_loc, messages, primary_locs) (loc, message) ->
-        let (next_id, loc_to_id, id_to_loc, message) =
-          extract_references_intermediate
-            next_id loc_to_id id_to_loc message in
-        let primary_locs = LocSet.add loc primary_locs in
-        (next_id, loc_to_id, id_to_loc, Nel.cons message messages, primary_locs)
-      ) (next_id, loc_to_id, id_to_loc, Nel.one first_message, primary_locs) messages
+    (* Extract all our references from the message group. *)
+    let (next_id, loc_to_id, id_to_loc, message_group) =
+      extract_references_intermediate
+        ~next_id ~loc_to_id ~id_to_loc ~message_group
     in
     (* Find all the references for primary locations. If there is not yet a
      * reference for a primary location then we create one. *)
@@ -2170,10 +2515,8 @@ module Cli_output = struct
     (* Go through a very similar process as primary locations to add a reference
      * for the root location and record its id. If a reference already exists
      * then we will not higlight our root location any differently! *)
-    let (next_id, loc_to_id, id_to_loc, root_id, custom_root_color) = match root with
-    | None -> (next_id, loc_to_id, id_to_loc, None, false)
-    | Some { root_loc; _ } ->
-      (match LocMap.get root_loc loc_to_id with
+    let (next_id, loc_to_id, id_to_loc, root_id, custom_root_color) =
+      match LocMap.get root_loc loc_to_id with
       | Some id -> (next_id, loc_to_id, id_to_loc, Some id, false)
       | None ->
         let id = -1 * next_id in
@@ -2181,7 +2524,6 @@ module Cli_output = struct
         let loc_to_id = LocMap.add root_loc id loc_to_id in
         let id_to_loc = IMap.add id root_loc id_to_loc in
         (next_id, loc_to_id, id_to_loc, Some id, true)
-      )
     in
     (* Create a custom color map for our primary location and root locations. *)
     let custom_colors = IMap.empty in
@@ -2198,28 +2540,25 @@ module Cli_output = struct
     let (colors, tags) = layout_references ~custom_colors id_to_loc in
     (* Return everything we need for printing error messages. *)
     let _ = (next_id, loc_to_id) in
-    (id_to_loc, root_id, colors, tags, root_message, messages_reversed)
+    (id_to_loc, root_id, colors, tags, message_group)
 
   let get_pretty_printed_friendly_error_group
     ~stdin_file
     ~strip_root
     ~flags
     ~severity
-    trace
-    root
-    messages
-    omitted
+    ~trace
+    ~root_loc
+    ~primary_locs
+    ~message_group
   =
     let open Friendly in
     (* Get the primary and root locations. *)
-    let primary_loc = match root, messages with
-    | None, ((loc, _), _) | _, ((loc, _), []) -> loc
-    | Some { root_loc; _ }, _ -> root_loc
-    in
-    let root_loc =
-      Option.value_map root
-        ~default:(let ((loc, _), _) = messages in loc)
-        ~f:(fun { root_loc; _ } -> root_loc)
+    let primary_loc =
+      if LocSet.cardinal primary_locs = 1 then
+        LocSet.min_elt primary_locs
+      else
+        root_loc
     in
     (* The header location is the primary location when we have color and the
      * root location when we don't have color. *)
@@ -2229,47 +2568,32 @@ module Cli_output = struct
     in
     (* Layout our entire friendly error group. This returns a bunch of data we
      * will need to print our friendly error group. *)
-    let (references, root_reference_id, colors, tags, root_message, messages_reversed) =
-      layout_friendly_error_group root messages in
-    (* Print the text of our error message depending on the root message and
-     * reversed messages. *)
-    let message = match root_message, messages_reversed with
-    (* When we do not have a root, we assume that there is only one error
-     * message. Based on our error message grouping logic this is a
-     * safe assumption. *)
-    | None, (message, _) ->
-      print_message_friendly ~flags ~colors message @ [default_style "\n"]
-    (* If we have a root message and only one message then add them together
-     * separated by a space. *)
-    | Some root_message, (message, []) when omitted = 0 ->
-      print_message_friendly ~flags ~colors (root_message @ (text " " :: message)) @
-      [default_style "\n"]
-    (* If we have a root message and more then one extra error messages then
-     * we want to use our bullet list style. *)
-    | Some root_message, (message, messages) ->
-      let root_message =
-        print_message_friendly ~flags ~colors root_message @ [default_style ":\n"] in
-      let messages = List.rev (List.map (fun message ->
-        print_message_friendly ~flags ~colors ~bullet:true message @
-        [default_style "\n"]
-      ) (message :: messages)) in
-      let message = List.concat (root_message :: messages) in
-      let message =
-        if omitted = 0 then
-          message
-        else
-          message @
-          [default_style (
-            " " ^
-            bullet_char ~flags ^
-            " ... " ^
-            string_of_int omitted ^
-            " more error" ^
-            (if omitted = 1 then "" else "s") ^
-            ".\n"
-          )]
+    let (references, root_reference_id, colors, tags, message_group) =
+      layout_friendly_error_group
+        ~root_loc
+        ~primary_locs
+        ~message_group
+    in
+    (* Print the text of our error message by traversing the message_group. We
+     * print group_message at the current indentation and group_message_list at
+     * the current indentation plus 1. *)
+    let message =
+      let rec loop ~indentation acc message_group =
+        let acc =
+          (print_message_friendly ~flags ~colors ~indentation message_group.group_message) :: acc in
+        loop_list
+          ~indentation:(indentation + 1) acc message_group.group_message_list
+
+      and loop_list ~indentation acc message_group_list =
+        match message_group_list with
+        | [] -> acc
+        | message_group :: message_group_list ->
+          (* Not tail-recursive for message_group depth. Generally message_group
+           * should not be more then 5 or so deep. *)
+          let acc = loop ~indentation acc message_group in
+          loop_list ~indentation acc message_group_list
       in
-      message
+      List.concat (List.rev (loop ~indentation:0 [] message_group))
     in
     (* Print the code frame for our error message. *)
     let code_frame =
@@ -2307,7 +2631,7 @@ module Cli_output = struct
       (match trace with [] -> [] | _ -> [default_style "\n"]);
       List.concat (List.map (
         print_message_nice ~strip_root ~severity stdin_file (
-          match file_of_source (let ((loc, _), _) = messages in loc.Loc.source) with
+          match file_of_source root_loc.Loc.source with
           | Some filename -> filename
           | None -> "[No file]"
         )
@@ -2316,6 +2640,94 @@ module Cli_output = struct
       (* Next error: *)
       [default_style "\n\n"];
     ]
+
+  let get_pretty_printed_error
+    ~flags
+    ~stdin_file
+    ~strip_root
+    ~severity
+    ~show_all_branches
+    ~on_hidden_branches
+    group
+  =
+    let check (hidden_branches, a, b) =
+      if hidden_branches then on_hidden_branches ();
+      (a, b)
+    in
+    match group with
+    | ClassicSingleton (kind, trace, error) ->
+      get_pretty_printed_classic_error
+        ~stdin_file
+        ~strip_root
+        ~severity
+        kind trace error
+    (* Singleton errors concatenate the optional error root with the error
+     * message and render a single message. Sometimes singletons will also
+     * render a trace. *)
+    | FriendlySingleton (_, trace, error) ->
+      let open Friendly in
+      let (primary_loc, { group_message; group_message_list }) =
+        check (message_group_of_error ~show_all_branches ~show_root:true error) in
+      get_pretty_printed_friendly_error_group
+        ~stdin_file
+        ~strip_root
+        ~flags
+        ~severity
+        ~trace
+        ~root_loc:(match error.root with Some { root_loc; _ } -> root_loc | None -> error.loc)
+        ~primary_locs:(LocSet.singleton primary_loc)
+        ~message_group:{
+          group_message = capitalize group_message;
+          group_message_list;
+        }
+    (* Groups either render a single error (if there is only a single group
+     * member) or a group will render a list of errors where some are
+     * optionally omitted. *)
+    | FriendlyGroup { kind=_; root; errors_rev; omitted } ->
+      let open Friendly in
+      (* Constructs the message group. *)
+      let (primary_locs, message_group) = match errors_rev with
+      (* When we only have a single message, append the root and move on. *)
+      | (error, []) when omitted = 0 ->
+        let (primary_loc, message_group) =
+          check (message_group_of_error ~show_all_branches ~show_root:true error) in
+        (LocSet.singleton primary_loc, message_group)
+      (* When we have multiple members we need to put them in a group with the
+       * root message as the group message. *)
+      | _ ->
+        let acc = (
+          if omitted = 0 then
+            []
+          else [{
+            group_message_list = [];
+            group_message = [text (
+              "... " ^
+              string_of_int omitted ^
+              " more error" ^
+              (if omitted = 1 then "" else "s") ^
+              "."
+            )];
+          }]
+        ) in
+        let (primary_locs, group_message_list) = List.fold_left (fun (primary_locs, acc) error ->
+          let (primary_loc, message_group) =
+            check (message_group_of_error ~show_all_branches ~show_root:false error) in
+          (LocSet.add primary_loc primary_locs, message_group :: acc)
+        ) (LocSet.empty, acc) (Nel.to_list errors_rev) in
+        (primary_locs, {
+          group_message = root.root_message @ [text ":"];
+          group_message_list;
+        })
+      in
+      get_pretty_printed_friendly_error_group
+        ~stdin_file
+        ~strip_root
+        ~flags
+        ~severity
+        ~trace:[]
+        ~root_loc:root.root_loc
+        ~primary_locs
+        ~message_group
 
   let print_styles ~out_channel ~flags styles =
     let styles =
@@ -2358,42 +2770,26 @@ module Cli_output = struct
           warnings
       in
       let total_count = err_count + warn_count in
+      let hidden_branches = ref false in
       let () =
         let iter_group ~severity group =
-          let styles = match group with
-          | ClassicSingleton (kind, trace, error) ->
-            get_pretty_printed_classic_error
-              ~stdin_file
-              ~strip_root
-              ~severity
-              kind trace error
-          | FriendlySingleton (_, trace, error) ->
-            let open Friendly in
-            get_pretty_printed_friendly_error_group
-              ~stdin_file
-              ~strip_root
+          let styles =
+            get_pretty_printed_error
               ~flags
-              ~severity
-              trace
-              error.root
-              (Nel.one (error.loc, error.message))
-              0
-          | FriendlyGroup { kind=_; root; messages; omitted } ->
-            get_pretty_printed_friendly_error_group
               ~stdin_file
               ~strip_root
-              ~flags
               ~severity
-              []
-              (Some root)
-              (Nel.rev messages)
-              omitted
+              ~show_all_branches:flags.show_all_branches
+              (* Feels like React... *)
+              ~on_hidden_branches:(fun () -> hidden_branches := true)
+              group
           in
           print_styles ~out_channel ~flags styles
         in
         List.iter (iter_group ~severity:Err) (List.rev errors);
         List.iter (iter_group ~severity:Warn) (List.rev warnings);
       in
+      let hidden_branches = !hidden_branches in
       if total_count > 0 then print_newline ();
       if truncate && total_count > 50 then (
         let remaining_errs, remaining_warns = if err_count - 50 < 0
@@ -2409,9 +2805,16 @@ module Cli_output = struct
           out_channel
           "To see all errors, re-run Flow with --show-all-errors\n";
         flush out_channel
-      ) else
+      ) else (
         Printf.fprintf out_channel "Found %s\n"
           (render_counts ~err_count ~warn_count " ")
+      );
+      if hidden_branches then (
+        Printf.fprintf out_channel
+          "\nOnly showing the most relevant union/intersection branches.\n\
+          To see all branches, re-run Flow with --show-all-branches\n"
+      );
+      ()
 end
 
 (* JSON output *)

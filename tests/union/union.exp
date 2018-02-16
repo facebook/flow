@@ -90,3 +90,6 @@ References:
 
 
 Found 6 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -693,12 +693,9 @@ Rest params are always arrays [1] is incompatible with string [2].
 
    rest.js:38:38
    38| function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                                            ^^^^^
+                                            ^^^^^ [1]
 
 References:
-   rest.js:38:38
-   38| function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                                            ^^^^^ [1]
    rest.js:38:42
    38| function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
                                                 ^ [2]

@@ -57,33 +57,6 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`2\` [2] in index 2.
-            References:
-              5:       for (let x = 1; x < 3; x++) {
-                                    ^ [1]
-              8:       (foo: [0, 1, 2]);
-                                    ^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`1\` [2] in index 1.
-            References:
-              5:       for (let x = 1; x < 3; x++) {
-                                              ^^^ [1]
-              8:       (foo: [0, 1, 2]);
-                                 ^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
-                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`2\` [2] in index 2.
-            References:
-              5:       for (let x = 1; x < 3; x++) {
-                                              ^^^ [1]
-              8:       (foo: [0, 1, 2]);
-                                    ^ [2]
-
-          test.js:8
-            8:       (foo: [0, 1, 2]);
                       ^^^ Cannot cast \`foo\` to tuple type because array literal [1] has an arity of 2 but tuple type [2] has an arity of 3.
             References:
               6:         foo = [...foo, x];
@@ -99,6 +72,33 @@ export default suite(({addFile, addFiles, addCode}) => [
                                ^^^^^^^^^^^ [1]
               8:       (foo: [0, 1, 2]);
                              ^^^^^^^^^ [2]
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`1\` [2] in index 1.
+            References:
+              5:       for (let x = 1; x < 3; x++) {
+                                              ^^^ [1]
+              8:       (foo: [0, 1, 2]);
+                                 ^ [2]
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`2\` [2] in index 2.
+            References:
+              5:       for (let x = 1; x < 3; x++) {
+                                    ^ [1]
+              8:       (foo: [0, 1, 2]);
+                                    ^ [2]
+
+          test.js:8
+            8:       (foo: [0, 1, 2]);
+                      ^^^ Cannot cast \`foo\` to tuple type because number [1] is incompatible with number literal \`2\` [2] in index 2.
+            References:
+              5:       for (let x = 1; x < 3; x++) {
+                                              ^^^ [1]
+              8:       (foo: [0, 1, 2]);
+                                    ^ [2]
         `,
       ),
   ]),

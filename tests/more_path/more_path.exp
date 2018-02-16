@@ -32,12 +32,9 @@ number [1] is incompatible with `B` [2].
 
    Sigma.js:15:5
    15|     x++; // TODO no error? since unreachable (x: B implies x: A)
-           ^^^
+           ^^^ [1]
 
 References:
-   Sigma.js:15:5
-   15|     x++; // TODO no error? since unreachable (x: B implies x: A)
-           ^^^ [1]
    Sigma.js:10:16
    10| function bar(x:B) {
                       ^ [2]

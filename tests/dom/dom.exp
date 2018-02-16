@@ -154,30 +154,35 @@ References:
                                                    ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:7:28
+Error ------------------------------------------------------------------------------------------ HTMLInputElement.js:7:5
 
-Cannot call `el.setRangeText` with `123` bound to `start` because number [1] is incompatible with undefined [2].
+Cannot call `el.setRangeText` because number [1] is incompatible with undefined [2].
 
+   HTMLInputElement.js:7:5
+      7|     el.setRangeText('foo', 123); // end is required
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-
-References:
    <BUILTINS>/dom.js:2807:45
    2807|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- HTMLInputElement.js:10:38
+Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:5
 
-Cannot call `el.setRangeText` with `'bogus'` bound to `selectMode` because string [1] is incompatible with string
-enum [2].
+Cannot call `el.setRangeText` because string [1] is incompatible with string enum [2].
 
+   HTMLInputElement.js:10:5
+     10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-
-References:
    <BUILTINS>/dom.js:2808:78
    2808|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
@@ -267,27 +272,27 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error: path2d.js:9
-  9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `arcTo`. Function cannot be called on any member of intersection type
-  9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-          ^^^^^^^^^^ intersection
-  Member 1:
-  1417:   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number, _: void, _: void): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1417
-  Error:
-    9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-                                       ^^^^ string. This type is incompatible with the expected param type of
-  1417:   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number, _: void, _: void): void;
-                                                                                   ^^^^ undefined. See lib: <BUILTINS>/dom.js:1417
-  Member 2:
-  1418:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1418
-  Error:
-    9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-                                       ^^^^ string. This type is incompatible with the expected param type of
-  1418:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
-                                                                                          ^^^^^^ number. See lib: <BUILTINS>/dom.js:1418
+Error ---------------------------------------------------------------------------------------------------- path2d.js:9:6
+
+Cannot call `path.arcTo` because:
+ - Either string [1] is incompatible with undefined [2].
+ - Or string [1] is incompatible with number [3].
+
+   path2d.js:9:6
+      9|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   path2d.js:9:33
+      9|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
+                                         ^^^^ [1]
+   <BUILTINS>/dom.js:1417:76
+   1417|   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number, _: void, _: void): void;
+                                                                                    ^^^^ [2]
+   <BUILTINS>/dom.js:1418:83
+   1418|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+                                                                                           ^^^^^^ [3]
+
 
 Error ----------------------------------------------------------------------------------------- registerElement.js:48:48
 
@@ -323,899 +328,554 @@ References:
                                  ^^^^ [4]
 
 
-Error: traversal.js:29
- 29:     document.createNodeIterator({}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
- 29:     document.createNodeIterator({}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
-  Member 1:
-  845:   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:845
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  845:   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
-                                       ^^^^ Attr. See lib: <BUILTINS>/dom.js:845
-  Member 2:
-  853:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:853
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  853:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:853
-  Member 3:
-  854:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:854
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  854:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:854
-  Member 4:
-  855:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:855
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  855:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:855
-  Member 5:
-  856:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:856
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  856:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:856
-  Member 6:
-  857:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:857
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  857:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:857
-  Member 7:
-  858:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:858
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  858:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:858
-  Member 8:
-  859:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:859
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  859:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:859
-  Member 9:
-  860:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:860
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  860:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:860
-  Member 10:
-  861:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:861
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  861:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:861
-  Member 11:
-  862:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:862
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  862:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:862
-  Member 12:
-  863:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:863
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  863:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:863
-  Member 13:
-  864:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:864
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  864:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:864
-  Member 14:
-  865:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:865
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  865:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:865
-  Member 15:
-  866:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:866
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  866:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:866
-  Member 16:
-  867:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:867
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  867:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:867
-  Member 17:
-  868:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:868
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  868:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:868
-  Member 18:
-  869:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:869
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  869:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:869
-  Member 19:
-  870:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:870
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  870:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:870
-  Member 20:
-  871:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:871
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  871:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:871
-  Member 21:
-  872:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:872
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  872:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:872
-  Member 22:
-  873:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:873
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  873:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:873
-  Member 23:
-  874:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:874
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  874:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:874
-  Member 24:
-  875:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:875
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  875:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:875
-  Member 25:
-  876:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:876
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  876:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text|Comment>;
-                                       ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:876
-  Member 26:
-  904:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:904
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  904:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:904
-  Member 27:
-  905:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:905
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  905:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:905
-  Member 28:
-  906:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:906
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  906:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:906
-  Member 29:
-  907:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:907
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  907:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:907
-  Member 30:
-  908:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:908
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  908:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Comment>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:908
-  Member 31:
-  909:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:909
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  909:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Comment>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:909
-  Member 32:
-  910:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:910
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  910:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text|Comment>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:910
-  Member 33:
-  911:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:911
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  911:   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text|Comment>;
-                                       ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:911
-  Member 34:
-  924:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:924
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  924:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:924
-  Member 35:
-  925:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:925
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  925:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:925
-  Member 36:
-  926:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:926
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  926:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:926
-  Member 37:
-  927:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:927
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  927:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:927
-  Member 38:
-  928:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:928
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  928:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:928
-  Member 39:
-  929:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:929
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  929:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:929
-  Member 40:
-  930:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:930
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  930:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:930
-  Member 41:
-  941:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:941
-  Error:
-   29:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with the expected param type of
-  941:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
-                                       ^^^^ Node. See lib: <BUILTINS>/dom.js:941
+Error ------------------------------------------------------------------------------------------------ traversal.js:29:5
 
-Error: traversal.js:33
- 33:     document.createTreeWalker({}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
- 33:     document.createTreeWalker({}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
-  Member 1:
-  846:   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:846
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  846:   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
-                                     ^^^^ Attr. See lib: <BUILTINS>/dom.js:846
-  Member 2:
-  877:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:877
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  877:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:877
-  Member 3:
-  878:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:878
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  878:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:878
-  Member 4:
-  879:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:879
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  879:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:879
-  Member 5:
-  880:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:880
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  880:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:880
-  Member 6:
-  881:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:881
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  881:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:881
-  Member 7:
-  882:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:882
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  882:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:882
-  Member 8:
-  883:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:883
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  883:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:883
-  Member 9:
-  884:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:884
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  884:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:884
-  Member 10:
-  885:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:885
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  885:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:885
-  Member 11:
-  886:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:886
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  886:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:886
-  Member 12:
-  887:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:887
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  887:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:887
-  Member 13:
-  888:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:888
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  888:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:888
-  Member 14:
-  889:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:889
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  889:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:889
-  Member 15:
-  890:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:890
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  890:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:890
-  Member 16:
-  891:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:891
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  891:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:891
-  Member 17:
-  892:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:892
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  892:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:892
-  Member 18:
-  893:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:893
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  893:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:893
-  Member 19:
-  894:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:894
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  894:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:894
-  Member 20:
-  895:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:895
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  895:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:895
-  Member 21:
-  896:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:896
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  896:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:896
-  Member 22:
-  897:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:897
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  897:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:897
-  Member 23:
-  898:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:898
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  898:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:898
-  Member 24:
-  899:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:899
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  899:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:899
-  Member 25:
-  900:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:900
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  900:   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text|Comment>;
-                                     ^^^^^^^^ Document. See lib: <BUILTINS>/dom.js:900
-  Member 26:
-  912:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:912
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  912:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:912
-  Member 27:
-  913:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:913
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  913:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:913
-  Member 28:
-  914:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:914
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  914:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:914
-  Member 29:
-  915:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:915
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  915:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:915
-  Member 30:
-  916:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:916
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  916:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Comment>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:916
-  Member 31:
-  917:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:917
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  917:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Comment>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:917
-  Member 32:
-  918:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:918
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  918:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text|Comment>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:918
-  Member 33:
-  919:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:919
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  919:   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text|Comment>;
-                                     ^^^^^^^^^^^^^^^^ DocumentFragment. See lib: <BUILTINS>/dom.js:919
-  Member 34:
-  931:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:931
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  931:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:931
-  Member 35:
-  932:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:932
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  932:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:932
-  Member 36:
-  933:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:933
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  933:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:933
-  Member 37:
-  934:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:934
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  934:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:934
-  Member 38:
-  935:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:935
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  935:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:935
-  Member 39:
-  936:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:936
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  936:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:936
-  Member 40:
-  937:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:937
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  937:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:937
-  Member 41:
-  942:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:942
-  Error:
-   33:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with the expected param type of
-  942:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
-                                     ^^^^ Node. See lib: <BUILTINS>/dom.js:942
+Cannot call `document.createNodeIterator` because:
+ - Either object literal [1] is incompatible with `Attr` [2] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [3] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [4] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [5] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [6] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [7] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [8] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [9] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [10] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [11] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [12] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [13] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [14] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [15] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [16] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [17] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [18] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [19] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [20] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [21] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [22] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [23] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [24] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [25] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [26] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [27] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [28] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [29] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [30] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [31] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [32] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [33] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [34] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [35] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [36] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [37] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [38] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [39] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [40] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [41] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [42] in type argument `RootNodeT`.
 
-Error: traversal.js:186
-186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                        ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                 ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-  The return is incompatible:
-    186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                    ^^^^^^^^ string. This type is incompatible with
-          v--------------------------------
-    3197: typeof NodeFilter.FILTER_ACCEPT |
-    3198: typeof NodeFilter.FILTER_REJECT |
-    3199: typeof NodeFilter.FILTER_SKIP;
-          ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
-      Member 1:
-      3197: typeof NodeFilter.FILTER_ACCEPT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
-      Error:
-      186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                      ^^^^^^^^ string. This type is incompatible with
-      3197: typeof NodeFilter.FILTER_ACCEPT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
-      Member 2:
-      3198: typeof NodeFilter.FILTER_REJECT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
-      Error:
-      186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                      ^^^^^^^^ string. This type is incompatible with
-      3198: typeof NodeFilter.FILTER_REJECT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
-      Member 3:
-      3199: typeof NodeFilter.FILTER_SKIP;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
-      Error:
-      186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                      ^^^^^^^^ string. This type is incompatible with
-      3199: typeof NodeFilter.FILTER_SKIP;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3199
+   traversal.js:29:5
+    29|     document.createNodeIterator({}); // invalid
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: traversal.js:188
-188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3201
-  Property `acceptNode` is incompatible:
-    188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                          ^^^^^^^^^^^^^^^^ function. This type is incompatible with
-    3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                                        ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-      The return is incompatible:
-        188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                      ^^^^^^^^ string. This type is incompatible with
-              v--------------------------------
-        3197: typeof NodeFilter.FILTER_ACCEPT |
-        3198: typeof NodeFilter.FILTER_REJECT |
-        3199: typeof NodeFilter.FILTER_SKIP;
-              ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
-          Member 1:
-          3197: typeof NodeFilter.FILTER_ACCEPT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
-          Error:
-          188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                        ^^^^^^^^ string. This type is incompatible with
-          3197: typeof NodeFilter.FILTER_ACCEPT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
-          Member 2:
-          3198: typeof NodeFilter.FILTER_REJECT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
-          Error:
-          188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                        ^^^^^^^^ string. This type is incompatible with
-          3198: typeof NodeFilter.FILTER_REJECT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
-          Member 3:
-          3199: typeof NodeFilter.FILTER_SKIP;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
-          Error:
-          188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                        ^^^^^^^^ string. This type is incompatible with
-          3199: typeof NodeFilter.FILTER_SKIP;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3199
+References:
+   traversal.js:29:33
+    29|     document.createNodeIterator({}); // invalid
+                                        ^^ [1]
+   <BUILTINS>/dom.js:845:33
+   845|   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
+                                        ^^^^ [2]
+   <BUILTINS>/dom.js:853:33
+   853|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document>;
+                                        ^^^^^^^^ [3]
+   <BUILTINS>/dom.js:854:33
+   854|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element>;
+                                        ^^^^^^^^ [4]
+   <BUILTINS>/dom.js:855:33
+   855|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text>;
+                                        ^^^^^^^^ [5]
+   <BUILTINS>/dom.js:856:33
+   856|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text>;
+                                        ^^^^^^^^ [6]
+   <BUILTINS>/dom.js:857:33
+   857|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Comment>;
+                                        ^^^^^^^^ [7]
+   <BUILTINS>/dom.js:858:33
+   858|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Comment>;
+                                        ^^^^^^^^ [8]
+   <BUILTINS>/dom.js:859:33
+   859|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text|Comment>;
+                                        ^^^^^^^^ [9]
+   <BUILTINS>/dom.js:860:33
+   860|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text|Comment>;
+                                        ^^^^^^^^ [10]
+   <BUILTINS>/dom.js:861:33
+   861|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType>;
+                                        ^^^^^^^^ [11]
+   <BUILTINS>/dom.js:862:33
+   862|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element>;
+                                        ^^^^^^^^ [12]
+   <BUILTINS>/dom.js:863:33
+   863|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text>;
+                                        ^^^^^^^^ [13]
+   <BUILTINS>/dom.js:864:33
+   864|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text>;
+                                        ^^^^^^^^ [14]
+   <BUILTINS>/dom.js:865:33
+   865|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Comment>;
+                                        ^^^^^^^^ [15]
+   <BUILTINS>/dom.js:866:33
+   866|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Comment>;
+                                        ^^^^^^^^ [16]
+   <BUILTINS>/dom.js:867:33
+   867|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text|Comment>;
+                                        ^^^^^^^^ [17]
+   <BUILTINS>/dom.js:868:33
+   868|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text|Comment>;
+                                        ^^^^^^^^ [18]
+   <BUILTINS>/dom.js:869:33
+   869|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document>;
+                                        ^^^^^^^^ [19]
+   <BUILTINS>/dom.js:870:33
+   870|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element>;
+                                        ^^^^^^^^ [20]
+   <BUILTINS>/dom.js:871:33
+   871|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text>;
+                                        ^^^^^^^^ [21]
+   <BUILTINS>/dom.js:872:33
+   872|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text>;
+                                        ^^^^^^^^ [22]
+   <BUILTINS>/dom.js:873:33
+   873|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Comment>;
+                                        ^^^^^^^^ [23]
+   <BUILTINS>/dom.js:874:33
+   874|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Comment>;
+                                        ^^^^^^^^ [24]
+   <BUILTINS>/dom.js:875:33
+   875|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text|Comment>;
+                                        ^^^^^^^^ [25]
+   <BUILTINS>/dom.js:876:33
+   876|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text|Comment>;
+                                        ^^^^^^^^ [26]
+   <BUILTINS>/dom.js:904:33
+   904|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment>;
+                                        ^^^^^^^^^^^^^^^^ [27]
+   <BUILTINS>/dom.js:905:33
+   905|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element>;
+                                        ^^^^^^^^^^^^^^^^ [28]
+   <BUILTINS>/dom.js:906:33
+   906|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text>;
+                                        ^^^^^^^^^^^^^^^^ [29]
+   <BUILTINS>/dom.js:907:33
+   907|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text>;
+                                        ^^^^^^^^^^^^^^^^ [30]
+   <BUILTINS>/dom.js:908:33
+   908|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Comment>;
+                                        ^^^^^^^^^^^^^^^^ [31]
+   <BUILTINS>/dom.js:909:33
+   909|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Comment>;
+                                        ^^^^^^^^^^^^^^^^ [32]
+   <BUILTINS>/dom.js:910:33
+   910|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text|Comment>;
+                                        ^^^^^^^^^^^^^^^^ [33]
+   <BUILTINS>/dom.js:911:33
+   911|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text|Comment>;
+                                        ^^^^^^^^^^^^^^^^ [34]
+   <BUILTINS>/dom.js:924:33
+   924|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
+                                        ^^^^ [35]
+   <BUILTINS>/dom.js:925:33
+   925|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
+                                        ^^^^ [36]
+   <BUILTINS>/dom.js:926:33
+   926|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
+                                        ^^^^ [37]
+   <BUILTINS>/dom.js:927:33
+   927|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
+                                        ^^^^ [38]
+   <BUILTINS>/dom.js:928:33
+   928|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
+                                        ^^^^ [39]
+   <BUILTINS>/dom.js:929:33
+   929|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
+                                        ^^^^ [40]
+   <BUILTINS>/dom.js:930:33
+   930|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
+                                        ^^^^ [41]
+   <BUILTINS>/dom.js:941:33
+   941|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
+                                        ^^^^ [42]
 
-Error: traversal.js:189
-189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with the expected param type of
-941:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
-                                                                                          ^^^^^^^^^^^^^^^^^^^ union: `NodeFilterCallback` | object type. See lib: <BUILTINS>/dom.js:941
-  Member 1:
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                   ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-  Error:
-  189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                          ^^ object literal. This type is incompatible with
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                   ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-    Callable property is incompatible:
-      3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                       ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. Callable signature not found in. See lib: <BUILTINS>/dom.js:3201
-      189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                              ^^ object literal
-  Member 2:
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3201
-  Error:
-  189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                          ^^ object literal. This type is incompatible with
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3201
-    Property `acceptNode` is incompatible:
-      3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3201
-      189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                              ^^ object literal
 
-Error: traversal.js:193
-193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                      ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                 ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-  The return is incompatible:
-    193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                  ^^^^^^^^ string. This type is incompatible with
-          v--------------------------------
-    3197: typeof NodeFilter.FILTER_ACCEPT |
-    3198: typeof NodeFilter.FILTER_REJECT |
-    3199: typeof NodeFilter.FILTER_SKIP;
-          ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
-      Member 1:
-      3197: typeof NodeFilter.FILTER_ACCEPT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
-      Error:
-      193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                    ^^^^^^^^ string. This type is incompatible with
-      3197: typeof NodeFilter.FILTER_ACCEPT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
-      Member 2:
-      3198: typeof NodeFilter.FILTER_REJECT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
-      Error:
-      193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                    ^^^^^^^^ string. This type is incompatible with
-      3198: typeof NodeFilter.FILTER_REJECT |
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
-      Member 3:
-      3199: typeof NodeFilter.FILTER_SKIP;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
-      Error:
-      193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                    ^^^^^^^^ string. This type is incompatible with
-      3199: typeof NodeFilter.FILTER_SKIP;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3199
+Error ------------------------------------------------------------------------------------------------ traversal.js:33:5
 
-Error: traversal.js:195
-195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3201
-  Property `acceptNode` is incompatible:
-    195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                        ^^^^^^^^^^^^^^^^ function. This type is incompatible with
-    3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                                        ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-      The return is incompatible:
-        195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                    ^^^^^^^^ string. This type is incompatible with
-              v--------------------------------
-        3197: typeof NodeFilter.FILTER_ACCEPT |
-        3198: typeof NodeFilter.FILTER_REJECT |
-        3199: typeof NodeFilter.FILTER_SKIP;
-              ----------------------------^ union: `typeof NodeFilter.FILTER_ACCEPT` | `typeof NodeFilter.FILTER_REJECT` | `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3197
-          Member 1:
-          3197: typeof NodeFilter.FILTER_ACCEPT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_ACCEPT`. See lib: <BUILTINS>/dom.js:3197
-          Error:
-          195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                      ^^^^^^^^ string. This type is incompatible with
-          3197: typeof NodeFilter.FILTER_ACCEPT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3197
-          Member 2:
-          3198: typeof NodeFilter.FILTER_REJECT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_REJECT`. See lib: <BUILTINS>/dom.js:3198
-          Error:
-          195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                      ^^^^^^^^ string. This type is incompatible with
-          3198: typeof NodeFilter.FILTER_REJECT |
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3198
-          Member 3:
-          3199: typeof NodeFilter.FILTER_SKIP;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `typeof NodeFilter.FILTER_SKIP`. See lib: <BUILTINS>/dom.js:3199
-          Error:
-          195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                      ^^^^^^^^ string. This type is incompatible with
-          3199: typeof NodeFilter.FILTER_SKIP;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3199
+Cannot call `document.createTreeWalker` because:
+ - Either object literal [1] is incompatible with `Attr` [2] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [3] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [4] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [5] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [6] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [7] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [8] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [9] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [10] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [11] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [12] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [13] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [14] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [15] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [16] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [17] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [18] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [19] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [20] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [21] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [22] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [23] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [24] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [25] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Document` [26] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [27] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [28] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [29] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [30] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [31] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [32] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [33] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `DocumentFragment` [34] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [35] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [36] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [37] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [38] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [39] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [40] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [41] in type argument `RootNodeT`.
+ - Or object literal [1] is incompatible with `Node` [42] in type argument `RootNodeT`.
 
-Error: traversal.js:196
-196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                      ^^ object literal. This type is incompatible with the expected param type of
-942:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
-                                                                                        ^^^^^^^^^^^^^^^^^^^ union: `NodeFilterCallback` | object type. See lib: <BUILTINS>/dom.js:942
-  Member 1:
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                   ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-  Error:
-  196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                   ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. See lib: <BUILTINS>/dom.js:3201
-    Callable property is incompatible:
-      3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                       ^^^^^^^^^^^^^^^^^^ NodeFilterCallback. Callable signature not found in. See lib: <BUILTINS>/dom.js:3201
-      196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                            ^^ object literal
-  Member 2:
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3201
-  Error:
-  196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with
-  3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3201
-    Property `acceptNode` is incompatible:
-      3201: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3201
-      196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                            ^^ object literal
+   traversal.js:33:5
+    33|     document.createTreeWalker({}); // invalid
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:33:31
+    33|     document.createTreeWalker({}); // invalid
+                                      ^^ [1]
+   <BUILTINS>/dom.js:846:31
+   846|   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
+                                      ^^^^ [2]
+   <BUILTINS>/dom.js:877:31
+   877|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document>;
+                                      ^^^^^^^^ [3]
+   <BUILTINS>/dom.js:878:31
+   878|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element>;
+                                      ^^^^^^^^ [4]
+   <BUILTINS>/dom.js:879:31
+   879|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text>;
+                                      ^^^^^^^^ [5]
+   <BUILTINS>/dom.js:880:31
+   880|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text>;
+                                      ^^^^^^^^ [6]
+   <BUILTINS>/dom.js:881:31
+   881|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Comment>;
+                                      ^^^^^^^^ [7]
+   <BUILTINS>/dom.js:882:31
+   882|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Comment>;
+                                      ^^^^^^^^ [8]
+   <BUILTINS>/dom.js:883:31
+   883|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text|Comment>;
+                                      ^^^^^^^^ [9]
+   <BUILTINS>/dom.js:884:31
+   884|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text|Comment>;
+                                      ^^^^^^^^ [10]
+   <BUILTINS>/dom.js:885:31
+   885|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType>;
+                                      ^^^^^^^^ [11]
+   <BUILTINS>/dom.js:886:31
+   886|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element>;
+                                      ^^^^^^^^ [12]
+   <BUILTINS>/dom.js:887:31
+   887|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text>;
+                                      ^^^^^^^^ [13]
+   <BUILTINS>/dom.js:888:31
+   888|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text>;
+                                      ^^^^^^^^ [14]
+   <BUILTINS>/dom.js:889:31
+   889|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Comment>;
+                                      ^^^^^^^^ [15]
+   <BUILTINS>/dom.js:890:31
+   890|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Comment>;
+                                      ^^^^^^^^ [16]
+   <BUILTINS>/dom.js:891:31
+   891|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text|Comment>;
+                                      ^^^^^^^^ [17]
+   <BUILTINS>/dom.js:892:31
+   892|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text|Comment>;
+                                      ^^^^^^^^ [18]
+   <BUILTINS>/dom.js:893:31
+   893|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document>;
+                                      ^^^^^^^^ [19]
+   <BUILTINS>/dom.js:894:31
+   894|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element>;
+                                      ^^^^^^^^ [20]
+   <BUILTINS>/dom.js:895:31
+   895|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text>;
+                                      ^^^^^^^^ [21]
+   <BUILTINS>/dom.js:896:31
+   896|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text>;
+                                      ^^^^^^^^ [22]
+   <BUILTINS>/dom.js:897:31
+   897|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Comment>;
+                                      ^^^^^^^^ [23]
+   <BUILTINS>/dom.js:898:31
+   898|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Comment>;
+                                      ^^^^^^^^ [24]
+   <BUILTINS>/dom.js:899:31
+   899|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text|Comment>;
+                                      ^^^^^^^^ [25]
+   <BUILTINS>/dom.js:900:31
+   900|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text|Comment>;
+                                      ^^^^^^^^ [26]
+   <BUILTINS>/dom.js:912:31
+   912|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment>;
+                                      ^^^^^^^^^^^^^^^^ [27]
+   <BUILTINS>/dom.js:913:31
+   913|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element>;
+                                      ^^^^^^^^^^^^^^^^ [28]
+   <BUILTINS>/dom.js:914:31
+   914|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text>;
+                                      ^^^^^^^^^^^^^^^^ [29]
+   <BUILTINS>/dom.js:915:31
+   915|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text>;
+                                      ^^^^^^^^^^^^^^^^ [30]
+   <BUILTINS>/dom.js:916:31
+   916|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Comment>;
+                                      ^^^^^^^^^^^^^^^^ [31]
+   <BUILTINS>/dom.js:917:31
+   917|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Comment>;
+                                      ^^^^^^^^^^^^^^^^ [32]
+   <BUILTINS>/dom.js:918:31
+   918|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text|Comment>;
+                                      ^^^^^^^^^^^^^^^^ [33]
+   <BUILTINS>/dom.js:919:31
+   919|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text|Comment>;
+                                      ^^^^^^^^^^^^^^^^ [34]
+   <BUILTINS>/dom.js:931:31
+   931|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
+                                      ^^^^ [35]
+   <BUILTINS>/dom.js:932:31
+   932|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
+                                      ^^^^ [36]
+   <BUILTINS>/dom.js:933:31
+   933|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
+                                      ^^^^ [37]
+   <BUILTINS>/dom.js:934:31
+   934|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
+                                      ^^^^ [38]
+   <BUILTINS>/dom.js:935:31
+   935|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
+                                      ^^^^ [39]
+   <BUILTINS>/dom.js:936:31
+   936|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
+                                      ^^^^ [40]
+   <BUILTINS>/dom.js:937:31
+   937|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+                                      ^^^^ [41]
+   <BUILTINS>/dom.js:942:31
+   942|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
+                                      ^^^^ [42]
+
+
+Error ---------------------------------------------------------------------------------------------- traversal.js:186:52
+
+Cannot call `document.createNodeIterator` with function bound to `filter` because in the return value:
+ - Either string [1] is incompatible with number literal `1` [2].
+ - Or string [1] is incompatible with number literal `2` [3].
+ - Or string [1] is incompatible with number literal `3` [4].
+
+   traversal.js:186:52
+    186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
+                                                            ^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:186:60
+    186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
+                                                                    ^^^^^^^^ [1]
+   <BUILTINS>/dom.js:3219:25
+   3219|   static FILTER_ACCEPT: 1;
+                                 ^ [2]
+   <BUILTINS>/dom.js:3220:25
+   3220|   static FILTER_REJECT: 2;
+                                 ^ [3]
+   <BUILTINS>/dom.js:3221:23
+   3221|   static FILTER_SKIP: 3;
+                               ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- traversal.js:188:52
+
+Cannot call `document.createNodeIterator` with object literal bound to `filter` because in the return value of property
+`acceptNode`:
+ - Either string [1] is incompatible with number literal `1` [2].
+ - Or string [1] is incompatible with number literal `2` [3].
+ - Or string [1] is incompatible with number literal `3` [4].
+
+   traversal.js:188:52
+    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:188:74
+    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                  ^^^^^^^^ [1]
+   <BUILTINS>/dom.js:3219:25
+   3219|   static FILTER_ACCEPT: 1;
+                                 ^ [2]
+   <BUILTINS>/dom.js:3220:25
+   3220|   static FILTER_REJECT: 2;
+                                 ^ [3]
+   <BUILTINS>/dom.js:3221:23
+   3221|   static FILTER_SKIP: 3;
+                               ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------- traversal.js:189:5
+
+Cannot call `document.createNodeIterator` because:
+ - Either number [1] is incompatible with number literal `1` [2].
+ - Or number [1] is incompatible with number literal `4` [3].
+ - Or number [1] is incompatible with number literal `5` [4].
+ - Or number [1] is incompatible with number literal `128` [5].
+ - Or number [1] is incompatible with number literal `129` [6].
+ - Or number [1] is incompatible with number literal `132` [7].
+ - Or number [1] is incompatible with number literal `133` [8].
+
+   traversal.js:189:5
+   189|     document.createNodeIterator(document_body, -1, {}); // invalid
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:189:48
+   189|     document.createNodeIterator(document_body, -1, {}); // invalid
+                                                       ^^ [1]
+   <BUILTINS>/dom.js:924:68
+   924|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
+                                                                           ^ [2]
+   <BUILTINS>/dom.js:925:68
+   925|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
+                                                                           ^ [3]
+   <BUILTINS>/dom.js:926:68
+   926|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
+                                                                           ^ [4]
+   <BUILTINS>/dom.js:927:68
+   927|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
+                                                                           ^^^ [5]
+   <BUILTINS>/dom.js:928:68
+   928|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
+                                                                           ^^^ [6]
+   <BUILTINS>/dom.js:929:68
+   929|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
+                                                                           ^^^ [7]
+   <BUILTINS>/dom.js:930:68
+   930|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
+                                                                           ^^^ [8]
+
+
+Error ---------------------------------------------------------------------------------------------- traversal.js:193:50
+
+Cannot call `document.createTreeWalker` with function bound to `filter` because in the return value:
+ - Either string [1] is incompatible with number literal `1` [2].
+ - Or string [1] is incompatible with number literal `2` [3].
+ - Or string [1] is incompatible with number literal `3` [4].
+
+   traversal.js:193:50
+    193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
+                                                          ^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:193:58
+    193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
+                                                                  ^^^^^^^^ [1]
+   <BUILTINS>/dom.js:3219:25
+   3219|   static FILTER_ACCEPT: 1;
+                                 ^ [2]
+   <BUILTINS>/dom.js:3220:25
+   3220|   static FILTER_REJECT: 2;
+                                 ^ [3]
+   <BUILTINS>/dom.js:3221:23
+   3221|   static FILTER_SKIP: 3;
+                               ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- traversal.js:195:50
+
+Cannot call `document.createTreeWalker` with object literal bound to `filter` because in the return value of property
+`acceptNode`:
+ - Either string [1] is incompatible with number literal `1` [2].
+ - Or string [1] is incompatible with number literal `2` [3].
+ - Or string [1] is incompatible with number literal `3` [4].
+
+   traversal.js:195:50
+    195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:195:72
+    195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                ^^^^^^^^ [1]
+   <BUILTINS>/dom.js:3219:25
+   3219|   static FILTER_ACCEPT: 1;
+                                 ^ [2]
+   <BUILTINS>/dom.js:3220:25
+   3220|   static FILTER_REJECT: 2;
+                                 ^ [3]
+   <BUILTINS>/dom.js:3221:23
+   3221|   static FILTER_SKIP: 3;
+                               ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------- traversal.js:196:5
+
+Cannot call `document.createTreeWalker` because:
+ - Either number [1] is incompatible with number literal `1` [2].
+ - Or number [1] is incompatible with number literal `4` [3].
+ - Or number [1] is incompatible with number literal `5` [4].
+ - Or number [1] is incompatible with number literal `128` [5].
+ - Or number [1] is incompatible with number literal `129` [6].
+ - Or number [1] is incompatible with number literal `132` [7].
+ - Or number [1] is incompatible with number literal `133` [8].
+
+   traversal.js:196:5
+   196|     document.createTreeWalker(document_body, -1, {}); // invalid
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   traversal.js:196:46
+   196|     document.createTreeWalker(document_body, -1, {}); // invalid
+                                                     ^^ [1]
+   <BUILTINS>/dom.js:931:66
+   931|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
+                                                                         ^ [2]
+   <BUILTINS>/dom.js:932:66
+   932|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
+                                                                         ^ [3]
+   <BUILTINS>/dom.js:933:66
+   933|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
+                                                                         ^ [4]
+   <BUILTINS>/dom.js:934:66
+   934|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
+                                                                         ^^^ [5]
+   <BUILTINS>/dom.js:935:66
+   935|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
+                                                                         ^^^ [6]
+   <BUILTINS>/dom.js:936:66
+   936|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
+                                                                         ^^^ [7]
+   <BUILTINS>/dom.js:937:66
+   937|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+                                                                         ^^^ [8]
+
 
 
 Found 29 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

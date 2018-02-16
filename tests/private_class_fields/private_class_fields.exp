@@ -195,12 +195,9 @@ number [1] is incompatible with string [2].
 
    test.js:107:16
    107|   #s: string = 0; // Error, number ~> string
-                       ^
+                       ^ [1]
 
 References:
-   test.js:107:16
-   107|   #s: string = 0; // Error, number ~> string
-                       ^ [1]
    test.js:107:7
    107|   #s: string = 0; // Error, number ~> string
               ^^^^^^ [2]
@@ -212,12 +209,9 @@ number [1] is incompatible with string [2].
 
    test.js:112:24
    112|   static #ss: string = 0; // Error, number ~> string
-                               ^
+                               ^ [1]
 
 References:
-   test.js:112:24
-   112|   static #ss: string = 0; // Error, number ~> string
-                               ^ [1]
    test.js:112:15
    112|   static #ss: string = 0; // Error, number ~> string
                       ^^^^^^ [2]

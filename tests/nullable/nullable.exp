@@ -59,49 +59,49 @@ References:
                ^^^^^^ [3]
 
 
-Error: error.js:16
- 16: ((any: ?number): number | null);
-            ^^^^^^^ null or undefined. This type is incompatible with
- 16: ((any: ?number): number | null);
-                      ^^^^^^^^^^^^^ union: number | null
-  Member 1:
-   16: ((any: ?number): number | null);
-                        ^^^^^^ number
-  Error:
-   16: ((any: ?number): number | null);
-              ^^^^^^^ null or undefined. This type is incompatible with
-   16: ((any: ?number): number | null);
-                        ^^^^^^ number
-  Member 2:
-   16: ((any: ?number): number | null);
-                                 ^^^^ null
-  Error:
-   16: ((any: ?number): number | null);
-              ^^^^^^^ null or undefined. This type is incompatible with
-   16: ((any: ?number): number | null);
-                                 ^^^^ null
+Error ---------------------------------------------------------------------------------------------------- error.js:16:3
 
-Error: error.js:17
- 17: ((any: ?number): number | void);
-            ^^^^^^^ null or undefined. This type is incompatible with
- 17: ((any: ?number): number | void);
-                      ^^^^^^^^^^^^^ union: number | undefined
-  Member 1:
-   17: ((any: ?number): number | void);
-                        ^^^^^^ number
-  Error:
-   17: ((any: ?number): number | void);
-              ^^^^^^^ null or undefined. This type is incompatible with
-   17: ((any: ?number): number | void);
-                        ^^^^^^ number
-  Member 2:
-   17: ((any: ?number): number | void);
-                                 ^^^^ undefined
-  Error:
-   17: ((any: ?number): number | void);
-              ^^^^^^^ null or undefined. This type is incompatible with
-   17: ((any: ?number): number | void);
-                                 ^^^^ undefined
+Cannot cast `any` to union type because:
+ - Either null or undefined [1] is incompatible with number [2].
+ - Or null or undefined [1] is incompatible with null [3].
+
+   error.js:16:3
+   16| ((any: ?number): number | null);
+         ^^^^^^^^^^^^
+
+References:
+   error.js:16:8
+   16| ((any: ?number): number | null);
+              ^^^^^^^ [1]
+   error.js:16:18
+   16| ((any: ?number): number | null);
+                        ^^^^^^ [2]
+   error.js:16:27
+   16| ((any: ?number): number | null);
+                                 ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- error.js:17:3
+
+Cannot cast `any` to union type because:
+ - Either null or undefined [1] is incompatible with number [2].
+ - Or null or undefined [1] is incompatible with undefined [3].
+
+   error.js:17:3
+   17| ((any: ?number): number | void);
+         ^^^^^^^^^^^^
+
+References:
+   error.js:17:8
+   17| ((any: ?number): number | void);
+              ^^^^^^^ [1]
+   error.js:17:18
+   17| ((any: ?number): number | void);
+                        ^^^^^^ [2]
+   error.js:17:27
+   17| ((any: ?number): number | void);
+                                 ^^^^ [3]
+
 
 Error ----------------------------------------------------------------------------------------------------- maybe.js:5:3
 
