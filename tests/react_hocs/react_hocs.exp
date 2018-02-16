@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- Bad.js:11:21
 
-In property `bar`, number [1] is incompatible with string [2].
+number [1] is incompatible with string [2] in property `bar`.
 
    Bad.js:11:21
     11| const Bad = (props: Props) => null;

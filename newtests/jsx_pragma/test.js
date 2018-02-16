@@ -145,7 +145,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar x={123} />;
-                             ^^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
+                             ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
             References:
               8:       <Bar x={123} />;
                                ^^^ [1]
@@ -214,7 +214,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                              ^^^^ Cannot create \`Bar\` element because in property \`key\`, string [1] is incompatible with boolean [2].
+                              ^^^^ Cannot create \`Bar\` element because string [1] is incompatible with boolean [2] in property \`key\`.
             References:
               7:       <Bar key="hi" ref="bye" />;
                                 ^^^^ [1]
@@ -223,7 +223,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                                       ^^^^^ Cannot create \`Bar\` element because in property \`ref\`, string [1] is incompatible with number [2].
+                                       ^^^^^ Cannot create \`Bar\` element because string [1] is incompatible with number [2] in property \`ref\`.
             References:
               7:       <Bar key="hi" ref="bye" />;
                                          ^^^^^ [1]

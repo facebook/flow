@@ -52,27 +52,27 @@ References:
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
 
 Cannot cast `d` to undefined because:
- - boolean [1] is incompatible with undefined [2].
- - number [3] is incompatible with undefined [2].
- - string [4] is incompatible with undefined [2].
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
+ - boolean [4] is incompatible with undefined [2].
 
    array_rest.js:10:2
    10| (d: void); // error: number|string|boolean ~> void
         ^
 
 References:
-   array_rest.js:1:18
+   array_rest.js:1:11
     1| let xs = [0, "", true];
-                        ^^^^ [1]
+                 ^ [1]
    array_rest.js:10:5
    10| (d: void); // error: number|string|boolean ~> void
            ^^^^ [2]
-   array_rest.js:1:11
-    1| let xs = [0, "", true];
-                 ^ [3]
    array_rest.js:1:14
     1| let xs = [0, "", true];
-                    ^^ [4]
+                    ^^ [3]
+   array_rest.js:1:18
+    1| let xs = [0, "", true];
+                        ^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:12:6
@@ -126,95 +126,95 @@ References:
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:4
 
 Cannot cast `q` to undefined because:
- - boolean [1] is incompatible with undefined [2].
- - null [3] is incompatible with undefined [2].
- - null [4] is incompatible with undefined [2].
- - number [5] is incompatible with undefined [2].
- - string [6] is incompatible with undefined [2].
+ - number [1] is incompatible with undefined [2].
+ - boolean [3] is incompatible with undefined [2].
+ - string [4] is incompatible with undefined [2].
+ - null [5] is incompatible with undefined [2].
+ - null [6] is incompatible with undefined [2].
 
    defaults.js:9:4
     9|   (q:void);
           ^
 
 References:
-   defaults.js:3:35
+   defaults.js:3:29
     3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
-                                         ^^^^ [1]
+                                   ^ [1]
    defaults.js:9:6
     9|   (q:void);
             ^^^^ [2]
-   defaults.js:14:20
-   14| obj_prop_fun({p:{q:null}}); // ok, provides add'l lower bound
-                          ^^^^ [3]
-   defaults.js:71:28
-   71| obj_prop_fun(({} : {p?:{q?:null}})); // ok
-                                  ^^^^ [4]
-   defaults.js:3:29
+   defaults.js:3:35
     3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
-                                   ^ [5]
+                                         ^^^^ [3]
    defaults.js:3:48
     3| function obj_prop_fun({p:{q=0}={q:true}}={p:{q:""}}) {
-                                                      ^^ [6]
+                                                      ^^ [4]
+   defaults.js:14:20
+   14| obj_prop_fun({p:{q:null}}); // ok, provides add'l lower bound
+                          ^^^^ [5]
+   defaults.js:71:28
+   71| obj_prop_fun(({} : {p?:{q?:null}})); // ok
+                                  ^^^^ [6]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:23:4
 
 Cannot cast `q` to undefined because:
- - boolean [1] is incompatible with undefined [2].
- - null [3] is incompatible with undefined [2].
- - null [4] is incompatible with undefined [2].
- - number [5] is incompatible with undefined [2].
- - string [6] is incompatible with undefined [2].
+ - string [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
+ - boolean [4] is incompatible with undefined [2].
+ - null [5] is incompatible with undefined [2].
+ - null [6] is incompatible with undefined [2].
 
    defaults.js:23:4
    23|   (q:void);
           ^
 
 References:
-   defaults.js:17:19
-   17|   var {p:{q=0}={q:true}} = o;
-                         ^^^^ [1]
+   defaults.js:16:31
+   16| function obj_prop_var(o={p:{q:""}}) {
+                                     ^^ [1]
    defaults.js:23:6
    23|   (q:void);
             ^^^^ [2]
-   defaults.js:28:20
-   28| obj_prop_var({p:{q:null}}); // ok, provides add'l lower bound
-                          ^^^^ [3]
-   defaults.js:72:28
-   72| obj_prop_var(({} : {p?:{q?:null}})); // ok
-                                  ^^^^ [4]
    defaults.js:17:13
    17|   var {p:{q=0}={q:true}} = o;
-                   ^ [5]
-   defaults.js:16:31
-   16| function obj_prop_var(o={p:{q:""}}) {
-                                     ^^ [6]
+                   ^ [3]
+   defaults.js:17:19
+   17|   var {p:{q=0}={q:true}} = o;
+                         ^^^^ [4]
+   defaults.js:28:20
+   28| obj_prop_var({p:{q:null}}); // ok, provides add'l lower bound
+                          ^^^^ [5]
+   defaults.js:72:28
+   72| obj_prop_var(({} : {p?:{q?:null}})); // ok
+                                  ^^^^ [6]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:35:4
 
 Cannot cast `o.r` to undefined because:
- - null [1] is incompatible with undefined [2].
- - number [3] is incompatible with undefined [2].
- - string [4] is incompatible with undefined [2].
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
+ - null [4] is incompatible with undefined [2].
 
    defaults.js:35:4
    35|   (o.r:void);
           ^^^
 
 References:
-   defaults.js:40:20
-   40| obj_rest({p:{q:0,r:null}});
-                          ^^^^ [1]
+   defaults.js:30:38
+   30| function obj_rest({p:{q,...o}={q:0,r:0}}={p:{q:0,r:""}}) {
+                                            ^ [1]
    defaults.js:35:8
    35|   (o.r:void);
               ^^^^ [2]
-   defaults.js:30:38
-   30| function obj_rest({p:{q,...o}={q:0,r:0}}={p:{q:0,r:""}}) {
-                                            ^ [3]
    defaults.js:30:52
    30| function obj_rest({p:{q,...o}={q:0,r:0}}={p:{q:0,r:""}}) {
-                                                          ^^ [4]
+                                                          ^^ [3]
+   defaults.js:40:20
+   40| obj_rest({p:{q:0,r:null}});
+                          ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:43:3
@@ -287,7 +287,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:56:5
 
-Cannot assign object literal to variable because in property `p`, number [1] is incompatible with string [2].
+Cannot assign object literal to variable because number [1] is incompatible with string [2] in property `p`.
 
    defaults.js:56:5
            v
@@ -436,23 +436,6 @@ Error: defaults.js:77
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:80:27
 
-boolean [1] is incompatible with number [2].
-
-   defaults.js:80:27
-   80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                                 ^
-
-References:
-   defaults.js:80:55
-   80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                                                             ^^^^ [1]
-   defaults.js:80:33
-   80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
-                                       ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ defaults.js:80:27
-
 string [1] is incompatible with number [2].
 
    defaults.js:80:27
@@ -463,6 +446,23 @@ References:
    defaults.js:80:44
    80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                                   ^^^^^^ [1]
+   defaults.js:80:33
+   80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ defaults.js:80:27
+
+boolean [1] is incompatible with number [2].
+
+   defaults.js:80:27
+   80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                 ^
+
+References:
+   defaults.js:80:55
+   80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                                                             ^^^^ [1]
    defaults.js:80:33
    80| function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
                                        ^^^^^^ [2]
@@ -662,7 +662,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:31:5
 
-Cannot call `qux` with object literal bound to `_` because in property `a`, string [1] is incompatible with number [2].
+Cannot call `qux` with object literal bound to `_` because string [1] is incompatible with number [2] in property `a`.
 
    destructuring.js:31:5
    31| qux({a:""});
@@ -679,8 +679,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:33:7
 
-Cannot call `corge` with object literal bound to the first parameter because in property `b`, number [1] is incompatible
-with string [2].
+Cannot call `corge` with object literal bound to the first parameter because number [1] is incompatible with string [2]
+in property `b`.
 
    destructuring.js:33:7
    33| corge({b:0});
@@ -697,7 +697,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:35:23
 
-Cannot assign object literal to variable because in property `n`, string [1] is incompatible with number [2].
+Cannot assign object literal to variable because string [1] is incompatible with number [2] in property `n`.
 
    destructuring.js:35:23
    35| var {n}:{n: number} = {n: ""}

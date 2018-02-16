@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ code_frame.js:2:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:2:2
    2| ({p: 42}: {p: empty});
@@ -24,7 +24,7 @@ Trace:
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:4:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:4:2
    4| ({p: 42}: {p: empty});
@@ -48,7 +48,7 @@ Trace:
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:6:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:6:2
        v
@@ -75,7 +75,7 @@ Trace:
 
 Error ----------------------------------------------------------------------------------------------- code_frame.js:12:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:12:2
    12| ({p: 42}: {p: empty});
@@ -99,7 +99,7 @@ Trace:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    test.js:6:2
        v
@@ -126,7 +126,7 @@ Trace:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Cannot cast object literal to object type because in property `a`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `a`.
 
    test.js:12:2
         v
@@ -155,7 +155,7 @@ Trace:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Cannot cast object literal to object type because in property `b`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `b`.
 
    test.js:12:2
         v
@@ -184,7 +184,7 @@ Trace:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
-Cannot cast object literal to object type because in property `c`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `c`.
 
    test.js:12:2
         v

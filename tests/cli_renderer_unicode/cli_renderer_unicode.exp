@@ -14,7 +14,7 @@ References:
 
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame.js:2:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:2:2
    2│ ({p: 42}: {p: empty});
@@ -31,7 +31,7 @@ References:
 
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame.js:4:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:4:2
    4│ ({p: 42}: {p: empty});
@@ -48,7 +48,7 @@ References:
 
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame.js:6:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:6:2
        v
@@ -68,7 +68,7 @@ References:
 
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame.js:12:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with empty [2].
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
 
    code_frame.js:12:2
    12│ ({p: 42}: {p: empty});
@@ -86,8 +86,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:10:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:10:4
    10│   ([x, y]: [empty, empty]);
@@ -111,8 +111,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:16:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:16:4
    16│   ([x, y]: [empty, empty]);
@@ -136,8 +136,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:17:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:17:4
    17│   ([x, y]: [empty, empty]);
@@ -161,8 +161,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:26:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:26:4
    26│   ([x, y]: [empty, empty]);
@@ -186,8 +186,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:32:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:32:4
    32│   ([x, y]: [empty, empty]);
@@ -211,8 +211,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:33:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:33:4
    33│   ([x, y]: [empty, empty]);
@@ -236,8 +236,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:43:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:43:4
    43│   ([x, y]: [empty, empty]);
@@ -261,8 +261,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:49:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:49:4
    49│   ([x, y]: [empty, empty]);
@@ -286,8 +286,8 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ code_frame_omit.js:50:4
 
 Cannot cast array literal to tuple type because:
- • in index 0, number [1] is incompatible with empty [2].
- • in index 1, number [3] is incompatible with empty [4].
+ • number [1] is incompatible with empty [2] in index 0.
+ • number [3] is incompatible with empty [4] in index 1.
 
    code_frame_omit.js:50:4
    50│   ([x, y]: [empty, empty]);
@@ -311,9 +311,9 @@ References:
 Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ group.js:6:2
 
 Cannot cast object literal to object type because:
- • in property `a`, number [1] is incompatible with string [2].
- • in property `b`, number [3] is incompatible with string [4].
- • in property `c`, number [5] is incompatible with string [6].
+ • number [1] is incompatible with string [2] in property `a`.
+ • number [3] is incompatible with string [4] in property `b`.
+ • number [5] is incompatible with string [6] in property `c`.
 
    group.js:6:2
         v

@@ -14,23 +14,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:10
 
-Cannot return `new A() || new A()` because in type argument `X` [1], property `x` is missing in object type [2] but
-exists in object type [3].
+Cannot return `new A() || new A()` because property `x` is missing in object type [1] but exists in object type [2] in
+type argument `X` [3].
 
    annot.js:10:10
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   annot.js:1:9
-    1| class A<X> { }
-               ^ [1]
    annot.js:10:20
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                          ^^ [2]
+                          ^^ [1]
    annot.js:10:38
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                            ^^^^^^^^^^^ [3]
+                                            ^^^^^^^^^^^ [2]
+   annot.js:1:9
+    1| class A<X> { }
+               ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- error.js:8:8
@@ -49,8 +49,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:12:8
 
-Cannot call `newFn2` with function bound to the first parameter because in the first argument, string [1] is
-incompatible with number [2].
+Cannot call `newFn2` with function bound to the first parameter because string [1] is incompatible with number [2] in
+the first argument.
 
    error.js:12:8
    12| newFn2((x: string) => {}); // The error should point here.
@@ -99,23 +99,23 @@ References:
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
 
 Cannot instantiate `C` because:
- - in type argument `T`, `Base` [1] is incompatible with `Middle` [2].
- - in type argument `T`, number [3] is incompatible with `Middle` [2].
+ - number [1] is incompatible with `Middle` [2] in type argument `T`.
+ - `Base` [3] is incompatible with `Middle` [2] in type argument `T`.
 
    implicit_bounded_instantiation.js:15:8
    15| var a: C<*> = new C();
               ^^^^
 
 References:
-   implicit_bounded_instantiation.js:20:8
-   20| a.meth(new Base()); // Error: Base ~> Middle
-              ^^^^^^^^^^ [1]
+   implicit_bounded_instantiation.js:19:8
+   19| a.meth(42); // Error: number ~> Middle
+              ^^ [1]
    implicit_bounded_instantiation.js:7:12
     7| class C<T: Middle> {
                   ^^^^^^ [2]
-   implicit_bounded_instantiation.js:19:8
-   19| a.meth(42); // Error: number ~> Middle
-              ^^ [3]
+   implicit_bounded_instantiation.js:20:8
+   20| a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:19:8
@@ -148,42 +148,42 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- phantom.js:7:2
 
-Cannot cast `a` to `B` because in type argument `Phantom` [1], number [2] is incompatible with string [3].
+Cannot cast `a` to `B` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
 
    phantom.js:7:2
    7| (a: B); // Error
        ^
 
 References:
-   phantom.js:9:8
-   9| type T<Phantom> = any;
-             ^^^^^^^ [1]
    phantom.js:3:12
    3| type A = T<number>;
-                 ^^^^^^ [2]
+                 ^^^^^^ [1]
    phantom.js:4:12
    4| type B = T<string>;
-                 ^^^^^^ [3]
+                 ^^^^^^ [2]
+   phantom.js:9:8
+   9| type T<Phantom> = any;
+             ^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- phantom.js:15:2
 
-Cannot cast `c` to `D` because in type argument `Phantom` [1], number [2] is incompatible with string [3].
+Cannot cast `c` to `D` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
 
    phantom.js:15:2
    15| (c: D); // Error
         ^
 
 References:
-   phantom.js:9:8
-    9| type T<Phantom> = any;
-              ^^^^^^^ [1]
    phantom.js:11:12
    11| type C = T<number>;
-                  ^^^^^^ [2]
+                  ^^^^^^ [1]
    phantom.js:12:12
    12| type D = T<string>;
-                  ^^^^^^ [3]
+                  ^^^^^^ [2]
+   phantom.js:9:8
+    9| type T<Phantom> = any;
+              ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
@@ -210,29 +210,29 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:18:21
 
-Cannot assign `Q.bar(...)` to `z` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot assign `Q.bar(...)` to `z` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    poly.js:18:21
    18| var z:Foo<number> = Q.bar(foo,"");
                            ^^^^^^^^^^^^^
 
 References:
-   poly.js:1:11
-    1| class Foo<T> {
-                 ^ [1]
    poly.js:18:31
    18| var z:Foo<number> = Q.bar(foo,"");
-                                     ^^ [2]
+                                     ^^ [1]
    poly.js:18:11
    18| var z:Foo<number> = Q.bar(foo,"");
-                 ^^^^^^ [3]
+                 ^^^^^^ [2]
+   poly.js:1:11
+    1| class Foo<T> {
+                 ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot extend `C` [1] with `D` because:
- - in property `foo` and then the first argument, number [2] is incompatible with `X` [3].
- - in property `foo` and then the return value, number [4] is incompatible with `X` [5].
+ - number [2] is incompatible with `X` [3] in the first argument of property `foo`.
+ - number [4] is incompatible with `X` [5] in the return value of property `foo`.
 
    test.js:7:1
        v------------------

@@ -479,7 +479,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- react.js:17:2
 
-Cannot create `Example` element because in property `a`, string [1] is incompatible with number [2].
+Cannot create `Example` element because string [1] is incompatible with number [2] in property `a`.
 
    react.js:17:2
     17| (<Example a="bad" />); // error: number ~> string
@@ -496,7 +496,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- react.js:18:2
 
-Cannot create `Example` element because in property `c`, number [1] is incompatible with string [2].
+Cannot create `Example` element because number [1] is incompatible with string [2] in property `c`.
 
    react.js:18:2
     18| (<Example a={0} c={0} />); // error: number ~> string

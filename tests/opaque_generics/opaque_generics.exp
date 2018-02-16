@@ -1,81 +1,81 @@
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:10:12
 
-Cannot return `x` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    importtest-polarity.js:10:12
    10|     return x;
                   ^
 
 References:
-   test-polarity.js:19:31
-   19| export opaque type Covariant<+T> = Foo<T>;
-                                     ^ [1]
    importtest-polarity.js:9:38
     9| function test2(x: Covariant<number | string>) : Covariant<number> { // Error number | string ~> number
-                                            ^^^^^^ [2]
+                                            ^^^^^^ [1]
    importtest-polarity.js:9:59
     9| function test2(x: Covariant<number | string>) : Covariant<number> { // Error number | string ~> number
-                                                                 ^^^^^^ [3]
+                                                                 ^^^^^^ [2]
+   test-polarity.js:19:31
+   19| export opaque type Covariant<+T> = Foo<T>;
+                                     ^ [3]
 
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:18:12
 
-Cannot return `x` because in type argument `T` [1], number [2] is incompatible with string [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
 
    importtest-polarity.js:18:12
    18|     return x;
                   ^
 
 References:
-   test-polarity.js:20:35
-   20| export opaque type Contravariant<-T> = Bar<T>;
-                                         ^ [1]
    importtest-polarity.js:17:33
    17| function test4(x: Contravariant<number>) : Contravariant<number | string> { // Error: number | string ~> number
-                                       ^^^^^^ [2]
+                                       ^^^^^^ [1]
    importtest-polarity.js:17:67
    17| function test4(x: Contravariant<number>) : Contravariant<number | string> { // Error: number | string ~> number
-                                                                         ^^^^^^ [3]
+                                                                         ^^^^^^ [2]
+   test-polarity.js:20:35
+   20| export opaque type Contravariant<-T> = Bar<T>;
+                                         ^ [3]
 
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:26:12
 
-Cannot return `x` because in type argument `T` [1], number [2] is incompatible with string [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
 
    importtest-polarity.js:26:12
    26|     return x;
                   ^
 
 References:
-   test-polarity.js:21:30
-   21| export opaque type Invariant<T> = Baz<T>;
-                                    ^ [1]
    importtest-polarity.js:25:29
    25| function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
-                                   ^^^^^^ [2]
+                                   ^^^^^^ [1]
    importtest-polarity.js:25:59
    25| function test6(x: Invariant<number>) : Invariant<number | string> { // Error: number ~> number | string
-                                                                 ^^^^^^ [3]
+                                                                 ^^^^^^ [2]
+   test-polarity.js:21:30
+   21| export opaque type Invariant<T> = Baz<T>;
+                                    ^ [3]
 
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:30:12
 
-Cannot return `x` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    importtest-polarity.js:30:12
    30|     return x;
                   ^
 
 References:
-   test-polarity.js:21:30
-   21| export opaque type Invariant<T> = Baz<T>;
-                                    ^ [1]
    importtest-polarity.js:29:38
    29| function test7(x: Invariant<number | string>) : Invariant<number> { // Error: number | string != number
-                                            ^^^^^^ [2]
+                                            ^^^^^^ [1]
    importtest-polarity.js:29:59
    29| function test7(x: Invariant<number | string>) : Invariant<number> { // Error: number | string != number
-                                                                 ^^^^^^ [3]
+                                                                 ^^^^^^ [2]
+   test-polarity.js:21:30
+   21| export opaque type Invariant<T> = Baz<T>;
+                                    ^ [3]
 
 
 Error: importtest-polarity.js:39
@@ -108,72 +108,72 @@ Error: importtest-polarity.js:39
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
 
 Cannot return `x` because:
- - in type argument `S` [1], number [2] is incompatible with string [3].
- - in type argument `T` [4], string [5] is incompatible with number [6].
+ - number [1] is incompatible with string [2] in type argument `S` [3].
+ - string [4] is incompatible with number [5] in type argument `T` [6].
 
    importtest-polarity.js:39:12
    39|     return x;
                   ^
 
 References:
-   test-polarity.js:22:24
-   22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
-                              ^ [1]
    importtest-polarity.js:38:23
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                             ^^^^^^ [2]
+                             ^^^^^^ [1]
    importtest-polarity.js:38:81
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                       ^^^^^^ [3]
-   test-polarity.js:22:27
+                                                                                       ^^^^^^ [2]
+   test-polarity.js:22:24
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
-                                 ^ [4]
+                              ^ [3]
    importtest-polarity.js:38:40
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                              ^^^^^^ [5]
+                                              ^^^^^^ [4]
    importtest-polarity.js:38:89
    38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                               ^^^^^^ [6]
+                                                                                               ^^^^^^ [5]
+   test-polarity.js:22:27
+   22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
+                                 ^ [6]
 
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:7:12
 
-Cannot return `x` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    importtest.js:7:12
    7|     return x;
                  ^
 
 References:
-   test.js:3:24
-   3| export opaque type Box<T> = [T];
-                             ^ [1]
    importtest.js:6:24
    6| function test1(x : Box<string>) : Box<number> { // Error: string ~> number
-                             ^^^^^^ [2]
+                             ^^^^^^ [1]
    importtest.js:6:39
    6| function test1(x : Box<string>) : Box<number> { // Error: string ~> number
-                                            ^^^^^^ [3]
+                                            ^^^^^^ [2]
+   test.js:3:24
+   3| export opaque type Box<T> = [T];
+                             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:15:12
 
-Cannot return `x` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    importtest.js:15:12
    15|     return x;
                   ^
 
 References:
-   test.js:4:30
-    4| export opaque type Container<T> = Box<T>;
-                                    ^ [1]
    importtest.js:14:30
    14| function test3(x : Container<string>) : Container<number> { // Error: string ~> number
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [1]
    importtest.js:14:51
    14| function test3(x : Container<string>) : Container<number> { // Error: string ~> number
-                                                         ^^^^^^ [3]
+                                                         ^^^^^^ [2]
+   test.js:4:30
+    4| export opaque type Container<T> = Box<T>;
+                                    ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:23:12
@@ -268,42 +268,42 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:12
 
-Cannot return `x` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    test.js:7:12
    7|     return x;
                  ^
 
 References:
-   test.js:3:24
-   3| export opaque type Box<T> = [T];
-                             ^ [1]
    test.js:6:24
    6| function test1(x : Box<string>) : Box<number> { // Error: string ~> number
-                             ^^^^^^ [2]
+                             ^^^^^^ [1]
    test.js:6:39
    6| function test1(x : Box<string>) : Box<number> { // Error: string ~> number
-                                            ^^^^^^ [3]
+                                            ^^^^^^ [2]
+   test.js:3:24
+   3| export opaque type Box<T> = [T];
+                             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:15:12
 
-Cannot return `x` because in type argument `T` [1], string [2] is incompatible with number [3].
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3].
 
    test.js:15:12
    15|     return x;
                   ^
 
 References:
-   test.js:4:30
-    4| export opaque type Container<T> = Box<T>;
-                                    ^ [1]
    test.js:14:30
    14| function test3(x : Container<string>) : Container<number> { // Error: string ~> number
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [1]
    test.js:14:51
    14| function test3(x : Container<string>) : Container<number> { // Error: string ~> number
-                                                         ^^^^^^ [3]
+                                                         ^^^^^^ [2]
+   test.js:4:30
+    4| export opaque type Container<T> = Box<T>;
+                                    ^ [3]
 
 
 

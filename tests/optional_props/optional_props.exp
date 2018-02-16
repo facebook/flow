@@ -31,8 +31,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:5
 
-Cannot call `bar` with object literal bound to `config` because in property `foo`, string [1] is incompatible with
-number [2].
+Cannot call `bar` with object literal bound to `config` because string [1] is incompatible with number [2] in property
+`foo`.
 
    test.js:12:5
    12| bar({foo: ""});
@@ -63,7 +63,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test2.js:10:27
 
-Cannot assign object literal to `d` because in property `foo`, null [1] is incompatible with string [2].
+Cannot assign object literal to `d` because null [1] is incompatible with string [2] in property `foo`.
 
    test2.js:10:27
    10| var d: { foo?: string } = { foo: null }; // But this is an error

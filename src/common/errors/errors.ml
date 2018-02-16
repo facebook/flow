@@ -163,6 +163,12 @@ module Friendly = struct
       Inline desc
     )
 
+  (* Intersperses a given separator in between each element of a list. *)
+  let rec intersperse sep = function
+  | [] -> []
+  | x :: [] -> x :: []
+  | x1 :: x2 :: xs -> x1 :: sep :: intersperse sep (x2 :: xs)
+
   (* Concatenates a list of messages with a conjunction according to the "rules"
    * of the English language. *)
   let conjunction_concat ?(conjunction="and") = function
@@ -617,8 +623,8 @@ let compare =
     | Inline _, Reference _ -> 1
     | Reference _, Inline _ -> -1
     | Reference (m1, loc1), Reference (m2, loc2) ->
-      let k = compare_lists compare_message_inline m1 m2 in
-      if k = 0 then Loc.compare loc1 loc2 else k
+      let k = Loc.compare loc1 loc2 in
+      if k = 0 then compare_lists compare_message_inline m1 m2 else k
   in
   fun err1 err2 ->
     let open Friendly in

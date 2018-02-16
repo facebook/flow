@@ -855,7 +855,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:91:3
 
-Cannot assign function to `f` because in the return value, number [1] is incompatible with string [2].
+Cannot assign function to `f` because number [1] is incompatible with string [2] in the return value.
 
    scope.js:91:3
          v----------

@@ -8,7 +8,7 @@ Cannot resolve name `copyProperties`.
 
 Error ------------------------------------------------------------------------------------------- copyProperties.js:31:6
 
-Cannot cast `copyProperties(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
+Cannot cast `copyProperties(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
 
    copyProperties.js:31:6
    31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string

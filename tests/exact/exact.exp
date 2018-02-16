@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `any` to object type because:
  - inexact object type [1] is incompatible with exact object type [2].
- - in property `p`, number [3] is incompatible with string [4].
+ - number [3] is incompatible with string [4] in property `p`.
 
    error_continues.js:3:3
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
@@ -169,7 +169,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- use_ops.js:2:31
 
-Cannot assign `a` to `b` because in property `p`, inexact object type [1] is incompatible with exact object type [2].
+Cannot assign `a` to `b` because inexact object type [1] is incompatible with exact object type [2] in property `p`.
 
    use_ops.js:2:31
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p

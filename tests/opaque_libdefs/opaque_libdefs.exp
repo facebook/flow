@@ -51,42 +51,42 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:12
 
-Cannot return `x` because in type argument `T` [1], number [2] is incompatible with string [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
 
    test.js:22:12
    22|     return x; // Error: string ~> number, number ~> string
                   ^
 
 References:
-   flow-typed/decls.js:10:38
-   10| declare export opaque type PolyStack<T>;
-                                            ^ [1]
    test.js:21:45
    21| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                   ^^^^^^ [2]
+                                                   ^^^^^^ [1]
    test.js:21:65
    21| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                                       ^^^^^^ [3]
+                                                                       ^^^^^^ [2]
+   flow-typed/decls.js:10:38
+   10| declare export opaque type PolyStack<T>;
+                                            ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:27:12
 
-Cannot return `x` because in type argument `T` [1], number [2] is incompatible with string [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
 
    test.js:27:12
    27|     return x; // Error string ~> number
                   ^
 
 References:
-   flow-typed/decls.js:15:36
-   15| declare export opaque type Contra<-T>;
-                                          ^ [1]
    test.js:26:30
    26| function contraBad(x: Contra<number>): Contra<number | string> {
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [1]
    test.js:26:56
    26| function contraBad(x: Contra<number>): Contra<number | string> {
-                                                              ^^^^^^ [3]
+                                                              ^^^^^^ [2]
+   flow-typed/decls.js:15:36
+   15| declare export opaque type Contra<-T>;
+                                          ^ [3]
 
 
 

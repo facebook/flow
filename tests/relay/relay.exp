@@ -68,8 +68,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:23:5
 
-Cannot create `ProfilePic` element because in property `image`, object literal [1] is incompatible with
-`ProfilePic_imageRef` [2].
+Cannot create `ProfilePic` element because object literal [1] is incompatible with `ProfilePic_imageRef` [2] in property
+`image`.
 
    Profile.js:23:5
    23|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
@@ -131,7 +131,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:17:1
 
-Cannot create `Profile` element because in property `foo`, string [1] is incompatible with number [2].
+Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
 
    main.js:17:1
    17| <Profile user={userRef} foo="bar" />; // Error: string ~> number
@@ -164,7 +164,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:19:1
 
-Cannot create `Profile` element because in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
+Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
 
    main.js:19:1
    19| <Profile user={user} foo={42} />; // Error: You must pass in a ref
@@ -182,8 +182,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:20:1
 
 Cannot create `Profile` element because:
- - in property `user`, object type [1] is incompatible with `Profile_userRef` [2].
- - in property `foo`, string [3] is incompatible with number [4].
+ - object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
+ - string [3] is incompatible with number [4] in property `foo`.
 
    main.js:20:1
    20| <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
@@ -207,8 +207,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:21:1
 
 Cannot create `Profile` element because:
- - in property `user`, mixed [1] is incompatible with `Profile_userRef` [2].
- - in property `foo`, mixed [3] is incompatible with number [4].
+ - mixed [1] is incompatible with `Profile_userRef` [2] in property `user`.
+ - mixed [3] is incompatible with number [4] in property `foo`.
 
    main.js:21:1
    21| <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
@@ -231,7 +231,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- more.js:92:1
 
-Cannot create `SingularTest` element because in property `user`, null [1] is incompatible with object type [2].
+Cannot create `SingularTest` element because null [1] is incompatible with object type [2] in property `user`.
 
    more.js:92:1
    92| <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
@@ -263,25 +263,23 @@ References:
 Error ----------------------------------------------------------------------------------------------------- more.js:98:1
 
 Cannot create `SingularTest` element because:
- - in property `user.__fragments` and then type argument `T` [1], `FragmentTypeof` [2] is incompatible with object
-   type [3].
- - in property `user.__fragments` and then type argument `T` [1], object type [3] is incompatible with
-   `FragmentTypeof` [4].
+ - `FragmentTypeof` [1] is incompatible with object type [2] in type argument `T` [3] of property `user.__fragments`.
+ - object type [2] is incompatible with `FragmentTypeof` [4] in type argument `T` [3] of property `user.__fragments`.
 
    more.js:98:1
    98| <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   more.js:11:39
-   11| declare opaque type FragmentReference<T: FragmentTypeof>;
-                                             ^ [1]
    more.js:23:10
    23|   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                ^^^^^^^^^^^^^^ [2]
+                ^^^^^^^^^^^^^^ [1]
    more.js:86:35
    86|   +__fragments: FragmentReference<{thing: true}>,
-                                         ^^^^^^^^^^^^^ [3]
+                                         ^^^^^^^^^^^^^ [2]
+   more.js:11:39
+   11| declare opaque type FragmentReference<T: FragmentTypeof>;
+                                             ^ [3]
    more.js:43:14
    43|   +__typeof: RelayModernTypedFlowtest_user$reference,
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -289,7 +287,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:121:1
 
-Cannot create `SingularTest` element because in property `optionalUser`, null [1] is incompatible with object type [2].
+Cannot create `SingularTest` element because null [1] is incompatible with object type [2] in property `optionalUser`.
 
    more.js:121:1
         v------------
@@ -313,7 +311,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:144:1
 
-Cannot create `PluralTest` element because in property `users`, null [1] is incompatible with read-only array type [2].
+Cannot create `PluralTest` element because null [1] is incompatible with read-only array type [2] in property `users`.
 
    more.js:144:1
    144| <PluralTest users={null} nullableUsers={null} />;
@@ -345,25 +343,25 @@ References:
 Error ---------------------------------------------------------------------------------------------------- more.js:150:1
 
 Cannot create `PluralTest` element because:
- - in property `users`, array element, property `__fragments`, and then type argument `T` [1]; `FragmentTypeof` [2] is
-   incompatible with object type [3].
- - in property `users`, array element, property `__fragments`, and then type argument `T` [1]; object type [3] is
-   incompatible with `FragmentTypeof` [4].
+ - `FragmentTypeof` [1] is incompatible with object type [2] in type argument `T` [3] of property `__fragments` of array
+   element of property `users`.
+ - object type [2] is incompatible with `FragmentTypeof` [4] in type argument `T` [3] of property `__fragments` of array
+   element of property `users`.
 
    more.js:150:1
    150| <PluralTest users={[nonUserRef]} nullableUsers={null} />;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   more.js:11:39
-    11| declare opaque type FragmentReference<T: FragmentTypeof>;
-                                              ^ [1]
    more.js:25:10
     25|   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                 ^^^^^^^^^^^^^^ [2]
+                 ^^^^^^^^^^^^^^ [1]
    more.js:86:35
     86|   +__fragments: FragmentReference<{thing: true}>,
-                                          ^^^^^^^^^^^^^ [3]
+                                          ^^^^^^^^^^^^^ [2]
+   more.js:11:39
+    11| declare opaque type FragmentReference<T: FragmentTypeof>;
+                                              ^ [3]
    more.js:49:14
     49|   +__typeof: RelayModernTypedFlowtest_users$reference,
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -371,8 +369,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:174:1
 
-Cannot create `PluralTest` element because in property `optionalUsers`, null [1] is incompatible with read-only array
-type [2].
+Cannot create `PluralTest` element because null [1] is incompatible with read-only array type [2] in property
+`optionalUsers`.
 
    more.js:174:1
    174| <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
@@ -389,7 +387,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:177:1
 
-Cannot create `SingularTest` element because in property `onClick`, string [1] is incompatible with function type [2].
+Cannot create `SingularTest` element because string [1] is incompatible with function type [2] in property `onClick`.
 
    more.js:177:1
    177| <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
@@ -406,7 +404,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:180:1
 
-Cannot create `SingularTest` element because in property `string`, number [1] is incompatible with string [2].
+Cannot create `SingularTest` element because number [1] is incompatible with string [2] in property `string`.
 
    more.js:180:1
    180| <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;

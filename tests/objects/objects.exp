@@ -1,8 +1,8 @@
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
 Cannot assign `y` to `x` because:
- - in property `x`, property `bar` is missing in object type [1] but exists in object type [2].
- - in property `x`, property `foo` is missing in object type [2] but exists in object type [1].
+ - property `bar` is missing in object type [1] but exists in object type [2] in property `x`.
+ - property `foo` is missing in object type [2] but exists in object type [1] in property `x`.
 
    compatibility.js:3:9
    3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -19,7 +19,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- compatibility.js:7:9
 
-Cannot assign `y` to `x` because in property `foo`, number [1] is incompatible with string [2].
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `foo`.
 
    compatibility.js:7:9
    7|     x = y; // 2 errors: string !~> number; number !~> string
@@ -36,7 +36,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:11:9
 
-Cannot assign `y` to `x` because in property `x.foo`, number [1] is incompatible with string [2].
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`.
 
    compatibility.js:11:9
    11|     x = y; // 2 errors: string !~> number; number !~> string
@@ -53,7 +53,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:15:9
 
-Cannot assign `y` to `x` because in property `foo`, number [1] is incompatible with string [2].
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `foo`.
 
    compatibility.js:15:9
    15|     x = y; // 1 error: number !~> string
@@ -70,7 +70,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:19:9
 
-Cannot assign `y` to `x` because in property `x.foo`, number [1] is incompatible with string [2].
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`.
 
    compatibility.js:19:9
    19|     x = y; // 2 errors: string !~> number; number !~> string
@@ -87,7 +87,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:23:9
 
-Cannot assign `y` to `x` because in property `foo`, string [1] is incompatible with number [2].
+Cannot assign `y` to `x` because string [1] is incompatible with number [2] in property `foo`.
 
    compatibility.js:23:9
    23|     x = y; // 1 error: string !~> number
@@ -104,7 +104,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:27:9
 
-Cannot assign `y` to `x` because in property `x.foo`, number [1] is incompatible with string [2].
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`.
 
    compatibility.js:27:9
    27|     x = y; // 2 errors: string !~> number; number !~> string
@@ -287,7 +287,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- unaliased_assign.js:20:10
 
-Cannot assign `obj` to `glob` because in property `x`, number [1] is incompatible with string [2].
+Cannot assign `obj` to `glob` because number [1] is incompatible with string [2] in property `x`.
 
    unaliased_assign.js:20:10
    20|   glob = obj;    // error: subsequent assignment might make glob.x a number

@@ -149,7 +149,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:103:24
 
-Cannot assign object literal to `j2` because in property `str`, number [1] is incompatible with string [2].
+Cannot assign object literal to `j2` because number [1] is incompatible with string [2] in property `str`.
 
    import_typeof.js:103:24
    103| var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string

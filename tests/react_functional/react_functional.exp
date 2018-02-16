@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot create `F` element because in property `foo`, number [1] is incompatible with string [2].
+Cannot create `F` element because number [1] is incompatible with string [2] in property `foo`.
 
    test.js:5:1
    5| <F foo={0} />; // error: number ~> string

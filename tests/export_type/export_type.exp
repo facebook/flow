@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:29:15
 
-Cannot assign object literal to `l` because in property `prop`, string [1] is incompatible with number [2].
+Cannot assign object literal to `l` because string [1] is incompatible with number [2] in property `prop`.
 
    importer.js:29:15
    29| var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
@@ -87,7 +87,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:32:16
 
-Cannot assign object literal to `n` because in property `prop`, number [1] is incompatible with string [2].
+Cannot assign object literal to `n` because number [1] is incompatible with string [2] in property `prop`.
 
    importer.js:32:16
    32| var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}

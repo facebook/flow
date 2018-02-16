@@ -618,8 +618,8 @@ References:
 
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:45:19
 
-Cannot call `this.setState` with object literal bound to `partialState` because in property `q`, property `q` is missing
-in object type [1].
+Cannot call `this.setState` with object literal bound to `partialState` because property `q` is missing in object
+type [1] in property `q`.
 
    create_class_initial_state_sealed.js:45:19
    45|     this.setState({ q: 0 }); // property `q` not found
@@ -664,8 +664,8 @@ References:
 
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:81:19
 
-Cannot call `this.setState` with object literal bound to `partialState` because in property `baz`, property `baz` is
-missing in object type [1].
+Cannot call `this.setState` with object literal bound to `partialState` because property `baz` is missing in object
+type [1] in property `baz`.
 
    create_class_initial_state_sealed.js:81:19
    81|     this.setState({ baz: 0 }); // property `baz`  not found
@@ -936,7 +936,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- default_props_undefined.js:10:1
 
-Cannot create `Foo` element because in property `bar`, string [1] is incompatible with number [2].
+Cannot create `Foo` element because string [1] is incompatible with number [2] in property `bar`.
 
    default_props_undefined.js:10:1
    10| <Foo bar="42"/>; // Error
@@ -1021,7 +1021,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:52:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:52:2
    52| ({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
@@ -1038,7 +1038,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:56:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:56:2
    56| ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
@@ -1070,7 +1070,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:60:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:60:2
    60| ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
@@ -1102,7 +1102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:64:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:64:2
    64| ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
@@ -1149,7 +1149,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:76:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:76:2
    76| ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
@@ -1166,7 +1166,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:80:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:80:2
    80| ({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
@@ -1183,7 +1183,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:84:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:84:2
    84| ({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
@@ -1200,7 +1200,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:88:2
 
-Cannot cast object literal to `ElementConfig` because in property `p`, string [1] is incompatible with number [2].
+Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:88:2
    88| ({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
@@ -1217,23 +1217,23 @@ References:
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:8:2
 
-Cannot cast `<Foo />` to `Element` because in property `type` and then type argument `Props` [1], property `b` is
-missing in object type [2] but exists in object type [3].
+Cannot cast `<Foo />` to `Element` because property `b` is missing in object type [1] but exists in object type [2] in
+type argument `Props` [3] of property `type`.
 
    element_with_component_type.js:8:2
     8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [1]
    element_with_component_type.js:5:35
     5| class Foo extends React.Component<{a: number}> {}
-                                         ^^^^^^^^^^^ [2]
+                                         ^^^^^^^^^^^ [1]
    element_with_component_type.js:8:51
     8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:11:7
@@ -1268,29 +1268,29 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:35:7
 
-Cannot call `myHOC` with `class { ... }` bound to `Component` because in type argument `Props` [1] and then property
-`foo`, string [2] is incompatible with number [3].
+Cannot call `myHOC` with `class { ... }` bound to `Component` because string [1] is incompatible with number [2] in
+property `foo` of type argument `Props` [3].
 
    hoc.js:35:7
    35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [1]
    hoc.js:35:49
    35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-                                                       ^^^^^^ [2]
+                                                       ^^^^^^ [1]
    hoc.js:6:40
     6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                              ^^^^^^ [3]
+                                              ^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
 
-Cannot call `myHOC` with function bound to `Component` because in the first argument and then property `foo`, string [1]
-is incompatible with number [2].
+Cannot call `myHOC` with function bound to `Component` because string [1] is incompatible with number [2] in property
+`foo` of the first argument.
 
    hoc.js:36:7
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -1396,39 +1396,36 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-In type argument `Props` [1], number [2] is incompatible with string [3].
+number [1] is incompatible with string [2] in type argument `Props` [3].
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [1]
    hoc2.js:12:6
    12|   a: number,
-            ^^^^^^ [2]
+            ^^^^^^ [1]
    hoc2.js:28:24
    28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                              ^^^^^ [3]
+                              ^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-In type argument `Props` [1], property `a` is missing in object type [2] but exists in object type [3].
+Property `a` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [1]
    hoc2.js:6:34
     6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc2.js:11:43
                                                  v-
    11| class MyComponent extends React.Component<{|
@@ -1436,24 +1433,24 @@ References:
    13|   b: number,
    14|   prop: number,
    15| |}> {}
-       -^ [3]
+       -^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-In type argument `Props` [1], property `b` is missing in object type [2] but exists in object type [3].
+Property `b` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [1]
    hoc2.js:6:34
     6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc2.js:11:43
                                                  v-
    11| class MyComponent extends React.Component<{|
@@ -1461,7 +1458,10 @@ References:
    13|   b: number,
    14|   prop: number,
    15| |}> {}
-       -^ [3]
+       -^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:1
@@ -1487,7 +1487,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:28:1
 
-Cannot create `MyEnhancedComponent` element because in property `a`, string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
 
    hoc3.js:28:1
    28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
@@ -1525,7 +1525,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:32:1
 
-Cannot create `MyEnhancedFunctionComponent` element because in property `a`, string [1] is incompatible with number [2].
+Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
 
    hoc3.js:32:1
    32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -1563,7 +1563,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:28:1
 
-Cannot create `MyEnhancedComponent` element because in property `a`, string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
 
    hoc4.js:28:1
    28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
@@ -1601,7 +1601,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:32:1
 
-Cannot create `MyEnhancedFunctionComponent` element because in property `a`, string [1] is incompatible with number [2].
+Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
 
    hoc4.js:32:1
    32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -1632,7 +1632,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:23:1
 
-Cannot create `MyComponent1` element because in property `bar`, string [1] is incompatible with number [2].
+Cannot create `MyComponent1` element because string [1] is incompatible with number [2] in property `bar`.
 
    hoc5.js:23:1
    23| <MyComponent1 bar="nope" />; // Error
@@ -1649,7 +1649,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:25:1
 
-Cannot create `MyComponent1` element because in property `foo`, number [1] is incompatible with string [2].
+Cannot create `MyComponent1` element because number [1] is incompatible with string [2] in property `foo`.
 
    hoc5.js:25:1
    25| <MyComponent1 bar={42} foo={100} />; // Error
@@ -1680,7 +1680,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:30:1
 
-Cannot create `MyComponent2` element because in property `bar`, string [1] is incompatible with number [2].
+Cannot create `MyComponent2` element because string [1] is incompatible with number [2] in property `bar`.
 
    hoc5.js:30:1
    30| <MyComponent2 bar="nope" />; // Error
@@ -1697,7 +1697,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:32:1
 
-Cannot create `MyComponent2` element because in property `foo`, number [1] is incompatible with string [2].
+Cannot create `MyComponent2` element because number [1] is incompatible with string [2] in property `foo`.
 
    hoc5.js:32:1
    32| <MyComponent2 bar={42} foo={100} />; // Error
@@ -1729,7 +1729,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:40:1
 
-Cannot create `MyEnhancedComponent1` element because in property `bar`, string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent1` element because string [1] is incompatible with number [2] in property `bar`.
 
    hoc5.js:40:1
    40| <MyEnhancedComponent1 bar="nope" />; // Error
@@ -1746,7 +1746,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:42:1
 
-Cannot create `MyEnhancedComponent1` element because in property `foo`, number [1] is incompatible with string [2].
+Cannot create `MyEnhancedComponent1` element because number [1] is incompatible with string [2] in property `foo`.
 
    hoc5.js:42:1
    42| <MyEnhancedComponent1 bar={42} foo={100} />; // Error
@@ -1778,7 +1778,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:47:1
 
-Cannot create `MyEnhancedComponent2` element because in property `bar`, string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent2` element because string [1] is incompatible with number [2] in property `bar`.
 
    hoc5.js:47:1
    47| <MyEnhancedComponent2 bar="nope" />; // Error
@@ -1795,7 +1795,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:49:1
 
-Cannot create `MyEnhancedComponent2` element because in property `foo`, number [1] is incompatible with string [2].
+Cannot create `MyEnhancedComponent2` element because number [1] is incompatible with string [2] in property `foo`.
 
    hoc5.js:49:1
    49| <MyEnhancedComponent2 bar={42} foo={100} />; // Error
@@ -1840,7 +1840,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_spread.js:11:12
 
-Cannot create `Foo` element because in property `bar`, number [1] is incompatible with string [2].
+Cannot create `Foo` element because number [1] is incompatible with string [2] in property `bar`.
 
    jsx_spread.js:11:12
     11| var blah = <Foo {...props} />; // error bar, number given string expected
@@ -1937,7 +1937,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:14:22
 
-Cannot create `Example` element because in property `arr`, number [1] is incompatible with array type [2].
+Cannot create `Example` element because number [1] is incompatible with array type [2] in property `arr`.
 
    proptype_arrayOf.js:14:22
    14| var fail_not_array = <Example arr={2} />
@@ -1954,8 +1954,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:15:27
 
-Cannot create `Example` element because in property `arr` and then array element, string [1] is incompatible with
-number [2].
+Cannot create `Example` element because string [1] is incompatible with number [2] in array element of property `arr`.
 
    proptype_arrayOf.js:15:27
     15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
@@ -1972,8 +1971,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:20:21
 
-Cannot create `Example` element because in property `arr` and then array element, null [1] is incompatible with
-number [2].
+Cannot create `Example` element because null [1] is incompatible with number [2] in array element of property `arr`.
 
    proptype_arrayOf.js:20:21
     20| var todo_required = <Example arr={[null]} />
@@ -1990,8 +1988,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- proptype_arrayOf.js:30:2
 
-Cannot create `OptionalExample` element because in property `arr` and then array element, string [1] is incompatible
-with number [2].
+Cannot create `OptionalExample` element because string [1] is incompatible with number [2] in array element of property
+`arr`.
 
    proptype_arrayOf.js:30:2
     30| (<OptionalExample arr={[""]} />); // error: string ~> number
@@ -2008,7 +2006,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- proptype_arrayOf.js:38:2
 
-Cannot create `AnyExample` element because in property `arr`, number [1] is incompatible with array type [2].
+Cannot create `AnyExample` element because number [1] is incompatible with array type [2] in property `arr`.
 
    proptype_arrayOf.js:38:2
    38| (<AnyExample arr={0} />); // error: still needs to be an array
@@ -2109,7 +2107,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_func.js:14:21
 
-Cannot create `Example` element because in property `func`, number [1] is incompatible with function type [2].
+Cannot create `Example` element because number [1] is incompatible with function type [2] in property `func`.
 
    proptype_func.js:14:21
     14| var fail_mistyped = <Example func={2} />
@@ -2140,7 +2138,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- proptype_instanceOf.js:14:2
 
-Cannot create `Example` element because in property `x`, `A` [1] is incompatible with `B` [2].
+Cannot create `Example` element because `A` [1] is incompatible with `B` [2] in property `x`.
 
    proptype_instanceOf.js:14:2
    14| (<Example x={new A} />); // error: A ~> B
@@ -2157,7 +2155,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- proptype_instanceOf.js:17:2
 
-Cannot create `Example` element because in property `x`, string [1] is incompatible with `B` [2].
+Cannot create `Example` element because string [1] is incompatible with `B` [2] in property `x`.
 
    proptype_instanceOf.js:17:2
    17| (<Example x="wrong" />); // error: string ~> B
@@ -2174,7 +2172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- proptype_object.js:13:21
 
-Cannot create `Example` element because in property `object`, number [1] is incompatible with object type [2].
+Cannot create `Example` element because number [1] is incompatible with object type [2] in property `object`.
 
    proptype_object.js:13:21
     13| var fail_mistyped = <Example object={2} />
@@ -2209,7 +2207,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:14:23
 
-Cannot create `Example` element because in property `obj`, number [1] is incompatible with object type [2].
+Cannot create `Example` element because number [1] is incompatible with object type [2] in property `obj`.
 
    proptype_objectOf.js:14:23
    14| var fail_not_object = <Example obj={2} />
@@ -2226,7 +2224,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:15:27
 
-Cannot create `Example` element because in property `obj.foo`, string [1] is incompatible with number [2].
+Cannot create `Example` element because string [1] is incompatible with number [2] in property `obj.foo`.
 
    proptype_objectOf.js:15:27
     15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
@@ -2243,7 +2241,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:20:21
 
-Cannot create `Example` element because in property `obj.p`, null [1] is incompatible with number [2].
+Cannot create `Example` element because null [1] is incompatible with number [2] in property `obj.p`.
 
    proptype_objectOf.js:20:21
     20| var todo_required = <Example obj={{p:null}} />
@@ -2260,7 +2258,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_objectOf.js:30:2
 
-Cannot create `OptionalExample` element because in property `obj.p`, string [1] is incompatible with number [2].
+Cannot create `OptionalExample` element because string [1] is incompatible with number [2] in property `obj.p`.
 
    proptype_objectOf.js:30:2
     30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
@@ -2277,7 +2275,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_objectOf.js:38:2
 
-Cannot create `AnyExample` element because in property `obj`, number [1] is incompatible with object type [2].
+Cannot create `AnyExample` element because number [1] is incompatible with object type [2] in property `obj`.
 
    proptype_objectOf.js:38:2
    38| (<AnyExample obj={0} />); // error: still needs to be an object
@@ -2308,7 +2306,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:14:2
 
-Cannot create `Example` element because in property `str`, string [1] is incompatible with string enum [2].
+Cannot create `Example` element because string [1] is incompatible with string enum [2] in property `str`.
 
    proptype_oneOf.js:14:2
    14| (<Example str="baz" />); // error: 'baz' not in enum
@@ -2325,7 +2323,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:17:2
 
-Cannot create `Example` element because in property `num`, number [1] is incompatible with number enum [2].
+Cannot create `Example` element because number [1] is incompatible with number enum [2] in property `num`.
 
    proptype_oneOf.js:17:2
    17| (<Example num={3} />); // error: 3 not in enum
@@ -2342,7 +2340,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:20:2
 
-Cannot create `Example` element because in property `bool`, boolean [1] is incompatible with boolean literal `true` [2].
+Cannot create `Example` element because boolean [1] is incompatible with boolean literal `true` [2] in property `bool`.
 
    proptype_oneOf.js:20:2
    20| (<Example bool={false} />); // error: false ~> true
@@ -2417,7 +2415,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:40:2
 
-Cannot create `EmptyExample` element because in property `nil`, number [1] is incompatible with empty [2].
+Cannot create `EmptyExample` element because number [1] is incompatible with empty [2] in property `nil`.
 
    proptype_oneOf.js:40:2
    40| (<EmptyExample nil={0} />); // number ~> empty
@@ -2573,7 +2571,7 @@ Error: proptype_oneOfType.js:29
 
 Error --------------------------------------------------------------------------------------- proptype_oneOfType.js:41:2
 
-Cannot create `OptionalExample` element because in property `p`, number [1] is incompatible with string [2].
+Cannot create `OptionalExample` element because number [1] is incompatible with string [2] in property `p`.
 
    proptype_oneOfType.js:41:2
     41| (<OptionalExample p={0} />); // error: number ~> string
@@ -2590,7 +2588,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- proptype_oneOfType.js:49:2
 
-Cannot create `EmptyExample` element because in property `nil`, number [1] is incompatible with empty [2].
+Cannot create `EmptyExample` element because number [1] is incompatible with empty [2] in property `nil`.
 
    proptype_oneOfType.js:49:2
    49| (<EmptyExample nil={0} />); // number ~> empty
@@ -2670,8 +2668,8 @@ References:
 Error ---------------------------------------------------------------------------------------- proptypes_builtins.js:7:2
 
 Cannot cast `React.PropTypes.arrayOf` to `NoFun` because:
- - in the first argument, `ReactPropsCheckType` [1] is incompatible with mixed [2].
- - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4].
+ - `ReactPropsCheckType` [1] is incompatible with mixed [2] in the first argument.
+ - `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4] in the return value.
 
    proptypes_builtins.js:7:2
      7| (React.PropTypes.arrayOf : NoFun);
@@ -2694,8 +2692,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:11:2
 
-Cannot cast `React.PropTypes.instanceOf` to `NoFun` because in the return value, `ReactPropsChainableTypeChecker` [1] is
-incompatible with empty [2].
+Cannot cast `React.PropTypes.instanceOf` to `NoFun` because `ReactPropsChainableTypeChecker` [1] is incompatible with
+empty [2] in the return value.
 
    proptypes_builtins.js:11:2
     11| (React.PropTypes.instanceOf : NoFun);
@@ -2713,8 +2711,8 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:15:2
 
 Cannot cast `React.PropTypes.objectOf` to `NoFun` because:
- - in the first argument, `ReactPropsCheckType` [1] is incompatible with mixed [2].
- - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4].
+ - `ReactPropsCheckType` [1] is incompatible with mixed [2] in the first argument.
+ - `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4] in the return value.
 
    proptypes_builtins.js:15:2
     15| (React.PropTypes.objectOf : NoFun);
@@ -2738,8 +2736,8 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:19:2
 
 Cannot cast `React.PropTypes.oneOf` to `NoFun` because:
- - in the first argument, array type [1] is incompatible with mixed [2].
- - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4].
+ - array type [1] is incompatible with mixed [2] in the first argument.
+ - `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4] in the return value.
 
    proptypes_builtins.js:19:2
     19| (React.PropTypes.oneOf : NoFun);
@@ -2763,8 +2761,8 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:23:2
 
 Cannot cast `React.PropTypes.oneOfType` to `NoFun` because:
- - in the first argument, array type [1] is incompatible with mixed [2].
- - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4].
+ - array type [1] is incompatible with mixed [2] in the first argument.
+ - `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4] in the return value.
 
    proptypes_builtins.js:23:2
     23| (React.PropTypes.oneOfType : NoFun);
@@ -2788,8 +2786,8 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:27:2
 
 Cannot cast `React.PropTypes.shape` to `NoFun` because:
- - in the first argument, object type [1] is incompatible with mixed [2].
- - in the return value, `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4].
+ - object type [1] is incompatible with mixed [2] in the first argument.
+ - `ReactPropsChainableTypeChecker` [3] is incompatible with empty [4] in the return value.
 
    proptypes_builtins.js:27:2
     27| (React.PropTypes.shape : NoFun);
@@ -3128,7 +3126,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- undefined_prop.js:7:1
 
-Cannot create `MyComponent` element because in property `title`, undefined [1] is incompatible with string [2].
+Cannot create `MyComponent` element because undefined [1] is incompatible with string [2] in property `title`.
 
    undefined_prop.js:7:1
     7| <MyComponent title={undefined} />;

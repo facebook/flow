@@ -109,15 +109,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ Cannot cast \`a.p\` to undefined because boolean [1] is incompatible with undefined [2].
-            References:
-             16: proto.p = true;
-                           ^^^^ [1]
-             12: (a.p: void);
-                       ^^^^ [2]
-
-          test.js:12
-           12: (a.p: void);
                 ^^^ Cannot cast \`a.p\` to undefined because string [1] is incompatible with undefined [2].
             References:
               8:       b.p = "";
@@ -125,13 +116,13 @@ export default suite(({addFile, addFiles, addCode}) => [
              12: (a.p: void);
                        ^^^^ [2]
 
-          test.js:14
-           14: (b.p: void);
-                ^^^ Cannot cast \`b.p\` to undefined because boolean [1] is incompatible with undefined [2].
+          test.js:12
+           12: (a.p: void);
+                ^^^ Cannot cast \`a.p\` to undefined because boolean [1] is incompatible with undefined [2].
             References:
              16: proto.p = true;
                            ^^^^ [1]
-             14: (b.p: void);
+             12: (a.p: void);
                        ^^^^ [2]
 
           test.js:14
@@ -140,6 +131,15 @@ export default suite(({addFile, addFiles, addCode}) => [
             References:
               7:       a.p = 0;
                              ^ [1]
+             14: (b.p: void);
+                       ^^^^ [2]
+
+          test.js:14
+           14: (b.p: void);
+                ^^^ Cannot cast \`b.p\` to undefined because boolean [1] is incompatible with undefined [2].
+            References:
+             16: proto.p = true;
+                           ^^^^ [1]
              14: (b.p: void);
                        ^^^^ [2]
         `,
@@ -157,7 +157,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because in property \`p\`, number [1] is incompatible with string [2].
+                                    ^^^^^^^^^^^^^^^^^^^^ Cannot assign \`Object.create(...)\` to \`o\` because number [1] is incompatible with string [2] in property \`p\`.
             References:
               5:       proto.p = 0;
                                  ^ [1]

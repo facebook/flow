@@ -52,27 +52,27 @@ References:
 Error ------------------------------------------------------------------------------------------------------ all.js:19:6
 
 Cannot cast `x` to undefined because:
- - boolean [1] is incompatible with undefined [2].
+ - string [1] is incompatible with undefined [2].
  - number [3] is incompatible with undefined [2].
- - string [4] is incompatible with undefined [2].
+ - boolean [4] is incompatible with undefined [2].
 
    all.js:19:6
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
             ^
 
 References:
-   all.js:9:3
-    9|   true, // non-Promise values passed through
-         ^^^^ [1]
+   all.js:3:27
+    3| declare var pstr: Promise<string>;
+                                 ^^^^^^ [1]
    all.js:19:9
    19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
                ^^^^ [2]
    all.js:4:27
     4| declare var pnum: Promise<number>;
                                  ^^^^^^ [3]
-   all.js:3:27
-    3| declare var pstr: Promise<string>;
-                                 ^^^^^^ [4]
+   all.js:9:3
+    9|   true, // non-Promise values passed through
+         ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:24:1
@@ -388,41 +388,41 @@ Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
 
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:3:2
 
-Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1], undefined [2] is incompatible with
-number [3].
+Cannot cast `Promise.resolve()` to `Promise` because undefined [1] is incompatible with number [2] in type argument
+`R` [3].
 
    resolve_void.js:3:2
      3| (Promise.resolve(): Promise<number>); // error
-         ^^^^^^^^^^^^^^^^^ [2]
+         ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:591:24
-   591| declare class Promise<+R> {
-                               ^ [1]
    resolve_void.js:3:29
      3| (Promise.resolve(): Promise<number>); // error
-                                    ^^^^^^ [3]
+                                    ^^^^^^ [2]
+   <BUILTINS>/core.js:591:24
+   591| declare class Promise<+R> {
+                               ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:5:2
 
-Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1], undefined [2] is incompatible with
-number [3].
+Cannot cast `Promise.resolve(...)` to `Promise` because undefined [1] is incompatible with number [2] in type argument
+`R` [3].
 
    resolve_void.js:5:2
      5| (Promise.resolve(undefined): Promise<number>); // error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:591:24
-   591| declare class Promise<+R> {
-                               ^ [1]
    resolve_void.js:5:18
      5| (Promise.resolve(undefined): Promise<number>); // error
-                         ^^^^^^^^^ [2]
+                         ^^^^^^^^^ [1]
    resolve_void.js:5:38
      5| (Promise.resolve(undefined): Promise<number>); // error
-                                             ^^^^^^ [3]
+                                             ^^^^^^ [2]
+   <BUILTINS>/core.js:591:24
+   591| declare class Promise<+R> {
+                               ^ [3]
 
 
 

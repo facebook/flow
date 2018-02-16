@@ -33,23 +33,23 @@ References:
 Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
 
 Cannot assign `a.get(...)` to `d` because:
- - `File` [1] is incompatible with string [2].
- - null or undefined [3] is incompatible with string [2].
+ - null or undefined [1] is incompatible with string [2].
+ - `File` [3] is incompatible with string [2].
 
    FormData.js:14:19
     14| const d: string = a.get('foo'); // incorrect
                           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:325:25
+   <BUILTINS>/bom.js:325:24
    325|     get(name: string): ?FormDataEntryValue;
-                                ^^^^^^^^^^^^^^^^^^ [1]
+                               ^^^^^^^^^^^^^^^^^^^ [1]
    FormData.js:14:10
     14| const d: string = a.get('foo'); // incorrect
                  ^^^^^^ [2]
-   <BUILTINS>/bom.js:325:24
+   <BUILTINS>/bom.js:325:25
    325|     get(name: string): ?FormDataEntryValue;
-                               ^^^^^^^^^^^^^^^^^^^ [3]
+                                ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:15:17
@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:21:43
 
-Cannot assign `a.getAll(...)` to `a2` because in array element, string [1] is incompatible with number [2].
+Cannot assign `a.getAll(...)` to `a2` because string [1] is incompatible with number [2] in array element.
 
    FormData.js:21:43
     21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
@@ -107,7 +107,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:22:41
 
-Cannot assign `a.getAll(...)` to `a3` because in array element, `File` [1] is incompatible with `Blob` [2].
+Cannot assign `a.getAll(...)` to `a3` because `File` [1] is incompatible with `Blob` [2] in array element.
 
    FormData.js:22:41
     22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
@@ -389,7 +389,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:64:52
 
-Cannot assign for-of element to variable because in index 1, `File` [1] is incompatible with `Blob` [2].
+Cannot assign for-of element to variable because `File` [1] is incompatible with `Blob` [2] in index 1.
 
    FormData.js:64:52
     64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
@@ -441,8 +441,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
 
 Cannot assign for-of element to variable because:
- - in index 0, string [1] is incompatible with number [2].
- - in index 1, `File` [3] is incompatible with string [4].
+ - string [1] is incompatible with number [2] in index 0.
+ - `File` [3] is incompatible with string [4] in index 1.
 
    FormData.js:65:38
     65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
@@ -485,24 +485,24 @@ References:
 Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
 
 Cannot assign for-of element to variable because:
- - in index 1, `File` [1] is incompatible with number [2].
- - in index 1, string [3] is incompatible with number [2].
- - in index 1, string [1] is incompatible with number [2].
+ - string [1] is incompatible with number [2] in index 1.
+ - `File` [3] is incompatible with number [2] in index 1.
+ - string [3] is incompatible with number [2] in index 1.
 
    FormData.js:66:38
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:340:34
-   340|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:319:27
+   319| type FormDataEntryValue = string | File
+                                  ^^^^^^ [1]
    FormData.js:66:27
     66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
                                   ^^^^^^ [2]
-   <BUILTINS>/bom.js:319:27
-   319| type FormDataEntryValue = string | File
-                                  ^^^^^^ [3]
+   <BUILTINS>/bom.js:340:34
+   340|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:67:11
@@ -544,31 +544,31 @@ References:
 Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
 
 Cannot assign for-of element to variable because:
- - in index 0, string [1] is incompatible with number [2].
- - in index 1, `File` [3] is incompatible with number [4].
- - in index 1, string [5] is incompatible with number [4].
- - in index 1, string [3] is incompatible with number [4].
+ - string [1] is incompatible with number [2] in index 1.
+ - string [3] is incompatible with number [4] in index 0.
+ - `File` [5] is incompatible with number [2] in index 1.
+ - string [5] is incompatible with number [2] in index 1.
 
    FormData.js:67:38
     67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
                                              ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:340:26
-   340|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                 ^^^^^^ [1]
-   FormData.js:67:19
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                          ^^^^^^ [2]
-   <BUILTINS>/bom.js:340:34
-   340|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [3]
-   FormData.js:67:27
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                  ^^^^^^ [4]
    <BUILTINS>/bom.js:319:27
    319| type FormDataEntryValue = string | File
-                                  ^^^^^^ [5]
+                                  ^^^^^^ [1]
+   FormData.js:67:27
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+   <BUILTINS>/bom.js:340:26
+   340|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                 ^^^^^^ [3]
+   FormData.js:67:19
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                          ^^^^^^ [4]
+   <BUILTINS>/bom.js:340:34
+   340|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:10:1
@@ -601,8 +601,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:12:22
 
-Cannot call `MutationObserver` with function bound to `callback` because in the first argument, number [1] is
-incompatible with array type [2].
+Cannot call `MutationObserver` with function bound to `callback` because number [1] is incompatible with array type [2]
+in the first argument.
 
    MutationObserver.js:12:22
     12| new MutationObserver((n: number) => {}); // incorrect
@@ -783,8 +783,8 @@ Error: MutationObserver.js:22
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:23:16
 
-Cannot call `o.observe` with object literal bound to `options` because in property `attributeFilter`, boolean [1] is
-incompatible with array type [2].
+Cannot call `o.observe` with object literal bound to `options` because boolean [1] is incompatible with array type [2]
+in property `attributeFilter`.
 
    MutationObserver.js:23:16
     23| o.observe(div, { attributes: true, attributeFilter: true }); // incorrect

@@ -63,7 +63,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar x={23} />;
-                           ^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
+                           ^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
           References:
             7:       <Bar x={23} />;
                              ^^ [1]
@@ -134,7 +134,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Foo>{...arr}</Foo>;
-                    ^^^ Cannot create \`Foo\` element because in property \`children\` and then array element, string [1] is incompatible with number [2].
+                    ^^^ Cannot create \`Foo\` element because string [1] is incompatible with number [2] in array element of property \`children\`.
           References:
             7:       const arr = ["foo"];
                                   ^^^^^ [1]
@@ -214,7 +214,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar {...params} />;
-                    ^^^ Cannot create \`Bar\` element because in property \`x\`, number [1] is incompatible with string [2].
+                    ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
           References:
             7:       const params = {x: 23};
                                         ^^ [1]
@@ -307,7 +307,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:9
           9:       <Foo><Bar /></Foo>
-                        ^^^^^^^ Cannot create \`Foo\` element because in property \`children\` and then array element, number [1] is incompatible with string [2].
+                        ^^^^^^^ Cannot create \`Foo\` element because number [1] is incompatible with string [2] in array element of property \`children\`.
           References:
             8:       function Bar(props: BarProps): number {return 0;}
                                                     ^^^^^^ [1]
@@ -350,7 +350,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>{42}</Bar>
-                         ^^ Cannot create \`Bar\` element because in property \`children\` and then index 0, number [1] is incompatible with string literal \`A\` [2].
+                         ^^ Cannot create \`Bar\` element because number [1] is incompatible with string literal \`A\` [2] in index 0 of property \`children\`.
           References:
             7:       <Bar>{42}</Bar>
                            ^^ [1]

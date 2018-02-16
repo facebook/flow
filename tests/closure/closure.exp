@@ -106,23 +106,23 @@ References:
 Error --------------------------------------------------------------------------------------------------- const.js:20:38
 
 Cannot assign `var_x` to `y` because:
- - null [1] is incompatible with number [2].
- - null or undefined [3] is incompatible with number [2].
+ - null or undefined [1] is incompatible with number [2].
+ - null [3] is incompatible with number [2].
 
    const.js:20:38
    20|     call_me = () => { var y:number = var_x; };  // error
                                             ^^^^^
 
 References:
-   const.js:22:11
-   22|   var_x = null;
-                 ^^^^ [1]
+   const.js:9:15
+    9| function g(x: ?number) {
+                     ^^^^^^^ [1]
    const.js:20:29
    20|     call_me = () => { var y:number = var_x; };  // error
                                    ^^^^^^ [2]
-   const.js:9:15
-    9| function g(x: ?number) {
-                     ^^^^^^^ [3]
+   const.js:22:11
+   22|   var_x = null;
+                 ^^^^ [3]
 
 
 

@@ -52,23 +52,23 @@ References:
 Error --------------------------------------------------------------------------------------------------- test3.js:17:18
 
 Cannot assign `s.y` to `t` because:
- - number [1] is incompatible with boolean [2].
- - string [3] is incompatible with boolean [2].
+ - string [1] is incompatible with boolean [2].
+ - number [3] is incompatible with boolean [2].
 
    test3.js:17:18
    17| var t: boolean = s.y; // error, string or number
                         ^^^
 
 References:
-   test3.js:12:14
-   12| var r = { y: 123 };
-                    ^^^ [1]
+   test3.js:1:14
+    1| var p = { y: "" };
+                    ^^ [1]
    test3.js:17:8
    17| var t: boolean = s.y; // error, string or number
               ^^^^^^^ [2]
-   test3.js:1:14
-    1| var p = { y: "" };
-                    ^^ [3]
+   test3.js:12:14
+   12| var r = { y: 123 };
+                    ^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
@@ -107,7 +107,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
 
-Cannot cast object literal to object type because in property `q`, string [1] is incompatible with number [2].
+Cannot cast object literal to object type because string [1] is incompatible with number [2] in property `q`.
 
    test8.js:7:2
     7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
@@ -124,7 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
 
-Cannot cast object literal to object type because in property `p`, number [1] is incompatible with string [2].
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `p`.
 
    test8.js:8:2
     8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)

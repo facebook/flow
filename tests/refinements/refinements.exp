@@ -292,23 +292,6 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `bar` [1] to number [2].
-
-   eq.js:19:9
-   19|     if (x.y == 123) {} // error
-               ^^^
-
-References:
-   eq.js:18:35
-   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                         ^^^^^ [1]
-   eq.js:19:16
-   19|     if (x.y == 123) {} // error
-                      ^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
-
 Cannot compare string literal `foo` [1] to number [2].
 
    eq.js:19:9
@@ -319,6 +302,23 @@ References:
    eq.js:18:20
    18|   function(x: { y: 'foo' } | { y: 'bar' }) {
                           ^^^^^ [1]
+   eq.js:19:16
+   19|     if (x.y == 123) {} // error
+                      ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
+
+Cannot compare string literal `bar` [1] to number [2].
+
+   eq.js:19:9
+   19|     if (x.y == 123) {} // error
+               ^^^
+
+References:
+   eq.js:18:35
+   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
+                                         ^^^^^ [1]
    eq.js:19:16
    19|     if (x.y == 123) {} // error
                       ^^^ [2]
@@ -858,20 +858,6 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because boolean [1] is not a number.
-
-   not.js:5:5
-   5|     x++; // should error for null, void and bool (false)
-          ^
-
-References:
-   not.js:3:18
-   3| function foo(x: ?bool) {
-                       ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------------- not.js:5:5
-
 Cannot perform arithmetic operation because null or undefined [1] is not a number.
 
    not.js:5:5
@@ -882,6 +868,20 @@ References:
    not.js:3:17
    3| function foo(x: ?bool) {
                       ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- not.js:5:5
+
+Cannot perform arithmetic operation because boolean [1] is not a number.
+
+   not.js:5:5
+   5|     x++; // should error for null, void and bool (false)
+          ^
+
+References:
+   not.js:3:18
+   3| function foo(x: ?bool) {
+                       ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
@@ -1269,45 +1269,45 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:7:20
 
 Cannot assign `x` to `z` because:
- - boolean [1] is incompatible with string [2].
- - null [3] is incompatible with string [2].
+ - null [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
 
    refinements.js:7:20
    7|     var z:string = x;
                          ^
 
 References:
-   refinements.js:5:13
-   5|         x = false;
-                  ^^^^^ [1]
+   refinements.js:2:20
+   2|     var x = b? 0 : null;
+                         ^^^^ [1]
    refinements.js:7:11
    7|     var z:string = x;
                 ^^^^^^ [2]
-   refinements.js:2:20
-   2|     var x = b? 0 : null;
-                         ^^^^ [3]
+   refinements.js:5:13
+   5|         x = false;
+                  ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:13:24
 
 Cannot assign `x` to `y` because:
- - null [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+ - number [1] is incompatible with string [2].
+ - null [3] is incompatible with string [2].
 
    refinements.js:13:24
    13|         var y:string = x;
                               ^
 
 References:
-   refinements.js:11:20
+   refinements.js:11:16
    11|     var x = b? 0 : null;
-                          ^^^^ [1]
+                      ^ [1]
    refinements.js:13:15
    13|         var y:string = x;
                      ^^^^^^ [2]
-   refinements.js:11:16
+   refinements.js:11:20
    11|     var x = b? 0 : null;
-                      ^ [3]
+                          ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:16:20
@@ -1386,23 +1386,23 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:45:20
 
 Cannot assign `x` to `z` because:
- - boolean [1] is incompatible with string [2].
- - null [3] is incompatible with string [2].
+ - null [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
 
    refinements.js:45:20
    45|     var z:string = x;
                           ^
 
 References:
-   refinements.js:42:14
-   42|          x = false) {
-                    ^^^^^ [1]
+   refinements.js:40:25
+   40|     for (var x = b? 0 : null;
+                               ^^^^ [1]
    refinements.js:45:11
    45|     var z:string = x;
                  ^^^^^^ [2]
-   refinements.js:40:25
-   40|     for (var x = b? 0 : null;
-                               ^^^^ [3]
+   refinements.js:42:14
+   42|          x = false) {
+                    ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:54:20

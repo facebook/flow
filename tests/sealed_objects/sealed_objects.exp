@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:39
 
-Cannot assign object literal to `o7` because in property `y`, number [1] is incompatible with string [2].
+Cannot assign object literal to `o7` because number [1] is incompatible with string [2] in property `y`.
 
    test.js:19:39
    19| var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error

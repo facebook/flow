@@ -141,7 +141,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:2
 
-Cannot cast `Object.assign(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
+Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
 
    spread.js:7:2
    7| (Object.assign({}, ...arrOfObjs): { foo: number}); // Error: string ~> number
@@ -158,7 +158,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:8:2
 
-Cannot cast `Object.assign(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
+Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
 
    spread.js:8:2
    8| (Object.assign({}, ...roArrOfObjs): { foo: number}); // Error: string ~> number
@@ -175,7 +175,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:9:2
 
-Cannot cast `Object.assign(...)` to object type because in property `bar`, number [1] is incompatible with boolean [2].
+Cannot cast `Object.assign(...)` to object type because number [1] is incompatible with boolean [2] in property `bar`.
 
    spread.js:9:2
    9| (Object.assign({}, ...tup): { foo: string, bar: boolean}); // Error: number ~> boolean
@@ -192,8 +192,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:11:2
 
-Cannot cast `Object.assign(...)` to object type because in property `b`, string [1] is incompatible with boolean literal
-`true` [2].
+Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with boolean literal `true` [2] in
+property `b`.
 
    spread.js:11:2
         v-------------

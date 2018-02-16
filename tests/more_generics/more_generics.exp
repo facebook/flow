@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
-Cannot return `x` because in array element, `T` [1] is incompatible with `T` [1].
+Cannot return `x` because `T` [1] is incompatible with `T` [1] in array element.
 
    poly.js:10:38
    10| function foo5<T>():Array<T> { return x; }

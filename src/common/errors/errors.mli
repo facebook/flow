@@ -43,6 +43,7 @@ module Friendly : sig
   val text: string -> 'a message_feature
   val code: string -> 'a message_feature
   val ref: ?loc:bool -> Reason.reason -> Loc.t message_feature
+  val intersperse: 'a -> 'a list -> 'a list
   val conjunction_concat: ?conjunction:string -> 'a message list -> 'a message
   val capitalize: 'a message -> 'a message
 end

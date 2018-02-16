@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:4:44
 
-Cannot assign `foo` to `bar` because in the first argument, string [1] is incompatible with number [2].
+Cannot assign `foo` to `bar` because string [1] is incompatible with number [2] in the first argument.
 
    annot.js:4:44
    4| var bar: (str:number, i:number)=> string = foo;
@@ -36,7 +36,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign object literal to `obj` because:
  - property `j` is missing in object literal [1] but exists in object type [2].
- - in property `i`, string [3] is incompatible with number [4].
+ - string [3] is incompatible with number [4] in property `i`.
 
    annot.js:8:46
    8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
@@ -56,7 +56,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:26
 
-Cannot assign array literal to `arr` because in array element, string [1] is incompatible with number [2].
+Cannot assign array literal to `arr` because string [1] is incompatible with number [2] in array element.
 
    annot.js:10:26
    10| var arr: Array<number> = [1,2,"..."];
@@ -73,7 +73,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:13:23
 
-Cannot assign array literal to `array` because in array element, string [1] is incompatible with number [2].
+Cannot assign array literal to `array` because string [1] is incompatible with number [2] in array element.
 
    annot.js:13:23
    13| var array: number[] = [1,2,"..."];
@@ -119,8 +119,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:45:21
 
-Cannot assign `batchRequests.map(...)` to `batchRequests` because in array element, property `path` is missing in object
-literal [1] but exists in object type [2].
+Cannot assign `batchRequests.map(...)` to `batchRequests` because property `path` is missing in object literal [1] but
+exists in object type [2] in array element.
 
    annot.js:45:21
                            v-------------------------------

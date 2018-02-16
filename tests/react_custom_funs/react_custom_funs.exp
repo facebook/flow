@@ -171,7 +171,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:41:1
 
-Cannot call `React.cloneElement` because in property `foo`, string [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `foo`.
 
    clone_element.js:41:1
    41| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
@@ -188,7 +188,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:47:1
 
-Cannot call `React.cloneElement` because in property `foo`, string [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `foo`.
 
    clone_element.js:47:1
    47| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
@@ -205,7 +205,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:53:1
 
-Cannot call `React.cloneElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `children`.
 
    clone_element.js:53:1
    53| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
@@ -222,7 +222,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:57:1
 
-Cannot call `React.cloneElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 
    clone_element.js:57:1
    57| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
@@ -236,7 +236,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:58:1
 
-Cannot call `React.cloneElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 
    clone_element.js:58:1
    58| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
@@ -250,7 +250,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:59:1
 
-Cannot call `React.cloneElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 
    clone_element.js:59:1
    59| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
@@ -264,7 +264,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:63:1
 
-Cannot call `React.cloneElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 
    clone_element.js:63:1
    63| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
@@ -281,7 +281,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:65:1
 
-Cannot call `React.cloneElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 
    clone_element.js:65:1
    65| React.cloneElement(d, {}, 42); // Error: `children` is an array.
@@ -298,7 +298,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:66:1
 
-Cannot call `React.cloneElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 
    clone_element.js:66:1
    66| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
@@ -315,7 +315,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:67:1
 
-Cannot call `React.cloneElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 
    clone_element.js:67:1
    67| React.cloneElement(d, null, 42); // Error: `children` is an array.
@@ -332,7 +332,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:79:1
 
-Cannot call `React.cloneElement` because in property `p`, string [1] is incompatible with number [2].
+Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `p`.
 
    clone_element.js:79:1
    79| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
@@ -399,7 +399,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:20:1
 
-Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 
    create_element.js:20:1
        v-----------------------
@@ -420,7 +420,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:24:1
 
-Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 
    create_element.js:24:1
        v-----------------------
@@ -645,7 +645,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:55:1
 
-Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 
    create_element.js:55:1
        v-----------------------
@@ -666,7 +666,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:59:1
 
-Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 
    create_element.js:59:1
        v-----------------------
@@ -738,7 +738,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:77:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:77:1
    77| React.createElement(E, {}, 1, 2); // Error
@@ -752,7 +752,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:78:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:78:1
    78| React.createElement(E, undefined, 1, 2); // Error
@@ -766,7 +766,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:79:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:79:1
    79| React.createElement(E, null, 1, 2); // Error
@@ -780,7 +780,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:80:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:80:1
    80| React.createElement(E, {}, 1, 2, 3); // Error
@@ -794,7 +794,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:81:1
 
-Cannot call `React.createElement` because in property `children`, array literal [1] is incompatible with number [2].
+Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in property `children`.
 
    create_element.js:81:1
    81| React.createElement(E, {}, [1, 2]); // Error
@@ -811,7 +811,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:82:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:82:1
    82| React.createElement(E, {}, [1, 2], [3, 4]); // Error
@@ -842,7 +842,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:85:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:85:1
    85| React.createElement(E, {}, ...[1, 2]); // Error
@@ -857,8 +857,8 @@ References:
 Error ------------------------------------------------------------------------------------------- create_element.js:86:1
 
 Cannot call `React.createElement` because:
- - in property `children`, children array or array [1] is incompatible with number [2].
- - in property `children`, undefined [1] is incompatible with number [2].
+ - children array or array [1] is incompatible with number [2] in property `children`.
+ - undefined [1] is incompatible with number [2] in property `children`.
 
    create_element.js:86:1
    86| React.createElement(E, {}, ...(any: Array<number>)); // Error
@@ -875,7 +875,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:88:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:88:1
    88| React.createElement(E, {}, 1, ...[2]); // Error
@@ -889,8 +889,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:89:1
 
-Cannot call `React.createElement` because in property `children`, children array or number [1] is incompatible with
-number [2].
+Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
+`children`.
 
    create_element.js:89:1
    89| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
@@ -955,7 +955,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:95:1
 
-Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 
    create_element.js:95:1
    95| React.createElement(F, {}, 1); // Error
@@ -972,7 +972,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:96:1
 
-Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 
    create_element.js:96:1
    96| React.createElement(F, undefined, 1); // Error
@@ -989,7 +989,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_element.js:97:1
 
-Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 
    create_element.js:97:1
    97| React.createElement(F, null, 1); // Error
@@ -1007,8 +1007,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:103:1
 
 Cannot call `React.createElement` because:
- - in property `children` and then array element, array literal [1] is incompatible with number [2].
- - in property `children` and then array element, array literal [3] is incompatible with number [2].
+ - array literal [1] is incompatible with number [2] in array element of property `children`.
+ - array literal [3] is incompatible with number [2] in array element of property `children`.
 
    create_element.js:103:1
    103| React.createElement(F, {}, [1, 2], [3, 4]); // Error
@@ -1045,7 +1045,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:105:1
 
-Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 
    create_element.js:105:1
    105| React.createElement(F, {}, ...[1]); // Error
@@ -1063,9 +1063,9 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:107:1
 
 Cannot call `React.createElement` because:
- - in property `children`, number [1] is incompatible with array type [2].
- - in property `children`, number [3] is incompatible with array type [2].
- - in property `children`, undefined [4] is incompatible with array type [2].
+ - number [1] is incompatible with array type [2] in property `children`.
+ - undefined [3] is incompatible with array type [2] in property `children`.
+ - number [4] is incompatible with array type [2] in property `children`.
 
    create_element.js:107:1
    107| React.createElement(F, {}, ...(any: Array<number>)); // Error
@@ -1078,17 +1078,17 @@ References:
    create_element.js:91:44
     91| class F extends React.Component<{children: Array<number>}> {}
                                                    ^^^^^^^^^^^^^ [2]
-   create_element.js:107:43
-   107| React.createElement(F, {}, ...(any: Array<number>)); // Error
-                                                  ^^^^^^ [3]
    create_element.js:107:37
    107| React.createElement(F, {}, ...(any: Array<number>)); // Error
-                                            ^^^^^^^^^^^^^ [4]
+                                            ^^^^^^^^^^^^^ [3]
+   create_element.js:107:43
+   107| React.createElement(F, {}, ...(any: Array<number>)); // Error
+                                                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:108:1
 
-Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 
    create_element.js:108:1
    108| React.createElement(F, {}, 1, ...[]); // Error
@@ -1105,7 +1105,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:110:1
 
-Cannot call `React.createElement` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 
    create_element.js:110:1
    110| React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
@@ -1140,8 +1140,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:118:1
 
 Cannot call `React.createElement` because:
- - in property `children` and then array element, array literal [1] is incompatible with number [2].
- - in property `children` and then array element, array literal [3] is incompatible with number [2].
+ - array literal [1] is incompatible with number [2] in array element of property `children`.
+ - array literal [3] is incompatible with number [2] in array element of property `children`.
 
    create_element.js:118:1
    118| React.createElement(G, {}, [1, 2], [3, 4]); // Error
@@ -1178,7 +1178,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:122:1
 
-Cannot call `React.createElement` because in property `children`, undefined [1] is incompatible with number [2].
+Cannot call `React.createElement` because undefined [1] is incompatible with number [2] in property `children`.
 
    create_element.js:122:1
    122| React.createElement(G, {}, ...(any: Array<number>)); // Error
@@ -1196,8 +1196,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:133:1
 
 Cannot call `React.createElement` because:
- - in property `children` and then array element, array literal [1] is incompatible with number [2].
- - in property `children` and then array element, array literal [3] is incompatible with number [2].
+ - array literal [1] is incompatible with number [2] in array element of property `children`.
+ - array literal [3] is incompatible with number [2] in array element of property `children`.
 
    create_element.js:133:1
    133| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
@@ -1251,7 +1251,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:153:1
 
-Cannot call `React.createElement` because in property `children`, undefined [1] is incompatible with number [2].
+Cannot call `React.createElement` because undefined [1] is incompatible with number [2] in property `children`.
 
    create_element.js:153:1
    153| React.createElement(H, {}, ...(any: Array<number>)); // Error
@@ -1268,7 +1268,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:161:1
 
-Cannot call `React.createElement` because in property `children`, null [1] is incompatible with number [2].
+Cannot call `React.createElement` because null [1] is incompatible with number [2] in property `children`.
 
    create_element.js:161:1
    161| React.createElement(I, {}, null); // Error
@@ -1285,7 +1285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:163:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:163:1
    163| React.createElement(I, {}, 1, 2); // Error
@@ -1299,7 +1299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:166:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:166:1
    166| React.createElement(I, {}, ...[1, 2]); // Error
@@ -1313,8 +1313,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:167:1
 
-Cannot call `React.createElement` because in property `children`, children array or array [1] is incompatible with
-number [2].
+Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
+`children`.
 
    create_element.js:167:1
    167| React.createElement(I, {}, ...(any: Array<number>)); // Error
@@ -1331,7 +1331,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:169:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:169:1
    169| React.createElement(I, {}, 1, ...[2]); // Error
@@ -1345,8 +1345,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:170:1
 
-Cannot call `React.createElement` because in property `children`, children array or number [1] is incompatible with
-number [2].
+Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
+`children`.
 
    create_element.js:170:1
    170| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
@@ -1377,7 +1377,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:177:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:177:1
    177| React.createElement(J, {}, 1, 2); // Error
@@ -1408,7 +1408,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:180:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:180:1
    180| React.createElement(J, {}, ...[1, 2]); // Error
@@ -1422,8 +1422,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:181:1
 
-Cannot call `React.createElement` because in property `children`, children array or array [1] is incompatible with
-number [2].
+Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
+`children`.
 
    create_element.js:181:1
    181| React.createElement(J, {}, ...(any: Array<number>)); // Error
@@ -1440,7 +1440,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:183:1
 
-Cannot call `React.createElement` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 
    create_element.js:183:1
    183| React.createElement(J, {}, 1, ...[2]); // Error
@@ -1454,8 +1454,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:184:1
 
-Cannot call `React.createElement` because in property `children`, children array or number [1] is incompatible with
-number [2].
+Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
+`children`.
 
    create_element.js:184:1
    184| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
@@ -1469,7 +1469,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:190:1
 
-Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 
    create_element.js:190:1
    190| React.createElement(K, {}, '42'); // Error
@@ -1486,7 +1486,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:191:1
 
-Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 
    create_element.js:191:1
    191| React.createElement(K, {children: '42'}); // Error
@@ -1503,7 +1503,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:193:1
 
-Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 
    create_element.js:193:1
    193| React.createElement(K, {children: 42}, '42'); // Error
@@ -1520,7 +1520,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:194:1
 
-Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 
    create_element.js:194:1
    194| React.createElement(K, {children: '42'}, '42'); // Error
@@ -1625,7 +1625,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:211:1
 
-Cannot call `React.createElement` because in property `foo`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `foo`.
 
    create_element.js:211:1
    211| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
@@ -1642,7 +1642,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:212:1
 
-Cannot call `React.createElement` because in property `foo`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `foo`.
 
    create_element.js:212:1
    212| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
@@ -1659,7 +1659,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:213:1
 
-Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 
    create_element.js:213:1
    213| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
@@ -1676,7 +1676,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:214:1
 
-Cannot call `React.createElement` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 
    create_element.js:214:1
    214| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
@@ -1693,7 +1693,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:215:1
 
-Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 
    create_element.js:215:1
    215| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
@@ -1710,7 +1710,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:216:1
 
-Cannot call `React.createElement` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 
    create_element.js:216:1
    216| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
@@ -1744,7 +1744,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:20:1
 
-Cannot call `aFactory` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `aFactory` because string [1] is incompatible with number [2] in property `bar`.
 
    create_factory.js:20:1
        v---------
@@ -1765,7 +1765,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:24:1
 
-Cannot call `bFactory` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `bFactory` because string [1] is incompatible with number [2] in property `bar`.
 
    create_factory.js:24:1
        v---------
@@ -1990,7 +1990,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:56:1
 
-Cannot call `cFactory` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `cFactory` because string [1] is incompatible with number [2] in property `bar`.
 
    create_factory.js:56:1
        v---------
@@ -2011,7 +2011,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:60:1
 
-Cannot call `dFactory` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `dFactory` because string [1] is incompatible with number [2] in property `bar`.
 
    create_factory.js:60:1
        v---------
@@ -2083,7 +2083,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:81:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:81:1
    81| eFactory({}, 1, 2); // Error
@@ -2097,7 +2097,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:82:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:82:1
    82| eFactory(undefined, 1, 2); // Error
@@ -2111,7 +2111,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:83:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:83:1
    83| eFactory(null, 1, 2); // Error
@@ -2125,7 +2125,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:84:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:84:1
    84| eFactory({}, 1, 2, 3); // Error
@@ -2139,7 +2139,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:85:1
 
-Cannot call `eFactory` because in property `children`, array literal [1] is incompatible with number [2].
+Cannot call `eFactory` because array literal [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:85:1
    85| eFactory({}, [1, 2]); // Error
@@ -2156,7 +2156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:86:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:86:1
    86| eFactory({}, [1, 2], [3, 4]); // Error
@@ -2187,7 +2187,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:89:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:89:1
    89| eFactory({}, ...[1, 2]); // Error
@@ -2202,8 +2202,8 @@ References:
 Error ------------------------------------------------------------------------------------------- create_factory.js:90:1
 
 Cannot call `eFactory` because:
- - in property `children`, children array or array [1] is incompatible with number [2].
- - in property `children`, undefined [1] is incompatible with number [2].
+ - children array or array [1] is incompatible with number [2] in property `children`.
+ - undefined [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:90:1
    90| eFactory({}, ...(any: Array<number>)); // Error
@@ -2220,7 +2220,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:92:1
 
-Cannot call `eFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `eFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:92:1
    92| eFactory({}, 1, ...[2]); // Error
@@ -2234,7 +2234,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:93:1
 
-Cannot call `eFactory` because in property `children`, children array or number [1] is incompatible with number [2].
+Cannot call `eFactory` because children array or number [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:93:1
    93| eFactory({}, 1, ...(any: Array<number>)); // Error
@@ -2299,7 +2299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:100:1
 
-Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `fFactory` because number [1] is incompatible with array type [2] in property `children`.
 
    create_factory.js:100:1
    100| fFactory({}, 1); // Error
@@ -2316,7 +2316,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:101:1
 
-Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `fFactory` because number [1] is incompatible with array type [2] in property `children`.
 
    create_factory.js:101:1
    101| fFactory(undefined, 1); // Error
@@ -2333,7 +2333,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:102:1
 
-Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `fFactory` because number [1] is incompatible with array type [2] in property `children`.
 
    create_factory.js:102:1
    102| fFactory(null, 1); // Error
@@ -2351,8 +2351,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_factory.js:108:1
 
 Cannot call `fFactory` because:
- - in property `children` and then array element, array literal [1] is incompatible with number [2].
- - in property `children` and then array element, array literal [3] is incompatible with number [2].
+ - array literal [1] is incompatible with number [2] in array element of property `children`.
+ - array literal [3] is incompatible with number [2] in array element of property `children`.
 
    create_factory.js:108:1
    108| fFactory({}, [1, 2], [3, 4]); // Error
@@ -2389,7 +2389,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:110:1
 
-Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `fFactory` because number [1] is incompatible with array type [2] in property `children`.
 
    create_factory.js:110:1
    110| fFactory({}, ...[1]); // Error
@@ -2407,9 +2407,9 @@ References:
 Error ------------------------------------------------------------------------------------------ create_factory.js:112:1
 
 Cannot call `fFactory` because:
- - in property `children`, number [1] is incompatible with array type [2].
- - in property `children`, number [3] is incompatible with array type [2].
- - in property `children`, undefined [4] is incompatible with array type [2].
+ - number [1] is incompatible with array type [2] in property `children`.
+ - undefined [3] is incompatible with array type [2] in property `children`.
+ - number [4] is incompatible with array type [2] in property `children`.
 
    create_factory.js:112:1
    112| fFactory({}, ...(any: Array<number>)); // Error
@@ -2422,17 +2422,17 @@ References:
    create_factory.js:95:44
     95| class F extends React.Component<{children: Array<number>}, void> {}
                                                    ^^^^^^^^^^^^^ [2]
-   create_factory.js:112:29
-   112| fFactory({}, ...(any: Array<number>)); // Error
-                                    ^^^^^^ [3]
    create_factory.js:112:23
    112| fFactory({}, ...(any: Array<number>)); // Error
-                              ^^^^^^^^^^^^^ [4]
+                              ^^^^^^^^^^^^^ [3]
+   create_factory.js:112:29
+   112| fFactory({}, ...(any: Array<number>)); // Error
+                                    ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:113:1
 
-Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `fFactory` because number [1] is incompatible with array type [2] in property `children`.
 
    create_factory.js:113:1
    113| fFactory({}, 1, ...[]); // Error
@@ -2449,7 +2449,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:115:1
 
-Cannot call `fFactory` because in property `children`, number [1] is incompatible with array type [2].
+Cannot call `fFactory` because number [1] is incompatible with array type [2] in property `children`.
 
    create_factory.js:115:1
    115| fFactory({}, 1, ...(any: Array<number>)); // Error
@@ -2484,8 +2484,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_factory.js:124:1
 
 Cannot call `gFactory` because:
- - in property `children` and then array element, array literal [1] is incompatible with number [2].
- - in property `children` and then array element, array literal [3] is incompatible with number [2].
+ - array literal [1] is incompatible with number [2] in array element of property `children`.
+ - array literal [3] is incompatible with number [2] in array element of property `children`.
 
    create_factory.js:124:1
    124| gFactory({}, [1, 2], [3, 4]); // Error
@@ -2522,7 +2522,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:128:1
 
-Cannot call `gFactory` because in property `children`, undefined [1] is incompatible with number [2].
+Cannot call `gFactory` because undefined [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:128:1
    128| gFactory({}, ...(any: Array<number>)); // Error
@@ -2573,7 +2573,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:145:1
 
-Cannot call `hFactory` because in property `children`, undefined [1] is incompatible with number [2].
+Cannot call `hFactory` because undefined [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:145:1
    145| hFactory({}, ...(any: Array<number>)); // Error
@@ -2590,7 +2590,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:154:1
 
-Cannot call `iFactory` because in property `children`, null [1] is incompatible with number [2].
+Cannot call `iFactory` because null [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:154:1
    154| iFactory({}, null); // Error
@@ -2607,7 +2607,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:156:1
 
-Cannot call `iFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `iFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:156:1
    156| iFactory({}, 1, 2); // Error
@@ -2621,7 +2621,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:159:1
 
-Cannot call `iFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `iFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:159:1
    159| iFactory({}, ...[1, 2]); // Error
@@ -2635,7 +2635,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:160:1
 
-Cannot call `iFactory` because in property `children`, children array or array [1] is incompatible with number [2].
+Cannot call `iFactory` because children array or array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:160:1
    160| iFactory({}, ...(any: Array<number>)); // Error
@@ -2652,7 +2652,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:162:1
 
-Cannot call `iFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `iFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:162:1
    162| iFactory({}, 1, ...[2]); // Error
@@ -2666,7 +2666,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:163:1
 
-Cannot call `iFactory` because in property `children`, children array or number [1] is incompatible with number [2].
+Cannot call `iFactory` because children array or number [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:163:1
    163| iFactory({}, 1, ...(any: Array<number>)); // Error
@@ -2697,7 +2697,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:171:1
 
-Cannot call `jFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `jFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:171:1
    171| jFactory({}, 1, 2); // Error
@@ -2728,7 +2728,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:174:1
 
-Cannot call `jFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `jFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:174:1
    174| jFactory({}, ...[1, 2]); // Error
@@ -2742,7 +2742,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:175:1
 
-Cannot call `jFactory` because in property `children`, children array or array [1] is incompatible with number [2].
+Cannot call `jFactory` because children array or array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:175:1
    175| jFactory({}, ...(any: Array<number>)); // Error
@@ -2759,7 +2759,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:177:1
 
-Cannot call `jFactory` because in property `children`, children array [1] is incompatible with number [2].
+Cannot call `jFactory` because children array [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:177:1
    177| jFactory({}, 1, ...[2]); // Error
@@ -2773,7 +2773,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:178:1
 
-Cannot call `jFactory` because in property `children`, children array or number [1] is incompatible with number [2].
+Cannot call `jFactory` because children array or number [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:178:1
    178| jFactory({}, 1, ...(any: Array<number>)); // Error
@@ -2787,7 +2787,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:185:1
 
-Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `kFactory` because string [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:185:1
    185| kFactory({}, '42'); // Error
@@ -2804,7 +2804,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:186:1
 
-Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `kFactory` because string [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:186:1
    186| kFactory({children: '42'}); // Error
@@ -2821,7 +2821,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:188:1
 
-Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `kFactory` because string [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:188:1
    188| kFactory({children: 42}, '42'); // Error
@@ -2838,7 +2838,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:189:1
 
-Cannot call `kFactory` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `kFactory` because string [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:189:1
    189| kFactory({children: '42'}, '42'); // Error
@@ -2943,7 +2943,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:207:1
 
-Cannot call `lFactory` because in property `foo`, string [1] is incompatible with number [2].
+Cannot call `lFactory` because string [1] is incompatible with number [2] in property `foo`.
 
    create_factory.js:207:1
    207| lFactory({foo: '1', bar: 2}, 3); // Error
@@ -2960,7 +2960,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:208:1
 
-Cannot call `lFactory` because in property `foo`, string [1] is incompatible with number [2].
+Cannot call `lFactory` because string [1] is incompatible with number [2] in property `foo`.
 
    create_factory.js:208:1
    208| lFactory({foo: '1', bar: 2, children: 3}); // Error
@@ -2977,7 +2977,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:209:1
 
-Cannot call `lFactory` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `lFactory` because string [1] is incompatible with number [2] in property `bar`.
 
    create_factory.js:209:1
    209| lFactory({foo: 1, bar: '2'}, 3); // Error
@@ -2994,7 +2994,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:210:1
 
-Cannot call `lFactory` because in property `bar`, string [1] is incompatible with number [2].
+Cannot call `lFactory` because string [1] is incompatible with number [2] in property `bar`.
 
    create_factory.js:210:1
    210| lFactory({foo: 1, bar: '2', children: 3}); // Error
@@ -3011,7 +3011,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:211:1
 
-Cannot call `lFactory` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `lFactory` because string [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:211:1
    211| lFactory({foo: 1, bar: 2}, '3'); // Error
@@ -3028,7 +3028,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:212:1
 
-Cannot call `lFactory` because in property `children`, string [1] is incompatible with number [2].
+Cannot call `lFactory` because string [1] is incompatible with number [2] in property `children`.
 
    create_factory.js:212:1
    212| lFactory({foo: 1, bar: 2, children: '3'}); // Error

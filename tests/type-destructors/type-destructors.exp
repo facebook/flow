@@ -355,7 +355,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:21:2
 
-Cannot cast `fn2(...)` to function type because in the first argument, `A` [1] is incompatible with `B` [2].
+Cannot cast `fn2(...)` to function type because `A` [1] is incompatible with `B` [2] in the first argument.
 
    tvar3.js:21:2
    21| (fn2((a: A) => {}): B => void); // Error: B ~> A
@@ -406,7 +406,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:23:2
 
-Cannot cast `fn4(...)` to function type because in the first argument, `B` [1] is incompatible with `C` [2].
+Cannot cast `fn4(...)` to function type because `B` [1] is incompatible with `C` [2] in the first argument.
 
    tvar3.js:23:2
    23| (fn4(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B. Not C ~> B!
@@ -457,7 +457,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:26:2
 
-Cannot cast `fn6(...)` to function type because in the first argument, `A` [1] is incompatible with `B` [2].
+Cannot cast `fn6(...)` to function type because `A` [1] is incompatible with `B` [2] in the first argument.
 
    tvar3.js:26:2
    26| (fn6((a: A) => {}): B => void); // Error: B ~> A
@@ -508,7 +508,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:27:9
 
-Cannot call `fn7` with function bound to `y` because in the first argument, `B` [1] is incompatible with `A` [2].
+Cannot call `fn7` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first argument.
 
    tvar3.js:27:9
    27| (fn7(a, (b: B) => {}): C); // Error: A ~> C and A ~> B twice. Not B ~> C!
@@ -525,7 +525,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:2
 
-Cannot cast `fn8(...)` to function type because in the first argument, `B` [1] is incompatible with `C` [2].
+Cannot cast `fn8(...)` to function type because `B` [1] is incompatible with `C` [2] in the first argument.
 
    tvar3.js:28:2
    28| (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
@@ -559,7 +559,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:9
 
-Cannot call `fn8` with function bound to `y` because in the first argument, `B` [1] is incompatible with `A` [2].
+Cannot call `fn8` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first argument.
 
    tvar3.js:28:9
    28| (fn8(a, (b: B) => {}): C => void); // Error: C ~> B and A ~> B twice. Not C ~> B!
@@ -604,8 +604,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:33:42
 
-Cannot call `fn3(...)` with object literal bound to the first parameter because in property `foo`, number [1] is
-incompatible with string [2].
+Cannot call `fn3(...)` with object literal bound to the first parameter because number [1] is incompatible with
+string [2] in property `foo`.
 
    tvar4.js:33:42
    33| fn3((x: {foo: string, p: number}) => {})({foo: 42});

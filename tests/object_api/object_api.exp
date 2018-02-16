@@ -111,7 +111,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:18:2
 
-Cannot cast `Object.keys(...)` to array type because in array element, string [1] is incompatible with number [2].
+Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with number [2] in array element.
 
    object_keys.js:18:2
    18| (Object.keys(any): Array<number>); // error, Array<string>
@@ -128,8 +128,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:25:2
 
-Cannot cast `Object.keys(...)` to array type because in array element, string literal `prop` [1] is incompatible with
-string literal `error` [2].
+Cannot cast `Object.keys(...)` to array type because string literal `prop` [1] is incompatible with string literal
+`error` [2] in array element.
 
    object_keys.js:25:2
    25| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
@@ -143,8 +143,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:32:2
 
-Cannot cast `Object.keys(...)` to array type because in array element, string literal `bar_prop` [1] is incompatible
-with string literal `error` [2].
+Cannot cast `Object.keys(...)` to array type because string literal `bar_prop` [1] is incompatible with string literal
+`error` [2] in array element.
 
    object_keys.js:32:2
    32| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
@@ -158,8 +158,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:38:6
 
-Cannot cast `Object.keys(...)` to array type because in array element, string literal `hi` [1] is incompatible with
-string literal `bye` [2].
+Cannot cast `Object.keys(...)` to array type because string literal `hi` [1] is incompatible with string literal
+`bye` [2] in array element.
 
    object_keys.js:38:6
    38|     (Object.keys(dict): Array<'bye'>); // error
@@ -176,8 +176,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:44:6
 
-Cannot cast `Object.keys(...)` to array type because in array element, string [1] is incompatible with string literal
-`123` [2].
+Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with string literal `123` [2] in array
+element.
 
    object_keys.js:44:6
    44|     (Object.keys(dict): Array<'123'>); // error: not supported yet
@@ -230,7 +230,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
 
-Cannot assign `x.toString` to `xToString2` because in the return value, string [1] is incompatible with number [2].
+Cannot assign `x.toString` to `xToString2` because string [1] is incompatible with number [2] in the return value.
 
    object_prototype.js:39:33
    39| var xToString2 : () => number = x.toString; // error
@@ -331,8 +331,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
 
-Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because in the return value, boolean [1] is incompatible with
-number [2].
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because boolean [1] is incompatible with number [2] in the return
+value.
 
    object_prototype.js:72:51
    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -392,8 +392,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
 
-Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because in the return value, boolean [1] is
-incompatible with number [2].
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because boolean [1] is incompatible with number [2]
+in the return value.
 
    object_prototype.js:98:3
    98|   x.propertyIsEnumerable; // error
@@ -495,8 +495,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
 
-Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return value, string [1] is incompatible with
-number [2].
+Cannot assign `x.toLocaleString` to `xToLocaleString2` because string [1] is incompatible with number [2] in the return
+value.
 
    object_prototype.js:151:39
    151| var xToLocaleString2 : () => number = x.toLocaleString; // error

@@ -31,19 +31,19 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:24:12
 
-Cannot return empty string because in type argument `Return` [1], string [2] is incompatible with number [3].
+Cannot return empty string because string [1] is incompatible with number [2] in type argument `Return` [3].
 
    class.js:24:12
     24|     return ""; // error: string ~> number
-                   ^^ [2]
+                   ^^ [1]
 
 References:
-   <BUILTINS>/core.js:507:29
-   507| interface Generator<+Yield,+Return,-Next> {
-                                    ^^^^^^ [1]
    class.js:23:39
     23|   *stmt_return_err(): Generator<void, number, void> {
-                                              ^^^^^^ [3]
+                                              ^^^^^^ [2]
+   <BUILTINS>/core.js:507:29
+   507| interface Generator<+Yield,+Return,-Next> {
+                                    ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:28:22
@@ -99,23 +99,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:72:12
 
-Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next` [1]; undefined [2]
-is incompatible with string [3].
+Cannot yield `xs` because undefined [1] is incompatible with string [2] in type argument `Next` [3] of the return value
+of property `@@iterator`.
 
    class.js:72:12
     72|     yield *xs;
                    ^^
 
 References:
-   <BUILTINS>/core.js:496:37
-   496| interface $Iterator<+Yield,+Return,-Next> {
-                                            ^^^^ [1]
    <BUILTINS>/core.js:500:38
    500| type Iterator<+T> = $Iterator<T,void,void>;
-                                             ^^^^ [2]
+                                             ^^^^ [1]
    class.js:125:42
    125| examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
-                                                 ^^ [3]
+                                                 ^^ [2]
+   <BUILTINS>/core.js:496:37
+   496| interface $Iterator<+Yield,+Return,-Next> {
+                                            ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:41
@@ -270,19 +270,19 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:23:10
 
-Cannot return empty string because in type argument `Return` [1], string [2] is incompatible with number [3].
+Cannot return empty string because string [1] is incompatible with number [2] in type argument `Return` [3].
 
    generators.js:23:10
     23|   return ""; // error: string ~> number
-                 ^^ [2]
+                 ^^ [1]
 
 References:
-   <BUILTINS>/core.js:507:29
-   507| interface Generator<+Yield,+Return,-Next> {
-                                    ^^^^^^ [1]
    generators.js:22:46
     22| function *stmt_return_err(): Generator<void, number, void> {
-                                                     ^^^^^^ [3]
+                                                     ^^^^^^ [2]
+   <BUILTINS>/core.js:507:29
+   507| interface Generator<+Yield,+Return,-Next> {
+                                    ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:27:20
@@ -389,23 +389,23 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:92:10
 
-Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next` [1]; undefined [2]
-is incompatible with string [3].
+Cannot yield `xs` because undefined [1] is incompatible with string [2] in type argument `Next` [3] of the return value
+of property `@@iterator`.
 
    generators.js:92:10
     92|   yield *xs;
                  ^^
 
 References:
-   <BUILTINS>/core.js:496:37
-   496| interface $Iterator<+Yield,+Return,-Next> {
-                                            ^^^^ [1]
    <BUILTINS>/core.js:500:38
    500| type Iterator<+T> = $Iterator<T,void,void>;
-                                             ^^^^ [2]
+                                             ^^^^ [1]
    generators.js:94:33
     94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
-                                        ^^ [3]
+                                        ^^ [2]
+   <BUILTINS>/core.js:496:37
+   496| interface $Iterator<+Yield,+Return,-Next> {
+                                            ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:100:4
@@ -484,45 +484,45 @@ References:
 Error ---------------------------------------------------------------------------------------------------- return.js:5:4
 
 Cannot cast `ret.value` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
+ - string [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
 
    return.js:5:4
    5|   (ret.value: void); // error: string | number ~> void
          ^^^^^^^^^
 
 References:
-   return.js:4:24
-   4|   var ret = gen.return(0);
-                             ^ [1]
+   return.js:1:37
+   1| function test1(gen: Generator<void, string, void>) {
+                                          ^^^^^^ [1]
    return.js:5:15
    5|   (ret.value: void); // error: string | number ~> void
                     ^^^^ [2]
-   return.js:1:37
-   1| function test1(gen: Generator<void, string, void>) {
-                                          ^^^^^^ [3]
+   return.js:4:24
+   4|   var ret = gen.return(0);
+                             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:4
 
 Cannot cast `refuse_return_result.value` to string because:
- - number [1] is incompatible with string [2].
- - undefined [3] is incompatible with string [2].
+ - undefined [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
    return.js:20:4
     20|   (refuse_return_result.value: string); // error: number | void ~> string
            ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   return.js:14:12
-    14|     return 0;
-                   ^ [1]
+   <BUILTINS>/core.js:493:28
+   493|   | { done: true, +value?: Return }
+                                   ^^^^^^ [1]
    return.js:20:32
     20|   (refuse_return_result.value: string); // error: number | void ~> string
                                        ^^^^^^ [2]
-   <BUILTINS>/core.js:493:28
-   493|   | { done: true, +value?: Return }
-                                   ^^^^^^ [3]
+   return.js:14:12
+    14|     return 0;
+                   ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:11:4
