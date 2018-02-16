@@ -1,3 +1,33 @@
+Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
+
+Cannot cast `k` to string literal `c` because:
+ - string literal `a` [1] is incompatible with string literal `c` [2].
+ - string literal `b` [1] is incompatible with string literal `c` [2].
+
+   errors.js:9:2
+   9| (k: 'c');
+       ^ [1]
+
+References:
+   errors.js:9:5
+   9| (k: 'c');
+          ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- errors.js:10:2
+
+Cannot cast `'c'` to `K` because property `c` is missing in `typeof O` [1].
+
+   errors.js:10:2
+   10| ('c': K);
+        ^^^
+
+References:
+   errors.js:10:7
+   10| ('c': K);
+             ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- keys.js:10:4
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2].
@@ -93,7 +123,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:38:4
 
-An indexer property is missing in `ObjLit` [1].
+Cannot cast `str` to key set because an indexer property is missing in `ObjLit` [1].
 
    keys.js:38:4
    38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
@@ -107,7 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:40:6
 
-An indexer property is missing in `ObjLit` [1].
+Cannot cast `str` to key set because an indexer property is missing in `ObjLit` [1].
 
    keys.js:40:6
    40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
@@ -134,4 +164,4 @@ References:
 
 
 
-Found 9 errors
+Found 12 errors

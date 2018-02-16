@@ -1,10 +1,11 @@
-Error ----------------------------------------------------------------------------------------------- enumerror.js:10:18
+Error ----------------------------------------------------------------------------------------------- enumerror.js:10:10
 
-Property `PAUSE` is missing in object type [1].
+Cannot call `isActive` with object literal bound to `ad` because property `PAUSE` is missing in object type [1] in
+property `state`.
 
-   enumerror.js:10:18
+   enumerror.js:10:10
    10| isActive({state: 'PAUSE'});
-                        ^^^^^^^
+                ^^^^^^^^^^^^^^^^
 
 References:
    enumerror.js:3:37
@@ -17,13 +18,14 @@ References:
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- enumerror.js:20:19
+Error ----------------------------------------------------------------------------------------------- enumerror.js:20:11
 
-Property `PAUSE` is missing in `typeof MyStates` [1].
+Cannot call `isActive2` with object literal bound to `ad` because property `PAUSE` is missing in `typeof MyStates` [1]
+in property `state`.
 
-   enumerror.js:20:19
+   enumerror.js:20:11
    20| isActive2({state: 'PAUSE'});
-                         ^^^^^^^
+                 ^^^^^^^^^^^^^^^^
 
 References:
    enumerror.js:17:38

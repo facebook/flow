@@ -573,7 +573,7 @@ class ['a] t = object(self)
         if t'' == t' then t
         else MixinT (r, t'')
     | ToStringT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#use_type cx map_cx t' in
         if t'' == t' then t
         else ToStringT (r, t'')
     | AdderT (op, r, flip, t1, t2) ->
@@ -704,7 +704,7 @@ class ['a] t = object(self)
         if t'' == t' then t
         else BecomeT (r, t'')
     | GetKeysT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
+        let t'' = self#use_type cx map_cx t' in
         if t'' == t' then t
         else GetKeysT (r, t'')
     | HasOwnPropT _ -> t

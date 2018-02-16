@@ -2759,29 +2759,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
 
-    | DefT (reason_s, StrT literal), UseT (_, KeysT (reason_op, o)) ->
+    | DefT (reason_s, StrT literal), UseT (use_op, KeysT (reason_op, o)) ->
       let reason_next = match literal with
       | Literal (_, x) -> replace_reason_const (RProperty (Some x)) reason_s
       | _ -> replace_reason_const RUnknownString reason_s in
       (* check that o has key x *)
-      let u = HasOwnPropT(reason_next, literal) in
+      let u = HasOwnPropT(use_op, reason_next, literal) in
       rec_flow cx trace (o, ReposLowerT(reason_op, false, u))
 
     | KeysT _, ToStringT (_, t) ->
       (* KeysT outputs strings, so we know ToStringT will be a no-op. *)
-      rec_flow_t cx trace (l, t)
+      rec_flow cx trace (l, t)
 
     | KeysT (reason1, o1), _ ->
       (* flow all keys of o1 to u *)
-      rec_flow cx trace (o1, GetKeysT (reason1,
-        match u with
-        | UseT (_, t) -> t
-        | _ -> tvar_with_constraint cx ~trace u))
+      rec_flow cx trace (o1, GetKeysT (reason1, u))
 
     (* helpers *)
 
     | DefT (reason_o, ObjT { props_tmap = mapr; dict_t; _; }),
-      HasOwnPropT (reason_op, x) ->
+      HasOwnPropT (use_op, reason_op, x) ->
       (match x, dict_t with
       (* If we have a literal string and that property exists *)
       | Literal (_, x), _ when Context.has_prop cx mapr x -> ()
@@ -2792,21 +2789,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Literal (_, prop) -> Some prop
         | _ -> None
         in
-        let err = FlowError.EPropNotFound (prop, (reason_op, reason_o), unknown_use) in
+        let err = FlowError.EPropNotFound (prop, (reason_op, reason_o), use_op) in
         add_output cx ~trace err)
 
-    | DefT (reason_o, InstanceT (_, _, _, instance)), HasOwnPropT(reason_op, Literal (_, x)) ->
+    | DefT (reason_o, InstanceT (_, _, _, instance)),
+      HasOwnPropT(use_op, reason_op, Literal (_, x)) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some _ -> ()
       | None ->
-        let err = FlowError.EPropNotFound (Some x, (reason_op, reason_o), unknown_use) in
+        let err = FlowError.EPropNotFound (Some x, (reason_op, reason_o), use_op) in
         add_output cx ~trace err)
 
-    | DefT (reason_o, InstanceT (_, _, _, _)), HasOwnPropT(reason_op, _) ->
-        let err = FlowError.EPropNotFound (None, (reason_op, reason_o), unknown_use) in
+    | DefT (reason_o, InstanceT (_, _, _, _)), HasOwnPropT(use_op, reason_op, _) ->
+        let err = FlowError.EPropNotFound (None, (reason_op, reason_o), use_op) in
         add_output cx ~trace err
 
     (* AnyObjT has every prop *)
@@ -2819,13 +2817,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         Context.iter_props cx props_tmap (fun x _ ->
           let reason = replace_reason_const (RStringLit x) reason_op in
           let t = DefT (reason, StrT (Literal (None, x))) in
-          rec_flow_t cx trace (t, keys)
+          rec_flow cx trace (t, keys)
         );
         Option.iter dict_t (fun { key; _ } ->
           rec_flow cx trace (key, ToStringT (reason_op, keys))
         );
       | _ ->
-        rec_flow_t cx trace (StrT.why reason_op, keys)
+        rec_flow cx trace (StrT.why reason_op, keys)
       end
 
     | DefT (_, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys) ->
@@ -2834,14 +2832,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       fields_tmap |> SMap.iter (fun x _ ->
         let reason = replace_reason_const (RStringLit x) reason_op in
         let t = DefT (reason, StrT (Literal (None, x))) in
-        rec_flow_t cx trace (t, keys)
+        rec_flow cx trace (t, keys)
       )
 
     | DefT (reason, (AnyObjT | AnyFunT)), GetKeysT (_, keys) ->
-      rec_flow_t cx trace (StrT.why reason, keys)
+      rec_flow cx trace (StrT.why reason, keys)
 
     | DefT (_, AnyT), GetKeysT (reason_op, keys) ->
-      rec_flow_t cx trace (AnyT.why reason_op, keys)
+      rec_flow cx trace (AnyT.why reason_op, keys)
 
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
@@ -6070,10 +6068,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ToStringT passes through strings unchanged, and flows a generic StrT otherwise *)
 
     | DefT (_, StrT _), ToStringT (_, t_out) ->
-      rec_flow_t cx trace (l, t_out)
+      rec_flow cx trace (l, t_out)
 
     | _, ToStringT (reason_op, t_out) ->
-      rec_flow_t cx trace (StrT.why reason_op, t_out)
+      rec_flow cx trace (StrT.why reason_op, t_out)
 
     (**********************)
     (* Array library call *)
@@ -6203,8 +6201,8 @@ and flow_error_kind_of_upper = function
   | ThisSpecializeT _ -> FlowError.IncompatibleThisSpecializeT
   | VarianceCheckT _ -> FlowError.IncompatibleVarianceCheckT
   | GetKeysT _ -> FlowError.IncompatibleGetKeysT
-  | HasOwnPropT (r, Literal (_, name)) -> FlowError.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
-  | HasOwnPropT (r, _) -> FlowError.IncompatibleHasOwnPropT (loc_of_reason r, None)
+  | HasOwnPropT (_, r, Literal (_, name)) -> FlowError.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
+  | HasOwnPropT (_, r, _) -> FlowError.IncompatibleHasOwnPropT (loc_of_reason r, None)
   | GetValuesT _ -> FlowError.IncompatibleGetValuesT
   | UnaryMinusT _ -> FlowError.IncompatibleUnaryMinusT
   | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> FlowError.IncompatibleMapTypeTObject

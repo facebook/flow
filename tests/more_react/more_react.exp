@@ -91,16 +91,11 @@ References:
           -------^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ checkPropTypes.js:10:16
+Error ------------------------------------------------------------------------------------------ checkPropTypes.js:10:43
 
-Property `bar` is missing in object literal [1].
+Cannot call `checkPropTypes` with object literal bound to `values` because property `bar` is missing in object
+literal [1].
 
-   checkPropTypes.js:10:16
-   10| checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   checkPropTypes.js:10:43
    10| checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
                                                  ^^^^^^^^^^^^^^ [1]
 

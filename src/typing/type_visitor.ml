@@ -319,7 +319,7 @@ class ['a] t = object(self)
   | SuperT (_, _, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
-  | ToStringT (_, t) -> self#type_ cx pole_TODO acc t
+  | ToStringT (_, t) -> self#use_type_ cx acc t
 
   | AdderT (_, _, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
@@ -410,9 +410,8 @@ class ['a] t = object(self)
 
   | BecomeT (_, t) -> self#type_ cx pole_TODO acc t
 
-  | GetKeysT (_, t)
-  | GetValuesT (_, t) ->
-    self#type_ cx pole_TODO acc t
+  | GetKeysT (_, t) -> self#use_type_ cx acc t
+  | GetValuesT (_, t) -> self#type_ cx pole_TODO acc t
 
   | HasOwnPropT _ -> acc
 

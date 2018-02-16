@@ -389,7 +389,7 @@ module rec TypeTerm : sig
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
-    | ToStringT of reason * t
+    | ToStringT of reason * use_t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of use_op * reason * bool * t * t
@@ -498,8 +498,8 @@ module rec TypeTerm : sig
     | BecomeT of reason * t
 
     (* Keys *)
-    | GetKeysT of reason * t
-    | HasOwnPropT of reason * string literal
+    | GetKeysT of reason * use_t
+    | HasOwnPropT of use_op * reason * string literal
 
     (* Values *)
     | GetValuesT of reason * t
@@ -1909,7 +1909,7 @@ end = struct
     | GetProtoT (reason,_) -> reason
     | GetStaticsT (reason,_) -> reason
     | GuardT (_, _, t) -> reason_of_t t
-    | HasOwnPropT (reason, _) -> reason
+    | HasOwnPropT (_, reason, _) -> reason
     | IdxUnMaybeifyT (reason, _) -> reason
     | IdxUnwrap (reason, _) -> reason
     | ImplementsT (_, t) -> reason_of_t t
@@ -2063,7 +2063,7 @@ end = struct
     | GetProtoT (reason, t) -> GetProtoT (f reason, t)
     | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
     | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
-    | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
+    | HasOwnPropT (use_op, reason, prop) -> HasOwnPropT (use_op, f reason, prop)
     | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
     | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
     | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
@@ -2126,7 +2126,19 @@ end = struct
     | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
 
   let rec util_use_op_of_use_t: 'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
-  fun nope util u -> let util = util u in match u with
+  fun nope util u ->
+  let util = util u in
+  let nested_util u2 make2 =
+    let result = util_use_op_of_use_t
+      (fun _ -> None)
+      (fun _ op make -> Some (op, make))
+      u2 in
+    (match result with
+    | None -> nope u
+    | Some (op, make) -> util op (fun op -> make2 (make op))
+    )
+  in
+  match u with
   | UseT (op, t) -> util op (fun op -> UseT (op, t))
   | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
   | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
@@ -2138,27 +2150,21 @@ end = struct
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
   | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
-  | ReposLowerT (r, d, u2) as u ->
-    let result = util_use_op_of_use_t
-      (fun _ -> None)
-      (fun _ op make -> Some (op, make))
-      u2 in
-    (match result with
-    | None -> nope u
-    | Some (op, make) ->
-      util op (fun op -> ReposLowerT (r, d, make op))
-    )
+  | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
   | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
+  | ToStringT (r, u2) -> nested_util u2 (fun u2 -> ToStringT (r, u2))
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
   | TypeAppVarianceCheckT (op, r1, r2, ts) ->
     util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
   | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
     util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
   | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
+  | HasOwnPropT (op, r, p) -> util op (fun op -> HasOwnPropT (op, r, p))
+  | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
   | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
@@ -2170,7 +2176,6 @@ end = struct
   | GetProtoT (_, _)
   | SetProtoT (_, _)
   | MixinT (_, _)
-  | ToStringT (_, _)
   | ComparatorT (_, _, _)
   | UnaryMinusT (_, _)
   | AssertArithmeticOperandT (_)
@@ -2196,8 +2201,6 @@ end = struct
   | ObjTestT (_, _, _)
   | UnifyT (_, _)
   | BecomeT (_, _)
-  | GetKeysT (_, _)
-  | HasOwnPropT (_, _)
   | GetValuesT (_, _)
   | MakeExactT (_, _)
   | CJSRequireT (_, _, _)

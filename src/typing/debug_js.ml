@@ -493,7 +493,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | ToStringT (_, t) -> [
-      "type", _json_of_t json_cx t
+      "type", _json_of_use_t json_cx t
     ]
 
   | AdderT (_, _, _, l, r) -> [
@@ -638,10 +638,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | GetKeysT (_, t) -> [
-      "type", _json_of_t json_cx t
+      "type", _json_of_use_t json_cx t
     ]
 
-  | HasOwnPropT (_, key) -> [
+  | HasOwnPropT (_, _, key) -> [
       "key", JSON_Object (_json_of_string_literal key)
     ]
 
@@ -2118,7 +2118,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (propref prop)
       (kid ptype)) t
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | ToStringT (_, arg) -> p ~extra:(kid arg) t
+  | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
   | UnaryMinusT _ -> p t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
