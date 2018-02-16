@@ -191,9 +191,18 @@ export default suite(({addFile, addFiles, flowCmd}) => [
     addFile('type_error.js'),
     flowCmd(['gen-flow-files', '--quiet', 'type_error.js']).stdout('').stderr(
                                                                         `
-                                                                          Error ------------------------------------------------------- type_error.js:3:24
+                                                                          Error ----------------------------------------------------------------------------------------------- type_error.js:3:24
 
                                                                           Cannot assign \`42\` to \`a\` because number [1] is incompatible with string [2].
+
+                                                                             type_error.js:3:24
+                                                                             3| export var a: string = 42;
+                                                                                                       ^^ [1]
+
+                                                                          References:
+                                                                             type_error.js:3:15
+                                                                             3| export var a: string = 42;
+                                                                                              ^^^^^^ [2]
 
 
                                                                           Found 1 error

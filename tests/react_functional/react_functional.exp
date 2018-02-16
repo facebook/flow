@@ -1,23 +1,54 @@
-Error -------------------------------------------------------------- test.js:4:2
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
-Cannot create `F` element because property `foo` is missing in props [1] but
-exists in object type [2].
+Cannot create `F` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   test.js:4:1
+   4| <F />; // error: missing `foo`
+      ^^^^^ [1]
+
+References:
+   test.js:3:19
+   3| function F(props: { foo: string }) {}
+                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------- test.js:5:9
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot create `F` element because in property `foo`, number [1] is incompatible
-with string [2].
+Cannot create `F` element because in property `foo`, number [1] is incompatible with string [2].
+
+   test.js:5:1
+   5| <F foo={0} />; // error: number ~> string
+      ^^^^^^^^^^^^^
+
+References:
+   test.js:5:9
+   5| <F foo={0} />; // error: number ~> string
+              ^ [1]
+   test.js:3:26
+   3| function F(props: { foo: string }) {}
+                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------- test.js:9:33
+Error ----------------------------------------------------------------------------------------------------- test.js:9:33
 
 Cannot resolve name `numner`.
 
+   9| function G(props: { foo: string|numner }) {}
+                                      ^^^^^^
 
-Error ------------------------------------------------------------- test.js:13:2
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
 Cannot create `Z` element because number [1] is not a React component.
+
+   test.js:13:1
+   13| <Z />; // error, expected React component
+       ^^^^^
+
+References:
+   test.js:12:9
+   12| var Z = 0;
+               ^ [1]
 
 
 

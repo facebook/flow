@@ -1,34 +1,91 @@
-Error -------------------------------------------------------- issue-198.js:9:20
+Error ------------------------------------------------------------------------------------------------ issue-198.js:9:16
 
 Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
 
+   issue-198.js:9:16
+     9|         return str.toFixed();
+                       ^^^^^^^^^^^^^
 
-Error -------------------------------------------------------- issue-324.js:8:10
-
-Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with
-`Foo` [2].
-
-
-Error ------------------------------------------------------------- union.js:2:5
-
-Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with
-string [2].
+References:
+   <BUILTINS>/core.js:141:39
+   141|     toFixed(fractionDigits?: number): string;
+                                              ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------ union.js:8:13
+Error ------------------------------------------------------------------------------------------------ issue-324.js:8:10
+
+Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with `Foo` [2].
+
+   issue-324.js:8:10
+   8| foostr = barstr;
+               ^^^^^^
+
+References:
+   issue-324.js:6:13
+   6| var barstr: Bar | string = new Bar();
+                  ^^^ [1]
+   issue-324.js:5:13
+   5| var foostr: Foo | string = new Foo();
+                  ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:2:5
+
+Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   union.js:2:5
+   2| bar(0);
+          ^ [1]
+
+References:
+   union.js:1:28
+   1| function bar(x: Document | string): void { }
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:8:13
 
 Cannot assign `new E()` to `c` because `D` [1] is incompatible with `C` [2].
 
+   union.js:8:13
+   8|   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+                  ^^^^^^^ [1]
 
-Error ------------------------------------------------------------ union.js:9:19
+References:
+   union.js:8:9
+   8|   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:9:19
 
 `D` [1] is incompatible with `C` [2].
 
+   union.js:9:19
+   9|   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+                        ^
 
-Error ------------------------------------------------------------- yuge.js:23:6
+References:
+   union.js:5:7
+   5| class D { }
+            ^ [1]
+   union.js:4:7
+   4| class C { }
+            ^ [2]
 
-Cannot cast empty string to `ErrorCode` because string [1] is incompatible with
-number enum [2].
+
+Error ----------------------------------------------------------------------------------------------------- yuge.js:23:6
+
+Cannot cast empty string to `ErrorCode` because string [1] is incompatible with number enum [2].
+
+   yuge.js:23:6
+   23|     ("": ErrorCode);  // also, error pos omits this line completely
+            ^^ [1]
+
+References:
+   yuge.js:23:10
+   23|     ("": ErrorCode);  // also, error pos omits this line completely
+                ^^^^^^^^^ [2]
 
 
 

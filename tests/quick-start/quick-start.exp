@@ -7,9 +7,18 @@ Expect no errors.
 No errors!
 
 Touch @flow file, expect error.
-Error ----------------------------------------------------------------- a.js:4:2
+Error --------------------------------------------------------------------------------------------------------- a.js:4:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2].
+
+   a.js:4:2
+   4| (0: string);
+       ^ [1]
+
+References:
+   a.js:4:5
+   4| (0: string);
+          ^^^^^^ [2]
 
 
 
@@ -19,9 +28,18 @@ Make file @noflow, expect error to go away.
 No errors!
 
 Revert file, expect error again.
-Error ----------------------------------------------------------------- a.js:4:2
+Error --------------------------------------------------------------------------------------------------------- a.js:4:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2].
+
+   a.js:4:2
+   4| (0: string);
+       ^ [1]
+
+References:
+   a.js:4:5
+   4| (0: string);
+          ^^^^^^ [2]
 
 
 

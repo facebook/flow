@@ -1,7 +1,18 @@
-Error ------------------------------------------------ type_param_bounds.js:4:10
+Error ----------------------------------------------------------------------------------------- type_param_bounds.js:4:8
 
-Cannot instantiate `X` because in type argument `T`, string [1] is incompatible
-with number [2].
+Cannot instantiate `X` because in type argument `T`, string [1] is incompatible with number [2].
+
+   type_param_bounds.js:4:8
+   4| (true: X<string>);
+             ^^^^^^^^^
+
+References:
+   type_param_bounds.js:4:10
+   4| (true: X<string>);
+               ^^^^^^ [1]
+   type_param_bounds.js:3:11
+   3| type X<T: number> = bool;
+                ^^^^^^ [2]
 
 
 

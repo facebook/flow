@@ -1,6 +1,9 @@
-Error --------------------------------------------------- foo/bar/client.js:7:27
+Error ------------------------------------------------------------------------------------------- foo/bar/client.js:7:27
 
 Cannot resolve module `annotation`.
+
+   7| var unreachable = require('annotation');
+                                ^^^^^^^^^^^^
 
 
 

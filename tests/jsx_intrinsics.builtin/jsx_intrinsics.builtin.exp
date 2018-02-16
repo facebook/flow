@@ -1,24 +1,58 @@
-Error ------------------------------------------------------------- main.js:12:4
+Error ----------------------------------------------------------------------------------------------------- main.js:12:3
 
-Cannot assign `<CustomComponent />` to `b` because in property `type`,
-`CustomComponent` [1] is incompatible with `CustomComponentNope` [2].
+Cannot assign `<CustomComponent />` to `b` because in property `type`, `CustomComponent` [1] is incompatible with
+`CustomComponentNope` [2].
+
+   main.js:12:3
+   12|   <CustomComponent prop="asdf" />; // Error: Bad class type
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   main.js:6:7
+    6| class CustomComponent extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^ [1]
+   main.js:7:7
+    7| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------- main.js:14:3
+Error ----------------------------------------------------------------------------------------------------- main.js:14:3
 
 Cannot assign `<CustomComponent />` to `c` because:
- - in property `props`, property `prop1` is missing in object type [1] but
-   exists in object type [2].
- - in property `type` and then type argument `Props`, property `prop` is missing
-   in object type [2] but exists in object type [1].
- - in property `type` and then type argument `Props`, property `prop1` is
-   missing in object type [1] but exists in object type [2].
+ - in property `props`, property `prop1` is missing in object type [1] but exists in object type [2].
+ - in property `type` and then type argument `Props`, property `prop` is missing in object type [2] but exists in object
+   type [1].
+ - in property `type` and then type argument `Props`, property `prop1` is missing in object type [1] but exists in
+   object type [2].
+
+   main.js:14:3
+   14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   main.js:6:47
+    6| class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [1]
+   main.js:13:38
+   13| var c: Element<Class<React.Component<{prop1: string}, void>>> =
+                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------ main.js:21:27
+Error ---------------------------------------------------------------------------------------------------- main.js:21:26
 
-Cannot assign `<div />` to `e` because in property `type`, `div` [1] is
-incompatible with string literal `span` [2].
+Cannot assign `<div />` to `e` because in property `type`, `div` [1] is incompatible with string literal `span` [2].
+
+   main.js:21:26
+   21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   main.js:21:27
+   21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                                 ^^^ [1]
+   main.js:21:16
+   21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                      ^^^^^^ [2]
 
 
 

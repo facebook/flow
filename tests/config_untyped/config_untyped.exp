@@ -1,18 +1,40 @@
-Error -------------------------------------------------------------- test.js:6:2
+Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot cast `typed` to number because string [1] is incompatible with
-number [2].
+Cannot cast `typed` to number because string [1] is incompatible with number [2].
+
+   test.js:6:2
+   6| (typed: number); // error: string ~> number
+       ^^^^^
+
+References:
+   typed/foo.js:5:18
+   5| module.exports = "foo";
+                       ^^^^^ [1]
+   test.js:6:9
+   6| (typed: number); // error: string ~> number
+              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------- test.js:9:29
+Error ----------------------------------------------------------------------------------------------------- test.js:9:29
 
 Cannot resolve module `./untyped/bogus`.
 
+   9| const nonexistent = require('./untyped/bogus'); // error, missing module
+                                  ^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------------- typed/foo.js:3:2
 
-Cannot cast `"string"` to number because string [1] is incompatible with
-number [2].
+Error ------------------------------------------------------------------------------------------------- typed/foo.js:3:2
+
+Cannot cast `"string"` to number because string [1] is incompatible with number [2].
+
+   typed/foo.js:3:2
+   3| ("string": number); // Error
+       ^^^^^^^^ [1]
+
+References:
+   typed/foo.js:3:12
+   3| ("string": number); // Error
+                 ^^^^^^ [2]
 
 
 

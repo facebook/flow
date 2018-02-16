@@ -1,31 +1,76 @@
-Error -------------------------------------------------------- typecheck.js:4:10
+Error ------------------------------------------------------------------------------------------------ typecheck.js:4:10
 
 Cannot return `bar()` because number [1] is incompatible with string [2].
 
+   typecheck.js:4:10
+   4|   return bar();
+               ^^^^^
 
-Error ------------------------------------------------------- typecheck.js:21:21
+References:
+   typecheck.js:7:12
+   7|     return 0;
+                 ^ [1]
+   typecheck.js:3:19
+   3| function test1(): string {
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- typecheck.js:21:21
 
 Cannot assign `n` to `y` because number [1] is incompatible with string [2].
 
+   typecheck.js:21:21
+   21|     var y: string = n;    // error, n is number (EmptyT would work)
+                           ^
 
-Error ------------------------------------------------------ unreachable.js:5:19
+References:
+   typecheck.js:15:13
+   15|   const n = 0;
+                   ^ [1]
+   typecheck.js:21:12
+   21|     var y: string = n;    // error, n is number (EmptyT would work)
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- unreachable.js:5:19
 
 Cannot call `baz` because uninitialized variable [1] is not a function.
 
+   unreachable.js:5:19
+    5|   return bar(x) + baz(y);
+                         ^^^^^^
 
-Error ----------------------------------------------------- unreachable.js:13:13
+References:
+   unreachable.js:13:7
+   13|   var baz = function (why) {
+             ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unreachable.js:13:13
 
 Unreachable code.
 
+                   v---------------
+   13|   var baz = function (why) {
+   14|     return y + why;
+   15|   };
+         ^
 
-Error ----------------------------------------------------- unreachable.js:22:11
+
+Error --------------------------------------------------------------------------------------------- unreachable.js:22:11
 
 Unreachable code.
 
+   22|       u = 5,
+                 ^
 
-Error ----------------------------------------------------- unreachable.js:24:11
+
+Error --------------------------------------------------------------------------------------------- unreachable.js:24:11
 
 Unreachable code.
+
+   24|       w = 7;
+                 ^
 
 
 

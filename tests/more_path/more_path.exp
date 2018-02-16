@@ -1,37 +1,105 @@
-Error ------------------------------------------------------------ Sigma.js:13:7
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:13:5
 
 Cannot call `x.c` because property `c` is missing in `B` [1].
 
+   Sigma.js:13:5
+   13|     x.c(); // error
+           ^^^^^
 
-Error ------------------------------------------------------------ Sigma.js:15:5
+References:
+   Sigma.js:10:16
+   10| function bar(x:B) {
+                      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:15:5
 
 Cannot assign number to `x` because number [1] is incompatible with `B` [2].
 
+   Sigma.js:15:5
+   15|     x++; // TODO no error? since unreachable (x: B implies x: A)
+           ^^^ [1]
 
-Error ------------------------------------------------------------ Sigma.js:15:5
+References:
+   Sigma.js:10:16
+   10| function bar(x:B) {
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:15:5
 
 number [1] is incompatible with `B` [2].
 
+   Sigma.js:15:5
+   15|     x++; // TODO no error? since unreachable (x: B implies x: A)
+           ^^^
 
-Error ------------------------------------------------------------ Sigma.js:24:7
+References:
+   Sigma.js:15:5
+   15|     x++; // TODO no error? since unreachable (x: B implies x: A)
+           ^^^ [1]
+   Sigma.js:10:16
+   10| function bar(x:B) {
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:24:5
 
 Cannot call `x.d` because property `d` is missing in `C` [1].
 
+   Sigma.js:24:5
+   24|     x.d(); // error
+           ^^^^^
 
-Error ------------------------------------------------------------ Sigma.js:27:7
+References:
+   Sigma.js:8:7
+    8| class C extends B { c() {} }
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:27:5
 
 Cannot call `x.c` because property `c` is missing in `A` [1].
 
+   Sigma.js:27:5
+   27|     x.c(); // error
+           ^^^^^
 
-Error ----------------------------------------------------------- Sigma.js:35:20
+References:
+   Sigma.js:19:16
+   19| function foo(x:A) {
+                      ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Sigma.js:35:20
 
 `A` [1] is incompatible with `D` [2].
 
+   Sigma.js:35:20
+   35|   if (x instanceof A) {
+                          ^
 
-Error ------------------------------------------------------------ test.js:11:16
+References:
+   Sigma.js:4:7
+    4| class A { a() {} }
+             ^ [1]
+   Sigma.js:34:16
+   34| function baz(x:D) {
+                      ^ [2]
 
-Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in
-`ChildClass` [1].
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:12
+
+Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1].
+
+   test.js:11:12
+   11|     return obj.childProp_TYPO; // error (obj: ChildClass)
+                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:5:7
+    5| class ChildClass extends BaseClass {
+             ^^^^^^^^^^ [1]
 
 
 

@@ -1,19 +1,49 @@
-Error ------------------------------------------------------------ class.js:4:12
+Error ---------------------------------------------------------------------------------------------------- class.js:4:12
 
-Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with
-`T` [2].
+Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2].
+
+   class.js:4:12
+   4|     this.b(a); // error: A ~> incompatible instance of T
+                 ^
+
+References:
+   class.js:2:15
+   2|   a<A>(x:T, a:A) {
+                    ^ [1]
+   class.js:1:9
+   1| class C<T> {
+              ^ [2]
 
 
-Error ---------------------------------------------------- default_params.js:6:7
+Error -------------------------------------------------------------------------------------------- default_params.js:6:7
 
-Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with
-`U` [2].
+Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2].
+
+   default_params.js:6:7
+   6|     h(c); // err, T ~> U
+            ^
+
+References:
+   default_params.js:2:24
+   2|   function g<U>(b:U, c:T = a) {
+                             ^ [1]
+   default_params.js:3:18
+   3|     function h(d:U = b) {}
+                       ^ [2]
 
 
-Error --------------------------------------------------- default_params.js:10:7
+Error ------------------------------------------------------------------------------------------- default_params.js:10:7
 
-Cannot call `g` with `0` bound to `c` because number [1] is incompatible with
-`T` [2].
+Cannot call `g` with `0` bound to `c` because number [1] is incompatible with `T` [2].
+
+   default_params.js:10:7
+   10|   g(0,0); // error: number ~> T
+             ^ [1]
+
+References:
+   default_params.js:2:24
+    2|   function g<U>(b:U, c:T = a) {
+                              ^ [2]
 
 
 Error: method_shadow.js:42
@@ -38,15 +68,38 @@ Error: method_shadow.js:42
    40: declare var g: G<number|string>;
                                ^^^^^^ string
 
-Error ---------------------------------------------------- method_shadow.js:43:6
+Error -------------------------------------------------------------------------------------------- method_shadow.js:43:2
 
-Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is
-incompatible with number [2].
+Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is incompatible with number [2].
+
+   method_shadow.js:43:2
+   43| (g.m(""): G<number>); // err, string ~> number
+        ^^^^^^^
+
+References:
+   method_shadow.js:43:6
+   43| (g.m(""): G<number>); // err, string ~> number
+            ^^ [1]
+   method_shadow.js:43:13
+   43| (g.m(""): G<number>); // err, string ~> number
+                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------- method_shadow.js:51:18
+Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18
 
 Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2].
+
+   method_shadow.js:51:18
+   51|         this.x = x; // err, m's T != H's T
+                        ^
+
+References:
+   method_shadow.js:50:12
+   50|     m<T>(x:T) {
+                  ^ [1]
+   method_shadow.js:49:7
+   49|     x:T;
+             ^ [2]
 
 
 

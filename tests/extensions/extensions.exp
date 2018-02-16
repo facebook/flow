@@ -1,7 +1,15 @@
-Error --------------------------------------------------------------- foo.js:2:5
+Error ------------------------------------------------------------------------------------------------------- foo.js:2:5
 
-Cannot call `imp` with `1337` bound to `p` because number [1] is incompatible
-with string [2].
+Cannot call `imp` with `1337` bound to `p` because number [1] is incompatible with string [2].
+
+   foo.js:2:5
+   2| imp(1337);
+          ^^^^ [1]
+
+References:
+   bar.jsx:1:31
+   1| module.exports = function (p: string) {}
+                                    ^^^^^^ [2]
 
 
 

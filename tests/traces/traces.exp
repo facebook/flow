@@ -1,7 +1,18 @@
-Error ----------------------------------------------------------- Traces.js:3:21
+Error --------------------------------------------------------------------------------------------------- Traces.js:3:21
 
-Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with
-string [2].
+Cannot call `g0` with `x` bound to `y` because number [1] is incompatible with string [2].
+
+   Traces.js:3:21
+   3| function f0(x) { g0(x) }
+                          ^
+
+References:
+   Traces.js:4:4
+   4| f0(0);
+         ^ [1]
+   Traces.js:2:15
+   2| function g0(y:string) { }
+                    ^^^^^^ [2]
 
 Trace:
 * path 1:
@@ -27,10 +38,21 @@ Trace:
                          ^ ~> ReposLowerT [`x`]
 
 
-Error ----------------------------------------------------------- Traces.js:8:27
+Error --------------------------------------------------------------------------------------------------- Traces.js:8:27
 
-Cannot call `g1` with `y` bound to `b` because number [1] is incompatible with
-string [2].
+Cannot call `g1` with `y` bound to `b` because number [1] is incompatible with string [2].
+
+   Traces.js:8:27
+   8| function f1(x, y) { g1(x, y) }
+                                ^
+
+References:
+   Traces.js:9:11
+   9| f1("hey", 0);
+                ^ [1]
+   Traces.js:7:25
+   7| function g1(a:string, b:string) { }
+                              ^^^^^^ [2]
 
 Trace:
 * path 1:
@@ -56,9 +78,18 @@ Trace:
                                ^ ~> ReposLowerT [`y`]
 
 
-Error ---------------------------------------------------------- Traces.js:14:25
+Error -------------------------------------------------------------------------------------------------- Traces.js:14:25
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:14:25
+   14| f2(function(x) { return x * x });
+                               ^
+
+References:
+   Traces.js:12:22
+   12| function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
 
 Trace:
 * path 1:
@@ -84,9 +115,18 @@ Trace:
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 
-Error ---------------------------------------------------------- Traces.js:14:29
+Error -------------------------------------------------------------------------------------------------- Traces.js:14:29
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:14:29
+   14| f2(function(x) { return x * x });
+                                   ^
+
+References:
+   Traces.js:12:22
+   12| function g2(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
 
 Trace:
 * path 1:
@@ -112,9 +152,18 @@ Trace:
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 
-Error ---------------------------------------------------------- Traces.js:19:29
+Error -------------------------------------------------------------------------------------------------- Traces.js:19:29
 
 Cannot perform arithmetic operation because string [1] is not a number.
+
+   Traces.js:19:29
+   19| function double(n) { return n * 2 }
+                                   ^
+
+References:
+   Traces.js:17:22
+   17| function g3(ylam: (s:string) => number) { }
+                            ^^^^^^ [1]
 
 Trace:
 * path 1:

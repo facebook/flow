@@ -1,182 +1,281 @@
-Error ------------------------------------------------------------- test.js:3:17
+Error ----------------------------------------------------------------------------------------------------- test.js:3:17
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------- test.js:4:22
-
-Redundant argument. This argument doesn't change any lint settings.
+   3| //flowlint-line sketchy-null:off
+                      ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------- test.js:6:12
+Error ----------------------------------------------------------------------------------------------------- test.js:4:22
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:12:12
-
-Redundant argument. This argument doesn't change any lint settings.
+   4| //flowlint-next-line sketchy-null:off
+                           ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:13:17
+Error ----------------------------------------------------------------------------------------------------- test.js:6:12
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:16:12
-
-Redundant argument. This argument doesn't change any lint settings.
+   6| //flowlint sketchy-null:off
+                 ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:17:17
+Error ---------------------------------------------------------------------------------------------------- test.js:12:12
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:22:32
-
-Redundant argument. This argument doesn't change any lint settings.
+   12| //flowlint sketchy-null:error
+                  ^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:23:35
+Error ---------------------------------------------------------------------------------------------------- test.js:13:17
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:25:30
-
-Redundant argument. This argument doesn't change any lint settings.
+   13| //flowlint-line sketchy-null:error
+                       ^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:26:37
+Error ---------------------------------------------------------------------------------------------------- test.js:16:12
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:31:12
-
-Redundant argument. The values set by this argument are overwritten later in
-this comment.
+   16| //flowlint sketchy-null:off
+                  ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:32:17
-
-Redundant argument. The values set by this argument are overwritten later in
-this comment.
-
-
-Error ------------------------------------------------------------ test.js:37:12
-
-Redundant argument. The values set by this argument are overwritten later in
-this comment.
-
-
-Error ------------------------------------------------------------ test.js:38:17
-
-Redundant argument. The values set by this argument are overwritten later in
-this comment.
-
-
-Error ------------------------------------------------------------ test.js:50:12
+Error ---------------------------------------------------------------------------------------------------- test.js:17:17
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:50:32
-
-Redundant argument. This argument doesn't change any lint settings.
+   17| //flowlint-line sketchy-null:off
+                       ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:51:17
+Error ---------------------------------------------------------------------------------------------------- test.js:22:32
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:51:37
-
-Redundant argument. This argument doesn't change any lint settings.
+   22| //flowlint sketchy-null:error, sketchy-null:error
+                                      ^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:54:12
+Error ---------------------------------------------------------------------------------------------------- test.js:23:35
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:54:30
-
-Redundant argument. This argument doesn't change any lint settings.
+   23| //flowlint-line sketchy-null:off, sketchy-null:off
+                                         ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:55:17
+Error ---------------------------------------------------------------------------------------------------- test.js:25:30
 
 Redundant argument. This argument doesn't change any lint settings.
 
+   25| //flowlint sketchy-null:off, sketchy-null:off
+                                    ^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------------ test.js:55:35
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:37
 
 Redundant argument. This argument doesn't change any lint settings.
 
-
-Error ------------------------------------------------------------ test.js:60:12
-
-Redundant argument. The values set by this argument are overwritten later in
-this comment.
+   26| //flowlint-line sketchy-null:error, sketchy-null:error
+                                           ^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------ test.js:61:17
+Error ---------------------------------------------------------------------------------------------------- test.js:31:12
 
-Redundant argument. The values set by this argument are overwritten later in
-this comment.
+Redundant argument. The values set by this argument are overwritten later in this comment.
+
+   31| //flowlint sketchy-null:error, sketchy-null:off
+                  ^^^^^^^^^^^^^^^^^^
 
 
-Warning ---------------------------------------------------------- test.js:15:12
+Error ---------------------------------------------------------------------------------------------------- test.js:32:17
+
+Redundant argument. The values set by this argument are overwritten later in this comment.
+
+   32| //flowlint-line sketchy-null:error, sketchy-null:off
+                       ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:37:12
+
+Redundant argument. The values set by this argument are overwritten later in this comment.
+
+   37| //flowlint sketchy-null-bool:error, sketchy-null:off
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:38:17
+
+Redundant argument. The values set by this argument are overwritten later in this comment.
+
+   38| //flowlint-line sketchy-null-bool:error, sketchy-null:off
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:50:12
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   50| //flowlint sketchy-null:error, sketchy-null:error
+                  ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:50:32
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   50| //flowlint sketchy-null:error, sketchy-null:error
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:51:17
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   51| //flowlint-line sketchy-null:error, sketchy-null:error
+                       ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:51:37
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   51| //flowlint-line sketchy-null:error, sketchy-null:error
+                                           ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:54:12
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   54| //flowlint sketchy-null:off, sketchy-null:off
+                  ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:54:30
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   54| //flowlint sketchy-null:off, sketchy-null:off
+                                    ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:55:17
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   55| //flowlint-line sketchy-null:off, sketchy-null:off
+                       ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:55:35
+
+Redundant argument. This argument doesn't change any lint settings.
+
+   55| //flowlint-line sketchy-null:off, sketchy-null:off
+                                         ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:60:12
+
+Redundant argument. The values set by this argument are overwritten later in this comment.
+
+   60| //flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+                  ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:61:17
+
+Redundant argument. The values set by this argument are overwritten later in this comment.
+
+   61| //flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+                       ^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:15:12
 
 Unused suppression comment.
 
-
-Warning ---------------------------------------------------------- test.js:43:32
-
-Unused suppression comment.
+   15| /*flowlint sketchy-null:off*/ //Unused suppression
+                  ^^^^^^^^^^^^^^^^
 
 
-Warning ---------------------------------------------------------- test.js:44:37
+Warning -------------------------------------------------------------------------------------------------- test.js:43:32
 
 Unused suppression comment.
 
-
-Warning ---------------------------------------------------------- test.js:53:53
-
-Unused suppression comment.
+   43| /*flowlint sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
+                                      ^^^^^^^^^^^^^^^^^^^^^
 
 
-Warning ---------------------------------------------------------- test.js:66:32
+Warning -------------------------------------------------------------------------------------------------- test.js:44:37
 
 Unused suppression comment.
 
-
-Warning ---------------------------------------------------------- test.js:66:55
-
-Unused suppression comment.
+   44| /*flowlint-line sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
+                                           ^^^^^^^^^^^^^^^^^^^^^
 
 
-Warning ---------------------------------------------------------- test.js:66:80
+Warning -------------------------------------------------------------------------------------------------- test.js:53:53
 
 Unused suppression comment.
 
-
-Warning ---------------------------------------------------------- test.js:67:37
-
-Unused suppression comment.
+   53| /*Clearing the settings; not an error.*/ /*flowlint sketchy-null:off*/ //Unused suppression
+                                                           ^^^^^^^^^^^^^^^^
 
 
-Warning ---------------------------------------------------------- test.js:67:60
+Warning -------------------------------------------------------------------------------------------------- test.js:66:32
 
 Unused suppression comment.
 
+   66| /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                      ^^^^^^^^^^^^^^^^^^^^^
 
-Warning ---------------------------------------------------------- test.js:67:85
+
+Warning -------------------------------------------------------------------------------------------------- test.js:66:55
 
 Unused suppression comment.
+
+   66| /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:66:80
+
+Unused suppression comment.
+
+   66| /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:67:37
+
+Unused suppression comment.
+
+   67| /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                           ^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:67:60
+
+Unused suppression comment.
+
+   67| /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning -------------------------------------------------------------------------------------------------- test.js:67:85
+
+Unused suppression comment.
+
+   67| /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 
 

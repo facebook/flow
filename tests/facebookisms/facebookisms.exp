@@ -1,34 +1,73 @@
-Error ---------------------------------------------------- copyProperties.js:6:6
+Error -------------------------------------------------------------------------------------------- copyProperties.js:6:6
 
 Cannot resolve name `copyProperties`.
 
-
-Error -------------------------------------------------- copyProperties.js:31:28
-
-Cannot cast `copyProperties(...)` to object type because in property `foo`,
-string [1] is incompatible with number [2].
+   6|     (copyProperties()); // error, unknown global
+           ^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------- invariant.js:6:5
+Error ------------------------------------------------------------------------------------------- copyProperties.js:31:6
+
+Cannot cast `copyProperties(...)` to object type because in property `foo`, string [1] is incompatible with number [2].
+
+   copyProperties.js:31:6
+   31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   copyProperties.js:31:28
+   31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+                                  ^^^ [1]
+   copyProperties.js:31:43
+   31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+                                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- invariant.js:6:5
 
 Cannot resolve name `invariant`.
 
+   6|     invariant(x, 'truthy only'); // error, forgot to require invariant
+          ^^^^^^^^^
 
-Error --------------------------------------------------------- mergeInto.js:6:6
+
+Error ------------------------------------------------------------------------------------------------- mergeInto.js:6:6
 
 Cannot resolve name `mergeInto`.
 
-
-Error ------------------------------------------------------------- test.js:6:21
-
-Cannot assign `this.x` to `x` because number [1] is incompatible with
-string [2].
+   6|     (mergeInto()); // error, unknown global
+           ^^^^^^^^^
 
 
-Error ------------------------------------------------------------- test.js:7:10
+Error ----------------------------------------------------------------------------------------------------- test.js:6:21
 
-Cannot assign empty string to `this.y` because property `y` is missing in
-`Foo` [1].
+Cannot assign `this.x` to `x` because number [1] is incompatible with string [2].
+
+   test.js:6:21
+   6|     var x: string = this.x;
+                          ^^^^^^
+
+References:
+   Bar.js:1:16
+   1| var Bar = { x: 0 };
+                     ^ [1]
+   test.js:6:12
+   6|     var x: string = this.x;
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Cannot assign empty string to `this.y` because property `y` is missing in `Foo` [1].
+
+   test.js:7:5
+   7|     this.y = "";
+          ^^^^^^
+
+References:
+   test.js:4:7
+   4| class Foo extends mixin(Bar) {
+            ^^^ [1]
 
 
 

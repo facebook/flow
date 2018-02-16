@@ -1,73 +1,169 @@
-Error -------------------------------------------------------------- in.js:27:15
+Error ------------------------------------------------------------------------------------------------------ in.js:27:15
 
-Cannot use `in` because on the right-hand side, number [1] must be an object or
-array.
+Cannot use `in` because on the right-hand side, number [1] must be an object or array.
 
+   in.js:27:15
+   27|     ('foo' in 123); // error
+                     ^^^
 
-Error -------------------------------------------------------------- in.js:28:15
-
-Cannot use `in` because on the right-hand side, string [1] must be an object or
-array.
-
-
-Error -------------------------------------------------------------- in.js:29:15
-
-Cannot use `in` because on the right-hand side, undefined [1] must be an object
-or array.
+References:
+   in.js:27:15
+   27|     ('foo' in 123); // error
+                     ^^^ [1]
 
 
-Error -------------------------------------------------------------- in.js:30:15
+Error ------------------------------------------------------------------------------------------------------ in.js:28:15
 
-Cannot use `in` because on the right-hand side, null [1] must be an object or
-array.
+Cannot use `in` because on the right-hand side, string [1] must be an object or array.
 
+   in.js:28:15
+   28|     ('foo' in 'bar'); // error
+                     ^^^^^
 
-Error --------------------------------------------------------------- in.js:35:6
-
-Cannot use `in` because on the left-hand side, null [1] must be a string or
-number.
-
-
-Error --------------------------------------------------------------- in.js:36:6
-
-Cannot use `in` because on the left-hand side, undefined [1] must be a string or
-number.
+References:
+   in.js:28:15
+   28|     ('foo' in 'bar'); // error
+                     ^^^^^ [1]
 
 
-Error --------------------------------------------------------------- in.js:37:6
+Error ------------------------------------------------------------------------------------------------------ in.js:29:15
 
-Cannot use `in` because on the left-hand side, object literal [1] must be a
-string or number.
+Cannot use `in` because on the right-hand side, undefined [1] must be an object or array.
 
+   in.js:29:15
+   29|     ('foo' in void 0); // error
+                     ^^^^^^
 
-Error --------------------------------------------------------------- in.js:38:6
-
-Cannot use `in` because on the left-hand side, empty array literal [1] must be a
-string or number.
-
-
-Error --------------------------------------------------------------- in.js:39:6
-
-Cannot use `in` because on the left-hand side, boolean [1] must be a string or
-number.
+References:
+   in.js:29:15
+   29|     ('foo' in void 0); // error
+                     ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------- in.js:44:18
+Error ------------------------------------------------------------------------------------------------------ in.js:30:15
 
-Cannot use `in` because on the right-hand side, number [1] must be an object or
-array.
+Cannot use `in` because on the right-hand side, null [1] must be an object or array.
+
+   in.js:30:15
+   30|     ('foo' in null); // error
+                     ^^^^
+
+References:
+   in.js:30:15
+   30|     ('foo' in null); // error
+                     ^^^^ [1]
 
 
-Error --------------------------------------------------------------- in.js:45:9
+Error ------------------------------------------------------------------------------------------------------- in.js:35:6
 
-Cannot use `in` because on the left-hand side, boolean literal `false` [1] must
-be a string or number.
+Cannot use `in` because on the left-hand side, null [1] must be a string or number.
+
+   in.js:35:6
+   35|     (null in {}); // error
+            ^^^^
+
+References:
+   in.js:35:6
+   35|     (null in {}); // error
+            ^^^^ [1]
 
 
-Error -------------------------------------------------------------- in.js:52:15
+Error ------------------------------------------------------------------------------------------------------- in.js:36:6
 
-Cannot use `in` because on the right-hand side, mixed [1] must be an object or
-array.
+Cannot use `in` because on the left-hand side, undefined [1] must be a string or number.
+
+   in.js:36:6
+   36|     (void 0 in {}); // error
+            ^^^^^^
+
+References:
+   in.js:36:6
+   36|     (void 0 in {}); // error
+            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- in.js:37:6
+
+Cannot use `in` because on the left-hand side, object literal [1] must be a string or number.
+
+   in.js:37:6
+   37|     ({} in {}); // error
+            ^^
+
+References:
+   in.js:37:6
+   37|     ({} in {}); // error
+            ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- in.js:38:6
+
+Cannot use `in` because on the left-hand side, empty array literal [1] must be a string or number.
+
+   in.js:38:6
+   38|     ([] in {}); // error
+            ^^
+
+References:
+   in.js:38:6
+   38|     ([] in {}); // error
+            ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- in.js:39:6
+
+Cannot use `in` because on the left-hand side, boolean [1] must be a string or number.
+
+   in.js:39:6
+   39|     (false in []); // error
+            ^^^^^
+
+References:
+   in.js:39:6
+   39|     (false in []); // error
+            ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ in.js:44:18
+
+Cannot use `in` because on the right-hand side, number [1] must be an object or array.
+
+   in.js:44:18
+   44|     if ('foo' in 123) {} // error
+                        ^^^
+
+References:
+   in.js:44:18
+   44|     if ('foo' in 123) {} // error
+                        ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- in.js:45:9
+
+Cannot use `in` because on the left-hand side, boolean literal `false` [1] must be a string or number.
+
+   in.js:45:9
+   45|     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^
+
+References:
+   in.js:45:9
+   45|     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ in.js:52:15
+
+Cannot use `in` because on the right-hand side, mixed [1] must be an object or array.
+
+   in.js:52:15
+   52|     ('foo' in y); // error
+                     ^
+
+References:
+   in.js:50:26
+   50|   function(x: Object, y: mixed) {
+                                ^^^^^ [1]
 
 
 

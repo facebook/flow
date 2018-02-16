@@ -1,7 +1,18 @@
-Error ------------------------------------------------------------- date.js:2:16
+Error ----------------------------------------------------------------------------------------------------- date.js:2:16
 
-Cannot assign `d.getTime()` to `x` because number [1] is incompatible with
-string [2].
+Cannot assign `d.getTime()` to `x` because number [1] is incompatible with string [2].
+
+   date.js:2:16
+     2| var x:string = d.getTime();
+                       ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:378:16
+   378|     getTime(): number;
+                       ^^^^^^ [1]
+   date.js:2:7
+     2| var x:string = d.getTime();
+              ^^^^^^ [2]
 
 
 Error: date.js:18
@@ -34,40 +45,88 @@ Error: date.js:18
   369:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                              ^^^^^^ number. See lib: <BUILTINS>/core.js:369
 
-Error ------------------------------------------------------------ date.js:19:16
+Error ---------------------------------------------------------------------------------------------------- date.js:19:16
 
-Cannot call `Date` with `'6'` bound to `month` because string [1] is
-incompatible with number [2].
+Cannot call `Date` with `'6'` bound to `month` because string [1] is incompatible with number [2].
 
+   date.js:19:16
+    19| new Date(2015, '6');
+                       ^^^ [1]
 
-Error ------------------------------------------------------------ date.js:20:19
-
-Cannot call `Date` with `'18'` bound to `day` because string [1] is incompatible
-with number [2].
-
-
-Error ------------------------------------------------------------ date.js:21:23
-
-Cannot call `Date` with `'11'` bound to `hour` because string [1] is
-incompatible with number [2].
+References:
+   <BUILTINS>/core.js:369:38
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------ date.js:22:27
+Error ---------------------------------------------------------------------------------------------------- date.js:20:19
 
-Cannot call `Date` with `'55'` bound to `minute` because string [1] is
-incompatible with number [2].
+Cannot call `Date` with `'18'` bound to `day` because string [1] is incompatible with number [2].
+
+   date.js:20:19
+    20| new Date(2015, 6, '18');
+                          ^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:369:52
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------ date.js:23:31
+Error ---------------------------------------------------------------------------------------------------- date.js:21:23
 
-Cannot call `Date` with `'42'` bound to `second` because string [1] is
-incompatible with number [2].
+Cannot call `Date` with `'11'` bound to `hour` because string [1] is incompatible with number [2].
+
+   date.js:21:23
+    21| new Date(2015, 6, 18, '11');
+                              ^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:369:67
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                          ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------ date.js:24:35
+Error ---------------------------------------------------------------------------------------------------- date.js:22:27
 
-Cannot call `Date` with `'999'` bound to `millisecond` because string [1] is
-incompatible with number [2].
+Cannot call `Date` with `'55'` bound to `minute` because string [1] is incompatible with number [2].
+
+   date.js:22:27
+    22| new Date(2015, 6, 18, 11, '55');
+                                  ^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:369:84
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:23:31
+
+Cannot call `Date` with `'42'` bound to `second` because string [1] is incompatible with number [2].
+
+   date.js:23:31
+    23| new Date(2015, 6, 18, 11, 55, '42');
+                                      ^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:369:101
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:24:35
+
+Cannot call `Date` with `'999'` bound to `millisecond` because string [1] is incompatible with number [2].
+
+   date.js:24:35
+    24| new Date(2015, 6, 18, 11, 55, 42, '999');
+                                          ^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:369:123
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                                                                  ^^^^^^ [2]
 
 
 Error: date.js:25
@@ -108,10 +167,18 @@ Error: date.js:25
   369:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:369
 
-Error ------------------------------------------------------------ date.js:26:10
+Error ---------------------------------------------------------------------------------------------------- date.js:26:10
 
-Cannot call `Date` with `'2015'` bound to `year` because string [1] is
-incompatible with number [2].
+Cannot call `Date` with `'2015'` bound to `year` because string [1] is incompatible with number [2].
+
+   date.js:26:10
+    26| new Date('2015', 6);
+                 ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:369:23
+   369|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                              ^^^^^^ [2]
 
 
 

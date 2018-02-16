@@ -1,13 +1,35 @@
-Error ----------------------------------------------------------- fetch.js:12:28
+Error --------------------------------------------------------------------------------------------------- fetch.js:12:28
 
-Cannot assign `fetch(...)` to `b` because in type argument `R`, `Response` [1]
-is incompatible with string [2].
+Cannot assign `fetch(...)` to `b` because in type argument `R`, `Response` [1] is incompatible with string [2].
+
+   fetch.js:12:28
+     12| const b: Promise<string> = fetch(myRequest); // incorrect
+                                    ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:1002:76
+   1002| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+                                                                                    ^^^^^^^^ [1]
+   fetch.js:12:18
+     12| const b: Promise<string> = fetch(myRequest); // incorrect
+                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------- fetch.js:25:26
+Error --------------------------------------------------------------------------------------------------- fetch.js:25:26
 
-Cannot assign `fetch(...)` to `d` because in type argument `R`, `Blob` [1] is
-incompatible with `Response` [2].
+Cannot assign `fetch(...)` to `d` because in type argument `R`, `Blob` [1] is incompatible with `Response` [2].
+
+   fetch.js:25:26
+     25| const d: Promise<Blob> = fetch('image.png'); // incorrect
+                                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   fetch.js:25:18
+     25| const d: Promise<Blob> = fetch('image.png'); // incorrect
+                          ^^^^ [1]
+   <BUILTINS>/bom.js:1002:76
+   1002| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+                                                                                    ^^^^^^^^ [2]
 
 
 Error: headers.js:3
@@ -54,66 +76,157 @@ Error: headers.js:4
   879: type HeadersInit = Headers | {[key: string]: string};
                                     ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
 
-Error ----------------------------------------------------------- headers.js:9:3
+Error --------------------------------------------------------------------------------------------------- headers.js:9:1
 
 Cannot call `e.append` because function [1] requires another argument.
 
+   headers.js:9:1
+     9| e.append('Content-Type'); // not correct
+        ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------- headers.js:10:3
+References:
+   <BUILTINS>/bom.js:887:5
+   887|     append(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- headers.js:10:1
 
 Cannot call `e.append` because function [1] requires another argument.
 
+   headers.js:10:1
+    10| e.append({'Content-Type': 'image/jpeg'}); // not correct
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------------- headers.js:10:10
+References:
+   <BUILTINS>/bom.js:887:5
+   887|     append(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Cannot call `e.append` with object literal bound to `name` because object
-literal [1] is incompatible with string [2].
+
+Error ------------------------------------------------------------------------------------------------- headers.js:10:10
+
+Cannot call `e.append` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+
+   headers.js:10:10
+    10| e.append({'Content-Type': 'image/jpeg'}); // not correct
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:887:18
+   887|     append(name: string, value: string): void;
+                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------- headers.js:12:3
+Error -------------------------------------------------------------------------------------------------- headers.js:12:1
 
 Cannot call `e.set` because function [1] requires another argument.
 
+   headers.js:12:1
+    12| e.set('Content-Type'); // not correct
+        ^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------- headers.js:13:3
+References:
+   <BUILTINS>/bom.js:894:5
+   894|     set(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- headers.js:13:1
 
 Cannot call `e.set` because function [1] requires another argument.
 
+   headers.js:13:1
+    13| e.set({'Content-Type': 'image/jpeg'}); // not correct
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------- headers.js:13:7
-
-Cannot call `e.set` with object literal bound to `name` because object
-literal [1] is incompatible with string [2].
-
-
-Error --------------------------------------------------------- headers.js:15:20
-
-Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with
-`Headers` [2].
+References:
+   <BUILTINS>/bom.js:894:5
+   894|     set(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------- headers.js:18:19
+Error -------------------------------------------------------------------------------------------------- headers.js:13:7
 
-Cannot assign `e.get(...)` to `h` because string [1] is incompatible with
-number [2].
+Cannot call `e.set` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+
+   headers.js:13:7
+    13| e.set({'Content-Type': 'image/jpeg'}); // not correct
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:894:15
+   894|     set(name: string, value: string): void;
+                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------- headers.js:28:3
+Error ------------------------------------------------------------------------------------------------- headers.js:15:20
+
+Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with `Headers` [2].
+
+   headers.js:15:20
+    15| const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:887:42
+   887|     append(name: string, value: string): void;
+                                                 ^^^^ [1]
+   headers.js:15:10
+    15| const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
+                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- headers.js:18:19
+
+Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+
+   headers.js:18:19
+    18| const h: number = e.get('Content-Type'); // not correct
+                          ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:891:24
+   891|     get(name: string): string;
+                               ^^^^^^ [1]
+   headers.js:18:10
+    18| const h: number = e.get('Content-Type'); // not correct
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- headers.js:28:1
 
 Cannot call `e.getAll` because property `getAll` is missing in `Headers` [1].
 
+   headers.js:28:1
+   28| e.getAll('content-type'); // incorrect
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------- request.js:2:24
+References:
+   headers.js:7:10
+    7| const e: Headers = new Headers(); // correct
+                ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:2:20
 
 Cannot call `Request` because function [1] requires another argument.
 
+   request.js:2:20
+     2| const a: Request = new Request(); // incorrect
+                           ^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------- request.js:6:35
+References:
+   <BUILTINS>/bom.js:977:5
+   977|     constructor(input: RequestInfo, init?: RequestOptions): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because:
  - in property `cache`, string enum [1] is incompatible with undefined [2].
- - in property `credentials`, string enum [3] is incompatible with
-   undefined [4].
+ - in property `credentials`, string enum [3] is incompatible with undefined [4].
  - in property `headers`, `Headers` [5] is incompatible with object type [6].
  - in property `headers`, `Headers` [5] is incompatible with undefined [6].
  - in property `integrity`, string [7] is incompatible with undefined [8].
@@ -121,8 +234,67 @@ Cannot call `Request` with `c` bound to `init` because:
  - in property `mode`, string enum [11] is incompatible with undefined [12].
  - in property `redirect`, string enum [13] is incompatible with undefined [14].
  - in property `referrer`, string [15] is incompatible with undefined [16].
- - in property `referrerPolicy`, string enum [17] is incompatible with
-   undefined [18].
+ - in property `referrerPolicy`, string enum [17] is incompatible with undefined [18].
+
+   request.js:6:35
+     6| const e: Request = new Request(b, c); // incorrect
+                                          ^
+
+References:
+   <BUILTINS>/bom.js:982:12
+   982|     cache: CacheType;
+                   ^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:931:13
+   931|     cache?: CacheType;
+                    ^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:983:18
+   983|     credentials: CredentialsType;
+                         ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:932:19
+   932|     credentials?: CredentialsType;
+                          ^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:984:14
+   984|     headers: Headers;
+                     ^^^^^^^ [5]
+   <BUILTINS>/bom.js:933:15
+   933|     headers?: HeadersInit;
+                      ^^^^^^^^^^^ [6]
+   <BUILTINS>/bom.js:985:16
+   985|     integrity: string;
+                       ^^^^^^ [7]
+   <BUILTINS>/bom.js:934:17
+   934|     integrity?: string;
+                        ^^^^^^ [8]
+   <BUILTINS>/bom.js:986:13
+   986|     method: string;
+                    ^^^^^^ [9]
+   <BUILTINS>/bom.js:936:14
+   936|     method?: string;
+                     ^^^^^^ [10]
+   <BUILTINS>/bom.js:987:11
+   987|     mode: ModeType;
+                  ^^^^^^^^ [11]
+   <BUILTINS>/bom.js:937:12
+   937|     mode?: ModeType;
+                   ^^^^^^^^ [12]
+   <BUILTINS>/bom.js:988:15
+   988|     redirect: RedirectType;
+                      ^^^^^^^^^^^^ [13]
+   <BUILTINS>/bom.js:938:16
+   938|     redirect?: RedirectType;
+                       ^^^^^^^^^^^^ [14]
+   <BUILTINS>/bom.js:989:15
+   989|     referrer: string;
+                      ^^^^^^ [15]
+   <BUILTINS>/bom.js:939:16
+   939|     referrer?: string;
+                       ^^^^^^ [16]
+   <BUILTINS>/bom.js:990:21
+   990|     referrerPolicy: ReferrerPolicyType;
+                            ^^^^^^^^^^^^^^^^^^ [17]
+   <BUILTINS>/bom.js:940:22
+   940|     referrerPolicy?: ReferrerPolicyType;
+                             ^^^^^^^^^^^^^^^^^^ [18]
 
 
 Error: request.js:8
@@ -147,16 +319,40 @@ Error: request.js:8
   926: type RequestInfo = Request | URL | string;
                                     ^^^ URL. See lib: <BUILTINS>/bom.js:926
 
-Error --------------------------------------------------------- request.js:24:19
+Error ------------------------------------------------------------------------------------------------- request.js:24:15
 
-Cannot call `h.text().then` with function bound to `onFulfill` because in the
-first argument, `Buffer` [1] is incompatible with string [2].
+Cannot call `h.text().then` with function bound to `onFulfill` because in the first argument, `Buffer` [1] is
+incompatible with string [2].
+
+   request.js:24:15
+    24| h.text().then((t: Buffer) => t); // incorrect
+                      ^^^^^^^^^^^^^^^^
+
+References:
+   request.js:24:19
+    24| h.text().then((t: Buffer) => t); // incorrect
+                          ^^^^^^ [1]
+   <BUILTINS>/bom.js:999:21
+   999|     text(): Promise<string>;
+                            ^^^^^^ [2]
 
 
-Error --------------------------------------------------------- request.js:26:27
+Error ------------------------------------------------------------------------------------------------- request.js:26:22
 
-Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in
-the first argument, `ArrayBuffer` [1] is incompatible with `Buffer` [2].
+Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in the first argument, `ArrayBuffer` [1]
+is incompatible with `Buffer` [2].
+
+   request.js:26:22
+    26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                             ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:995:28
+   995|     arrayBuffer(): Promise<ArrayBuffer>;
+                                   ^^^^^^^^^^^ [1]
+   request.js:26:27
+    26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                                  ^^^^^^ [2]
 
 
 Error: request.js:54
@@ -191,22 +387,58 @@ Error: request.js:54
       879: type HeadersInit = Headers | {[key: string]: string};
                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:879
 
-Error --------------------------------------------------------- request.js:63:28
+Error ------------------------------------------------------------------------------------------------- request.js:63:18
 
-Cannot call `Request` with object literal bound to `init` because in property
-`method`, null [1] is incompatible with string [2].
+Cannot call `Request` with object literal bound to `init` because in property `method`, null [1] is incompatible with
+string [2].
+
+   request.js:63:18
+    63| new Request('/', { method: null }); // incorrect
+                         ^^^^^^^^^^^^^^^^
+
+References:
+   request.js:63:28
+    63| new Request('/', { method: null }); // incorrect
+                                   ^^^^ [1]
+   <BUILTINS>/bom.js:936:14
+   936|     method?: string;
+                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------- response.js:8:28
+Error ------------------------------------------------------------------------------------------------- response.js:8:18
 
-Cannot call `Response` with object literal bound to `init` because in property
-`status`, string [1] is incompatible with number [2].
+Cannot call `Response` with object literal bound to `init` because in property `status`, string [1] is incompatible with
+number [2].
+
+   response.js:8:18
+     8| new Response("", { status: "404" }); // incorrect
+                         ^^^^^^^^^^^^^^^^^
+
+References:
+   response.js:8:28
+     8| new Response("", { status: "404" }); // incorrect
+                                   ^^^^^ [1]
+   <BUILTINS>/bom.js:945:14
+   945|     status?: number;
+                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------- response.js:9:28
+Error ------------------------------------------------------------------------------------------------- response.js:9:18
 
-Cannot call `Response` with object literal bound to `init` because in property
-`status`, null [1] is incompatible with number [2].
+Cannot call `Response` with object literal bound to `init` because in property `status`, null [1] is incompatible with
+number [2].
+
+   response.js:9:18
+     9| new Response("", { status: null }); // incorrect
+                         ^^^^^^^^^^^^^^^^
+
+References:
+   response.js:9:28
+     9| new Response("", { status: null }); // incorrect
+                                   ^^^^ [1]
+   <BUILTINS>/bom.js:945:14
+   945|     status?: number;
+                     ^^^^^^ [2]
 
 
 Error: response.js:11
@@ -342,67 +574,180 @@ Error: response.js:30
     628: type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:628
 
-Error -------------------------------------------------------- response.js:42:19
+Error ------------------------------------------------------------------------------------------------ response.js:42:15
 
-Cannot call `h.text().then` with function bound to `onFulfill` because in the
-first argument, `Buffer` [1] is incompatible with string [2].
+Cannot call `h.text().then` with function bound to `onFulfill` because in the first argument, `Buffer` [1] is
+incompatible with string [2].
+
+   response.js:42:15
+    42| h.text().then((t: Buffer) => t); // incorrect
+                      ^^^^^^^^^^^^^^^^
+
+References:
+   response.js:42:19
+    42| h.text().then((t: Buffer) => t); // incorrect
+                          ^^^^^^ [1]
+   <BUILTINS>/bom.js:973:21
+   973|     text(): Promise<string>;
+                            ^^^^^^ [2]
 
 
-Error -------------------------------------------------------- response.js:44:27
+Error ------------------------------------------------------------------------------------------------ response.js:44:22
 
-Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in
-the first argument, `ArrayBuffer` [1] is incompatible with `Buffer` [2].
+Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because in the first argument, `ArrayBuffer` [1]
+is incompatible with `Buffer` [2].
+
+   response.js:44:22
+    44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                             ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:969:28
+   969|     arrayBuffer(): Promise<ArrayBuffer>;
+                                   ^^^^^^^^^^^ [1]
+   response.js:44:27
+    44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
+                                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------- urlsearchparams.js:4:31
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:31
 
 Cannot call `URLSearchParams` with array literal bound to `query` because:
  - in type argument `T`, string [1] is incompatible with tuple type [2].
  - in type argument `T`, string [3] is incompatible with tuple type [2].
 
+   urlsearchparams.js:4:31
+     4| const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                      ^^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------- urlsearchparams.js:9:3
+References:
+   urlsearchparams.js:4:32
+     4| const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                       ^^^^^^ [1]
+   <BUILTINS>/bom.js:900:58
+   900|     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
+                                                                 ^^^^^^^^^^^^^^^^ [2]
+   urlsearchparams.js:4:40
+     4| const b = new URLSearchParams(['key1', 'value1']); // not correct
+                                               ^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- urlsearchparams.js:9:1
 
 Cannot call `e.append` because function [1] requires another argument.
 
+   urlsearchparams.js:9:1
+     9| e.append('key1'); // not correct
+        ^^^^^^^^^^^^^^^^
 
-Error -------------------------------------------------- urlsearchparams.js:10:3
+References:
+   <BUILTINS>/bom.js:901:5
+   901|     append(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:10:1
 
 Cannot call `e.append` because function [1] requires another argument.
 
+   urlsearchparams.js:10:1
+    10| e.append({'key1': 'value1'}); // not correct
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------- urlsearchparams.js:10:10
+References:
+   <BUILTINS>/bom.js:901:5
+   901|     append(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Cannot call `e.append` with object literal bound to `name` because object
-literal [1] is incompatible with string [2].
+
+Error ----------------------------------------------------------------------------------------- urlsearchparams.js:10:10
+
+Cannot call `e.append` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+
+   urlsearchparams.js:10:10
+    10| e.append({'key1': 'value1'}); // not correct
+                 ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:901:18
+   901|     append(name: string, value: string): void;
+                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------- urlsearchparams.js:12:3
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:12:1
 
 Cannot call `e.set` because function [1] requires another argument.
 
+   urlsearchparams.js:12:1
+    12| e.set('key1'); // not correct
+        ^^^^^^^^^^^^^
 
-Error -------------------------------------------------- urlsearchparams.js:13:3
+References:
+   <BUILTINS>/bom.js:909:5
+   909|     set(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:13:1
 
 Cannot call `e.set` because function [1] requires another argument.
 
+   urlsearchparams.js:13:1
+    13| e.set({'key1': 'value1'}); // not correct
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error -------------------------------------------------- urlsearchparams.js:13:7
-
-Cannot call `e.set` with object literal bound to `name` because object
-literal [1] is incompatible with string [2].
-
-
-Error ------------------------------------------------- urlsearchparams.js:15:28
-
-Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with
-`URLSearchParams` [2].
+References:
+   <BUILTINS>/bom.js:909:5
+   909|     set(name: string, value: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------- urlsearchparams.js:18:19
+Error ------------------------------------------------------------------------------------------ urlsearchparams.js:13:7
 
-Cannot assign `e.get(...)` to `h` because string [1] is incompatible with
-number [2].
+Cannot call `e.set` with object literal bound to `name` because object literal [1] is incompatible with string [2].
+
+   urlsearchparams.js:13:7
+    13| e.set({'key1': 'value1'}); // not correct
+              ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:909:15
+   909|     set(name: string, value: string): void;
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- urlsearchparams.js:15:28
+
+Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with `URLSearchParams` [2].
+
+   urlsearchparams.js:15:28
+    15| const f: URLSearchParams = e.append('key1', 'value1'); // not correct
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:901:42
+   901|     append(name: string, value: string): void;
+                                                 ^^^^ [1]
+   urlsearchparams.js:15:10
+    15| const f: URLSearchParams = e.append('key1', 'value1'); // not correct
+                 ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- urlsearchparams.js:18:19
+
+Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+
+   urlsearchparams.js:18:19
+    18| const h: number = e.get('key1'); // not correct
+                          ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:905:24
+   905|     get(name: string): string;
+                               ^^^^^^ [1]
+   urlsearchparams.js:18:10
+    18| const h: number = e.get('key1'); // not correct
+                 ^^^^^^ [2]
 
 
 

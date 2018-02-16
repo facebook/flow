@@ -1,349 +1,1051 @@
-Error -------------------------------------------------------------- any.js:5:21
+Error ------------------------------------------------------------------------------------------------------ any.js:5:21
 
-Cannot assign `dict[k]` to `val` because number [1] is incompatible with
-string [2].
+Cannot assign `dict[k]` to `val` because number [1] is incompatible with string [2].
+
+   any.js:5:21
+   5| const val: string = dict[k] // error: number incompatible with string
+                          ^^^^^^^
+
+References:
+   any.js:3:29
+   3| const dict: {[key: string]: number} = {}
+                                  ^^^^^^ [1]
+   any.js:5:12
+   5| const val: string = dict[k] // error: number incompatible with string
+                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------- dictionary.js:47:9
+Error ----------------------------------------------------------------------------------------------- dictionary.js:47:9
 
 Cannot assign `new A()` to `o.p` because `A` [1] is incompatible with `B` [2].
 
+   dictionary.js:47:9
+   47|   o.p = new A; // error, A ~> B
+               ^^^^^ [1]
 
-Error ------------------------------------------------------- dictionary.js:58:4
+References:
+   dictionary.js:45:18
+   45|   o: {[k:string]:B},
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- dictionary.js:58:4
 
 Cannot cast `o.p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:58:4
+   58|   (o.p: C); // error, C ~> B
+          ^^^
 
-Error ------------------------------------------------------- dictionary.js:66:3
+References:
+   dictionary.js:54:18
+   54|   o: {[k:string]:B},
+                        ^ [1]
+   dictionary.js:58:9
+   58|   (o.p: C); // error, C ~> B
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- dictionary.js:66:3
 
 string `prop` [1] is incompatible with number [2].
 
+   dictionary.js:66:3
+   66|   o.prop = "err"; // error: string ~> number
+         ^^^^^^
 
-Error ------------------------------------------------------- dictionary.js:94:4
-
-Cannot cast `o.toString()` to boolean because string [1] is incompatible with
-boolean [2].
-
-
-Error ----------------------------------------------------- dictionary.js:110:34
-
-Cannot assign `x` to `a` because in type argument `T` and then the indexer
-property, `B` [1] is incompatible with `A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:115:34
-
-Cannot assign `x` to `c` because in type argument `T` and then the indexer
-property, `B` [1] is incompatible with `C` [2].
+References:
+   dictionary.js:66:3
+   66|   o.prop = "err"; // error: string ~> number
+         ^^^^^^ [1]
+   dictionary.js:64:10
+   64|   o: {[k:number]:any},
+                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:116:4
+Error ----------------------------------------------------------------------------------------------- dictionary.js:94:4
+
+Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2].
+
+   dictionary.js:94:4
+   94|   (o.toString(): boolean); // error: string ~> boolean
+          ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:54:17
+   54|     toString(): string;
+                       ^^^^^^ [1]
+   dictionary.js:94:18
+   94|   (o.toString(): boolean); // error: string ~> boolean
+                        ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:110:34
+
+Cannot assign `x` to `a` because in type argument `T` and then the indexer property, `B` [1] is incompatible with
+`A` [2].
+
+   dictionary.js:110:34
+   110|   let a: Array<{[k:string]:A}> = x; // error
+                                         ^
+
+References:
+   dictionary.js:108:24
+   108|   x: Array<{[k:string]:B}>,
+                               ^ [1]
+   dictionary.js:110:28
+   110|   let a: Array<{[k:string]:A}> = x; // error
+                                   ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:115:34
+
+Cannot assign `x` to `c` because in type argument `T` and then the indexer property, `B` [1] is incompatible with
+`C` [2].
+
+   dictionary.js:115:34
+   115|   let c: Array<{[k:string]:C}> = x; // error
+                                         ^
+
+References:
+   dictionary.js:108:24
+   108|   x: Array<{[k:string]:B}>,
+                               ^ [1]
+   dictionary.js:115:28
+   115|   let c: Array<{[k:string]:C}> = x; // error
+                                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:116:4
 
 Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:116:4
+   116|   (x[0].p: C); // not true
+           ^^^^^^
 
-Error ----------------------------------------------------- dictionary.js:122:27
-
-Cannot assign `x` to `a` because in the indexer property, `B` [1] is
-incompatible with `A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:127:27
-
-Cannot assign `x` to `c` because in the indexer property, `B` [1] is
-incompatible with `C` [2].
+References:
+   dictionary.js:108:24
+   108|   x: Array<{[k:string]:B}>,
+                               ^ [1]
+   dictionary.js:116:12
+   116|   (x[0].p: C); // not true
+                   ^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:128:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:122:27
+
+Cannot assign `x` to `a` because in the indexer property, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:122:27
+   122|   let a: {[k:string]:A} = x; // error
+                                  ^
+
+References:
+   dictionary.js:120:18
+   120|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:122:22
+   122|   let a: {[k:string]:A} = x; // error
+                             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:127:27
+
+Cannot assign `x` to `c` because in the indexer property, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:127:27
+   127|   let c: {[k:string]:C} = x; // error
+                                  ^
+
+References:
+   dictionary.js:120:18
+   120|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:127:22
+   127|   let c: {[k:string]:C} = x; // error
+                             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:128:4
 
 Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:128:4
+   128|   (x.p: C); // not true
+           ^^^
 
-Error ------------------------------------------------------ dictionary.js:139:8
+References:
+   dictionary.js:120:18
+   120|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:128:9
+   128|   (x.p: C); // not true
+                ^ [2]
 
-Cannot assign object literal to `b` because in property `a`, `A` [1] is
-incompatible with `B` [2].
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:138:27
+
+Cannot assign object literal to `b` because in property `a`, `A` [1] is incompatible with `B` [2].
+
+   dictionary.js:138:27
+                                  v
+   138|   let b: {[k:string]:B} = {
+   139|     a: new A, // error, A not <: B
+   140|     b: new B, // ok, B == B
+   141|     c: new C, // ok, C <: A
+   142|   };
+          ^
+
+References:
+   dictionary.js:139:8
+   139|     a: new A, // error, A not <: B
+               ^^^^^ [1]
+   dictionary.js:138:22
+   138|   let b: {[k:string]:B} = {
+                             ^ [2]
 
 
-Error ----------------------------------------------------- dictionary.js:144:27
+Error --------------------------------------------------------------------------------------------- dictionary.js:144:27
 
 Cannot assign object literal to `c` because:
  - in property `a`, `A` [1] is incompatible with `C` [2].
  - in property `b`, `B` [3] is incompatible with `C` [2].
 
+   dictionary.js:144:27
+                                  v
+   144|   let c: {[k:string]:C} = {
+   145|     a: new A, // error, A not <: C
+   146|     b: new B, // error, A not <: C
+   147|     c: new C, // ok, C == C
+   148|   };
+          ^
 
-Error ----------------------------------------------------- dictionary.js:159:31
-
-Cannot assign `x` to `a` because in type argument `T` and then the indexer
-property's key, `B` [1] is incompatible with `A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:161:31
-
-Cannot assign `x` to `c` because in type argument `T` and then the indexer
-property's key, `B` [1] is incompatible with `C` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:167:24
-
-Cannot assign `x` to `a` because in the indexer property's key, `B` [1] is
-incompatible with `A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:169:24
-
-Cannot assign `x` to `c` because in the indexer property's key, `B` [1] is
-incompatible with `C` [2].
+References:
+   dictionary.js:145:8
+   145|     a: new A, // error, A not <: C
+               ^^^^^ [1]
+   dictionary.js:144:22
+   144|   let c: {[k:string]:C} = {
+                             ^ [2]
+   dictionary.js:146:8
+   146|     b: new B, // error, A not <: C
+               ^^^^^ [3]
 
 
-Error ----------------------------------------------------- dictionary.js:175:39
+Error --------------------------------------------------------------------------------------------- dictionary.js:159:31
 
-Cannot assign `x` to `a` because in type argument `T` and then property `p`,
-`A` [1] is incompatible with `B` [2].
+Cannot assign `x` to `a` because in type argument `T` and then the indexer property's key, `B` [1] is incompatible with
+`A` [2].
+
+   dictionary.js:159:31
+   159|   let a: Array<{[k:A]:any}> = x; // error
+                                      ^
+
+References:
+   dictionary.js:157:16
+   157|   x: Array<{[k:B]:any}>,
+                       ^ [1]
+   dictionary.js:159:20
+   159|   let a: Array<{[k:A]:any}> = x; // error
+                           ^ [2]
 
 
-Error ----------------------------------------------------- dictionary.js:180:39
+Error --------------------------------------------------------------------------------------------- dictionary.js:161:31
 
-Cannot assign `x` to `c` because in type argument `T` and then property `p`,
-`C` [1] is incompatible with `B` [2].
+Cannot assign `x` to `c` because in type argument `T` and then the indexer property's key, `B` [1] is incompatible with
+`C` [2].
+
+   dictionary.js:161:31
+   161|   let c: Array<{[k:C]:any}> = x; // error
+                                      ^
+
+References:
+   dictionary.js:157:16
+   157|   x: Array<{[k:B]:any}>,
+                       ^ [1]
+   dictionary.js:161:20
+   161|   let c: Array<{[k:C]:any}> = x; // error
+                           ^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:181:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:167:24
+
+Cannot assign `x` to `a` because in the indexer property's key, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:167:24
+   167|   let a: {[k:A]:any} = x; // error
+                               ^
+
+References:
+   dictionary.js:165:10
+   165|   x: {[k:B]:any},
+                 ^ [1]
+   dictionary.js:167:14
+   167|   let a: {[k:A]:any} = x; // error
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:169:24
+
+Cannot assign `x` to `c` because in the indexer property's key, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:169:24
+   169|   let c: {[k:C]:any} = x; // error
+                               ^
+
+References:
+   dictionary.js:165:10
+   165|   x: {[k:B]:any},
+                 ^ [1]
+   dictionary.js:169:14
+   169|   let c: {[k:C]:any} = x; // error
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:175:39
+
+Cannot assign `x` to `a` because in type argument `T` and then property `p`, `A` [1] is incompatible with `B` [2].
+
+   dictionary.js:175:39
+   175|   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
+                                              ^
+
+References:
+   dictionary.js:175:33
+   175|   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
+                                        ^ [1]
+   dictionary.js:173:24
+   173|   x: Array<{[k:string]:B}>,
+                               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:180:39
+
+Cannot assign `x` to `c` because in type argument `T` and then property `p`, `C` [1] is incompatible with `B` [2].
+
+   dictionary.js:180:39
+   180|   let c: Array<{[k:string]:B, p:C}> = x; // error
+                                              ^
+
+References:
+   dictionary.js:180:33
+   180|   let c: Array<{[k:string]:B, p:C}> = x; // error
+                                        ^ [1]
+   dictionary.js:173:24
+   173|   x: Array<{[k:string]:B}>,
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:181:4
 
 Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:181:4
+   181|   (x[0].p: C); // not true
+           ^^^^^^
 
-Error ----------------------------------------------------- dictionary.js:189:34
-
-Cannot assign `xa` to `a` because in type argument `T` and then property `p`,
-`B` [1] is incompatible with `A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:194:34
-
-Cannot assign `xc` to `c` because in type argument `T` and then property `p`,
-`B` [1] is incompatible with `C` [2].
+References:
+   dictionary.js:173:24
+   173|   x: Array<{[k:string]:B}>,
+                               ^ [1]
+   dictionary.js:181:12
+   181|   (x[0].p: C); // not true
+                   ^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:195:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:189:34
+
+Cannot assign `xa` to `a` because in type argument `T` and then property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:189:34
+   189|   let a: Array<{[k:string]:A}> = xa; // error
+                                         ^^
+
+References:
+   dictionary.js:185:30
+   185|   xa: Array<{[k:string]:A, p:B}>,
+                                     ^ [1]
+   dictionary.js:189:28
+   189|   let a: Array<{[k:string]:A}> = xa; // error
+                                   ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:194:34
+
+Cannot assign `xc` to `c` because in type argument `T` and then property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:194:34
+   194|   let c: Array<{[k:string]:C}> = xc; // error
+                                         ^^
+
+References:
+   dictionary.js:187:30
+   187|   xc: Array<{[k:string]:C, p:B}>,
+                                     ^ [1]
+   dictionary.js:194:28
+   194|   let c: Array<{[k:string]:C}> = xc; // error
+                                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:195:4
 
 Cannot cast `xc[0].p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:195:4
+   195|   (xc[0].p: C); // not true
+           ^^^^^^^
 
-Error ----------------------------------------------------- dictionary.js:201:32
-
-Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:206:32
-
-Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
+References:
+   dictionary.js:187:30
+   187|   xc: Array<{[k:string]:C, p:B}>,
+                                     ^ [1]
+   dictionary.js:195:13
+   195|   (xc[0].p: C); // not true
+                    ^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:207:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:201:32
+
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:201:32
+   201|   let a: {[k:string]:B, p:A} = x; // error: A ~> B
+                                       ^
+
+References:
+   dictionary.js:199:18
+   199|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:201:27
+   201|   let a: {[k:string]:B, p:A} = x; // error: A ~> B
+                                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:206:32
+
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:206:32
+   206|   let c: {[k:string]:B, p:C} = x; // error
+                                       ^
+
+References:
+   dictionary.js:199:18
+   199|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:206:27
+   206|   let c: {[k:string]:B, p:C} = x; // error
+                                  ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:207:4
 
 Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:207:4
+   207|   (x.p: C); // not true
+           ^^^
 
-Error ----------------------------------------------------- dictionary.js:215:27
-
-Cannot assign `xa` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:220:27
-
-Cannot assign `xc` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
+References:
+   dictionary.js:199:18
+   199|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:207:9
+   207|   (x.p: C); // not true
+                ^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:221:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:215:27
+
+Cannot assign `xa` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:215:27
+   215|   let a: {[k:string]:A} = xa; // error
+                                  ^^
+
+References:
+   dictionary.js:211:24
+   211|   xa: {[k:string]:A, p:B},
+                               ^ [1]
+   dictionary.js:215:22
+   215|   let a: {[k:string]:A} = xa; // error
+                             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:220:27
+
+Cannot assign `xc` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:220:27
+   220|   let c: {[k:string]:C} = xc; // error
+                                  ^^
+
+References:
+   dictionary.js:213:24
+   213|   xc: {[k:string]:C, p:B},
+                               ^ [1]
+   dictionary.js:220:22
+   220|   let c: {[k:string]:C} = xc; // error
+                             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:221:4
 
 Cannot cast `xc.p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:221:4
+   221|   (xc.p: C); // not true
+           ^^^^
 
-Error ----------------------------------------------------- dictionary.js:227:10
-
-Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type [1] but exists in object type [2].
-
-
-Error ----------------------------------------------------- dictionary.js:233:10
-
-Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type [1] but exists in object type [2].
-
-
-Error ----------------------------------------------------- dictionary.js:239:18
-
-Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
+References:
+   dictionary.js:213:24
+   213|   xc: {[k:string]:C, p:B},
+                               ^ [1]
+   dictionary.js:221:10
+   221|   (xc.p: C); // not true
+                 ^ [2]
 
 
-Error ----------------------------------------------------- dictionary.js:244:18
+Error --------------------------------------------------------------------------------------------- dictionary.js:227:10
 
-Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
+Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+type [2].
+
+   dictionary.js:227:10
+   227|   return x; // error: if allowed, could write {p:X,q:Y} into `x`
+                 ^
+
+References:
+   dictionary.js:226:10
+   226| ): Array<{p:X}> {
+                 ^^^^^ [1]
+   dictionary.js:225:12
+   225|   x: Array<{[k:string]:X}>,
+                   ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:245:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:233:10
+
+Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+type [2].
+
+   dictionary.js:233:10
+   233|   return x; // error: if allowed, could write {p:X,q:Y} into returned array
+                 ^
+
+References:
+   dictionary.js:231:12
+   231|   x: Array<{p:X}>,
+                   ^^^^^ [1]
+   dictionary.js:232:10
+   232| ): Array<{[k:string]:X}> {
+                 ^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:239:18
+
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:239:18
+   239|   let a: {p:A} = x; // error
+                         ^
+
+References:
+   dictionary.js:237:18
+   237|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:239:13
+   239|   let a: {p:A} = x; // error
+                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:244:18
+
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:244:18
+   244|   let c: {p:C} = x; // error
+                         ^
+
+References:
+   dictionary.js:237:18
+   237|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:244:13
+   244|   let c: {p:C} = x; // error
+                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:245:4
 
 Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:245:4
+   245|   (x.p: C); // not true
+           ^^^
 
-Error ----------------------------------------------------- dictionary.js:251:27
-
-Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:256:27
-
-Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
+References:
+   dictionary.js:237:18
+   237|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:245:9
+   245|   (x.p: C); // not true
+                ^ [2]
 
 
-Error ------------------------------------------------------ dictionary.js:257:4
+Error --------------------------------------------------------------------------------------------- dictionary.js:251:27
+
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:251:27
+   251|   let a: {[k:string]:A} = x; // error
+                                  ^
+
+References:
+   dictionary.js:249:9
+   249|   x: {p:B},
+                ^ [1]
+   dictionary.js:251:22
+   251|   let a: {[k:string]:A} = x; // error
+                             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:256:27
+
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:256:27
+   256|   let c: {[k:string]:C} = x; // error
+                                  ^
+
+References:
+   dictionary.js:249:9
+   249|   x: {p:B},
+                ^ [1]
+   dictionary.js:256:22
+   256|   let c: {[k:string]:C} = x; // error
+                             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- dictionary.js:257:4
 
 Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2].
 
+   dictionary.js:257:4
+   257|   (x.p: C); // not true
+           ^^^
 
-Error ----------------------------------------------------- dictionary.js:265:31
-
-Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:267:31
-
-Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:273:39
-
-Cannot assign `x` to `a` because in type argument `T` and then property `p`,
-`A` [1] is incompatible with `B` [2].
+References:
+   dictionary.js:249:9
+   249|   x: {p:B},
+                ^ [1]
+   dictionary.js:257:9
+   257|   (x.p: C); // not true
+                ^ [2]
 
 
-Error ----------------------------------------------------- dictionary.js:275:39
+Error --------------------------------------------------------------------------------------------- dictionary.js:265:31
 
-Cannot assign `x` to `c` because in type argument `T` and then property `p`,
-`C` [1] is incompatible with `B` [2].
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
 
+   dictionary.js:265:31
+   265|   let a: {[k:string]:A,x:X} = x; // error (as above), but exclusive of x
+                                      ^
 
-Error ----------------------------------------------------- dictionary.js:281:32
-
-Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:283:32
-
-Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
-
-
-Error ----------------------------------------------------- dictionary.js:289:19
-
-Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with
-`A` [2].
+References:
+   dictionary.js:263:9
+   263|   x: {p:B, x:X},
+                ^ [1]
+   dictionary.js:265:22
+   265|   let a: {[k:string]:A,x:X} = x; // error (as above), but exclusive of x
+                             ^ [2]
 
 
-Error ----------------------------------------------------- dictionary.js:301:19
+Error --------------------------------------------------------------------------------------------- dictionary.js:267:31
 
-Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with
-`C` [2].
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:267:31
+   267|   let c: {[k:string]:C,x:X} = x; // error (as above), but exclusive of x
+                                      ^
+
+References:
+   dictionary.js:263:9
+   263|   x: {p:B, x:X},
+                ^ [1]
+   dictionary.js:267:22
+   267|   let c: {[k:string]:C,x:X} = x; // error (as above), but exclusive of x
+                             ^ [2]
 
 
-Error ----------------------------------------------------- dictionary.js:307:10
+Error --------------------------------------------------------------------------------------------- dictionary.js:273:39
+
+Cannot assign `x` to `a` because in type argument `T` and then property `p`, `A` [1] is incompatible with `B` [2].
+
+   dictionary.js:273:39
+   273|   let a: Array<{[k:string]:B, p:A}> = x; // error
+                                              ^
+
+References:
+   dictionary.js:273:33
+   273|   let a: Array<{[k:string]:B, p:A}> = x; // error
+                                        ^ [1]
+   dictionary.js:271:24
+   271|   x: Array<{[k:string]:B}>,
+                               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:275:39
+
+Cannot assign `x` to `c` because in type argument `T` and then property `p`, `C` [1] is incompatible with `B` [2].
+
+   dictionary.js:275:39
+   275|   let c: Array<{[k:string]:B, p:C}> = x; // error
+                                              ^
+
+References:
+   dictionary.js:275:33
+   275|   let c: Array<{[k:string]:B, p:C}> = x; // error
+                                        ^ [1]
+   dictionary.js:271:24
+   271|   x: Array<{[k:string]:B}>,
+                               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:281:32
+
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:281:32
+   281|   let a: {[k:string]:B, p:A} = x; // error
+                                       ^
+
+References:
+   dictionary.js:279:18
+   279|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:281:27
+   281|   let a: {[k:string]:B, p:A} = x; // error
+                                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:283:32
+
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:283:32
+   283|   let c: {[k:string]:B, p:C} = x; // error
+                                       ^
+
+References:
+   dictionary.js:279:18
+   279|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:283:27
+   283|   let c: {[k:string]:B, p:C} = x; // error
+                                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:289:19
+
+Cannot assign `x` to `a` because in property `p`, `B` [1] is incompatible with `A` [2].
+
+   dictionary.js:289:19
+   289|   let a: {p?:A} = x; // error
+                          ^
+
+References:
+   dictionary.js:287:18
+   287|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:289:14
+   289|   let a: {p?:A} = x; // error
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:301:19
+
+Cannot assign `x` to `c` because in property `p`, `B` [1] is incompatible with `C` [2].
+
+   dictionary.js:301:19
+   301|   let c: {p?:C} = x; // error
+                          ^
+
+References:
+   dictionary.js:299:18
+   299|   x: {[k:string]:B},
+                         ^ [1]
+   dictionary.js:301:14
+   301|   let c: {p?:C} = x; // error
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:307:10
 
 Cannot return `x` because in property `p`, `A` [1] is incompatible with `B` [2].
 
+   dictionary.js:307:10
+   307|   return x;
+                 ^
 
-Error ----------------------------------------------------- dictionary.js:319:10
+References:
+   dictionary.js:305:10
+   305|   x: {p?:A},
+                 ^ [1]
+   dictionary.js:306:16
+   306| ): {[k:string]:B} { // error: A ~> B
+                       ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- dictionary.js:319:10
 
 Cannot return `x` because in property `p`, `C` [1] is incompatible with `B` [2].
 
+   dictionary.js:319:10
+   319|   return x;
+                 ^
 
-Error ----------------------------------------------------- incompatible.js:4:35
-
-Cannot assign `x` to `y` because in the indexer property, string [1] is
-incompatible with number [2].
-
-
-Error ----------------------------------------------------- incompatible.js:5:35
-
-Cannot assign `x` to `z` because in the indexer property's key, string [1] is
-incompatible with number [2].
-
-
-Error ----------------------------------------------------- incompatible.js:8:35
-
-Cannot assign `a` to `b` because in the indexer property, null or undefined [1]
-is incompatible with string [2].
+References:
+   dictionary.js:317:10
+   317|   x: {p?:C},
+                 ^ [1]
+   dictionary.js:318:16
+   318| ): {[k:string]:B} { // error: C ~> B
+                       ^ [2]
 
 
-Error ----------------------------------------------------- incompatible.js:9:36
+Error --------------------------------------------------------------------------------------------- incompatible.js:4:35
 
-Cannot assign `b` to `c` because in the indexer property, string [1] is
-incompatible with null or undefined [2].
+Cannot assign `x` to `y` because in the indexer property, string [1] is incompatible with number [2].
 
+   incompatible.js:4:35
+   4| var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
+                                        ^
 
-Error ---------------------------------------------------- incompatible.js:13:10
-
-Cannot return `x` because in type argument `T` and then the indexer property,
-number [1] is incompatible with string [2].
-
-
-Error ---------------------------------------------------- incompatible.js:20:10
-
-Cannot return `x` because in type argument `T` and then property `fooBar`,
-string [1] is incompatible with number [2].
-
-
-Error ---------------------------------------------------- incompatible.js:27:10
-
-Cannot return `x` because in type argument `T` and then property `fooBar`,
-string [1] is incompatible with mixed [2].
+References:
+   incompatible.js:3:25
+   3| var x : {[key: string]: string} = {};
+                              ^^^^^^ [1]
+   incompatible.js:4:25
+   4| var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
+                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------- incompatible.js:37:10
+Error --------------------------------------------------------------------------------------------- incompatible.js:5:35
 
-Cannot return `x` because in property `foo`, number [1] is incompatible with
+Cannot assign `x` to `z` because in the indexer property's key, string [1] is incompatible with number [2].
+
+   incompatible.js:5:35
+   5| var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
+                                        ^
+
+References:
+   incompatible.js:3:16
+   3| var x : {[key: string]: string} = {};
+                     ^^^^^^ [1]
+   incompatible.js:5:16
+   5| var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- incompatible.js:8:35
+
+Cannot assign `a` to `b` because in the indexer property, null or undefined [1] is incompatible with string [2].
+
+   incompatible.js:8:35
+   8| var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                                        ^
+
+References:
+   incompatible.js:7:25
+   7| var a : {[key: string]: ?string} = {};
+                              ^^^^^^^ [1]
+   incompatible.js:8:25
+   8| var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- incompatible.js:9:36
+
+Cannot assign `b` to `c` because in the indexer property, string [1] is incompatible with null or undefined [2].
+
+   incompatible.js:9:36
+   9| var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
+                                         ^
+
+References:
+   incompatible.js:8:25
+   8| var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                              ^^^^^^ [1]
+   incompatible.js:9:25
+   9| var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
+                              ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- incompatible.js:13:10
+
+Cannot return `x` because in type argument `T` and then the indexer property, number [1] is incompatible with
 string [2].
 
+   incompatible.js:13:10
+   13|   return x;
+                ^
 
-Error ---------------------------------------------------- incompatible.js:42:10
-
-Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type [1] but exists in object type [2].
-
-
-Error ---------------------------------------------------- incompatible.js:47:10
-
-Cannot return `x` because in type argument `T`, an indexer property is missing
-in object type [1] but exists in object type [2].
+References:
+   incompatible.js:12:40
+   12| function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                              ^^^^^^ [1]
+   incompatible.js:12:73
+   12| function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                                                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------- incompatible.js:55:4
+Error -------------------------------------------------------------------------------------------- incompatible.js:20:10
 
-Cannot cast `x.foo` to string because number [1] is incompatible with
+Cannot return `x` because in type argument `T` and then property `fooBar`, string [1] is incompatible with number [2].
+
+   incompatible.js:20:10
+   20|   return x;
+                ^
+
+References:
+   incompatible.js:19:42
+   19| ): Array<{[key: string]: number, fooBar: string}> {
+                                                ^^^^^^ [1]
+   incompatible.js:18:28
+   18|   x: Array<{[key: string]: number}>
+                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- incompatible.js:27:10
+
+Cannot return `x` because in type argument `T` and then property `fooBar`, string [1] is incompatible with mixed [2].
+
+   incompatible.js:27:10
+   27|   return x; // error: mixed ~> string
+                ^
+
+References:
+   incompatible.js:25:41
+   25| ): Array<{[key: string]: mixed, fooBar: string}> {
+                                               ^^^^^^ [1]
+   incompatible.js:24:28
+   24|   x: Array<{[key: string]: mixed}>
+                                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- incompatible.js:37:10
+
+Cannot return `x` because in property `foo`, number [1] is incompatible with string [2].
+
+   incompatible.js:37:10
+   37|   return x;
+                ^
+
+References:
+   incompatible.js:36:34
+   36| function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                        ^^^^^^ [1]
+   incompatible.js:36:73
+   36| function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                                                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
+
+Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+type [2].
+
+   incompatible.js:42:10
+   42|   return x;
+                ^
+
+References:
+   incompatible.js:41:57
+   41| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+                                                               ^^^^^^^^^^^^^ [1]
+   incompatible.js:41:24
+   41| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
+
+Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+type [2].
+
+   incompatible.js:47:10
+   47|   return x;
+                ^
+
+References:
+   incompatible.js:46:24
+   46| function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+                              ^^^^^^^^^^^^^ [1]
+   incompatible.js:46:47
+   46| function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- incompatible.js:55:4
+
+Cannot cast `x.foo` to string because number [1] is incompatible with string [2].
+
+   incompatible.js:55:4
+   55|   (x.foo: string); // error
+          ^^^^^
+
+References:
+   incompatible.js:54:34
+   54| function foo8(x: {[key: string]: number}) {
+                                        ^^^^^^ [1]
+   incompatible.js:55:11
+   55|   (x.foo: string); // error
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:4:33
+
+Cannot assign object literal to `o` because in property `foo` and then the return value, number [1] is incompatible with
 string [2].
 
+   test.js:4:33
+                                      v
+   4| var o: { foo: QueryFunction } = {
+   5|   foo(params) {
+   6|     return params.count; // error, number ~/~ string
+   7|   }
+   8| };
+      ^
 
-Error ------------------------------------------------------------- test.js:6:12
+References:
+   test.js:1:23
+   1| type Params = {count: number; [name: string]: string};
+                            ^^^^^^ [1]
+   test.js:2:42
+   2| type QueryFunction = (params: Params) => string;
+                                               ^^^^^^ [2]
 
-Cannot assign object literal to `o` because in property `foo` and then the
-return value, number [1] is incompatible with string [2].
 
+Error ----------------------------------------------------------------------------------------------- test_client.js:3:9
 
-Error ------------------------------------------------------ test_client.js:4:10
+Cannot assign function to `o.foo` because in the return value, number [1] is incompatible with string [2].
 
-Cannot assign function to `o.foo` because in the return value, number [1] is
-incompatible with string [2].
+   test_client.js:3:9
+              v------------------
+   3| o.foo = function (params) {
+   4|   return params.count; // error, number ~/~ string
+   5| }
+      ^
+
+References:
+   test.js:1:23
+   1| type Params = {count: number; [name: string]: string};
+                            ^^^^^^ [1]
+   test.js:2:42
+   2| type QueryFunction = (params: Params) => string;
+                                               ^^^^^^ [2]
 
 
 

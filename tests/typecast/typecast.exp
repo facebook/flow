@@ -1,7 +1,15 @@
-Error --------------------------------------------------------- typecast.js:7:14
+Error ------------------------------------------------------------------------------------------------- typecast.js:7:14
 
-Cannot cast `"hey"` to number because string [1] is incompatible with
-number [2].
+Cannot cast `"hey"` to number because string [1] is incompatible with number [2].
+
+   typecast.js:7:14
+   7|     var n = ("hey" : number);
+                   ^^^^^ [1]
+
+References:
+   typecast.js:7:22
+   7|     var n = ("hey" : number);
+                           ^^^^^^ [2]
 
 
 

@@ -1,79 +1,232 @@
-Error --------------------------------------------------------- decltest.js:2:33
+Error ------------------------------------------------------------------------------------------------- decltest.js:2:33
 
-Cannot use `T` [1] in an input/output position because `T` [1] is expected to
-occur only in output positions.
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+
+   decltest.js:2:33
+   2| declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
+                                      ^
+
+References:
+   decltest.js:2:26
+   2| declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
+                               ^ [1]
 
 
-Error ------------------------------------------------------- importtest.js:7:12
+Error ----------------------------------------------------------------------------------------------- importtest.js:7:12
 
 Cannot return `y` because number [1] is incompatible with `SuperOpaque` [2].
 
+   importtest.js:7:12
+   7|     return y;
+                 ^
 
-Error ------------------------------------------------------ importtest.js:15:12
+References:
+   importtest.js:6:20
+   6| function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+                         ^^^^^^^^^ [1]
+   importtest.js:6:33
+   6| function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+                                      ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:15:12
 
 Cannot return `x` because number [1] is incompatible with `Counter` [2].
 
+   importtest.js:15:12
+   15|     return x;
+                  ^
 
-Error ------------------------------------------------------ importtest.js:27:12
+References:
+   importtest.js:14:20
+   14| function test3 (x: number): Counter {// Error: number ~> Counter
+                          ^^^^^^ [1]
+   importtest.js:14:29
+   14| function test3 (x: number): Counter {// Error: number ~> Counter
+                                   ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:27:12
 
 Cannot return `x` because `PolyFoo` [1] is incompatible with `PolyBar` [2].
 
+   importtest.js:27:12
+   27|     return x;
+                  ^
 
-Error ------------------------------------------------------ importtest.js:31:12
-
-Cannot return `x` because in type argument `T`, number [1] is incompatible with
-string [2].
-
-
-Error ------------------------------------------------------ importtest.js:39:12
-
-Cannot assign number to `x` because number [1] is incompatible with
-`SuperType` [2].
+References:
+   importtest.js:26:19
+   26| function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+                         ^^^^^^^^^^^^^^^^ [1]
+   importtest.js:26:38
+   26| function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------ importtest.js:39:12
+Error ---------------------------------------------------------------------------------------------- importtest.js:31:12
+
+Cannot return `x` because in type argument `T`, number [1] is incompatible with string [2].
+
+   importtest.js:31:12
+   31|     return x;
+                  ^
+
+References:
+   importtest.js:30:28
+   30| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                  ^^^^^^ [1]
+   importtest.js:30:46
+   30| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:39:12
+
+Cannot assign number to `x` because number [1] is incompatible with `SuperType` [2].
+
+   importtest.js:39:12
+   39|     return x++; // Error number ~> SuperType
+                  ^^^ [1]
+
+References:
+   importtest.js:38:19
+   38| function test9(x: SuperType): SuperType { // Error number ~> SuperType
+                         ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:39:12
 
 Cannot return `x++` because number [1] is incompatible with `SuperType` [2].
 
+   importtest.js:39:12
+   39|     return x++; // Error number ~> SuperType
+                  ^^^ [1]
 
-Error ------------------------------------------------------ importtest.js:52:12
+References:
+   importtest.js:38:31
+   38| function test9(x: SuperType): SuperType { // Error number ~> SuperType
+                                     ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:52:12
 
 Cannot return `x + y` because string [1] is incompatible with number [2].
 
+   importtest.js:52:12
+   52|     return x + y;
+                  ^^^^^ [1]
 
-Error ------------------------------------------------------------- test.js:7:48
+References:
+   importtest.js:51:32
+   51| function test12(x: ID, y: ID): number { // Error: string ~> number
+                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:48
 
 number [1] is incompatible with `SuperType` [2].
 
+   test.js:7:48
+   7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+                                                     ^^^^^^^
 
-Error ------------------------------------------------------------ test.js:12:36
+References:
+   test.js:7:48
+   7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+                                                     ^^^^^^^ [1]
+   test.js:7:36
+   7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+                                         ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:36
 
 `Foo` [1] is incompatible with `Bar` [2].
 
+   test.js:12:36
+   12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+                                          ^^^
 
-Error ------------------------------------------------------------ test.js:17:45
+References:
+   test.js:12:36
+   12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+                                          ^^^ [1]
+   test.js:12:30
+   12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+                                    ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:45
 
 `PolyFoo` [1] is incompatible with `PolyBar` [2].
 
+   test.js:17:45
+   17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+                                                   ^^^^^^^^^^
 
-Error ------------------------------------------------------------ test.js:19:27
+References:
+   test.js:17:45
+   17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+                                                   ^^^^^^^^^^ [1]
+   test.js:17:32
+   17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+                                      ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:27
 
 Cannot use `PolyFoo` [1] with less than 1 type argument.
 
+   test.js:19:27
+   19| class PolyBar2<T> extends PolyFoo {}
+                                 ^^^^^^^
 
-Error ------------------------------------------------------------ test.js:21:47
+References:
+   test.js:14:22
+   14| export class PolyFoo<T> {}
+                            ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:47
 
 `PolyFoo` [1] is incompatible with `PolyBar2` [2].
 
+   test.js:21:47
+   21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+                                                     ^^^^^^^^^^
 
-Error ------------------------------------------------------------ test.js:27:65
+References:
+   test.js:21:47
+   21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+                                                     ^^^^^^^^^^ [1]
+   test.js:21:33
+   21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+                                       ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:65
 
 string [1] is incompatible with number [2].
 
+   test.js:27:65
+   27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                                                       ^^^^^^
 
-Error ------------------------------------------------------ typeapp-test.js:5:8
+References:
+   test.js:27:65
+   27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                                                       ^^^^^^ [1]
+   test.js:27:38
+   27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typeapp-test.js:5:3
 
 Cannot assign `null` to `foo2.p` because property `p` is not writable.
+
+   5|   foo2.p = null; // Error, covariant property p
+        ^^^^^^
 
 
 

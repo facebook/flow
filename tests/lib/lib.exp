@@ -1,24 +1,69 @@
-Error ---------------------------------------------------------- libtest.js:1:16
+Error -------------------------------------------------------------------------------------------------- libtest.js:1:16
 
 Cannot assign `NaN` to `x` because number [1] is incompatible with string [2].
 
+   libtest.js:1:16
+    1| var x:string = NaN
+                      ^^^
 
-Error ---------------------------------------------------------- libtest.js:2:16
-
-Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with
-string [2].
-
-
-Error ---------------------------------------------------------- libtest.js:3:16
-
-Cannot assign `new TypeError().name` to `z` because string [1] is incompatible
-with number [2].
+References:
+   <BUILTINS>/core.js:11:18
+   11| declare var NaN: number;
+                        ^^^^^^ [1]
+   libtest.js:1:7
+    1| var x:string = NaN
+             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------- libtest.js:4:16
+Error -------------------------------------------------------------------------------------------------- libtest.js:2:16
 
-Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with
-string [2].
+Cannot assign `Number.MAX_VALUE` to `y` because number [1] is incompatible with string [2].
+
+   libtest.js:2:16
+     2| var y:string = Number.MAX_VALUE;
+                       ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:126:23
+   126|     static MAX_VALUE: number;
+                              ^^^^^^ [1]
+   libtest.js:2:7
+     2| var y:string = Number.MAX_VALUE;
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- libtest.js:3:16
+
+Cannot assign `new TypeError().name` to `z` because string [1] is incompatible with number [2].
+
+   libtest.js:3:16
+     3| var z:number = new TypeError().name;
+                       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:442:11
+   442|     name: string;
+                  ^^^^^^ [1]
+   libtest.js:3:7
+     3| var z:number = new TypeError().name;
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- libtest.js:4:16
+
+Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with string [2].
+
+   libtest.js:4:16
+    4| var w:string = parseInt("...");
+                      ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:15:59
+   15| declare function parseInt(string: mixed, radix?: number): number;
+                                                                 ^^^^^^ [1]
+   libtest.js:4:7
+    4| var w:string = parseInt("...");
+             ^^^^^^ [2]
 
 
 

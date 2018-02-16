@@ -1,22 +1,67 @@
-Error -------------------------------------------------------------- test.js:4:8
+Error ----------------------------------------------------------------------------------------------------- test.js:2:33
 
-Cannot assign object literal to `o1` because in property `bar`, string [1] is
-incompatible with number [2].
+Cannot assign object literal to `o1` because in property `bar`, string [1] is incompatible with number [2].
+
+   test.js:2:33
+                                      v
+   2| var o1: {[key: Key1]: number} = {
+   3|   foo: 0,
+   4|   bar: "", // error: string ~/~ number
+   5| };
+      ^
+
+References:
+   test.js:4:8
+   4|   bar: "", // error: string ~/~ number
+             ^^ [1]
+   test.js:2:23
+   2| var o1: {[key: Key1]: number} = {
+                            ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------- test.js:7:1
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 string `qux` [1] is incompatible with string enum [2].
 
+   test.js:7:1
+   7| o1.qux; // error: qux not found
+      ^^^^^^
 
-Error ------------------------------------------------------------- test.js:14:1
+References:
+   test.js:7:1
+   7| o1.qux; // error: qux not found
+      ^^^^^^ [1]
+   test.js:2:16
+   2| var o1: {[key: Key1]: number} = {
+                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:1
 
 Property `qux` is missing in `R` [1].
 
+   test.js:14:1
+   14| o2.qux; // error: qux not found
+       ^^^^^^
 
-Error ------------------------------------------------------------- test.js:20:6
+References:
+   test.js:12:16
+   12| var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
+                      ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:6
 
 Property `qux` is missing in object type [1].
+
+   test.js:20:6
+   20|   x: { foo: number, qux: boolean }; // error: qux not found
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:19:19
+   19| class D extends C<{foo: number, bar: string}> {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

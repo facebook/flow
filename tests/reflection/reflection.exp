@@ -1,16 +1,43 @@
-Error ------------------------------------------------------------- type.js:2:19
+Error ----------------------------------------------------------------------------------------------------- type.js:2:19
 
 Cannot assign `"..."` to `b` because string [1] is incompatible with number [2].
 
+   type.js:2:19
+   2| var b: typeof a = "...";
+                        ^^^^^ [1]
 
-Error ------------------------------------------------------------- type.js:3:19
+References:
+   type.js:1:16
+   1| declare var a: number;
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- type.js:3:19
 
 Cannot assign `"..."` to `c` because string [1] is incompatible with number [2].
 
+   type.js:3:19
+   3| var c: typeof a = "...";
+                        ^^^^^ [1]
 
-Error ------------------------------------------------------------- type.js:6:11
+References:
+   type.js:1:16
+   1| declare var a: number;
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- type.js:6:11
 
 Cannot assign `"..."` to `x` because string [1] is incompatible with number [2].
+
+   type.js:6:11
+   6| var x:T = "...";
+                ^^^^^ [1]
+
+References:
+   type.js:6:7
+   6| var x:T = "...";
+            ^ [2]
 
 
 

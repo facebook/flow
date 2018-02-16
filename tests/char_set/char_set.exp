@@ -1,32 +1,81 @@
-Error ------------------------------------------------------------- test.js:14:4
+Error ----------------------------------------------------------------------------------------------------- test.js:14:4
 
-Cannot cast `"aaaa"` to character set `ab` because string literal `aaaa` [1] is
-incompatible with character set `ab` [2] since `a` is duplicated.
+Cannot cast `"aaaa"` to character set `ab` because string literal `aaaa` [1] is incompatible with character set `ab` [2]
+since `a` is duplicated.
 
+   test.js:14:4
+   14|   ("aaaa": $CharSet<"ab">); // error
+          ^^^^^^ [1]
 
-Error ------------------------------------------------------------- test.js:15:4
-
-Cannot cast `"c"` to character set `ab` because string literal `c` [1] is
-incompatible with character set `ab` [2] since `c` is not a member of the set.
-
-
-Error ------------------------------------------------------------- test.js:16:4
-
-Cannot cast `"ac"` to character set `ab` because string literal `ac` [1] is
-incompatible with character set `ab` [2] since `c` is not a member of the set.
+References:
+   test.js:14:12
+   14|   ("aaaa": $CharSet<"ab">); // error
+                  ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------- test.js:20:9
+Error ----------------------------------------------------------------------------------------------------- test.js:15:4
 
-Cannot call `C` with `x` bound to `flags` because string literal `abcd` [1] is
-incompatible with `C$flags` [2] since `c` is not a member of the set and `d` is
-not a member of the set.
+Cannot cast `"c"` to character set `ab` because string literal `c` [1] is incompatible with character set `ab` [2] since
+`c` is not a member of the set.
+
+   test.js:15:4
+   15|   ("c": $CharSet<"ab">); // error
+          ^^^ [1]
+
+References:
+   test.js:15:9
+   15|   ("c": $CharSet<"ab">); // error
+               ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------- test.js:25:4
+Error ----------------------------------------------------------------------------------------------------- test.js:16:4
 
-Cannot cast `x` to string literal `foo` because string [1] is incompatible with
-string literal `foo` [2].
+Cannot cast `"ac"` to character set `ab` because string literal `ac` [1] is incompatible with character set `ab` [2]
+since `c` is not a member of the set.
+
+   test.js:16:4
+   16|   ("ac": $CharSet<"ab">); // error
+          ^^^^ [1]
+
+References:
+   test.js:16:10
+   16|   ("ac": $CharSet<"ab">); // error
+                ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:9
+
+Cannot call `C` with `x` bound to `flags` because string literal `abcd` [1] is incompatible with `C$flags` [2] since `c`
+is not a member of the set and `d` is not a member of the set.
+
+   test.js:20:9
+   20|   new C(x);
+               ^
+
+References:
+   test.js:22:3
+   22| g("abcd");
+         ^^^^^^ [1]
+   test.js:3:16
+    3| type C$flags = $CharSet<"ab">
+                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:25:4
+
+Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
+
+   test.js:25:4
+   25|   (x: "foo");
+          ^
+
+References:
+   test.js:24:15
+   24| function h(x: $CharSet<"ab">) {
+                     ^^^^^^^^^^^^^^ [1]
+   test.js:25:7
+   25|   (x: "foo");
+             ^^^^^ [2]
 
 
 

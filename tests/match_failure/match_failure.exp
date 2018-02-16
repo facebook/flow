@@ -64,9 +64,21 @@ Error: disjoint_union.js:34
    31:   {+type: 'circle', radius: number};
                  ^^^^^^^^ string literal `circle`
 
-Error ------------------------------------------------------------- enum.js:8:25
+Error ----------------------------------------------------------------------------------------------------- enum.js:8:25
 
 number literal `2` [1] is incompatible with number enum [2].
+
+   enum.js:8:25
+   8|   } else if (binary === 2) { // oops
+                              ^
+
+References:
+   enum.js:8:25
+   8|   } else if (binary === 2) { // oops
+                              ^ [1]
+   enum.js:5:34
+   5| function stringifyBinary(binary: Binary): string {
+                                       ^^^^^^ [2]
 
 
 

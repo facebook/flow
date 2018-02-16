@@ -1,37 +1,52 @@
 
 Stop any already-running server.
 Full check shows the two unused suppressions:
-Warning ------------------------------------------------------ dependency.js:5:1
+Warning ---------------------------------------------------------------------------------------------- dependency.js:5:1
 
 Unused suppression comment.
 
+   5| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Warning --------------------------------------------------------- focused.js:7:1
+
+Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
 Found 2 warnings
 
 Full focus-check shows the two unused suppressions:
-Warning ------------------------------------------------------ dependency.js:5:1
+Warning ---------------------------------------------------------------------------------------------- dependency.js:5:1
 
 Unused suppression comment.
 
+   5| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Warning --------------------------------------------------------- focused.js:7:1
+
+Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
 Found 2 warnings
 
 Focused check on focused.js only reports focused's unused suppression
-Warning --------------------------------------------------------- focused.js:7:1
+Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -41,14 +56,20 @@ Focused check on unrelated.js doesn't show any unused suppressions
 Found 0 errors
 
 Focused check on dependency.js shows the two unused suppressions
-Warning ------------------------------------------------------ dependency.js:5:1
+Warning ---------------------------------------------------------------------------------------------- dependency.js:5:1
 
 Unused suppression comment.
 
+   5| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Warning --------------------------------------------------------- focused.js:7:1
+
+Warning ------------------------------------------------------------------------------------------------- focused.js:7:1
 
 Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 

@@ -1,18 +1,49 @@
-Error ----------------------------------------------------------- encaps.js:3:16
+Error --------------------------------------------------------------------------------------------------- encaps.js:3:14
 
 Cannot get `a.x` because property `x` is missing in `A` [1].
 
+   encaps.js:3:14
+   3| var s1 = `l${a.x}r`; // error: no prop x in A
+                   ^^^
 
-Error ----------------------------------------------------------- encaps.js:6:20
+References:
+   encaps.js:2:9
+   2| var a = new A();
+              ^^^^^^^ [1]
 
-Cannot assign `strings[0]` to `x` because string [1] is incompatible with
-number [2].
+
+Error --------------------------------------------------------------------------------------------------- encaps.js:6:20
+
+Cannot assign `strings[0]` to `x` because string [1] is incompatible with number [2].
+
+   encaps.js:6:20
+   6|     var x:number = strings[0]; // error: string ~> number
+                         ^^^^^^^^^^
+
+References:
+   encaps.js:9:10
+   9| var s2 = tag `l${42}r`;
+               ^^^^^^^^^^^^^ [1]
+   encaps.js:6:11
+   6|     var x:number = strings[0]; // error: string ~> number
+                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------- encaps.js:16:2
+Error --------------------------------------------------------------------------------------------------- encaps.js:16:2
 
-Cannot cast `s3.foo` to number because string [1] is incompatible with
-number [2].
+Cannot cast `s3.foo` to number because string [1] is incompatible with number [2].
+
+   encaps.js:16:2
+   16| (s3.foo: number); // error: string ~> number
+        ^^^^^^
+
+References:
+   encaps.js:12:17
+   12|   return { foo: "" }; // ok: tagged templates can return whatever
+                       ^^ [1]
+   encaps.js:16:10
+   16| (s3.foo: number); // error: string ~> number
+                ^^^^^^ [2]
 
 
 

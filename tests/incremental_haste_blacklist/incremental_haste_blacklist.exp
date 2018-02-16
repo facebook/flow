@@ -3,9 +3,12 @@ Initial status:
 No errors!
 
 Move A.js to B.js (blacklisted):
-Error ------------------------------------------------------------- index.js:2:9
+Error ----------------------------------------------------------------------------------------------------- index.js:2:9
 
 Cannot resolve module `A`.
+
+   2| require('A');
+              ^^^
 
 
 

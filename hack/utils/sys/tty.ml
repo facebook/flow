@@ -165,7 +165,7 @@ let eprintf fmt =
  * [1]: http://invisible-island.net/ncurses/man/tput.1.html
  *)
 let get_term_cols () =
-  if not Sys.unix then
+  if not Sys.unix || not (supports_color ()) then
     None
   else
     try

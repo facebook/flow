@@ -1,21 +1,62 @@
-Error ------------------------------------------------------------- error.js:8:8
+Error ----------------------------------------------------------------------------------------------------- error.js:8:3
 
-Cannot cast `any` to number because null or undefined [1] is incompatible with
-number [2].
+Cannot cast `any` to number because null or undefined [1] is incompatible with number [2].
+
+   error.js:8:3
+   8| ((any: ?number): number);
+        ^^^^^^^^^^^^
+
+References:
+   error.js:8:8
+   8| ((any: ?number): number);
+             ^^^^^^^ [1]
+   error.js:8:18
+   8| ((any: ?number): number);
+                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------- error.js:9:3
+Error ----------------------------------------------------------------------------------------------------- error.js:9:3
 
 Cannot cast `any` to null because:
  - null or undefined [1] is incompatible with null [2].
  - number [3] is incompatible with null [2].
 
+   error.js:9:3
+   9| ((any: ?number): null);
+        ^^^^^^^^^^^^
 
-Error ------------------------------------------------------------ error.js:10:3
+References:
+   error.js:9:8
+   9| ((any: ?number): null);
+             ^^^^^^^ [1]
+   error.js:9:18
+   9| ((any: ?number): null);
+                       ^^^^ [2]
+   error.js:9:9
+   9| ((any: ?number): null);
+              ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- error.js:10:3
 
 Cannot cast `any` to undefined because:
  - null or undefined [1] is incompatible with undefined [2].
  - number [3] is incompatible with undefined [2].
+
+   error.js:10:3
+   10| ((any: ?number): void);
+         ^^^^^^^^^^^^
+
+References:
+   error.js:10:8
+   10| ((any: ?number): void);
+              ^^^^^^^ [1]
+   error.js:10:18
+   10| ((any: ?number): void);
+                        ^^^^ [2]
+   error.js:10:9
+   10| ((any: ?number): void);
+               ^^^^^^ [3]
 
 
 Error: error.js:16
@@ -62,34 +103,88 @@ Error: error.js:17
    17: ((any: ?number): number | void);
                                  ^^^^ undefined
 
-Error ------------------------------------------------------------ maybe.js:5:11
+Error ----------------------------------------------------------------------------------------------------- maybe.js:5:3
 
-Cannot cast `123` to nullable string because number [1] is incompatible with
-string [2].
+Cannot cast `123` to nullable string because number [1] is incompatible with string [2].
+
+   maybe.js:5:3
+   5| ((123: ?(?number)): ?string); // error (only num ~> string)
+        ^^^^^^^^^^^^^^^
+
+References:
+   maybe.js:5:11
+   5| ((123: ?(?number)): ?string); // error (only num ~> string)
+                ^^^^^^ [1]
+   maybe.js:5:22
+   5| ((123: ?(?number)): ?string); // error (only num ~> string)
+                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------- nullable.js:1:32
+Error ------------------------------------------------------------------------------------------------- nullable.js:1:32
 
 Cannot return `null` because null [1] is incompatible with string [2].
 
+   nullable.js:1:32
+   1| function foo():string { return null; }
+                                     ^^^^ [1]
 
-Error -------------------------------------------------------- nullable.js:11:22
+References:
+   nullable.js:1:16
+   1| function foo():string { return null; }
+                     ^^^^^^ [2]
 
-Cannot call `corge` with `x` bound to `x` because string [1] is incompatible
-with number [2].
+
+Error ------------------------------------------------------------------------------------------------ nullable.js:11:22
+
+Cannot call `corge` with `x` bound to `x` because string [1] is incompatible with number [2].
+
+   nullable.js:11:22
+   11| if (x != null) corge(x); // x: ?string | null
+                            ^
+
+References:
+   nullable.js:3:17
+    3| function bar():?string { return null; }
+                       ^^^^^^ [1]
+   nullable.js:7:18
+    7| function corge(x:number) { }
+                        ^^^^^^ [2]
 
 
-Error -------------------------------------------------------- nullable.js:15:17
+Error ------------------------------------------------------------------------------------------------ nullable.js:15:17
 
 Cannot call `qux` with `x` bound to `x` because:
  - null [1] is incompatible with string [2].
  - null or undefined [3] is incompatible with string [2].
 
+   nullable.js:15:17
+   15|   grault(); qux(x);
+                       ^
 
-Error --------------------------------------------------- simple_nullable.js:4:5
+References:
+   nullable.js:13:25
+   13| function grault() { x = null; }
+                               ^^^^ [1]
+   nullable.js:5:16
+    5| function qux(x:string) { }
+                      ^^^^^^ [2]
+   nullable.js:3:16
+    3| function bar():?string { return null; }
+                      ^^^^^^^ [3]
 
-Cannot call `bar` with `'hmm'` bound to `x` because string [1] is incompatible
-with number [2].
+
+Error ------------------------------------------------------------------------------------------- simple_nullable.js:4:5
+
+Cannot call `bar` with `'hmm'` bound to `x` because string [1] is incompatible with number [2].
+
+   simple_nullable.js:4:5
+   4| bar('hmm');
+          ^^^^^ [1]
+
+References:
+   simple_nullable.js:2:17
+   2| function bar(x:?number) {}
+                      ^^^^^^ [2]
 
 
 

@@ -1,7 +1,18 @@
-Error ----------------------------------------------------------- regexp.js:2:20
+Error --------------------------------------------------------------------------------------------------- regexp.js:2:20
 
-Cannot assign `patt.test(...)` to `match` because boolean [1] is incompatible
-with number [2].
+Cannot assign `patt.test(...)` to `match` because boolean [1] is incompatible with number [2].
+
+   regexp.js:2:20
+     2| var match:number = patt.test("Hello world!");
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:345:27
+   345|     test(string: string): boolean;
+                                  ^^^^^^^ [1]
+   regexp.js:2:11
+     2| var match:number = patt.test("Hello world!");
+                  ^^^^^^ [2]
 
 
 

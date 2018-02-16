@@ -1,7 +1,18 @@
-Error ----------------------------------------------------- issue-1462-i.js:21:9
+Error --------------------------------------------------------------------------------------------- issue-1462-i.js:21:9
 
-Cannot call `print` with `val.foo` bound to `x` because array type [1] is
-incompatible with number [2].
+Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
+
+   issue-1462-i.js:21:9
+   21|   print(val.foo);  // <--- foo could be an array
+               ^^^^^^^
+
+References:
+   issue-1462-i.js:11:8
+   11|   foo: Array<number>
+              ^^^^^^^^^^^^^ [1]
+   issue-1462-i.js:16:19
+   16| function print(x: number) {
+                         ^^^^^^ [2]
 
 
 Error: issue-824.js:21
@@ -150,10 +161,19 @@ Error: test10.js:62
    62: check_arr([id("")]);
                  ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
-Error ----------------------------------------------------------- test11.js:12:8
+Error --------------------------------------------------------------------------------------------------- test11.js:12:8
 
-Cannot call `length` with object literal bound to `list` because property `next`
-is missing in object literal [1] but exists in `Cons` [2].
+Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but
+exists in `Cons` [2].
+
+   test11.js:12:8
+   12| length({ kind: "cons" }); // missing `next`
+              ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test11.js:16:19
+   16| type List = Nil | Cons;
+                         ^^^^ [2]
 
 
 Error: test11.js:14
@@ -233,21 +253,54 @@ Error: test16.js:14
    14: bar(() => qux());
                  ^^^^^ return
 
-Error ------------------------------------------------------------ test17.js:7:2
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
 
 Cannot cast `[].concat(...)[1]` to string because:
  - number [1] is incompatible with string [2].
  - number [3] is incompatible with string [2].
 
+   test17.js:7:2
+   7| ([].concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^
 
-Error ---------------------------------------------------------- test20.js:14:26
+References:
+   test17.js:7:13
+   7| ([].concat([0,1])[1]: string)
+                  ^ [1]
+   test17.js:7:23
+   7| ([].concat([0,1])[1]: string)
+                            ^^^^^^ [2]
+   test17.js:7:15
+   7| ([].concat([0,1])[1]: string)
+                    ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
 Cannot perform arithmetic operation because string [1] is not a number.
 
+   test20.js:14:26
+   14| [""].reduce((acc,str) => acc * str.length);
+                                ^^^
 
-Error ---------------------------------------------------------- test20.js:14:36
+References:
+   test20.js:14:2
+   14| [""].reduce((acc,str) => acc * str.length);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- test20.js:14:32
 
 Cannot get `str.length` because property `length` is missing in `Number` [1].
+
+   test20.js:14:32
+   14| [""].reduce((acc,str) => acc * str.length);
+                                      ^^^^^^^^^^
+
+References:
+   test20.js:14:26
+   14| [""].reduce((acc,str) => acc * str.length);
+                                ^^^^^^^^^^^^^^^^ [1]
 
 
 Error: test21.js:11
@@ -295,10 +348,18 @@ Error: test22.js:20
    14: } & Empty;
            ^^^^^ Empty
 
-Error ---------------------------------------------------------- test26.js:20:25
+Error -------------------------------------------------------------------------------------------------- test26.js:20:25
 
-Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is
-incompatible with number [2].
+Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is incompatible with number [2].
+
+   test26.js:20:25
+   20| new Record().set('foo', "42");
+                               ^^^^ [1]
+
+References:
+   test26.js:16:20
+   16|   set(x: 'foo', y: number): void;
+                          ^^^^^^ [2]
 
 
 Error: test33.js:7
@@ -316,15 +377,38 @@ Error: test33.js:7
     6: function bar() { return 0 }
                      ^ return
 
-Error ------------------------------------------------------------ test33.js:8:2
+Error ---------------------------------------------------------------------------------------------------- test33.js:8:2
 
-Cannot cast `bar()` to string because number [1] is incompatible with
-string [2].
+Cannot cast `bar()` to string because number [1] is incompatible with string [2].
+
+   test33.js:8:2
+   8| (bar(): string); // error: number ~> string
+       ^^^^^
+
+References:
+   test33.js:6:25
+   6| function bar() { return 0 }
+                              ^ [1]
+   test33.js:8:9
+   8| (bar(): string); // error: number ~> string
+              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------- test34.js:10:6
+Error --------------------------------------------------------------------------------------------------- test34.js:10:6
 
 Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2].
+
+   test34.js:10:6
+   10|     (x.foo: empty); // error: string ~> empty
+            ^^^^^
+
+References:
+   test34.js:16:18
+   16| type A = {| foo: string |};
+                        ^^^^^^ [1]
+   test34.js:10:13
+   10|     (x.foo: empty); // error: string ~> empty
+                   ^^^^^ [2]
 
 
 Error: test5.js:14
@@ -359,16 +443,32 @@ Error: test5.js:25
    24: var a2 = [];
                 ^^ unknown element type of empty array
 
-Error ----------------------------------------------------------- test9.js:12:10
+Error --------------------------------------------------------------------------------------------------- test9.js:12:10
 
-Cannot perform arithmetic operation because null or undefined [1] is not a
-number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number.
+
+   test9.js:12:10
+   12|   return x * x;
+                ^
+
+References:
+   test9.js:15:22
+   15| function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------- test9.js:12:14
+Error --------------------------------------------------------------------------------------------------- test9.js:12:14
 
-Cannot perform arithmetic operation because null or undefined [1] is not a
-number.
+Cannot perform arithmetic operation because null or undefined [1] is not a number.
+
+   test9.js:12:14
+   12|   return x * x;
+                    ^
+
+References:
+   test9.js:15:22
+   15| function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]
 
 
 

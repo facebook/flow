@@ -1,31 +1,84 @@
-Error ----------------------------------------------------------- client.js:3:19
+Error --------------------------------------------------------------------------------------------------- client.js:3:19
 
-Cannot assign `ns.foo` to `bar` because number [1] is incompatible with
-string [2].
+Cannot assign `ns.foo` to `bar` because number [1] is incompatible with string [2].
 
+   client.js:3:19
+    3| var bar: string = ns.foo
+                         ^^^^^^
 
-Error -------------------------------------------------------- namespace.js:3:23
-
-Cannot assign function to `f` because in the first argument, string [1] is
-incompatible with number [2].
-
-
-Error ------------------------------------------------------- namespace.js:11:16
-
-Cannot assign `bar(...)` to `y` because string [1] is incompatible with
-number [2].
-
-
-Error ------------------------------------------------------- namespace.js:15:16
-
-Cannot assign array literal to `s2` because in type argument `T` and then type
-argument `T`, string [1] is incompatible with number [2].
+References:
+   namespace.js:17:30
+   17| module.exports = { foo: ("": number) };
+                                    ^^^^^^ [1]
+   client.js:3:10
+    3| var bar: string = ns.foo
+                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------- namespace.js:17:26
+Error ------------------------------------------------------------------------------------------------ namespace.js:3:12
 
-Cannot cast empty string to number because string [1] is incompatible with
-number [2].
+Cannot assign function to `f` because in the first argument, string [1] is incompatible with number [2].
+
+   namespace.js:3:12
+   3| var f: T = function(x:string): void { }
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   namespace.js:3:23
+   3| var f: T = function(x:string): void { }
+                            ^^^^^^ [1]
+   namespace.js:2:13
+   2| type T = (x:number) => void;
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- namespace.js:11:16
+
+Cannot assign `bar(...)` to `y` because string [1] is incompatible with number [2].
+
+   namespace.js:11:16
+   11| var y:number = bar(0, x => "");
+                      ^^^^^^^^^^^^^^^
+
+References:
+   namespace.js:11:28
+   11| var y:number = bar(0, x => "");
+                                  ^^ [1]
+   namespace.js:11:7
+   11| var y:number = bar(0, x => "");
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- namespace.js:15:14
+
+Cannot assign array literal to `s2` because in type argument `T` and then type argument `T`, string [1] is incompatible
+with number [2].
+
+   namespace.js:15:14
+   15| var s2:Seq = [[""]];
+                    ^^^^^^
+
+References:
+   namespace.js:15:16
+   15| var s2:Seq = [[""]];
+                      ^^ [1]
+   namespace.js:13:12
+   13| type Seq = number | Array<Seq>;
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- namespace.js:17:26
+
+Cannot cast empty string to number because string [1] is incompatible with number [2].
+
+   namespace.js:17:26
+   17| module.exports = { foo: ("": number) };
+                                ^^ [1]
+
+References:
+   namespace.js:17:30
+   17| module.exports = { foo: ("": number) };
+                                    ^^^^^^ [2]
 
 
 

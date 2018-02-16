@@ -3,9 +3,10 @@ Check without --all doesn't read malformed @flow file
 Found 0 errors
 
 Check with --all sees a parse error
-Error -------------------------------------------------------------- text.js:0:1
+Error ------------------------------------------------------------------------------------------------------ text.js:0:1
 
 Malformed unicode
+
 
 
 

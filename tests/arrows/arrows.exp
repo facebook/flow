@@ -1,18 +1,53 @@
-Error -------------------------------------------------- advanced_arrows.js:7:34
+Error ------------------------------------------------------------------------------------------ advanced_arrows.js:7:34
 
 Cannot return `x` because number [1] is incompatible with string [2].
 
+   advanced_arrows.js:7:34
+   7| var bad = (x: number): string => x; // Error!
+                                       ^
 
-Error -------------------------------------------------- advanced_arrows.js:11:2
+References:
+   advanced_arrows.js:7:15
+   7| var bad = (x: number): string => x; // Error!
+                    ^^^^^^ [1]
+   advanced_arrows.js:7:24
+   7| var bad = (x: number): string => x; // Error!
+                             ^^^^^^ [2]
 
-Cannot cast `ident(...)` to number because string [1] is incompatible with
-number [2].
+
+Error ------------------------------------------------------------------------------------------ advanced_arrows.js:11:2
+
+Cannot cast `ident(...)` to number because string [1] is incompatible with number [2].
+
+   advanced_arrows.js:11:2
+   11| (ident("hi"): number); // Error
+        ^^^^^^^^^^^
+
+References:
+   advanced_arrows.js:11:8
+   11| (ident("hi"): number); // Error
+              ^^^^ [1]
+   advanced_arrows.js:11:15
+   11| (ident("hi"): number); // Error
+                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------- arrows.js:7:36
+Error --------------------------------------------------------------------------------------------------- arrows.js:7:26
 
-Cannot call `images.sort` with function bound to `compareFn` because in the
-return value, string [1] is incompatible with number [2].
+Cannot call `images.sort` with function bound to `compareFn` because in the return value, string [1] is incompatible
+with number [2].
+
+   arrows.js:7:26
+     7|     images = images.sort((a, b) => (a.width - b.width) + "");
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   arrows.js:7:36
+     7|     images = images.sort((a, b) => (a.width - b.width) + "");
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:269:38
+   269|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+                                             ^^^^^^ [2]
 
 
 

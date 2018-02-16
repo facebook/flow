@@ -1,7 +1,15 @@
-Error -------------------------------------------------------------- main.js:4:2
+Error ------------------------------------------------------------------------------------------------------ main.js:4:2
 
-Cannot cast `<fbt />` to number because `React.Element` [1] is incompatible with
-number [2].
+Cannot cast `<fbt />` to number because `React.Element` [1] is incompatible with number [2].
+
+   main.js:4:2
+   4| (<fbt />: number); // Error: ReactElement ~> number
+       ^^^^^^^ [1]
+
+References:
+   main.js:4:11
+   4| (<fbt />: number); // Error: ReactElement ~> number
+                ^^^^^^ [2]
 
 
 

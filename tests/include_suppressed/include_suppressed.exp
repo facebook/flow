@@ -1,12 +1,24 @@
 Without --include-suppressed
-Error -------------------------------------------------------------- test.js:3:2
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
 Cannot cast `123` to string because number [1] is incompatible with string [2].
 
+   test.js:3:2
+   3| (123: string); // Normal error
+       ^^^ [1]
 
-Warning ------------------------------------------------------------ test.js:8:1
+References:
+   test.js:3:7
+   3| (123: string); // Normal error
+            ^^^^^^ [2]
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
 
 Unused suppression comment.
+
+   8| // $FlowFixMe - unused suppression comment
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -14,19 +26,40 @@ Found 1 error and 1 warning
 
 
 With --include-suppressed
-Error -------------------------------------------------------------- test.js:3:2
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
 Cannot cast `123` to string because number [1] is incompatible with string [2].
 
+   test.js:3:2
+   3| (123: string); // Normal error
+       ^^^ [1]
 
-Error -------------------------------------------------------------- test.js:6:2
+References:
+   test.js:3:7
+   3| (123: string); // Normal error
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
 Cannot cast `123` to string because number [1] is incompatible with string [2].
 
+   test.js:6:2
+   6| (123: string); // Suppressed error
+       ^^^ [1]
 
-Warning ------------------------------------------------------------ test.js:8:1
+References:
+   test.js:6:7
+   6| (123: string); // Suppressed error
+            ^^^^^^ [2]
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
 
 Unused suppression comment.
+
+   8| // $FlowFixMe - unused suppression comment
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 

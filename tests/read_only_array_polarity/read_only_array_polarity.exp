@@ -1,13 +1,29 @@
-Error ------------------------------------------------------------ test.js:16:38
+Error ---------------------------------------------------------------------------------------------------- test.js:16:38
 
-Cannot use `T` [1] in an output position because `T` [1] is expected to occur
-only in input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   test.js:16:38
+   16|     bad (x: number) : $ReadOnlyArray<T> {// Error: T in covariant position
+                                            ^
+
+References:
+   test.js:15:12
+   15| class Baz<-T> {
+                  ^ [1]
 
 
-Error ------------------------------------------------------------ test.js:22:28
+Error ---------------------------------------------------------------------------------------------------- test.js:22:28
 
-Cannot use `T` [1] in an output position because `T` [1] is expected to occur
-only in input positions.
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   test.js:22:28
+   22|     bad (x: $ReadOnlyArray<T> => number) : number {// Error: T used covariantly
+                                  ^
+
+References:
+   test.js:21:18
+   21| class ContraBaz<-T> {
+                        ^ [1]
 
 
 

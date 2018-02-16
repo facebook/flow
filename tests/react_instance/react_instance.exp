@@ -1,46 +1,127 @@
-Error ----------------------------------------------------------- class.js:11:37
+Error ---------------------------------------------------------------------------------------------------- class.js:11:1
 
 Cannot get `any.yep2` because property `yep2` is missing in `Foo` [1].
 
+   class.js:11:1
+   11| (any: React$ElementRef<Class<Foo>>).yep2; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------- class.js:12:37
+References:
+   class.js:11:30
+   11| (any: React$ElementRef<Class<Foo>>).yep2; // Error
+                                    ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:12:1
 
 Cannot get `any.nope` because property `nope` is missing in `Foo` [1].
 
+   class.js:12:1
+   12| (any: React$ElementRef<Class<Foo>>).nope; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------- class.js:13:37
+References:
+   class.js:12:30
+   12| (any: React$ElementRef<Class<Foo>>).nope; // Error
+                                    ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:13:1
 
 Cannot get `any.yep1` because property `yep1` is missing in `Bar` [1].
 
+   class.js:13:1
+   13| (any: React$ElementRef<Class<Bar>>).yep1; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ----------------------------------------------------------- class.js:15:37
+References:
+   class.js:13:30
+   13| (any: React$ElementRef<Class<Bar>>).yep1; // Error
+                                    ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:15:1
 
 Cannot get `any.nope` because property `nope` is missing in `Bar` [1].
 
+   class.js:15:1
+   15| (any: React$ElementRef<Class<Bar>>).nope; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error --------------------------------------------------------- function.js:7:37
+References:
+   class.js:15:30
+   15| (any: React$ElementRef<Class<Bar>>).nope; // Error
+                                    ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- function.js:7:1
 
 Cannot get `any.nope` because property `nope` is missing in undefined [1].
 
+   function.js:7:1
+   7| (any: React$ElementRef<typeof Foo>).nope; // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error -------------------------------------------------------- intrinsic.js:6:32
+References:
+   function.js:7:24
+   7| (any: React$ElementRef<typeof Foo>).nope; // Error
+                             ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- intrinsic.js:6:1
 
 Cannot get `any.yep2` because property `yep2` is missing in object type [1].
 
+   intrinsic.js:6:1
+   6| (any: React$ElementRef<'foo'>).yep2; // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error -------------------------------------------------------- intrinsic.js:7:32
+References:
+   lib/jsx.js:4:15
+   4|     instance: {yep1: true},
+                    ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- intrinsic.js:7:1
 
 Cannot get `any.nope` because property `nope` is missing in object type [1].
 
+   intrinsic.js:7:1
+   7| (any: React$ElementRef<'foo'>).nope; // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error -------------------------------------------------------- intrinsic.js:8:32
+References:
+   lib/jsx.js:4:15
+   4|     instance: {yep1: true},
+                    ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- intrinsic.js:8:1
 
 Cannot get `any.yep1` because property `yep1` is missing in object type [1].
 
+   intrinsic.js:8:1
+   8| (any: React$ElementRef<'bar'>).yep1; // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error ------------------------------------------------------- intrinsic.js:10:32
+References:
+   lib/jsx.js:8:15
+   8|     instance: {yep2: true},
+                    ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ intrinsic.js:10:1
 
 Cannot get `any.nope` because property `nope` is missing in object type [1].
+
+   intrinsic.js:10:1
+   10| (any: React$ElementRef<'bar'>).nope; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib/jsx.js:8:15
+    8|     instance: {yep2: true},
+                     ^^^^^^^^^^^^ [1]
 
 
 
