@@ -15,59 +15,32 @@ References:
                          ^^^^^^ [2]
 
 
-Error: issue-824.js:21
- 21:     return this.foo(p);
-                         ^ intersection type. This type is incompatible with the expected param type of
- 10:   static foo(p: K): bool {
-                     ^ union: `B` | `C`
-  Member 1:
-    3: type K = B | C;
-                ^ B
-  Error:
-   21:     return this.foo(p);
-                           ^ intersection. This type is incompatible with
-    3: type K = B | C;
-                ^ B
-    Member 1:
-     13:   static bar(p: I & K): bool {
-                         ^ I
-    Error:
-     13:   static bar(p: I & K): bool {
-                         ^ I. This type is incompatible with
-      3: type K = B | C;
-                  ^ B
-    Member 2:
-     13:   static bar(p: I & K): bool {
-                             ^ K
-    Error:
-     13:   static bar(p: I & K): bool {
-                             ^ C. This type is incompatible with
-      3: type K = B | C;
-                  ^ B
-  Member 2:
-    3: type K = B | C;
-                    ^ C
-  Error:
-   21:     return this.foo(p);
-                           ^ intersection. This type is incompatible with
-    3: type K = B | C;
-                    ^ C
-    Member 1:
-     13:   static bar(p: I & K): bool {
-                         ^ I
-    Error:
-     13:   static bar(p: I & K): bool {
-                         ^ I. This type is incompatible with
-      3: type K = B | C;
-                      ^ C
-    Member 2:
-     13:   static bar(p: I & K): bool {
-                             ^ K
-    Error:
-     13:   static bar(p: I & K): bool {
-                             ^ B. This type is incompatible with
-      3: type K = B | C;
-                      ^ C
+Error ----------------------------------------------------------------------------------------------- issue-824.js:21:21
+
+Cannot call `this.foo` with `p` bound to `p` because:
+ - Either `I` [1] is incompatible with `B` [2].
+ - Or `C` [3] is incompatible with `B` [2].
+ - Or `I` [1] is incompatible with `C` [4].
+ - Or `B` [3] is incompatible with `C` [4].
+
+   issue-824.js:21:21
+   21|     return this.foo(p);
+                           ^
+
+References:
+   issue-824.js:13:17
+   13|   static bar(p: I & K): bool {
+                       ^ [1]
+   issue-824.js:3:10
+    3| type K = B | C;
+                ^ [2]
+   issue-824.js:13:21
+   13|   static bar(p: I & K): bool {
+                           ^ [3]
+   issue-824.js:3:14
+    3| type K = B | C;
+                    ^ [4]
+
 
 Error: test1.js:39
  39: const fun_result = fun(() => "");
@@ -176,37 +149,27 @@ References:
                          ^^^^ [2]
 
 
-Error: test11.js:14
- 14: length({ kind: "empty" }); // `kind` not found
-            ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  5: function length(list: List) {
-                           ^^^^ union: `Nil` | `Cons`
-  Member 1:
-   16: type List = Nil | Cons;
-                   ^^^ Nil
-  Error:
-   14: length({ kind: "empty" }); // `kind` not found
-              ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-   16: type List = Nil | Cons;
-                   ^^^ Nil
-    Property `kind` is incompatible:
-       14: length({ kind: "empty" }); // `kind` not found
-                          ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
-       17: type Nil = { kind: "nil" };
-                              ^^^^^ string literal `nil`
-  Member 2:
-   16: type List = Nil | Cons;
-                         ^^^^ Cons
-  Error:
-   14: length({ kind: "empty" }); // `kind` not found
-              ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-   16: type List = Nil | Cons;
-                         ^^^^ Cons
-    Property `kind` is incompatible:
-       14: length({ kind: "empty" }); // `kind` not found
-                          ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
-       18: type Cons = { kind: "cons", next: List };
-                               ^^^^^^ string literal `cons`
+Error --------------------------------------------------------------------------------------------------- test11.js:14:8
+
+Cannot call `length` with object literal bound to `list` because:
+ - Either string [1] is incompatible with string literal `nil` [2] in property `kind`.
+ - Or string [1] is incompatible with string literal `cons` [3] in property `kind`.
+
+   test11.js:14:8
+   14| length({ kind: "empty" }); // `kind` not found
+              ^^^^^^^^^^^^^^^^^
+
+References:
+   test11.js:14:16
+   14| length({ kind: "empty" }); // `kind` not found
+                      ^^^^^^^ [1]
+   test11.js:17:20
+   17| type Nil = { kind: "nil" };
+                          ^^^^^ [2]
+   test11.js:18:21
+   18| type Cons = { kind: "cons", next: List };
+                           ^^^^^^ [3]
+
 
 Error: test14.js:12
  12:   union({ x: c.get() });
@@ -320,43 +283,40 @@ Error: test21.js:11
    11: ({ type: bar(), x: str() }: T);
                           ^^^^^ call of `str`
 
-Error: test22.js:20
- 20:   else return x.result;
-                   ^^^^^^^^ property `result`. Property cannot be accessed on any member of intersection type
- 20:   else return x.result;
-                   ^ intersection
-  Member 1:
+Error -------------------------------------------------------------------------------------------------- test22.js:20:15
+
+Cannot get `x.result` because:
+ - Either property `result` is missing in object type [1].
+ - Or property `result` is missing in `Empty` [2].
+
+   test22.js:20:15
+   20|   else return x.result;
+                     ^^^^^^^^
+
+References:
+   test22.js:12:14
                     v
-   12: type Error = {
-   13:   type: 'ERROR';
-   14: } & Empty;
-       ^ object type
-  Error:
-   20:   else return x.result;
-                       ^^^^^^ property `result`. Property not found in
-                    v
-   12: type Error = {
-   13:   type: 'ERROR';
-   14: } & Empty;
-       ^ object type
-  Member 2:
-   14: } & Empty;
-           ^^^^^ Empty
-  Error:
-   20:   else return x.result;
-                       ^^^^^^ property `result`. Property not found in
-   14: } & Empty;
-           ^^^^^ Empty
+   12| type Error = {
+   13|   type: 'ERROR';
+   14| } & Empty;
+       ^ [1]
+   test22.js:14:5
+   14| } & Empty;
+           ^^^^^ [2]
 
-Error -------------------------------------------------------------------------------------------------- test26.js:20:25
 
-Cannot call `new Record().set` with `"42"` bound to `y` because string [1] is incompatible with number [2].
+Error --------------------------------------------------------------------------------------------------- test26.js:20:1
 
+Cannot call `new Record().set` because string [1] is incompatible with number [2].
+
+   test26.js:20:1
+   20| new Record().set('foo', "42");
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    test26.js:20:25
    20| new Record().set('foo', "42");
                                ^^^^ [1]
-
-References:
    test26.js:16:20
    16|   set(x: 'foo', y: number): void;
                           ^^^^^^ [2]
@@ -473,3 +433,6 @@ References:
 
 
 Found 27 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

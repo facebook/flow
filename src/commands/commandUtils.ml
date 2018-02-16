@@ -79,6 +79,7 @@ let collect_error_flags main
   max_warnings
   one_line
   show_all_errors
+  show_all_branches
   unicode
   message_width
 =
@@ -109,6 +110,7 @@ let collect_error_flags main
     max_warnings;
     one_line;
     show_all_errors;
+    show_all_branches;
     unicode;
     message_width;
   }
@@ -131,6 +133,8 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
+  |> flag "--show-all-branches" no_arg
+      ~doc:"Print all branch errors (the default is to print the most relevant branches)"
   |> flag "--unicode" (enum ["auto"; "never"; "always"])
       ~doc:"Display terminal output with unicode decoration. never, always, auto (default: auto)"
   |> flag "--message-width" int

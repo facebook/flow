@@ -26,12 +26,13 @@ type error_message =
       lower: reason * lower_kind option;
       upper: reason * upper_kind;
       use_op: use_op option;
-      extras: (int * Reason.t * error_message) list;
+      branches: (Reason.t * error_message) list;
     }
   | EIncompatibleDefs of {
+      use_op: use_op;
       reason_lower: reason;
       reason_upper: reason;
-      extras: (int * Reason.t * error_message) list;
+      branches: (Reason.t * error_message) list;
     }
   | EIncompatibleProp of {
       prop: string option;
@@ -77,7 +78,7 @@ type error_message =
       use_op: use_op;
       reason: reason;
       reason_op: reason;
-      branches: (int * reason * error_message) list
+      branches: (reason * error_message) list;
     }
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
   | EIncompatibleWithExact of (reason * reason) * use_op
@@ -257,10 +258,13 @@ let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
 (* A utility function for getting and updating the use_op in error messages. *)
 let util_use_op_of_msg nope util = function
-| EIncompatible {use_op; lower; upper; extras} ->
+| EIncompatible {use_op; lower; upper; branches} ->
   Option.value_map use_op ~default:nope ~f:(fun use_op ->
     util use_op (fun use_op ->
-      EIncompatible {use_op=Some use_op; lower; upper; extras}))
+      EIncompatible {use_op=Some use_op; lower; upper; branches}))
+| EIncompatibleDefs {use_op; reason_lower; reason_upper; branches} ->
+  util use_op (fun use_op ->
+    EIncompatibleDefs {use_op; reason_lower; reason_upper; branches})
 | EIncompatibleProp {use_op; prop; reason_prop; reason_obj; special} ->
   Option.value_map use_op ~default:nope ~f:(fun use_op ->
     util use_op (fun use_op ->
@@ -291,7 +295,6 @@ let util_use_op_of_msg nope util = function
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
 | EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
-| EIncompatibleDefs {reason_lower=_; reason_upper=_; extras=_}
 | EDebugPrint (_, _)
 | EImportValueAsType (_, _)
 | EImportTypeAsTypeof (_, _)
@@ -373,20 +376,20 @@ let property_sentinel_score = tuple_element_frame_score * 2
  * score_of_msg to learn more about scores.
  *
  * Calculated by taking the count of all the frames. *)
-let score_of_use_op ~root_use_op use_op =
+let score_of_use_op use_op =
   let score = fold_use_op
     (* Comparing the scores of use_ops only works when they all have the same
      * root_use_op! If two use_ops have different roots, we can't realistically
      * compare the number of frames since the basis is completely different.
      *
-     * So we require a root_use_op to be passed into score_of_use_op and we
-     * perform a structural equality check using that.
+     * So we require a Speculation root use_op to be passed into score_of_use_op
+     * and we perform a structural equality check using that.
      *
      * Otherwise, the total score from score_of_use_op is -1. This way, errors
-     * which match our root_use_op will be promoted. It is more likely the user
-     * was trying to target these branches. *)
+     * which match Speculation will be promoted. It is more likely the user was
+     * trying to target these branches. *)
     (function
-    | use_op when use_op = root_use_op -> Ok 0
+    | Speculation _ -> Ok 0
     | _ -> Error (-1))
 
     (fun acc frame -> match acc with Error _ -> acc | Ok acc ->
@@ -429,6 +432,10 @@ let score_of_use_op ~root_use_op use_op =
        * compatibility are always picked relative to the score of errors which
        * failed their sentinel prop checks. *)
       | PropertyCompatibility {is_sentinel=true; _} -> -property_sentinel_score
+      (* ImplicitTypeParam is an internal marker use_op that doesn't get
+       * rendered in error messages. So it doesn't necessarily signal anything
+       * about the user's intent. *)
+      | ImplicitTypeParam _ -> 0
       | _ -> frame_score)))
     use_op
   in
@@ -464,12 +471,12 @@ let score_of_use_op ~root_use_op use_op =
  * where we want to approximate which branch the user meant to target with
  * their code. Branches with higher scores have a higher liklihood of being
  * the branch the user was targeting. *)
-let score_of_msg ~root_use_op msg =
+let score_of_msg msg =
   (* Start by getting the score based off the use_op of our error message. If
    * the message does not have a use_op then we return 0. This score
    * contribution declares that greater complexity in the use is more likely to
    * cause a match. *)
-  let score = util_use_op_of_msg 0 (fun op _ -> score_of_use_op ~root_use_op op) msg in
+  let score = util_use_op_of_msg 0 (fun op _ -> score_of_use_op op) msg in
   (* Special cases for messages which increment the score. *)
   let score = score + match msg with
   (* If a property doesn't exist, we still use a PropertyCompatibility use_op.
@@ -490,7 +497,7 @@ let score_of_msg ~root_use_op msg =
    * other type is not then we decrement our score. *)
   let score = score + (
     let reasons = match msg with
-    | EIncompatibleDefs {reason_lower=rl; reason_upper=ru; extras=[]}
+    | EIncompatibleDefs {reason_lower=rl; reason_upper=ru; branches=[]; use_op=_}
     | EIncompatibleWithUseOp (rl, ru, _)
     | EIncompatibleWithExact ((rl, ru), _)
       -> Some (rl, ru)
@@ -509,15 +516,6 @@ let score_of_msg ~root_use_op msg =
   ) in
   score
 
-(* When we are type checking in speculation, we use a root UnknownUse use_op
- * even if when speculation started there was a reasonable root use_op. Once
- * we finish speculation and pick a single error then we want to swap out our
- * true root use_op chain with the UnknownUse used during speculation. This
- * function does that. *)
-let add_use_op_to_msg use_op msg =
-  util_use_op_of_msg msg (fun use_op' mk_msg ->
-    mk_msg (replace_unknown_root_use_op use_op use_op')) msg
-
 (* Decide reason order based on UB's flavor and blamability.
    If the order is unchanged, maintain reference equality. *)
 let ordered_reasons ((rl, ru) as reasons) =
@@ -530,7 +528,7 @@ let is_useless_op op_reason error_reason =
   | RMethodCall _ -> reasons_overlap op_reason error_reason
   | _ -> false
 
-let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
+let rec error_of_msg ~trace_reasons ~source_file =
   let open Errors in
 
   let mk_info reason extras =
@@ -660,24 +658,8 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     )]
   in
 
-  let speculation_extras branches =
-    List.map (fun (i, r, msg) ->
-      let err = error_of_msg ~friendly:false ~trace_reasons:[] ~source_file msg in
-      let header_infos = [
-        Loc.none, [spf "Member %d:" (i + 1)];
-        info_of_reason r;
-        Loc.none, ["Error:"];
-      ] in
-      let error_infos = infos_of_error err in
-      let error_extra = extra_of_error err in
-      let info_list = header_infos @ error_infos in
-      let info_tree = match error_extra with
-        | [] -> Errors.InfoLeaf (info_list)
-        | _ -> Errors.InfoNode (info_list, error_extra)
-      in
-      info_tree
-    ) branches
-  in
+  (* TODO: Actually clean this up *)
+  let speculation_extras _ = failwith "unreachable" in
 
   (* Flip the lower/upper reasons of a frame_use_op. *)
   let flip_frame = function
@@ -934,7 +916,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       let action = match use_op with
       | Op UnknownUse
       | Op (Internal _)
-        -> `UnknownRoot
+        -> `UnknownRoot false
+
+      | Op (Speculation _) ->
+        `UnknownRoot true
 
       | Op (Addition {op; left; right}) ->
         `Root (op, None,
@@ -966,6 +951,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
       | Op (FunCallMethod {op; fn; prop; _}) ->
         `Root (op, Some prop, [text "Cannot call "; desc fn])
+
+      | Frame (FunParam _, ((Op (Speculation
+          (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _)))) as use_op))
+        -> `Next use_op
 
       | Frame (FunParam {n; name; lower = lower'; _},
           Op (FunCall {args; fn; _} | FunCallMethod {args; fn; _})) ->
@@ -1124,9 +1113,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         let frames = (frame::all_frames, frame::local_frames) in
         loop loc frames use_op
       (* We don't know what our root is! Return what we do know. *)
-      | `UnknownRoot ->
-        let (_, local_frames) = frames in
-        Some (None, loc, local_frames)
+      | `UnknownRoot show_all_frames ->
+        let (all_frames, local_frames) = frames in
+        (None, loc, if show_all_frames then all_frames else local_frames)
       (* Finish up be returning our root location, root message, primary loc,
        * and frames. *)
       | `Root (root_reason, root_specific_reason, root_message) ->
@@ -1141,35 +1130,45 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         (* Return our root loc and message in addition to the true primary loc
          * and frames. *)
         let (all_frames, _) = frames in
-        Some (Some (root_loc, root_message), loc, all_frames)
+        (Some (root_loc, root_message), loc, all_frames)
     in
-    fun loc use_op message ->
-      (* If friendly errors are not turned on then never return a friendly error
-       * from this function. *)
-      if not friendly then None else
-      Option.map (loop loc ([], []) use_op) (fun (root, loc, frames) ->
-        (* Construct the message... *)
-        let final_message =
-          match frames with
-          (* If we have no path then it is just the message we were passed. *)
-          | [] -> message
-          (* Otherwise add the path in sentence format. *)
-          | frames ->
-            List.concat (
-              message :: [text " in "] ::
-              intersperse [text " of "] (List.rev frames)
-            )
-        in
-        (* Construct the error and return! *)
-        match root with
-        | Some (root_loc, root_message) ->
-          mk_friendly_error_with_root ~trace_infos
-            (root_loc, root_message @ [Inline [Text " because"]])
-            (loc, final_message @ [text "."])
-        | None ->
-          mk_friendly_error ~trace_infos loc
-            (capitalize final_message @ [text "."])
-      )
+    fun loc use_op ->
+      let (root, loc, frames) = loop loc ([], []) use_op in
+      let root = Option.map root (fun (root_loc, root_message) ->
+        (root_loc, root_message @ [text " because"])) in
+      Some (root, loc, frames)
+  in
+
+  (* Make a friendly error based on a use_op. The message we are provided should
+   * not have any punctuation. Punctuation will be provided after the frames of
+   * an error message. *)
+  let mk_use_op_friendly_error loc use_op message =
+    Option.map (unwrap_use_ops_friendly loc use_op) (fun (root, loc, frames) ->
+      mk_friendly_error
+        ~trace_infos
+        ?root
+        ~frames
+        loc
+        message
+    )
+  in
+
+  (* Make a friendly error based on failed speculation. *)
+  let mk_use_op_friendly_speculation_error loc use_op branches =
+    Option.map (unwrap_use_ops_friendly loc use_op) (fun (root, loc, frames) ->
+      let speculation_errors = List.map (fun (_, msg) ->
+        let score = score_of_msg msg in
+        let error = error_of_msg ~trace_reasons:[] ~source_file msg in
+        (score, error)
+      ) branches in
+      mk_friendly_speculation_error
+        ~kind:InferError
+        ~trace_infos
+        ~loc
+        ~root
+        ~frames
+        ~speculation_errors
+    )
   in
 
   (* An error between two incompatible types. A "lower" type and an "upper"
@@ -1184,7 +1183,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     (* Add a custom message for Coercion root_use_ops that does not include the
      * upper bound. *)
     | Op (Coercion {from; _}) ->
-      unwrap_use_ops_friendly (loc_of_reason from) use_op
+      mk_use_op_friendly_error (loc_of_reason from) use_op
         [ref lower; text " should not be coerced"]
     (* Ending with FunMissingArg gives us a different error message. Even though
      * this error was generated by an incompatibility, we want to show a more
@@ -1200,7 +1199,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | _ ->
         [ref def; text " requires another argument from "; ref op]
       in
-      unwrap_use_ops_friendly (loc_of_reason op) use_op message
+      mk_use_op_friendly_error (loc_of_reason op) use_op message
     | _ ->
       let root_use_op = root_of_use_op use_op in
       (match root_use_op with
@@ -1211,7 +1210,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
        * In flip_contravariant we flip upper/lower for all FunImplicitReturn. So
        * reverse those back as well. *)
       | FunImplicitReturn {upper=return; _} ->
-        unwrap_use_ops_friendly (loc_of_reason lower) use_op (
+        mk_use_op_friendly_error (loc_of_reason lower) use_op (
           [ref lower; text " is incompatible with "] @
           if Loc.compare (loc_of_reason return) (loc_of_reason upper) = 0 then
             [text "implicitly-returned "; desc upper]
@@ -1220,7 +1219,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         )
       (* Default incompatibility. *)
       | _ ->
-        unwrap_use_ops_friendly (loc_of_reason lower) use_op
+        mk_use_op_friendly_error (loc_of_reason lower) use_op
           [ref lower; text " is incompatible with "; ref upper]
       )
   in
@@ -1259,7 +1258,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       prop_message @ [text " is missing in "; ref lower]
     in
     (* Finally, create our error message. *)
-    unwrap_use_ops_friendly loc use_op message
+    mk_use_op_friendly_error loc use_op message
   in
 
   (* An error that occurs when some arbitrary "use" is incompatible with the
@@ -1271,7 +1270,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
    * incompatibilities in general. *)
   let mk_incompatible_use_friendly_error use_loc use_kind lower use_op =
     let nope msg =
-      unwrap_use_ops_friendly use_loc use_op
+      mk_use_op_friendly_error use_loc use_op
         [ref lower; text (" " ^ msg)]
     in
     match use_kind with
@@ -1352,7 +1351,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Positive -> "writable"
       | Neutral -> failwith "unreachable")
     in
-    unwrap_use_ops_friendly (loc_of_reason lower) use_op (
+    mk_use_op_friendly_error (loc_of_reason lower) use_op (
       mk_prop_friendly_message prop @
       [text (" is " ^ expected ^ " in "); ref lower; text " but "] @
       [text (actual ^ " in "); ref upper]
@@ -1371,46 +1370,54 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       lower = (reason_lower, lower_kind);
       upper = (reason_upper, upper_kind);
       use_op;
-      extras;
+      branches;
     } ->
-    (* TODO: friendlify when there are "extras" *)
-    let friendly_error = if extras <> []
-      then None
-      else mk_incompatible_use_friendly_error
-        (loc_of_reason reason_upper)
-        upper_kind
-        reason_lower
-        (Option.value ~default:unknown_use use_op)
+    let friendly_error =
+      if branches = [] then
+        mk_incompatible_use_friendly_error
+          (loc_of_reason reason_upper)
+          upper_kind
+          reason_lower
+          (Option.value ~default:unknown_use use_op)
+      else
+        mk_use_op_friendly_speculation_error
+          (loc_of_reason reason_upper)
+          (Option.value ~default:unknown_use use_op)
+          branches
     in
     (match friendly_error with
     | Some error -> error
     | None ->
       (match use_op with
       | Some use_op ->
-        let extra = speculation_extras extras in
+        let extra = speculation_extras branches in
         let extra, msgs =
           let msg = err_msg_use lower_kind upper_kind in
           unwrap_use_ops ~force:true ((reason_upper, reason_lower), extra, msg) use_op in
         typecheck_error_with_core_infos ~extra msgs
       | _ ->
-        let extra = speculation_extras extras in
+        let extra = speculation_extras branches in
         typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
       )
     )
 
-  | EIncompatibleDefs { reason_lower; reason_upper; extras=[] } ->
-    (match (mk_incompatible_friendly_error reason_lower reason_upper unknown_use) with
+  | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
+    (match (
+      if branches = [] then
+        mk_incompatible_friendly_error
+          reason_lower
+          reason_upper
+          use_op
+      else
+        mk_use_op_friendly_speculation_error
+          (loc_of_reason reason_upper)
+          use_op
+          branches
+    ) with
     | Some error -> error
-    | None ->
-      let reasons = ordered_reasons (reason_lower, reason_upper) in
-      typecheck_error "This type is incompatible with" reasons
-    )
 
-  (* TODO: friendlify *)
-  | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
-    let reasons = ordered_reasons (reason_lower, reason_upper) in
-    let extra = speculation_extras extras in
-    typecheck_error ~extra "This type is incompatible with" reasons
+    (* TODO: Remove the option to make this actually unreachable. *)
+    | None -> failwith "unreachable")
 
   | EIncompatibleProp { prop; reason_prop; reason_obj; special; use_op } ->
     let friendly_error = mk_prop_missing_friendly_error
@@ -1620,7 +1627,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | Read -> "readable"
       | Write _ -> "writable"
       in
-      unwrap_use_ops_friendly (loc_of_reason reason_prop) use_op
+      mk_use_op_friendly_error (loc_of_reason reason_prop) use_op
         (mk_prop_friendly_message x @ [text (spf " is not %s" rw)])
     in
     (match friendly_error with
@@ -1711,7 +1718,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
   | EAdditionMixed (reason, use_op) ->
     let friendly_error =
-      unwrap_use_ops_friendly (loc_of_reason reason) use_op
+      mk_use_op_friendly_error (loc_of_reason reason) use_op
         [ref reason; text " could either behave like a string or like a number"]
     in
     (match friendly_error with
@@ -1729,7 +1736,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | ETupleArityMismatch (reasons, l1, l2, use_op) ->
     let friendly_error =
       let (lower, upper) = reasons in
-      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+      mk_use_op_friendly_error (loc_of_reason lower) use_op [
         ref lower; text (spf " has an arity of %d but " l1); ref upper;
         text (spf " has an arity of %d" l2);
       ]
@@ -1751,7 +1758,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | ENonLitArrayToTuple (reasons, use_op) ->
     let friendly_error =
       let (lower, upper) = reasons in
-      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+      mk_use_op_friendly_error (loc_of_reason lower) use_op [
         ref lower; text " has an unknown number of elements, so is ";
         text "incompatible with "; ref upper;
       ]
@@ -1767,7 +1774,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | ETupleOutOfBounds (reasons, length, index, use_op) ->
     let friendly_error =
       let (lower, upper) = reasons in
-      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+      mk_use_op_friendly_error (loc_of_reason lower) use_op [
         ref upper;
         text (spf " only has %d element%s, so index %d is out of bounds"
           length (if length == 1 then "" else "s") index);
@@ -1787,7 +1794,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | ETupleUnsafeWrite (reasons, use_op) ->
     let friendly_error =
       let (lower, _) = reasons in
-      unwrap_use_ops_friendly (loc_of_reason lower) use_op
+      mk_use_op_friendly_error (loc_of_reason lower) use_op
         [text "the index must be statically known to write a tuple element"]
     in
     (match friendly_error with
@@ -1799,8 +1806,15 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       typecheck_error msg reasons
     )
 
-  (* TODO: friendlify *)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
+    let friendly_error =
+      mk_use_op_friendly_speculation_error
+        (loc_of_reason reason)
+        use_op
+        branches in
+    (match friendly_error with
+    | Some error -> error
+    | None ->
       let extra, msgs =
         let reasons = ordered_reasons (reason, reason_op) in
         let extra = speculation_extras branches in
@@ -1808,6 +1822,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         unwrap_use_ops (reasons, extra, msg) use_op
       in
       typecheck_error_with_core_infos ~extra msgs
+    )
 
   (* TODO: friendlify *)
   | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->
@@ -1840,7 +1855,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
   | EIncompatibleWithExact (reasons, use_op) ->
     let (lower, upper) = reasons in
     let friendly_error =
-      unwrap_use_ops_friendly (loc_of_reason lower) use_op
+      mk_use_op_friendly_error (loc_of_reason lower) use_op
         [text "inexact "; ref lower; text " is incompatible with exact "; ref upper]
     in
     (match friendly_error with
@@ -1914,7 +1929,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         ) invalid_chars []
         |> List.rev
       in
-      unwrap_use_ops_friendly (loc_of_reason invalid_reason) use_op (
+      mk_use_op_friendly_error (loc_of_reason invalid_reason) use_op (
         [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "] @
         Friendly.conjunction_concat ~conjunction:"and" invalids
       )
@@ -1964,7 +1979,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
   | EFunctionIncompatibleWithShape (lower, upper, use_op) ->
     let friendly_error =
-      unwrap_use_ops_friendly (loc_of_reason lower) use_op [
+      mk_use_op_friendly_error (loc_of_reason lower) use_op [
         ref lower; text " is incompatible with "; code "$Shape"; text " of ";
         ref upper;
       ]
@@ -2180,7 +2195,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
   | EInvalidObjectKit { tool; reason; reason_op; use_op } ->
     let friendly_error =
-      unwrap_use_ops_friendly (loc_of_reason reason) use_op
+      mk_use_op_friendly_error (loc_of_reason reason) use_op
         [ref reason; text " is not an object"]
     in
     (match friendly_error with
@@ -2301,7 +2316,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         | InitialState _ -> "is not an object or null"
         )
       in
-      unwrap_use_ops_friendly (loc_of_reason reason) use_op
+      mk_use_op_friendly_error (loc_of_reason reason) use_op
         [ref reason; text (" " ^ msg)]
     in
     (match friendly_error with
@@ -2364,7 +2379,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       | 1 -> "no more than 1 argument is expected by"
       | n -> spf "no more than %d arguments are expected by" n
       in
-      unwrap_use_ops_friendly (loc_of_reason unused_reason) use_op
+      mk_use_op_friendly_error (loc_of_reason unused_reason) use_op
         [text msg; text " "; ref def_reason]
     in
     (match friendly_error with

@@ -1049,12 +1049,6 @@ Error --------------------------------------------------------------------------
 
 number [1] is not supported by unclassified use GetStaticsT.
 
-   misc-incompatibles.js:11:21
-   11| interface B extends A {}
-                           ^
-
-References:
-   misc-incompatibles.js:11:21
    11| interface B extends A {}
                            ^ [1]
 
@@ -1063,12 +1057,6 @@ Error --------------------------------------------------------------------------
 
 Cannot access computed property using boolean [1].
 
-   misc-incompatibles.js:14:3
-   14| o[true];
-         ^^^^
-
-References:
-   misc-incompatibles.js:14:3
    14| o[true];
          ^^^^ [1]
 
@@ -1077,12 +1065,6 @@ Error --------------------------------------------------------------------------
 
 Cannot assign computed property using boolean [1].
 
-   misc-incompatibles.js:15:3
-   15| o[true] = 42;
-         ^^^^
-
-References:
-   misc-incompatibles.js:15:3
    15| o[true] = 42;
          ^^^^ [1]
 

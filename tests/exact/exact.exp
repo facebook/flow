@@ -123,32 +123,27 @@ References:
                                                  ^^^^^^ [1]
 
 
-Error: unsealed.js:14
- 14: f(o); // error: o incompatible with exact type
-       ^ object literal. This type is incompatible with the expected param type of
-  4: function f(o: {p: string} | $Exact<{}>): string {
-                   ^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s)
-  Member 1:
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ object type
-  Error:
-   14: f(o); // error: o incompatible with exact type
-         ^ object literal. This type is incompatible with
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ object type
-    Property `p` is incompatible:
-        4: function f(o: {p: string} | $Exact<{}>): string {
-                         ^^^^^^^^^^^ property `p`. Property not found in
-       14: f(o); // error: o incompatible with exact type
-             ^ object literal
-  Member 2:
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                                   ^^^^^^^^^^ object type
-  Error:
-   14: f(o); // error: o incompatible with exact type
-         ^ object literal. Inexact type is incompatible with exact type
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                                   ^^^^^^^^^^ object type
+Error ------------------------------------------------------------------------------------------------- unsealed.js:14:3
+
+Cannot call `f` with `o` bound to `o` because:
+ - Either property `p` is missing in object literal [1] but exists in object type [2].
+ - Or inexact object literal [1] is incompatible with exact object type [3].
+
+   unsealed.js:14:3
+   14| f(o); // error: o incompatible with exact type
+         ^
+
+References:
+   unsealed.js:12:9
+   12| var o = {};
+               ^^ [1]
+   unsealed.js:4:15
+    4| function f(o: {p: string} | $Exact<{}>): string {
+                     ^^^^^^^^^^^ [2]
+   unsealed.js:4:29
+    4| function f(o: {p: string} | $Exact<{}>): string {
+                                   ^^^^^^^^^^ [3]
+
 
 Error ----------------------------------------------------------------------------------------------- unsealed2.js:15:12
 

@@ -4,12 +4,9 @@ string [1] is incompatible with number [2].
 
    base_class.js:9:46
    9|   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                   ^^^^^^
+                                                   ^^^^^^ [1]
 
 References:
-   base_class.js:9:46
-   9|   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                   ^^^^^^ [1]
    base_class.js:9:37
    9|   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                           ^^^^^^ [2]
@@ -21,12 +18,9 @@ string [1] is incompatible with number [2].
 
    base_class.js:16:53
    16|   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                           ^^^^^^
+                                                           ^^^^^^ [1]
 
 References:
-   base_class.js:16:53
-   16|   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                           ^^^^^^ [1]
    base_class.js:16:44
    16|   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                   ^^^^^^ [2]
@@ -209,12 +203,9 @@ string [1] is incompatible with number [2].
 
    derived_class.js:9:51
    9|   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                        ^^^^^^
+                                                        ^^^^^^ [1]
 
 References:
-   derived_class.js:9:51
-   9|   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                        ^^^^^^ [1]
    derived_class.js:9:42
    9|   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                ^^^^^^ [2]
@@ -226,12 +217,9 @@ string [1] is incompatible with number [2].
 
    derived_class.js:16:58
    16|   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                                ^^^^^^
+                                                                ^^^^^^ [1]
 
 References:
-   derived_class.js:16:58
-   16|   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                                ^^^^^^ [1]
    derived_class.js:16:49
    16|   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                        ^^^^^^ [2]
@@ -243,12 +231,9 @@ string [1] is incompatible with number [2].
 
    derived_class.js:28:52
    28|   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                          ^^^^^^
+                                                          ^^^^^^ [1]
 
 References:
-   derived_class.js:28:52
-   28|   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                          ^^^^^^ [1]
    derived_class.js:28:43
    28|   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                  ^^^^^^ [2]
@@ -260,12 +245,9 @@ string [1] is incompatible with number [2].
 
    derived_class.js:35:59
    35|   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                                 ^^^^^^
+                                                                 ^^^^^^ [1]
 
 References:
-   derived_class.js:35:59
-   35|   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
-                                                                 ^^^^^^ [1]
    derived_class.js:35:50
    35|   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
                                                         ^^^^^^ [2]
@@ -689,12 +671,9 @@ number [1] is incompatible with `T` [2].
 
    generic_class.js:26:16
    26|   invalid: T = 42; // Error: number ~> Generic<T>
-                      ^^
+                      ^^ [1]
 
 References:
-   generic_class.js:26:16
-   26|   invalid: T = 42; // Error: number ~> Generic<T>
-                      ^^ [1]
    generic_class.js:26:12
    26|   invalid: T = 42; // Error: number ~> Generic<T>
                   ^ [2]
@@ -706,12 +685,9 @@ number [1] is incompatible with `T` [2].
 
    generic_class.js:29:23
    29|   static invalid: T = 42; // Error: number ~> Generic<T>
-                             ^^
+                             ^^ [1]
 
 References:
-   generic_class.js:29:23
-   29|   static invalid: T = 42; // Error: number ~> Generic<T>
-                             ^^ [1]
    generic_class.js:29:19
    29|   static invalid: T = 42; // Error: number ~> Generic<T>
                          ^ [2]

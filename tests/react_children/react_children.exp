@@ -150,53 +150,34 @@ References:
                             ^^^^^^ [2]
 
 
-Error: builtin_intrinsic.js:24
-     v--------
- 24: <builtin>
- 25:   {{a: 1, b: 2, c: 3}}
- 26: </builtin>;
-     ---------^ props. This type is incompatible with
-384:   props: {children?: React$Node, [key: string]: any},
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react-dom.js:384
-  Property `children` is incompatible:
-     25:   {{a: 1, b: 2, c: 3}}
-            ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    384:   props: {children?: React$Node, [key: string]: any},
-                              ^^^^^^^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`. See lib: <BUILTINS>/react-dom.js:384
-      Member 6:
-       18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
-      Error:
-       25:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
-        Property `a` is incompatible:
-           25:   {{a: 1, b: 2, c: 3}}
-                  ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-           18:   | React$Element<any>
-                   ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
-      Member 7:
-       19:   | React$Portal
-               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
-      Error:
-       25:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       19:   | React$Portal
-               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
-      Member 8:
-       20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
-      Error:
-       25:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
-        Property `@@iterator` is incompatible:
-           20:   | Iterable<React$Node>;
-                   ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
-           25:   {{a: 1, b: 2, c: 3}}
-                  ^^^^^^^^^^^^^^^^^^ object literal
+Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:24:1
+
+Cannot create `builtin` element because in property `children`:
+ - Either property `a` is missing in `React.Element` [1] but exists in object literal [2].
+ - Or object literal [2] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [2] but exists in `$Iterable` [4].
+
+   builtin_intrinsic.js:24:1
+       v--------
+   24| <builtin>
+   25|   {{a: 1, b: 2, c: 3}}
+   26| </builtin>;
+       ---------^
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [1]
+   builtin_intrinsic.js:25:4
+   25|   {{a: 1, b: 2, c: 3}}
+          ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
 
 Error ------------------------------------------------------------------------------------------------ component.js:15:1
 
@@ -240,53 +221,34 @@ References:
                                                  ^^^^^^^^^^^^^^^^ [2]
 
 
-Error: component.js:40
-     v------------
- 40: <MyComponent>
- 41:   {{a: 1, b: 2, c: 3}}
- 42: </MyComponent>;
-     -------------^ props. This type is incompatible with
-  6: class MyComponent extends React.Component<{children: Node}, void> {
-                                               ^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     41:   {{a: 1, b: 2, c: 3}}
-            ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-      6: class MyComponent extends React.Component<{children: Node}, void> {
-                                                              ^^^^ union: undefined | null | boolean | number | string | `React.Element` | `React.Portal` | `Iterable`
-      Member 6:
-       18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
-      Error:
-       41:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       18:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
-        Property `a` is incompatible:
-           41:   {{a: 1, b: 2, c: 3}}
-                  ^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-           18:   | React$Element<any>
-                   ^^^^^^^^^^^^^^^^^^ React.Element. See lib: <BUILTINS>/react.js:18
-      Member 7:
-       19:   | React$Portal
-               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
-      Error:
-       41:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       19:   | React$Portal
-               ^^^^^^^^^^^^ React.Portal. See lib: <BUILTINS>/react.js:19
-      Member 8:
-       20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ Iterable. See lib: <BUILTINS>/react.js:20
-      Error:
-       41:   {{a: 1, b: 2, c: 3}}
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       20:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:20
-        Property `@@iterator` is incompatible:
-           20:   | Iterable<React$Node>;
-                   ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of `$Iterable`. Property not found in. See lib: <BUILTINS>/react.js:20
-           41:   {{a: 1, b: 2, c: 3}}
-                  ^^^^^^^^^^^^^^^^^^ object literal
+Error ------------------------------------------------------------------------------------------------ component.js:40:1
+
+Cannot create `MyComponent` element because in property `children`:
+ - Either property `a` is missing in `React.Element` [1] but exists in object literal [2].
+ - Or object literal [2] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [2] but exists in `$Iterable` [4].
+
+   component.js:40:1
+       v------------
+   40| <MyComponent>
+   41|   {{a: 1, b: 2, c: 3}}
+   42| </MyComponent>;
+       -------------^
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [1]
+   component.js:41:4
+   41|   {{a: 1, b: 2, c: 3}}
+          ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:23:1
 
@@ -793,167 +755,137 @@ References:
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error: fun.js:136
-136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
-                    ^^^^^^^^^ undefined. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
-      Member 1:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Error:
-      136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
-                      ^^^^^^^^^ undefined. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Member 2:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
-      Error:
-      136: <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
-                      ^^^^^^^^^ undefined. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
+Error ----------------------------------------------------------------------------------------------------- fun.js:136:1
 
-Error: fun.js:137
-137: <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    137: <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
-                    ^^^^ null. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
-      Member 1:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Error:
-      137: <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
-                      ^^^^ null. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Member 2:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
-      Error:
-      137: <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
-                      ^^^^ null. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
+Cannot create `FunArray` element because in property `children`:
+ - Either undefined [1] is incompatible with `Fn` [2].
+ - Or undefined [1] is incompatible with array type [3].
 
-Error: fun.js:138
-138: <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    138: <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
-                    ^^^^ boolean. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
-      Member 1:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Error:
-      138: <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^^^^ boolean. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Member 2:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
-      Error:
-      138: <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^^^^ boolean. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
+   fun.js:136:1
+   136| <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: fun.js:139
-139: <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    139: <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
-                    ^^^^^ boolean. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
-      Member 1:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Error:
-      139: <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^^^^^ boolean. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Member 2:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
-      Error:
-      139: <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^^^^^ boolean. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
+References:
+   <BUILTINS>/core.js:13:24
+    13| declare var undefined: void;
+                               ^^^^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
 
-Error: fun.js:140
-140: <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    140: <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
-                    ^ number. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
-      Member 1:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Error:
-      140: <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^ number. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Member 2:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
-      Error:
-      140: <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^ number. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
 
-Error: fun.js:141
-141: <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    141: <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
-                    ^^ number. This type is incompatible with
-     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                           ^^^^^^^^^^^^^^ union: `Fn` | array type
-      Member 1:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Error:
-      141: <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^^ number. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ Fn
-      Member 2:
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
-      Error:
-      141: <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
-                      ^^ number. This type is incompatible with
-       21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^^^^^^^^ array type
+Error ----------------------------------------------------------------------------------------------------- fun.js:137:1
+
+Cannot create `FunArray` element because in property `children`:
+ - Either null [1] is incompatible with `Fn` [2].
+ - Or null [1] is incompatible with array type [3].
+
+   fun.js:137:1
+   137| <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:137:12
+   137| <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
+                   ^^^^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:138:1
+
+Cannot create `FunArray` element because in property `children`:
+ - Either boolean [1] is incompatible with `Fn` [2].
+ - Or boolean [1] is incompatible with array type [3].
+
+   fun.js:138:1
+   138| <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:138:12
+   138| <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
+                   ^^^^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:139:1
+
+Cannot create `FunArray` element because in property `children`:
+ - Either boolean [1] is incompatible with `Fn` [2].
+ - Or boolean [1] is incompatible with array type [3].
+
+   fun.js:139:1
+   139| <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:139:12
+   139| <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
+                   ^^^^^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:140:1
+
+Cannot create `FunArray` element because in property `children`:
+ - Either number [1] is incompatible with `Fn` [2].
+ - Or number [1] is incompatible with array type [3].
+
+   fun.js:140:1
+   140| <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:140:12
+   140| <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
+                   ^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:141:1
+
+Cannot create `FunArray` element because in property `children`:
+ - Either number [1] is incompatible with `Fn` [2].
+ - Or number [1] is incompatible with array type [3].
+
+   fun.js:141:1
+   141| <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   fun.js:141:12
+   141| <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
+                   ^^ [1]
+   fun.js:21:51
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                          ^^ [2]
+   fun.js:21:56
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ [3]
+
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:142:1
 
@@ -995,129 +927,109 @@ References:
                                             ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error: tabs.js:30
- 30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-                 ^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-             ^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-                     ^^ JSX text. This type is incompatible with
-         18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                       ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-           14:   | void
-                   ^^^^ undefined
-          Error:
-           30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-                       ^^ JSX text. This type is incompatible with
-           14:   | void
-                   ^^^^ undefined
-          Member 2:
-           15:   | null
-                   ^^^^ null
-          Error:
-           30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-                       ^^ JSX text. This type is incompatible with
-           15:   | null
-                   ^^^^ null
-          Member 3:
-           16:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           30: <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-                       ^^ JSX text. This type is incompatible with
-           16:   | boolean
-                   ^^^^^^^ boolean
+Error ----------------------------------------------------------------------------------------------------- tabs.js:30:1
 
-Error: tabs.js:31
- 31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-                 ^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-             ^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-                           ^^ JSX text. This type is incompatible with
-         18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                       ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-           14:   | void
-                   ^^^^ undefined
-          Error:
-           31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-                             ^^ JSX text. This type is incompatible with
-           14:   | void
-                   ^^^^ undefined
-          Member 2:
-           15:   | null
-                   ^^^^ null
-          Error:
-           31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-                             ^^ JSX text. This type is incompatible with
-           15:   | null
-                   ^^^^ null
-          Member 3:
-           16:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           31: <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-                             ^^ JSX text. This type is incompatible with
-           16:   | boolean
-                   ^^^^^^^ boolean
+Cannot create `TabBar` element because in property `children`:
+ - Either inexact children array [1] is incompatible with exact `React.Element` [2].
+ - Or JSX text [3] is incompatible with undefined [4] in array element.
+ - Or JSX text [3] is incompatible with null [5] in array element.
+ - Or JSX text [3] is incompatible with boolean [6] in array element.
 
-Error: tabs.js:32
- 32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 24: class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-                 ^^^^^^^^^^^^^^ children array. Has some incompatible type argument with
-     18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-             ^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-                                 ^^ JSX text. This type is incompatible with
-         18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-                       ^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-           14:   | void
-                   ^^^^ undefined
-          Error:
-           32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-                                   ^^ JSX text. This type is incompatible with
-           14:   | void
-                   ^^^^ undefined
-          Member 2:
-           15:   | null
-                   ^^^^ null
-          Error:
-           32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-                                   ^^ JSX text. This type is incompatible with
-           15:   | null
-                   ^^^^ null
-          Member 3:
-           16:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           32: <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-                                   ^^ JSX text. This type is incompatible with
-           16:   | boolean
-                   ^^^^^^^ boolean
+   tabs.js:30:1
+   30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tabs.js:30:9
+   30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
+               ^^^^^^^^^^^^^^ [1]
+   tabs.js:17:5
+   17|   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tabs.js:30:9
+   30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
+               ^^ [3]
+   tabs.js:14:5
+   14|   | void
+           ^^^^ [4]
+   tabs.js:15:5
+   15|   | null
+           ^^^^ [5]
+   tabs.js:16:5
+   16|   | boolean
+           ^^^^^^^ [6]
+
+
+Error ----------------------------------------------------------------------------------------------------- tabs.js:31:1
+
+Cannot create `TabBar` element because in property `children`:
+ - Either inexact children array [1] is incompatible with exact `React.Element` [2].
+ - Or JSX text [3] is incompatible with undefined [4] in array element.
+ - Or JSX text [3] is incompatible with null [5] in array element.
+ - Or JSX text [3] is incompatible with boolean [6] in array element.
+
+   tabs.js:31:1
+   31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tabs.js:31:9
+   31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
+               ^^^^^^^^^^^^^^ [1]
+   tabs.js:17:5
+   17|   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tabs.js:31:15
+   31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
+                     ^^ [3]
+   tabs.js:14:5
+   14|   | void
+           ^^^^ [4]
+   tabs.js:15:5
+   15|   | null
+           ^^^^ [5]
+   tabs.js:16:5
+   16|   | boolean
+           ^^^^^^^ [6]
+
+
+Error ----------------------------------------------------------------------------------------------------- tabs.js:32:1
+
+Cannot create `TabBar` element because in property `children`:
+ - Either inexact children array [1] is incompatible with exact `React.Element` [2].
+ - Or JSX text [3] is incompatible with undefined [4] in array element.
+ - Or JSX text [3] is incompatible with null [5] in array element.
+ - Or JSX text [3] is incompatible with boolean [6] in array element.
+
+   tabs.js:32:1
+   32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   tabs.js:32:9
+   32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
+               ^^^^^^^^^^^^^^ [1]
+   tabs.js:17:5
+   17|   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tabs.js:32:21
+   32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
+                           ^^ [3]
+   tabs.js:14:5
+   14|   | void
+           ^^^^ [4]
+   tabs.js:15:5
+   15|   | null
+           ^^^^ [5]
+   tabs.js:16:5
+   16|   | boolean
+           ^^^^^^^ [6]
+
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:67:1
 
-Cannot create `TabBar` element because `NotTab` [1] is incompatible with `Tab` [2] in property `children.type`.
+Cannot create `TabBar` element because `NotTab` [1] is incompatible with `Tab` [2] in property `type` of property
+`children`.
 
    tabs.js:67:1
    67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1713,390 +1625,201 @@ References:
           ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error: view.js:35
- 35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
-               ^^^^^^^^^^^^^ JSX text. This type is incompatible with
-     17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-      Member 1:
-        6:   | void
-               ^^^^ undefined
-      Error:
-       35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
-                 ^^^^^^^^^^^^^ JSX text. This type is incompatible with
-        6:   | void
-               ^^^^ undefined
-      Member 2:
-        7:   | null
-               ^^^^ null
-      Error:
-       35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
-                 ^^^^^^^^^^^^^ JSX text. This type is incompatible with
-        7:   | null
-               ^^^^ null
-      Member 3:
-        8:   | boolean
-               ^^^^^^^ boolean
-      Error:
-       35: <View>Hello, world!</View>; // Error: Strings are not allowed as children.
-                 ^^^^^^^^^^^^^ JSX text. This type is incompatible with
-        8:   | boolean
-               ^^^^^^^ boolean
+Error ----------------------------------------------------------------------------------------------------- view.js:35:1
 
-Error: view.js:36
- 36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
-                ^^^^^^^^^^^^^^^ string. This type is incompatible with
-     17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-      Member 1:
-        6:   | void
-               ^^^^ undefined
-      Error:
-       36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
-                  ^^^^^^^^^^^^^^^ string. This type is incompatible with
-        6:   | void
-               ^^^^ undefined
-      Member 2:
-        7:   | null
-               ^^^^ null
-      Error:
-       36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
-                  ^^^^^^^^^^^^^^^ string. This type is incompatible with
-        7:   | null
-               ^^^^ null
-      Member 3:
-        8:   | boolean
-               ^^^^^^^ boolean
-      Error:
-       36: <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
-                  ^^^^^^^^^^^^^^^ string. This type is incompatible with
-        8:   | boolean
-               ^^^^^^^ boolean
+Cannot create `View` element because in property `children`:
+ - Either JSX text [1] is incompatible with undefined [2].
+ - Or JSX text [1] is incompatible with null [3].
+ - Or JSX text [1] is incompatible with boolean [4].
 
-Error: view.js:37
- 37: <View>{42}</View>; // Error: Numbers are not allowed as children.
-     ^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     37: <View>{42}</View>; // Error: Numbers are not allowed as children.
-                ^^ number. This type is incompatible with
-     17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-      Member 1:
-        6:   | void
-               ^^^^ undefined
-      Error:
-       37: <View>{42}</View>; // Error: Numbers are not allowed as children.
-                  ^^ number. This type is incompatible with
-        6:   | void
-               ^^^^ undefined
-      Member 2:
-        7:   | null
-               ^^^^ null
-      Error:
-       37: <View>{42}</View>; // Error: Numbers are not allowed as children.
-                  ^^ number. This type is incompatible with
-        7:   | null
-               ^^^^ null
-      Member 3:
-        8:   | boolean
-               ^^^^^^^ boolean
-      Error:
-       37: <View>{42}</View>; // Error: Numbers are not allowed as children.
-                  ^^ number. This type is incompatible with
-        8:   | boolean
-               ^^^^^^^ boolean
+   view.js:35:1
+   35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: view.js:38
- 38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-     ^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-               ^^^^^^^^^ children array. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-                    ^ number. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-                      ^ number. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-                      ^ number. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           38: <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-                      ^ number. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
+References:
+   view.js:35:7
+   35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
+             ^^^^^^^^^^^^^ [1]
+   view.js:6:5
+    6|   | void
+           ^^^^ [2]
+   view.js:7:5
+    7|   | null
+           ^^^^ [3]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [4]
 
-Error: view.js:39
- 39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                ^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                     ^^^ string. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                       ^^^ string. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                       ^^^ string. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                       ^^^ string. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
 
-Error: view.js:39
- 39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                ^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                          ^^^ string. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                            ^^^ string. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                            ^^^ string. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                            ^^^ string. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
+Error ----------------------------------------------------------------------------------------------------- view.js:36:1
 
-Error: view.js:39
- 39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                ^^^^^^^^^^^^^^^ array literal. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                               ^^^ string. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                                 ^^^ string. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                                 ^^^ string. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           39: <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                                 ^^^ string. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
+Cannot create `View` element because in property `children`:
+ - Either string [1] is incompatible with undefined [2].
+ - Or string [1] is incompatible with null [3].
+ - Or string [1] is incompatible with boolean [4].
 
-Error: view.js:40
- 40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                ^^^^^^^^^ array literal. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                     ^ number. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                       ^ number. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                       ^ number. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                       ^ number. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
+   view.js:36:1
+   36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: view.js:40
- 40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                ^^^^^^^^^ array literal. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                        ^ number. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                          ^ number. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                          ^ number. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                          ^ number. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
+References:
+   view.js:36:8
+   36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
+              ^^^^^^^^^^^^^^^ [1]
+   view.js:6:5
+    6|   | void
+           ^^^^ [2]
+   view.js:7:5
+    7|   | null
+           ^^^^ [3]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [4]
 
-Error: view.js:40
- 40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props. This type is incompatible with
- 17: class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                ^^^^^^^^^ array literal. Has some incompatible type argument with
-     10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-      Type argument `T` is incompatible:
-         40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                           ^ number. This type is incompatible with
-         10:   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-                       ^^^^^^^^^^^^^^^^^^^^^^ union: undefined | null | boolean | `React.Element` | array type
-          Member 1:
-            6:   | void
-                   ^^^^ undefined
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                             ^ number. This type is incompatible with
-            6:   | void
-                   ^^^^ undefined
-          Member 2:
-            7:   | null
-                   ^^^^ null
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                             ^ number. This type is incompatible with
-            7:   | null
-                   ^^^^ null
-          Member 3:
-            8:   | boolean
-                   ^^^^^^^ boolean
-          Error:
-           40: <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                             ^ number. This type is incompatible with
-            8:   | boolean
-                   ^^^^^^^ boolean
+
+Error ----------------------------------------------------------------------------------------------------- view.js:37:1
+
+Cannot create `View` element because in property `children`:
+ - Either number [1] is incompatible with undefined [2].
+ - Or number [1] is incompatible with null [3].
+ - Or number [1] is incompatible with boolean [4].
+
+   view.js:37:1
+   37| <View>{42}</View>; // Error: Numbers are not allowed as children.
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   view.js:37:8
+   37| <View>{42}</View>; // Error: Numbers are not allowed as children.
+              ^^ [1]
+   view.js:6:5
+    6|   | void
+           ^^^^ [2]
+   view.js:7:5
+    7|   | null
+           ^^^^ [3]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- view.js:38:1
+
+Cannot create `View` element because in property `children`:
+ - Either inexact children array [1] is incompatible with exact `React.Element` [2].
+ - Or number [3] is incompatible with undefined [4] in array element.
+ - Or number [3] is incompatible with null [5] in array element.
+ - Or number [3] is incompatible with boolean [6] in array element.
+
+   view.js:38:1
+   38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   view.js:38:7
+   38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
+             ^^^^^^^^^ [1]
+   view.js:9:5
+    9|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   view.js:38:8
+   38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
+              ^ [3]
+   view.js:6:5
+    6|   | void
+           ^^^^ [4]
+   view.js:7:5
+    7|   | null
+           ^^^^ [5]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [6]
+
+
+Error ----------------------------------------------------------------------------------------------------- view.js:39:1
+
+Cannot create `View` element because:
+ - in array element of property `children`:
+    - Either string [1] is incompatible with undefined [2].
+    - Or string [1] is incompatible with null [3].
+    - Or string [1] is incompatible with boolean [4].
+ - in array element of property `children`:
+    - Either string [5] is incompatible with undefined [2].
+    - Or string [5] is incompatible with null [3].
+    - Or string [5] is incompatible with boolean [4].
+ - in array element of property `children`:
+    - Either string [6] is incompatible with undefined [2].
+    - Or string [6] is incompatible with null [3].
+    - Or string [6] is incompatible with boolean [4].
+
+   view.js:39:1
+   39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   view.js:39:9
+   39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
+               ^^^ [1]
+   view.js:6:5
+    6|   | void
+           ^^^^ [2]
+   view.js:7:5
+    7|   | null
+           ^^^^ [3]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [4]
+   view.js:39:14
+   39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
+                    ^^^ [5]
+   view.js:39:19
+   39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
+                         ^^^ [6]
+
+
+Error ----------------------------------------------------------------------------------------------------- view.js:40:1
+
+Cannot create `View` element because:
+ - in array element of property `children`:
+    - Either number [1] is incompatible with undefined [2].
+    - Or number [1] is incompatible with null [3].
+    - Or number [1] is incompatible with boolean [4].
+ - in array element of property `children`:
+    - Either number [5] is incompatible with undefined [2].
+    - Or number [5] is incompatible with null [3].
+    - Or number [5] is incompatible with boolean [4].
+ - in array element of property `children`:
+    - Either number [6] is incompatible with undefined [2].
+    - Or number [6] is incompatible with null [3].
+    - Or number [6] is incompatible with boolean [4].
+
+   view.js:40:1
+   40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   view.js:40:9
+   40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
+               ^ [1]
+   view.js:6:5
+    6|   | void
+           ^^^^ [2]
+   view.js:7:5
+    7|   | null
+           ^^^^ [3]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [4]
+   view.js:40:12
+   40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
+                  ^ [5]
+   view.js:40:15
+   40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
+                     ^ [6]
+
 
 
 Found 107 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

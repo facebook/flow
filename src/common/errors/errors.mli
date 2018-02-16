@@ -62,15 +62,19 @@ val mk_error:
 val mk_friendly_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
+  ?root:(Loc.t * Loc.t Friendly.message) ->
+  ?frames:(Loc.t Friendly.message list) ->
   Loc.t ->
   Loc.t Friendly.message ->
   error
 
-val mk_friendly_error_with_root:
+val mk_friendly_speculation_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
-  (Loc.t * Loc.t Friendly.message) ->
-  (Loc.t * Loc.t Friendly.message) ->
+  loc:Loc.t ->
+  root:(Loc.t * Loc.t Friendly.message) option ->
+  frames:(Loc.t Friendly.message list) ->
+  speculation_errors:((int * error) list) ->
   error
 
 val is_duplicate_provider_error: error -> bool
@@ -106,6 +110,7 @@ module Cli_output : sig
     max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
+    show_all_branches: bool;
     unicode: bool;
     message_width: int;
   }

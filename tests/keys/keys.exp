@@ -62,12 +62,9 @@ some string with unknown value [1] is incompatible with string literal `hi` [2].
 
    keys.js:26:4
    26|   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
-          ^^^
+          ^^^ [1]
 
 References:
-   keys.js:26:4
-   26|   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
-          ^^^ [1]
    keys.js:24:26
    24| type StrLitDict = {[key: 'hi']: mixed};
                                 ^^^^ [2]
@@ -79,12 +76,9 @@ some string with unknown value [1] is incompatible with string literal `hi` [2].
 
    keys.js:28:6
    28|     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
-            ^^^
+            ^^^ [1]
 
 References:
-   keys.js:28:6
-   28|     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
-            ^^^ [1]
    keys.js:24:26
    24| type StrLitDict = {[key: 'hi']: mixed};
                                 ^^^^ [2]
@@ -96,12 +90,9 @@ property `bye` [1] is incompatible with string literal `hi` [2].
 
    keys.js:31:4
    31|   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
-          ^^^^^
+          ^^^^^ [1]
 
 References:
-   keys.js:31:4
-   31|   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
-          ^^^^^ [1]
    keys.js:24:26
    24| type StrLitDict = {[key: 'hi']: mixed};
                                 ^^^^ [2]

@@ -156,49 +156,49 @@ References:
                               ^^^^^^ [2]
 
 
-Error: logical.js:291
-291:     return x || y || false;
-                          ^^^^^ boolean. This type is incompatible with the expected return type of
-290: ): number | string { // expected `: number | string | boolean`
-        ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-  290: ): number | string { // expected `: number | string | boolean`
-          ^^^^^^ number
-  Error:
-  291:     return x || y || false;
-                            ^^^^^ boolean. This type is incompatible with
-  290: ): number | string { // expected `: number | string | boolean`
-          ^^^^^^ number
-  Member 2:
-  290: ): number | string { // expected `: number | string | boolean`
-                   ^^^^^^ string
-  Error:
-  291:     return x || y || false;
-                            ^^^^^ boolean. This type is incompatible with
-  290: ): number | string { // expected `: number | string | boolean`
-                   ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------ logical.js:291:12
 
-Error: logical.js:315
-315:     return x && y && false;
-                          ^^^^^ boolean. This type is incompatible with the expected return type of
-314: ): number | string { // expected `: number | string | boolean`
-        ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-  314: ): number | string { // expected `: number | string | boolean`
-          ^^^^^^ number
-  Error:
-  315:     return x && y && false;
-                            ^^^^^ boolean. This type is incompatible with
-  314: ): number | string { // expected `: number | string | boolean`
-          ^^^^^^ number
-  Member 2:
-  314: ): number | string { // expected `: number | string | boolean`
-                   ^^^^^^ string
-  Error:
-  315:     return x && y && false;
-                            ^^^^^ boolean. This type is incompatible with
-  314: ): number | string { // expected `: number | string | boolean`
-                   ^^^^^^ string
+Cannot return `x || y || false` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   logical.js:291:12
+   291|     return x || y || false;
+                   ^^^^^^^^^^^^^^^
+
+References:
+   logical.js:291:22
+   291|     return x || y || false;
+                             ^^^^^ [1]
+   logical.js:290:4
+   290| ): number | string { // expected `: number | string | boolean`
+           ^^^^^^ [2]
+   logical.js:290:13
+   290| ): number | string { // expected `: number | string | boolean`
+                    ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:315:12
+
+Cannot return `x && y && false` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   logical.js:315:12
+   315|     return x && y && false;
+                   ^^^^^^^^^^^^^^^
+
+References:
+   logical.js:315:22
+   315|     return x && y && false;
+                             ^^^^^ [1]
+   logical.js:314:4
+   314| ): number | string { // expected `: number | string | boolean`
+           ^^^^^^ [2]
+   logical.js:314:13
+   314| ): number | string { // expected `: number | string | boolean`
+                    ^^^^^^ [3]
+
 
 Error ------------------------------------------------------------------------------------------------ logical.js:322:12
 
@@ -262,12 +262,9 @@ boolean [1] is incompatible with number [2].
 
    logical.js:348:18
    348|         y = y || true; // expected a number
-                         ^^^^
+                         ^^^^ [1]
 
 References:
-   logical.js:348:18
-   348|         y = y || true; // expected a number
-                         ^^^^ [1]
    logical.js:346:24
    346| function logical11b(y: number): number {
                                ^^^^^^ [2]
@@ -313,12 +310,9 @@ boolean [1] is incompatible with number [2].
 
    logical.js:371:18
    371|         y = y && true; // expected a number
-                         ^^^^
+                         ^^^^ [1]
 
 References:
-   logical.js:371:18
-   371|         y = y && true; // expected a number
-                         ^^^^ [1]
    logical.js:369:24
    369| function logical12b(y: number): number {
                                ^^^^^^ [2]

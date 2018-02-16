@@ -131,12 +131,9 @@ number [1] is incompatible with `SuperType` [2].
 
    test.js:7:48
    7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
-                                                     ^^^^^^^
+                                                     ^^^^^^^ [1]
 
 References:
-   test.js:7:48
-   7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
-                                                     ^^^^^^^ [1]
    test.js:7:36
    7| export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
                                          ^^^^^^^^^ [2]
@@ -148,12 +145,9 @@ Error --------------------------------------------------------------------------
 
    test.js:12:36
    12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
-                                          ^^^
+                                          ^^^ [1]
 
 References:
-   test.js:12:36
-   12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
-                                          ^^^ [1]
    test.js:12:30
    12| export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
                                     ^^^ [2]
@@ -165,12 +159,9 @@ Error --------------------------------------------------------------------------
 
    test.js:17:45
    17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
-                                                   ^^^^^^^^^^
+                                                   ^^^^^^^^^^ [1]
 
 References:
-   test.js:17:45
-   17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
-                                                   ^^^^^^^^^^ [1]
    test.js:17:32
    17| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
                                       ^^^^^^^^^^ [2]
@@ -196,12 +187,9 @@ Error --------------------------------------------------------------------------
 
    test.js:21:47
    21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
-                                                     ^^^^^^^^^^
+                                                     ^^^^^^^^^^ [1]
 
 References:
-   test.js:21:47
-   21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
-                                                     ^^^^^^^^^^ [1]
    test.js:21:33
    21| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
                                        ^^^^^^^^^^^ [2]
@@ -213,12 +201,9 @@ string [1] is incompatible with number [2].
 
    test.js:27:65
    27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
-                                                                       ^^^^^^
+                                                                       ^^^^^^ [1]
 
 References:
-   test.js:27:65
-   27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
-                                                                       ^^^^^^ [1]
    test.js:27:38
    27| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
                                             ^^^^^^ [2]

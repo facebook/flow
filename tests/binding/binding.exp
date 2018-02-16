@@ -777,12 +777,9 @@ string [1] is incompatible with number [2].
 
    scope.js:66:16
    66|   for (var a = "" /* error: string ~> number */;;) {}
-                      ^^
+                      ^^ [1]
 
 References:
-   scope.js:66:16
-   66|   for (var a = "" /* error: string ~> number */;;) {}
-                      ^^ [1]
    scope.js:65:10
    65|   var a: number = 0;
                 ^^^^^^ [2]
@@ -808,12 +805,9 @@ string [1] is incompatible with number [2].
 
    scope.js:76:12
    76|   for (var a /* error: string ~> number */ in o) {}
-                  ^
+                  ^ [1]
 
 References:
-   scope.js:76:12
-   76|   for (var a /* error: string ~> number */ in o) {}
-                  ^ [1]
    scope.js:75:10
    75|   var a: number = 0;
                 ^^^^^^ [2]

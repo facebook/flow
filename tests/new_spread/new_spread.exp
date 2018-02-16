@@ -108,12 +108,9 @@ Inexact object type [1] is incompatible with exact `O3` [2].
 
    type.js:30:16
    30| type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
-                      ^^^^^
+                      ^^^^^ [1]
 
 References:
-   type.js:30:16
-   30| type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
-                      ^^^^^ [1]
    type.js:30:11
    30| type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
                  ^^^^^^^^^^^^ [2]
@@ -252,12 +249,9 @@ Inexact object type [1] is incompatible with exact `O7` [2].
 
    type.js:62:16
    62| type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
-                      ^^^^^
+                      ^^^^^ [1]
 
 References:
-   type.js:62:16
-   62| type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
-                      ^^^^^ [1]
    type.js:62:11
    62| type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -622,12 +616,6 @@ Error --------------------------------------------------------------------------
 
 string literal `foo` [1] is not an object.
 
-   type_string.js:1:15
-   1| type O1 = {..."foo"}; // error
-                    ^^^^^
-
-References:
-   type_string.js:1:15
    1| type O1 = {..."foo"}; // error
                     ^^^^^ [1]
 

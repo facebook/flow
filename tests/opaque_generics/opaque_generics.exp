@@ -78,38 +78,14 @@ References:
                                     ^ [3]
 
 
-Error: importtest-polarity.js:39
- 39:     return x;
-                ^ All. This type is incompatible with the expected return type of
- 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ All
-  Type argument `U` is incompatible:
-     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                           ^^^^ null. This type is incompatible with
-     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                        ^^^^^^^^^^^^^^^ union: number | string
-      Member 1:
-       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                          ^^^^^^ number
-      Error:
-       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                             ^^^^ null. This type is incompatible with
-       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                          ^^^^^^ number
-      Member 2:
-       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                   ^^^^^^ string
-      Error:
-       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                             ^^^^ null. This type is incompatible with
-       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                   ^^^^^^ string
-
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:39:12
 
 Cannot return `x` because:
  - number [1] is incompatible with string [2] in type argument `S` [3].
  - string [4] is incompatible with number [5] in type argument `T` [6].
+ - in type argument `U` [7]:
+    - Either null [8] is incompatible with number [9].
+    - Or null [8] is incompatible with string [10].
 
    importtest-polarity.js:39:12
    39|     return x;
@@ -134,6 +110,18 @@ References:
    test-polarity.js:22:27
    22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
                                  ^ [6]
+   test-polarity.js:22:30
+   22| export opaque type All<S,+T,-U> = FooBarBaz<S,T,U>;
+                                    ^ [7]
+   importtest-polarity.js:38:115
+   38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                         ^^^^ [8]
+   importtest-polarity.js:38:48
+   38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                      ^^^^^^ [9]
+   importtest-polarity.js:38:57
+   38| function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                               ^^^^^^ [10]
 
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:7:12

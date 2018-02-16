@@ -21,12 +21,9 @@ empty string [1] is incompatible with number [2].
 
    keyvalue.js:5:6
    5|     (x[""]: number);
-           ^^^^^
+           ^^^^^ [1]
 
 References:
-   keyvalue.js:5:6
-   5|     (x[""]: number);
-           ^^^^^ [1]
    keyvalue.js:4:23
    4|   function(x: { [key: number]: string }) {
                             ^^^^^^ [2]

@@ -103,12 +103,9 @@ number [1] is incompatible with string [2].
 
    locals.js:2:7
    2| var x:number = 1;
-            ^^^^^^
+            ^^^^^^ [1]
 
 References:
-   locals.js:2:7
-   2| var x:number = 1;
-            ^^^^^^ [1]
    locals.js:1:7
    1| var x:string = 0;
             ^^^^^^ [2]
@@ -128,40 +125,15 @@ References:
             ^^^^^^ [2]
 
 
-Error: locals.js:12
- 12:         var x: bool = true;
-                    ^^^^ boolean. This type is incompatible with
- 10:         var x: number | string = 1337;
-                    ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Error:
-   12:         var x: bool = true;
-                      ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Member 2:
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-  Error:
-   12:         var x: bool = true;
-                      ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-
 Error -------------------------------------------------------------------------------------------------- locals.js:12:16
 
 boolean [1] is incompatible with number [2].
 
    locals.js:12:16
    12|         var x: bool = true;
-                      ^^^^
+                      ^^^^ [1]
 
 References:
-   locals.js:12:16
-   12|         var x: bool = true;
-                      ^^^^ [1]
    locals.js:10:16
    10|         var x: number | string = 1337;
                       ^^^^^^ [2]
@@ -173,38 +145,51 @@ boolean [1] is incompatible with string [2].
 
    locals.js:12:16
    12|         var x: bool = true;
-                      ^^^^
+                      ^^^^ [1]
 
 References:
-   locals.js:12:16
-   12|         var x: bool = true;
-                      ^^^^ [1]
    locals.js:10:25
    10|         var x: number | string = 1337;
                                ^^^^^^ [2]
 
 
-Error: locals.js:12
- 12:         var x: bool = true;
-                           ^^^^ boolean. This type is incompatible with
- 10:         var x: number | string = 1337;
-                    ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Error:
-   12:         var x: bool = true;
-                             ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Member 2:
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-  Error:
-   12:         var x: bool = true;
-                             ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
+Error -------------------------------------------------------------------------------------------------- locals.js:12:16
+
+All branches are incompatible:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   locals.js:12:16
+   12|         var x: bool = true;
+                      ^^^^ [1]
+
+References:
+   locals.js:10:16
+   10|         var x: number | string = 1337;
+                      ^^^^^^ [2]
+   locals.js:10:25
+   10|         var x: number | string = 1337;
+                               ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- locals.js:12:23
+
+Cannot assign `true` to `x` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   locals.js:12:23
+   12|         var x: bool = true;
+                             ^^^^ [1]
+
+References:
+   locals.js:10:16
+   10|         var x: number | string = 1337;
+                      ^^^^^^ [2]
+   locals.js:10:25
+   10|         var x: number | string = 1337;
+                               ^^^^^^ [3]
+
 
 Error --------------------------------------------------------------------------------------------------- locals.js:14:9
 

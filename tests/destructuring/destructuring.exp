@@ -240,12 +240,9 @@ boolean [1] is incompatible with string [2].
 
    defaults.js:43:7
    43|   p = true // error: boolean ~> string
-             ^^^^
+             ^^^^ [1]
 
 References:
-   defaults.js:43:7
-   43|   p = true // error: boolean ~> string
-             ^^^^ [1]
    defaults.js:45:6
    45|   p: string
             ^^^^^^ [2]
@@ -412,27 +409,27 @@ References:
                                        ^^^^^^ [2]
 
 
-Error: defaults.js:77
- 77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                              ^ boolean. This type is incompatible with
- 77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                              ^ union: number | string
-  Member 1:
-   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^ number
-  Error:
-   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^ boolean. This type is incompatible with
-   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^ number
-  Member 2:
-   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^ string
-  Error:
-   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^ boolean. This type is incompatible with
-   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
-                                ^ string
+Error ------------------------------------------------------------------------------------------------ defaults.js:77:26
+
+All branches are incompatible:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   defaults.js:77:26
+   77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^
+
+References:
+   defaults.js:77:50
+   77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                                        ^^^^ [1]
+   defaults.js:77:32
+   77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                      ^^^^^^ [2]
+   defaults.js:77:39
+   77| function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                             ^^^^^^ [3]
+
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:80:27
 

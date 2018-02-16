@@ -59,27 +59,24 @@ References:
                                          ^^^^^ [2]
 
 
-Error: boolean.js:29
- 29: bar(1); // error
-         ^ number. This type is incompatible with the expected param type of
- 19: function bar(x: MyOwnBooleanLOL): false {
-                     ^^^^^^^^^^^^^^^ union: boolean literal `true` | boolean literal `false`
-  Member 1:
-   17: type MyOwnBooleanLOL = true | false
-                              ^^^^ boolean literal `true`
-  Error:
-   29: bar(1); // error
-           ^ number. This type is incompatible with
-   17: type MyOwnBooleanLOL = true | false
-                              ^^^^ boolean literal `true`
-  Member 2:
-   17: type MyOwnBooleanLOL = true | false
-                                     ^^^^^ boolean literal `false`
-  Error:
-   29: bar(1); // error
-           ^ number. This type is incompatible with
-   17: type MyOwnBooleanLOL = true | false
-                                     ^^^^^ boolean literal `false`
+Error -------------------------------------------------------------------------------------------------- boolean.js:29:5
+
+Cannot call `bar` with `1` bound to `x` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or number [1] is incompatible with boolean literal `false` [3].
+
+   boolean.js:29:5
+   29| bar(1); // error
+           ^ [1]
+
+References:
+   boolean.js:17:24
+   17| type MyOwnBooleanLOL = true | false
+                              ^^^^ [2]
+   boolean.js:17:31
+   17| type MyOwnBooleanLOL = true | false
+                                     ^^^^^ [3]
+
 
 Error --------------------------------------------------------------------------------------------------- number.js:8:12
 

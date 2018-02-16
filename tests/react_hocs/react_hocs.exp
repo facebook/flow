@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- Bad.js:11:13
 
-Property `foo` is missing in object type [1] but exists in `Props` [2].
+Property `foo` is missing in object type [1] but exists in `Props` [2] in the first argument.
 
    Bad.js:11:13
    11| const Bad = (props: Props) => null;
@@ -21,7 +21,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Bad.js:11:21
 
-number [1] is incompatible with string [2] in property `bar`.
+number [1] is incompatible with string [2] in property `bar` of the first argument.
 
    Bad.js:11:21
     11| const Bad = (props: Props) => null;

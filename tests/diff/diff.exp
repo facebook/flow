@@ -1,34 +1,24 @@
-Error: intersection.js:9
-  9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-            ^^^^^^^^^^^^^^^ intersection. This type is incompatible with
-  9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 1:
-    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-              ^^^^^^ object type
-  Error:
-    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-              ^^^^^^ object type. This type is incompatible with
-    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                  ^^^^^^ object type
-  Member 2:
-    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                       ^^^^^^ object type
-  Error:
-    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                       ^^^^^^ object type. This type is incompatible with
-    9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
-        9: ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
-                           ^^^^^^ object type
+Error ---------------------------------------------------------------------------------------------- intersection.js:9:3
+
+Cannot cast `any` to `$Diff` because:
+ - Either property `a` is missing in object type [1] but exists in object type [2].
+ - Or property `a` is missing in object type [3] but exists in object type [2].
+
+   intersection.js:9:3
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   intersection.js:9:8
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+             ^^^^^^ [1]
+   intersection.js:9:32
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                     ^^^^^^^^^^^^ [2]
+   intersection.js:9:17
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                      ^^^^^^ [3]
+
 
 Error --------------------------------------------------------------------------------------------- intersection.js:12:3
 

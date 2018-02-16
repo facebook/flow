@@ -33,41 +33,27 @@ References:
                    ^^^^ [1]
 
 
-Error: test_obj.js:29
- 29: var e: E = c; // error
-                ^ intersection. This type is incompatible with
- 29: var e: E = c; // error
-            ^ E
-  Member 1:
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-  Error:
-   29: var e: E = c; // error
-                  ^ c
-   29: var e: E = c; // error
-              ^ E. This type is incompatible with
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-    Indexable signature is incompatible:
-       33: type C = { [key: string]: number } & { [key: string]: number };
-                                     ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
-       28: type E = { [key: string]: string };
-                                     ^^^^^^ string
-  Member 2:
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-  Error:
-   29: var e: E = c; // error
-                  ^ c
-   29: var e: E = c; // error
-              ^ E. This type is incompatible with
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-    Indexable signature is incompatible:
-       33: type C = { [key: string]: number } & { [key: string]: number };
-                                                                 ^^^^^^ number. This type is incompatible with. See lib: lib/lib.js:33
-       28: type E = { [key: string]: string };
-                                     ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------ test_obj.js:29:12
+
+Cannot assign `c` to `e` because:
+ - Either number [1] is incompatible with string [2] in the indexer property.
+ - Or number [3] is incompatible with string [2] in the indexer property.
+
+   test_obj.js:29:12
+   29| var e: E = c; // error
+                  ^
+
+References:
+   lib/lib.js:33:27
+   33| type C = { [key: string]: number } & { [key: string]: number };
+                                 ^^^^^^ [1]
+   test_obj.js:28:27
+   28| type E = { [key: string]: string };
+                                 ^^^^^^ [2]
+   lib/lib.js:33:55
+   33| type C = { [key: string]: number } & { [key: string]: number };
+                                                             ^^^^^^ [3]
+
 
 
 Found 3 errors

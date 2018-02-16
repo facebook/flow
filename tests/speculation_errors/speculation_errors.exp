@@ -1,46 +1,2070 @@
-Error: intersection-function.js:19
- 19: a(true);
-     ^^^^^^^ call of `a`. Function cannot be called on any member of intersection type
- 19: a(true);
-     ^ intersection
-  Member 1:
-   17: declare function a(x: number): void;
-                         ^^^^^^^^^^^^^^^^^ function type
-  Error:
-   19: a(true);
-         ^^^^ boolean. This type is incompatible with the expected param type of
-   17: declare function a(x: number): void;
-                             ^^^^^^ number
-  Member 2:
-   18: declare function a(x: string): void;
-                         ^^^^^^^^^^^^^^^^^ function type
-  Error:
-   19: a(true);
-         ^^^^ boolean. This type is incompatible with the expected param type of
-   18: declare function a(x: string): void;
-                             ^^^^^^ string
+Error -------------------------------------------------------------------------------------- errors_intersection.js:13:3
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:23:3
+Cannot cast `any` to object type because:
+ - null [1] is incompatible with number literal `2` [2] in property `b`.
+ - null [3] is incompatible with number literal `1` [4] in property `a`.
+ - null [5] is incompatible with number literal `3` [6] in property `c`.
 
-Cannot call `b` with `42` bound to `x` because number [1] is incompatible with string [2].
+   errors_intersection.js:13:3
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+References:
+   errors_intersection.js:13:13
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                   ^^^^ [1]
+   errors_intersection.js:13:46
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                    ^ [2]
+   errors_intersection.js:13:23
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                             ^^^^ [3]
+   errors_intersection.js:13:53
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                           ^ [4]
+   errors_intersection.js:13:33
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                       ^^^^ [5]
+   errors_intersection.js:13:60
+   13| ((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                                  ^ [6]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:16:3
+
+Cannot cast `any` to object type because:
+ - in property `a`:
+    - Either null [1] is incompatible with number literal `1` [2].
+    - Or string [3] is incompatible with number literal `1` [2].
+ - in property `b`:
+    - Either null [4] is incompatible with number literal `2` [5].
+    - Or string [6] is incompatible with number literal `2` [5].
+ - in property `c`:
+    - Either null [7] is incompatible with number literal `3` [8].
+    - Or string [9] is incompatible with number literal `3` [8].
+
+   errors_intersection.js:16:3
+         v-----
+   16| ((any: {
+   17|   +b: null & string,
+   18|   +a: null & string,
+   19|   +c: null & string,
+   20| }): {+b: 2, +a: 1, +c: 3});
+       ^
+
+References:
+   errors_intersection.js:18:7
+   18|   +a: null & string,
+             ^^^^ [1]
+   errors_intersection.js:20:17
+   20| }): {+b: 2, +a: 1, +c: 3});
+                       ^ [2]
+   errors_intersection.js:18:14
+   18|   +a: null & string,
+                    ^^^^^^ [3]
+   errors_intersection.js:17:7
+   17|   +b: null & string,
+             ^^^^ [4]
+   errors_intersection.js:20:10
+   20| }): {+b: 2, +a: 1, +c: 3});
+                ^ [5]
+   errors_intersection.js:17:14
+   17|   +b: null & string,
+                    ^^^^^^ [6]
+   errors_intersection.js:19:7
+   19|   +c: null & string,
+             ^^^^ [7]
+   errors_intersection.js:20:24
+   20| }): {+b: 2, +a: 1, +c: 3});
+                              ^ [8]
+   errors_intersection.js:19:14
+   19|   +c: null & string,
+                    ^^^^^^ [9]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:23:3
+
+Cannot cast `any` to object type because:
+ - in property `a`:
+    - Either null [1] is incompatible with number literal `1` [2].
+    - Or string [3] is incompatible with number literal `1` [2].
+ - null [4] is incompatible with number literal `2` [5] in property `b`.
+ - null [6] is incompatible with number literal `3` [7] in property `c`.
+
+   errors_intersection.js:23:3
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:23:23
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                             ^^^^ [1]
+   errors_intersection.js:23:62
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                                    ^ [2]
+   errors_intersection.js:23:30
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                    ^^^^^^ [3]
+   errors_intersection.js:23:13
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                   ^^^^ [4]
+   errors_intersection.js:23:55
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                             ^ [5]
+   errors_intersection.js:23:42
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                ^^^^ [6]
+   errors_intersection.js:23:69
+   23| ((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                                           ^ [7]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:26:3
+
+Cannot cast `any` to object type because:
+ - in property `b`:
+    - Either null [1] is incompatible with number literal `2` [2].
+    - Or string [3] is incompatible with number literal `2` [2].
+ - null [4] is incompatible with number literal `1` [5] in property `a`.
+ - null [6] is incompatible with number literal `3` [7] in property `c`.
+
+   errors_intersection.js:26:3
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:26:13
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                   ^^^^ [1]
+   errors_intersection.js:26:55
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                             ^ [2]
+   errors_intersection.js:26:20
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                          ^^^^^^ [3]
+   errors_intersection.js:26:32
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                      ^^^^ [4]
+   errors_intersection.js:26:62
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                                    ^ [5]
+   errors_intersection.js:26:42
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                ^^^^ [6]
+   errors_intersection.js:26:69
+   26| ((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+                                                                           ^ [7]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:29:3
+
+Cannot cast `any` to object type because:
+ - in property `c`:
+    - Either null [1] is incompatible with number literal `3` [2].
+    - Or string [3] is incompatible with number literal `3` [2].
+ - null [4] is incompatible with number literal `2` [5] in property `b`.
+ - null [6] is incompatible with number literal `1` [7] in property `a`.
+
+   errors_intersection.js:29:3
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:29:33
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                                       ^^^^ [1]
+   errors_intersection.js:29:69
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                                                                           ^ [2]
+   errors_intersection.js:29:40
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                                              ^^^^^^ [3]
+   errors_intersection.js:29:13
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                   ^^^^ [4]
+   errors_intersection.js:29:55
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                                                             ^ [5]
+   errors_intersection.js:29:23
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                             ^^^^ [6]
+   errors_intersection.js:29:62
+   29| ((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+                                                                    ^ [7]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:32:3
+
+Cannot cast `any` to object type because null [1] is incompatible with number literal `42` [2] in property `a.b`.
+
+   errors_intersection.js:32:3
+   32| ((any: {+a: {+b: null}}): {+a: {+b: 42}});
+         ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:32:18
+   32| ((any: {+a: {+b: null}}): {+a: {+b: 42}});
+                        ^^^^ [1]
+   errors_intersection.js:32:37
+   32| ((any: {+a: {+b: null}}): {+a: {+b: 42}});
+                                           ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:36:3
+
+Cannot cast `any` to object type because null [1] is incompatible with number literal `42` [2] in property `a` of
+property `b`.
+
+   errors_intersection.js:36:3
+   36| ((any: {+a: null & {+b: null & {}}}): {+a: {+b: 42}});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:36:25
+   36| ((any: {+a: null & {+b: null & {}}}): {+a: {+b: 42}});
+                               ^^^^ [1]
+   errors_intersection.js:36:49
+   36| ((any: {+a: null & {+b: null & {}}}): {+a: {+b: 42}});
+                                                       ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:38:3
+
+Cannot cast `any` to number literal `42` because null [1] is incompatible with number literal `42` [2].
+
+   errors_intersection.js:38:3
+   38| ((any: null): 42); // Error: number ~> null
+         ^^^^^^^^^
+
+References:
+   errors_intersection.js:38:8
+   38| ((any: null): 42); // Error: number ~> null
+              ^^^^ [1]
+   errors_intersection.js:38:15
+   38| ((any: null): 42); // Error: number ~> null
+                     ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:39:3
+
+Cannot cast `any` to number literal `42` because null [1] is incompatible with number literal `42` [2].
+
+   errors_intersection.js:39:3
+   39| ((any: {} & {} & {} & null): 42); // Error: number ~> null
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:39:23
+   39| ((any: {} & {} & {} & null): 42); // Error: number ~> null
+                             ^^^^ [1]
+   errors_intersection.js:39:30
+   39| ((any: {} & {} & {} & null): 42); // Error: number ~> null
+                                    ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:40:3
+
+Cannot cast `any` to number literal `42` because null [1] is incompatible with number literal `42` [2].
+
+   errors_intersection.js:40:3
+   40| ((any: {} & ({} & ({} & null))): 42); // Error: number ~> null
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:40:25
+   40| ((any: {} & ({} & ({} & null))): 42); // Error: number ~> null
+                               ^^^^ [1]
+   errors_intersection.js:40:34
+   40| ((any: {} & ({} & ({} & null))): 42); // Error: number ~> null
+                                        ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:42:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:42:3
+   42| ((any: number & string): true); // Error
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:42:8
+   42| ((any: number & string): true); // Error
+              ^^^^^^ [1]
+   errors_intersection.js:42:26
+   42| ((any: number & string): true); // Error
+                                ^^^^ [2]
+   errors_intersection.js:42:17
+   42| ((any: number & string): true); // Error
+                       ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:43:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:43:3
+   43| ((any: number & string & {}): true); // Error: should not show the {} branch
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:43:8
+   43| ((any: number & string & {}): true); // Error: should not show the {} branch
+              ^^^^^^ [1]
+   errors_intersection.js:43:31
+   43| ((any: number & string & {}): true); // Error: should not show the {} branch
+                                     ^^^^ [2]
+   errors_intersection.js:43:17
+   43| ((any: number & string & {}): true); // Error: should not show the {} branch
+                       ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:44:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:44:3
+   44| ((any: {} & number & string): true); // Error: should not show the {} branch
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:44:13
+   44| ((any: {} & number & string): true); // Error: should not show the {} branch
+                   ^^^^^^ [1]
+   errors_intersection.js:44:31
+   44| ((any: {} & number & string): true); // Error: should not show the {} branch
+                                     ^^^^ [2]
+   errors_intersection.js:44:22
+   44| ((any: {} & number & string): true); // Error: should not show the {} branch
+                            ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:45:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:45:3
+   45| ((any: number & {} & string): true); // Error: should not show the {} branch
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:45:8
+   45| ((any: number & {} & string): true); // Error: should not show the {} branch
+              ^^^^^^ [1]
+   errors_intersection.js:45:31
+   45| ((any: number & {} & string): true); // Error: should not show the {} branch
+                                     ^^^^ [2]
+   errors_intersection.js:45:22
+   45| ((any: number & {} & string): true); // Error: should not show the {} branch
+                            ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:47:3
+
+Cannot cast `any` to object type because in property `a`:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:47:3
+   47| ((any: {+a: number & string}): {+a: true}); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:47:13
+   47| ((any: {+a: number & string}): {+a: true}); // Error
+                   ^^^^^^ [1]
+   errors_intersection.js:47:37
+   47| ((any: {+a: number & string}): {+a: true}); // Error
+                                           ^^^^ [2]
+   errors_intersection.js:47:22
+   47| ((any: {+a: number & string}): {+a: true}); // Error
+                            ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:49:3
+
+Cannot cast `any` to object type because:
+ - in property `a`:
+    - Either number [1] is incompatible with boolean literal `true` [2].
+    - Or string [3] is incompatible with boolean literal `true` [2].
+ - in property `b`:
+    - Either number [4] is incompatible with boolean literal `true` [5].
+    - Or string [6] is incompatible with boolean literal `true` [5].
+ - in property `c`:
+    - Either number [7] is incompatible with boolean literal `true` [8].
+    - Or string [9] is incompatible with boolean literal `true` [8].
+ - in property `d`:
+    - Either number [10] is incompatible with boolean literal `true` [11].
+    - Or string [12] is incompatible with boolean literal `true` [11].
+
+   errors_intersection.js:49:3
+         v-----
+   49| ((any: {
+   50|   +a: number & string,
+   51|   +b: {} & number & string,
+   52|   +c: number & {} & string,
+   53|   +d: number & string & {},
+   54| }): {
+       ^
+
+References:
+   errors_intersection.js:50:7
+   50|   +a: number & string,
+             ^^^^^^ [1]
+   errors_intersection.js:55:7
+   55|   +a: true, // Error: should be grouped
+             ^^^^ [2]
+   errors_intersection.js:50:16
+   50|   +a: number & string,
+                      ^^^^^^ [3]
+   errors_intersection.js:51:12
+   51|   +b: {} & number & string,
+                  ^^^^^^ [4]
+   errors_intersection.js:56:7
+   56|   +b: true, // Error: should be grouped, should not show the {} branch
+             ^^^^ [5]
+   errors_intersection.js:51:21
+   51|   +b: {} & number & string,
+                           ^^^^^^ [6]
+   errors_intersection.js:52:7
+   52|   +c: number & {} & string,
+             ^^^^^^ [7]
+   errors_intersection.js:57:7
+   57|   +c: true, // Error: should be grouped, should not show the {} branch
+             ^^^^ [8]
+   errors_intersection.js:52:21
+   52|   +c: number & {} & string,
+                           ^^^^^^ [9]
+   errors_intersection.js:53:7
+   53|   +d: number & string & {},
+             ^^^^^^ [10]
+   errors_intersection.js:58:7
+   58|   +d: true, // Error: should be grouped, should not show the {} branch
+             ^^^^ [11]
+   errors_intersection.js:53:16
+   53|   +d: number & string & {},
+                      ^^^^^^ [12]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:62:3
+
+Cannot cast `any` to object type because:
+ - in property `a`:
+    - Either number [1] is incompatible with boolean literal `true` [2] in index 0.
+    - Or string [3] is incompatible with boolean literal `true` [2] in index 0.
+ - in property `b`:
+    - Either number [4] is incompatible with boolean literal `true` [5] in index 0.
+    - Or string [6] is incompatible with boolean literal `true` [5] in index 0.
+ - in property `c`:
+    - Either number [7] is incompatible with boolean literal `true` [8] in index 0.
+    - Or string [9] is incompatible with boolean literal `true` [8] in index 0.
+ - in property `d`:
+    - Either number [10] is incompatible with boolean literal `true` [11] in index 0.
+    - Or string [12] is incompatible with boolean literal `true` [11] in index 0.
+
+   errors_intersection.js:62:3
+         v-----
+   62| ((any: {
+   63|   +a: [number] & [string],
+   64|   +b: [{}] & [number] & [string],
+   65|   +c: [number] & [{}] & [string],
+   66|   +d: [number] & [string] & [{}],
+   67| }): {
+       ^
+
+References:
+   errors_intersection.js:63:8
+   63|   +a: [number] & [string],
+              ^^^^^^ [1]
+   errors_intersection.js:68:8
+   68|   +a: [true], // Error: should be grouped
+              ^^^^ [2]
+   errors_intersection.js:63:19
+   63|   +a: [number] & [string],
+                         ^^^^^^ [3]
+   errors_intersection.js:64:15
+   64|   +b: [{}] & [number] & [string],
+                     ^^^^^^ [4]
+   errors_intersection.js:69:8
+   69|   +b: [true], // Error: should be grouped, should not show the [{}] branch
+              ^^^^ [5]
+   errors_intersection.js:64:26
+   64|   +b: [{}] & [number] & [string],
+                                ^^^^^^ [6]
+   errors_intersection.js:65:8
+   65|   +c: [number] & [{}] & [string],
+              ^^^^^^ [7]
+   errors_intersection.js:70:8
+   70|   +c: [true], // Error: should be grouped, should not show the [{}] branch
+              ^^^^ [8]
+   errors_intersection.js:65:26
+   65|   +c: [number] & [{}] & [string],
+                                ^^^^^^ [9]
+   errors_intersection.js:66:8
+   66|   +d: [number] & [string] & [{}],
+              ^^^^^^ [10]
+   errors_intersection.js:71:8
+   71|   +d: [true], // Error: should be grouped, should not show the [{}] branch
+              ^^^^ [11]
+   errors_intersection.js:66:19
+   66|   +d: [number] & [string] & [{}],
+                         ^^^^^^ [12]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:74:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+ - Or null [4] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:74:3
+   74| ((any: number & (string & null)): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:74:8
+   74| ((any: number & (string & null)): true); // Error: should be flattened
+              ^^^^^^ [1]
+   errors_intersection.js:74:35
+   74| ((any: number & (string & null)): true); // Error: should be flattened
+                                         ^^^^ [2]
+   errors_intersection.js:74:18
+   74| ((any: number & (string & null)): true); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_intersection.js:74:27
+   74| ((any: number & (string & null)): true); // Error: should be flattened
+                                 ^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:75:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either string [1] is incompatible with boolean literal `true` [2].
+ - Or null [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:75:3
+   75| ((any: (string & null) & number): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:75:9
+   75| ((any: (string & null) & number): true); // Error: should be flattened
+               ^^^^^^ [1]
+   errors_intersection.js:75:35
+   75| ((any: (string & null) & number): true); // Error: should be flattened
+                                         ^^^^ [2]
+   errors_intersection.js:75:18
+   75| ((any: (string & null) & number): true); // Error: should be flattened
+                        ^^^^ [3]
+   errors_intersection.js:75:26
+   75| ((any: (string & null) & number): true); // Error: should be flattened
+                                ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:76:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+ - Or null [4] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:76:3
+   76| ((any: {} & number & (string & null)): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:76:13
+   76| ((any: {} & number & (string & null)): true); // Error: should be flattened
+                   ^^^^^^ [1]
+   errors_intersection.js:76:40
+   76| ((any: {} & number & (string & null)): true); // Error: should be flattened
+                                              ^^^^ [2]
+   errors_intersection.js:76:23
+   76| ((any: {} & number & (string & null)): true); // Error: should be flattened
+                             ^^^^^^ [3]
+   errors_intersection.js:76:32
+   76| ((any: {} & number & (string & null)): true); // Error: should be flattened
+                                      ^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:77:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+ - Or null [4] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:77:3
+   77| ((any: number & (string & null) & {}): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:77:8
+   77| ((any: number & (string & null) & {}): true); // Error: should be flattened
+              ^^^^^^ [1]
+   errors_intersection.js:77:40
+   77| ((any: number & (string & null) & {}): true); // Error: should be flattened
+                                              ^^^^ [2]
+   errors_intersection.js:77:18
+   77| ((any: number & (string & null) & {}): true); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_intersection.js:77:27
+   77| ((any: number & (string & null) & {}): true); // Error: should be flattened
+                                 ^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:78:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+ - Or null [4] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:78:3
+   78| ((any: number & (string & {} & null)): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:78:8
+   78| ((any: number & (string & {} & null)): true); // Error: should be flattened
+              ^^^^^^ [1]
+   errors_intersection.js:78:40
+   78| ((any: number & (string & {} & null)): true); // Error: should be flattened
+                                              ^^^^ [2]
+   errors_intersection.js:78:18
+   78| ((any: number & (string & {} & null)): true); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_intersection.js:78:32
+   78| ((any: number & (string & {} & null)): true); // Error: should be flattened
+                                      ^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:80:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or string [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:80:3
+   80| ((any: number & number & number & string): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:80:8
+   80| ((any: number & number & number & string): true); // Error: should be flattened
+              ^^^^^^ [1]
+   errors_intersection.js:80:44
+   80| ((any: number & number & number & string): true); // Error: should be flattened
+                                                  ^^^^ [2]
+   errors_intersection.js:80:17
+   80| ((any: number & number & number & string): true); // Error: should be flattened
+                       ^^^^^^ [3]
+   errors_intersection.js:80:26
+   80| ((any: number & number & number & string): true); // Error: should be flattened
+                                ^^^^^^ [4]
+   errors_intersection.js:80:35
+   80| ((any: number & number & number & string): true); // Error: should be flattened
+                                         ^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:81:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or string [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:81:3
+   81| ((any: number & number & (number & string)): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:81:8
+   81| ((any: number & number & (number & string)): true); // Error: should be flattened
+              ^^^^^^ [1]
+   errors_intersection.js:81:46
+   81| ((any: number & number & (number & string)): true); // Error: should be flattened
+                                                    ^^^^ [2]
+   errors_intersection.js:81:17
+   81| ((any: number & number & (number & string)): true); // Error: should be flattened
+                       ^^^^^^ [3]
+   errors_intersection.js:81:27
+   81| ((any: number & number & (number & string)): true); // Error: should be flattened
+                                 ^^^^^^ [4]
+   errors_intersection.js:81:36
+   81| ((any: number & number & (number & string)): true); // Error: should be flattened
+                                          ^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:82:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or string [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:82:3
+   82| ((any: number & (number & (number & string))): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:82:8
+   82| ((any: number & (number & (number & string))): true); // Error: should be flattened
+              ^^^^^^ [1]
+   errors_intersection.js:82:48
+   82| ((any: number & (number & (number & string))): true); // Error: should be flattened
+                                                      ^^^^ [2]
+   errors_intersection.js:82:18
+   82| ((any: number & (number & (number & string))): true); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_intersection.js:82:28
+   82| ((any: number & (number & (number & string))): true); // Error: should be flattened
+                                  ^^^^^^ [4]
+   errors_intersection.js:82:37
+   82| ((any: number & (number & (number & string))): true); // Error: should be flattened
+                                           ^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:83:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either string [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or number [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:83:3
+   83| ((any: (string & number) & number & number): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:83:9
+   83| ((any: (string & number) & number & number): true); // Error: should be flattened
+               ^^^^^^ [1]
+   errors_intersection.js:83:46
+   83| ((any: (string & number) & number & number): true); // Error: should be flattened
+                                                    ^^^^ [2]
+   errors_intersection.js:83:18
+   83| ((any: (string & number) & number & number): true); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_intersection.js:83:28
+   83| ((any: (string & number) & number & number): true); // Error: should be flattened
+                                  ^^^^^^ [4]
+   errors_intersection.js:83:37
+   83| ((any: (string & number) & number & number): true); // Error: should be flattened
+                                           ^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:84:3
+
+Cannot cast `any` to boolean literal `true` because:
+ - Either string [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or number [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:84:3
+   84| ((any: ((string & number) & number) & number): true); // Error: should be flattened
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:84:10
+   84| ((any: ((string & number) & number) & number): true); // Error: should be flattened
+                ^^^^^^ [1]
+   errors_intersection.js:84:48
+   84| ((any: ((string & number) & number) & number): true); // Error: should be flattened
+                                                      ^^^^ [2]
+   errors_intersection.js:84:19
+   84| ((any: ((string & number) & number) & number): true); // Error: should be flattened
+                         ^^^^^^ [3]
+   errors_intersection.js:84:29
+   84| ((any: ((string & number) & number) & number): true); // Error: should be flattened
+                                   ^^^^^^ [4]
+   errors_intersection.js:84:39
+   84| ((any: ((string & number) & number) & number): true); // Error: should be flattened
+                                             ^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:86:3
+
+Cannot cast `any` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:86:3
+   86| ((any: number & {}): true); // Error
+         ^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:86:8
+   86| ((any: number & {}): true); // Error
+              ^^^^^^ [1]
+   errors_intersection.js:86:22
+   86| ((any: number & {}): true); // Error
+                            ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:87:3
+
+Cannot cast `any` to object type because:
+ - number [1] is incompatible with boolean literal `true` [2] in property `a`.
+ - number [3] is incompatible with boolean literal `true` [4] in property `b`.
+
+   errors_intersection.js:87:3
+   87| ((any: {+a: number & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:87:13
+   87| ((any: {+a: number & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                   ^^^^^^ [1]
+   errors_intersection.js:87:50
+   87| ((any: {+a: number & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                                                        ^^^^ [2]
+   errors_intersection.js:87:30
+   87| ((any: {+a: number & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                                    ^^^^^^ [3]
+   errors_intersection.js:87:60
+   87| ((any: {+a: number & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                                                                  ^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:88:3
+
+Cannot cast `any` to object type because:
+ - in property `a`:
+    - Either number [1] is incompatible with boolean literal `true` [2].
+    - Or string [3] is incompatible with boolean literal `true` [2].
+ - number [4] is incompatible with boolean literal `true` [5] in property `b`.
+
+   errors_intersection.js:88:3
+   88| ((any: {+a: number & string & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:88:13
+   88| ((any: {+a: number & string & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                   ^^^^^^ [1]
+   errors_intersection.js:88:59
+   88| ((any: {+a: number & string & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                                                                 ^^^^ [2]
+   errors_intersection.js:88:22
+   88| ((any: {+a: number & string & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                            ^^^^^^ [3]
+   errors_intersection.js:88:39
+   88| ((any: {+a: number & string & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                                             ^^^^^^ [4]
+   errors_intersection.js:88:69
+   88| ((any: {+a: number & string & {}, +b: number & {}}): {+a: true, +b: true}); // Error
+                                                                           ^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:91:3
+
+Cannot cast `any` to tuple type because:
+ - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
+ - Or `B` [3] is incompatible with number [2] in index 1 of index 0.
+ - Or `C` [4] is incompatible with number [2] in index 1 of index 0.
+ - Or `D` [5] is incompatible with number [2] in index 1 of index 0.
+
+   errors_intersection.js:91:3
+   91| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:91:16
+   91| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
+                      ^ [1]
+   errors_intersection.js:91:68
+   91| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
+                                                                          ^^^^^^ [2]
+   errors_intersection.js:91:28
+   91| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
+                                  ^ [3]
+   errors_intersection.js:91:42
+   91| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
+                                                ^ [4]
+   errors_intersection.js:91:54
+   91| ((any: [[null, A] & [null, B]] & [[null, C] & [null, D]]): [[null, number]]);
+                                                            ^ [5]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:94:3
+
+Cannot cast `any` to tuple type because:
+ - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
+ - Or `C` [3] is incompatible with number [2] in index 1 of index 0.
+ - Or `D` [4] is incompatible with number [2] in index 1 of index 0.
+
+   errors_intersection.js:94:3
+   94| ((any: [[null, A] & {}] & [[null, C] & [null, D]]): [[null, number]]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:94:16
+   94| ((any: [[null, A] & {}] & [[null, C] & [null, D]]): [[null, number]]);
+                      ^ [1]
+   errors_intersection.js:94:61
+   94| ((any: [[null, A] & {}] & [[null, C] & [null, D]]): [[null, number]]);
+                                                                   ^^^^^^ [2]
+   errors_intersection.js:94:35
+   94| ((any: [[null, A] & {}] & [[null, C] & [null, D]]): [[null, number]]);
+                                         ^ [3]
+   errors_intersection.js:94:47
+   94| ((any: [[null, A] & {}] & [[null, C] & [null, D]]): [[null, number]]);
+                                                     ^ [4]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:97:3
+
+Cannot cast `any` to tuple type because:
+ - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
+ - Or `C` [3] is incompatible with number [2] in index 1 of index 0.
+
+   errors_intersection.js:97:3
+   97| ((any: [[null, A] & {}] & [[null, C] & {}]): [[null, number]]);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:97:16
+   97| ((any: [[null, A] & {}] & [[null, C] & {}]): [[null, number]]);
+                      ^ [1]
+   errors_intersection.js:97:54
+   97| ((any: [[null, A] & {}] & [[null, C] & {}]): [[null, number]]);
+                                                            ^^^^^^ [2]
+   errors_intersection.js:97:35
+   97| ((any: [[null, A] & {}] & [[null, C] & {}]): [[null, number]]);
+                                         ^ [3]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:100:3
+
+Cannot cast `any` to tuple type because `C` [1] is incompatible with number [2] in index 1 of index 0.
+
+   errors_intersection.js:100:3
+   100| ((any: {} & [[null, C] & {}]): [[null, number]]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:100:21
+   100| ((any: {} & [[null, C] & {}]): [[null, number]]);
+                            ^ [1]
+   errors_intersection.js:100:40
+   100| ((any: {} & [[null, C] & {}]): [[null, number]]);
+                                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:103:1
+
+Cannot call `f1` because:
+ - `A` [1] is not a function.
+ - `B` [2] is not a function.
+
+   errors_intersection.js:103:1
+   103| f1(); // Error
+        ^^^^
+
+References:
+   errors_intersection.js:102:17
+   102| declare var f1: A | B;
+                        ^ [1]
+   errors_intersection.js:102:21
+   102| declare var f1: A | B;
+                            ^ [2]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:106:1
+
+Cannot call `f2` because:
+ - `A` [1] is not a function.
+ - `B` [2] is not a function.
+ - `C` [3] is not a function.
+
+   errors_intersection.js:106:1
+   106| f2(); // Error
+        ^^^^
+
+References:
+   errors_intersection.js:105:17
+   105| declare var f2: A | (B | C);
+                        ^ [1]
+   errors_intersection.js:105:22
+   105| declare var f2: A | (B | C);
+                             ^ [2]
+   errors_intersection.js:105:26
+   105| declare var f2: A | (B | C);
+                                 ^ [3]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:109:1
+
+Cannot call `f3` because:
+ - `A` [1] is not a function.
+ - `B` [2] is not a function.
+ - `C` [3] is not a function.
+ - `D` [4] is not a function.
+
+   errors_intersection.js:109:1
+   109| f3(); // Error
+        ^^^^
+
+References:
+   errors_intersection.js:108:17
+   108| declare var f3: A | (B | (C | D));
+                        ^ [1]
+   errors_intersection.js:108:22
+   108| declare var f3: A | (B | (C | D));
+                             ^ [2]
+   errors_intersection.js:108:27
+   108| declare var f3: A | (B | (C | D));
+                                  ^ [3]
+   errors_intersection.js:108:31
+   108| declare var f3: A | (B | (C | D));
+                                      ^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:13:2
+
+Cannot cast object literal to object type because:
+ - number [1] is incompatible with null [2] in property `b`.
+ - number [3] is incompatible with null [4] in property `a`.
+ - number [5] is incompatible with null [6] in property `c`.
+
+   errors_union.js:13:2
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:13:6
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+            ^ [1]
+   errors_union.js:13:35
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+                                         ^^^^ [2]
+   errors_union.js:13:12
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+                  ^ [3]
+   errors_union.js:13:26
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+                                ^^^^ [4]
+   errors_union.js:13:18
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+                        ^ [5]
+   errors_union.js:13:44
+   13| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+                                                  ^^^^ [6]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:16:2
+
+Cannot cast object literal to object type because:
+ - in property `b`:
+    - Either number [1] is incompatible with null [2].
+    - Or number [1] is incompatible with string [3].
+ - in property `a`:
+    - Either number [4] is incompatible with null [5].
+    - Or number [4] is incompatible with string [6].
+ - in property `c`:
+    - Either number [7] is incompatible with null [8].
+    - Or number [7] is incompatible with string [9].
+
+   errors_union.js:16:2
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:16:6
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+            ^ [1]
+   errors_union.js:16:44
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                                                  ^^^^ [2]
+   errors_union.js:16:51
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                                                         ^^^^^^ [3]
+   errors_union.js:16:12
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                  ^ [4]
+   errors_union.js:16:26
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                                ^^^^ [5]
+   errors_union.js:16:33
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                                       ^^^^^^ [6]
+   errors_union.js:16:18
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                        ^ [7]
+   errors_union.js:16:62
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                                                                    ^^^^ [8]
+   errors_union.js:16:69
+   16| ({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+                                                                           ^^^^^^ [9]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:19:2
+
+Cannot cast object literal to object type because:
+ - number [1] is incompatible with null [2] in property `b`.
+ - in property `a`:
+    - Either number [3] is incompatible with null [4].
+    - Or number [3] is incompatible with string [5].
+ - number [6] is incompatible with null [7] in property `c`.
+
+   errors_union.js:19:2
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:19:6
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+            ^ [1]
+   errors_union.js:19:44
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+                                                  ^^^^ [2]
+   errors_union.js:19:12
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+                  ^ [3]
+   errors_union.js:19:26
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+                                ^^^^ [4]
+   errors_union.js:19:33
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+                                       ^^^^^^ [5]
+   errors_union.js:19:18
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+                        ^ [6]
+   errors_union.js:19:53
+   19| ({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+                                                           ^^^^ [7]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:22:2
+
+Cannot cast object literal to object type because:
+ - in property `b`:
+    - Either number [1] is incompatible with null [2].
+    - Or number [1] is incompatible with string [3].
+ - number [4] is incompatible with null [5] in property `a`.
+ - number [6] is incompatible with null [7] in property `c`.
+
+   errors_union.js:22:2
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:22:6
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+            ^ [1]
+   errors_union.js:22:35
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+                                         ^^^^ [2]
+   errors_union.js:22:42
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+                                                ^^^^^^ [3]
+   errors_union.js:22:12
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+                  ^ [4]
+   errors_union.js:22:26
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+                                ^^^^ [5]
+   errors_union.js:22:18
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+                        ^ [6]
+   errors_union.js:22:53
+   22| ({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+                                                           ^^^^ [7]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:25:2
+
+Cannot cast object literal to object type because:
+ - number [1] is incompatible with null [2] in property `b`.
+ - number [3] is incompatible with null [4] in property `a`.
+ - in property `c`:
+    - Either number [5] is incompatible with null [6].
+    - Or number [5] is incompatible with string [7].
+
+   errors_union.js:25:2
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:25:6
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+            ^ [1]
+   errors_union.js:25:35
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+                                         ^^^^ [2]
+   errors_union.js:25:12
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+                  ^ [3]
+   errors_union.js:25:26
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+                                ^^^^ [4]
+   errors_union.js:25:18
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+                        ^ [5]
+   errors_union.js:25:44
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+                                                  ^^^^ [6]
+   errors_union.js:25:51
+   25| ({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+                                                         ^^^^^^ [7]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:28:2
+
+Cannot cast object literal to object type because number [1] is incompatible with null [2] in property `a.b`.
+
+   errors_union.js:28:2
+   28| ({a: {b: 42}}: {a: {b: null}});
+        ^^^^^^^^^^^^
+
+References:
+   errors_union.js:28:10
+   28| ({a: {b: 42}}: {a: {b: null}});
+                ^^ [1]
+   errors_union.js:28:24
+   28| ({a: {b: 42}}: {a: {b: null}});
+                              ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:32:2
+
+Cannot cast object literal to object type because number [1] is incompatible with null [2] in property `a` of property
+`b`.
+
+   errors_union.js:32:2
+   32| ({a: {b: 42}}: {a: null | {b: null | {}}});
+        ^^^^^^^^^^^^
+
+References:
+   errors_union.js:32:10
+   32| ({a: {b: 42}}: {a: null | {b: null | {}}});
+                ^^ [1]
+   errors_union.js:32:31
+   32| ({a: {b: 42}}: {a: null | {b: null | {}}});
+                                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:34:2
+
+Cannot cast `42` to null because number [1] is incompatible with null [2].
+
+   errors_union.js:34:2
+   34| (42: null); // Error: number ~> null
+        ^^ [1]
+
+References:
+   errors_union.js:34:6
+   34| (42: null); // Error: number ~> null
+            ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:35:2
+
+Cannot cast `42` to union type because number [1] is incompatible with null [2].
+
+   errors_union.js:35:2
+   35| (42: {} | {} | {} | null); // Error: number ~> null
+        ^^ [1]
+
+References:
+   errors_union.js:35:21
+   35| (42: {} | {} | {} | null); // Error: number ~> null
+                           ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:36:2
+
+Cannot cast `42` to union type because number [1] is incompatible with null [2].
+
+   errors_union.js:36:2
+   36| (42: {} | ({} | ({} | null))); // Error: number ~> null
+        ^^ [1]
+
+References:
+   errors_union.js:36:23
+   36| (42: {} | ({} | ({} | null))); // Error: number ~> null
+                             ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:39:2
+
+Cannot cast object literal to union type because:
+ - Either string [1] is incompatible with number [2] in property `y`.
+ - Or number [3] is incompatible with string [4] in property `x`.
+
+   errors_union.js:39:2
+   39| ({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:39:14
+   39| ({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error
+                    ^^^^^ [1]
+   errors_union.js:39:37
+   39| ({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error
+                                           ^^^^^^ [2]
+   errors_union.js:39:6
+   39| ({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error
+            ^^^ [3]
+   errors_union.js:39:51
+   39| ({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error
+                                                         ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:44:2
+
+Cannot cast object literal to union type because:
+ - Either string [1] is incompatible with number [2] in property `y`.
+ - Or number [3] is incompatible with string [4] in property `x`.
+
+   errors_union.js:44:2
+   44| ({x: 123, y: 'abc'}: number | NumberPoint | StringPoint); // Error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:44:14
+   44| ({x: 123, y: 'abc'}: number | NumberPoint | StringPoint); // Error
+                    ^^^^^ [1]
+   errors_union.js:42:35
+   42| type NumberPoint = {x: number, y: number};
+                                         ^^^^^^ [2]
+   errors_union.js:44:6
+   44| ({x: 123, y: 'abc'}: number | NumberPoint | StringPoint); // Error
+            ^^^ [3]
+   errors_union.js:43:24
+   43| type StringPoint = {x: string, y: string};
+                              ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:48:2
+
+Cannot cast object literal to `Point` because:
+ - Either string [1] is incompatible with number [2] in property `y`.
+ - Or number [3] is incompatible with string [4] in property `x`.
+
+   errors_union.js:48:2
+   48| ({x: 123, y: 'abc'}: Point); // Error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:48:14
+   48| ({x: 123, y: 'abc'}: Point); // Error
+                    ^^^^^ [1]
+   errors_union.js:42:35
+   42| type NumberPoint = {x: number, y: number};
+                                         ^^^^^^ [2]
+   errors_union.js:48:6
+   48| ({x: 123, y: 'abc'}: Point); // Error
+            ^^^ [3]
+   errors_union.js:43:24
+   43| type StringPoint = {x: string, y: string};
+                              ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:50:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   errors_union.js:50:2
+   50| (true: number | string); // Error
+        ^^^^ [1]
+
+References:
+   errors_union.js:50:8
+   50| (true: number | string); // Error
+              ^^^^^^ [2]
+   errors_union.js:50:17
+   50| (true: number | string); // Error
+                       ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:51:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   errors_union.js:51:2
+   51| (true: number | string | {}); // Error: should not show the {} branch
+        ^^^^ [1]
+
+References:
+   errors_union.js:51:8
+   51| (true: number | string | {}); // Error: should not show the {} branch
+              ^^^^^^ [2]
+   errors_union.js:51:17
+   51| (true: number | string | {}); // Error: should not show the {} branch
+                       ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:52:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   errors_union.js:52:2
+   52| (true: {} | number | string); // Error: should not show the {} branch
+        ^^^^ [1]
+
+References:
+   errors_union.js:52:13
+   52| (true: {} | number | string); // Error: should not show the {} branch
+                   ^^^^^^ [2]
+   errors_union.js:52:22
+   52| (true: {} | number | string); // Error: should not show the {} branch
+                            ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:53:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   errors_union.js:53:2
+   53| (true: number | {} | string); // Error: should not show the {} branch
+        ^^^^ [1]
+
+References:
+   errors_union.js:53:8
+   53| (true: number | {} | string); // Error: should not show the {} branch
+              ^^^^^^ [2]
+   errors_union.js:53:22
+   53| (true: number | {} | string); // Error: should not show the {} branch
+                            ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:55:2
+
+Cannot cast object literal to object type because in property `a`:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   errors_union.js:55:2
+   55| ({a: true}: {a: number | string}); // Error
+        ^^^^^^^^^
+
+References:
+   errors_union.js:55:6
+   55| ({a: true}: {a: number | string}); // Error
+            ^^^^ [1]
+   errors_union.js:55:17
+   55| ({a: true}: {a: number | string}); // Error
+                       ^^^^^^ [2]
+   errors_union.js:55:26
+   55| ({a: true}: {a: number | string}); // Error
+                                ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:57:2
+
+Cannot cast object literal to object type because:
+ - in property `a`:
+    - Either boolean [1] is incompatible with number [2].
+    - Or boolean [1] is incompatible with string [3].
+ - in property `b`:
+    - Either boolean [4] is incompatible with number [5].
+    - Or boolean [4] is incompatible with string [6].
+ - in property `c`:
+    - Either boolean [7] is incompatible with number [8].
+    - Or boolean [7] is incompatible with string [9].
+ - in property `d`:
+    - Either boolean [10] is incompatible with number [11].
+    - Or boolean [10] is incompatible with string [12].
+
+   errors_union.js:57:2
+        v
+   57| ({
+   58|   a: true, // Error: should be grouped
+   59|   b: true, // Error: should be grouped, should not show the {} branch
+   60|   c: true, // Error: should be grouped, should not show the {} branch
+   61|   d: true, // Error: should be grouped, should not show the {} branch
+   62| }: {
+       ^
+
+References:
+   errors_union.js:58:6
+   58|   a: true, // Error: should be grouped
+            ^^^^ [1]
+   errors_union.js:63:6
+   63|   a: number | string,
+            ^^^^^^ [2]
+   errors_union.js:63:15
+   63|   a: number | string,
+                     ^^^^^^ [3]
+   errors_union.js:59:6
+   59|   b: true, // Error: should be grouped, should not show the {} branch
+            ^^^^ [4]
+   errors_union.js:64:11
+   64|   b: {} | number | string,
+                 ^^^^^^ [5]
+   errors_union.js:64:20
+   64|   b: {} | number | string,
+                          ^^^^^^ [6]
+   errors_union.js:60:6
+   60|   c: true, // Error: should be grouped, should not show the {} branch
+            ^^^^ [7]
+   errors_union.js:65:6
+   65|   c: number | {} | string,
+            ^^^^^^ [8]
+   errors_union.js:65:20
+   65|   c: number | {} | string,
+                          ^^^^^^ [9]
+   errors_union.js:61:6
+   61|   d: true, // Error: should be grouped, should not show the {} branch
+            ^^^^ [10]
+   errors_union.js:66:6
+   66|   d: number | string | {},
+            ^^^^^^ [11]
+   errors_union.js:66:15
+   66|   d: number | string | {},
+                     ^^^^^^ [12]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:70:2
+
+Cannot cast object literal to object type because:
+ - in property `a`:
+    - Either boolean [1] is incompatible with number [2] in index 0.
+    - Or boolean [1] is incompatible with string [3] in index 0.
+ - in property `b`:
+    - Either boolean [4] is incompatible with number [5] in index 0.
+    - Or boolean [4] is incompatible with string [6] in index 0.
+ - in property `c`:
+    - Either boolean [7] is incompatible with number [8] in index 0.
+    - Or boolean [7] is incompatible with string [9] in index 0.
+ - in property `d`:
+    - Either boolean [10] is incompatible with number [11] in index 0.
+    - Or boolean [10] is incompatible with string [12] in index 0.
+
+   errors_union.js:70:2
+        v
+   70| ({
+   71|   a: [true], // Error: should be grouped
+   72|   b: [true], // Error: should be grouped, should not show the [{}] branch
+   73|   c: [true], // Error: should be grouped, should not show the [{}] branch
+   74|   d: [true], // Error: should be grouped, should not show the [{}] branch
+   75| }: {
+       ^
+
+References:
+   errors_union.js:71:7
+   71|   a: [true], // Error: should be grouped
+             ^^^^ [1]
+   errors_union.js:76:7
+   76|   a: [number] | [string],
+             ^^^^^^ [2]
+   errors_union.js:76:18
+   76|   a: [number] | [string],
+                        ^^^^^^ [3]
+   errors_union.js:72:7
+   72|   b: [true], // Error: should be grouped, should not show the [{}] branch
+             ^^^^ [4]
+   errors_union.js:77:14
+   77|   b: [{}] | [number] | [string],
+                    ^^^^^^ [5]
+   errors_union.js:77:25
+   77|   b: [{}] | [number] | [string],
+                               ^^^^^^ [6]
+   errors_union.js:73:7
+   73|   c: [true], // Error: should be grouped, should not show the [{}] branch
+             ^^^^ [7]
+   errors_union.js:78:7
+   78|   c: [number] | [{}] | [string],
+             ^^^^^^ [8]
+   errors_union.js:78:25
+   78|   c: [number] | [{}] | [string],
+                               ^^^^^^ [9]
+   errors_union.js:74:7
+   74|   d: [true], // Error: should be grouped, should not show the [{}] branch
+             ^^^^ [10]
+   errors_union.js:79:7
+   79|   d: [number] | [string] | [{}],
+             ^^^^^^ [11]
+   errors_union.js:79:18
+   79|   d: [number] | [string] | [{}],
+                        ^^^^^^ [12]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:82:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+ - Or boolean [1] is incompatible with null [4].
+
+   errors_union.js:82:2
+   82| (true: number | (string | null)); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:82:8
+   82| (true: number | (string | null)); // Error: should be flattened
+              ^^^^^^ [2]
+   errors_union.js:82:18
+   82| (true: number | (string | null)); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_union.js:82:27
+   82| (true: number | (string | null)); // Error: should be flattened
+                                 ^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:83:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with null [3].
+ - Or boolean [1] is incompatible with number [4].
+
+   errors_union.js:83:2
+   83| (true: (string | null) | number); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:83:9
+   83| (true: (string | null) | number); // Error: should be flattened
+               ^^^^^^ [2]
+   errors_union.js:83:18
+   83| (true: (string | null) | number); // Error: should be flattened
+                        ^^^^ [3]
+   errors_union.js:83:26
+   83| (true: (string | null) | number); // Error: should be flattened
+                                ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:84:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+ - Or boolean [1] is incompatible with null [4].
+
+   errors_union.js:84:2
+   84| (true: {} | number | (string | null)); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:84:13
+   84| (true: {} | number | (string | null)); // Error: should be flattened
+                   ^^^^^^ [2]
+   errors_union.js:84:23
+   84| (true: {} | number | (string | null)); // Error: should be flattened
+                             ^^^^^^ [3]
+   errors_union.js:84:32
+   84| (true: {} | number | (string | null)); // Error: should be flattened
+                                      ^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:85:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+ - Or boolean [1] is incompatible with null [4].
+
+   errors_union.js:85:2
+   85| (true: number | (string | null) | {}); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:85:8
+   85| (true: number | (string | null) | {}); // Error: should be flattened
+              ^^^^^^ [2]
+   errors_union.js:85:18
+   85| (true: number | (string | null) | {}); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_union.js:85:27
+   85| (true: number | (string | null) | {}); // Error: should be flattened
+                                 ^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:86:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+ - Or boolean [1] is incompatible with null [4].
+
+   errors_union.js:86:2
+   86| (true: number | (string | {} | null)); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:86:8
+   86| (true: number | (string | {} | null)); // Error: should be flattened
+              ^^^^^^ [2]
+   errors_union.js:86:18
+   86| (true: number | (string | {} | null)); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_union.js:86:32
+   86| (true: number | (string | {} | null)); // Error: should be flattened
+                                      ^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:88:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with number [3].
+ - Or boolean [1] is incompatible with number [4].
+ - Or boolean [1] is incompatible with string [5].
+
+   errors_union.js:88:2
+   88| (true: number | number | number | string); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:88:8
+   88| (true: number | number | number | string); // Error: should be flattened
+              ^^^^^^ [2]
+   errors_union.js:88:17
+   88| (true: number | number | number | string); // Error: should be flattened
+                       ^^^^^^ [3]
+   errors_union.js:88:26
+   88| (true: number | number | number | string); // Error: should be flattened
+                                ^^^^^^ [4]
+   errors_union.js:88:35
+   88| (true: number | number | number | string); // Error: should be flattened
+                                         ^^^^^^ [5]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:89:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with number [3].
+ - Or boolean [1] is incompatible with number [4].
+ - Or boolean [1] is incompatible with string [5].
+
+   errors_union.js:89:2
+   89| (true: number | number | (number | string)); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:89:8
+   89| (true: number | number | (number | string)); // Error: should be flattened
+              ^^^^^^ [2]
+   errors_union.js:89:17
+   89| (true: number | number | (number | string)); // Error: should be flattened
+                       ^^^^^^ [3]
+   errors_union.js:89:27
+   89| (true: number | number | (number | string)); // Error: should be flattened
+                                 ^^^^^^ [4]
+   errors_union.js:89:36
+   89| (true: number | number | (number | string)); // Error: should be flattened
+                                          ^^^^^^ [5]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:90:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with number [3].
+ - Or boolean [1] is incompatible with number [4].
+ - Or boolean [1] is incompatible with string [5].
+
+   errors_union.js:90:2
+   90| (true: number | (number | (number | string))); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:90:8
+   90| (true: number | (number | (number | string))); // Error: should be flattened
+              ^^^^^^ [2]
+   errors_union.js:90:18
+   90| (true: number | (number | (number | string))); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_union.js:90:28
+   90| (true: number | (number | (number | string))); // Error: should be flattened
+                                  ^^^^^^ [4]
+   errors_union.js:90:37
+   90| (true: number | (number | (number | string))); // Error: should be flattened
+                                           ^^^^^^ [5]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:91:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+ - Or boolean [1] is incompatible with number [4].
+ - Or boolean [1] is incompatible with number [5].
+
+   errors_union.js:91:2
+   91| (true: (string | number) | number | number); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:91:9
+   91| (true: (string | number) | number | number); // Error: should be flattened
+               ^^^^^^ [2]
+   errors_union.js:91:18
+   91| (true: (string | number) | number | number); // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_union.js:91:28
+   91| (true: (string | number) | number | number); // Error: should be flattened
+                                  ^^^^^^ [4]
+   errors_union.js:91:37
+   91| (true: (string | number) | number | number); // Error: should be flattened
+                                           ^^^^^^ [5]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:92:2
+
+Cannot cast `true` to union type because:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+ - Or boolean [1] is incompatible with number [4].
+ - Or boolean [1] is incompatible with number [5].
+
+   errors_union.js:92:2
+   92| (true: ((string | number) | number) | number); // Error: should be flattened
+        ^^^^ [1]
+
+References:
+   errors_union.js:92:10
+   92| (true: ((string | number) | number) | number); // Error: should be flattened
+                ^^^^^^ [2]
+   errors_union.js:92:19
+   92| (true: ((string | number) | number) | number); // Error: should be flattened
+                         ^^^^^^ [3]
+   errors_union.js:92:29
+   92| (true: ((string | number) | number) | number); // Error: should be flattened
+                                   ^^^^^^ [4]
+   errors_union.js:92:39
+   92| (true: ((string | number) | number) | number); // Error: should be flattened
+                                             ^^^^^^ [5]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:94:2
+
+Cannot cast `true` to union type because boolean [1] is incompatible with number [2].
+
+   errors_union.js:94:2
+   94| (true: number | {}); // Error
+        ^^^^ [1]
+
+References:
+   errors_union.js:94:8
+   94| (true: number | {}); // Error
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:95:2
+
+Cannot cast object literal to object type because:
+ - boolean [1] is incompatible with number [2] in property `a`.
+ - boolean [3] is incompatible with number [4] in property `b`.
+
+   errors_union.js:95:2
+   95| ({a: true, b: true}: {a: number | {}, b: number | {}}); // Error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:95:6
+   95| ({a: true, b: true}: {a: number | {}, b: number | {}}); // Error
+            ^^^^ [1]
+   errors_union.js:95:26
+   95| ({a: true, b: true}: {a: number | {}, b: number | {}}); // Error
+                                ^^^^^^ [2]
+   errors_union.js:95:15
+   95| ({a: true, b: true}: {a: number | {}, b: number | {}}); // Error
+                     ^^^^ [3]
+   errors_union.js:95:42
+   95| ({a: true, b: true}: {a: number | {}, b: number | {}}); // Error
+                                                ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:96:2
+
+Cannot cast object literal to object type because:
+ - in property `a`:
+    - Either boolean [1] is incompatible with number [2].
+    - Or boolean [1] is incompatible with string [3].
+ - boolean [4] is incompatible with number [5] in property `b`.
+
+   errors_union.js:96:2
+   96| ({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:96:6
+   96| ({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error
+            ^^^^ [1]
+   errors_union.js:96:26
+   96| ({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error
+                                ^^^^^^ [2]
+   errors_union.js:96:35
+   96| ({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error
+                                         ^^^^^^ [3]
+   errors_union.js:96:15
+   96| ({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error
+                     ^^^^ [4]
+   errors_union.js:96:51
+   96| ({a: true, b: true}: {a: number | string | {}, b: number | {}}); // Error
+                                                         ^^^^^^ [5]
+
+
+Error --------------------------------------------------------------------------------------------- errors_union.js:99:3
+
+Cannot cast `any` to union type because:
+ - Either number [1] is incompatible with `A` [2] in index 1 of index 0.
+ - Or number [1] is incompatible with `B` [3] in index 1 of index 0.
+ - Or number [1] is incompatible with `C` [4] in index 1 of index 0.
+ - Or number [1] is incompatible with `D` [5] in index 1 of index 0.
+
+   errors_union.js:99:3
+   99| ((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);
+         ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:99:16
+   99| ((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);
+                      ^^^^^^ [1]
+   errors_union.js:99:35
+   99| ((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);
+                                         ^ [2]
+   errors_union.js:99:47
+   99| ((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);
+                                                     ^ [3]
+   errors_union.js:99:61
+   99| ((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);
+                                                                   ^ [4]
+   errors_union.js:99:73
+   99| ((any: [[null, number]]): [[null, A] | [null, B]] | [[null, C] | [null, D]]);
+                                                                               ^ [5]
+
+
+Error -------------------------------------------------------------------------------------------- errors_union.js:102:3
+
+Cannot cast `any` to union type because:
+ - Either number [1] is incompatible with `A` [2] in index 1 of index 0.
+ - Or number [1] is incompatible with `C` [3] in index 1 of index 0.
+ - Or number [1] is incompatible with `D` [4] in index 1 of index 0.
+
+   errors_union.js:102:3
+   102| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | [null, D]]);
+          ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:102:16
+   102| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | [null, D]]);
+                       ^^^^^^ [1]
+   errors_union.js:102:35
+   102| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | [null, D]]);
+                                          ^ [2]
+   errors_union.js:102:54
+   102| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | [null, D]]);
+                                                             ^ [3]
+   errors_union.js:102:66
+   102| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | [null, D]]);
+                                                                         ^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- errors_union.js:105:3
+
+Cannot cast `any` to union type because:
+ - Either number [1] is incompatible with `A` [2] in index 1 of index 0.
+ - Or number [1] is incompatible with `C` [3] in index 1 of index 0.
+
+   errors_union.js:105:3
+   105| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);
+          ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:105:16
+   105| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);
+                       ^^^^^^ [1]
+   errors_union.js:105:35
+   105| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);
+                                          ^ [2]
+   errors_union.js:105:54
+   105| ((any: [[null, number]]): [[null, A] | {}] | [[null, C] | {}]);
+                                                             ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- errors_union.js:108:3
+
+Cannot cast `any` to union type because number [1] is incompatible with `C` [2] in index 1 of index 0.
+
+   errors_union.js:108:3
+   108| ((any: [[null, number]]): {} | [[null, C] | {}]);
+          ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_union.js:108:16
+   108| ((any: [[null, number]]): {} | [[null, C] | {}]);
+                       ^^^^^^ [1]
+   errors_union.js:108:40
+   108| ((any: [[null, number]]): {} | [[null, C] | {}]);
+                                               ^ [2]
+
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:19:1
+
+Cannot call `a` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   intersection-function.js:19:1
+   19| a(true);
+       ^^^^^^^
+
+References:
+   intersection-function.js:19:3
+   19| a(true);
+         ^^^^ [1]
+   intersection-function.js:17:23
+   17| declare function a(x: number): void;
+                             ^^^^^^ [2]
+   intersection-function.js:18:23
+   18| declare function a(x: string): void;
+                             ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:23:1
+
+Cannot call `b` because number [1] is incompatible with string [2].
+
+   intersection-function.js:23:1
+   23| b(42);
+       ^^^^^
+
+References:
    intersection-function.js:23:3
    23| b(42);
          ^^ [1]
-
-References:
    intersection-function.js:21:23
    21| declare function b(x: string): void;
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:24:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:24:1
 
-Cannot call `b` with object literal bound to `x` because number [1] is incompatible with string [2] in property `p`.
+Cannot call `b` because number [1] is incompatible with string [2] in property `p`.
 
-   intersection-function.js:24:3
+   intersection-function.js:24:1
    24| b({p: 42});
-         ^^^^^^^
+       ^^^^^^^^^^
 
 References:
    intersection-function.js:24:7
@@ -51,91 +2075,74 @@ References:
                                  ^^^^^^ [2]
 
 
-Error: intersection-function.js:30
- 30: c(42);
-     ^^^^^ call of `c`. Function cannot be called on any member of intersection type
- 30: c(42);
-     ^ intersection
-  Member 1:
-   26: declare function c(x: string): void;
-                         ^^^^^^^^^^^^^^^^^ function type
-  Error:
-   30: c(42);
-         ^^ number. This type is incompatible with the expected param type of
-   26: declare function c(x: string): void;
-                             ^^^^^^ string
-  Member 3:
-   28: declare function c(x: boolean): void;
-                         ^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   30: c(42);
-         ^^ number. This type is incompatible with the expected param type of
-   28: declare function c(x: boolean): void;
-                             ^^^^^^^ boolean
+Error ------------------------------------------------------------------------------------ intersection-function.js:30:1
 
-Error: intersection-function.js:31
- 31: c({a: {b: 42}});
-     ^^^^^^^^^^^^^^^ call of `c`. Function cannot be called on any member of intersection type
- 31: c({a: {b: 42}});
-     ^ intersection
-  Member 2:
-   27: declare function c(x: {a: {b: string}}): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   31: c({a: {b: 42}});
-         ^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-   27: declare function c(x: {a: {b: string}}): void;
-                             ^^^^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       31: c({a: {b: 42}});
-                 ^^^^^^^ object literal. This type is incompatible with
-       27: declare function c(x: {a: {b: string}}): void;
-                                     ^^^^^^^^^^^ object type
-        Property `b` is incompatible:
-           31: c({a: {b: 42}});
-                         ^^ number. This type is incompatible with
-           27: declare function c(x: {a: {b: string}}): void;
-                                             ^^^^^^ string
-  Member 4:
-   29: declare function c(x: {a: {b: boolean}}): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   31: c({a: {b: 42}});
-         ^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-   29: declare function c(x: {a: {b: boolean}}): void;
-                             ^^^^^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       31: c({a: {b: 42}});
-                 ^^^^^^^ object literal. This type is incompatible with
-       29: declare function c(x: {a: {b: boolean}}): void;
-                                     ^^^^^^^^^^^^ object type
-        Property `b` is incompatible:
-           31: c({a: {b: 42}});
-                         ^^ number. This type is incompatible with
-           29: declare function c(x: {a: {b: boolean}}): void;
-                                             ^^^^^^^ boolean
+Cannot call `c` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with boolean [3].
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:36:3
+   intersection-function.js:30:1
+   30| c(42);
+       ^^^^^
 
-Cannot call `d` with `42` bound to `x` because number [1] is incompatible with string [2].
+References:
+   intersection-function.js:30:3
+   30| c(42);
+         ^^ [1]
+   intersection-function.js:26:23
+   26| declare function c(x: string): void;
+                             ^^^^^^ [2]
+   intersection-function.js:28:23
+   28| declare function c(x: boolean): void;
+                             ^^^^^^^ [3]
 
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:31:1
+
+Cannot call `c` because:
+ - Either number [1] is incompatible with string [2] in property `a.b`.
+ - Or number [1] is incompatible with boolean [3] in property `a.b`.
+
+   intersection-function.js:31:1
+   31| c({a: {b: 42}});
+       ^^^^^^^^^^^^^^^
+
+References:
+   intersection-function.js:31:11
+   31| c({a: {b: 42}});
+                 ^^ [1]
+   intersection-function.js:27:31
+   27| declare function c(x: {a: {b: string}}): void;
+                                     ^^^^^^ [2]
+   intersection-function.js:29:31
+   29| declare function c(x: {a: {b: boolean}}): void;
+                                     ^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:36:1
+
+Cannot call `d` because number [1] is incompatible with string [2].
+
+   intersection-function.js:36:1
+   36| d(42);
+       ^^^^^
+
+References:
    intersection-function.js:36:3
    36| d(42);
          ^^ [1]
-
-References:
    intersection-function.js:33:23
    33| declare function d(x: string): void;
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:37:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:37:1
 
-Cannot call `d` with object literal bound to `x` because number [1] is incompatible with string [2] in property `a`.
+Cannot call `d` because number [1] is incompatible with string [2] in property `a`.
 
-   intersection-function.js:37:3
+   intersection-function.js:37:1
    37| d({a: 42});
-         ^^^^^^^
+       ^^^^^^^^^^
 
 References:
    intersection-function.js:37:7
@@ -146,13 +2153,13 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:38:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:38:1
 
-Cannot call `d` with object literal bound to `x` because number [1] is incompatible with string [2] in property `a.b`.
+Cannot call `d` because number [1] is incompatible with string [2] in property `a.b`.
 
-   intersection-function.js:38:3
+   intersection-function.js:38:1
    38| d({a: {b: 42}});
-         ^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
 
 References:
    intersection-function.js:38:11
@@ -163,35 +2170,35 @@ References:
                                      ^^^^^^ [2]
 
 
-Error: intersection-function.js:42
- 42: e(42);
-     ^^^^^ call of `e`. Function cannot be called on any member of intersection type
- 42: e(42);
-     ^ intersection
-  Member 1:
-   40: declare function e(x: X): void;
-                         ^^^^^^^^^^^^ function type
-  Error:
-   42: e(42);
-         ^^ number. This type is incompatible with the expected param type of
-   40: declare function e(x: X): void;
-                             ^ X
-  Member 2:
-   41: declare function e(x: {p: string}): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   42: e(42);
-         ^^ number. This type is incompatible with the expected param type of
-   41: declare function e(x: {p: string}): void;
-                             ^^^^^^^^^^^ object type
+Error ------------------------------------------------------------------------------------ intersection-function.js:42:1
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:44:3
+Cannot call `e` because:
+ - Either number [1] is incompatible with `X` [2].
+ - Or number [1] is incompatible with object type [3].
 
-Cannot call `e` with `new Y()` bound to `x` because number [1] is incompatible with string [2] in property `p`.
+   intersection-function.js:42:1
+   42| e(42);
+       ^^^^^
 
-   intersection-function.js:44:3
+References:
+   intersection-function.js:42:3
+   42| e(42);
+         ^^ [1]
+   intersection-function.js:40:23
+   40| declare function e(x: X): void;
+                             ^ [2]
+   intersection-function.js:41:23
+   41| declare function e(x: {p: string}): void;
+                             ^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:44:1
+
+Cannot call `e` because number [1] is incompatible with string [2] in property `p`.
+
+   intersection-function.js:44:1
    44| e(new Y());
-         ^^^^^^^
+       ^^^^^^^^^^
 
 References:
    intersection-function.js:10:6
@@ -202,40 +2209,35 @@ References:
                                  ^^^^^^ [2]
 
 
-Error: intersection-function.js:45
- 45: e(new Z());
-     ^^^^^^^^^^ call of `e`. Function cannot be called on any member of intersection type
- 45: e(new Z());
-     ^ intersection
-  Member 1:
-   40: declare function e(x: X): void;
-                         ^^^^^^^^^^^^ function type
-  Error:
-   45: e(new Z());
-         ^^^^^^^ Z. This type is incompatible with the expected param type of
-   40: declare function e(x: X): void;
-                             ^ X
-  Member 2:
-   41: declare function e(x: {p: string}): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   45: e(new Z());
-         ^^^^^^^ Z. This type is incompatible with the expected param type of
-   41: declare function e(x: {p: string}): void;
-                             ^^^^^^^^^^^ object type
-    Property `p` is incompatible:
-       41: declare function e(x: {p: string}): void;
-                                 ^^^^^^^^^^^ property `p`. Property not found in
-       45: e(new Z());
-             ^^^^^^^ Z
+Error ------------------------------------------------------------------------------------ intersection-function.js:45:1
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:46:3
+Cannot call `e` because:
+ - Either `Z` [1] is incompatible with `X` [2].
+ - Or property `p` is missing in `Z` [1] but exists in object type [3].
 
-Cannot call `e` with object literal bound to `x` because boolean [1] is incompatible with string [2] in property `p`.
+   intersection-function.js:45:1
+   45| e(new Z());
+       ^^^^^^^^^^
 
-   intersection-function.js:46:3
+References:
+   intersection-function.js:45:3
+   45| e(new Z());
+         ^^^^^^^ [1]
+   intersection-function.js:40:23
+   40| declare function e(x: X): void;
+                             ^ [2]
+   intersection-function.js:41:23
+   41| declare function e(x: {p: string}): void;
+                             ^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:46:1
+
+Cannot call `e` because boolean [1] is incompatible with string [2] in property `p`.
+
+   intersection-function.js:46:1
    46| e({p: true});
-         ^^^^^^^^^
+       ^^^^^^^^^^^^
 
 References:
    intersection-function.js:46:7
@@ -246,43 +2248,39 @@ References:
                                  ^^^^^^ [2]
 
 
-Error: intersection-function.js:51
- 51: f(42);
-     ^^^^^ call of `f`. Function cannot be called on any member of intersection type
- 51: f(42);
-     ^ intersection
-  Member 1:
-   48: declare function f(x: {p: string}): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   51: f(42);
-         ^^ number. This type is incompatible with the expected param type of
-   48: declare function f(x: {p: string}): void;
-                             ^^^^^^^^^^^ object type
-  Member 2:
-   49: declare function f(x: $ReadOnlyArray<string>): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   51: f(42);
-         ^^ number. This type is incompatible with the expected param type of
-   49: declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Member 3:
-   50: declare function f(x: [string, string]): void;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   51: f(42);
-         ^^ number. This type is incompatible with the expected param type of
-   50: declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ tuple type
+Error ------------------------------------------------------------------------------------ intersection-function.js:51:1
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:52:3
+Cannot call `f` because:
+ - Either number [1] is incompatible with object type [2].
+ - Or number [1] is incompatible with read-only array type [3].
+ - Or number [1] is incompatible with tuple type [4].
 
-Cannot call `f` with object literal bound to `x` because number [1] is incompatible with string [2] in property `p`.
+   intersection-function.js:51:1
+   51| f(42);
+       ^^^^^
 
-   intersection-function.js:52:3
+References:
+   intersection-function.js:51:3
+   51| f(42);
+         ^^ [1]
+   intersection-function.js:48:23
+   48| declare function f(x: {p: string}): void;
+                             ^^^^^^^^^^^ [2]
+   intersection-function.js:49:23
+   49| declare function f(x: $ReadOnlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   intersection-function.js:50:23
+   50| declare function f(x: [string, string]): void;
+                             ^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------ intersection-function.js:52:1
+
+Cannot call `f` because number [1] is incompatible with string [2] in property `p`.
+
+   intersection-function.js:52:1
    52| f({p: 42});
-         ^^^^^^^
+       ^^^^^^^^^^
 
 References:
    intersection-function.js:52:7
@@ -293,28 +2291,30 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:53:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:53:1
 
-Cannot call `f` with object literal bound to `x` because property `p` is missing in object literal [1] but exists in
-object type [2].
+Cannot call `f` because property `p` is missing in object literal [1] but exists in object type [2].
 
+   intersection-function.js:53:1
+   53| f({});
+       ^^^^^
+
+References:
    intersection-function.js:53:3
    53| f({});
          ^^ [1]
-
-References:
    intersection-function.js:48:23
    48| declare function f(x: {p: string}): void;
                              ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:54:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:54:1
 
-Cannot call `f` with `new Y()` bound to `x` because number [1] is incompatible with string [2] in property `p`.
+Cannot call `f` because number [1] is incompatible with string [2] in property `p`.
 
-   intersection-function.js:54:3
+   intersection-function.js:54:1
    54| f(new Y());
-         ^^^^^^^
+       ^^^^^^^^^^
 
 References:
    intersection-function.js:10:6
@@ -325,27 +2325,30 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:55:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:55:1
 
-Cannot call `f` with `new Z()` bound to `x` because property `p` is missing in `Z` [1] but exists in object type [2].
+Cannot call `f` because property `p` is missing in `Z` [1] but exists in object type [2].
 
+   intersection-function.js:55:1
+   55| f(new Z());
+       ^^^^^^^^^^
+
+References:
    intersection-function.js:55:3
    55| f(new Z());
          ^^^^^^^ [1]
-
-References:
    intersection-function.js:48:23
    48| declare function f(x: {p: string}): void;
                              ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:56:4
+Error ------------------------------------------------------------------------------------ intersection-function.js:56:1
 
-Cannot call `f` with array literal bound to `x` because number [1] is incompatible with string [2] in array element.
+Cannot call `f` because number [1] is incompatible with string [2] in array element.
 
-   intersection-function.js:56:4
+   intersection-function.js:56:1
    56| f(([1]: [number]));
-          ^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^
 
 References:
    intersection-function.js:56:10
@@ -356,13 +2359,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:57:4
+Error ------------------------------------------------------------------------------------ intersection-function.js:57:1
 
-Cannot call `f` with array literal bound to `x` because number [1] is incompatible with string [2] in index 0.
+Cannot call `f` because number [1] is incompatible with string [2] in index 0.
 
-   intersection-function.js:57:4
+   intersection-function.js:57:1
    57| f(([1, 2]: [number, number]));
-          ^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    intersection-function.js:57:13
@@ -373,13 +2376,13 @@ References:
                               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:58:4
+Error ------------------------------------------------------------------------------------ intersection-function.js:58:1
 
-Cannot call `f` with array literal bound to `x` because number [1] is incompatible with string [2] in array element.
+Cannot call `f` because number [1] is incompatible with string [2] in array element.
 
-   intersection-function.js:58:4
+   intersection-function.js:58:1
    58| f(([1, 2, 3]: [number, number, number]));
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    intersection-function.js:58:16
@@ -390,13 +2393,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:59:5
+Error ------------------------------------------------------------------------------------ intersection-function.js:59:1
 
-Cannot call `f` with `null` bound to `x` because number [1] is incompatible with string [2] in array element.
+Cannot call `f` because number [1] is incompatible with string [2] in array element.
 
-   intersection-function.js:59:5
+   intersection-function.js:59:1
    59| f(((null: any): Array<number> & {p: number}));
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    intersection-function.js:59:23
@@ -407,83 +2410,98 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:63:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:63:1
 
-Cannot call `g` with `42` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `g` because number [1] is incompatible with string [2].
 
+   intersection-function.js:63:1
+   63| g(42);
+       ^^^^^
+
+References:
    intersection-function.js:63:3
    63| g(42);
          ^^ [1]
-
-References:
    intersection-function.js:61:23
    61| declare function g(x: string): void;
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:64:3
+Error ------------------------------------------------------------------------------------ intersection-function.js:64:1
 
-Cannot call `g` with object literal bound to `x` because object literal [1] is incompatible with `Z` [2].
+Cannot call `g` because object literal [1] is incompatible with `Z` [2].
 
+   intersection-function.js:64:1
+   64| g({});
+       ^^^^^
+
+References:
    intersection-function.js:64:3
    64| g({});
          ^^ [1]
-
-References:
    intersection-function.js:62:23
    62| declare function g(x: Z): void;
                              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:68:6
+Error ------------------------------------------------------------------------------------ intersection-function.js:68:1
 
-Cannot call `h` with `2` bound to `b` because number [1] is incompatible with object type [2].
+Cannot call `h` because number [1] is incompatible with object type [2].
 
+   intersection-function.js:68:1
+   68| h(1, 2, 3);
+       ^^^^^^^^^^
+
+References:
    intersection-function.js:68:6
    68| h(1, 2, 3);
             ^ [1]
-
-References:
    intersection-function.js:67:34
    67| declare function h(a: number, b: {}, c: string): void;
                                         ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- intersection-function.js:72:12
+Error ------------------------------------------------------------------------------------ intersection-function.js:72:1
 
-Cannot call `i` with `42` bound to `b` because number [1] is incompatible with string [2].
+Cannot call `i` because number [1] is incompatible with string [2].
 
+   intersection-function.js:72:1
+   72| i(new Y(), 42);
+       ^^^^^^^^^^^^^^
+
+References:
    intersection-function.js:72:12
    72| i(new Y(), 42);
                   ^^ [1]
-
-References:
    intersection-function.js:70:29
    70| declare function i(a: Y, b: string): void;
                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:76:6
+Error ------------------------------------------------------------------------------------ intersection-function.js:76:1
 
-Cannot call `j` with `2` bound to `b` because number [1] is incompatible with string [2].
+Cannot call `j` because number [1] is incompatible with string [2].
 
+   intersection-function.js:76:1
+   76| j(1, 2);
+       ^^^^^^^
+
+References:
    intersection-function.js:76:6
    76| j(1, 2);
             ^ [1]
-
-References:
    intersection-function.js:74:34
    74| declare function j(a: number, b: string): void;
                                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:80:6
+Error ------------------------------------------------------------------------------------ intersection-function.js:80:1
 
-Cannot call `k` with object literal bound to `b` because number [1] is incompatible with string [2] in property `p`.
+Cannot call `k` because number [1] is incompatible with string [2] in property `p`.
 
-   intersection-function.js:80:6
+   intersection-function.js:80:1
    80| k(1, {p: 2});
-            ^^^^^^
+       ^^^^^^^^^^^^
 
 References:
    intersection-function.js:80:10
@@ -494,13 +2512,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ intersection-function.js:84:4
+Error ------------------------------------------------------------------------------------ intersection-function.js:84:1
 
-Cannot call `m` with `new W()` bound to `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot call `m` because number [1] is incompatible with string [2] in type argument `T` [3].
 
-   intersection-function.js:84:4
+   intersection-function.js:84:1
    84| m((new W(): W<number>));
-          ^^^^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    intersection-function.js:84:15
@@ -531,72 +2549,50 @@ References:
                           ^^^^^^ [2]
 
 
-Error: sentinel.js:12
- 12: ({type: 'D'}: X);
-      ^^^^^^^^^^^ object literal. This type is incompatible with
- 12: ({type: 'D'}: X);
-                   ^ union: object type(s)
-  Member 1:
-    7:   | {type: 'A', p: number}
-           ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   12: ({type: 'D'}: X);
-        ^^^^^^^^^^^ object literal. This type is incompatible with
-    7:   | {type: 'A', p: number}
-           ^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `type` is incompatible:
-       12: ({type: 'D'}: X);
-                   ^^^ string. Expected string literal `A`, got `D` instead
-        7:   | {type: 'A', p: number}
-                      ^^^ string literal `A`
-  Member 2:
-    8:   | {type: 'B', p: string}
-           ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   12: ({type: 'D'}: X);
-        ^^^^^^^^^^^ object literal. This type is incompatible with
-    8:   | {type: 'B', p: string}
-           ^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `type` is incompatible:
-       12: ({type: 'D'}: X);
-                   ^^^ string. Expected string literal `B`, got `D` instead
-        8:   | {type: 'B', p: string}
-                      ^^^ string literal `B`
-  Member 3:
-    9:   | {type: 'C', p: boolean};
-           ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   12: ({type: 'D'}: X);
-        ^^^^^^^^^^^ object literal. This type is incompatible with
-    9:   | {type: 'C', p: boolean};
-           ^^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `type` is incompatible:
-       12: ({type: 'D'}: X);
-                   ^^^ string. Expected string literal `C`, got `D` instead
-        9:   | {type: 'C', p: boolean};
-                      ^^^ string literal `C`
+Error ------------------------------------------------------------------------------------------------- sentinel.js:12:2
 
-Error: union.js:18
- 18: (true: A);
-      ^^^^ boolean. This type is incompatible with
- 18: (true: A);
-            ^ union: number | string
-  Member 1:
-   17: type A = number | string;
-                ^^^^^^ number
-  Error:
-   18: (true: A);
-        ^^^^ boolean. This type is incompatible with
-   17: type A = number | string;
-                ^^^^^^ number
-  Member 2:
-   17: type A = number | string;
-                         ^^^^^^ string
-  Error:
-   18: (true: A);
-        ^^^^ boolean. This type is incompatible with
-   17: type A = number | string;
-                         ^^^^^^ string
+Cannot cast object literal to `X` because:
+ - Either string [1] is incompatible with string literal `A` [2] in property `type`.
+ - Or string [1] is incompatible with string literal `B` [3] in property `type`.
+ - Or string [1] is incompatible with string literal `C` [4] in property `type`.
+
+   sentinel.js:12:2
+   12| ({type: 'D'}: X);
+        ^^^^^^^^^^^
+
+References:
+   sentinel.js:12:9
+   12| ({type: 'D'}: X);
+               ^^^ [1]
+   sentinel.js:7:12
+    7|   | {type: 'A', p: number}
+                  ^^^ [2]
+   sentinel.js:8:12
+    8|   | {type: 'B', p: string}
+                  ^^^ [3]
+   sentinel.js:9:12
+    9|   | {type: 'C', p: boolean};
+                  ^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:18:2
+
+Cannot cast `true` to `A` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   union.js:18:2
+   18| (true: A);
+        ^^^^ [1]
+
+References:
+   union.js:17:10
+   17| type A = number | string;
+                ^^^^^^ [2]
+   union.js:17:19
+   17| type A = number | string;
+                         ^^^^^^ [3]
+
 
 Error ---------------------------------------------------------------------------------------------------- union.js:21:2
 
@@ -629,69 +2625,46 @@ References:
                              ^^^^^^ [2]
 
 
-Error: union.js:25
- 25: (42: C);
-      ^^ number. This type is incompatible with
- 25: (42: C);
-          ^ union: string | object type | boolean | object type
-  Member 1:
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                ^^^^^^ string
-  Error:
-   25: (42: C);
-        ^^ number. This type is incompatible with
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                ^^^^^^ string
-  Member 3:
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                            ^^^^^^^ boolean
-  Error:
-   25: (42: C);
-        ^^ number. This type is incompatible with
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                            ^^^^^^^ boolean
+Error ---------------------------------------------------------------------------------------------------- union.js:25:2
 
-Error: union.js:26
- 26: ({a: {b: 42}}: C);
-      ^^^^^^^^^^^^ object literal. This type is incompatible with
- 26: ({a: {b: 42}}: C);
-                    ^ union: string | object type | boolean | object type
-  Member 2:
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                         ^^^^^^^^^^^^^^^^ object type
-  Error:
-   26: ({a: {b: 42}}: C);
-        ^^^^^^^^^^^^ object literal. This type is incompatible with
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                         ^^^^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       26: ({a: {b: 42}}: C);
-                ^^^^^^^ object literal. This type is incompatible with
-       24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                 ^^^^^^^^^^^ object type
-        Property `b` is incompatible:
-           26: ({a: {b: 42}}: C);
-                        ^^ number. This type is incompatible with
-           24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                         ^^^^^^ string
-  Member 4:
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                                      ^^^^^^^^^^^^^^^^^ object type
-  Error:
-   26: ({a: {b: 42}}: C);
-        ^^^^^^^^^^^^ object literal. This type is incompatible with
-   24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                                      ^^^^^^^^^^^^^^^^^ object type
-    Property `a` is incompatible:
-       26: ({a: {b: 42}}: C);
-                ^^^^^^^ object literal. This type is incompatible with
-       24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                                              ^^^^^^^^^^^^ object type
-        Property `b` is incompatible:
-           26: ({a: {b: 42}}: C);
-                        ^^ number. This type is incompatible with
-           24: type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-                                                                      ^^^^^^^ boolean
+Cannot cast `42` to `C` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with boolean [3].
+
+   union.js:25:2
+   25| (42: C);
+        ^^ [1]
+
+References:
+   union.js:24:10
+   24| type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                ^^^^^^ [2]
+   union.js:24:38
+   24| type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                            ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:26:2
+
+Cannot cast object literal to `C` because:
+ - Either number [1] is incompatible with string [2] in property `a.b`.
+ - Or number [1] is incompatible with boolean [3] in property `a.b`.
+
+   union.js:26:2
+   26| ({a: {b: 42}}: C);
+        ^^^^^^^^^^^^
+
+References:
+   union.js:26:10
+   26| ({a: {b: 42}}: C);
+                ^^ [1]
+   union.js:24:27
+   24| type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                 ^^^^^^ [2]
+   union.js:24:56
+   24| type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
+                                                              ^^^^^^^ [3]
+
 
 Error ---------------------------------------------------------------------------------------------------- union.js:29:2
 
@@ -741,27 +2714,24 @@ References:
                                                ^^^^^^ [2]
 
 
-Error: union.js:34
- 34: (42: E);
-      ^^ number. This type is incompatible with
- 34: (42: E);
-          ^ union: `X` | object type
-  Member 1:
-   33: type E = X | {p: string};
-                ^ X
-  Error:
-   34: (42: E);
-        ^^ number. This type is incompatible with
-   33: type E = X | {p: string};
-                ^ X
-  Member 2:
-   33: type E = X | {p: string};
-                    ^^^^^^^^^^^ object type
-  Error:
-   34: (42: E);
-        ^^ number. This type is incompatible with
-   33: type E = X | {p: string};
-                    ^^^^^^^^^^^ object type
+Error ---------------------------------------------------------------------------------------------------- union.js:34:2
+
+Cannot cast `42` to `E` because:
+ - Either number [1] is incompatible with `X` [2].
+ - Or number [1] is incompatible with object type [3].
+
+   union.js:34:2
+   34| (42: E);
+        ^^ [1]
+
+References:
+   union.js:33:10
+   33| type E = X | {p: string};
+                ^ [2]
+   union.js:33:14
+   33| type E = X | {p: string};
+                    ^^^^^^^^^^^ [3]
+
 
 Error ---------------------------------------------------------------------------------------------------- union.js:36:2
 
@@ -780,32 +2750,24 @@ References:
                         ^^^^^^ [2]
 
 
-Error: union.js:37
- 37: (new Z(): E);
-      ^^^^^^^ Z. This type is incompatible with
- 37: (new Z(): E);
-               ^ union: `X` | object type
-  Member 1:
-   33: type E = X | {p: string};
-                ^ X
-  Error:
-   37: (new Z(): E);
-        ^^^^^^^ Z. This type is incompatible with
-   33: type E = X | {p: string};
-                ^ X
-  Member 2:
-   33: type E = X | {p: string};
-                    ^^^^^^^^^^^ object type
-  Error:
-   37: (new Z(): E);
-        ^^^^^^^ Z. This type is incompatible with
-   33: type E = X | {p: string};
-                    ^^^^^^^^^^^ object type
-    Property `p` is incompatible:
-       33: type E = X | {p: string};
-                        ^^^^^^^^^^^ property `p`. Property not found in
-       37: (new Z(): E);
-            ^^^^^^^ Z
+Error ---------------------------------------------------------------------------------------------------- union.js:37:2
+
+Cannot cast `new Z()` to `E` because:
+ - Either `Z` [1] is incompatible with `X` [2].
+ - Or property `p` is missing in `Z` [1] but exists in object type [3].
+
+   union.js:37:2
+   37| (new Z(): E);
+        ^^^^^^^ [1]
+
+References:
+   union.js:33:10
+   33| type E = X | {p: string};
+                ^ [2]
+   union.js:33:14
+   33| type E = X | {p: string};
+                    ^^^^^^^^^^^ [3]
+
 
 Error ---------------------------------------------------------------------------------------------------- union.js:38:2
 
@@ -824,35 +2786,28 @@ References:
                         ^^^^^^ [2]
 
 
-Error: union.js:41
- 41: (42: F);
-      ^^ number. This type is incompatible with
- 41: (42: F);
-          ^ union: object type | read-only array type | tuple type
-  Member 1:
-   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                ^^^^^^^^^^^ object type
-  Error:
-   41: (42: F);
-        ^^ number. This type is incompatible with
-   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                ^^^^^^^^^^^ object type
-  Member 2:
-   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                              ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Error:
-   41: (42: F);
-        ^^ number. This type is incompatible with
-   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                              ^^^^^^^^^^^^^^^^^^^^^^ read-only array type
-  Member 3:
-   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^^^^^^^^^^^ tuple type
-  Error:
-   41: (42: F);
-        ^^ number. This type is incompatible with
-   40: type F = {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^^^^^^^^^^^ tuple type
+Error ---------------------------------------------------------------------------------------------------- union.js:41:2
+
+Cannot cast `42` to `F` because:
+ - Either number [1] is incompatible with object type [2].
+ - Or number [1] is incompatible with read-only array type [3].
+ - Or number [1] is incompatible with tuple type [4].
+
+   union.js:41:2
+   41| (42: F);
+        ^^ [1]
+
+References:
+   union.js:40:10
+   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                ^^^^^^^^^^^ [2]
+   union.js:40:24
+   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                              ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   union.js:40:49
+   40| type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+                                                       ^^^^^^^^^^^^^^^^ [4]
+
 
 Error ---------------------------------------------------------------------------------------------------- union.js:42:2
 
@@ -1033,4 +2988,7 @@ References:
 
 
 
-Found 54 errors
+Found 170 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

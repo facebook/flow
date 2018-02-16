@@ -307,6 +307,7 @@ module rec TypeTerm : sig
     | JSXCreateElement of { op: reason; component: reason }
     | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
     | ReactGetIntrinsic of { literal: reason }
+    | Speculation of use_op
     | TypeApplication of { type': reason }
     | SetProperty of { lhs: reason; prop: reason; value: reason }
     | UnknownUse
@@ -2516,9 +2517,9 @@ let rec root_of_use_op = function
 | Op use_op -> use_op
 | Frame (_, use_op) -> root_of_use_op use_op
 
-let replace_unknown_root_use_op =
+let replace_speculation_root_use_op =
   let rec loop new_parent_use_op = function
-  | Op UnknownUse -> Ok new_parent_use_op
+  | Op (Speculation _) -> Ok new_parent_use_op
   | Op _ -> Error new_parent_use_op
   | (Frame (frame, parent_use_op)) as use_op ->
     let parent_use_op' = loop new_parent_use_op parent_use_op in
@@ -2555,6 +2556,7 @@ let loc_of_root_use_op = function
 | SetProperty {value=op; _}
   -> loc_of_reason op
 | ReactGetIntrinsic _
+| Speculation _
 | Internal _
 | UnknownUse
   -> Loc.none
@@ -2678,6 +2680,7 @@ let string_of_root_use_op = function
 | JSXCreateElement _ -> "JSXCreateElement"
 | ReactCreateElementCall _ -> "ReactCreateElementCall"
 | ReactGetIntrinsic _ -> "ReactGetIntrinsic"
+| Speculation _ -> "Speculation"
 | TypeApplication _ -> "TypeApplication"
 | SetProperty _ -> "SetProperty"
 | UnknownUse -> "UnknownUse"

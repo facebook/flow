@@ -138,35 +138,26 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:70
            70: (woB: RWA);
-                ^^^ Cannot cast \`woB\` to \`RWA\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`.
-            References:
-              9:     type RWA = {p: A}
-                                    ^ [1]
-             14:     type WOB = {-p: B}
-                                     ^ [2]
-
-          test.js:70
-           70: (woB: RWA);
                 ^^^ Cannot cast \`woB\` to \`RWA\` because property \`p\` is write-only in \`WOB\` [1] but readable in \`RWA\` [2].
             References:
              22:     declare var woB: WOB;
                                       ^^^ [1]
              70: (woB: RWA);
                        ^^^ [2]
+
+          test.js:70
+           70: (woB: RWA);
+                ^^^ Cannot cast \`woB\` to \`RWA\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`.
+            References:
+              9:     type RWA = {p: A}
+                                    ^ [1]
+             14:     type WOB = {-p: B}
+                                     ^ [2]
         `,
       ),
     addCode('(dwoB: dRWA);')
       .newErrors(
         `
-          test.js:72
-           72: (dwoB: dRWA);
-                ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because \`A\` [1] is incompatible with \`B\` [2] in the indexer property.
-            References:
-             26:     type dRWA = {[string]: A};
-                                            ^ [1]
-             31:     type dWOB = {-[string]: B};
-                                             ^ [2]
-
           test.js:72
            72: (dwoB: dRWA);
                 ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because an indexer property is write-only in \`dWOB\` [1] but readable in \`dRWA\` [2].
@@ -175,6 +166,15 @@ export default suite(({addFile, addFiles, addCode}) => [
                                        ^^^^ [1]
              72: (dwoB: dRWA);
                         ^^^^ [2]
+
+          test.js:72
+           72: (dwoB: dRWA);
+                ^^^^ Cannot cast \`dwoB\` to \`dRWA\` because \`A\` [1] is incompatible with \`B\` [2] in the indexer property.
+            References:
+             26:     type dRWA = {[string]: A};
+                                            ^ [1]
+             31:     type dWOB = {-[string]: B};
+                                             ^ [2]
         `,
       ),
   ]),
@@ -454,35 +454,26 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: RWB);
-                ^^^ Cannot cast \`roA\` to \`RWB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`.
-            References:
-             10:     type ROA = {+p: A}
-                                     ^ [1]
-             12:     type RWB = {p: B}
-                                    ^ [2]
-
-          test.js:50
-           50: (roA: RWB);
                 ^^^ Cannot cast \`roA\` to \`RWB\` because property \`p\` is read-only in \`ROA\` [1] but writable in \`RWB\` [2].
             References:
              17:     declare var roA: ROA;
                                       ^^^ [1]
              50: (roA: RWB);
                        ^^^ [2]
+
+          test.js:50
+           50: (roA: RWB);
+                ^^^ Cannot cast \`roA\` to \`RWB\` because \`A\` [1] is incompatible with \`B\` [2] in property \`p\`.
+            References:
+             10:     type ROA = {+p: A}
+                                     ^ [1]
+             12:     type RWB = {p: B}
+                                    ^ [2]
         `,
       ),
     addCode('(droA: dRWB);')
       .newErrors(
         `
-          test.js:52
-           52: (droA: dRWB);
-                ^^^^ Cannot cast \`droA\` to \`dRWB\` because \`A\` [1] is incompatible with \`B\` [2] in the indexer property.
-            References:
-             27:     type dROA = {+[string]: A};
-                                             ^ [1]
-             29:     type dRWB = {[string]: B};
-                                            ^ [2]
-
           test.js:52
            52: (droA: dRWB);
                 ^^^^ Cannot cast \`droA\` to \`dRWB\` because an indexer property is read-only in \`dROA\` [1] but writable in \`dRWB\` [2].
@@ -491,6 +482,15 @@ export default suite(({addFile, addFiles, addCode}) => [
                                        ^^^^ [1]
              52: (droA: dRWB);
                         ^^^^ [2]
+
+          test.js:52
+           52: (droA: dRWB);
+                ^^^^ Cannot cast \`droA\` to \`dRWB\` because \`A\` [1] is incompatible with \`B\` [2] in the indexer property.
+            References:
+             27:     type dROA = {+[string]: A};
+                                             ^ [1]
+             29:     type dRWB = {[string]: B};
+                                            ^ [2]
         `,
       ),
 
