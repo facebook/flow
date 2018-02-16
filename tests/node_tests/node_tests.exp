@@ -140,35 +140,42 @@ References:
                             ^^^^ [2]
 
 
-Error: fs/fs.js:13
-     v-----------------------------------------------------------
- 13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
- 14:   (data : string);
- 15: });
-     -^ call of method `readFile`. Could not decide which case to select
- 13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-     ^^^^^^^^^^^ intersection type
-  Case 3 may work:
-                                  v
-  909:   declare function readFile(
-  910:     path: string | Buffer | URL | number,
-  911:     options: { encoding: string; flag?: string },
-  912:     callback: (err: ?ErrnoError, data: string) => void
-  913:   ): void;
-         ------^ function type. See lib: <BUILTINS>/node.js:909
-  But if it doesn't, case 4 looks promising too:
-                                  v
-  914:   declare function readFile(
-  915:     path: string | Buffer | URL | number,
-  916:     options: { flag?: string },
-  917:     callback: (err: ?ErrnoError, data: Buffer) => void
-  918:   ): void;
-         ------^ function type. See lib: <BUILTINS>/node.js:914
-  Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
-   13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-                                                      ^ _
-   13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
-                                                         ^^^^ data
+Error ---------------------------------------------------------------------------------------------------- fs/fs.js:13:1
+
+Could not decide which case to select. Since case 3 [1] may work but if it doesn't case 4 [2] looks promising too. To
+fix add a type annotation to `_` [3] or to `data` [4].
+
+   fs/fs.js:13:1
+        v-----------------------------------------------------------
+    13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+    14|   (data : string);
+    15| });
+        -^
+
+References:
+   <BUILTINS>/node.js:909:28
+                                   v
+   909|   declare function readFile(
+   910|     path: string | Buffer | URL | number,
+   911|     options: { encoding: string; flag?: string },
+   912|     callback: (err: ?ErrnoError, data: string) => void
+   913|   ): void;
+          ------^ [1]
+   <BUILTINS>/node.js:914:28
+                                   v
+   914|   declare function readFile(
+   915|     path: string | Buffer | URL | number,
+   916|     options: { flag?: string },
+   917|     callback: (err: ?ErrnoError, data: Buffer) => void
+   918|   ): void;
+          ------^ [2]
+   fs/fs.js:13:48
+    13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+                                                       ^ [3]
+   fs/fs.js:13:51
+    13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+                                                          ^^^^ [4]
+
 
 Error ---------------------------------------------------------------------------------------------------- fs/fs.js:28:2
 

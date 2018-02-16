@@ -26,22 +26,29 @@ References:
                                  ^^^^ [1]
 
 
-Error: example6.js:9
-  9: onString(id);
-              ^^ function. Could not decide which case to select
-  7: function onString(f: Ambiguous) { f(""); }
-                          ^^^^^^^^^ Ambiguous
-  Case 1 may work:
-    5: type Ambiguous = IDString | IDNullableString;
-                        ^^^^^^^^ IDString
-  But if it doesn't, case 2 looks promising too:
-    5: type Ambiguous = IDString | IDNullableString;
-                                   ^^^^^^^^^^^^^^^^ IDNullableString
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-    8: let id = (x) => x;
-                       ^ return
-    8: let id = (x) => x;
-                 ^ x
+Error ------------------------------------------------------------------------------------------------- example6.js:9:10
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3] or to `x` [4].
+
+   example6.js:9:10
+   9| onString(id);
+               ^^
+
+References:
+   example6.js:5:18
+   5| type Ambiguous = IDString | IDNullableString;
+                       ^^^^^^^^ [1]
+   example6.js:5:29
+   5| type Ambiguous = IDString | IDNullableString;
+                                  ^^^^^^^^^^^^^^^^ [2]
+   example6.js:8:17
+   8| let id = (x) => x;
+                      ^ [3]
+   example6.js:8:11
+   8| let id = (x) => x;
+                ^ [4]
+
 
 Error ------------------------------------------------------------------------------------------------ example7.js:14:16
 
