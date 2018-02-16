@@ -26,6 +26,7 @@ let focus_and_check genv env filenames =
   if not (FilenameSet.is_empty new_focused_files)
   then
     (* Rechecking will send errors to the clients *)
-    Rechecker.recheck genv env new_focused_files, true
+    let _profiling, env = Rechecker.recheck genv env new_focused_files in
+    env, true
   else
     env, false

@@ -147,6 +147,12 @@ let warning_flags prev = CommandSpec.ArgSpec.(
     ~doc:"Warnings above this number will cause a nonzero exit code (implies --include-warnings)"
 )
 
+let profile_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--profile" no_arg
+    ~doc:"Output profiling information"
+)
+
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_error_flags
@@ -675,8 +681,7 @@ let options_flags =
     |> collect collect_options_flags
     |> flag "--debug" no_arg
         ~doc:"Print debug info during typecheck"
-    |> flag "--profile" no_arg
-        ~doc:"Output profiling information"
+    |> profile_flag
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
     |> flag "--weak" no_arg

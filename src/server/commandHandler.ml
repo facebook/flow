@@ -389,10 +389,13 @@ let handle_ephemeral_unsafe
           let result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global) in
           ServerProt.Response.FIND_REFS result |> respond;
           json_data
-      | ServerProt.Request.FORCE_RECHECK (files, force_focus) ->
-          respond ServerProt.Response.FORCE_RECHECK;
+      | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
+          (* If we're not profiling the recheck, then respond immediately *)
+          if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
           let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
-          env := Rechecker.recheck genv !env ~force_focus updates;
+          let profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
+          env := new_env;
+          if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
           None
       | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
           let options = { options with Options.

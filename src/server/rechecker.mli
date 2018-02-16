@@ -17,4 +17,4 @@ val recheck:
   ServerEnv.env ->
   ?force_focus:bool ->
   Utils_js.FilenameSet.t ->
-  ServerEnv.env
+  Profiling_js.finished option * ServerEnv.env

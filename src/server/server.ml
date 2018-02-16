@@ -117,7 +117,7 @@ let rec recheck_loop ~dfind genv env =
   in
   if SSet.is_empty raw_updates then env else begin
     let updates = Rechecker.process_updates genv env raw_updates in
-    let env = Rechecker.recheck genv env updates in
+    let _profiling, env = Rechecker.recheck genv env updates in
     recheck_loop ~dfind genv env
   end
 

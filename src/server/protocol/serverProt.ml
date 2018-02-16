@@ -28,7 +28,7 @@ module Request = struct
       Verbose.t option
   | PORT of string list
   | STATUS of Path.t * bool (* include_warnings *)
-  | FORCE_RECHECK of string list * bool (* focus *)
+  | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
   | SUGGEST of (string * string list) list
 
   let to_string = function
@@ -46,9 +46,9 @@ module Request = struct
       Printf.sprintf "find-module %s %s" moduleref filename
   | FIND_REFS (fn, line, char, global) ->
       Printf.sprintf "find-refs %s:%d:%d:%B" (File_input.filename_of_file_input fn) line char global
-  | FORCE_RECHECK (files, force_focus) ->
+  | FORCE_RECHECK {files; focus; profile=_} ->
       Printf.sprintf
-        "force-recheck %s (focus = %b)" (String.concat " " files) force_focus
+        "force-recheck %s (focus = %b)" (String.concat " " files) focus
   | GEN_FLOW_FILES (files, _) ->
       Printf.sprintf "gen-flow-files %s"
         (files |> List.map File_input.filename_of_file_input |> String.concat " ")
@@ -165,7 +165,7 @@ module Response = struct
   | INFER_TYPE of infer_type_response
   | PORT of port_response
   | STATUS of status_response
-  | FORCE_RECHECK
+  | FORCE_RECHECK of Profiling_js.finished option
   | SUGGEST of suggest_response
 
   let to_string = function
@@ -182,6 +182,6 @@ module Response = struct
   | INFER_TYPE _ -> "infer_type response"
   | PORT _ -> "port response"
   | STATUS _ -> "status response"
-  | FORCE_RECHECK -> "force_recheck response"
+  | FORCE_RECHECK _ -> "force_recheck response"
   | SUGGEST _ -> "suggest response"
 end

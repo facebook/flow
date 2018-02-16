@@ -1086,7 +1086,7 @@ let recheck ~options ~workers ~updates env ~force_focus =
     ~deleted_count
     ~dependent_file_count
     ~profiling;
-  env
+  profiling, env
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =

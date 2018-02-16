@@ -27,7 +27,7 @@ val recheck:
   updates:FilenameSet.t ->
   ServerEnv.env ->
   force_focus:bool ->
-  ServerEnv.env
+  Profiling_js.finished * ServerEnv.env
 
 (* initial (full) check *)
 val full_check:
