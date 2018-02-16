@@ -7,6 +7,30 @@
 
 open Utils_js
 
+(* realpath doesn't work for non-existent paths. So let's find the longest existent prefix, run
+ * realpath on that, and then append the rest to it
+ *)
+let imaginary_realpath =
+  (* Realpath fails on non-existent paths. So let's find the longest prefix which exists. We
+   * recurse using Sys.file_exists, which is just a single stat, as opposed to realpath which
+   * stats /foo, then /foo/bar, then /foo/bar/baz, etc *)
+  let rec find_real_prefix path rev_suffix =
+    let rev_suffix = Filename.basename path :: rev_suffix in
+    let prefix = Filename.dirname path in
+    (* Sys.file_exists should always return true for / and for . so we should never get into
+     * infinite recursion. Let's assert that *)
+    assert (prefix <> path);
+    if Sys.file_exists prefix
+    then prefix, rev_suffix
+    else find_real_prefix prefix rev_suffix
+  in
+
+  fun path ->
+    let real_prefix, rev_suffix = find_real_prefix path [] in
+    match Sys_utils.realpath real_prefix with
+    | None -> failwith (spf "Realpath failed for existent path %s" real_prefix)
+    | Some abs -> List.fold_left Filename.concat abs rev_suffix
+
 let canonicalize_filenames ?(allow_imaginary=false) ~cwd filenames =
   List.map (fun filename ->
     let filename = Sys_utils.expanduser filename in (* normalize ~ *)
@@ -15,7 +39,7 @@ let canonicalize_filenames ?(allow_imaginary=false) ~cwd filenames =
     | Some abs -> abs
     | None ->
       if allow_imaginary
-      then filename
+      then imaginary_realpath filename
       else
         let msg = Printf.sprintf "File not found: %S" filename in
         FlowExitStatus.(exit ~msg No_input)
