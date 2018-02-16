@@ -33,6 +33,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -159,6 +160,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -299,6 +301,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -421,6 +424,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -546,6 +550,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -664,6 +669,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -889,6 +895,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1151,6 +1158,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1178,6 +1186,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "lint",
@@ -1304,6 +1313,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1322,6 +1332,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "lint",
@@ -1461,6 +1472,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1483,6 +1495,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1501,6 +1514,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "lint",
@@ -1623,6 +1637,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }

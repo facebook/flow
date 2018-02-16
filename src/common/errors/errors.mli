@@ -118,10 +118,15 @@ module Cli_output : sig
 end
 
 module Json_output : sig
+  type json_version =
+  | JsonV1
+  | JsonV2
+
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
     suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    ?version:json_version ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
     unit ->
@@ -130,6 +135,7 @@ module Json_output : sig
   val full_status_json_of_errors :
     strip_root: Path.t option ->
     suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    ?version:json_version ->
     ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
@@ -141,7 +147,8 @@ module Json_output : sig
     out_channel:out_channel ->
     strip_root: Path.t option ->
     suppressed_errors: (error * Utils_js.LocSet.t) list ->
-    ?pretty:bool ->
+    pretty:bool ->
+    ?version:json_version ->
     ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->

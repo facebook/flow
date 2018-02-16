@@ -1,4 +1,5 @@
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"lint",

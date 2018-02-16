@@ -64,6 +64,7 @@ Found 1 error and 1 warning
 
 JSON without --include-warnings
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"lint",
@@ -151,6 +152,7 @@ JSON without --include-warnings
 
 JSON with --include-warnings
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"lint",

@@ -38,6 +38,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       args = CommandSpec.ArgSpec.(
         empty
         |> server_and_json_flags
+        |> json_version_flag
         |> error_flags
         |> strip_root_flag
         |> from_flag
@@ -78,6 +79,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       args = CommandSpec.ArgSpec.(
         empty
         |> server_and_json_flags
+        |> json_version_flag
         |> error_flags
         |> strip_root_flag
         |> from_flag
@@ -91,6 +93,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     from: string;
     output_json: bool;
+    output_json_version: Errors.Json_output.json_version option;
     pretty: bool;
     error_flags: Errors.Cli_output.error_flags;
     strip_root: bool;
@@ -107,7 +110,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
-      ~out_channel:stdout ~strip_root ~pretty:args.pretty
+      ~out_channel:stdout ~strip_root ~pretty:args.pretty ?version:args.output_json_version
       ~suppressed_errors:([])
     in
     match response with
@@ -146,7 +149,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  let main server_flags json pretty error_flags strip_root from version root () =
+  let main server_flags json pretty json_version error_flags strip_root from version root () =
     FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
@@ -157,12 +160,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
     let root = guess_root root in
 
-    let json = json || pretty in
+    let json = json || Option.is_some json_version || pretty in
 
     let args = {
       root;
       from = server_flags.CommandUtils.from;
       output_json = json;
+      output_json_version = json_version;
       pretty;
       error_flags;
       strip_root;

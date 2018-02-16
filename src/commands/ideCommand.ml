@@ -34,13 +34,18 @@ let spec = {
     |> flag "--protocol" (required (enum protocol_options))
         ~doc:("Indicates the protocol to be used. One of: " ^ protocol_options_string)
     |> strip_root_flag
+    |> json_version_flag
     (* TODO use this somehow? |> verbose_flags *)
   )
 }
 
 module type ClientProtocol = sig
   val server_request_of_stdin_message: Buffered_line_reader.t -> Prot.request option
-  val handle_server_response: strip_root:Path.t option -> Prot.response -> unit
+  val handle_server_response:
+    strip_root:Path.t option ->
+    json_version:Errors.Json_output.json_version option ->
+    Prot.response ->
+    unit
 end
 
 module HumanReadable: ClientProtocol = struct
@@ -73,7 +78,7 @@ module HumanReadable: ClientProtocol = struct
         flush stdout
 
 
-  let handle_server_response ~strip_root:_ = function
+  let handle_server_response ~strip_root:_ ~json_version:_ = function
     | Prot.Errors {errors; warnings} ->
       let err_count = Errors.ErrorSet.cardinal errors in
       let warn_count = Errors.ErrorSet.cardinal warnings in
@@ -89,11 +94,13 @@ module HumanReadable: ClientProtocol = struct
 end
 
 module VeryUnstable: ClientProtocol = struct
-  let print_errors ~strip_root errors warnings =
+  let print_errors ~strip_root ~json_version errors warnings =
     (* Because the file-tracking portion of the protocol already handles which warnings
      * we display, we don't want the printer removing them. *)
     let json_errors = Errors.Json_output.full_status_json_of_errors
-      ~strip_root ~suppressed_errors:([]) ~errors ~warnings () in
+      ~strip_root ?version:json_version
+      ~suppressed_errors:([]) ~errors ~warnings ()
+    in
     let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;
@@ -115,9 +122,9 @@ module VeryUnstable: ClientProtocol = struct
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
-  let handle_server_response ~strip_root = function
+  let handle_server_response ~strip_root ~json_version = function
     | Prot.Errors {errors; warnings} ->
-      print_errors ~strip_root errors warnings
+      print_errors ~strip_root ~json_version errors warnings
     | Prot.ServerExit _code -> () (* ignored here, but used in lspCommand *)
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
@@ -271,7 +278,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
     pending_requests: PendingRequests.t;
   }
 
-  let handle_server_response ~strip_root fd local_env =
+  let handle_server_response ~strip_root ~json_version fd local_env =
     let (message : Prot.response) =
       try
         Marshal_tools.from_fd_with_preamble fd
@@ -287,7 +294,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
     let pending_requests =
       PendingRequests.add_response local_env.pending_requests message
     in
-    Protocol.handle_server_response ~strip_root message;
+    Protocol.handle_server_response ~strip_root ~json_version message;
     { pending_requests }
 
   let send_server_request fd msg =
@@ -321,7 +328,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
           send_pending_requests fd local_env
         end
 
-  let main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root =
+  let main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root ~json_version =
     let stdin_fd = Buffered_line_reader.get_fd buffered_stdin in
     let local_env =
       ref {
@@ -334,7 +341,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
       let readable_fds, _, _ = Unix.select [stdin_fd; ic_fd] [] [] ~-.1.0 in
       List.iter (fun fd ->
         if fd = ic_fd then begin
-          local_env := handle_server_response ~strip_root ic_fd !local_env
+          local_env := handle_server_response ~strip_root ~json_version ic_fd !local_env
         end else if fd = stdin_fd then begin
           local_env := handle_all_stdin_messages buffered_stdin !local_env
         end else
@@ -346,7 +353,7 @@ end
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
 module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
-let main option_values root from protocol strip_root () =
+let main option_values root from protocol strip_root json_version () =
   FlowEventLogger.set_from from;
   let root = CommandUtils.guess_root root in
   let strip_root = if strip_root then Some root else None in
@@ -360,6 +367,6 @@ let main option_values root from protocol strip_root () =
     | "human-readable" -> HumanReadableProtocol.main_loop
     | x -> failwith ("Internal error: unknown protocol '" ^ x ^ "'")
   in
-  main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root
+  main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root ~json_version
 
 let command = CommandSpec.command spec main

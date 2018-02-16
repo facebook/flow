@@ -27,6 +27,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_and_json_flags
+    |> json_version_flag
     |> root_flag
     |> error_flags
     |> strip_root_flag
@@ -38,7 +39,7 @@ let spec = {
   )
 }
 
-let main option_values json pretty root error_flags strip_root verbose from
+let main option_values json pretty json_version root error_flags strip_root verbose from
   respect_pragma all file () =
   FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin file
@@ -50,7 +51,7 @@ let main option_values json pretty root error_flags strip_root verbose from
   ) in
 
   (* pretty implies json *)
-  let json = json || pretty in
+  let json = json || Option.is_some json_version || pretty in
 
   if not option_values.quiet && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
@@ -82,8 +83,9 @@ let main option_values json pretty root error_flags strip_root verbose from
   in
   let strip_root = if strip_root then Some root else None in
   let print_json = Errors.Json_output.print_errors
-    ~out_channel:stdout ~strip_root ~pretty ~stdin_file
-    ~suppressed_errors:([]) in
+    ~out_channel:stdout ~strip_root ~pretty
+    ?version:json_version
+    ~stdin_file ~suppressed_errors:([]) in
   match response with
   | ServerProt.Response.ERRORS {errors; warnings} ->
       if json
