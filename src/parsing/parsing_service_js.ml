@@ -249,7 +249,7 @@ let extract_docblock =
     |> List.fold_left Loc.(fun _end elem ->
       match elem with
       | Str.Delim delim ->
-          let line_incr = if "delim" = "\r" then 0 else 1 in
+          let line_incr = if delim = "\r" then 0 else 1 in
           let column = 0 in
           let line = _end.line + line_incr in
           let offset = _end.offset + (String.length delim) in
