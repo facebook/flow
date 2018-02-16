@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Core_result
 open Utils_js
 
 type getdef_type =
@@ -179,3 +180,41 @@ let getdef_set_hooks pos =
 
 let getdef_unset_hooks () =
   Type_inference_hooks_js.reset_hooks ()
+
+let rec get_def ~options ~workers ~env ~profiling ~depth (file_input, line, col) =
+  (* Since we may call check contents repeatedly, we must prefix our timing keys *)
+  Profiling_js.with_timer_prefix profiling ~prefix:(spf "GetDef%d_" depth) ~f:(fun () ->
+    let filename = File_input.filename_of_file_input file_input in
+    let file = File_key.SourceFile filename in
+    let loc = Loc.make file line col in
+    let state = getdef_set_hooks loc in
+    let result, json_object =
+      File_input.content_of_file_input file_input
+      >>= (fun content ->
+        Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+      )
+      |> map_error ~f:(fun str -> str, None)
+      >>= (fun (cx, _info) -> Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
+        try_with_json (fun () -> getdef_get_result ~options cx state)
+      ))
+      |> split_result
+    in
+    getdef_unset_hooks ();
+    match result with
+    | Error e -> Error e, json_object
+    | Ok ok -> (match ok with
+      | Done loc -> Ok loc, json_object
+      | Chain (line, col) ->
+        let result, chain_json_object =
+          get_def ~options ~workers ~env ~profiling ~depth:(depth+1) (file_input, line, col) in
+        (match result with
+        | Error e -> Error e, json_object
+        | Ok loc' ->
+          (* Chaining can sometimes lead to a dead end, due to lack of type
+             information. In that case, fall back to the previous location. *)
+          if loc' = Loc.none
+          then (Ok loc, json_object)
+          else (Ok loc', chain_json_object)
+        )
+      )
+  )

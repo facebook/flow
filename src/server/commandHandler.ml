@@ -9,12 +9,6 @@ open Core_result
 open ServerEnv
 open Utils_js
 
-let extract_json_data = function
-| Ok (result, json_data) -> Ok result, json_data
-| Error (msg, json_data) -> Error msg, json_data
-
-let try_with_json f = try f () with exn -> Error (Printexc.to_string exn, None)
-
 let status_log errors =
   if Errors.ErrorSet.is_empty errors
     then Hh_logger.info "Status: OK"
@@ -65,7 +59,7 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
         try_with_json (fun () -> AutocompleteService_js.autocomplete_get_results cx state info)
       )
     )
-    |> extract_json_data
+    |> split_result
   in
   Autocomplete_js.autocomplete_unset_hooks ();
   results, json_data_to_log
@@ -107,7 +101,7 @@ let infer_type
     try_with_json begin fun () ->
       Type_info_service.type_at_pos ~options ~workers ~env ~profiling file content line col
     end
-    |> extract_json_data
+    |> split_result
 
 let dump_types ~options ~workers ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
@@ -255,43 +249,8 @@ let find_refs ~genv ~env ~profiling (file_input, line, col, global) =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let rec get_def ~options ~workers ~env ~profiling ?(depth=0) (file_input, line, col) =
-  (* Since we may call check contents repeatedly, we must prefix our timing keys *)
-  Profiling_js.with_timer_prefix profiling ~prefix:(spf "GetDef%d_" depth) ~f:(fun () ->
-    let filename = File_input.filename_of_file_input file_input in
-    let file = File_key.SourceFile filename in
-    let loc = Loc.make file line col in
-    let state = GetDef_js.getdef_set_hooks loc in
-    let result, json_object =
-      File_input.content_of_file_input file_input
-      >>= (fun content ->
-        Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
-      )
-      |> map_error ~f:(fun str -> str, None)
-      >>= (fun (cx, _info) -> Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
-        try_with_json (fun () -> GetDef_js.getdef_get_result ~options cx state)
-      ))
-      |> extract_json_data
-    in
-    GetDef_js.getdef_unset_hooks ();
-    match result with
-    | Error e -> Error e, json_object
-    | Ok ok -> (match ok with
-      | GetDef_js.Done loc -> Ok loc, json_object
-      | GetDef_js.Chain (line, col) ->
-        let result, chain_json_object =
-          get_def ~options ~workers ~env ~profiling ~depth:(depth+1) (file_input, line, col) in
-        (match result with
-        | Error e -> Error e, json_object
-        | Ok loc' ->
-          (* Chaining can sometimes lead to a dead end, due to lack of type
-             information. In that case, fall back to the previous location. *)
-          if loc' = Loc.none
-          then (Ok loc, json_object)
-          else (Ok loc', chain_json_object)
-        )
-      )
-  )
+let get_def ~options ~workers ~env ~profiling position =
+  GetDef_js.get_def ~options ~workers ~env ~profiling ~depth:0 position
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
