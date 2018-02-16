@@ -76,11 +76,22 @@ References:
                 ^^^^^^ [2]
 
 
-Error: sanity-filter.js:13
- 13: const d = my_filter(c, is_string_regular);
-                            ^^^^^^^^^^^^^^^^^ function. Function is incompatible with
-  3: declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
-                                      ^^^^^^^^ abstract predicate function
+Error ------------------------------------------------------------------------------------------- sanity-filter.js:13:24
+
+function [1]. Function is incompatible with abstract predicate function [2].
+
+   sanity-filter.js:13:24
+   13| const d = my_filter(c, is_string_regular);
+                              ^^^^^^^^^^^^^^^^^
+
+References:
+   sanity-filter.js:20:1
+   20| function is_string_regular(x): boolean {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   sanity-filter.js:3:34
+    3| declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
+                                        ^^^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------- sanity-filter.js:14:2
 
@@ -99,11 +110,20 @@ References:
                  ^^^^^^ [2]
 
 
-Error: sanity-refine.js:4
-  4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
-                                                           ^^^^^^^^^^^^^^ refined type that uses predicate on parameter at position 2. This is incompatible with
-  7: var b = refine(a, is_string);   // ERROR: index out of bounds
-                       ^^^^^^^^^ function with 1 parameters
+Error -------------------------------------------------------------------------------------------- sanity-refine.js:4:55
+
+refined type that uses predicate on parameter at position 2 [1]. This is incompatible with function with 1
+parameters [2].
+
+   sanity-refine.js:4:55
+   4| declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
+                                                            ^^^^^^^^^^^^^^ [1]
+
+References:
+   sanity-refine.js:7:19
+   7| var b = refine(a, is_string);   // ERROR: index out of bounds
+                        ^^^^^^^^^ [2]
+
 
 Error --------------------------------------------------------------------------------------------- sanity-refine.js:8:2
 
@@ -122,17 +142,37 @@ References:
           ^^^^^^ [2]
 
 
-Error: sanity-refine.js:19
- 19: var e = refine3(c, d, e, is_string_and_number);
-                              ^^^^^^^^^^^^^^^^^^^^ predicate function with 2 arguments. Predicate function is incompatible with
- 17: declare function refine3<T, P: $Pred<3>>(u: T, v: T, w: T, cb: P): $Refine<T,P,1>;
-                                    ^^^^^^^^ predicate function with 3 arguments
+Error ------------------------------------------------------------------------------------------- sanity-refine.js:19:26
 
-Error: sanity-refine.js:28
- 28: var e = refine(a, is_string_regular);   // ERROR: is_string_regular is not a
-                       ^^^^^^^^^^^^^^^^^ function. Function is incompatible with
-  4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
-                                   ^^^^^^^^ abstract predicate function
+predicate function with 2 arguments [1]. Predicate function is incompatible with predicate function with 3
+arguments [2].
+
+   sanity-refine.js:19:26
+   19| var e = refine3(c, d, e, is_string_and_number);
+                                ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   sanity-refine.js:17:32
+   17| declare function refine3<T, P: $Pred<3>>(u: T, v: T, w: T, cb: P): $Refine<T,P,1>;
+                                      ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- sanity-refine.js:28:19
+
+function [1]. Function is incompatible with abstract predicate function [2].
+
+   sanity-refine.js:28:19
+   28| var e = refine(a, is_string_regular);   // ERROR: is_string_regular is not a
+                         ^^^^^^^^^^^^^^^^^
+
+References:
+   sanity-refine.js:38:1
+   38| function is_string_regular(x)  {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   sanity-refine.js:4:31
+    4| declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
+                                     ^^^^^^^^ [2]
+
 
 Error -------------------------------------------------------------------------------------------- sanity-refine.js:30:2
 

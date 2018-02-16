@@ -55,20 +55,13 @@ type error
 val mk_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
-  ?extra:info_tree list ->
-  info list ->
-  error
-
-val mk_friendly_error:
-  ?kind:error_kind ->
-  ?trace_infos:info list ->
   ?root:(Loc.t * Loc.t Friendly.message) ->
   ?frames:(Loc.t Friendly.message list) ->
   Loc.t ->
   Loc.t Friendly.message ->
   error
 
-val mk_friendly_speculation_error:
+val mk_speculation_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
   loc:Loc.t ->
@@ -81,8 +74,6 @@ val is_duplicate_provider_error: error -> bool
 
 val loc_of_error: error -> Loc.t
 val locs_of_error: error -> Loc.t list
-val infos_of_error: error -> info list
-val extra_of_error: error -> info_tree list
 val kind_of_error: error -> error_kind
 
 (* we store errors in sets, currently, because distinct

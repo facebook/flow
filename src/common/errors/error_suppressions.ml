@@ -93,11 +93,10 @@ let check err severity_cover suppressions =
     check_locs locs suppressions lint_kind severity_cover
   in
   (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
-  let is_in_dependency = match Errors.infos_of_error err with
-    | (primary_loc,_)::_ ->
-      Option.value_map (Loc.source primary_loc) ~default:false ~f:(fun filename ->
-        String_utils.is_substring "/node_modules/" (File_key.to_string filename))
-    | [] -> false
+  let is_in_dependency =
+    let primary_loc = Errors.loc_of_error err in
+    Option.value_map (Loc.source primary_loc) ~default:false ~f:(fun filename ->
+      String_utils.is_substring "/node_modules/" (File_key.to_string filename))
   in
   let result = match Errors.kind_of_error err with
     | Errors.RecursionLimitError -> Err
