@@ -111,7 +111,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:18:2
 
-Cannot cast `Object.keys(...)` to array type because in type argument `T`, string [1] is incompatible with number [2].
+Cannot cast `Object.keys(...)` to array type because in array element, string [1] is incompatible with number [2].
 
    object_keys.js:18:2
    18| (Object.keys(any): Array<number>); // error, Array<string>
@@ -128,8 +128,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:25:2
 
-Cannot cast `Object.keys(...)` to array type because in type argument `T`, string literal `prop` [1] is incompatible
-with string literal `error` [2].
+Cannot cast `Object.keys(...)` to array type because in array element, string literal `prop` [1] is incompatible with
+string literal `error` [2].
 
    object_keys.js:25:2
    25| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
@@ -143,7 +143,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:32:2
 
-Cannot cast `Object.keys(...)` to array type because in type argument `T`, string literal `bar_prop` [1] is incompatible
+Cannot cast `Object.keys(...)` to array type because in array element, string literal `bar_prop` [1] is incompatible
 with string literal `error` [2].
 
    object_keys.js:32:2
@@ -158,7 +158,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:38:6
 
-Cannot cast `Object.keys(...)` to array type because in type argument `T`, string literal `hi` [1] is incompatible with
+Cannot cast `Object.keys(...)` to array type because in array element, string literal `hi` [1] is incompatible with
 string literal `bye` [2].
 
    object_keys.js:38:6
@@ -176,8 +176,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:44:6
 
-Cannot cast `Object.keys(...)` to array type because in type argument `T`, string [1] is incompatible with string
-literal `123` [2].
+Cannot cast `Object.keys(...)` to array type because in array element, string [1] is incompatible with string literal
+`123` [2].
 
    object_keys.js:44:6
    44|     (Object.keys(dict): Array<'123'>); // error: not supported yet

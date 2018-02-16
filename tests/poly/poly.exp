@@ -14,20 +14,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:10
 
-Cannot return `new A() || new A()` because in type argument `X`, property `x` is missing in object type [1] but exists
-in object type [2].
+Cannot return `new A() || new A()` because in type argument `X` [1], property `x` is missing in object type [2] but
+exists in object type [3].
 
    annot.js:10:10
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   annot.js:1:9
+    1| class A<X> { }
+               ^ [1]
    annot.js:10:20
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                          ^^ [1]
+                          ^^ [2]
    annot.js:10:38
    10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                            ^^^^^^^^^^^ [2]
+                                            ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- error.js:8:8
@@ -145,36 +148,42 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- phantom.js:7:2
 
-Cannot cast `a` to `B` because in type argument `Phantom`, number [1] is incompatible with string [2].
+Cannot cast `a` to `B` because in type argument `Phantom` [1], number [2] is incompatible with string [3].
 
    phantom.js:7:2
    7| (a: B); // Error
        ^
 
 References:
+   phantom.js:9:8
+   9| type T<Phantom> = any;
+             ^^^^^^^ [1]
    phantom.js:3:12
    3| type A = T<number>;
-                 ^^^^^^ [1]
+                 ^^^^^^ [2]
    phantom.js:4:12
    4| type B = T<string>;
-                 ^^^^^^ [2]
+                 ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- phantom.js:15:2
 
-Cannot cast `c` to `D` because in type argument `Phantom`, number [1] is incompatible with string [2].
+Cannot cast `c` to `D` because in type argument `Phantom` [1], number [2] is incompatible with string [3].
 
    phantom.js:15:2
    15| (c: D); // Error
         ^
 
 References:
+   phantom.js:9:8
+    9| type T<Phantom> = any;
+              ^^^^^^^ [1]
    phantom.js:11:12
    11| type C = T<number>;
-                  ^^^^^^ [1]
+                  ^^^^^^ [2]
    phantom.js:12:12
    12| type D = T<string>;
-                  ^^^^^^ [2]
+                  ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
@@ -201,19 +210,22 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:18:21
 
-Cannot assign `Q.bar(...)` to `z` because in type argument `T`, string [1] is incompatible with number [2].
+Cannot assign `Q.bar(...)` to `z` because in type argument `T` [1], string [2] is incompatible with number [3].
 
    poly.js:18:21
    18| var z:Foo<number> = Q.bar(foo,"");
                            ^^^^^^^^^^^^^
 
 References:
+   poly.js:1:11
+    1| class Foo<T> {
+                 ^ [1]
    poly.js:18:31
    18| var z:Foo<number> = Q.bar(foo,"");
-                                     ^^ [1]
+                                     ^^ [2]
    poly.js:18:11
    18| var z:Foo<number> = Q.bar(foo,"");
-                 ^^^^^^ [2]
+                 ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1

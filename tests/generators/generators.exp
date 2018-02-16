@@ -31,16 +31,19 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:24:12
 
-Cannot return empty string because in type argument `Return`, string [1] is incompatible with number [2].
+Cannot return empty string because in type argument `Return` [1], string [2] is incompatible with number [3].
 
    class.js:24:12
-   24|     return ""; // error: string ~> number
-                  ^^ [1]
+    24|     return ""; // error: string ~> number
+                   ^^ [2]
 
 References:
+   <BUILTINS>/core.js:507:29
+   507| interface Generator<+Yield,+Return,-Next> {
+                                    ^^^^^^ [1]
    class.js:23:39
-   23|   *stmt_return_err(): Generator<void, number, void> {
-                                             ^^^^^^ [2]
+    23|   *stmt_return_err(): Generator<void, number, void> {
+                                              ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:28:22
@@ -96,20 +99,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:72:12
 
-Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next`; undefined [1] is
-incompatible with string [2].
+Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next` [1]; undefined [2]
+is incompatible with string [3].
 
    class.js:72:12
     72|     yield *xs;
                    ^^
 
 References:
+   <BUILTINS>/core.js:496:37
+   496| interface $Iterator<+Yield,+Return,-Next> {
+                                            ^^^^ [1]
    <BUILTINS>/core.js:500:38
    500| type Iterator<+T> = $Iterator<T,void,void>;
-                                             ^^^^ [1]
+                                             ^^^^ [2]
    class.js:125:42
    125| examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
-                                                 ^^ [2]
+                                                 ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:41
@@ -264,16 +270,19 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:23:10
 
-Cannot return empty string because in type argument `Return`, string [1] is incompatible with number [2].
+Cannot return empty string because in type argument `Return` [1], string [2] is incompatible with number [3].
 
    generators.js:23:10
-   23|   return ""; // error: string ~> number
-                ^^ [1]
+    23|   return ""; // error: string ~> number
+                 ^^ [2]
 
 References:
+   <BUILTINS>/core.js:507:29
+   507| interface Generator<+Yield,+Return,-Next> {
+                                    ^^^^^^ [1]
    generators.js:22:46
-   22| function *stmt_return_err(): Generator<void, number, void> {
-                                                    ^^^^^^ [2]
+    22| function *stmt_return_err(): Generator<void, number, void> {
+                                                     ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:27:20
@@ -380,20 +389,23 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:92:10
 
-Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next`; undefined [1] is
-incompatible with string [2].
+Cannot yield `xs` because in property `@@iterator`, the return value, and then type argument `Next` [1]; undefined [2]
+is incompatible with string [3].
 
    generators.js:92:10
     92|   yield *xs;
                  ^^
 
 References:
+   <BUILTINS>/core.js:496:37
+   496| interface $Iterator<+Yield,+Return,-Next> {
+                                            ^^^^ [1]
    <BUILTINS>/core.js:500:38
    500| type Iterator<+T> = $Iterator<T,void,void>;
-                                             ^^^^ [1]
+                                             ^^^^ [2]
    generators.js:94:33
     94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
-                                        ^^ [2]
+                                        ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:100:4

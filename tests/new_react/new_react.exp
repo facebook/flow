@@ -552,8 +552,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propTypes.js:13:1
 
-Cannot create `C` element because in property `statistics` and then type argument `T`, property `label` is missing in
-object literal [1] but exists in object type [2].
+Cannot create `C` element because in property `statistics` and then array element, property `label` is missing in object
+literal [1] but exists in object type [2].
 
    propTypes.js:13:1
        v---------------
@@ -578,8 +578,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- propTypes.js:18:53
 
-Cannot assign array literal to `props` because in type argument `T`, property `label` is missing in object literal [1]
-but exists in object type [2].
+Cannot assign array literal to `props` because in array element, property `label` is missing in object literal [1] but
+exists in object type [2].
 
    propTypes.js:18:53
                                                            v

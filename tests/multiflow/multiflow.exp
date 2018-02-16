@@ -297,7 +297,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:46:2
 
-Cannot create `ExpectsChildrenArray` element because in the rest argument and then type argument `T`, number [1] is
+Cannot create `ExpectsChildrenArray` element because in the rest argument and then array element, number [1] is
 incompatible with string [2].
 
    jsx.js:46:2
@@ -373,7 +373,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:28:1
 
 Cannot call `funWithRestArray` because:
- - in the rest argument and then type argument `T`, string [1] is incompatible with number [2].
+ - in the rest argument and then array element, string [1] is incompatible with number [2].
  - in the rest argument, string [1] is incompatible with number literal `123` [3].
 
    spread.js:28:1

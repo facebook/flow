@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:21:43
 
-Cannot assign `a.getAll(...)` to `a2` because in type argument `T`, string [1] is incompatible with number [2].
+Cannot assign `a.getAll(...)` to `a2` because in array element, string [1] is incompatible with number [2].
 
    FormData.js:21:43
     21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
@@ -107,7 +107,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:22:41
 
-Cannot assign `a.getAll(...)` to `a3` because in type argument `T`, `File` [1] is incompatible with `Blob` [2].
+Cannot assign `a.getAll(...)` to `a3` because in array element, `File` [1] is incompatible with `Blob` [2].
 
    FormData.js:22:41
     22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect

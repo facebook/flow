@@ -111,8 +111,12 @@ class ['a] t = object(self)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
-          let opaque_type_args =
-            SMap.ident_map (self#type_ cx map_cx) opaquetype.opaque_type_args in
+          let opaque_type_args = SMap.ident_map (fun x ->
+            let (r, t) = x in
+            let t' = self#type_ cx map_cx t in
+            if t == t' then x
+            else (r, t')
+          ) opaquetype.opaque_type_args in
           if underlying_t == opaquetype.underlying_t &&
             super_t == opaquetype.super_t &&
             opaque_type_args == opaquetype.opaque_type_args
@@ -291,7 +295,12 @@ class ['a] t = object(self)
       mixins;
       structural
     } = i in
-    let type_args' = SMap.ident_map (self#type_ cx map_cx) type_args in
+    let type_args' = SMap.ident_map (fun x ->
+      let (r, t) = x in
+      let t' = self#type_ cx map_cx t in
+      if t == t' then x
+      else (r, t')
+    ) type_args in
     let f_tmap = Context.find_props cx fields_tmap in
     let f_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) f_tmap in
     let fields_tmap' =

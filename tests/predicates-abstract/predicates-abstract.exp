@@ -18,8 +18,8 @@ References:
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:16:2
 
 Cannot cast `my_filter(...)` to array type because:
- - in type argument `T` and then property `kind`, string literal `A` [1] is incompatible with string literal `B` [2].
- - in type argument `T`, property `v` is missing in `A` [3] but exists in `B` [4].
+ - in array element and then property `kind`, string literal `A` [1] is incompatible with string literal `B` [2].
+ - in array element, property `v` is missing in `A` [3] but exists in `B` [4].
 
    sanity-filter-union.js:16:2
    16| (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
@@ -79,7 +79,7 @@ Error: sanity-filter-union.js:17
 
 Error --------------------------------------------------------------------------------------------- sanity-filter.js:8:2
 
-Cannot cast `b` to array type because in type argument `T`, string [1] is incompatible with number [2].
+Cannot cast `b` to array type because in array element, string [1] is incompatible with number [2].
 
    sanity-filter.js:8:2
    8| (b: Array<number>);
@@ -102,7 +102,7 @@ Error: sanity-filter.js:13
 
 Error -------------------------------------------------------------------------------------------- sanity-filter.js:14:2
 
-Cannot cast `d` to array type because in type argument `T`, mixed [1] is incompatible with string [2].
+Cannot cast `d` to array type because in array element, mixed [1] is incompatible with string [2].
 
    sanity-filter.js:14:2
    14| (d: Array<string>);

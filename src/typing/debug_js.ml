@@ -1050,7 +1050,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let method_pmap = Context.find_props json_cx.cx insttype.methods_tmap in
   JSON_Object [
     "classId", int_ insttype.class_id;
-    "typeArgs", json_of_tmap json_cx insttype.type_args;
+    "typeArgs", json_of_tmap json_cx (SMap.map snd insttype.type_args);
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
     "fieldTypes", json_of_pmap json_cx field_pmap;
     "methodTypes", json_of_pmap json_cx method_pmap;

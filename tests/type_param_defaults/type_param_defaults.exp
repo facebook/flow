@@ -85,19 +85,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:27:27
 
-Cannot assign `new C(...)` to `c_number` because in type argument `T`, number [1] is incompatible with string [2].
+Cannot assign `new C(...)` to `c_number` because in type argument `T` [1], number [2] is incompatible with string [3].
 
    classes.js:27:27
    27| var c_number: C<number> = new C(123); // Error number ~> ?string
                                  ^^^^^^^^^^
 
 References:
+   classes.js:25:9
+   25| class C<T: ?string = string> extends A<T> {}
+               ^ [1]
    classes.js:27:17
    27| var c_number: C<number> = new C(123); // Error number ~> ?string
-                       ^^^^^^ [1]
+                       ^^^^^^ [2]
    classes.js:25:13
    25| class C<T: ?string = string> extends A<T> {}
-                   ^^^^^^ [2]
+                   ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:27:33
@@ -195,19 +198,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:42:20
 
-Cannot assign `new D(...)` to `d_star` because in type argument `T`, number [1] is incompatible with string [2].
+Cannot assign `new D(...)` to `d_star` because in type argument `T` [1], number [2] is incompatible with string [3].
 
    classes.js:42:20
    42| var d_star: D<*> = new D(10); // error, number ~> string
                           ^^^^^^^^^
 
 References:
+   classes.js:36:12
+   36| class D<S, T = string> extends A<T> {}
+                  ^ [1]
    classes.js:42:26
    42| var d_star: D<*> = new D(10); // error, number ~> string
-                                ^^ [1]
+                                ^^ [2]
    classes.js:36:16
    36| class D<S, T = string> extends A<T> {}
-                      ^^^^^^ [2]
+                      ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:44:2
@@ -356,19 +362,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:62:27
 
-Cannot assign `new I(...)` to `i_number` because in type argument `T`, number [1] is incompatible with string [2].
+Cannot assign `new I(...)` to `i_number` because in type argument `T` [1], number [2] is incompatible with string [3].
 
    classes.js:62:27
    62| var i_number: I<number> = new I(123); // Error number ~> ?string
                                  ^^^^^^^^^^
 
 References:
+   classes.js:60:9
+   60| class I<T: ?string = *> extends A<T> {}
+               ^ [1]
    classes.js:62:17
    62| var i_number: I<number> = new I(123); // Error number ~> ?string
-                       ^^^^^^ [1]
+                       ^^^^^^ [2]
    classes.js:60:13
    60| class I<T: ?string = *> extends A<T> {}
-                   ^^^^^^ [2]
+                   ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:62:33

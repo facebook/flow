@@ -82,8 +82,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:110:34
 
-Cannot assign `x` to `a` because in type argument `T` and then the indexer property, `B` [1] is incompatible with
-`A` [2].
+Cannot assign `x` to `a` because in array element and then the indexer property, `B` [1] is incompatible with `A` [2].
 
    dictionary.js:110:34
    110|   let a: Array<{[k:string]:A}> = x; // error
@@ -100,8 +99,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:115:34
 
-Cannot assign `x` to `c` because in type argument `T` and then the indexer property, `B` [1] is incompatible with
-`C` [2].
+Cannot assign `x` to `c` because in array element and then the indexer property, `B` [1] is incompatible with `C` [2].
 
    dictionary.js:115:34
    115|   let c: Array<{[k:string]:C}> = x; // error
@@ -235,7 +233,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:159:31
 
-Cannot assign `x` to `a` because in type argument `T` and then the indexer property's key, `B` [1] is incompatible with
+Cannot assign `x` to `a` because in array element and then the indexer property's key, `B` [1] is incompatible with
 `A` [2].
 
    dictionary.js:159:31
@@ -253,7 +251,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:161:31
 
-Cannot assign `x` to `c` because in type argument `T` and then the indexer property's key, `B` [1] is incompatible with
+Cannot assign `x` to `c` because in array element and then the indexer property's key, `B` [1] is incompatible with
 `C` [2].
 
    dictionary.js:161:31
@@ -305,7 +303,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:175:39
 
-Cannot assign `x` to `a` because in type argument `T` and then property `p`, `A` [1] is incompatible with `B` [2].
+Cannot assign `x` to `a` because in array element and then property `p`, `A` [1] is incompatible with `B` [2].
 
    dictionary.js:175:39
    175|   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
@@ -322,7 +320,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:180:39
 
-Cannot assign `x` to `c` because in type argument `T` and then property `p`, `C` [1] is incompatible with `B` [2].
+Cannot assign `x` to `c` because in array element and then property `p`, `C` [1] is incompatible with `B` [2].
 
    dictionary.js:180:39
    180|   let c: Array<{[k:string]:B, p:C}> = x; // error
@@ -356,7 +354,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:189:34
 
-Cannot assign `xa` to `a` because in type argument `T` and then property `p`, `B` [1] is incompatible with `A` [2].
+Cannot assign `xa` to `a` because in array element and then property `p`, `B` [1] is incompatible with `A` [2].
 
    dictionary.js:189:34
    189|   let a: Array<{[k:string]:A}> = xa; // error
@@ -373,7 +371,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:194:34
 
-Cannot assign `xc` to `c` because in type argument `T` and then property `p`, `B` [1] is incompatible with `C` [2].
+Cannot assign `xc` to `c` because in array element and then property `p`, `B` [1] is incompatible with `C` [2].
 
    dictionary.js:194:34
    194|   let c: Array<{[k:string]:C}> = xc; // error
@@ -509,7 +507,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:227:10
 
-Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+Cannot return `x` because in array element, an indexer property is missing in object type [1] but exists in object
 type [2].
 
    dictionary.js:227:10
@@ -527,7 +525,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:233:10
 
-Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+Cannot return `x` because in array element, an indexer property is missing in object type [1] but exists in object
 type [2].
 
    dictionary.js:233:10
@@ -681,7 +679,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:273:39
 
-Cannot assign `x` to `a` because in type argument `T` and then property `p`, `A` [1] is incompatible with `B` [2].
+Cannot assign `x` to `a` because in array element and then property `p`, `A` [1] is incompatible with `B` [2].
 
    dictionary.js:273:39
    273|   let a: Array<{[k:string]:B, p:A}> = x; // error
@@ -698,7 +696,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:275:39
 
-Cannot assign `x` to `c` because in type argument `T` and then property `p`, `C` [1] is incompatible with `B` [2].
+Cannot assign `x` to `c` because in array element and then property `p`, `C` [1] is incompatible with `B` [2].
 
    dictionary.js:275:39
    275|   let c: Array<{[k:string]:B, p:C}> = x; // error
@@ -885,8 +883,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:13:10
 
-Cannot return `x` because in type argument `T` and then the indexer property, number [1] is incompatible with
-string [2].
+Cannot return `x` because in array element and then the indexer property, number [1] is incompatible with string [2].
 
    incompatible.js:13:10
    13|   return x;
@@ -903,7 +900,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:20:10
 
-Cannot return `x` because in type argument `T` and then property `fooBar`, string [1] is incompatible with number [2].
+Cannot return `x` because in array element and then property `fooBar`, string [1] is incompatible with number [2].
 
    incompatible.js:20:10
    20|   return x;
@@ -920,7 +917,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:27:10
 
-Cannot return `x` because in type argument `T` and then property `fooBar`, string [1] is incompatible with mixed [2].
+Cannot return `x` because in array element and then property `fooBar`, string [1] is incompatible with mixed [2].
 
    incompatible.js:27:10
    27|   return x; // error: mixed ~> string
@@ -954,7 +951,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
 
-Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+Cannot return `x` because in array element, an indexer property is missing in object type [1] but exists in object
 type [2].
 
    incompatible.js:42:10
@@ -972,7 +969,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
-Cannot return `x` because in type argument `T`, an indexer property is missing in object type [1] but exists in object
+Cannot return `x` because in array element, an indexer property is missing in object type [1] but exists in object
 type [2].
 
    incompatible.js:47:10

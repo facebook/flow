@@ -134,7 +134,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Foo>{...arr}</Foo>;
-                    ^^^ Cannot create \`Foo\` element because in property \`children\` and then type argument \`T\`, string [1] is incompatible with number [2].
+                    ^^^ Cannot create \`Foo\` element because in property \`children\` and then array element, string [1] is incompatible with number [2].
           References:
             7:       const arr = ["foo"];
                                   ^^^^^ [1]
@@ -307,7 +307,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:9
           9:       <Foo><Bar /></Foo>
-                        ^^^^^^^ Cannot create \`Foo\` element because in property \`children\` and then type argument \`T\`, number [1] is incompatible with string [2].
+                        ^^^^^^^ Cannot create \`Foo\` element because in property \`children\` and then array element, number [1] is incompatible with string [2].
           References:
             8:       function Bar(props: BarProps): number {return 0;}
                                                     ^^^^^^ [1]

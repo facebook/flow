@@ -356,7 +356,7 @@ let insttype cx ~initialized_static_field_names s =
   let inited_fields, fields, methods = elements cx ?constructor s.instance in
   { Type.
     class_id = s.id;
-    type_args = s.tparams_map;
+    type_args = SMap.map (fun t -> (Type.reason_of_t t, t)) s.tparams_map;
     arg_polarities = arg_polarities s;
     fields_tmap = Context.make_property_map cx fields;
     initialized_field_names = inited_fields;

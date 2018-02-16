@@ -323,7 +323,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: const arr: Array<number> = [..."hello"];
-                                          ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because in type argument \`T\`, string [1] is incompatible with number [2].
+                                          ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because in array element, string [1] is incompatible with number [2].
             References:
             288:     @@iterator(): Iterator<string>;
                                             ^^^^^^ [1]. See lib: [LIB] core.js:288
@@ -343,7 +343,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       const arr: Array<number> = [...foo()];
-                                                ^^^^^^^^^^ Cannot assign array literal to \`arr\` because in type argument \`T\`, string [1] is incompatible with number [2].
+                                                ^^^^^^^^^^ Cannot assign array literal to \`arr\` because in array element, string [1] is incompatible with number [2].
             References:
               4:       function *foo(): Generator<string, void, void> {
                                                   ^^^^^^ [1]
@@ -362,7 +362,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return [...iter];
-                              ^^^^^^^^^ Cannot return array literal because in type argument \`T\`, string [1] is incompatible with number [2].
+                              ^^^^^^^^^ Cannot return array literal because in array element, string [1] is incompatible with number [2].
             References:
               4:       function test(iter: Iterable<string>): Array<number> {
                                                     ^^^^^^ [1]

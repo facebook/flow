@@ -263,23 +263,28 @@ References:
 Error ----------------------------------------------------------------------------------------------------- more.js:98:1
 
 Cannot create `SingularTest` element because:
- - in property `user.__fragments` and then type argument `T`, `FragmentTypeof` [1] is incompatible with object type [2].
- - in property `user.__fragments` and then type argument `T`, object type [2] is incompatible with `FragmentTypeof` [3].
+ - in property `user.__fragments` and then type argument `T` [1], `FragmentTypeof` [2] is incompatible with object
+   type [3].
+ - in property `user.__fragments` and then type argument `T` [1], object type [3] is incompatible with
+   `FragmentTypeof` [4].
 
    more.js:98:1
    98| <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   more.js:11:39
+   11| declare opaque type FragmentReference<T: FragmentTypeof>;
+                                             ^ [1]
    more.js:23:10
    23|   & (<T: FragmentTypeof, Data: {+__typeof: T}>(Data) => {+__fragments: FragmentReference<T>})
-                ^^^^^^^^^^^^^^ [1]
+                ^^^^^^^^^^^^^^ [2]
    more.js:86:35
    86|   +__fragments: FragmentReference<{thing: true}>,
-                                         ^^^^^^^^^^^^^ [2]
+                                         ^^^^^^^^^^^^^ [3]
    more.js:43:14
    43|   +__typeof: RelayModernTypedFlowtest_user$reference,
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- more.js:121:1
@@ -340,25 +345,28 @@ References:
 Error ---------------------------------------------------------------------------------------------------- more.js:150:1
 
 Cannot create `PluralTest` element because:
- - in property `users`, type argument `T`, property `__fragments`, and then type argument `T`; `FragmentTypeof` [1] is
-   incompatible with object type [2].
- - in property `users`, type argument `T`, property `__fragments`, and then type argument `T`; object type [2] is
-   incompatible with `FragmentTypeof` [3].
+ - in property `users`, array element, property `__fragments`, and then type argument `T` [1]; `FragmentTypeof` [2] is
+   incompatible with object type [3].
+ - in property `users`, array element, property `__fragments`, and then type argument `T` [1]; object type [3] is
+   incompatible with `FragmentTypeof` [4].
 
    more.js:150:1
    150| <PluralTest users={[nonUserRef]} nullableUsers={null} />;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   more.js:11:39
+    11| declare opaque type FragmentReference<T: FragmentTypeof>;
+                                              ^ [1]
    more.js:25:10
     25|   & (<T: FragmentTypeof, Data: {+__typeof: T}>($ReadOnlyArray<Data>) => $ReadOnlyArray<{+__fragments: FragmentReference<T>}>)
-                 ^^^^^^^^^^^^^^ [1]
+                 ^^^^^^^^^^^^^^ [2]
    more.js:86:35
     86|   +__fragments: FragmentReference<{thing: true}>,
-                                          ^^^^^^^^^^^^^ [2]
+                                          ^^^^^^^^^^^^^ [3]
    more.js:49:14
     49|   +__typeof: RelayModernTypedFlowtest_users$reference,
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- more.js:174:1

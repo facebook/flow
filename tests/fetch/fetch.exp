@@ -1,35 +1,41 @@
 Error --------------------------------------------------------------------------------------------------- fetch.js:12:28
 
-Cannot assign `fetch(...)` to `b` because in type argument `R`, `Response` [1] is incompatible with string [2].
+Cannot assign `fetch(...)` to `b` because in type argument `R` [1], `Response` [2] is incompatible with string [3].
 
    fetch.js:12:28
      12| const b: Promise<string> = fetch(myRequest); // incorrect
                                     ^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:591:24
+    591| declare class Promise<+R> {
+                                ^ [1]
    <BUILTINS>/bom.js:1002:76
    1002| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
-                                                                                    ^^^^^^^^ [1]
+                                                                                    ^^^^^^^^ [2]
    fetch.js:12:18
      12| const b: Promise<string> = fetch(myRequest); // incorrect
-                          ^^^^^^ [2]
+                          ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- fetch.js:25:26
 
-Cannot assign `fetch(...)` to `d` because in type argument `R`, `Blob` [1] is incompatible with `Response` [2].
+Cannot assign `fetch(...)` to `d` because in type argument `R` [1], `Blob` [2] is incompatible with `Response` [3].
 
    fetch.js:25:26
      25| const d: Promise<Blob> = fetch('image.png'); // incorrect
                                   ^^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:591:24
+    591| declare class Promise<+R> {
+                                ^ [1]
    fetch.js:25:18
      25| const d: Promise<Blob> = fetch('image.png'); // incorrect
-                          ^^^^ [1]
+                          ^^^^ [2]
    <BUILTINS>/bom.js:1002:76
    1002| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
-                                                                                    ^^^^^^^^ [2]
+                                                                                    ^^^^^^^^ [3]
 
 
 Error: headers.js:3
@@ -613,8 +619,8 @@ References:
 Error ------------------------------------------------------------------------------------------ urlsearchparams.js:4:31
 
 Cannot call `URLSearchParams` with array literal bound to `query` because:
- - in type argument `T`, string [1] is incompatible with tuple type [2].
- - in type argument `T`, string [3] is incompatible with tuple type [2].
+ - in array element, string [1] is incompatible with tuple type [2].
+ - in array element, string [3] is incompatible with tuple type [2].
 
    urlsearchparams.js:4:31
      4| const b = new URLSearchParams(['key1', 'value1']); // not correct

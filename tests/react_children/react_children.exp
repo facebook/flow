@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ api.js:11:4
 
-Cannot call `na` with `Children.map(...)` bound to `x` because in type argument `T`, string [1] is incompatible with
+Cannot call `na` with `Children.map(...)` bound to `x` because in array element, string [1] is incompatible with
 number [2].
 
    api.js:11:4
@@ -36,7 +36,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:12:4
 
-Cannot call `sa` with `Children.map(...)` bound to `x` because in type argument `T`, number [1] is incompatible with
+Cannot call `sa` with `Children.map(...)` bound to `x` because in array element, number [1] is incompatible with
 string [2].
 
    api.js:12:4
@@ -54,42 +54,48 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:14:18
 
-Cannot call `Children.forEach` with `a` bound to `children` because in type argument `T`, null or undefined [1] is
-incompatible with number [2].
+Cannot call `Children.forEach` with `a` bound to `children` because in type argument `T` [1], null or undefined [2] is
+incompatible with number [3].
 
    api.js:14:18
-   14| Children.forEach(a, (x: number) => {}); // Error
-                        ^
+    14| Children.forEach(a, (x: number) => {}); // Error
+                         ^
 
 References:
+   <BUILTINS>/react.js:224:38
+   224|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                             ^ [1]
    api.js:5:24
-    5| const a: ChildrenArray<?number> = [
-                              ^^^^^^^ [1]
+     5| const a: ChildrenArray<?number> = [
+                               ^^^^^^^ [2]
    api.js:14:25
-   14| Children.forEach(a, (x: number) => {}); // Error
-                               ^^^^^^ [2]
+    14| Children.forEach(a, (x: number) => {}); // Error
+                                ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:16:18
 
 Cannot call `Children.forEach` with `a` bound to `children` because:
- - in type argument `T`, null or undefined [1] is incompatible with string [2].
- - in type argument `T`, number [3] is incompatible with string [2].
+ - in type argument `T` [1], null or undefined [2] is incompatible with string [3].
+ - in type argument `T` [1], number [4] is incompatible with string [3].
 
    api.js:16:18
-   16| Children.forEach(a, (x: string) => {}); // Error
-                        ^
+    16| Children.forEach(a, (x: string) => {}); // Error
+                         ^
 
 References:
+   <BUILTINS>/react.js:224:38
+   224|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                             ^ [1]
    api.js:5:24
-    5| const a: ChildrenArray<?number> = [
-                              ^^^^^^^ [1]
+     5| const a: ChildrenArray<?number> = [
+                               ^^^^^^^ [2]
    api.js:16:25
-   16| Children.forEach(a, (x: string) => {}); // Error
-                               ^^^^^^ [2]
+    16| Children.forEach(a, (x: string) => {}); // Error
+                                ^^^^^^ [3]
    api.js:5:25
-    5| const a: ChildrenArray<?number> = [
-                               ^^^^^^ [3]
+     5| const a: ChildrenArray<?number> = [
+                                ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ api.js:19:3
@@ -128,7 +134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:25:4
 
-Cannot call `sa` with `Children.toArray(...)` bound to `x` because in type argument `T`, number [1] is incompatible with
+Cannot call `sa` with `Children.toArray(...)` bound to `x` because in array element, number [1] is incompatible with
 string [2].
 
    api.js:25:4
@@ -662,8 +668,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ fun.js:77:1
 
 Cannot create `FunArrayOnly` element because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with `Fn` [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with `Fn` [2].
+ - in property `children` and then array element, array literal [1] is incompatible with `Fn` [2].
+ - in property `children` and then array element, array literal [3] is incompatible with `Fn` [2].
 
    fun.js:77:1
    77| <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
@@ -683,7 +689,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:80:1
 
-Cannot create `FunArrayOnly` element because in property `children` and then type argument `T`, array literal [1] is
+Cannot create `FunArrayOnly` element because in property `children` and then array element, array literal [1] is
 incompatible with `Fn` [2].
 
    fun.js:80:1
@@ -722,8 +728,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- fun.js:108:1
 
 Cannot create `FunArray` element because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with `Fn` [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with `Fn` [2].
+ - in property `children` and then array element, array literal [1] is incompatible with `Fn` [2].
+ - in property `children` and then array element, array literal [3] is incompatible with `Fn` [2].
 
    fun.js:108:1
    108| <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
@@ -743,7 +749,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:111:1
 
-Cannot create `FunArray` element because in property `children` and then type argument `T`, array literal [1] is
+Cannot create `FunArray` element because in property `children` and then array element, array literal [1] is
 incompatible with `Fn` [2].
 
    fun.js:111:1
@@ -1129,8 +1135,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:1
 
 Cannot create `TabBar` element because:
- - in property `children`, type argument `T`, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
- - in property `children`, type argument `T`, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
+ - in property `children`, array element, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
+ - in property `children`, array element, and then property `type`; `NotTab` [1] is incompatible with `Tab` [2].
 
    tabs.js:68:1
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1147,8 +1153,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:71:1
 
-Cannot create `TabBar` element because in property `children`, type argument `T`, and then property `type`; `NotTab` [1]
-is incompatible with `Tab` [2].
+Cannot create `TabBar` element because in property `children`, array element, and then property `type`; `NotTab` [1] is
+incompatible with `Tab` [2].
 
    tabs.js:71:1
        v-------

@@ -388,35 +388,41 @@ Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
 
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:3:2
 
-Cannot cast `Promise.resolve()` to `Promise` because in type argument `R`, undefined [1] is incompatible with
-number [2].
+Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1], undefined [2] is incompatible with
+number [3].
 
    resolve_void.js:3:2
-   3| (Promise.resolve(): Promise<number>); // error
-       ^^^^^^^^^^^^^^^^^ [1]
+     3| (Promise.resolve(): Promise<number>); // error
+         ^^^^^^^^^^^^^^^^^ [2]
 
 References:
+   <BUILTINS>/core.js:591:24
+   591| declare class Promise<+R> {
+                               ^ [1]
    resolve_void.js:3:29
-   3| (Promise.resolve(): Promise<number>); // error
-                                  ^^^^^^ [2]
+     3| (Promise.resolve(): Promise<number>); // error
+                                    ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:5:2
 
-Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R`, undefined [1] is incompatible with
-number [2].
+Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1], undefined [2] is incompatible with
+number [3].
 
    resolve_void.js:5:2
-   5| (Promise.resolve(undefined): Promise<number>); // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     5| (Promise.resolve(undefined): Promise<number>); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:591:24
+   591| declare class Promise<+R> {
+                               ^ [1]
    resolve_void.js:5:18
-   5| (Promise.resolve(undefined): Promise<number>); // error
-                       ^^^^^^^^^ [1]
+     5| (Promise.resolve(undefined): Promise<number>); // error
+                         ^^^^^^^^^ [2]
    resolve_void.js:5:38
-   5| (Promise.resolve(undefined): Promise<number>); // error
-                                           ^^^^^^ [2]
+     5| (Promise.resolve(undefined): Promise<number>); // error
+                                             ^^^^^^ [3]
 
 
 

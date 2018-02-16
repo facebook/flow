@@ -32,7 +32,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:22
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                                                ^^^ Cannot return \`tup\` because in type argument \`T\`, number [1] is incompatible with string [2].
+                                                                                ^^^ Cannot return \`tup\` because in array element, number [1] is incompatible with string [2].
             References:
              22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
                                               ^^^^^^ [1]

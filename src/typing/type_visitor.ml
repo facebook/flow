@@ -76,7 +76,7 @@ class ['a] t = object(self)
       opaque_arg_polarities;
       opaque_name = _;
     } = ot in
-    let acc = SMap.fold (fun x t acc ->
+    let acc = SMap.fold (fun x (_, t) acc ->
       let pole' = SMap.find_unsafe x opaque_arg_polarities in
       self#type_ cx (P.mult (pole, pole')) acc t
     ) opaque_type_args acc in
@@ -719,7 +719,7 @@ class ['a] t = object(self)
       mixins = _;
       structural = _;
     } = i in
-    let acc = SMap.fold (fun x t acc ->
+    let acc = SMap.fold (fun x (_, t) acc ->
       let pole' = SMap.find_unsafe x arg_polarities in
       self#type_ cx (P.mult (pole, pole')) acc t
     ) type_args acc in

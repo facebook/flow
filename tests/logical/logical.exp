@@ -327,9 +327,9 @@ References:
 Error ------------------------------------------------------------------------------------------------ logical.js:380:12
 
 Cannot return array literal because:
- - in type argument `T` and then property `x`, number [1] is incompatible with string [2].
- - in type argument `T` and then property `x`, boolean [3] is incompatible with string [2].
- - in type argument `T` and then property `x`, boolean [4] is incompatible with string [2].
+ - in array element and then property `x`, number [1] is incompatible with string [2].
+ - in array element and then property `x`, boolean [3] is incompatible with string [2].
+ - in array element and then property `x`, boolean [4] is incompatible with string [2].
 
    logical.js:380:12
                    v
@@ -363,9 +363,9 @@ References:
 Error ------------------------------------------------------------------------------------------------ logical.js:396:12
 
 Cannot return array literal because:
- - in type argument `T` and then property `x`, number [1] is incompatible with string [2].
- - in type argument `T` and then property `x`, boolean [3] is incompatible with string [2].
- - in type argument `T` and then property `x`, boolean [4] is incompatible with string [2].
+ - in array element and then property `x`, number [1] is incompatible with string [2].
+ - in array element and then property `x`, boolean [3] is incompatible with string [2].
+ - in array element and then property `x`, boolean [4] is incompatible with string [2].
 
    logical.js:396:12
                    v

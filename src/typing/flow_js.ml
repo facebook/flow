@@ -969,7 +969,7 @@ module ResolvableTypeJob = struct
     | DefT (_, InstanceT (static, super, _,
         { class_id; type_args; fields_tmap; methods_tmap; _ })) ->
       let ts = if class_id = 0 then [] else [super; static] in
-      let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
+      let ts = SMap.fold (fun _ (_, t) ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
         (Context.find_props cx fields_tmap)
         (Context.find_props cx methods_tmap)
@@ -3682,7 +3682,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace
           (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       ) else (
-        let unused_targs = List.fold_left (fun targs { name; default; polarity; _ } ->
+        let unused_targs = List.fold_left (fun targs { name; default; polarity; reason; _ } ->
           match default, targs with
           | None, [] ->
             (* fewer arguments than params but no default *)
@@ -3693,6 +3693,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _, (t1, t2)::targs ->
             let use_op = Frame (TypeArgCompatibility {
               name;
+              targ = reason;
               lower = reason_op;
               upper = reason_tapp;
               polarity;
@@ -4327,11 +4328,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Arrays can flow to arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, ts1))),
       UseT (use_op, DefT (r2, ArrT (ArrayAT (t2, ts2)))) ->
-      let use_op = Frame (TypeArgCompatibility {
-        name = "T";
+      let use_op = Frame (ArrayElementCompatibility {
         lower = r1;
         upper = r2;
-        polarity = Neutral;
       }, use_op) in
       let lit1 = (desc_of_reason r1) = RArrayLit in
       let ts1 = Option.value ~default:[] ts1 in
@@ -4376,11 +4375,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Read only arrays are the super type of all tuples and arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
       UseT (use_op, DefT (r2, ArrT (ROArrayAT (t2)))) ->
-      let use_op = Frame (TypeArgCompatibility {
-        name = "T";
+      let use_op = Frame (ArrayElementCompatibility {
         lower = r1;
         upper = r2;
-        polarity = Positive;
       }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
 
@@ -6777,8 +6774,8 @@ and generate_tests =
 (*********************)
 
 and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
-  tmap1 |> SMap.iter (fun x t1 ->
-    let t2 = SMap.find_unsafe x tmap2 in
+  tmap1 |> SMap.iter (fun x (targ_reason, t1) ->
+    let (_, t2) = SMap.find_unsafe x tmap2 in
     (* type_args contains a mixture of args to type params declared on the
        instance's class, and args to outer-scope type params.
        OTOH arg_polarities only holds polarities of declared params.
@@ -6787,6 +6784,7 @@ and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
     let polarity = Option.value (SMap.get x pmap) ~default:Neutral in
     let use_op = Frame (TypeArgCompatibility {
       name = x;
+      targ = targ_reason;
       lower = lreason;
       upper = ureason;
       polarity;

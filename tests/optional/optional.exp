@@ -232,19 +232,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_param2.js:7:19
 
-Cannot assign `i.map(...)` to `j` because in type argument `V`, undefined [1] is incompatible with number [2].
+Cannot assign `i.map(...)` to `j` because in type argument `V` [1], undefined [2] is incompatible with number [3].
 
    optional_param2.js:7:19
    7| var j:I<number> = i.map(id => id);
                         ^^^^^^^^^^^^^^^
 
 References:
+   optional_param2.js:1:17
+   1| declare class I<V> {
+                      ^ [1]
    optional_param2.js:3:26
    3|         mapper: (value?: V) => M
-                               ^ [1]
+                               ^ [2]
    optional_param2.js:7:9
    7| var j:I<number> = i.map(id => id);
-              ^^^^^^ [2]
+              ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ optional_param4.js:12:5
@@ -263,7 +266,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_param4.js:13:1
 
-Cannot call `foo` because in the rest argument and then type argument `T`, boolean [1] is incompatible with string [2].
+Cannot call `foo` because in the rest argument and then array element, boolean [1] is incompatible with string [2].
 
    optional_param4.js:13:1
    13| foo(123, true); // ERROR boolean ~> string

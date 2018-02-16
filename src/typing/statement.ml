@@ -699,7 +699,7 @@ and statement cx = Ast.Statement.(
                          super_t;
                          opaque_id = Context.make_nominal cx;
                          opaque_arg_polarities;
-                         opaque_type_args = typeparams_map;
+                         opaque_type_args = SMap.map (fun t -> (reason_of_t t, t)) typeparams_map;
                          opaque_name = name} in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       Flow.check_polarity cx Positive t;

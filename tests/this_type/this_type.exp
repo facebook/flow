@@ -378,19 +378,22 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:3
 
-Cannot cast `new B3().bar()` to `A2` because in type argument `X`, string [1] is incompatible with number [2].
+Cannot cast `new B3().bar()` to `A2` because in type argument `X` [1], string [2] is incompatible with number [3].
 
    import.js:21:3
    21| ((new B3().bar(): B3<string>): A2<number>); // error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   export.js:6:17
+    6| export class A2<X> {
+                       ^ [1]
    import.js:21:22
    21| ((new B3().bar(): B3<string>): A2<number>); // error
-                            ^^^^^^ [1]
+                            ^^^^^^ [2]
    import.js:21:35
    21| ((new B3().bar(): B3<string>): A2<number>); // error
-                                         ^^^^^^ [2]
+                                         ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:2
