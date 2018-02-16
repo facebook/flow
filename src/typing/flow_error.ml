@@ -1086,7 +1086,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         `FrameWithoutLoc (use_op,
           [text "type argument "; code name])
 
-      | Frame (FunCompatibility _, use_op)
+      | Frame (FunCompatibility {lower; _}, use_op) ->
+        `NextWithLoc (lower, use_op)
+
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam _, use_op)
       | Frame (ReactConfigCheck, use_op)
@@ -1096,6 +1098,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
       match action with
       (* Skip this use_op and go to the next one. *)
       | `Next use_op -> loop loc frames use_op
+      (* Skip this use_op, don't add a frame, but do use the loc to reposition
+       * our primary location. *)
+      | `NextWithLoc (frame_reason, use_op) ->
+        (* If our current loc is inside our frame_loc then use our current loc
+         * since it is the smallest possible loc in our frame_loc. *)
+        let frame_loc = loc_of_reason frame_reason in
+        let loc = if Loc.contains frame_loc loc then loc else frame_loc in
+        loop loc frames use_op
       (* Add our frame message and reposition the location if appropriate. *)
       | `Frame (frame_reason, use_op, frame) ->
         (* If our current loc is inside our frame_loc then use our current loc

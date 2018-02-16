@@ -180,102 +180,6 @@ References:
             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:43:17
-
-Property `y_` is missing in function type [1] but exists in object type [2] in property `setState`.
-
-   classes.js:43:17
-                       v------------------
-   43| var FooLegacy = React.createClass({
-   44|   is_mounted: (undefined: ?boolean),
-   45|
-   46|   propTypes: {
-   47|     x: React.PropTypes.number.isRequired
-   48|   },
-   49|
-   50|   getDefaultProps(): DefaultProps { return {} },
-   51|
-   52|   statics: {
-   53|     bar(): void {}
-   54|   },
-   55|
-   56|   qux(): void {
-   57|     var _: string = this.props.x;
-     :
-   62|   },
-   63|
-   64|   setState(o: { y_: string }): void { },
-   65|
-   66|   componentDidMount(): void {
-   67|     this.is_mounted = true;
-   68|   },
-   69|
-   70|   componentWillReceiveProps(
-   71|     nextProps: Object,
-   72|     nextContext: any
-   73|   ): void {
-   74|     this.qux();
-   75|   },
-   76| });
-       -^
-
-References:
-   <BUILTINS>/react.js:35:36
-   35|     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   classes.js:64:15
-   64|   setState(o: { y_: string }): void { },
-                     ^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:43:17
-
-Property `y_` is missing in object type [1] but exists in object type [2] in the first argument of property `setState`.
-
-   classes.js:43:17
-                       v------------------
-   43| var FooLegacy = React.createClass({
-   44|   is_mounted: (undefined: ?boolean),
-   45|
-   46|   propTypes: {
-   47|     x: React.PropTypes.number.isRequired
-   48|   },
-   49|
-   50|   getDefaultProps(): DefaultProps { return {} },
-   51|
-   52|   statics: {
-   53|     bar(): void {}
-   54|   },
-   55|
-   56|   qux(): void {
-   57|     var _: string = this.props.x;
-     :
-   62|   },
-   63|
-   64|   setState(o: { y_: string }): void { },
-   65|
-   66|   componentDidMount(): void {
-   67|     this.is_mounted = true;
-   68|   },
-   69|
-   70|   componentWillReceiveProps(
-   71|     nextProps: Object,
-   72|     nextContext: any
-   73|   ): void {
-   74|     this.qux();
-   75|   },
-   76| });
-       -^
-
-References:
-   classes.js:60:22
-   60|   getInitialState(): { y: string } {
-                            ^^^^^^^^^^^^^ [1]
-   classes.js:64:15
-   64|   setState(o: { y_: string }): void { },
-                     ^^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- classes.js:57:21
 
 Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2].
@@ -291,6 +195,40 @@ References:
    classes.js:57:12
     57|     var _: string = this.props.x;
                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:64:11
+
+Property `y_` is missing in function type [1] but exists in object type [2].
+
+   classes.js:64:11
+   64|   setState(o: { y_: string }): void { },
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:35:36
+   35|     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js:64:15
+   64|   setState(o: { y_: string }): void { },
+                     ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:64:11
+
+Property `y_` is missing in object type [1] but exists in object type [2] in the first argument.
+
+   classes.js:64:11
+   64|   setState(o: { y_: string }): void { },
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js:60:22
+   60|   getInitialState(): { y: string } {
+                            ^^^^^^^^^^^^^ [1]
+   classes.js:64:15
+   64|   setState(o: { y_: string }): void { },
+                     ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
