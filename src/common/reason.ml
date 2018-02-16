@@ -302,8 +302,8 @@ let string_of_loc ?(strip_root=None) loc = Loc.(
     spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
 
-let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
-  JSON_Object [
+let json_of_loc_props ?(strip_root=None) loc = Hh_json.(Loc.(
+  [
     "source", (
       match loc.source with
       | Some x -> JSON_String (string_of_source ~strip_root x)
@@ -330,6 +330,10 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
     ];
   ]
 ))
+
+let json_of_loc ?strip_root loc = Hh_json.(
+  JSON_Object (json_of_loc_props ?strip_root loc)
+)
 
 (* reason constructors, accessors, etc. *)
 

@@ -199,6 +199,48 @@ module Friendly = struct
     in
     loop xs
 
+  (* Flattens out the Inline and Text constructors in an error message. Helpful
+   * for hiding implementation details in our JSON output. *)
+  let flatten_message =
+    let rec loop_inlines inlines =
+      match inlines with
+      | [] -> []
+      | ((Code _) as inline) :: inlines -> inline :: loop_inlines inlines
+      | ((Text text) as inline) :: inlines ->
+        let inlines = loop_inlines inlines in
+        (match inlines with
+        | [] -> [inline]
+        | (Text text') :: inlines -> Text (text ^ text') :: inlines
+        | inlines -> inline :: inlines
+        )
+    in
+    let rec loop features =
+      match features with
+      | [] -> []
+      | Reference (inlines, loc) :: features ->
+        let inlines = loop_inlines inlines in
+        let features = loop features in
+        let feature = Reference (inlines, loc) in
+        (match features with
+        | [] -> [feature]
+        | Inline inlines' :: features -> feature :: (Inline (loop_inlines inlines')) :: features
+        | features -> feature :: features
+        )
+      | ((Inline inlines) as feature) :: features ->
+        let features = loop features in
+        (match features with
+        | [] -> [feature]
+        | (Inline inlines') :: features -> Inline (inlines @ inlines') :: features
+        | features -> feature :: features
+        )
+    in
+    fun features ->
+      let features = loop features in
+      match features with
+      | [] -> []
+      | Inline inlines :: features -> Inline (loop_inlines inlines) :: features
+      | features -> features
+
   (* Capitalizes the first letter in the message. Does not capitalize code or
    * text in references. *)
   let capitalize = function
@@ -2570,6 +2612,10 @@ end
 
 (* JSON output *)
 module Json_output = struct
+  type json_version =
+  | JsonV1
+  | JsonV2
+
   let unwrap_message = function
   | BlameM (loc, str) when loc <> Loc.none -> str, Some loc
   | BlameM (_, str) | CommentM str -> str, None
@@ -2588,9 +2634,8 @@ module Json_output = struct
       ("loc", Reason.json_of_loc ~strip_root loc) ::
       deprecated_json_props_of_loc ~strip_root loc
 
-  let json_of_message_with_context ~strip_root ~stdin_file message =
+  let json_of_loc_context ~stdin_file loc =
     let open Hh_json in
-    let _, loc = unwrap_message message in
     let code_line = match loc with
     | None -> None
     | Some loc ->
@@ -2600,10 +2645,23 @@ module Json_output = struct
         | Some l -> Some (Nel.hd l)
         | None -> None)
     in
-    let context = ("context", match code_line with
+    match code_line with
     | None -> JSON_Null
-    | Some context -> JSON_String context) in
-    Hh_json.JSON_Object (context :: (json_of_message_props ~strip_root message))
+    | Some context -> JSON_String context
+
+  let json_of_loc_with_context ~strip_root ~stdin_file loc =
+    let open Hh_json in
+    let props =
+      Reason.json_of_loc_props ~strip_root loc @
+        [("context", json_of_loc_context ~stdin_file (Some loc))]
+    in
+    JSON_Object props
+
+  let json_of_message_with_context ~strip_root ~stdin_file message =
+    let open Hh_json in
+    let _, loc = unwrap_message message in
+    let context = ("context", json_of_loc_context ~stdin_file loc) in
+    JSON_Object (context :: (json_of_message_props ~strip_root message))
 
   let json_of_infos ~json_of_message infos =
     let open Hh_json in
@@ -2636,8 +2694,88 @@ module Json_output = struct
       let extra = List.map (json_of_info_tree ~json_of_message) extra in
       ("extra", JSON_Array extra) :: props
 
+  let json_of_message_inline_friendly message_inline =
+    let open Hh_json in
+    let open Friendly in
+    match message_inline with
+    | Text text ->
+        JSON_Object [
+          ("kind", JSON_String "Text");
+          ("text", JSON_String text);
+        ]
+    | Code code ->
+        JSON_Object [
+          ("kind", JSON_String "Code");
+          ("text", JSON_String code);
+        ]
+
+  let json_of_message_friendly message =
+    let open Hh_json in
+    let open Friendly in
+    let message = flatten_message message in
+    JSON_Array (List.concat (List.map (function
+    | Inline inlines -> List.map json_of_message_inline_friendly inlines
+    | Reference (inlines, id) -> [
+        JSON_Object [
+          ("kind", JSON_String "Reference");
+          ("referenceId", JSON_String (string_of_int id));
+          ("message", JSON_Array (List.map json_of_message_inline_friendly inlines));
+        ];
+      ]
+    ) message))
+
+  let rec json_of_message_group_friendly message_group =
+    let open Hh_json in
+    let open Friendly in
+    let { group_message; group_message_list } = message_group in
+    let group_message = json_of_message_friendly group_message in
+    if group_message_list = [] then
+      group_message
+    else
+      JSON_Object [
+        ("kind", JSON_String "UnorderedList");
+        ("message", group_message);
+        ("items", JSON_Array (List.map json_of_message_group_friendly group_message_list));
+      ]
+
+  let json_of_references ~strip_root ~stdin_file references =
+    let open Hh_json in
+    JSON_Object (List.rev (IMap.fold (fun id loc acc ->
+      (string_of_int id, json_of_loc_with_context ~strip_root ~stdin_file loc) :: acc
+    ) references []))
+
+  let json_of_friendly_error_props ~strip_root ~stdin_file error =
+    let open Hh_json in
+    let open Friendly in
+    let (_, primary_loc, message_group) =
+      message_group_of_error
+        ~show_all_branches:false ~show_root:true error in
+    let (references, message_group) =
+      extract_references message_group in
+    let root_loc = match error.root with
+    | None -> JSON_Null
+    | Some { root_loc; _ } -> json_of_loc_with_context ~strip_root ~stdin_file root_loc
+    in
+    [
+      (* Unfortunately, Nuclide currently depends on this flag. Remove it in
+       * the future? *)
+      ("classic", JSON_Bool false);
+      (* NOTE: `primaryLoc` is the location we want to show in an IDE! `rootLoc`
+       * is another loc which Flow associates with some errors. We include it
+       * for tools which are interested in using the location to enhance
+       * their rendering. `primaryLoc` will always be inside `rootLoc`. *)
+      ("primaryLoc", json_of_loc_with_context ~strip_root ~stdin_file primary_loc);
+      ("rootLoc", root_loc);
+      (* NOTE: This `messageMarkup` can be concatenated into a string when
+       * implementing the LSP error output. *)
+      ("messageMarkup", json_of_message_group_friendly message_group);
+      (* NOTE: These `referenceLocs` can become `relatedLocations` when
+       * implementing the LSP error output. *)
+      ("referenceLocs", json_of_references ~strip_root ~stdin_file references);
+    ]
+
   let json_of_error_props
-    ~strip_root ~json_of_message ~severity
+    ~strip_root ~stdin_file ~version ~json_of_message ~severity
     ?(suppression_locs=Utils_js.LocSet.empty) (kind, trace, error) =
     let open Hh_json in
     let kind_str = match kind with
@@ -2663,21 +2801,24 @@ module Json_output = struct
     ] in
     props @
     (* add the error type specific props *)
-    (json_of_classic_error_props ~json_of_message (Friendly.to_classic error)) @
+    (match version with
+    | JsonV1 -> json_of_classic_error_props ~json_of_message (Friendly.to_classic error)
+    | JsonV2 -> json_of_friendly_error_props ~strip_root ~stdin_file error
+    ) @
     (* add trace if present *)
     match trace with
     | [] -> []
     | _ -> ["trace", JSON_Array (List.map json_of_message trace)]
 
   let json_of_error_with_context
-    ~strip_root ~stdin_file ~severity (error, suppression_locs) =
+    ~strip_root ~stdin_file ~version ~severity (error, suppression_locs) =
     let json_of_message =
       json_of_message_with_context ~strip_root ~stdin_file in
-    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message
+    Hh_json.JSON_Object (json_of_error_props ~strip_root ~stdin_file ~version ~json_of_message
       ~severity ~suppression_locs error)
 
   let json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings () =
+    ~strip_root ~stdin_file ~suppressed_errors ?(version=JsonV1) ~errors ~warnings () =
     let errors = errors
       |> ErrorSet.elements
       |> List.map (fun err -> err, Utils_js.LocSet.empty) in
@@ -2685,7 +2826,7 @@ module Json_output = struct
       |> ErrorSet.elements
       |> List.map (fun warn -> warn, Utils_js.LocSet.empty)
     in
-    let f = json_of_error_with_context ~strip_root ~stdin_file in
+    let f = json_of_error_with_context ~strip_root ~stdin_file ~version in
     Hh_json.JSON_Array (
       List.map (f ~severity:Err) errors @
       List.map (f ~severity:Warn) warnings @
@@ -2694,13 +2835,14 @@ module Json_output = struct
     )
 
   let full_status_json_of_errors ~strip_root ~suppressed_errors
-    ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
+    ?(version=JsonV1) ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
     let open Hh_json in
 
     let props = [
       "flowVersion", JSON_String Flow_version.version;
+      "jsonVersion", JSON_String (match version with JsonV1 -> "1" | JsonV2 -> "2");
       "errors", json_of_errors_with_context
-        ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings ();
+        ~strip_root ~stdin_file ~suppressed_errors ~version ~errors ~warnings ();
       "passed", JSON_Bool (ErrorSet.is_empty errors);
     ] in
     let props = match profiling with
@@ -2713,12 +2855,15 @@ module Json_output = struct
       ~out_channel
       ~strip_root
       ~suppressed_errors
-      ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
+      ~pretty
+      ?version
+      ?(profiling=None)
+      ?(stdin_file=None)
       ~errors
       ~warnings
       () =
     let open Hh_json in
-    let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file
+    let res = full_status_json_of_errors ~strip_root ?version ~profiling ~stdin_file
       ~suppressed_errors ~errors ~warnings () in
     if pretty then output_string out_channel (json_to_multiline res)
     else json_to_output out_channel res;

@@ -692,6 +692,19 @@ let options_and_json_flags =
     |> options_flags
     |> json_flags
 
+let collect_json_version main = function
+| None -> main None
+| Some "1" -> main (Some Errors.Json_output.JsonV1)
+| Some "2" -> main (Some Errors.Json_output.JsonV2)
+| _ -> failwith "unreachable"
+
+let json_version_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_json_version
+  |> flag "--json-version" (optional (enum ["1"; "2"]))
+       ~doc:"The version of the JSON format (defaults to 1)"
+)
+
 let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir

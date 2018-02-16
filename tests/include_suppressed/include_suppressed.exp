@@ -68,6 +68,7 @@ Found 2 errors and 1 warning
 
 JSON without --include-suppressed
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"infer",
@@ -178,6 +179,7 @@ JSON without --include-suppressed
 
 JSON with --include-suppressed
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"infer",

@@ -20,6 +20,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -45,6 +46,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -63,6 +65,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -86,6 +89,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -204,6 +208,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -326,6 +331,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -491,6 +497,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -515,6 +522,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -533,6 +541,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -554,6 +563,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -668,6 +678,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -786,6 +797,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1070,6 +1082,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1088,6 +1101,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1108,6 +1122,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1226,6 +1241,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1344,6 +1360,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1462,6 +1479,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1604,6 +1622,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1622,6 +1641,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1664,6 +1684,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1688,6 +1709,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1706,6 +1728,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1726,6 +1749,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1844,6 +1868,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
@@ -1992,6 +2017,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2071,6 +2097,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2089,6 +2116,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2218,6 +2246,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2236,6 +2265,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2335,6 +2365,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2353,6 +2384,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2450,6 +2482,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -2468,6 +2501,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
