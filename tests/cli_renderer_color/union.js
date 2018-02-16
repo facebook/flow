@@ -10,30 +10,34 @@ declare opaque type C;
 declare opaque type D;
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-({b: 2, a: 1, c: 3}: {a: null, b: null, c: null});
+({b: 2, a: 1, c: 3}: {a: boolean, b: boolean, c: boolean});
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-({b: 2, a: 1, c: 3}: {a: null | string, b: null | string, c: null | string});
+({b: 2, a: 1, c: 3}: {
+  a: boolean | string,
+  b: boolean | string,
+  c: boolean | string,
+});
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-({b: 2, a: 1, c: 3}: {a: null | string, b: null, c: null});
+({b: 2, a: 1, c: 3}: {a: boolean | string, b: boolean, c: boolean});
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-({b: 2, a: 1, c: 3}: {a: null, b: null | string, c: null});
+({b: 2, a: 1, c: 3}: {a: boolean, b: boolean | string, c: boolean});
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-({b: 2, a: 1, c: 3}: {a: null, b: null, c: null | string});
+({b: 2, a: 1, c: 3}: {a: boolean, b: boolean, c: boolean | string});
 
-// Error: number ~> null
-({a: {b: 42}}: {a: {b: null}});
+// Error: number ~> boolean
+({a: {b: 42}}: {a: {b: boolean}});
 
-// Error: number ~> null. Because of union error scoring we should only see
+// Error: number ~> boolean. Because of union error scoring we should only see
 // one error.
-({a: {b: 42}}: {a: null | {b: null | {}}});
+({a: {b: 42}}: {a: boolean | {b: boolean | {}}});
 
-(42: null); // Error: number ~> null
-(42: {} | {} | {} | null); // Error: number ~> null
-(42: {} | ({} | ({} | null))); // Error: number ~> null
+(42: boolean); // Error: number ~> boolean
+(42: {} | {} | {} | boolean); // Error: number ~> boolean
+(42: {} | ({} | ({} | boolean))); // Error: number ~> boolean
 
 // Alias Example 1
 ({x: 123, y: 'abc'}: {x: number, y: number} | {x: string, y: string}); // Error
@@ -79,11 +83,11 @@ type Point = NumberPoint | StringPoint;
   d: [number] | [string] | [{}],
 });
 
-(true: number | (string | null)); // Error: should be flattened
-(true: (string | null) | number); // Error: should be flattened
-(true: {} | number | (string | null)); // Error: should be flattened
-(true: number | (string | null) | {}); // Error: should be flattened
-(true: number | (string | {} | null)); // Error: should be flattened
+(true: number | (string | false)); // Error: should be flattened
+(true: (string | false) | number); // Error: should be flattened
+(true: {} | number | (string | false)); // Error: should be flattened
+(true: number | (string | false) | {}); // Error: should be flattened
+(true: number | (string | {} | false)); // Error: should be flattened
 
 (true: number | number | number | string); // Error: should be flattened
 (true: number | number | (number | string)); // Error: should be flattened

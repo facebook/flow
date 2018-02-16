@@ -196,6 +196,7 @@ val is_constant_reason: reason -> bool
 val is_typemap_reason: reason -> bool
 val is_calltype_reason: reason -> bool
 
+val is_nullish_reason: reason -> bool
 val is_scalar_reason: reason -> bool
 val is_array_reason: reason -> bool
 

@@ -1163,7 +1163,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:122:1
 
-Cannot call `React.createElement` because undefined [1] is incompatible with number [2] in property `children`.
+Cannot call `React.createElement` because in property `children`:
+ - Either undefined [1] is incompatible with number [2].
+ - Or undefined [1] is incompatible with array type [3].
 
    create_element.js:122:1
    122| React.createElement(G, {}, ...(any: Array<number>)); // Error
@@ -1176,6 +1178,9 @@ References:
    create_element.js:112:44
    112| class G extends React.Component<{children: number | Array<number>}> {}
                                                    ^^^^^^ [2]
+   create_element.js:112:53
+   112| class G extends React.Component<{children: number | Array<number>}> {}
+                                                            ^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:133:1
@@ -1236,7 +1241,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:153:1
 
-Cannot call `React.createElement` because undefined [1] is incompatible with number [2] in property `children`.
+Cannot call `React.createElement` because in property `children`:
+ - Either undefined [1] is incompatible with number [2].
+ - Or undefined [1] is incompatible with array type [3].
 
    create_element.js:153:1
    153| React.createElement(H, {}, ...(any: Array<number>)); // Error
@@ -1249,6 +1256,9 @@ References:
    create_element.js:142:29
    142| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                     ^^^^^^ [2]
+   create_element.js:142:38
+   142| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:161:1
@@ -2507,7 +2517,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:128:1
 
-Cannot call `gFactory` because undefined [1] is incompatible with number [2] in property `children`.
+Cannot call `gFactory` because in property `children`:
+ - Either undefined [1] is incompatible with number [2].
+ - Or undefined [1] is incompatible with array type [3].
 
    create_factory.js:128:1
    128| gFactory({}, ...(any: Array<number>)); // Error
@@ -2520,6 +2532,9 @@ References:
    create_factory.js:117:44
    117| class G extends React.Component<{children: number | Array<number>}, void> {}
                                                    ^^^^^^ [2]
+   create_factory.js:117:53
+   117| class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                            ^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:136:1
@@ -2558,7 +2573,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:145:1
 
-Cannot call `hFactory` because undefined [1] is incompatible with number [2] in property `children`.
+Cannot call `hFactory` because in property `children`:
+ - Either undefined [1] is incompatible with number [2].
+ - Or undefined [1] is incompatible with array type [3].
 
    create_factory.js:145:1
    145| hFactory({}, ...(any: Array<number>)); // Error
@@ -2571,6 +2588,9 @@ References:
    create_factory.js:133:29
    133| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                     ^^^^^^ [2]
+   create_factory.js:133:38
+   133| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:154:1
@@ -3047,6 +3067,3 @@ References:
 
 
 Found 203 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

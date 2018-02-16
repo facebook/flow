@@ -10,34 +10,46 @@ declare opaque type C;
 declare opaque type D;
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-((any: {+b: null, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+((any: {+b: boolean, +a: boolean, +c: boolean}): {+b: 2, +a: 1, +c: 3});
 
 // Error: Group should list three errors in the order: `a`, `b`, `c`
 ((any: {
-  +b: null & string,
-  +a: null & string,
-  +c: null & string,
+  +b: boolean & string,
+  +a: boolean & string,
+  +c: boolean & string,
 }): {+b: 2, +a: 1, +c: 3});
 
 // Error: Group should list three errors in the order: `a`, `b`, `c`
-((any: {+b: null, +a: null & string, +c: null}): {+b: 2, +a: 1, +c: 3});
+((any: {+b: boolean, +a: boolean & string, +c: boolean}): {
+  +b: 2,
+  +a: 1,
+  +c: 3,
+});
 
 // Error: Group should list three errors in the order: `b`, `a`, `c`
-((any: {+b: null & string, +a: null, +c: null}): {+b: 2, +a: 1, +c: 3});
+((any: {+b: boolean & string, +a: boolean, +c: boolean}): {
+  +b: 2,
+  +a: 1,
+  +c: 3,
+});
 
 // Error: Group should list three errors in the order: `c`, `b`, `a`
-((any: {+b: null, +a: null, +c: null & string}): {+b: 2, +a: 1, +c: 3});
+((any: {+b: boolean, +a: boolean, +c: boolean & string}): {
+  +b: 2,
+  +a: 1,
+  +c: 3,
+});
 
-// Error: number ~> null
-((any: {+a: {+b: null}}): {+a: {+b: 42}});
+// Error: number ~> boolean
+((any: {+a: {+b: boolean}}): {+a: {+b: 42}});
 
-// Error: number ~> null. Because of union error scoring we should only see
+// Error: number ~> boolean. Because of union error scoring we should only see
 // one error.
-((any: {+a: null & {+b: null & {}}}): {+a: {+b: 42}});
+((any: {+a: boolean & {+b: boolean & {}}}): {+a: {+b: 42}});
 
-((any: null): 42); // Error: number ~> null
-((any: {} & {} & {} & null): 42); // Error: number ~> null
-((any: {} & ({} & ({} & null))): 42); // Error: number ~> null
+((any: boolean): 42); // Error: number ~> boolean
+((any: {} & {} & {} & boolean): 42); // Error: number ~> boolean
+((any: {} & ({} & ({} & boolean))): 42); // Error: number ~> boolean
 
 ((any: number & string): true); // Error
 ((any: number & string & {}): true); // Error: should not show the {} branch
@@ -71,11 +83,11 @@ declare opaque type D;
   +d: [true], // Error: should be grouped, should not show the [{}] branch
 });
 
-((any: number & (string & null)): true); // Error: should be flattened
-((any: (string & null) & number): true); // Error: should be flattened
-((any: {} & number & (string & null)): true); // Error: should be flattened
-((any: number & (string & null) & {}): true); // Error: should be flattened
-((any: number & (string & {} & null)): true); // Error: should be flattened
+((any: number & (string & false)): true); // Error: should be flattened
+((any: (string & false) & number): true); // Error: should be flattened
+((any: {} & number & (string & false)): true); // Error: should be flattened
+((any: number & (string & false) & {}): true); // Error: should be flattened
+((any: number & (string & {} & false)): true); // Error: should be flattened
 
 ((any: number & number & number & string): true); // Error: should be flattened
 ((any: number & number & (number & string)): true); // Error: should be flattened

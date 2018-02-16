@@ -931,9 +931,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`:
  - Either inexact children array [1] is incompatible with exact `React.Element` [2].
- - Or JSX text [3] is incompatible with undefined [4] in array element.
- - Or JSX text [3] is incompatible with null [5] in array element.
- - Or JSX text [3] is incompatible with boolean [6] in array element.
+ - Or JSX text [3] is incompatible with boolean [4] in array element.
 
    tabs.js:30:1
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
@@ -949,24 +947,16 @@ References:
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
                ^^ [3]
-   tabs.js:14:5
-   14|   | void
-           ^^^^ [4]
-   tabs.js:15:5
-   15|   | null
-           ^^^^ [5]
    tabs.js:16:5
    16|   | boolean
-           ^^^^^^^ [6]
+           ^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:31:1
 
 Cannot create `TabBar` element because in property `children`:
  - Either inexact children array [1] is incompatible with exact `React.Element` [2].
- - Or JSX text [3] is incompatible with undefined [4] in array element.
- - Or JSX text [3] is incompatible with null [5] in array element.
- - Or JSX text [3] is incompatible with boolean [6] in array element.
+ - Or JSX text [3] is incompatible with boolean [4] in array element.
 
    tabs.js:31:1
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
@@ -982,24 +972,16 @@ References:
    tabs.js:31:15
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
                      ^^ [3]
-   tabs.js:14:5
-   14|   | void
-           ^^^^ [4]
-   tabs.js:15:5
-   15|   | null
-           ^^^^ [5]
    tabs.js:16:5
    16|   | boolean
-           ^^^^^^^ [6]
+           ^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:32:1
 
 Cannot create `TabBar` element because in property `children`:
  - Either inexact children array [1] is incompatible with exact `React.Element` [2].
- - Or JSX text [3] is incompatible with undefined [4] in array element.
- - Or JSX text [3] is incompatible with null [5] in array element.
- - Or JSX text [3] is incompatible with boolean [6] in array element.
+ - Or JSX text [3] is incompatible with boolean [4] in array element.
 
    tabs.js:32:1
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
@@ -1015,15 +997,9 @@ References:
    tabs.js:32:21
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
                            ^^ [3]
-   tabs.js:14:5
-   14|   | void
-           ^^^^ [4]
-   tabs.js:15:5
-   15|   | null
-           ^^^^ [5]
    tabs.js:16:5
    16|   | boolean
-           ^^^^^^^ [6]
+           ^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:67:1
@@ -1627,10 +1603,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- view.js:35:1
 
-Cannot create `View` element because in property `children`:
- - Either JSX text [1] is incompatible with undefined [2].
- - Or JSX text [1] is incompatible with null [3].
- - Or JSX text [1] is incompatible with boolean [4].
+Cannot create `View` element because JSX text [1] is incompatible with boolean [2] in property `children`.
 
    view.js:35:1
    35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
@@ -1640,23 +1613,14 @@ References:
    view.js:35:7
    35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
              ^^^^^^^^^^^^^ [1]
-   view.js:6:5
-    6|   | void
-           ^^^^ [2]
-   view.js:7:5
-    7|   | null
-           ^^^^ [3]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:36:1
 
-Cannot create `View` element because in property `children`:
- - Either string [1] is incompatible with undefined [2].
- - Or string [1] is incompatible with null [3].
- - Or string [1] is incompatible with boolean [4].
+Cannot create `View` element because string [1] is incompatible with boolean [2] in property `children`.
 
    view.js:36:1
    36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
@@ -1666,23 +1630,14 @@ References:
    view.js:36:8
    36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
               ^^^^^^^^^^^^^^^ [1]
-   view.js:6:5
-    6|   | void
-           ^^^^ [2]
-   view.js:7:5
-    7|   | null
-           ^^^^ [3]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:37:1
 
-Cannot create `View` element because in property `children`:
- - Either number [1] is incompatible with undefined [2].
- - Or number [1] is incompatible with null [3].
- - Or number [1] is incompatible with boolean [4].
+Cannot create `View` element because number [1] is incompatible with boolean [2] in property `children`.
 
    view.js:37:1
    37| <View>{42}</View>; // Error: Numbers are not allowed as children.
@@ -1692,24 +1647,16 @@ References:
    view.js:37:8
    37| <View>{42}</View>; // Error: Numbers are not allowed as children.
               ^^ [1]
-   view.js:6:5
-    6|   | void
-           ^^^^ [2]
-   view.js:7:5
-    7|   | null
-           ^^^^ [3]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:38:1
 
 Cannot create `View` element because in property `children`:
  - Either inexact children array [1] is incompatible with exact `React.Element` [2].
- - Or number [3] is incompatible with undefined [4] in array element.
- - Or number [3] is incompatible with null [5] in array element.
- - Or number [3] is incompatible with boolean [6] in array element.
+ - Or number [3] is incompatible with boolean [4] in array element.
 
    view.js:38:1
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
@@ -1725,32 +1672,17 @@ References:
    view.js:38:8
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
               ^ [3]
-   view.js:6:5
-    6|   | void
-           ^^^^ [4]
-   view.js:7:5
-    7|   | null
-           ^^^^ [5]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [6]
+           ^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:39:1
 
 Cannot create `View` element because:
- - in array element of property `children`:
-    - Either string [1] is incompatible with undefined [2].
-    - Or string [1] is incompatible with null [3].
-    - Or string [1] is incompatible with boolean [4].
- - in array element of property `children`:
-    - Either string [5] is incompatible with undefined [2].
-    - Or string [5] is incompatible with null [3].
-    - Or string [5] is incompatible with boolean [4].
- - in array element of property `children`:
-    - Either string [6] is incompatible with undefined [2].
-    - Or string [6] is incompatible with null [3].
-    - Or string [6] is incompatible with boolean [4].
+ - string [1] is incompatible with boolean [2] in array element of property `children`.
+ - string [3] is incompatible with boolean [2] in array element of property `children`.
+ - string [4] is incompatible with boolean [2] in array element of property `children`.
 
    view.js:39:1
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
@@ -1760,38 +1692,23 @@ References:
    view.js:39:9
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
                ^^^ [1]
-   view.js:6:5
-    6|   | void
-           ^^^^ [2]
-   view.js:7:5
-    7|   | null
-           ^^^^ [3]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
    view.js:39:14
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                    ^^^ [5]
+                    ^^^ [3]
    view.js:39:19
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
-                         ^^^ [6]
+                         ^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:40:1
 
 Cannot create `View` element because:
- - in array element of property `children`:
-    - Either number [1] is incompatible with undefined [2].
-    - Or number [1] is incompatible with null [3].
-    - Or number [1] is incompatible with boolean [4].
- - in array element of property `children`:
-    - Either number [5] is incompatible with undefined [2].
-    - Or number [5] is incompatible with null [3].
-    - Or number [5] is incompatible with boolean [4].
- - in array element of property `children`:
-    - Either number [6] is incompatible with undefined [2].
-    - Or number [6] is incompatible with null [3].
-    - Or number [6] is incompatible with boolean [4].
+ - number [1] is incompatible with boolean [2] in array element of property `children`.
+ - number [3] is incompatible with boolean [2] in array element of property `children`.
+ - number [4] is incompatible with boolean [2] in array element of property `children`.
 
    view.js:40:1
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
@@ -1801,21 +1718,15 @@ References:
    view.js:40:9
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
                ^ [1]
-   view.js:6:5
-    6|   | void
-           ^^^^ [2]
-   view.js:7:5
-    7|   | null
-           ^^^^ [3]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
    view.js:40:12
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                  ^ [5]
+                  ^ [3]
    view.js:40:15
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
-                     ^ [6]
+                     ^ [4]
 
 
 

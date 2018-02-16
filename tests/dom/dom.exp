@@ -274,9 +274,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- path2d.js:9:6
 
-Cannot call `path.arcTo` because:
- - Either string [1] is incompatible with undefined [2].
- - Or string [1] is incompatible with number [3].
+Cannot call `path.arcTo` because string [1] is incompatible with number [2].
 
    path2d.js:9:6
       9|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
@@ -286,12 +284,9 @@ References:
    path2d.js:9:33
       9|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:1417:76
-   1417|   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number, _: void, _: void): void;
-                                                                                    ^^^^ [2]
    <BUILTINS>/dom.js:1418:83
    1418|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
-                                                                                           ^^^^^^ [3]
+                                                                                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- registerElement.js:48:48

@@ -210,16 +210,25 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:2:20
 
-Cannot call `Request` because undefined [1] is incompatible with string [2].
+Cannot call `Request` because:
+ - Either undefined [1] is incompatible with `Request` [2].
+ - Or undefined [1] is incompatible with `URL` [3].
+ - Or undefined [1] is incompatible with string [4].
 
    request.js:2:20
      2| const a: Request = new Request(); // incorrect
                            ^^^^^^^^^^^^^ [1]
 
 References:
+   <BUILTINS>/bom.js:926:20
+   926| type RequestInfo = Request | URL | string;
+                           ^^^^^^^ [2]
+   <BUILTINS>/bom.js:926:30
+   926| type RequestInfo = Request | URL | string;
+                                     ^^^ [3]
    <BUILTINS>/bom.js:926:36
    926| type RequestInfo = Request | URL | string;
-                                           ^^^^^^ [2]
+                                           ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35

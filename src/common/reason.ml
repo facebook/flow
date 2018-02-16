@@ -998,16 +998,23 @@ let rec mk_expression_reason = Ast.Expression.(function
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
 
-(* Is this the reason of a scalar type? true if the type *cannot* recursively
- * hold any other types. For example, number is a scalar but an object like
- * {p: number} is not. *)
-let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
+(* Classifies a reason description. These classifications can be used to
+ * implement various asthetic behaviors in error messages when we would like to
+ * distinguish between different error "classes".
+ *
+ * The classifications we currently support:
+ *
+ * - `Scalar: The type *cannot* recursively hold any other types. For example,
+ *   number is a scalar but an object like {p: number} is not.
+ * - `Nullish: The type is null or undefined. Nullish types are also `Scalar.
+ * - `Array: The type is an array. This depends on Flow's custom implementation
+ *   of arrays and tuples.
+ * - `Unclassified: Everything else which hasn't been classified yet.
+ *)
+let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RNumber
 | RString
 | RBoolean
-| RVoid
-| RNull
-| RNullOrVoid
 | RStringLit _
 | RNumberLit _
 | RBooleanLit _
@@ -1019,7 +1026,20 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RNumberEnum
 | RKeySet
 | RRegExp
-  -> true
+  -> `Scalar
+| RVoid
+| RNull
+| RNullOrVoid
+  -> `Nullish
+| RArray
+| RArrayLit
+| REmptyArrayLit
+| RArrayType
+| RROArrayType
+| RTupleType
+| RRestArray _
+| RArrayPatternRestProp
+  -> `Array
 | RMixed
 | REmpty
 | RAny
@@ -1028,12 +1048,6 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RObjectLit
 | RObjectType
 | RObjectClassName
-| RArray
-| RArrayLit
-| REmptyArrayLit
-| RArrayType
-| RROArrayType
-| RTupleType
 | RTupleElement
 | RTupleOutOfBoundsAccess
 | RFunction _
@@ -1116,7 +1130,6 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RExactType _
 | ROptional _
 | RMaybe _
-| RRestArray _
 | RAbstract _
 | RTypeApp _
 | RThisTypeApp _
@@ -1133,7 +1146,6 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RIncompatibleInstantiation _
 | RSpreadOf _
 | RObjectPatternRestProp
-| RArrayPatternRestProp
 | RCommonJSExports _
 | RReactProps
 | RReactElement _
@@ -1147,154 +1159,14 @@ let is_scalar_reason r = match desc_of_reason ~unwrap:true r with
 | RReactChildrenOrType _
 | RReactChildrenOrUndefinedOrType _
 | RReactSFC
-  -> false
+  -> `Unclassified
 
-(* Is this the reason of an array type? This depends on Flow's custom handling
- * of arrays. *)
-let is_array_reason r = match desc_of_reason ~unwrap:true r with
-| RArray
-| RArrayLit
-| REmptyArrayLit
-| RArrayType
-| RROArrayType
-| RTupleType
-| RRestArray _
-| RArrayPatternRestProp
-  -> true
-| RNumber
-| RString
-| RBoolean
-| RMixed
-| REmpty
-| RAny
-| RVoid
-| RNull
-| RNullOrVoid
-| RStringLit _
-| RNumberLit _
-| RBooleanLit _
-| RMatchingProp _
-| RObject
-| RObjectLit
-| RObjectType
-| RObjectClassName
-| RTupleElement
-| RTupleOutOfBoundsAccess
-| RFunction _
-| RFunctionType
-| RFunctionBody
-| RFunctionCall _
-| RFunctionCallType
-| RFunctionUnusedArgument
-| RJSXFunctionCall _
-| RJSXIdentifier _
-| RJSXElementProps _
-| RJSXElement _
-| RJSXText
-| RFbt
-| RUnaryOperator _
-| RBinaryOperator _
-| RLogical _
-| RAnyObject
-| RAnyFunction
-| RTemplateString
-| RUnknownString
-| RStringEnum
-| RNumberEnum
-| RGetterSetterProperty
-| RThis
-| RThisType
-| RExistential
-| RTooFewArgs
-| RTooFewArgsExpectedRest
-| RUninitializedThis
-| RConstructorReturn
-| RNewObject
-| RUnion
-| RUnionType
-| RIntersection
-| RIntersectionType
-| RKeySet
-| RAnd
-| RConditional
-| RPrototype
-| RObjectPrototype
-| RFunctionPrototype
-| RDestructuring
-| RDefaultValue
-| RConstructor
-| RDefaultConstructor
-| RConstructorCall _
-| RReturn
-| RImplicitReturn _
-| RRegExp
-| RSuper
-| RNoSuper
-| RDummyPrototype
-| RDummyThis
-| RTupleMap
-| RObjectMap
-| RObjectMapi
-| RType _
-| RTypeAlias _
-| ROpaqueType _
-| RTypeParam _
-| RTypeof _
-| RMethod _
-| RMethodCall _
-| RParameter _
-| RRestParameter _
-| RIdentifier _
-| RIdentifierAssignment _
-| RPropertyAssignment _
-| RProperty _
-| RPrivateProperty _
-| RShadowProperty _
-| RPropertyOf _
-| RPropertyIsAString _
-| RMissingProperty _
-| RUnknownProperty _
-| RUndefinedProperty _
-| RSomeProperty
-| RNameProperty _
-| RMissingAbstract _
-| RFieldInitializer _
-| RUntypedModule _
-| RNamedImportedType _
-| RCode _
-| RCustom _
-| RPolyType _
-| RPolyTest _
-| RExactType _
-| ROptional _
-| RMaybe _
-| RAbstract _
-| RTypeApp _
-| RThisTypeApp _
-| RExtends _
-| RStatics _
-| RSuperOf _
-| RFrozen _
-| RBound _
-| RVarianceCheck _
-| RPredicateOf _
-| RPredicateCall _
-| RPredicateCallNeg _
-| RRefined _
-| RIncompatibleInstantiation _
-| RSpreadOf _
-| RObjectPatternRestProp
-| RCommonJSExports _
-| RReactProps
-| RReactElement _
-| RReactClass
-| RReactComponent
-| RReactStatics
-| RReactDefaultProps
-| RReactState
-| RReactPropTypes
-| RReactChildren
-| RReactChildrenOrType _
-| RReactChildrenOrUndefinedOrType _
-| RReactSFC
-  -> false
+let is_nullish_reason r =
+  classification_of_reason r = `Nullish
+
+let is_scalar_reason r =
+  let c = classification_of_reason r in
+  c = `Scalar || c = `Nullish
+
+let is_array_reason r =
+  classification_of_reason r = `Array
