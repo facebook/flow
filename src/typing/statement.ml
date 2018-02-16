@@ -4755,7 +4755,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m args_ =
           let keys_reason = replace_reason (fun desc ->
             RCustom (spf "element of %s" (string_of_desc desc))
           ) reason in
-          Flow.flow cx (o, GetKeysT (keys_reason, tvar));
+          Flow.flow cx (o, GetKeysT (keys_reason, UseT (unknown_use, tvar)));
         ),
         None
       )

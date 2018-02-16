@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- enum_client.js:6:5
 
-Property `LOCATION` is missing in object literal [1].
+Cannot call `foo` with `"LOCATION"` bound to `x` because property `LOCATION` is missing in object literal [1].
 
    enum_client.js:6:5
    6| foo("LOCATION"); // error
@@ -18,7 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum_client.js:10:5
 
-Property `name` is missing in object type [1].
+Cannot call `bar` with `APIKeys.NAME` bound to `x` because property `name` is missing in object type [1].
 
    enum_client.js:10:5
    10| bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum

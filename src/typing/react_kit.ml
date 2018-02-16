@@ -132,21 +132,22 @@ let run cx trace ~use_op reason_op l u
       let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l) in
       get_builtin_type cx ~trace reason "$JSXIntrinsics"
     in
-    (* GetPropT with a non-literal when there is not a dictionary will propagate
-     * any. Run the HasOwnPropT check to give the user an error if they use a
-     * non-literal without a dictionary. *)
-    (match literal with
-      | Literal _ -> ()
-      | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (reason, literal)));
-    (* Create a type variable which will represent the specific intrinsic we
-     * find in the intrinsics map. *)
-    let intrinsic = Tvar.mk cx reason in
-    (* Get the intrinsic from the map. *)
+    (* Create a use_op for the upcoming operations. *)
     let use_op = Op (ReactGetIntrinsic {
       literal = (match literal with
         | Literal (_, name) -> replace_reason_const (RIdentifier name) reason
         | _ -> reason);
     }) in
+    (* GetPropT with a non-literal when there is not a dictionary will propagate
+     * any. Run the HasOwnPropT check to give the user an error if they use a
+     * non-literal without a dictionary. *)
+    (match literal with
+      | Literal _ -> ()
+      | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, literal)));
+    (* Create a type variable which will represent the specific intrinsic we
+     * find in the intrinsics map. *)
+    let intrinsic = Tvar.mk cx reason in
+    (* Get the intrinsic from the map. *)
     rec_flow cx trace (intrinsics, GetPropT (use_op, reason, (match literal with
       | Literal (_, name) ->
         Named (replace_reason_const (RReactElement (Some name)) reason, name)
