@@ -256,6 +256,7 @@ export class TestBuilder {
         '--debug',
         '--temp-dir', this.tmpDir,
         '--no-auto-restart',
+        '--file-watcher', 'none',
       ].concat(lazyMode)
       .concat([
         this.dir,

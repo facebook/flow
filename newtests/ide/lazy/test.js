@@ -51,25 +51,6 @@ export default suite(({
                 "passed": true
               }
             ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "jsonVersion": "1",
-                "errors": [],
-                "passed": true
-              }
-            ]
           }
         ],
       )
@@ -509,25 +490,6 @@ export default suite(({
       .ideNewMessagesWithTimeout(
         5000,
         [
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "jsonVersion": "1",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
           {
             "method": "startRecheck",
             "params": []
@@ -1352,244 +1314,6 @@ export default suite(({
                 "passed": false
               }
             ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "jsonVersion": "1",
-                "errors": [
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
-                    "extra": [
-                      {
-                        "message": [
-                          {
-                            "context": null,
-                            "descr": "References:",
-                            "type": "Blame",
-                            "path": "",
-                            "line": 0,
-                            "endline": 0,
-                            "start": 1,
-                            "end": 0
-                          }
-                        ]
-                      },
-                      {
-                        "message": [
-                          {
-                            "context": "var x: string = 123;",
-                            "descr": "[1]",
-                            "type": "Blame",
-                            "loc": {
-                              "source": "errors.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 17,
-                                "offset": 25
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 19,
-                                "offset": 28
-                              }
-                            },
-                            "path": "errors.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 17,
-                            "end": 19
-                          }
-                        ]
-                      },
-                      {
-                        "message": [
-                          {
-                            "context": "var x: string = 123;",
-                            "descr": "[2]",
-                            "type": "Blame",
-                            "loc": {
-                              "source": "errors.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 16
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 13,
-                                "offset": 22
-                              }
-                            },
-                            "path": "errors.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 13
-                          }
-                        ]
-                      }
-                    ],
-                    "message": [
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 17,
-                            "offset": 25
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 19,
-                            "offset": 28
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 17,
-                        "end": 19
-                      }
-                    ]
-                  }
-                ],
-                "passed": false
-              }
-            ]
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "jsonVersion": "1",
-                "errors": [
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
-                    "extra": [
-                      {
-                        "message": [
-                          {
-                            "context": null,
-                            "descr": "References:",
-                            "type": "Blame",
-                            "path": "",
-                            "line": 0,
-                            "endline": 0,
-                            "start": 1,
-                            "end": 0
-                          }
-                        ]
-                      },
-                      {
-                        "message": [
-                          {
-                            "context": "var x: string = 123;",
-                            "descr": "[1]",
-                            "type": "Blame",
-                            "loc": {
-                              "source": "errors.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 17,
-                                "offset": 25
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 19,
-                                "offset": 28
-                              }
-                            },
-                            "path": "errors.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 17,
-                            "end": 19
-                          }
-                        ]
-                      },
-                      {
-                        "message": [
-                          {
-                            "context": "var x: string = 123;",
-                            "descr": "[2]",
-                            "type": "Blame",
-                            "loc": {
-                              "source": "errors.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 16
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 13,
-                                "offset": 22
-                              }
-                            },
-                            "path": "errors.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 13
-                          }
-                        ]
-                      }
-                    ],
-                    "message": [
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 17,
-                            "offset": 25
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 19,
-                            "offset": 28
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 17,
-                        "end": 19
-                      }
-                    ]
-                  }
-                ],
-                "passed": false
-              }
-            ]
           }
         ],
       )
@@ -1611,25 +1335,6 @@ export default suite(({
       .ideNewMessagesWithTimeout(
         5000,
         [
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "jsonVersion": "1",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
           {
             "method": "startRecheck",
             "params": []
@@ -1698,25 +1403,6 @@ export default suite(({
       .ideNewMessagesWithTimeout(
         5000,
         [
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "jsonVersion": "1",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
           {
             "method": "startRecheck",
             "params": []
