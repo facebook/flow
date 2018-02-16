@@ -543,11 +543,7 @@ module Friendly = struct
     }
 end
 
-type error' =
-  | Classic of classic_error
-  | Friendly of Friendly.t
-
-type error = error_kind * message list * error'
+type error = error_kind * message list * Friendly.t
 
 let is_duplicate_provider_error (kind, _, _) = kind = DuplicateProviderError
 
@@ -560,20 +556,7 @@ let info_to_messages = function
 let infos_to_messages infos =
   List.concat (List.map info_to_messages infos)
 
-let mk_error ?(kind=InferError) ?trace_infos ?(extra=[]) infos =
-  let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
-  let infos = match kind, infos with
-    | LintError lint_kind, (head_loc, head_str::head_tail)::tail ->
-      let prefix = (Lints.string_of_kind lint_kind) ^ ": " in
-      (head_loc, (prefix ^ head_str)::head_tail)::tail
-    | _ -> infos
-  in
-  (kind, trace, Classic {
-    messages = infos_to_messages infos;
-    extra
-  })
-
-let mk_friendly_error
+let mk_error
   ?(kind=InferError)
   ?trace_infos
   ?root
@@ -587,17 +570,13 @@ let mk_friendly_error
   | LintError kind -> message @ [text " ("; code (Lints.string_of_kind kind); text ")"]
   | _ -> message
   in
-  (kind, trace, Friendly {
+  (kind, trace, {
     loc;
     root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
     message = Normal { message; frames };
   })
 
-let empty_friendly_error = Friendly.(
-  { root = None; loc = Loc.none; message = Normal { frames = None; message = [] } }
-)
-
-let mk_friendly_speculation_error
+let mk_speculation_error
   ?(kind=InferError)
   ?trace_infos
   ~loc
@@ -608,11 +587,9 @@ let mk_friendly_speculation_error
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
   let branches = List.map (fun (score, (_, _, error)) ->
-    (score, match error with
-    | Classic _ -> empty_friendly_error
-    | Friendly error -> error)
+    (score, error)
   ) speculation_errors in
-  (kind, trace, Friendly {
+  (kind, trace, {
     loc;
     root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
     message = Speculation { frames; branches };
@@ -626,8 +603,6 @@ let to_pp = function
 
 type stdin_file = (Path.t * string) option
 
-let internal_error_prefix = "Internal error (see logs): "
-
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
@@ -635,11 +610,8 @@ let append_trace_reasons message_list trace_reasons =
     message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
 
 
-let file_location_style text = (Tty.Underline Tty.Default, text)
 let default_style text = (Tty.Normal Tty.Default, text)
 let source_fragment_style text = (Tty.Normal Tty.Default, text)
-let error_heading_style text = (Tty.Bold Tty.Red, text)
-let warning_heading_style text = (Tty.Bold Tty.Yellow, text)
 let error_fragment_style text = (Tty.Normal Tty.Red, text)
 let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
 let line_number_style text = (Tty.Bold Tty.Default, text)
@@ -757,36 +729,16 @@ let file_of_source source =
     | Some File_key.Builtins -> None
     | None -> None
 
-let loc_of_classic_error { messages; _ } =
-  match messages with
-  | message :: _ ->
-      let loc, _ = to_pp message in
-      loc
-  | _ -> Loc.none
-
-let loc_of_error ((_, _, err): error) =
-  let open Friendly in
-  match err with
-  | Classic err -> loc_of_classic_error err
-  | Friendly { loc; _ } -> loc
+let loc_of_error ((_, _, { Friendly.loc; _ }): error) =
+  loc
 
 let loc_of_error_for_compare ((_, _, err): error) =
   let open Friendly in
   match err with
-  | Classic err -> loc_of_classic_error err
-  | Friendly { root=Some {root_loc; _}; _ } -> root_loc
-  | Friendly { loc; _ } -> loc
+  | { root=Some {root_loc; _}; _ } -> root_loc
+  | { loc; _ } -> loc
 
 let locs_of_error =
-  let locs_of_info_list = List.fold_left (fun acc (loc, _) -> loc::acc)
-
-  in let rec locs_of_info_tree acc = function
-  | InfoLeaf infos -> locs_of_info_list acc infos
-  | InfoNode (infos, branches) -> locs_of_extra (locs_of_info_list acc infos) branches
-
-  and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
-  in
-
   let locs_of_message locs message = Friendly.(
     List.fold_left (fun locs feature ->
       match feature with
@@ -818,42 +770,10 @@ let locs_of_error =
     locs
   ) in
 
-  fun ((_, _, err): error) ->
-    match err with
-    | Classic { messages; extra; _ } ->
-      let extra_locs = locs_of_extra [] extra in
-      List.fold_left (fun acc message ->
-        let loc, _ = to_pp message in
-        loc::acc
-      ) extra_locs messages
-    | Friendly error ->
-      locs_of_friendly_error [] error
-
-let infos_of_error (_, _, error) =
-  match error with
-  | Classic { messages; _ } ->
-    let rev_infos = List.fold_left (
-      fun acc -> function
-      | BlameM (loc, str) -> (loc, [str]) :: acc
-      | CommentM str ->
-        match acc with
-        | (loc, strs) :: tail -> (loc, str :: strs) :: tail
-        | [] -> [Loc.none, [str]] (* shouldn't start with a comment *)
-      ) [] messages in
-    List.rev (List.map (fun (loc, strs) -> loc, List.rev strs) rev_infos)
-  | Friendly _ -> []
-
-let extra_of_error (_, _, error) =
-  match error with
-  | Classic { extra; _ } -> extra
-  | Friendly _ -> []
-
-let file_of_classic_error err =
-  let loc = loc_of_classic_error err in
-  file_of_source loc.Loc.source
+  fun ((_, _, error): error) ->
+    locs_of_friendly_error [] error
 
 let kind_of_error (kind, _, _) = kind
-
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc ~strip_root loc = Loc.(
@@ -871,11 +791,7 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
 (* first reason's position, then second reason's position, etc.; if all
    positions match then first message, then second message, etc.
 
-   for friendly errors check the location, docs slug, and then message.
-
-   friendly errors go before classic errors when the kind is the same and the
-   friendly error's location is the same as the classic error's first
-   location. *)
+   for friendly errors check the location, docs slug, and then message. *)
 let rec compare =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
@@ -892,15 +808,6 @@ let rec compare =
     in
     fun k1 k2 -> (order_of_kind k1) - (order_of_kind k2)
   in
-  let compare_message msg1 msg2 =
-    match msg1, msg2 with
-    | CommentM _, BlameM _ -> -1
-    | BlameM _, CommentM _ -> 1
-    | CommentM m1, CommentM m2 -> String.compare m1 m2
-    | BlameM (loc1, m1), BlameM (loc2, m2) ->
-        let k = Loc.compare loc1 loc2 in
-        if k = 0 then String.compare m1 m2 else k
-  in
   let rec compare_lists f list1 list2 =
     match list1, list2 with
     | [], [] -> 0
@@ -916,23 +823,6 @@ let rec compare =
     | Some _, None -> 1
     | None, Some _ -> -1
     | None, None -> 0
-  in
-  let compare_info (loc1, msgs1) (loc2, msgs2) =
-    let k = Loc.compare loc1 loc2 in
-    if k = 0 then compare_lists String.compare msgs1 msgs2 else k
-  in
-  let rec compare_info_tree tree1 tree2 =
-    match tree1, tree2 with
-    | InfoLeaf k1, InfoLeaf k2 -> compare_lists compare_info k1 k2
-    | InfoLeaf k1, InfoNode (k2, _) ->
-        let k = compare_lists compare_info k1 k2 in
-        if k = 0 then -1 else k
-    | InfoNode (k1, _), InfoLeaf k2 ->
-        let k = compare_lists compare_info k1 k2 in
-        if k = 0 then 1 else k
-    | InfoNode (k1, rest1), InfoNode (k2, rest2) ->
-        let k = compare_lists compare_info k1 k2 in
-        if k = 0 then compare_lists compare_info_tree rest1 rest2 else k
   in
   let compare_message_inline m1 m2 =
     let open Friendly in
@@ -966,7 +856,7 @@ let rec compare =
         let k = List.length b1 - List.length b2 in
         if k = 0 then
           compare_lists (fun (_, err1) (_, err2) ->
-            compare (InferError, [], Friendly err1) (InferError, [], Friendly err2)
+            compare (InferError, [], err1) (InferError, [], err2)
           ) b1 b2
         else k
       else k
@@ -979,25 +869,18 @@ let rec compare =
     if k = 0 then
       let k = kind_cmp k1 k2 in
       if k = 0 then match err1, err2 with
-      | Friendly _, Classic _ -> 1
-      | Classic _, Friendly _ -> -1
-      | Classic { messages = ml1; extra = extra1 },
-        Classic { messages = ml2; extra = extra2 } ->
-        let k = compare_lists compare_message ml1 ml2 in
-        if k = 0 then compare_lists compare_info_tree extra1 extra2
-        else k
-      | Friendly { root=Some _; _ }, Friendly { root=None; _ } -> -1
-      | Friendly { root=None; _ }, Friendly { root=Some _; _ } -> 1
-      | Friendly { root=Some { root_message=rm1; _ }; loc=loc1; message=m1 },
-        Friendly { root=Some { root_message=rm2; _ }; loc=loc2; message=m2 } ->
+      | { root=Some _; _ }, { root=None; _ } -> -1
+      | { root=None; _ }, { root=Some _; _ } -> 1
+      | { root=Some { root_message=rm1; _ }; loc=loc1; message=m1 },
+        { root=Some { root_message=rm2; _ }; loc=loc2; message=m2 } ->
         let k = compare_lists compare_message_feature rm1 rm2 in
         if k = 0 then
           let k = Loc.compare loc1 loc2 in
           if k = 0 then compare_friendly_message m1 m2
           else k
         else k
-      | Friendly { root=None; message=m1; _ },
-        Friendly { root=None; message=m2; _ } ->
+      | { root=None; message=m1; _ },
+        { root=None; message=m2; _ } ->
         compare_friendly_message m1 m2
       else k
     else k
@@ -1012,14 +895,12 @@ end
 module ErrorSet = Set.Make(Error)
 
 type error_group =
-  (* Classic errors are never grouped. *)
-  | ClassicSingleton of error_kind * message list * classic_error
   (* Friendly errors without a root are never grouped. When traces are enabled
    * all friendly errors will never group. *)
-  | FriendlySingleton of error_kind * message list * Friendly.t
+  | Singleton of error_kind * message list * Friendly.t
   (* Friendly errors that share a root are grouped together. The errors list
    * is reversed. *)
-  | FriendlyGroup of {
+  | Group of {
       kind: error_kind;
       root: Loc.t Friendly.error_root;
       errors_rev: Friendly.t Nel.t;
@@ -1036,19 +917,14 @@ let collect_errors_into_groups max set =
     let (_, acc) = ErrorSet.fold (fun (kind, trace, error) (n, acc) ->
       let omit = Option.value_map max ~default:false ~f:(fun max -> max <= n) in
       let acc = match error with
-      (* If the error is not a candidate for grouping then add a singleton to
-       * our accumulator. *)
-      | Classic error ->
+      | error when trace <> [] ->
         if omit then raise (Interrupt_ErrorSet_fold acc);
-        ClassicSingleton (kind, trace, error) :: acc
-      | Friendly error when trace <> [] ->
+        Singleton (kind, trace, error) :: acc
+      | ({ root = None; _ } as error) ->
         if omit then raise (Interrupt_ErrorSet_fold acc);
-        FriendlySingleton (kind, trace, error) :: acc
-      | Friendly ({ root = None; _ } as error) ->
-        if omit then raise (Interrupt_ErrorSet_fold acc);
-        FriendlySingleton (kind, trace, error) :: acc
+        Singleton (kind, trace, error) :: acc
       (* Friendly errors with a root might need to be grouped. *)
-      | Friendly ({ root = Some root; _ } as error) ->
+      | ({ root = Some root; _ } as error) ->
         (match acc with
         (* When the root location and message match the previous group, add our
          * friendly error to the group. We can do this by only looking at the last
@@ -1057,12 +933,12 @@ let collect_errors_into_groups max set =
          *
          * If we are now omitting errors then increment the omitted count
          * instead of adding a message. *)
-        | FriendlyGroup {kind = kind'; root = root'; errors_rev; omitted} :: acc' when (
+        | Group {kind = kind'; root = root'; errors_rev; omitted} :: acc' when (
             kind = kind' &&
             Loc.compare root.root_loc root'.root_loc = 0 &&
             root.root_message = root'.root_message
           ) ->
-          FriendlyGroup {
+          Group {
             kind = kind';
             root = root';
             errors_rev = if omit then errors_rev else Nel.cons error errors_rev;
@@ -1071,7 +947,7 @@ let collect_errors_into_groups max set =
         (* If the roots did not match then we have a friendly singleton. *)
         | _ ->
           if omit then raise (Interrupt_ErrorSet_fold acc);
-          FriendlyGroup {
+          Group {
             kind = kind;
             root = root;
             errors_rev = Nel.one error;
@@ -1104,12 +980,6 @@ module Cli_output = struct
   let severity_fragment_style = function
   | Err -> error_fragment_style
   | Warn -> warning_fragment_style
-  | Off ->
-    Utils_js.assert_false "CLI output is only called with warnings and errors."
-
-  let severity_heading_style = function
-  | Err -> error_heading_style
-  | Warn -> warning_heading_style
   | Off ->
     Utils_js.assert_false "CLI output is only called with warnings and errors."
 
@@ -1277,121 +1147,8 @@ module Cli_output = struct
     let loc, s = to_pp message in
     print_file_at_location ~strip_root ~severity stdin_file main_file loc s
 
-  let print_extra_info =
-    let nonterm_newline = Str.regexp "\n\\(.\\)" in
-    let rec f ~strip_root ~severity stdin_file main_file indent tree =
-      let infos, kids = match tree with
-        | InfoLeaf infos -> infos, []
-        | InfoNode (infos, kids) -> infos, kids
-      in
-      let lines = List.map (fun (loc, strs) ->
-        let msg = String.concat ". " strs in
-        let lines =
-          print_file_at_location ~strip_root ~severity stdin_file main_file loc msg in
-        match lines with
-        | [] -> []
-        | (style, str) :: lines ->
-          let nonterm_newline_plus_indent = Utils_js.spf "\n%s\\1" indent in
-          (style, indent ^ str) :: (List.map (
-            fun (style, s) ->
-              style,
-              Str.global_replace nonterm_newline nonterm_newline_plus_indent s
-            ) lines
-          )
-      ) infos in
-      lines @ List.concat (
-        List.map (f ~strip_root ~severity stdin_file main_file ("  " ^ indent)) kids
-      )
-    in fun ~strip_root ~severity stdin_file main_file tree ->
-      List.concat (f ~strip_root ~severity stdin_file main_file "  " tree)
-
-  let print_error_header ~strip_root ~kind ~severity message =
-    let loc, _ = to_pp message in
-    let prefix, relfilename = match loc.Loc.source with
-      | Some File_key.LibFile filename ->
-        let header = match kind with
-        | ParseError -> "Library parse error:"
-        | InferError -> "Library type error:"
-        (* "InferWarning"s should still really be treated as errors. *)
-        | InferWarning -> "Library type error:"
-        | InternalError -> internal_error_prefix
-        (* TODO: is this possible? What happens when there are two `declare
-           module`s with the same name? *)
-        | DuplicateProviderError -> "Library duplicate provider error:"
-        | RecursionLimitError -> "Library recursion limit error:"
-        | LintError lint_kind ->
-          let lint_string = Lints.string_of_kind lint_kind in
-          Printf.sprintf "Library lint %s (%s):"
-            (output_string_of_severity severity) lint_string
-        in
-        [comment_file_style (header^"\n")],
-        relative_lib_path ~strip_root filename
-      | Some File_key.SourceFile filename
-      | Some File_key.JsonFile filename
-      | Some File_key.ResourceFile filename ->
-        let heading_style = severity_heading_style severity in
-        let severity_str = severity
-          |> output_string_of_severity
-          |> String.capitalize_ascii
-        in
-        [heading_style (severity_str ^ ":"); default_style " "], relative_path ~strip_root filename
-      | Some File_key.Builtins -> [], "[No file]"
-      | None -> [], "[No file]"
-    in
-    let file_loc = Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line) in
-    prefix @ [
-      file_location_style file_loc;
-      default_style "\n"
-    ]
-
-  let append_comment blame comment =
-    match blame with
-    | BlameM(loc, s) ->
-      (match comment with
-      (* Almost everywhere we have "Error:" that hurts readability *)
-      | "Error:" -> BlameM(loc, s)
-      | comment ->
-        let combined_comment = if String.length s > 0
-          then s ^ ". " ^ comment
-          else comment
-        in
-        BlameM(loc, combined_comment))
-    | CommentM(_) -> failwith "should not be comment"
-
-  let maybe_combine_message_text messages message =
-    match message with
-      | BlameM (_, _) -> message :: messages
-      | CommentM s ->
-        match messages with
-        | x :: xs -> append_comment x s :: xs
-        | _ -> failwith "can't append comment to nonexistent blame"
-
-  let merge_comments_into_blames messages =
-    List.fold_left maybe_combine_message_text [] messages |> List.rev
-
   let remove_newlines (color, text) =
     (color, Str.global_replace (Str.regexp "\n") "\\n" text)
-
-  let get_pretty_printed_classic_error
-    ~stdin_file
-    ~strip_root
-    ~severity
-    kind trace error
-  =
-    let { messages; extra } = error in
-    let messages = append_trace_reasons messages trace in
-    let messages = merge_comments_into_blames messages in
-    let header = print_error_header ~strip_root ~kind ~severity (List.hd messages) in
-    let main_file = match file_of_classic_error error with
-      | Some filename -> filename
-      | None -> "[No file]" in
-    let formatted_messages = List.concat (List.map (
-      print_message_nice ~strip_root ~severity stdin_file main_file
-    ) messages) in
-    let formatted_extra = List.concat (List.map (
-      print_extra_info ~strip_root ~severity stdin_file main_file
-    ) extra) in
-    header @ formatted_messages @ formatted_extra @ [default_style "\n"]
 
   (* ==========================
    * Full Terminal Width Header
@@ -2655,16 +2412,10 @@ module Cli_output = struct
       (a, b)
     in
     match group with
-    | ClassicSingleton (kind, trace, error) ->
-      get_pretty_printed_classic_error
-        ~stdin_file
-        ~strip_root
-        ~severity
-        kind trace error
     (* Singleton errors concatenate the optional error root with the error
      * message and render a single message. Sometimes singletons will also
      * render a trace. *)
-    | FriendlySingleton (_, trace, error) ->
+    | Singleton (_, trace, error) ->
       let open Friendly in
       let (primary_loc, { group_message; group_message_list }) =
         check (message_group_of_error ~show_all_branches ~show_root:true error) in
@@ -2683,7 +2434,7 @@ module Cli_output = struct
     (* Groups either render a single error (if there is only a single group
      * member) or a group will render a list of errors where some are
      * optionally omitted. *)
-    | FriendlyGroup { kind=_; root; errors_rev; omitted } ->
+    | Group { kind=_; root; errors_rev; omitted } ->
       let open Friendly in
       (* Constructs the message group. *)
       let (primary_locs, message_group) = match errors_rev with
@@ -2912,11 +2663,7 @@ module Json_output = struct
     ] in
     props @
     (* add the error type specific props *)
-    (match error with
-    | Classic error ->
-      json_of_classic_error_props ~json_of_message error
-    | Friendly error ->
-      json_of_classic_error_props ~json_of_message (Friendly.to_classic error)) @
+    (json_of_classic_error_props ~json_of_message (Friendly.to_classic error)) @
     (* add trace if present *)
     match trace with
     | [] -> []
@@ -3020,12 +2767,7 @@ module Vim_emacs_output = struct
       Buffer.contents buf
     in
     let to_string ~strip_root prefix ((_, trace, error) : error) : string =
-      match error with
-      | Classic error ->
-        classic_to_string ~strip_root prefix trace error
-      | Friendly error ->
-        classic_to_string ~strip_root prefix trace (Friendly.to_classic error)
-    in
+      classic_to_string ~strip_root prefix trace (Friendly.to_classic error) in
     fun ~strip_root oc ~errors ~warnings () ->
       let sl = []
         |> ErrorSet.fold (fun err acc ->
