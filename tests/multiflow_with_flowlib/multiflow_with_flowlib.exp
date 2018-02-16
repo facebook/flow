@@ -1,8 +1,8 @@
 Error --------------------------------------------------------------------------------------------------- spread.js:14:1
 
 Cannot call `funWithRestArray` because:
- - string [1] is incompatible with number literal `123` [2] in the rest argument.
- - string [1] is incompatible with number [3] in array element of the rest argument.
+ - string [1] is incompatible with number literal `123` [2].
+ - string [1] is incompatible with number [3] in array element.
 
    spread.js:14:1
    14| funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);

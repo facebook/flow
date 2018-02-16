@@ -1280,8 +1280,8 @@ References:
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
 
 Cannot call `process.nextTick` because:
- - number [1] is incompatible with string [2] in the first argument of the rest argument.
- - null [3] is incompatible with boolean [4] in the third argument of the rest argument.
+ - number [1] is incompatible with string [2] in the first argument.
+ - null [3] is incompatible with boolean [4] in the third argument.
 
    process/nextTick.js:12:1
        v----------------
@@ -1310,8 +1310,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:19:1
 
-Cannot call `process.nextTick` because string [1] is incompatible with number [2] in the second argument of the rest
-argument.
+Cannot call `process.nextTick` because string [1] is incompatible with number [2] in the second argument.
 
    process/nextTick.js:19:1
        v----------------
@@ -1334,8 +1333,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:26:1
 
-Cannot call `process.nextTick` because function [1] requires another argument from function type [2] in the rest
-argument.
+Cannot call `process.nextTick` because function [1] requires another argument from function type [2].
 
    process/nextTick.js:26:1
          v----------------

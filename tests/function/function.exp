@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:25:1
 
-Cannot call `test.apply` because string [1] is incompatible with number [2] in the rest argument.
+Cannot call `test.apply` because string [1] is incompatible with number [2].
 
    apply.js:25:1
     25| test.apply("", "not array"); // error: expect array of args
@@ -764,7 +764,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because:
  - string [1] is not an array.
- - rest array [2] is incompatible with string [1] in the rest argument.
+ - rest array [2] is incompatible with string [1].
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors
