@@ -1824,33 +1824,28 @@ let rec error_of_msg ~trace_reasons ~source_file =
       typecheck_error_with_core_infos ~extra msgs
     )
 
-  (* TODO: friendlify *)
-  | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->
-      let infos = List.map info_of_reason case_rs in
-      let extra = [
-        InfoLeaf [
-          Loc.none, [spf "Case %d may work:" (prev_i + 1)];
-          info_of_reason prev_case;
-        ];
-        InfoLeaf [
-          Loc.none, [spf
-            "But if it doesn't, case %d looks promising too:"
-            (i + 1)];
-          info_of_reason case;
-        ];
-        InfoLeaf (
-          (Loc.none, [spf
-            "Please provide additional annotation(s) to determine whether \
-             case %d works (or consider merging it with case %d):"
-            (prev_i + 1)
-            (i + 1)]
-          )::infos
-        )
-      ] in
-      mk_error ~trace_infos ~extra [
-        (mk_info case_r ["Could not decide which case to select"]);
-        (info_of_reason r)
-      ]
+  | ESpeculationAmbiguous ((union_r, _), (prev_i, prev_case), (i, case), case_rs) ->
+    let open Friendly in
+    let prev_case_r =
+      mk_reason (RCustom
+        ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
+    in
+    let case_r =
+      mk_reason (RCustom
+        ("case " ^ string_of_int (i + 1))) (loc_of_reason case)
+    in
+    mk_friendly_error (loc_of_reason union_r) (
+      [
+        text "Could not decide which case to select. Since "; ref prev_case_r; text " ";
+        text "may work but if it doesn't "; ref case_r; text " looks promising ";
+        text "too. To fix add a type annotation ";
+      ] @
+      (conjunction_concat ~conjunction:"or" (List.map (fun case_r ->
+        let text = "to " ^ (string_of_desc (desc_of_reason case_r)) in
+        [ref (mk_reason (RCustom text) (loc_of_reason case_r))]
+      ) case_rs)) @
+      [text "."]
+    )
 
   | EIncompatibleWithExact (reasons, use_op) ->
     let (lower, upper) = reasons in
