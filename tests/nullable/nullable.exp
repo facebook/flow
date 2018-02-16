@@ -61,9 +61,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:16:3
 
-Cannot cast `any` to union type because:
- - Either null or undefined [1] is incompatible with number [2].
- - Or null or undefined [1] is incompatible with null [3].
+Cannot cast `any` to union type because null or undefined [1] is incompatible with null [2].
 
    error.js:16:3
    16| ((any: ?number): number | null);
@@ -73,19 +71,14 @@ References:
    error.js:16:8
    16| ((any: ?number): number | null);
               ^^^^^^^ [1]
-   error.js:16:18
-   16| ((any: ?number): number | null);
-                        ^^^^^^ [2]
    error.js:16:27
    16| ((any: ?number): number | null);
-                                 ^^^^ [3]
+                                 ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:17:3
 
-Cannot cast `any` to union type because:
- - Either null or undefined [1] is incompatible with number [2].
- - Or null or undefined [1] is incompatible with undefined [3].
+Cannot cast `any` to union type because null or undefined [1] is incompatible with undefined [2].
 
    error.js:17:3
    17| ((any: ?number): number | void);
@@ -95,12 +88,9 @@ References:
    error.js:17:8
    17| ((any: ?number): number | void);
               ^^^^^^^ [1]
-   error.js:17:18
-   17| ((any: ?number): number | void);
-                        ^^^^^^ [2]
    error.js:17:27
    17| ((any: ?number): number | void);
-                                 ^^^^ [3]
+                                 ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- maybe.js:5:3
@@ -189,3 +179,6 @@ References:
 
 
 Found 13 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -506,10 +506,15 @@ let score_of_msg msg =
     in
     match reasons with
     | Some ((rl, ru)) ->
+      if is_nullish_reason rl && is_nullish_reason ru then reason_score else
+      (* T ~> null should have a lower score then T ~> scalar *)
+      if is_nullish_reason rl || is_nullish_reason ru then 0 else
+
       if is_scalar_reason rl && is_scalar_reason ru then reason_score else
-      if is_scalar_reason rl || is_scalar_reason ru then 0 else
+      if is_scalar_reason rl || is_scalar_reason ru then 1 else
+
       if is_array_reason rl && is_array_reason ru then reason_score else
-      if is_array_reason rl || is_array_reason ru then 0 else
+      if is_array_reason rl || is_array_reason ru then 1 else
       reason_score
     | None ->
       reason_score

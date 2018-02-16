@@ -1345,9 +1345,10 @@ Error --------------------------------------------------------------------------
 
 Cannot call `process.emitWarning` because:
  - Either undefined [1] is incompatible with string [2].
- - Or function type [3] requires another argument from call of method `emitWarning` [1].
+ - Or undefined [1] is incompatible with `Error` [3].
  - Or function type [4] requires another argument from call of method `emitWarning` [1].
  - Or function type [5] requires another argument from call of method `emitWarning` [1].
+ - Or function type [6] requires another argument from call of method `emitWarning` [1].
 
    process/process.js:10:1
      10| process.emitWarning(); // error
@@ -1357,12 +1358,15 @@ References:
    <BUILTINS>/node.js:1933:24
    1933|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
+   <BUILTINS>/node.js:1933:33
+   1933|   emitWarning(warning: string | Error): void;
+                                         ^^^^^ [3]
    <BUILTINS>/node.js:1934:3
    1934|   emitWarning(warning: string, typeOrCtor: string | Function): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/node.js:1935:3
    1935|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/node.js:1936:3
            v-----------
    1936|   emitWarning(
@@ -1371,7 +1375,7 @@ References:
    1939|     code: string,
    1940|     ctor?: Function
    1941|   ): void;
-           ------^ [5]
+           ------^ [6]
 
 
 Error ------------------------------------------------------------------------------------------ process/process.js:11:1
