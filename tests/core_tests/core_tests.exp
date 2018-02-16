@@ -14,11 +14,11 @@ References:
    map.js:23:22
     23|     let x = new Map(['foo', 123]); // error
                              ^^^^^ [1]
-   <BUILTINS>/core.js:542:37
-   542|     constructor(iterable: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:555:37
+   555|     constructor(iterable: ?Iterable<[K, V]>): void;
                                             ^^^^^^ [2]
-   <BUILTINS>/core.js:496:22
-   496| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:509:22
+   509| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
    map.js:23:29
     23|     let x = new Map(['foo', 123]); // error
@@ -42,8 +42,8 @@ References:
    map.js:24:16
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                        ^^^^^^ [2]
-   <BUILTINS>/core.js:540:19
-   540| declare class Map<K, V> {
+   <BUILTINS>/core.js:553:19
+   553| declare class Map<K, V> {
                           ^ [3]
    map.js:24:51
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -51,8 +51,8 @@ References:
    map.js:24:24
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                ^^^^^^ [5]
-   <BUILTINS>/core.js:540:22
-   540| declare class Map<K, V> {
+   <BUILTINS>/core.js:553:22
+   553| declare class Map<K, V> {
                              ^ [6]
 
 
@@ -67,8 +67,8 @@ Cannot cast `x.get(...)` to boolean because:
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:547:22
-   547|     get(key: K): V | void;
+   <BUILTINS>/core.js:560:22
+   560|     get(key: K): V | void;
                              ^^^^ [1]
    map.js:29:20
     29|     (x.get('foo'): boolean); // error, string | void
@@ -102,8 +102,8 @@ since `z` is not a member of the set.
                           ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:330:21
-   330| type RegExp$flags = $CharSet<"gimsuy">
+   <BUILTINS>/core.js:343:21
+   343| type RegExp$flags = $CharSet<"gimsuy">
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -117,8 +117,8 @@ since `z` is not a member of the set.
                               ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:330:21
-   330| type RegExp$flags = $CharSet<"gimsuy">
+   <BUILTINS>/core.js:343:21
+   343| type RegExp$flags = $CharSet<"gimsuy">
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -140,11 +140,11 @@ References:
    weakset.js:19:24
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ [1]
-   <BUILTINS>/core.js:580:26
-   580| declare class WeakSet<T: Object> {
+   <BUILTINS>/core.js:593:26
+   593| declare class WeakSet<T: Object> {
                                  ^^^^^^ [2]
-   <BUILTINS>/core.js:496:22
-   496| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:509:22
+   509| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
    weakset.js:19:27
     19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -167,11 +167,11 @@ References:
    weakset.js:29:31
     29| function* numbers(): Iterable<number> {
                                       ^^^^^^ [1]
-   <BUILTINS>/core.js:580:26
-   580| declare class WeakSet<T: Object> {
+   <BUILTINS>/core.js:593:26
+   593| declare class WeakSet<T: Object> {
                                  ^^^^^^ [2]
-   <BUILTINS>/core.js:502:22
-   502| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:515:22
+   515| interface $Iterable<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 

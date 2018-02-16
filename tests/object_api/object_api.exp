@@ -198,8 +198,8 @@ Cannot call method `doesNotExist` because property `doesNotExist` is missing in 
            ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:25:15
-   25| declare class Object {
+   <BUILTINS>/core.js:38:15
+   38| declare class Object {
                      ^^^^^^ [1]
 
 
@@ -220,8 +220,8 @@ Cannot assign `x.toString` to `xToString` because function type [1] is incompati
                                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:54:5
-   54|     toString(): string;
+   <BUILTINS>/core.js:66:5
+   66|     toString(): string;
            ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:38:17
    38| var xToString : number = x.toString; // error
@@ -237,8 +237,8 @@ Cannot assign `x.toString` to `xToString2` because string [1] is incompatible wi
                                        ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:54:17
-   54|     toString(): string;
+   <BUILTINS>/core.js:66:17
+   66|     toString(): string;
                        ^^^^^^ [1]
    object_prototype.js:39:24
    39| var xToString2 : () => number = x.toString; // error
@@ -254,8 +254,8 @@ Cannot assign `y.toString` to `yToString` because function type [1] is incompati
                                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:54:5
-   54|     toString(): string;
+   <BUILTINS>/core.js:66:5
+   66|     toString(): string;
            ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:43:17
    43| var yToString : number = y.toString; // error
@@ -285,8 +285,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is i
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:144:22
-   144|     toString(radix?: number): string;
+   <BUILTINS>/core.js:157:22
+   157|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -299,8 +299,8 @@ Cannot call `123.toString` with `null` bound to `radix` because null [1] is inco
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:144:22
-   144|     toString(radix?: number): string;
+   <BUILTINS>/core.js:157:22
+   157|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -321,8 +321,8 @@ Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] 
                                       ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:50:5
-   50|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:62:5
+   62|     hasOwnProperty(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:71:23
    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
@@ -339,8 +339,8 @@ value.
                                                          ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:50:32
-   50|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:62:32
+   62|     hasOwnProperty(prop: any): boolean;
                                       ^^^^^^^ [1]
    object_prototype.js:72:42
    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -356,8 +356,8 @@ Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] 
                                       ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:50:5
-   50|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:62:5
+   62|     hasOwnProperty(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:76:23
    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -382,8 +382,8 @@ number [2].
                                             ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:52:5
-   52|     propertyIsEnumerable(prop: any): boolean;
+   <BUILTINS>/core.js:64:5
+   64|     propertyIsEnumerable(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:96:29
    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
@@ -400,8 +400,8 @@ in the return value.
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:52:38
-   52|     propertyIsEnumerable(prop: any): boolean;
+   <BUILTINS>/core.js:64:38
+   64|     propertyIsEnumerable(prop: any): boolean;
                                             ^^^^^^^ [1]
    object_prototype.js:97:48
    97| var xPropertyIsEnumerable2 : (prop: string) => number =
@@ -418,8 +418,8 @@ number [2].
                                              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:52:5
-    52|     propertyIsEnumerable(prop: any): boolean;
+   <BUILTINS>/core.js:64:5
+    64|     propertyIsEnumerable(prop: any): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:102:29
    102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -443,8 +443,8 @@ Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:411:5
-   411|     valueOf(): number;
+   <BUILTINS>/core.js:424:5
+   424|     valueOf(): number;
             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
    122| var xValueOf : number = x.valueOf; // error
@@ -460,8 +460,8 @@ Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:55:5
-    55|     valueOf(): Object;
+   <BUILTINS>/core.js:67:5
+    67|     valueOf(): Object;
             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
@@ -485,8 +485,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:407:5
-   407|     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
+   <BUILTINS>/core.js:420:5
+   420|     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
    150| var xToLocaleString : number = x.toLocaleString; // error
@@ -503,8 +503,8 @@ value.
                                               ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:407:85
-   407|     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
+   <BUILTINS>/core.js:420:85
+   420|     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
                                                                                             ^^^^^^ [1]
    object_prototype.js:151:30
    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -520,8 +520,8 @@ Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:53:5
-    53|     toLocaleString(): string;
+   <BUILTINS>/core.js:65:5
+    65|     toLocaleString(): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:155:23
    155| var yToLocaleString : number = y.toLocaleString; // error
@@ -537,8 +537,8 @@ Cannot cast `o1_proto.toString` to empty because function type [1] is incompatib
         ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:54:5
-   54|     toString(): string;
+   <BUILTINS>/core.js:66:5
+   66|     toString(): string;
            ^^^^^^^^^^^^^^^^^^ [1]
    proto.js:3:21
     3| (o1_proto.toString: empty); // error: function ~> empty
