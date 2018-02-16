@@ -1023,9 +1023,8 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         `Frame (lower, use_op,
           [text "the "; text (Utils_js.ordinal n); text " argument"])
 
-      | Frame (FunRestParam {lower; _}, use_op) ->
-        `Frame (lower, use_op,
-          [text "the rest argument"])
+      | Frame (FunRestParam _, use_op) ->
+        `Next use_op
 
       | Frame (FunReturn {lower; _}, use_op) ->
         `Frame (repos_reason loc lower, use_op,
