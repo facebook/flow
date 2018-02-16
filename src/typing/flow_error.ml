@@ -421,6 +421,7 @@ let score_of_use_op ~root_use_op use_op =
       | FunMissingArg _ -> 0
       (* Higher signal then PropertyCompatibility, for example. *)
       | TypeArgCompatibility _ -> type_arg_frame_score
+      | ArrayElementCompatibility _ -> type_arg_frame_score
       (* Higher signal then TypeArgCompatibility. *)
       | TupleElementCompatibility _ -> tuple_element_frame_score
       (* If we error-ed on a sentinel prop compatibility then tank the score of
@@ -680,6 +681,7 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
 
   (* Flip the lower/upper reasons of a frame_use_op. *)
   let flip_frame = function
+  | ArrayElementCompatibility c -> ArrayElementCompatibility {lower = c.upper; upper = c.lower}
   | FunCompatibility c -> FunCompatibility {lower = c.upper; upper = c.lower}
   | FunParam c -> FunParam {c with lower = c.upper; upper = c.lower}
   | FunRestParam c -> FunRestParam {lower = c.upper; upper = c.lower}
@@ -810,6 +812,14 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
     let msg = "Has some incompatible tuple element with" in
     unwrap_use_ops ((lower, upper), extra, msg) use_op
   | Frame (TypeArgCompatibility {name=x; lower=reason_op; upper=reason_tapp; _}, use_op) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "Type argument `%s` is incompatible:" x)
+    in
+    let msg = "Has some incompatible type argument with" in
+    unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
+  | Frame (ArrayElementCompatibility {lower=reason_op; upper=reason_tapp}, use_op) ->
+    let x = "T" in
     let extra =
       extra_info_of_use_op reasons extra msg
         (spf "Type argument `%s` is incompatible:" x)
@@ -1005,6 +1015,10 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         `Root (loc_reason, None,
           [text "Cannot assign "; desc value; text " to "; desc prop])
 
+      | Frame (ArrayElementCompatibility {lower; _}, use_op) ->
+        `Frame (lower, use_op,
+          [text "array element"])
+
       | Frame (FunParam {n; lower; _}, use_op) ->
         `Frame (lower, use_op,
           [text "the "; text (Utils_js.ordinal n); text " argument"])
@@ -1065,9 +1079,9 @@ let rec error_of_msg ?(friendly=true) ~trace_reasons ~source_file =
         `Frame (lower, use_op,
           [text "index "; text (string_of_int (n - 1))])
 
-      | Frame (TypeArgCompatibility {name; lower; _}, use_op) ->
+      | Frame (TypeArgCompatibility {targ; lower; _}, use_op) ->
         `Frame (lower, use_op,
-          [text "type argument "; code name])
+          [text "type argument "; ref targ])
 
       | Frame (TypeParamBound {name}, use_op) ->
         `FrameWithoutLoc (use_op,

@@ -70,19 +70,22 @@ Error: method_shadow.js:42
 
 Error -------------------------------------------------------------------------------------------- method_shadow.js:43:2
 
-Cannot cast `g.m(...)` to `G` because in type argument `T`, string [1] is incompatible with number [2].
+Cannot cast `g.m(...)` to `G` because in type argument `T` [1], string [2] is incompatible with number [3].
 
    method_shadow.js:43:2
    43| (g.m(""): G<number>); // err, string ~> number
         ^^^^^^^
 
 References:
+   method_shadow.js:34:9
+   34| class G<T> {
+               ^ [1]
    method_shadow.js:43:6
    43| (g.m(""): G<number>); // err, string ~> number
-            ^^ [1]
+            ^^ [2]
    method_shadow.js:43:13
    43| (g.m(""): G<number>); // err, string ~> number
-                   ^^^^^^ [2]
+                   ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18

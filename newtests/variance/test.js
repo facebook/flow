@@ -691,7 +691,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:44
            44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
-                              ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is read-only in object type [1] but writable in object type [2].
+                              ^^^^^^ Cannot cast array literal to array type because in array element, property \`p\` is read-only in object type [1] but writable in object type [2].
             References:
              44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
                                 ^^^^^^ [1]
@@ -705,7 +705,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:46
            46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
-                              ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is write-only in object type [1] but readable in object type [2].
+                              ^^^^^^ Cannot cast array literal to array type because in array element, property \`p\` is write-only in object type [1] but readable in object type [2].
             References:
              46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
                                 ^^^^^^ [1]
@@ -719,7 +719,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:48
            48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
-                              ^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is writable in object type [1] but read-only in object type [2].
+                              ^^^^^ Cannot cast array literal to array type because in array element, property \`p\` is writable in object type [1] but read-only in object type [2].
             References:
              48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
                                 ^^^^^ [1]
@@ -736,7 +736,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
-                              ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is write-only in object type [1] but read-only in object type [2].
+                              ^^^^^^ Cannot cast array literal to array type because in array element, property \`p\` is write-only in object type [1] but read-only in object type [2].
             References:
              52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
                                 ^^^^^^ [1]
@@ -750,7 +750,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
-                              ^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is readable in object type [1] but write-only in object type [2].
+                              ^^^^^ Cannot cast array literal to array type because in array element, property \`p\` is readable in object type [1] but write-only in object type [2].
             References:
              54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
                                 ^^^^^ [1]
@@ -764,7 +764,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
-                              ^^^^^^ Cannot cast array literal to array type because in type argument \`T\`, property \`p\` is read-only in object type [1] but write-only in object type [2].
+                              ^^^^^^ Cannot cast array literal to array type because in array element, property \`p\` is read-only in object type [1] but write-only in object type [2].
             References:
              56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
                                 ^^^^^^ [1]

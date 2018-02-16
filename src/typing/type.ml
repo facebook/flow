@@ -312,6 +312,7 @@ module rec TypeTerm : sig
     | UnknownUse
 
   and frame_use_op =
+    | ArrayElementCompatibility of { lower: reason; upper: reason }
     | FunCompatibility of { lower: reason; upper: reason }
     | FunMissingArg of { n: int; op: reason; def: reason }
     | FunParam of { n: int; name: string option; lower: reason; upper: reason }
@@ -329,6 +330,7 @@ module rec TypeTerm : sig
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
     | TypeArgCompatibility of {
         name: string;
+        targ: reason;
         lower: reason;
         upper: reason;
         polarity: polarity;
@@ -886,7 +888,7 @@ module rec TypeTerm : sig
 
   and insttype = {
     class_id: ident;
-    type_args: t SMap.t;
+    type_args: (reason * t) SMap.t;
     arg_polarities: polarity SMap.t;
     fields_tmap: Properties.id;
     initialized_field_names: SSet.t;
@@ -900,7 +902,7 @@ module rec TypeTerm : sig
     opaque_id: int;
     underlying_t: t option;
     super_t: t option;
-    opaque_type_args: t SMap.t;
+    opaque_type_args: (reason * t) SMap.t;
     opaque_arg_polarities: polarity SMap.t;
     opaque_name: string;
   }
@@ -2678,6 +2680,7 @@ let string_of_root_use_op = function
 | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op = function
+| ArrayElementCompatibility _ -> "ArrayElementCompatibility"
 | FunCompatibility _ -> "FunCompatibility"
 | FunMissingArg _ -> "FunMissingArg"
 | FunParam _ -> "FunParam"

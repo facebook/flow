@@ -14,19 +14,22 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:6:41
 
-Cannot assign `c` to `a` because in type argument `Z`, boolean [1] is incompatible with array type [2].
+Cannot assign `c` to `a` because in type argument `Z` [1], boolean [2] is incompatible with array type [3].
 
    test3.js:6:41
    6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
                                               ^
 
 References:
+   test3.js:1:15
+   1| class A<X, Y, Z> {}
+                    ^ [1]
    test3.js:2:35
    2| class B extends A<string, number, bool> {}
-                                        ^^^^ [1]
+                                        ^^^^ [2]
    test3.js:6:26
    6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                               ^^^^^^^^^^^ [2]
+                               ^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test4.js:7:20

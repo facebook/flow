@@ -1007,8 +1007,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:103:1
 
 Cannot call `React.createElement` because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with number [2].
+ - in property `children` and then array element, array literal [1] is incompatible with number [2].
+ - in property `children` and then array element, array literal [3] is incompatible with number [2].
 
    create_element.js:103:1
    103| React.createElement(F, {}, [1, 2], [3, 4]); // Error
@@ -1140,8 +1140,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:118:1
 
 Cannot call `React.createElement` because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with number [2].
+ - in property `children` and then array element, array literal [1] is incompatible with number [2].
+ - in property `children` and then array element, array literal [3] is incompatible with number [2].
 
    create_element.js:118:1
    118| React.createElement(G, {}, [1, 2], [3, 4]); // Error
@@ -1196,8 +1196,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:133:1
 
 Cannot call `React.createElement` because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with number [2].
+ - in property `children` and then array element, array literal [1] is incompatible with number [2].
+ - in property `children` and then array element, array literal [3] is incompatible with number [2].
 
    create_element.js:133:1
    133| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
@@ -2351,8 +2351,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_factory.js:108:1
 
 Cannot call `fFactory` because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with number [2].
+ - in property `children` and then array element, array literal [1] is incompatible with number [2].
+ - in property `children` and then array element, array literal [3] is incompatible with number [2].
 
    create_factory.js:108:1
    108| fFactory({}, [1, 2], [3, 4]); // Error
@@ -2484,8 +2484,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_factory.js:124:1
 
 Cannot call `gFactory` because:
- - in property `children` and then type argument `T`, array literal [1] is incompatible with number [2].
- - in property `children` and then type argument `T`, array literal [3] is incompatible with number [2].
+ - in property `children` and then array element, array literal [1] is incompatible with number [2].
+ - in property `children` and then array element, array literal [3] is incompatible with number [2].
 
    create_factory.js:124:1
    124| gFactory({}, [1, 2], [3, 4]); // Error

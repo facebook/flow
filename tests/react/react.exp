@@ -1217,20 +1217,23 @@ References:
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:8:2
 
-Cannot cast `<Foo />` to `Element` because in property `type` and then type argument `Props`, property `b` is missing in
-object type [1] but exists in object type [2].
+Cannot cast `<Foo />` to `Element` because in property `type` and then type argument `Props` [1], property `b` is
+missing in object type [2] but exists in object type [3].
 
    element_with_component_type.js:8:2
-   8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-       ^^^^^^^^^^^^^
+    8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+        ^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [1]
    element_with_component_type.js:5:35
-   5| class Foo extends React.Component<{a: number}> {}
-                                        ^^^^^^^^^^^ [1]
+    5| class Foo extends React.Component<{a: number}> {}
+                                         ^^^^^^^^^^^ [2]
    element_with_component_type.js:8:51
-   8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                        ^^^^^^^^^^^ [2]
+    8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:11:7
@@ -1265,20 +1268,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:35:7
 
-Cannot call `myHOC` with `class { ... }` bound to `Component` because in type argument `Props` and then property `foo`,
-string [1] is incompatible with number [2].
+Cannot call `myHOC` with `class { ... }` bound to `Component` because in type argument `Props` [1] and then property
+`foo`, string [2] is incompatible with number [3].
 
    hoc.js:35:7
    35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [1]
    hoc.js:35:49
    35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-                                                       ^^^^^^ [1]
+                                                       ^^^^^^ [2]
    hoc.js:6:40
     6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                              ^^^^^^ [2]
+                                              ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
@@ -1390,33 +1396,39 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-In type argument `Props`, number [1] is incompatible with string [2].
+In type argument `Props` [1], number [2] is incompatible with string [3].
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [1]
    hoc2.js:12:6
    12|   a: number,
-            ^^^^^^ [1]
+            ^^^^^^ [2]
    hoc2.js:28:24
    28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                              ^^^^^ [2]
+                              ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-In type argument `Props`, property `a` is missing in object type [1] but exists in object type [2].
+In type argument `Props` [1], property `a` is missing in object type [2] but exists in object type [3].
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [1]
    hoc2.js:6:34
     6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    hoc2.js:11:43
                                                  v-
    11| class MyComponent extends React.Component<{|
@@ -1424,21 +1436,24 @@ References:
    13|   b: number,
    14|   prop: number,
    15| |}> {}
-       -^ [2]
+       -^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-In type argument `Props`, property `b` is missing in object type [1] but exists in object type [2].
+In type argument `Props` [1], property `b` is missing in object type [2] but exists in object type [3].
 
    hoc2.js:23:37
    23| const MyEnhancedComponent = connect(MyComponent);
                                            ^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [1]
    hoc2.js:6:34
     6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    hoc2.js:11:43
                                                  v-
    11| class MyComponent extends React.Component<{|
@@ -1446,7 +1461,7 @@ References:
    13|   b: number,
    14|   prop: number,
    15| |}> {}
-       -^ [2]
+       -^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:1
@@ -1939,7 +1954,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:15:27
 
-Cannot create `Example` element because in property `arr` and then type argument `T`, string [1] is incompatible with
+Cannot create `Example` element because in property `arr` and then array element, string [1] is incompatible with
 number [2].
 
    proptype_arrayOf.js:15:27
@@ -1957,7 +1972,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:20:21
 
-Cannot create `Example` element because in property `arr` and then type argument `T`, null [1] is incompatible with
+Cannot create `Example` element because in property `arr` and then array element, null [1] is incompatible with
 number [2].
 
    proptype_arrayOf.js:20:21
@@ -1975,7 +1990,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- proptype_arrayOf.js:30:2
 
-Cannot create `OptionalExample` element because in property `arr` and then type argument `T`, string [1] is incompatible
+Cannot create `OptionalExample` element because in property `arr` and then array element, string [1] is incompatible
 with number [2].
 
    proptype_arrayOf.js:30:2

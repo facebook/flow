@@ -51,8 +51,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- namespace.js:15:14
 
-Cannot assign array literal to `s2` because in type argument `T` and then type argument `T`, string [1] is incompatible
-with number [2].
+Cannot assign array literal to `s2` because in array element and then array element, string [1] is incompatible with
+number [2].
 
    namespace.js:15:14
    15| var s2:Seq = [[""]];

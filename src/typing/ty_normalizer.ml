@@ -809,7 +809,7 @@ end = struct
     let open Type in
     name_of_instance_reason r >>= fun name ->
     let args = SMap.bindings inst.type_args in
-    mapM (fun (_, t) -> type__ ~env t) args >>| function
+    mapM (fun (_, (_, t)) -> type__ ~env t) args >>| function
     | [] -> Ty.Generic (name, inst.structural, None)
     | xs -> Ty.Generic (name, inst.structural, Some xs)
 

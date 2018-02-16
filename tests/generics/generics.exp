@@ -56,20 +56,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:39:41
 
-Cannot assign `h1` to `h2` because in type argument `X` and then type argument `T`, string [1] is incompatible with
-number [2].
+Cannot assign `h1` to `h2` because in type argument `X` [1] and then array element, string [2] is incompatible with
+number [3].
 
    generics.js:39:41
    39| var h2:F<Array<Array<Array<number>>>> = h1;
                                                ^^
 
 References:
+   generics.js:30:9
+   30| class F<X> { }
+               ^ [1]
    generics.js:38:9
    38| h1.foo(["..."]);
-               ^^^^^ [1]
+               ^^^^^ [2]
    generics.js:39:28
    39| var h2:F<Array<Array<Array<number>>>> = h1;
-                                  ^^^^^^ [2]
+                                  ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ generics.js:41:11

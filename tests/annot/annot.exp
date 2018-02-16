@@ -56,7 +56,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:26
 
-Cannot assign array literal to `arr` because in type argument `T`, string [1] is incompatible with number [2].
+Cannot assign array literal to `arr` because in array element, string [1] is incompatible with number [2].
 
    annot.js:10:26
    10| var arr: Array<number> = [1,2,"..."];
@@ -73,7 +73,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:13:23
 
-Cannot assign array literal to `array` because in type argument `T`, string [1] is incompatible with number [2].
+Cannot assign array literal to `array` because in array element, string [1] is incompatible with number [2].
 
    annot.js:13:23
    13| var array: number[] = [1,2,"..."];
@@ -119,8 +119,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:45:21
 
-Cannot assign `batchRequests.map(...)` to `batchRequests` because in type argument `T`, property `path` is missing in
-object literal [1] but exists in object type [2].
+Cannot assign `batchRequests.map(...)` to `batchRequests` because in array element, property `path` is missing in object
+literal [1] but exists in object type [2].
 
    annot.js:45:21
                            v-------------------------------
