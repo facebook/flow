@@ -14,8 +14,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- Foo.js:7:1
 
-Cannot extend `Qux` [1] with `Foo` because in property `fooqux` and then the first argument, string [2] is incompatible
-with number [3].
+Cannot extend `Qux` [1] with `Foo` because string [2] is incompatible with number [3] in the first argument of property
+`fooqux`.
 
    Foo.js:7:1
        v----------------------

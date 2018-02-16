@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ namespace.js:3:12
 
-Cannot assign function to `f` because in the first argument, string [1] is incompatible with number [2].
+Cannot assign function to `f` because string [1] is incompatible with number [2] in the first argument.
 
    namespace.js:3:12
    3| var f: T = function(x:string): void { }
@@ -51,8 +51,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- namespace.js:15:14
 
-Cannot assign array literal to `s2` because in array element and then array element, string [1] is incompatible with
-number [2].
+Cannot assign array literal to `s2` because string [1] is incompatible with number [2] in array element of array
+element.
 
    namespace.js:15:14
    15| var s2:Seq = [[""]];

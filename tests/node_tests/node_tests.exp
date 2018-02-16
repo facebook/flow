@@ -15,8 +15,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- child_process/execSync.js:8:17
 
-Cannot call `execSync` with object literal bound to `options` because in property `timeout`, string [1] is incompatible
-with number [2].
+Cannot call `execSync` with object literal bound to `options` because string [1] is incompatible with number [2] in
+property `timeout`.
 
    child_process/execSync.js:8:17
      8| (execSync('ls', {timeout: '250'})); // error, no signatures match
@@ -34,27 +34,27 @@ References:
 Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
 
 Cannot cast `hmac.read()` to number because:
- - `Buffer` [1] is incompatible with number [2].
- - null or undefined [3] is incompatible with number [2].
- - string [4] is incompatible with number [2].
+ - null or undefined [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
+ - `Buffer` [4] is incompatible with number [2].
 
    crypto/crypto.js:12:8
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1428:35
+   <BUILTINS>/node.js:1428:24
    1428|   read(size?: number): ?(string | Buffer);
-                                           ^^^^^^ [1]
+                                ^^^^^^^^^^^^^^^^^^ [1]
    crypto/crypto.js:12:21
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1428:24
-   1428|   read(size?: number): ?(string | Buffer);
-                                ^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/node.js:1428:26
    1428|   read(size?: number): ?(string | Buffer);
-                                  ^^^^^^ [4]
+                                  ^^^^^^ [3]
+   <BUILTINS>/node.js:1428:35
+   1428|   read(size?: number): ?(string | Buffer);
+                                           ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:16:16
@@ -1280,8 +1280,8 @@ References:
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
 
 Cannot call `process.nextTick` because:
- - in the rest argument and then the first argument, number [1] is incompatible with string [2].
- - in the rest argument and then the third argument, null [3] is incompatible with boolean [4].
+ - number [1] is incompatible with string [2] in the first argument of the rest argument.
+ - null [3] is incompatible with boolean [4] in the third argument of the rest argument.
 
    process/nextTick.js:12:1
        v----------------
@@ -1310,8 +1310,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:19:1
 
-Cannot call `process.nextTick` because in the rest argument and then the second argument, string [1] is incompatible
-with number [2].
+Cannot call `process.nextTick` because string [1] is incompatible with number [2] in the second argument of the rest
+argument.
 
    process/nextTick.js:19:1
        v----------------
@@ -1334,8 +1334,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:26:1
 
-Cannot call `process.nextTick` because in the rest argument, function [1] requires another argument from function
-type [2].
+Cannot call `process.nextTick` because function [1] requires another argument from function type [2] in the rest
+argument.
 
    process/nextTick.js:26:1
          v----------------

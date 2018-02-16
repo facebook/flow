@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:10:23
 
-Cannot assign `a.reverse()` to `e` because in array element, number [1] is incompatible with string [2].
+Cannot assign `a.reverse()` to `e` because number [1] is incompatible with string [2] in array element.
 
    array_lib.js:10:23
    10| var e:Array<string> = a.reverse();
@@ -52,9 +52,9 @@ References:
 Error ----------------------------------------------------------------------------------------------- array_lib.js:21:24
 
 Cannot assign `h.concat(...)` to `n` because:
- - in array element, string [1] is incompatible with number [2].
- - in array element, string [3] is incompatible with number [2].
- - in array element, string [4] is incompatible with number [2].
+ - string [1] is incompatible with number [2] in array element.
+ - string [3] is incompatible with number [2] in array element.
+ - string [4] is incompatible with number [2] in array element.
 
    array_lib.js:21:24
    21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error

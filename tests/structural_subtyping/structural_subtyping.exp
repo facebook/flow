@@ -29,8 +29,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:22:34
 
-Cannot assign `new ClassWithXString()` to `testInstance2` because in property `x`, string [1] is incompatible with
-number [2].
+Cannot assign `new ClassWithXString()` to `testInstance2` because string [1] is incompatible with number [2] in property
+`x`.
 
    class.js:22:34
    22| var testInstance2: IHasXNumber = new ClassWithXString(); // Error wrong type
@@ -62,7 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:10:30
 
-Cannot assign object literal to `propTest2` because in property `x`, number [1] is incompatible with string [2].
+Cannot assign object literal to `propTest2` because number [1] is incompatible with string [2] in property `x`.
 
    obj.js:10:30
    10| var propTest2: IHasXString = { x: 123 }; // Error string != number
@@ -94,7 +94,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:19:4
 
-Cannot cast `y` to `IHasXString` because in property `x`, number [1] is incompatible with string [2].
+Cannot cast `y` to `IHasXString` because number [1] is incompatible with string [2] in property `x`.
 
    obj.js:19:4
    19|   (y: IHasXString); // error: string != number
@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:12:26
 
-Cannot assign object literal to `test3` because in property `b`, boolean [1] is incompatible with number [2].
+Cannot assign object literal to `test3` because boolean [1] is incompatible with number [2] in property `b`.
 
    optional.js:12:26
    12| var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number

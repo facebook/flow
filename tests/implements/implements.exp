@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
-Cannot implement `IFoo` [1] with `C2` because in property `foo`, number [2] is incompatible with string [3].
+Cannot implement `IFoo` [1] with `C2` because number [2] is incompatible with string [3] in property `foo`.
 
    test.js:6:1
    6| class C2 implements IFoo { foo: number } // error: number <~> string
@@ -37,23 +37,6 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Cannot implement `IBar` [1] with `C4` because property `bar` is missing in `C4` [2] but exists in `IBar` [1].
-
-   test.js:13:1
-   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:13:27
-   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                                 ^^^^ [1]
-   test.js:13:7
-   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-             ^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:13:1
-
 Cannot implement `IFoo` [1] with `C4` because property `foo` is missing in `C4` [2] but exists in `IFoo` [1].
 
    test.js:13:1
@@ -64,6 +47,23 @@ References:
    test.js:13:21
    13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
                            ^^^^ [1]
+   test.js:13:7
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+             ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Cannot implement `IBar` [1] with `C4` because property `bar` is missing in `C4` [2] but exists in `IBar` [1].
+
+   test.js:13:1
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:13:27
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                                 ^^^^ [1]
    test.js:13:7
    13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
              ^^ [2]

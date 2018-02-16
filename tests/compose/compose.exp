@@ -176,8 +176,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:16:2
 
 Cannot cast `compose(...)(...)` to empty because:
- - number [1] is incompatible with empty [2].
- - string [3] is incompatible with empty [2].
+ - string [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
 
    spread.js:16:2
         v-------
@@ -187,15 +187,15 @@ Cannot cast `compose(...)(...)` to empty because:
        ----^
 
 References:
-   spread.js:18:3
-   18| )(42): empty); // Error: number ~> empty and string ~> empty
-         ^^ [1]
+   spread.js:5:37
+    5| declare var fns2: Array<(number) => string>;
+                                           ^^^^^^ [1]
    spread.js:18:8
    18| )(42): empty); // Error: number ~> empty and string ~> empty
               ^^^^^ [2]
-   spread.js:5:37
-    5| declare var fns2: Array<(number) => string>;
-                                           ^^^^^^ [3]
+   spread.js:18:3
+   18| )(42): empty); // Error: number ~> empty and string ~> empty
+         ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:17:6
@@ -236,11 +236,11 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:21:2
 
 Cannot cast `compose(...)(...)` to empty because:
- - number [1] is incompatible with empty [2].
+ - object literal [1] is incompatible with empty [2].
  - object literal [3] is incompatible with empty [2].
  - object literal [4] is incompatible with empty [2].
  - object literal [5] is incompatible with empty [2].
- - object literal [6] is incompatible with empty [2].
+ - number [6] is incompatible with empty [2].
 
    spread.js:21:2
         v-------
@@ -250,24 +250,24 @@ Cannot cast `compose(...)(...)` to empty because:
        ----^
 
 References:
-   spread.js:20:32
+   spread.js:20:12
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                                      ^^ [1]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    spread.js:23:8
    23| )(x1): empty); // Error: number ~> empty and object ~> empty
               ^^^^^ [2]
-   spread.js:20:12
-   20| const x1 = { p: { p: { p: { p: 42 } } } };
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    spread.js:20:17
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                       ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    spread.js:20:22
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                            ^^^^^^^^^^^^^^^^ [5]
+                            ^^^^^^^^^^^^^^^^ [4]
    spread.js:20:27
    20| const x1 = { p: { p: { p: { p: 42 } } } };
-                                 ^^^^^^^^^ [6]
+                                 ^^^^^^^^^ [5]
+   spread.js:20:32
+   20| const x1 = { p: { p: { p: { p: 42 } } } };
+                                      ^^ [6]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:27:2

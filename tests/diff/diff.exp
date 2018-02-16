@@ -128,7 +128,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined.js:10:3
 
-Cannot cast `any` to `$Diff` because in property `a`, undefined [1] is incompatible with `A` [2].
+Cannot cast `any` to `$Diff` because undefined [1] is incompatible with `A` [2] in property `a`.
 
    undefined.js:10:3
    10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error

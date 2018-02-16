@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ fun.js:5:13
 
-Cannot assign function to `f0` because in the return value, number [1] is incompatible with undefined [2].
+Cannot assign function to `f0` because number [1] is incompatible with undefined [2] in the return value.
 
    fun.js:5:13
    5| var f0: F = () => 0; // error: number ~> void
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:12
 
-Cannot assign object literal to `k` because in property `x`, string [1] is incompatible with number [2].
+Cannot assign object literal to `k` because string [1] is incompatible with number [2] in property `x`.
 
    test.js:6:12
    6| var k: K = { x: "", y: "" }; // error: x should be number
@@ -105,8 +105,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:17:20
 
 Cannot assign object literal to `e` because:
- - in property `x`, string [1] is incompatible with number [2].
- - in property `z`, string [3] is incompatible with number [2].
+ - string [1] is incompatible with number [2] in property `x`.
+ - string [3] is incompatible with number [2] in property `z`.
 
    test.js:17:20
    17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
@@ -174,7 +174,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:3:1
 
-Cannot extend `I` [1] with `K` because in property `x`, string [2] is incompatible with number [3].
+Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`.
 
    test3.js:3:1
    3| interface K extends I, J { x: string } // error: x is number in I
@@ -245,8 +245,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test4.js:9:13
 
-Cannot call `new C().bar` with function bound to `f` because in the first argument, string [1] is incompatible with
-number [2].
+Cannot call `new C().bar` with function bound to `f` because string [1] is incompatible with number [2] in the first
+argument.
 
    test4.js:9:13
    9| new C().bar((x: string) => { }); // error, number ~/~> string

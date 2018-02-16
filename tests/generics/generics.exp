@@ -35,44 +35,43 @@ References:
 Error ------------------------------------------------------------------------------------------------ generics.js:28:16
 
 Cannot assign `e.set(...)` to `x` because:
- - number [1] is incompatible with string [2].
- - undefined [3] is incompatible with string [2].
+ - undefined [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
    generics.js:28:16
    28| var x:string = e.set(0);
                       ^^^^^^^^
 
 References:
-   generics.js:28:22
-   28| var x:string = e.set(0);
-                            ^ [1]
+   generics.js:27:9
+   27| var e = new E(); // error: too few arguments to inherited constructor
+               ^^^^^^^ [1]
    generics.js:28:7
    28| var x:string = e.set(0);
              ^^^^^^ [2]
-   generics.js:27:9
-   27| var e = new E(); // error: too few arguments to inherited constructor
-               ^^^^^^^ [3]
+   generics.js:28:22
+   28| var x:string = e.set(0);
+                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ generics.js:39:41
 
-Cannot assign `h1` to `h2` because in type argument `X` [1] and then array element, string [2] is incompatible with
-number [3].
+Cannot assign `h1` to `h2` because string [1] is incompatible with number [2] in array element of type argument `X` [3].
 
    generics.js:39:41
    39| var h2:F<Array<Array<Array<number>>>> = h1;
                                                ^^
 
 References:
-   generics.js:30:9
-   30| class F<X> { }
-               ^ [1]
    generics.js:38:9
    38| h1.foo(["..."]);
-               ^^^^^ [2]
+               ^^^^^ [1]
    generics.js:39:28
    39| var h2:F<Array<Array<Array<number>>>> = h1;
-                                  ^^^^^^ [3]
+                                  ^^^^^^ [2]
+   generics.js:30:9
+   30| class F<X> { }
+               ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ generics.js:41:11

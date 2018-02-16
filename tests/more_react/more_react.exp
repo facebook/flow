@@ -107,8 +107,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ checkPropTypes.js:12:85
 
-Cannot call `checkPropTypes` with function bound to `getStack` because in the return value, number [1] is incompatible
-with string [2].
+Cannot call `checkPropTypes` with function bound to `getStack` because number [1] is incompatible with string [2] in the
+return value.
 
    checkPropTypes.js:12:85
     12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string

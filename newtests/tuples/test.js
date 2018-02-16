@@ -32,7 +32,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:22
            22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
-                                                                                ^^^ Cannot return \`tup\` because in array element, number [1] is incompatible with string [2].
+                                                                                ^^^ Cannot return \`tup\` because number [1] is incompatible with string [2] in array element.
             References:
              22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
                                               ^^^^^^ [1]
@@ -345,7 +345,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       (rest: [3,40]);
-                      ^^^^ Cannot cast \`rest\` to tuple type because in index 1, number literal \`4\` [1] is incompatible with number literal \`40\` [2].
+                      ^^^^ Cannot cast \`rest\` to tuple type because number literal \`4\` [1] is incompatible with number literal \`40\` [2] in index 1.
             References:
               4:       const tup: [1,2,3,4] = [1,2,3,4];
                                          ^ [1]
@@ -363,7 +363,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return arr;
-                              ^^^ Cannot return \`arr\` because in index 0, string [1] is incompatible with number literal \`1\` [2].
+                              ^^^ Cannot return \`arr\` because string [1] is incompatible with number literal \`1\` [2] in index 0.
             References:
               4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
                                                                                ^^^^^^ [1]
@@ -372,7 +372,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:5
             5:         return arr;
-                              ^^^ Cannot return \`arr\` because in index 1, string [1] is incompatible with number literal \`2\` [2].
+                              ^^^ Cannot return \`arr\` because string [1] is incompatible with number literal \`2\` [2] in index 1.
             References:
               4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
                                                                                ^^^^^^ [1]
@@ -390,7 +390,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return arr;
-                              ^^^ Cannot return \`arr\` because in index 0, number [1] is incompatible with string [2].
+                              ^^^ Cannot return \`arr\` because number [1] is incompatible with string [2] in index 0.
             References:
               4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
                                           ^^^^^^ [1]
@@ -399,7 +399,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:5
             5:         return arr;
-                              ^^^ Cannot return \`arr\` because in index 1, number [1] is incompatible with string [2].
+                              ^^^ Cannot return \`arr\` because number [1] is incompatible with string [2] in index 1.
             References:
               4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
                                                   ^^^^^^ [1]
@@ -417,7 +417,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5:         return tup;
-                              ^^^ Cannot return \`tup\` because in index 0, number literal \`1\` [1] is incompatible with number [2].
+                              ^^^ Cannot return \`tup\` because number literal \`1\` [1] is incompatible with number [2] in index 0.
             References:
               4:       function foo(tup: [1, 2]): [number, number] {
                                           ^ [1]
@@ -426,7 +426,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:5
             5:         return tup;
-                              ^^^ Cannot return \`tup\` because in index 1, number literal \`2\` [1] is incompatible with number [2].
+                              ^^^ Cannot return \`tup\` because number literal \`2\` [1] is incompatible with number [2] in index 1.
             References:
               4:       function foo(tup: [1, 2]): [number, number] {
                                              ^ [1]

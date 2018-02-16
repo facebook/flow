@@ -15,8 +15,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
 Cannot extend `A` [1] with `B` because:
- - in property `x`, string [2] is incompatible with number [3].
- - in property `foo` and then the first argument, string [4] is incompatible with number [5].
+ - string [2] is incompatible with number [3] in property `x`.
+ - string [4] is incompatible with number [5] in the first argument of property `foo`.
 
    test.js:9:1
        v------------------

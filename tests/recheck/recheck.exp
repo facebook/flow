@@ -237,7 +237,7 @@ No errors!
 Test f:
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
-Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
+Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`.
 
    f2.js:4:2
    4| (c: { x: number });
@@ -258,7 +258,7 @@ No errors!
 No errors!
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
-Cannot cast `c` to object type because in property `x`, string [1] is incompatible with number [2].
+Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`.
 
    f2.js:4:2
    4| (c: { x: number });
@@ -321,22 +321,22 @@ No errors!
 Test m:
 Error -------------------------------------------------------------------------------------------------------- m3.js:6:2
 
-Cannot cast `x` to `T` because in type argument `X` [1], string [2] is incompatible with number [3].
+Cannot cast `x` to `T` because string [1] is incompatible with number [2] in type argument `X` [3].
 
    m3.js:6:2
    6| (x: T<number>);
        ^
 
 References:
-   m1.js:3:15
-   3| export type T<X> = any;
-                    ^ [1]
    m1.js:5:17
    5| export var x: T<string> = null;
-                      ^^^^^^ [2]
+                      ^^^^^^ [1]
    m3.js:6:7
    6| (x: T<number>);
-            ^^^^^^ [3]
+            ^^^^^^ [2]
+   m1.js:3:15
+   3| export type T<X> = any;
+                    ^ [3]
 
 
 

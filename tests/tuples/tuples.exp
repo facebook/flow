@@ -99,7 +99,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:6:27
 
-Cannot assign array literal to `f` because in index 1, number [1] is incompatible with string [2].
+Cannot assign array literal to `f` because number [1] is incompatible with string [2] in index 1.
 
    tuples.js:6:27
    6| var f: [number, string] = [123, 456];

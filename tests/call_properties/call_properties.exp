@@ -73,7 +73,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:5:34
 
-Cannot assign function to `b` because in the return value, string [1] is incompatible with number [2].
+Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
 
    B.js:5:34
    5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
@@ -90,7 +90,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:8:34
 
-Cannot assign function to `c` because in the first argument, number [1] is incompatible with string [2].
+Cannot assign function to `c` because number [1] is incompatible with string [2] in the first argument.
 
    B.js:8:34
    8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
@@ -124,7 +124,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- C.js:8:10
 
-Cannot return `x` because in the return value, string [1] is incompatible with number [2].
+Cannot return `x` because string [1] is incompatible with number [2] in the return value.
 
    C.js:8:10
    8|   return x;
@@ -141,7 +141,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:13:10
 
-Cannot return `x` because in the first argument, number [1] is incompatible with string [2].
+Cannot return `x` because number [1] is incompatible with string [2] in the first argument.
 
    C.js:13:10
    13|   return x;
@@ -226,7 +226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
-Cannot return `x` because in the return value, string [1] is incompatible with number [2].
+Cannot return `x` because string [1] is incompatible with number [2] in the return value.
 
    D.js:21:10
    21|   return x;
@@ -260,7 +260,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- F.js:6:34
 
-Cannot assign function to `b` because in the return value, string [1] is incompatible with number [2].
+Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
 
    F.js:6:34
    6| var b: { (x: number): number } = (x) => "hi"
@@ -291,8 +291,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
-Cannot cast `a` to `B` because in property `p`, a callable signature is missing in object type [1] but exists in
-function type [2].
+Cannot cast `a` to `B` because a callable signature is missing in object type [1] but exists in function type [2] in
+property `p`.
 
    use_ops.js:4:2
    4| (a: B); // error HERE and preserve use ops

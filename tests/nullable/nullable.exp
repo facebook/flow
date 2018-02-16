@@ -154,23 +154,23 @@ References:
 Error ------------------------------------------------------------------------------------------------ nullable.js:15:17
 
 Cannot call `qux` with `x` bound to `x` because:
- - null [1] is incompatible with string [2].
- - null or undefined [3] is incompatible with string [2].
+ - null or undefined [1] is incompatible with string [2].
+ - null [3] is incompatible with string [2].
 
    nullable.js:15:17
    15|   grault(); qux(x);
                        ^
 
 References:
-   nullable.js:13:25
-   13| function grault() { x = null; }
-                               ^^^^ [1]
+   nullable.js:3:16
+    3| function bar():?string { return null; }
+                      ^^^^^^^ [1]
    nullable.js:5:16
     5| function qux(x:string) { }
                       ^^^^^^ [2]
-   nullable.js:3:16
-    3| function bar():?string { return null; }
-                      ^^^^^^^ [3]
+   nullable.js:13:25
+   13| function grault() { x = null; }
+                               ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- simple_nullable.js:4:5

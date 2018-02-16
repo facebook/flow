@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:12:3
 
-Cannot assign `<CustomComponent />` to `b` because in property `type`, `CustomComponent` [1] is incompatible with
-`CustomComponentNope` [2].
+Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is incompatible with `CustomComponentNope` [2]
+in property `type`.
 
    main.js:12:3
    12|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -19,11 +19,11 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:14:3
 
 Cannot assign `<CustomComponent />` to `c` because:
- - in property `props`, property `prop1` is missing in object type [1] but exists in object type [2].
- - in property `type` and then type argument `Props` [3], property `prop` is missing in object type [2] but exists in
-   object type [1].
- - in property `type` and then type argument `Props` [3], property `prop1` is missing in object type [1] but exists in
-   object type [2].
+ - property `prop1` is missing in object type [1] but exists in object type [2] in property `props`.
+ - property `prop` is missing in object type [2] but exists in object type [1] in type argument `Props` [3] of property
+   `type`.
+ - property `prop1` is missing in object type [1] but exists in object type [2] in type argument `Props` [3] of property
+   `type`.
 
    main.js:14:3
    14|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -43,7 +43,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:21:26
 
-Cannot assign `<div />` to `e` because in property `type`, `div` [1] is incompatible with string literal `span` [2].
+Cannot assign `<div />` to `e` because `div` [1] is incompatible with string literal `span` [2] in property `type`.
 
    main.js:21:26
    21| var e: Element<'span'> = <div not_a_real_attr="asdf" />;

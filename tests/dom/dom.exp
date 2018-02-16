@@ -28,8 +28,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because in property `behavior`, string [1] is
-incompatible with string enum [2].
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
+enum [2] in property `behavior`.
 
    Element.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -46,8 +46,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because in property `block`, string [1] is
-incompatible with string enum [2].
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
+enum [2] in property `block`.
 
    Element.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -78,8 +78,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because in property `behavior`, string [1] is
-incompatible with string enum [2].
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
+enum [2] in property `behavior`.
 
    HTMLElement.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -96,8 +96,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because in property `block`, string [1] is
-incompatible with string enum [2].
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
+enum [2] in property `block`.
 
    HTMLElement.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -292,10 +292,8 @@ Error: path2d.js:9
 Error ----------------------------------------------------------------------------------------- registerElement.js:48:48
 
 Cannot call `document.registerElement` with object literal bound to `options` because:
- - in property `prototype.attributeChangedCallback` and then the second argument, string [1] is incompatible with
-   null [2].
- - in property `prototype.attributeChangedCallback` and then the third argument, string [3] is incompatible with
-   null [4].
+ - string [1] is incompatible with null [2] in the second argument of property `prototype.attributeChangedCallback`.
+ - string [3] is incompatible with null [4] in the third argument of property `prototype.attributeChangedCallback`.
 
    registerElement.js:48:48
                                                        v

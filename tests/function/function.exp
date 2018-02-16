@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:25:1
 
-Cannot call `test.apply` because in the rest argument, string [1] is incompatible with number [2].
+Cannot call `test.apply` because string [1] is incompatible with number [2] in the rest argument.
 
    apply.js:25:1
     25| test.apply("", "not array"); // error: expect array of args
@@ -376,8 +376,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:47:7
 
-Cannot call `f` with object literal bound to `y` because in property `x`, string [1] is incompatible with string literal
-`bar` [2].
+Cannot call `f` with object literal bound to `y` because string [1] is incompatible with string literal `bar` [2] in
+property `x`.
 
    call.js:47:7
    47|     f({x: "foo"}); // error, "foo" !~> "bar"
@@ -394,8 +394,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:53:7
 
-Cannot call `f` with object literal bound to `y` because in property `x`, number [1] is incompatible with number literal
-`123` [2].
+Cannot call `f` with object literal bound to `y` because number [1] is incompatible with number literal `123` [2] in
+property `x`.
 
    call.js:53:7
    53|     f({x: 234}); // error, 234 !~> 123
@@ -412,8 +412,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:59:7
 
-Cannot call `f` with object literal bound to `y` because in property `x`, boolean [1] is incompatible with boolean
-literal `false` [2].
+Cannot call `f` with object literal bound to `y` because boolean [1] is incompatible with boolean literal `false` [2] in
+property `x`.
 
    call.js:59:7
    59|     f({x: true}); // error, true !~> false
@@ -720,7 +720,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:58:10
 
-Cannot return function because in the return value, rest array [1] is incompatible with number [2].
+Cannot return function because rest array [1] is incompatible with number [2] in the return value.
 
    rest.js:58:10
                 v------------------
@@ -764,7 +764,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because:
  - string [1] is not an array.
- - in the rest argument, rest array [2] is incompatible with string [1].
+ - rest array [2] is incompatible with string [1] in the rest argument.
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors

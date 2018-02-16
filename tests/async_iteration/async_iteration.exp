@@ -69,45 +69,45 @@ References:
 Error ---------------------------------------------------------------------------------------------------- return.js:6:4
 
 Cannot cast `result.value` to undefined because:
- - number [1] is incompatible with undefined [2].
- - string [3] is incompatible with undefined [2].
+ - string [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
 
    return.js:6:4
    6|   (result.value: void); // error: string | number ~> void
          ^^^^^^^^^^^^
 
 References:
-   return.js:5:12
-   5| gen.return(0).then(result => {
-                 ^ [1]
+   return.js:1:38
+   1| declare var gen: AsyncGenerator<void,string,void>;
+                                           ^^^^^^ [1]
    return.js:6:18
    6|   (result.value: void); // error: string | number ~> void
                        ^^^^ [2]
-   return.js:1:38
-   1| declare var gen: AsyncGenerator<void,string,void>;
-                                           ^^^^^^ [3]
+   return.js:5:12
+   5| gen.return(0).then(result => {
+                 ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:6
 
 Cannot cast `result.value` to string because:
- - number [1] is incompatible with string [2].
- - undefined [3] is incompatible with string [2].
+ - undefined [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
 
    return.js:20:6
     20|     (result.value: string); // error: number | void ~> string
              ^^^^^^^^^^^^
 
 References:
-   return.js:15:12
-    15|     return 0;
-                   ^ [1]
+   <BUILTINS>/core.js:493:28
+   493|   | { done: true, +value?: Return }
+                                   ^^^^^^ [1]
    return.js:20:20
     20|     (result.value: string); // error: number | void ~> string
                            ^^^^^^ [2]
-   <BUILTINS>/core.js:493:28
-   493|   | { done: true, +value?: Return }
-                                   ^^^^^^ [3]
+   return.js:15:12
+    15|     return 0;
+                   ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:12:8

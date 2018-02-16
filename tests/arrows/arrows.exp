@@ -34,8 +34,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrows.js:7:26
 
-Cannot call `images.sort` with function bound to `compareFn` because in the return value, string [1] is incompatible
-with number [2].
+Cannot call `images.sort` with function bound to `compareFn` because string [1] is incompatible with number [2] in the
+return value.
 
    arrows.js:7:26
      7|     images = images.sort((a, b) => (a.width - b.width) + "");

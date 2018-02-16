@@ -65,22 +65,22 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:31:12
 
-Cannot return `x` because in type argument `T` [1], number [2] is incompatible with string [3].
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
 
    importtest.js:31:12
    31|     return x;
                   ^
 
 References:
-   test.js:14:22
-   14| export class PolyFoo<T> {}
-                            ^ [1]
    importtest.js:30:28
    30| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                  ^^^^^^ [2]
+                                  ^^^^^^ [1]
    importtest.js:30:46
    30| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                                    ^^^^^^ [3]
+                                                    ^^^^^^ [2]
+   test.js:14:22
+   14| export class PolyFoo<T> {}
+                            ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:39:12
