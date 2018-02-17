@@ -50,18 +50,30 @@ let multi_threaded_call
   (interrupt_fds: Unix.file_descr list)
   (interrupt_handler: interrupt_handler) =
 
-  let check_cancel workers handles ready_fds =
+  let rec add_pending acc = match next () with
+    | Done -> acc
+    | Job a -> add_pending (a::acc)
+    | Wait ->
+      (* Wait is only used by Flow at the moment, and they don't plan to use
+      * this cancelling mechanism for now. *)
+      failwith "cancelling jobs with Wait not supported" in
+
+  (* When a job is cancelled, return all the jobs that were not started OR were
+   * cancelled in the middle (so you better hope they are idempotent).*)
+  let check_cancel workers handles ready_fds acc =
     if ready_fds <> [] && interrupt_handler ready_fds then begin
       Worker.cancel handles;
-      true
-    end else false in
+      let unfinished = List.map handles ~f:Worker.get_job in
+      let unfinished = add_pending unfinished in
+      acc, Some unfinished
+    end else acc, None in
 
   let rec dispatch workers handles acc =
     (* 'worker' represents available workers. *)
     (* 'handles' represents pendings jobs. *)
     (* 'acc' are the accumulated results. *)
     match workers with
-    | [] when handles = [] -> acc
+    | [] when handles = [] -> acc, []
     | [] ->
         (* No worker available: wait for some workers to finish. *)
         collect [] handles acc
@@ -89,16 +101,17 @@ let multi_threaded_call
         ~f:(fun acc h -> merge (Worker.get_result h) acc)
         ~init:acc
         readys in
-    if check_cancel workers waiters ready_fds then acc else
-    (* And continue.. *)
-    dispatch workers waiters acc in
+    match check_cancel workers waiters ready_fds acc with
+    | acc, Some unfinished -> acc, unfinished
+    | acc, None ->
+      (* And continue.. *)
+      dispatch workers waiters acc in
   dispatch workers [] neutral
 
 let call workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler =
   match workers with
-  | None -> single_threaded_call job merge neutral next
-  | Some workers ->
-    multi_threaded_call workers job merge neutral next
+  | None -> single_threaded_call job merge neutral next, []
+  | Some workers -> multi_threaded_call workers job merge neutral next
       interrupt_fds interrupt_handler
 
 let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt_fds
@@ -108,7 +121,10 @@ let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt_fds
 let call workers ~job ~merge ~neutral ~next =
   let interrupt_fds = [] in
   let interrupt_handler = fun _ -> assert false in
-  call workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler
+  let res, unfinished =
+    call workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler in
+  assert (unfinished = []);
+  res
 
 let next ?progress_fn ?max_size workers =
   Bucket.make

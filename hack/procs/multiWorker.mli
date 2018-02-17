@@ -44,4 +44,4 @@ val call_with_interrupt :
   next:'a Bucket.next ->
   interrupt_fds:Unix.file_descr list ->
   interrupt_handler:interrupt_handler ->
-  'c
+  'c * 'a list
