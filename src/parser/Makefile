@@ -43,7 +43,7 @@ clean:
 	$(OCB) -clean; \
 	cd $(TOP); \
 	$(OCB) -clean; \
-	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files; \
+	rm -f $(REL_DIR)/flow_parser.js; \
 	rm -rf $(REL_DIR)/dist
 
 build-parser:
@@ -120,13 +120,6 @@ test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
 test: test-js test-ocaml
 
-tools: native_test_files
-
-native_test_files:
-	cd $(TOP); \
-	$(OCB) $(REL_DIR)/tools/native_test_files.native; \
-	mv native_test_files.native $(REL_DIR)/tools/native_test_files
-
 npm-pack:
 	mv README.md README-backup.md
 	mv README-npm.md README.md
@@ -152,16 +145,3 @@ ocamlfind-install:
 
 lexer.native: lexer.ml
 	$(OCB) $@
-
-tools/native_test_files: ../../_build/$(REL_DIR)/tools/native_test_files
-
-../../_build/$(REL_DIR)/tools/native_test_files: build-parser
-	cd $(TOP); \
-	$(OCB) -ocamlc "ocamlopt" $(NATIVE_OBJECT_FILES); \
-	$(OCB) \
-		-I $(REL_DIR) \
-	 	-lib unix -lib str \
-	 	-lflags "$(NATIVE_OBJECT_FILES)" \
-		$(REL_DIR)/tools/native_test_files.native; \
-	rm native_test_files.native; \
-	mv _build/$(REL_DIR)/tools/native_test_files.native $(REL_DIR)/tools/native_test_files
