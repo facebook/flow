@@ -287,15 +287,20 @@ export class TestBuilder {
       this.stopFlowServer();
     });
 
-    // Wait for the server to be ready
+    // Wait for the server to be ready or die
     await new Promise((resolve, reject) => {
-      function resolveOnReady(data) {
-        if (stderr.concat([data]).join('').match(/Server is free/)) {
-          serverProcess.stderr.removeListener('data', resolveOnReady);
-          resolve();
-        }
+      function done() {
+        serverProcess.stderr.removeListener('data', resolveOnReady);
+        serverProcess.stderr.removeListener('exit', resolveOnExit);
+        resolve();
       }
+      const resolveOnReady = (data) => {
+        stderr.concat([data]).join('').match(/Server is free/) && done()
+      }
+      const resolveOnExit = done;
+
       serverProcess.stderr.on('data', resolveOnReady);
+      serverProcess.on('exit', resolveOnExit);
     });
   }
 
