@@ -825,7 +825,6 @@ let make_env server_flags root =
   let log_file =
     Path.to_string (server_log_file ~tmp_dir root flowconfig) in
   let retries = server_flags.retries in
-  let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with
   | None -> None
   | Some n -> Some (Unix.gettimeofday () +. float n)
@@ -834,7 +833,6 @@ let make_env server_flags root =
     root;
     autostart = not server_flags.no_auto_start;
     retries;
-    retry_if_init;
     expiry;
     autostop = false;
     tmp_dir;
@@ -1004,8 +1002,9 @@ let rec connect_and_make_request =
     then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
 
     let quiet = server_flags.quiet in
+    let client_type = SocketHandshake.Ephemeral { fail_on_init = not server_flags.retry_if_init } in
     (* connect handles timeouts itself *)
-    let ic, oc = connect ~client_type:SocketHandshake.Ephemeral server_flags root in
+    let ic, oc = connect ~client_type server_flags root in
     send_command ?timeout oc request;
     try wait_for_response ?timeout ~quiet ~root ic
     with End_of_file ->

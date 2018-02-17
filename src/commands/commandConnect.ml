@@ -11,7 +11,6 @@ type env = {
   root : Path.t;
   autostart : bool;
   retries : int;
-  retry_if_init : bool;
   expiry : float option;
   autostop : bool;
   tmp_dir : string;
@@ -94,6 +93,10 @@ type retry_info = {
 }
 
 let reset_retries_if_necessary retries = function
+  | Error (CCS.Server_busy CCS.Fail_on_init) ->
+    { retries with
+      retries_remaining = 0;
+    }
   | Error CCS.Server_missing
   | Error CCS.Server_busy _ -> retries
   | Ok _
@@ -141,6 +144,7 @@ let rec connect ~client_type env retries start_time =
       let busy_reason = match busy_reason with
       | CCS.Too_many_clients -> "has too many clients and rejected our connection"
       | CCS.Not_responding -> "is not responding"
+      | CCS.Fail_on_init -> "is still initializing and the client used --retry-if-init false"
       in
       if not env.quiet then Printf.eprintf
         "The flow server %s (%d %s remaining): %s%!"

@@ -15,10 +15,14 @@ let build_revision = match Build_id.build_revision with
  | x -> x
 
 type client_type =
-| Ephemeral (* A new ephemeral client (one that sends a request, gets a response and disconnects) *)
-| Persistent of FlowEventLogger.logging_context (* A new persistent client *)
+(* A new ephemeral client (one that sends a request, gets a response and disconnects) *)
+| Ephemeral of { fail_on_init: bool }
+(* A new persistent client *)
+| Persistent of FlowEventLogger.logging_context
+(* A new lsp client *)
 | PersistentLsp of FlowEventLogger.logging_context * Lsp.Initialize.params
-| StabbityStabStab (* A flow stop that wants the Flow server to die *)
+(* A flow stop that wants the Flow server to die *)
+| StabbityStabStab
 
 type client_to_monitor = {
   client_build_id: build_id;
@@ -29,4 +33,6 @@ type monitor_to_client =
   | Connection_ok
   | Build_id_mismatch of { server_build_id: build_id; server_bin: string }
   | Too_many_clients
-  | Not_ready of ServerStatus.status (* only sent to PersistentLsp clients *)
+  (* The server is still initializing. Sent to lsp clients or clients which used
+   * --retry-if-init false *)
+  | Still_initializing of ServerStatus.status

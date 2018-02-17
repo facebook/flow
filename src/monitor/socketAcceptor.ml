@@ -161,12 +161,21 @@ let perform_handshake_and_get_client_type ~client_fd =
         >|= (fun () -> failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int))
       else if is_lsp && not (StatusStream.ever_been_free ()) then
         let status = StatusStream.get_status () in
-        Marshal_tools_lwt.to_fd_with_preamble client_fd (SocketHandshake.Not_ready status)
+        Marshal_tools_lwt.to_fd_with_preamble client_fd (SocketHandshake.Still_initializing status)
         >|= (fun () -> failwith (ServerStatus.string_of_status status))
-      else
-        (* If the build id matches, send the Ok and return the client_type *)
-        Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
-        >|= (fun () -> client_type)
+      else begin
+        match client_type with
+        | SocketHandshake.Ephemeral {fail_on_init=true} when not (StatusStream.ever_been_free ()) ->
+          Marshal_tools_lwt.to_fd_with_preamble
+            client_fd (SocketHandshake.Still_initializing (StatusStream.get_status ()))
+          >|= (fun () ->
+            failwith "Client used --retry-on-init false, and the server is still initializing"
+          )
+        | _ ->
+          (* Nothing else has gone wrong with the handshake. Send Ok and return the client_type *)
+          Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
+          >|= (fun () -> client_type)
+      end
     end
   )
 
@@ -245,7 +254,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         perform_handshake_and_get_client_type ~client_fd
         >>= (
           function
-          | SocketHandshake.Ephemeral ->
+          | SocketHandshake.Ephemeral _ ->
             create_ephemeral_connection ~client_fd ~close
           | SocketHandshake.Persistent logging_context ->
             create_persistent_connection ~client_fd ~close ~logging_context ~lsp:None

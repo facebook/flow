@@ -8,6 +8,7 @@
  type busy_reason =
  | Too_many_clients
  | Not_responding
+ | Fail_on_init
 
 type error =
   | Build_id_mismatch

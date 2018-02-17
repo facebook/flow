@@ -10,6 +10,7 @@ module Server_files = Server_files_js
 type busy_reason =
 | Too_many_clients
 | Not_responding
+| Fail_on_init
 
 type error =
   | Build_id_mismatch
@@ -104,7 +105,7 @@ let get_handshake ~timeout:_ sockaddr ic oc =
 
 let verify_handshake sockaddr ic = function
   | SocketHandshake.Connection_ok -> Ok ()
-  | SocketHandshake.Not_ready _ -> Error (Server_busy Not_responding)
+  | SocketHandshake.Still_initializing _ -> Error (Server_busy Fail_on_init)
   | SocketHandshake.Build_id_mismatch _ ->
       (* TODO (glevi) - I want to change this behavior. I want the server to survive and the client
        * to exec a new client. *)
