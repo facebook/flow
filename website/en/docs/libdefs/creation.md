@@ -41,7 +41,7 @@ declare class URL {
   toString(): string;
 
   static compare(url1: URL, url2: URL): boolean;
-};
+}
 ```
 
 This tells Flow that any code within the project can reference the `URL` global
@@ -129,11 +129,11 @@ declare module "some-es-module" {
   // body of this `declare module`
   declare class Path {
     toString(): string;
-  };
+  }
 
   // Declares a named "concatPath" export which returns an instance of the
   // `Path` class (defined above)
-  declare export function concatPath(dirA: string, dirB: string): Path,
+  declare export function concatPath(dirA: string, dirB: string): Path
 }
 ```
 
@@ -147,7 +147,7 @@ declare module "some-es-module" {
     toString(): string;
 
     static compare(url1: URL, url2: URL): boolean;
-  };
+  }
 
   // Declares a default export whose type is `typeof URL`
   declare export default typeof URL;
@@ -185,7 +185,7 @@ declare module "some-commonjs-module" {
   // body of this `declare module`
   declare class Path {
     toString(): string;
-  };
+  }
 
   // The "concatPath" function now returns an instance of the `Path` class
   // (defined above).
