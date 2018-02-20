@@ -219,6 +219,8 @@ module.system.node.resolve_dirname=custom_node_modules
 Then Flow will look in directories named `node_modules` or
 `custom_node_modules`.
 
+It is important to use `module.system.node.resolve_dirname` only for external dependency sources such as `node_modules`. If your aim is to enable your internal modules to import each other via absolute paths (to avoid long `../../..` relative paths), use [`module.name_mapper`](https://flow.org/en/docs/config/options/#toc-module-name-mapper-regex-string) instead. This is because using `module.system.node.resolve_dirname` opts into a new feature added in v0.57.0 intended for `node_modules`, whereby Flow skips checking any files that aren't direct or transitive dependencies of other files outside this directory—probably not what you want.
+
 > **Note:** you can specify `module.system.node.resolve_dirname` multiple times
 
 #### `module.use_strict` _`(boolean)`_ <a class="toc" id="toc-module-use-strict-boolean" href="#toc-module-use-strict-boolean"></a>
