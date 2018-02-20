@@ -356,21 +356,20 @@ class ssa_builder = object(this)
      environments corresponding to them, and merge those environments with the
      current environment. This function is called when exiting ASTs that
      introduce (and therefore expect) particular abrupt completions. *)
-  method commit_abrupt_completion_matching =
-    let merge_abrupt_completions_matching filter =
-      let matching, non_matching = List.partition (fun (abrupt_completion, _env) ->
-        filter abrupt_completion
-      ) abrupt_completion_envs in
+  method commit_abrupt_completion_matching filter completion_state =
+    let matching, non_matching = List.partition (fun (abrupt_completion, _env) ->
+      filter abrupt_completion
+    ) abrupt_completion_envs in
+    if matching <> []
+    then begin
       List.iter (fun (_abrupt_completion, env) ->
         this#merge_remote_ssa_env env
       ) matching;
       abrupt_completion_envs <- non_matching
-    in fun filter -> function
-      | None -> merge_abrupt_completions_matching filter
-      | Some abrupt_completion ->
-        if filter abrupt_completion
-        then merge_abrupt_completions_matching filter
-        else raise (AbruptCompletion.Exn abrupt_completion)
+    end else match completion_state with
+      | Some abrupt_completion when not (filter abrupt_completion) ->
+        raise (AbruptCompletion.Exn abrupt_completion)
+      | _ -> ()
 
   (* Track the list of labels that might describe a loop. Used to detect which
      labeled continues need to be handled by the loop.
