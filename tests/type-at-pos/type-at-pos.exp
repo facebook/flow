@@ -1708,3 +1708,18 @@ unions.js:57:5 = {
   "start":5,
   "end":5
 }
+opaque.js:3:20 = {
+  "type":"type Foo = Foo",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":20,"offset":29},
+    "end":{"line":3,"column":22,"offset":32}
+  },
+  "path":"opaque.js",
+  "line":3,
+  "endline":3,
+  "start":20,
+  "end":22
+}

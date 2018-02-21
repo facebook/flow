@@ -713,7 +713,7 @@ and statement cx = Ast.Statement.(
       | _ -> ()
       in
       Type_table.set (Context.type_table cx) loc type_;
-      Type_table.set_info (Context.type_table cx) loc type_;
+      Type_table.set_info (Context.type_table cx) name_loc type_;
       Env.init_type cx name type_ name_loc
 
   (*******************************************************)
