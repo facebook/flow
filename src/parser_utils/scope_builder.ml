@@ -205,14 +205,10 @@ class scope_builder = object(this)
     let open Ast.Statement.Try.CatchClause in
     let { param; body = _ } = clause in
 
-    this#with_bindings (
-      let open Ast.Pattern in
-      let _, patt = param in
-      match patt with
-      | Identifier { Identifier.name; _ } -> Bindings.singleton name
-      | _ -> (* TODO *)
-        Bindings.empty
-    ) super#catch_clause clause
+    (* hoisting *)
+    let lexical_hoist = new lexical_hoister in
+    let bindings = lexical_hoist#eval lexical_hoist#catch_clause_pattern param in
+    this#with_bindings ~lexical:true bindings super#catch_clause clause
 
   (* helper for function params and body *)
   method private lambda params body =

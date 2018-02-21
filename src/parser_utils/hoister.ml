@@ -93,8 +93,8 @@ class hoister = object(this)
   method! import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     decl
 
-  (* This is visited by function parameters and variable declarations (but not
-     assignment expressions or catch patterns). *)
+  (* This is visited by function parameters, variable declarations, and catch patterns (but not
+     assignment expressions). *)
   method! pattern ?kind (expr: Loc.t Ast.Pattern.t) =
     match Utils.unsafe_opt kind with
     | Ast.Statement.VariableDeclaration.Var ->

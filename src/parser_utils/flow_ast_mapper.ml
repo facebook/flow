@@ -955,7 +955,7 @@ class mapper = object(this)
     this#binding_pattern ~kind expr
 
   method catch_clause_pattern (expr: Loc.t Ast.Pattern.t) =
-    this#binding_pattern expr
+    this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
 
   method for_in_assignment_pattern (expr: Loc.t Ast.Pattern.t) =
     this#assignment_pattern expr
