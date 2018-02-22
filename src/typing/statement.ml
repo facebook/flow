@@ -2544,14 +2544,13 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       property = Member.PropertyIdentifier (ploc, name);
       _
     } ->
+      let super = super_ cx super_loc in
+      Type_table.set_info (Context.type_table cx) super_loc super;
       let expr_reason = mk_reason (RProperty (Some name)) loc in
       (match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
-
-        let super = super_ cx super_loc in
-        Type_table.set_info (Context.type_table cx) super_loc super;
 
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
         then AnyT.at ploc
