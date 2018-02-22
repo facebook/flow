@@ -109,3 +109,6 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 35 25
 
 printf "Use as a JSX component class: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root jsx.js 5 7
+
+printf "declare var: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root declare.js 3 13

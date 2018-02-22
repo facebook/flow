@@ -1009,3 +1009,21 @@ Use as a JSX component class: {
     }
   ]
 }
+declare var: {
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":13,"offset":22},
+      "end":{"line":3,"column":15,"offset":25}
+    },
+    {
+      "source":"declare.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":1,"offset":35},
+      "end":{"line":4,"column":3,"offset":38}
+    }
+  ]
+}

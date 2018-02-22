@@ -112,6 +112,21 @@ class hoister = object(this)
     | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
       expr (* don't hoist let/const bindings *)
 
+  method! declare_variable (decl: Loc.t Ast.Statement.DeclareVariable.t) =
+    let open Ast.Statement.DeclareVariable in
+    this#add_binding decl.id;
+    super#declare_variable decl
+
+  method! declare_class (decl: Loc.t Ast.Statement.DeclareClass.t) =
+    let open Ast.Statement.DeclareClass in
+    this#add_binding decl.id;
+    super#declare_class decl
+
+  method! declare_function (decl: Loc.t Ast.Statement.DeclareFunction.t) =
+    let open Ast.Statement.DeclareFunction in
+    this#add_binding decl.id;
+    super#declare_function decl
+
   method! function_declaration (expr: Loc.t Ast.Function.t) =
     let open Ast.Function in
     let { id; _ } = expr in

@@ -135,4 +135,16 @@ let tests = "scope_builder" >::: [
      mk_loc (1, 15) (1, 18);
      mk_loc (1, 21) (1, 24);
      mk_loc (1, 28) (1, 31)];
+  "declare_var" >:: mk_scope_builder_all_uses_test
+    "declare var foo: number; foo"
+    [mk_loc (1, 12) (1, 15);
+     mk_loc (1, 25) (1, 28)];
+  "declare_class" >:: mk_scope_builder_all_uses_test
+    "declare class Foo {}; new Foo()"
+    [mk_loc (1, 14) (1, 17);
+     mk_loc (1, 26) (1, 29)];
+  "declare_function" >:: mk_scope_builder_all_uses_test
+    "declare function foo(): void; foo()"
+    [mk_loc (1, 17) (1, 20);
+     mk_loc (1, 30) (1, 33)];
 ]
