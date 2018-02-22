@@ -32,12 +32,20 @@ assert_ok "$FLOW" get-def --strip-root react.js 9 3
 assert_ok "$FLOW" get-def --strip-root react.js 9 9
 assert_ok "$FLOW" get-def --strip-root react.js 11 4
 assert_ok "$FLOW" get-def --strip-root react.js 11 12
+# TODO give some result for the JSX intrinsic here
+assert_ok "$FLOW" get-def --strip-root react.js 11 4
 
 printf "\nInheritance\n"
 assert_ok "$FLOW" get-def --strip-root override.js 8 19
+assert_ok "$FLOW" get-def --strip-root override.js 11 11
+assert_ok "$FLOW" get-def --strip-root override.js 12 11
 
 printf "\nDirectly jump to required/imported modules (TODO #2)\n"
 assert_ok "$FLOW" get-def --strip-root main.js 3 26
 assert_ok "$FLOW" get-def --strip-root main.js 23 29
 assert_ok "$FLOW" get-def --strip-root main.js 23 14
 assert_ok "$FLOW" get-def --strip-root main.js 24 25
+
+printf "\nRefinements\n"
+assert_ok "$FLOW" get-def --strip-root refinements.js 10 9
+assert_ok "$FLOW" get-def --strip-root refinements.js 11 9

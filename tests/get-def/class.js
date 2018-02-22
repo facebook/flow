@@ -2,11 +2,16 @@
 
 class Foo {
   prop: ?string;
-  fun(): void {}
+  #privateProp: number;
+  fun(): void {
+    this.#privateProp;
+    this.#privateProp = 4;
+  }
 }
 
 const foo = new Foo();
 foo.prop;
+foo.prop = null;
 foo.fun();
 
 if (foo.prop != null) {
