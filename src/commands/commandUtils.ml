@@ -281,6 +281,12 @@ let strip_root_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Print paths without the root"
 )
 
+let path_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--path" (optional string)
+      ~doc:"Specify (fake) path to file when reading data from stdin"
+)
+
 let verbose_flags =
   let collector main verbose indent depth =
     let opt_verbose =

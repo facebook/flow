@@ -28,8 +28,7 @@ let spec = {
     |> root_flag
     |> strip_root_flag
     |> from_flag
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> path_flag
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
   )
 }

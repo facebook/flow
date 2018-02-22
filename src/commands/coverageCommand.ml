@@ -34,8 +34,7 @@ let spec = {
     |> flag "--debug" no_arg
         ~doc:("Print debugging info about each range in the file to stderr. " ^
               "Cannot be used with --json or --pretty")
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> path_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
