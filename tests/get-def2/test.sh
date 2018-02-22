@@ -49,3 +49,9 @@ assert_ok "$FLOW" get-def --strip-root main.js 24 25
 printf "\nRefinements\n"
 assert_ok "$FLOW" get-def --strip-root refinements.js 10 9
 assert_ok "$FLOW" get-def --strip-root refinements.js 11 9
+
+printf "\ndeclare var\n"
+assert_ok "$FLOW" get-def --strip-root declare.js 4 1
+assert_ok "$FLOW" get-def --strip-root declare.js 7 1
+assert_ok "$FLOW" get-def --strip-root declare.js 10 1
+assert_ok "$FLOW" get-def --strip-root declare.js 13 5

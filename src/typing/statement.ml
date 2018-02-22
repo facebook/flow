@@ -222,11 +222,11 @@ and statement_decl cx = Ast.Statement.(
         )
       )
 
-  | (loc, DeclareVariable { DeclareVariable.id = (_, name); _ }) ->
+  | (loc, DeclareVariable { DeclareVariable.id = (id_loc, name); _ }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Tvar.mk cx r in
-      Type_table.set (Context.type_table cx) loc t;
-      Env.bind_declare_var cx name t loc
+      Type_table.set (Context.type_table cx) id_loc t;
+      Env.bind_declare_var cx name t id_loc
 
   | (loc, DeclareFunction { DeclareFunction.
       id = (id_loc, name) as id;
@@ -238,9 +238,9 @@ and statement_decl cx = Ast.Statement.(
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
           let t =
             Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation) in
-          Type_table.set (Context.type_table cx) loc t;
+          Type_table.set (Context.type_table cx) id_loc t;
           Type_table.set_info (Context.type_table cx) id_loc t;
-          Env.bind_declare_fun cx name t loc
+          Env.bind_declare_fun cx name t id_loc
       | Some func_decl ->
           statement_decl cx (loc, func_decl)
       )

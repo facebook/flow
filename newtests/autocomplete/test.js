@@ -2324,8 +2324,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 8,
                "endline": 8,
-               "start": 1,
-               "end": 55
+               "start": 13,
+               "end": 32
              },
              {
                "name": "objectAssign",
@@ -2346,8 +2346,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 9,
                "endline": 9,
-               "start": 1,
-               "end": 39
+               "start": 13,
+               "end": 24
              },
              {
                "name": "mixin",
@@ -2364,8 +2364,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 7,
                "endline": 7,
-               "start": 1,
-               "end": 38
+               "start": 13,
+               "end": 17
              },
              {
                "name": "mergeInto",
@@ -2386,8 +2386,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 6,
                "endline": 6,
-               "start": 1,
-               "end": 46
+               "start": 13,
+               "end": 21
              },
              {
                "name": "mergeDeepInto",
@@ -2408,8 +2408,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 5,
                "endline": 5,
-               "start": 1,
-               "end": 54
+               "start": 13,
+               "end": 25
              },
              {
                "name": "merge",
@@ -2426,8 +2426,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 4,
                "endline": 4,
-               "start": 1,
-               "end": 38
+               "start": 13,
+               "end": 17
              },
              {
                "name": "idx",
@@ -2448,8 +2448,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "customfun.js",
                "line": 3,
                "endline": 3,
-               "start": 1,
-               "end": 34
+               "start": 13,
+               "end": 15
              },
              {
                "name": "exports",
@@ -2652,8 +2652,8 @@ export default suite(({addFile, flowCmd}) => [
               "path": "exact.js",
               "line": 5,
               "endline": 5,
-              "start": 1,
-              "end": 48
+              "start": 13,
+              "end": 15
             },
             {
               "name": "exports",

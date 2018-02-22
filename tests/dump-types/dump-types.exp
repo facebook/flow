@@ -605,14 +605,14 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":1,"offset":450},
-      "end":{"line":19,"column":34,"offset":484}
+      "start":{"line":19,"column":13,"offset":462},
+      "end":{"line":19,"column":15,"offset":465}
     },
     "path":"test.js",
     "line":19,
     "endline":19,
-    "start":1,
-    "end":34
+    "start":13,
+    "end":15
   },
   {
     "type":"{a?: {b: ?{c: (null | {d: number})}}}",
@@ -620,14 +620,14 @@
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":1,"offset":485},
-      "end":{"line":20,"column":53,"offset":538}
+      "start":{"line":20,"column":13,"offset":497},
+      "end":{"line":20,"column":15,"offset":500}
     },
     "path":"test.js",
     "line":20,
     "endline":20,
-    "start":1,
-    "end":53
+    "start":13,
+    "end":15
   },
   {
     "type":"?number",

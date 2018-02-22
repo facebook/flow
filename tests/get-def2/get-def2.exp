@@ -45,3 +45,9 @@ types.js:3:13,3:15
 Refinements
 refinements.js:4:3,4:6
 refinements.js:4:3,4:6
+
+declare var
+declare.js:3:13,3:15
+declare.js:6:20,6:22
+declare.js:9:18,9:20
+declare.js:12:15,12:17
