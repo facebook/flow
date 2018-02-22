@@ -129,4 +129,10 @@ let tests = "scope_builder" >::: [
      [mk_loc (1, 76) (1, 77)];
      [mk_loc (1, 94) (1, 96)];
      [mk_loc (1, 101) (1, 103)]];
+  "jsx_uses_of_all_uses" >:: mk_scope_builder_all_uses_test
+    "class Foo {}; <Foo></Foo>; <Foo/>"
+    [mk_loc (1, 6) (1, 9);
+     mk_loc (1, 15) (1, 18);
+     mk_loc (1, 21) (1, 24);
+     mk_loc (1, 28) (1, 31)];
 ]

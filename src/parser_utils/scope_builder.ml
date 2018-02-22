@@ -139,6 +139,12 @@ class scope_builder = object(this)
     uses <- expr::uses;
     expr
 
+  method! jsx_identifier (id: Loc.t Ast.JSX.Identifier.t) =
+    let open Ast.JSX.Identifier in
+    let loc, {name} = id in
+    uses <- (loc, name)::uses;
+    id
+
   (* don't rename the `foo` in `x.foo` *)
   method! member_property_identifier (id: Loc.t Ast.Identifier.t) = id
 

@@ -745,11 +745,12 @@ class mapper = object(this)
 
   method jsx_element (expr: Loc.t Ast.JSX.element) =
     let open Ast.JSX in
-    let { openingElement; closingElement = _; children } = expr in
+    let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
+    let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
     let children' = map_list this#jsx_child children in
-    if openingElement == openingElement' && children == children' then expr
-    else { expr with openingElement = openingElement'; children = children' }
+    if openingElement == openingElement' && closingElement == closingElement' && children == children' then expr
+    else { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
   method jsx_fragment (expr: Loc.t Ast.JSX.fragment) =
     let open Ast.JSX in
@@ -760,9 +761,16 @@ class mapper = object(this)
   method jsx_opening_element (elem: Loc.t Ast.JSX.Opening.t) =
     let open Ast.JSX.Opening in
     let loc, { name; selfClosing; attributes } = elem in
+    let name' = this#jsx_name name in
     let attributes' = map_list this#jsx_opening_attribute attributes in
-    if attributes == attributes' then elem
+    if name == name' && attributes == attributes' then elem
     else loc, { name; selfClosing; attributes = attributes' }
+
+  method jsx_closing_element (elem: Loc.t Ast.JSX.Closing.t) =
+    let open Ast.JSX.Closing in
+    let loc, {name} = elem in
+    let name' = this#jsx_name name in
+    if name == name' then elem else loc, {name=name'}
 
   method jsx_opening_attribute (jsx_attr: Loc.t Ast.JSX.Opening.attribute) =
     let open Ast.JSX.Opening in
@@ -812,6 +820,52 @@ class mapper = object(this)
     | Expression expr ->
       id this#expression expr jsx_expr (fun expr -> { expression = Expression expr})
     | EmptyExpression _ -> jsx_expr
+
+  method jsx_name (name: Loc.t Ast.JSX.name) =
+    let open Ast.JSX in
+    let name' = match name with
+      | Identifier id -> Identifier (this#jsx_identifier id)
+      | NamespacedName namespaced_name ->
+          NamespacedName (this#jsx_namespaced_name namespaced_name)
+      | MemberExpression member_exp ->
+          MemberExpression (this#jsx_member_expression member_exp)
+    in
+    (* structural equality since it's easier than checking equality in each branch of the match
+     * above *)
+    if name = name' then name else name'
+
+  method jsx_namespaced_name (namespaced_name: Loc.t Ast.JSX.NamespacedName.t) =
+    let open Ast.JSX in
+    let open NamespacedName in
+    let loc, {namespace; name} = namespaced_name in
+    let namespace' = this#jsx_identifier namespace in
+    let name' = this#jsx_identifier name in
+    if namespace == namespace' && name == name' then
+      namespaced_name
+    else
+      loc, {namespace=namespace'; name=name'}
+
+  method jsx_member_expression (member_exp: Loc.t Ast.JSX.MemberExpression.t) =
+    let open Ast.JSX in
+    let loc, {MemberExpression._object; MemberExpression.property} = member_exp in
+    let _object' = match _object with
+      | MemberExpression.Identifier id ->
+          let id' = this#jsx_identifier id in
+          if id' == id then _object else MemberExpression.Identifier id'
+      | MemberExpression.MemberExpression nested_exp ->
+          let nested_exp' = this#jsx_member_expression nested_exp in
+          if nested_exp' == nested_exp then
+            _object
+          else
+            MemberExpression.MemberExpression nested_exp'
+    in
+    let property' = this#jsx_identifier property in
+    if _object == _object' && property == property' then
+      member_exp
+    else
+      loc, MemberExpression.({_object=_object'; property=property'})
+
+  method jsx_identifier (id: Loc.t Ast.JSX.Identifier.t) = id
 
   method labeled_statement (stmt: Loc.t Ast.Statement.Labeled.t) =
     let open Ast.Statement.Labeled in

@@ -979,3 +979,33 @@ Write of a shadow property introduced via a read: {
 Introduction of a shadow property that is never written: {"kind":"no-symbol-found"}
 Read of a shadow property that is never written: {"kind":"no-symbol-found"}
 Use of a property that came through type spread: {"kind":"no-symbol-found"}
+Use as a JSX component class: {
+  "kind":"symbol-found",
+  "name":"Foo",
+  "locs":[
+    {
+      "source":"jsx.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":7,"offset":49},
+      "end":{"line":5,"column":9,"offset":52}
+    },
+    {
+      "source":"jsx.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":2,"offset":92},
+      "end":{"line":7,"column":4,"offset":95}
+    },
+    {
+      "source":"jsx.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":8,"offset":98},
+      "end":{"line":7,"column":10,"offset":101}
+    },
+    {
+      "source":"jsx.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":5,"offset":108},
+      "end":{"line":9,"column":7,"offset":111}
+    }
+  ]
+}
