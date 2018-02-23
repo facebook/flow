@@ -2334,10 +2334,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:24:2
 
-Cannot create `Example` element because in property `mixed`:
- - Either string [1] is incompatible with string literal `foo` [2].
- - Or string [1] is incompatible with number literal `0` [3].
- - Or string [1] is incompatible with boolean literal `true` [4].
+Cannot create `Example` element because string [1] is incompatible with enum [2] in property `mixed`.
 
    proptype_oneOf.js:24:2
    24| (<Example mixed={"baz"} />); // error: 'baz' not in enum
@@ -2347,15 +2344,9 @@ References:
    proptype_oneOf.js:24:18
    24| (<Example mixed={"baz"} />); // error: 'baz' not in enum
                         ^^^^^ [1]
-   proptype_oneOf.js:9:35
+   proptype_oneOf.js:9:12
     9|     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                                         ^^^^^ [2]
-   proptype_oneOf.js:9:42
-    9|     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                                                ^ [3]
-   proptype_oneOf.js:9:45
-    9|     mixed: React.PropTypes.oneOf(["foo", 0, true]),
-                                                   ^^^^ [4]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:32:2

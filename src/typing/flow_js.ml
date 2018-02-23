@@ -8089,7 +8089,10 @@ and ignore_of_spec = function
 *)
 and optimize_spec_try_quick_mem cx trace reason_op = function
   | UnionCases (use_op, l, rep, ts) -> begin match l with
-    | DefT (_, (StrT _ | NumT _ | SingletonStrT _ | SingletonNumT _)) ->
+    | DefT (_,
+        (StrT _ | NumT _ | BoolT _ |
+         SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ |
+         VoidT | NullT)) ->
       enum_optimize cx rep;
       begin match UnionRep.quick_mem l rep with
         | Some true -> (* membership check succeeded *)

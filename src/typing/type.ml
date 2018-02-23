@@ -1417,19 +1417,26 @@ end = struct
   type canon_t =
     | StrCanon of string
     | NumCanon of TypeTerm.number_literal
+    | BoolCanon of bool
+    | VoidCanon
+    | NullCanon
 
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
-    | DefT (_, SingletonStrT lit)
-    | DefT (_, StrT (Literal (_, lit))) -> Some (StrCanon lit)
-    | DefT (_, SingletonNumT lit)
-    | DefT (_, NumT (Literal (_, lit))) -> Some (NumCanon lit)
+    | DefT (_, SingletonStrT lit) | DefT (_, StrT (Literal (_, lit))) -> Some (StrCanon lit)
+    | DefT (_, SingletonNumT lit) | DefT (_, NumT (Literal (_, lit))) -> Some (NumCanon lit)
+    | DefT (_, SingletonBoolT lit) | DefT (_, BoolT (Some lit)) -> Some (BoolCanon lit)
+    | DefT (_, VoidT) -> Some (VoidCanon)
+    | DefT (_, NullT) -> Some (NullCanon)
     | _ -> None
   )
 
   let is_base = TypeTerm.(function
     | DefT (_, SingletonStrT _)
     | DefT (_, SingletonNumT _)
+    | DefT (_, SingletonBoolT _)
+    | DefT (_, VoidT)
+    | DefT (_, NullT)
       -> true
     | _ -> false
   )

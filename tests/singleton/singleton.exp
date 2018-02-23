@@ -61,21 +61,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- boolean.js:29:5
 
-Cannot call `bar` with `1` bound to `x` because:
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or number [1] is incompatible with boolean literal `false` [3].
+Cannot call `bar` with `1` bound to `x` because number [1] is incompatible with enum [2].
 
    boolean.js:29:5
    29| bar(1); // error
            ^ [1]
 
 References:
-   boolean.js:17:24
-   17| type MyOwnBooleanLOL = true | false
-                              ^^^^ [2]
-   boolean.js:17:31
-   17| type MyOwnBooleanLOL = true | false
-                                     ^^^^^ [3]
+   boolean.js:19:17
+   19| function bar(x: MyOwnBooleanLOL): false {
+                       ^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- number.js:8:12
