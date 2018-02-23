@@ -234,16 +234,16 @@ References:
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
 Cannot call `Request` with `c` bound to `init` because:
- - string enum [1] is incompatible with undefined [2] in property `cache`.
- - string enum [3] is incompatible with undefined [4] in property `credentials`.
+ - enum [1] is incompatible with undefined [2] in property `cache`.
+ - enum [3] is incompatible with undefined [4] in property `credentials`.
  - `Headers` [5] is incompatible with object type [6] in property `headers`.
  - `Headers` [5] is incompatible with undefined [6] in property `headers`.
  - string [7] is incompatible with undefined [8] in property `integrity`.
  - string [9] is incompatible with undefined [10] in property `method`.
- - string enum [11] is incompatible with undefined [12] in property `mode`.
- - string enum [13] is incompatible with undefined [14] in property `redirect`.
+ - enum [11] is incompatible with undefined [12] in property `mode`.
+ - enum [13] is incompatible with undefined [14] in property `redirect`.
  - string [15] is incompatible with undefined [16] in property `referrer`.
- - string enum [17] is incompatible with undefined [18] in property `referrerPolicy`.
+ - enum [17] is incompatible with undefined [18] in property `referrerPolicy`.
 
    request.js:6:35
      6| const e: Request = new Request(b, c); // incorrect

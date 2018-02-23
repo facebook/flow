@@ -76,7 +76,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- yuge.js:23:6
 
-Cannot cast empty string to `ErrorCode` because string [1] is incompatible with number enum [2].
+Cannot cast empty string to `ErrorCode` because string [1] is incompatible with enum [2].
 
    yuge.js:23:6
    23|     ("": ErrorCode);  // also, error pos omits this line completely

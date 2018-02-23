@@ -45,8 +45,7 @@ type reason_desc =
   | RAnyFunction
   | RTemplateString
   | RUnknownString
-  | RStringEnum
-  | RNumberEnum
+  | REnum
   | RGetterSetterProperty
   | RThis
   | RThisType

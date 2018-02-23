@@ -1322,7 +1322,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:48:1
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with string enum [2] in property `children`.
+Cannot create `TextLiteral` element because JSX text [1] is incompatible with enum [2] in property `children`.
 
    text.js:48:1
    48| <TextLiteral>buz</TextLiteral>; // Error: `buz` is not allowed.
@@ -1339,7 +1339,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:49:1
 
-Cannot create `TextLiteral` element because string [1] is incompatible with string enum [2] in property `children`.
+Cannot create `TextLiteral` element because string [1] is incompatible with enum [2] in property `children`.
 
    text.js:49:1
    49| <TextLiteral>{'buz'}</TextLiteral>; // Error: `buz` is not allowed.
@@ -1356,7 +1356,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:50:1
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with string enum [2] in property `children`.
+Cannot create `TextLiteral` element because JSX text [1] is incompatible with enum [2] in property `children`.
 
    text.js:50:1
    50| <TextLiteral>foo  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1373,7 +1373,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:51:1
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with string enum [2] in property `children`.
+Cannot create `TextLiteral` element because JSX text [1] is incompatible with enum [2] in property `children`.
 
    text.js:51:1
    51| <TextLiteral>  foo</TextLiteral>; // Error: Spaces are not trimmed.
@@ -1390,8 +1390,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:52:1
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with string enum [2] in property
-`children`.
+Cannot create `TextLiteral` element because children array [1] is incompatible with enum [2] in property `children`.
 
    text.js:52:1
    52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1408,8 +1407,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:53:1
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with string enum [2] in property
-`children`.
+Cannot create `TextLiteral` element because children array [1] is incompatible with enum [2] in property `children`.
 
    text.js:53:1
    53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.

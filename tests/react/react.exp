@@ -2283,7 +2283,7 @@ number [1] is not a React propType.
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:14:2
 
-Cannot create `Example` element because string [1] is incompatible with string enum [2] in property `str`.
+Cannot create `Example` element because string [1] is incompatible with enum [2] in property `str`.
 
    proptype_oneOf.js:14:2
    14| (<Example str="baz" />); // error: 'baz' not in enum
@@ -2300,7 +2300,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- proptype_oneOf.js:17:2
 
-Cannot create `Example` element because number [1] is incompatible with number enum [2] in property `num`.
+Cannot create `Example` element because number [1] is incompatible with enum [2] in property `num`.
 
    proptype_oneOf.js:17:2
    17| (<Example num={3} />); // error: 3 not in enum

@@ -93,8 +93,7 @@ type reason_desc =
   | RAnyFunction
   | RTemplateString
   | RUnknownString
-  | RStringEnum
-  | RNumberEnum
+  | REnum
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -439,8 +438,7 @@ let rec string_of_desc = function
   | RAnyFunction -> "any function"
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
-  | RStringEnum -> "string enum"
-  | RNumberEnum -> "number enum"
+  | REnum -> "enum"
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -1022,8 +1020,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RFbt
 | RTemplateString
 | RUnknownString
-| RStringEnum
-| RNumberEnum
+| REnum
 | RKeySet
 | RRegExp
   -> `Scalar

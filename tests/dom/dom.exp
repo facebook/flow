@@ -28,8 +28,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
-enum [2] in property `behavior`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
+in property `behavior`.
 
    Element.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -46,8 +46,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Element.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
-enum [2] in property `block`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
+in property `block`.
 
    Element.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -78,8 +78,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:14:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
-enum [2] in property `behavior`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
+in property `behavior`.
 
    HTMLElement.js:14:28
      14|     element.scrollIntoView({ behavior: 'invalid' });
@@ -96,8 +96,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- HTMLElement.js:15:28
 
-Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with string
-enum [2] in property `block`.
+Cannot call `element.scrollIntoView` with object literal bound to `arg` because string [1] is incompatible with enum [2]
+in property `block`.
 
    HTMLElement.js:15:28
      15|     element.scrollIntoView({ block: 'invalid' });
@@ -173,7 +173,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- HTMLInputElement.js:10:5
 
-Cannot call `el.setRangeText` because string [1] is incompatible with string enum [2].
+Cannot call `el.setRangeText` because string [1] is incompatible with enum [2].
 
    HTMLInputElement.js:10:5
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value

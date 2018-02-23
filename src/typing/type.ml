@@ -1418,18 +1418,6 @@ end = struct
     | StrCanon of string
     | NumCanon of TypeTerm.number_literal
 
-  type base_t =
-    | StrBase
-    | NumBase
-
-  let desc_of_base = function
-    | StrBase -> RStringEnum
-    | NumBase -> RNumberEnum
-
-  let base_of_canon = function
-    | StrCanon _ -> StrBase
-    | NumCanon _ -> NumBase
-
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
     | DefT (_, SingletonStrT lit)
@@ -1439,10 +1427,11 @@ end = struct
     | _ -> None
   )
 
-  let base_of_t = TypeTerm.(function
-    | DefT (_, SingletonStrT _) -> Some StrBase
-    | DefT (_, SingletonNumT _) -> Some NumBase
-    | _ -> None
+  let is_base = TypeTerm.(function
+    | DefT (_, SingletonStrT _)
+    | DefT (_, SingletonNumT _)
+      -> true
+    | _ -> false
   )
 
   (* enums are stored as singleton type sets *)
@@ -1452,7 +1441,7 @@ end = struct
   end)
 
   type finally_optimized_rep =
-    | Enum of base_t * EnumSet.t
+    | Enum of EnumSet.t
     | Unoptimized (* TODO: should record why optimization failed *)
 
   (** union rep is:
@@ -1465,11 +1454,11 @@ end = struct
     TypeTerm.t * TypeTerm.t * TypeTerm.t list *
     finally_optimized_rep option ref
 
-  (* helper: add t to enum set if base matches *)
-  let acc_enum (base, tset) t =
-    match Option.both (base_of_t t) (canon t) with
-    | Some (tbase, tcanon) when tbase = base ->
-      Some (base, EnumSet.add tcanon tset)
+  (* helper: add t to enum set *)
+  let acc_enum tset t =
+    match canon t with
+    | Some tcanon when is_base t ->
+      Some (EnumSet.add tcanon tset)
     | _ -> None
 
   let optimize ?flatten (t0, t1, ts, enum_ref) =
@@ -1480,15 +1469,15 @@ end = struct
        case the union should be considered degenerate and optimized further. *)
     match ts with
       | t::ts ->
-        let enum = match Option.both (base_of_t t) (canon t) with
-          | None -> None
-          | Some (tbase, tcanon) ->
-            let enum = EnumSet.singleton tcanon in
-            ListUtils.fold_left_opt acc_enum (tbase, enum) ts
+        let enum = match canon t with
+          | Some tcanon when is_base t ->
+            let tset = EnumSet.singleton tcanon in
+            ListUtils.fold_left_opt acc_enum tset ts
+          | _ -> None
         in
         let enum = match enum with
           | None -> default
-          | Some (tbase, enum) -> Some (Enum (tbase, enum)) in
+          | Some enum -> Some (Enum enum) in
         enum_ref := enum
       | [] -> ()
 
@@ -1509,8 +1498,8 @@ end = struct
     match !enum_ref with
     | None -> r
     | Some Unoptimized -> r
-    | Some (Enum (b, _)) ->
-      replace_reason_const (desc_of_base b) r
+    | Some (Enum _) ->
+      replace_reason_const REnum r
 
   let members (t0, t1, ts, _) = t0::t1::ts
   let members_nel (t0, t1, ts, _) = t0, (t1, ts)
@@ -1550,10 +1539,9 @@ end = struct
       else None
     | None, Some (Enum _) ->
       Some false
-    | Some tcanon, Some (Enum (base, tset)) ->
-      if (base_of_canon tcanon) = base
-      then Some (EnumSet.mem tcanon tset)
-      else Some false
+    | Some tcanon, Some (Enum tset) ->
+      Some (EnumSet.mem tcanon tset)
+
 end
 
 (* We encapsulate IntersectionT's internal structure.

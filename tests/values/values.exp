@@ -481,7 +481,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:71:2
 
-Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with string enum [2].
+Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with enum [2].
 
    object_types.js:71:2
    71| ('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -495,7 +495,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:72:2
 
-Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with string enum [2].
+Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with enum [2].
 
    object_types.js:72:2
    72| ('Magic': SuiteEnum); // Error: 'Magic' is not a value.
@@ -509,7 +509,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:73:3
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with string enum [2].
+Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with enum [2].
 
    object_types.js:73:3
    73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
@@ -526,7 +526,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:79:12
 
-Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with string enum [2].
+Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with enum [2].
 
    object_types.js:79:12
    79| magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
@@ -540,7 +540,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:80:12
 
-Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with string enum [2].
+Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with enum [2].
 
    object_types.js:80:12
    80| magicTrick('Magic'); // Error: 'Magic' is not a value.
@@ -554,7 +554,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:81:13
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with string enum [2].
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with enum [2].
 
    object_types.js:81:13
    81| magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
@@ -571,7 +571,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:95:2
 
-Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with string enum [2].
+Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with enum [2].
 
    object_types.js:95:2
    95| ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -585,7 +585,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:96:2
 
-Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with string enum [2].
+Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with enum [2].
 
    object_types.js:96:2
    96| ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
@@ -599,7 +599,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:97:3
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible with string enum [2].
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible with enum [2].
 
    object_types.js:97:3
    97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
