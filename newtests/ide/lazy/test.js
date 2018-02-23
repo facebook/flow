@@ -446,6 +446,9 @@ export default suite(({
 
           Found 1 error
 
+          The Flow server is currently in IDE lazy mode and is only checking 1/1 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       )
       .because('Even though test.js is closed, it is still focused'),
@@ -982,8 +985,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -997,8 +999,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -1012,6 +1013,9 @@ export default suite(({
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ).because('There are two errors now'),
@@ -1360,6 +1364,9 @@ export default suite(({
         `
           No errors!
 
+          The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       )
       .because('File is open but has @noflow so we should no errors'),
@@ -1688,6 +1695,9 @@ export default suite(({
 
           Found 1 error
 
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       )
       .because('Nothing should blow up and we should see the single error'),
@@ -1718,6 +1728,9 @@ export default suite(({
       .stdout(
         `
           No errors!
+
+          The Flow server is currently in IDE lazy mode and is only checking 0/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1751,8 +1764,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -1766,6 +1778,9 @@ export default suite(({
 
 
           Found 1 error
+
+          The Flow server is currently in IDE lazy mode and is only checking 1/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1820,8 +1835,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -1835,8 +1849,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -1850,6 +1863,9 @@ export default suite(({
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1868,8 +1884,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -1884,6 +1899,9 @@ export default suite(({
 
           Found 2 errors
 
+          The Flow server is currently in IDE lazy mode and is only checking 1/3 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       )
       .because('Error in dependency.js disappears and we get missing module error'),
@@ -1893,8 +1911,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -1908,8 +1925,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -1923,6 +1939,9 @@ export default suite(({
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -2000,8 +2019,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -2015,8 +2033,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -2030,8 +2047,7 @@ export default suite(({
 
           Error ------------------------------------------------------------------------------------------- otherDependent.js:3:35
 
-          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible
-          with string [2].
+          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible with string [2].
 
              otherDependent.js:3:35
              3| var otherDependentError: string = 123;
@@ -2045,6 +2061,9 @@ export default suite(({
 
 
           Found 3 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 3/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -2096,8 +2115,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -2111,8 +2129,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -2126,6 +2143,9 @@ export default suite(({
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ),
@@ -2136,8 +2156,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -2151,8 +2170,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -2166,6 +2184,9 @@ export default suite(({
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -2217,8 +2238,7 @@ export default suite(({
         `
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -2232,8 +2252,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -2248,6 +2267,9 @@ export default suite(({
 
           Found 2 errors
 
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       ).because("otherDependent's errors are ignored due to lazy mode"),
     flowCmd(['force-recheck', '--focus', 'dependency.js'])
@@ -2257,8 +2279,7 @@ export default suite(({
 
           Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
              dependency.js:3:31
              3| var dependencyError: string = 123;
@@ -2272,8 +2293,7 @@ export default suite(({
 
           Error -------------------------------------------------------------------------------------------------- focused.js:3:28
 
-          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
-          string [2].
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
 
              focused.js:3:28
              3| var focusedError: string = 123;
@@ -2287,8 +2307,7 @@ export default suite(({
 
           Error ------------------------------------------------------------------------------------------- otherDependent.js:3:35
 
-          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible
-          with string [2].
+          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible with string [2].
 
              otherDependent.js:3:35
              3| var otherDependentError: string = 123;
@@ -2302,6 +2321,9 @@ export default suite(({
 
 
           Found 3 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 3/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ).because('force-recheck --focus promotes dependency to focused, so we see the error in otherDependent'),

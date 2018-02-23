@@ -200,6 +200,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/lang/width-subtyping/":
   title: "Width Subtyping"
   description: ""
+"/docs/lang/lazy-modes/":
+  title: "Lazy Modes"
+  description: "Explanation of Flow's lazy mode"
 "/docs/libdefs/":
   title: "Library Definitions"
   description: "Typing third-party libraries"

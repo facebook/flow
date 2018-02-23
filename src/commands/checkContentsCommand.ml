@@ -99,6 +99,7 @@ let main option_values json pretty json_version root error_flags strip_root verb
           ~strip_root
           ~errors
           ~warnings
+          ~lazy_msg:None
           ();
         (* Return a successful exit code if there were only warnings. *)
         let open FlowExitStatus in

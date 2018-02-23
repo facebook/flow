@@ -48,6 +48,7 @@ let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warning
       ~strip_root
       ~errors
       ~warnings
+      ~lazy_msg:None
       ()
 
 module CheckCommand = struct

@@ -147,6 +147,12 @@ module Response = struct
   | NO_ERRORS
   | NOT_COVERED
 
+  type lazy_stats = {
+    lazy_mode: Options.lazy_mode option;
+    checked_files: int;
+    total_files: int;
+  }
+
   type check_file_response = status_response
 
   type find_module_response = File_key.t option
@@ -164,7 +170,7 @@ module Response = struct
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
   | PORT of port_response
-  | STATUS of status_response
+  | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
   | FORCE_RECHECK of Profiling_js.finished option
   | SUGGEST of suggest_response
 

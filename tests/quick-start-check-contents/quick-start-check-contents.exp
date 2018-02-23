@@ -6,6 +6,9 @@ Quick start.
 Expect no errors.
 No errors!
 
+The Flow server is currently in filesystem lazy mode and is only checking 0/5 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
 Check contents with dependency, expect errors in contents.
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
@@ -44,6 +47,9 @@ References:
 
 
 Found 1 error
+
+The Flow server is currently in filesystem lazy mode and is only checking 1/5 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Unsaved files don't have dependents, as in non-lazy mode.
 No errors!
