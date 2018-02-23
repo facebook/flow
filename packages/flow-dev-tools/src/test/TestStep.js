@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import searchStackForTestAssertion from './searchStackForTestAssertion';
 import newErrors from './assertions/newErrors';
@@ -9,8 +13,7 @@ import sortedStdout from './assertions/sortedStdout';
 import exitCodes from './assertions/exitCodes';
 import serverRunning from './assertions/serverRunning';
 import noop from './assertions/noop';
-import ideNoNewMessagesAfterSleep
-  from './assertions/ideNoNewMessagesAfterSleep';
+import ideNoNewMessagesAfterSleep from './assertions/ideNoNewMessagesAfterSleep';
 import ideNewMessagesWithTimeout from './assertions/ideNewMessagesWithTimeout';
 import ideStderr from './assertions/ideStderr';
 
@@ -26,14 +29,16 @@ import type {FlowResult} from '../flowResult';
 import type {StepEnvReadable, StepEnvWriteable} from './stepEnv';
 import type {IDEMessage} from './ide';
 
-type Action =
-  (builder: TestBuilder, envWrite: StepEnvWriteable) => Promise<void>;
+type Action = (
+  builder: TestBuilder,
+  envWrite: StepEnvWriteable,
+) => Promise<void>;
 
 export type StepResult = {
   passed: boolean,
   assertionResults: Array<ErrorAssertionResult>,
   exception?: Error,
-}
+};
 
 /**
  * A test suite is made up of tests. A test is made up of test steps. When you
@@ -92,11 +97,11 @@ export class TestStep {
   checkAssertions(env: StepEnvReadable): StepResult {
     let passed = true;
     const assertionResults = this._assertions.map(assertion => {
-      const result = assertion(this._reason, env)
-      passed = passed && result.type == "pass";
+      const result = assertion(this._reason, env);
+      passed = passed && result.type == 'pass';
       return result;
     });
-    return { passed, assertionResults };
+    return {passed, assertionResults};
   }
 
   needsFlowServer(): boolean {
@@ -195,175 +200,152 @@ class TestStepFirstOrSecondStage extends TestStep {
  * ]);
  */
 export class TestStepFirstStage extends TestStepFirstOrSecondStage {
-  addCode: (code:string) => TestStepFirstStage =
-    (code) => this._cloneWithAction(
-      async (builder, env) => {
-        await builder.addCode(code);
-        env.triggerFlowCheck();
-      }
+  addCode: (code: string) => TestStepFirstStage = code =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.addCode(code);
+      env.triggerFlowCheck();
+    });
+
+  addFile: (source: string, dest?: string) => TestStepFirstStage = (
+    source,
+    dest,
+  ) =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.addFile(source, dest || source);
+      env.triggerFlowCheck();
+    });
+
+  addFiles: (...sources: Array<string>) => TestStepFirstStage = (...sources) =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.addFiles(sources);
+      env.triggerFlowCheck();
+    });
+
+  removeFile: (filename: string) => TestStepFirstStage = filename =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.removeFile(filename);
+      env.triggerFlowCheck();
+    });
+
+  removeFiles: (...filenames: Array<string>) => TestStepFirstStage = (
+    ...filenames
+  ) =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.removeFiles(filenames);
+      env.triggerFlowCheck();
+    });
+
+  ideStart: () => TestStepFirstStage = () => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.createIDEConnection();
+      env.triggerFlowCheck();
+    });
+    ret._startsIde = true;
+    ret._needsFlowServer = true;
+    return ret;
+  };
+
+  ideStop: () => TestStepFirstStage = () => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.cleanupIDEConnection();
+    });
+    ret._needsFlowServer = true;
+    return ret;
+  };
+
+  ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage = (
+    method,
+    ...params
+  ) => {
+    const ret = this._cloneWithAction(async (builder, env) =>
+      builder.sendIDENotification(method, params),
     );
+    return ret;
+  };
 
-  addFile: (source: string, dest?: string) => TestStepFirstStage =
-    (source, dest) => this._cloneWithAction(
-      async (builder, env) => {
-        await builder.addFile(source, dest || source);
-        env.triggerFlowCheck();
-      }
-    );
-
-  addFiles: (...sources: Array<string>) => TestStepFirstStage =
-    (...sources) => this._cloneWithAction(
-      async (builder, env) => {
-        await builder.addFiles(sources);
-        env.triggerFlowCheck();
-      }
-    );
-
-  removeFile: (filename: string) => TestStepFirstStage =
-    (filename) => this._cloneWithAction(
-      async (builder, env) => {
-        await builder.removeFile(filename);
-        env.triggerFlowCheck();
-      }
-    );
-
-  removeFiles: (...filenames: Array<string>) => TestStepFirstStage =
-    (...filenames) => this._cloneWithAction(
-      async (builder, env) => {
-        await builder.removeFiles(filenames);
-        env.triggerFlowCheck();
-      }
-    );
-
-  ideStart: () => TestStepFirstStage =
-    () => {
-      const ret = this._cloneWithAction(
-        async (builder, env) => {
-          await builder.createIDEConnection();
-          env.triggerFlowCheck();
-        }
-      );
-      ret._startsIde = true;
-      ret._needsFlowServer = true;
-      return ret;
-    };
-
-  ideStop: () => TestStepFirstStage =
-    () => {
-      const ret = this._cloneWithAction(
-        async (builder, env) => {
-          await builder.cleanupIDEConnection();
-        }
-      );
-      ret._needsFlowServer = true;
-      return ret;
-    };
-
-  ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage =
-    (method, ...params) => {
-      const ret = this._cloneWithAction(
-        async (builder, env) => builder.sendIDENotification(
-          method,
-          params,
-        )
-      );
-      return ret;
-    }
-
-  ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage =
-    (method, ...params) => this._cloneWithAction(
-      (builder, env) => builder.sendIDERequest(method, params),
+  ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage = (
+    method,
+    ...params
+  ) =>
+    this._cloneWithAction((builder, env) =>
+      builder.sendIDERequest(method, params),
     );
 
   // Sleep timeoutMs milliseconds and assert there were no ide messages
-  ideNoNewMessagesAfterSleep: (number) => TestStepSecondStage =
-    (timeoutMs) => {
-      const assertLoc = searchStackForTestAssertion();
+  ideNoNewMessagesAfterSleep: number => TestStepSecondStage = timeoutMs => {
+    const assertLoc = searchStackForTestAssertion();
 
-      const ret = this
-        ._cloneWithAction((builder, env) => sleep(timeoutMs))
-        ._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
-      ret._readsIdeMessages = true;
-      return ret;
-    };
+    const ret = this._cloneWithAction((builder, env) =>
+      sleep(timeoutMs),
+    )._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
+    ret._readsIdeMessages = true;
+    return ret;
+  };
 
-  sleep: (number) => TestStepFirstStage =
-    (timeoutMs) => this._cloneWithAction(
-      async (builder, env) => {
-        await sleep(timeoutMs);
-      }
-    );
+  sleep: number => TestStepFirstStage = timeoutMs =>
+    this._cloneWithAction(async (builder, env) => {
+      await sleep(timeoutMs);
+    });
 
   // Wait for the expected output, and timeout after timeousMs milliseconds
-  ideNewMessagesWithTimeout:
-    (number, $ReadOnlyArray<IDEMessage>) => TestStepSecondStage =
-    (timeoutMs, expected) => {
-      const assertLoc = searchStackForTestAssertion();
+  ideNewMessagesWithTimeout: (
+    number,
+    $ReadOnlyArray<IDEMessage>,
+  ) => TestStepSecondStage = (timeoutMs, expected) => {
+    const assertLoc = searchStackForTestAssertion();
 
-      const ret = this
-        ._cloneWithAction(
-          (builder, env) => builder.ideNewMessagesWithTimeout(
-            timeoutMs,
-            expected,
-          )
-        )
-        ._cloneWithAssertion(
-          ideNewMessagesWithTimeout(timeoutMs, expected, assertLoc)
-        );
-      ret._readsIdeMessages = true;
-      return ret;
-    };
+    const ret = this._cloneWithAction((builder, env) =>
+      builder.ideNewMessagesWithTimeout(timeoutMs, expected),
+    )._cloneWithAssertion(
+      ideNewMessagesWithTimeout(timeoutMs, expected, assertLoc),
+    );
+    ret._readsIdeMessages = true;
+    return ret;
+  };
 
-  flowCmd: (args: Array<string>, stdinFile?: string) => TestStepFirstStage =
-    (args, stdinFile) => {
-      // Certain flow configs don't need a flow server to exist
-      let needsFlowServer = false;
-      switch (args[0]) {
-        case 'ast':
-        case 'init':
-        case 'ls':
-        case 'start':
-        case 'stop':
-        case 'version':
-          break;
-        default:
-          needsFlowServer = true;
-      }
-      if (needsFlowServer) {
-        // We never want a flowCmd to automatically start a server
-        args = [
-          args[0],
-          '--no-auto-start',
-          ...args.slice(1),
-        ];
-      }
-      const ret = this._cloneWithAction(
-        async (builder, env) => {
-          const [code, stdout, stderr] = await builder.flowCmd(args, stdinFile);
-          env.reportExitCode(code);
-          env.reportStdout(stdout);
-          env.reportStderr(stderr);
-          env.triggerFlowCheck();
-        }
-      );
+  flowCmd: (args: Array<string>, stdinFile?: string) => TestStepFirstStage = (
+    args,
+    stdinFile,
+  ) => {
+    // Certain flow configs don't need a flow server to exist
+    let needsFlowServer = false;
+    switch (args[0]) {
+      case 'ast':
+      case 'init':
+      case 'ls':
+      case 'start':
+      case 'stop':
+      case 'version':
+        break;
+      default:
+        needsFlowServer = true;
+    }
+    if (needsFlowServer) {
+      // We never want a flowCmd to automatically start a server
+      args = [args[0], '--no-auto-start', ...args.slice(1)];
+    }
+    const ret = this._cloneWithAction(async (builder, env) => {
+      const [code, stdout, stderr] = await builder.flowCmd(args, stdinFile);
+      env.reportExitCode(code);
+      env.reportStdout(stdout);
+      env.reportStderr(stderr);
+      env.triggerFlowCheck();
+    });
 
-      if (needsFlowServer) {
-        ret._needsFlowServer = needsFlowServer;
-      }
-      return ret;
-    };
+    if (needsFlowServer) {
+      ret._needsFlowServer = needsFlowServer;
+    }
+    return ret;
+  };
 
-  waitForServerToDie: (timeout: number) => TestStepFirstStage =
-    (timeout) => {
-      const ret = this._cloneWithAction(
-        async (builder, env) => {
-          await builder.waitForServerToDie(timeout);
-        }
-      );
-      ret._needsFlowServer = true;
-      ret._allowServerToDie = true;
-      return ret;
-    };
+  waitForServerToDie: (timeout: number) => TestStepFirstStage = timeout => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.waitForServerToDie(timeout);
+    });
+    ret._needsFlowServer = true;
+    ret._allowServerToDie = true;
+    return ret;
+  };
 
   _cloneWithAction(action: Action): TestStepFirstStage {
     const ret = new TestStepFirstStage(this);
@@ -384,5 +366,4 @@ class TestStepSecondStage extends TestStepFirstOrSecondStage {
   }
 }
 
-class TestStepThirdStage extends TestStep {
-}
+class TestStepThirdStage extends TestStep {}
