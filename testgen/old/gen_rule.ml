@@ -29,7 +29,7 @@
    prop(o.p)       <- This is the consequence of the rule
 
    With this, when the generator wants to generate property write, it
-   will check whether it has all the premises satisifed. If not, it
+   will check whether it has all the premises satisfied. If not, it
    will first exercise the rules that satisfy the premises of property
    write and then exercise the rule for generating property write
 
@@ -40,7 +40,7 @@
    3. Has runtime error
 
    Before this week, everything was hard-coded and it would be hard to
-   configurate the generator without modifying the code. With this
+   configure the generator without modifying the code. With this
    constraint-based code generator, users can easily extend the
    generator by writing a module and let it generate any code under
    some constraints. *)

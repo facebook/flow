@@ -7,3 +7,8 @@ function unix_getpid() {
 function unix_isatty() {
   return false;
 }
+
+//Provides: unix_sleep const
+function unix_sleep() {
+  return;
+}

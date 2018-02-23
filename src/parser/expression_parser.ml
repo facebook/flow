@@ -56,6 +56,7 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
@@ -206,6 +207,7 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
@@ -472,7 +474,7 @@ module Expression
     let env = with_no_new false env in
     let expr = match Peek.token env with
     | T_NEW when allow_new -> Cover_expr (new_expression env)
-    | T_IMPORT -> Cover_expr (import env start_loc)
+    | T_IMPORT -> Cover_expr (import env)
     | T_SUPER -> Cover_expr (super env)
     | _ when Peek.is_function env -> Cover_expr (_function env)
     | _ -> primary_cover env in
@@ -515,12 +517,13 @@ module Expression
         else error_unexpected env;
       super
 
-  and import env start_loc =
+  and import env = with_loc (fun env ->
     Expect.token env T_IMPORT;
     Expect.token env T_LPAREN;
     let arg = assignment (with_no_in false env) in
     Expect.token env T_RPAREN;
-    Expression.(Loc.btwn start_loc (fst arg), Import arg)
+    Expression.Import arg
+  ) env
 
   and call_cover env start_loc left =
     let left = member_cover env start_loc left in
@@ -757,8 +760,10 @@ module Expression
     | T_DIV
     | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
-        let loc, element = Parse.jsx_element env in
-        Cover_expr (loc, Expression.JSXElement element)
+        let loc, expression = match Parse.jsx_element_or_fragment env with
+            | (loc, `Element e) -> (loc, Expression.JSXElement e)
+            | (loc, `Fragment f) -> (loc, Expression.JSXFragment f) in
+        Cover_expr (loc, expression)
     | T_TEMPLATE_PART part ->
         let loc, template = template_literal env part in
         Cover_expr (loc, Expression.TemplateLiteral template)
@@ -872,7 +877,7 @@ module Expression
              they will be in the element list, but a trailing elision, like `[...x,]`, is not part
              of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
           let new_errs =
-            if not is_last && Peek.token ~i:1 env = T_RBRACKET then
+            if not is_last && Peek.ith_token ~i:1 env = T_RBRACKET then
               let if_patt = (loc, Parse_error.ElementAfterRestElement)::new_errs.if_patt in
               { new_errs with if_patt }
             else new_errs
@@ -939,7 +944,7 @@ module Expression
       let start_loc = Peek.loc env in
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
-      let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
+      let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
       let typeParameters = Type.type_parameter_declaration env in
       let params, returnType, predicate =
         (* Disallow all fancy features for identifier => body *)

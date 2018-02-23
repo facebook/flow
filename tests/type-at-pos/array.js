@@ -1,6 +1,6 @@
 // @flow
 
-type NumType = Array<{|+nums: number|}>;
+type NumType = Array<{|+nums: number|}>;   // TODO
 type ReadOnlyNumType = $ReadOnlyArray<{|+nums: number|}>;
 
 function foo(num: NumType) {

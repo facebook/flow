@@ -66,6 +66,7 @@
                       "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
                       "range":[21,27]
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
                     "variance":null,

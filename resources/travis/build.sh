@@ -11,6 +11,10 @@ printf "travis_fold:start:make\nBuilding flow\n"
 make
 printf "travis_fold:end:make\n"
 
+printf "travis_fold:start:libflowparser\nBuilding libflowparser\n"
+make -C src/parser dist/libflowparser.zip
+printf "travis_fold:end:libflowparser\n"
+
 printf "travis_fold:start:make_js\nBuilding flow.js\n"
 make js
 printf "travis_fold:end:make_js\n"
@@ -20,11 +24,12 @@ make all-ocp
 printf "travis_fold:end:make_ocp-build\n"
 
 printf "travis_fold:start:flow_check\nRunning flow check\n"
-bin/flow check
+bin/flow check packages/flow-dev-tools
 printf "travis_fold:end:flow_check\n"
 
 printf "travis_fold:start:test_tool\nRunning tests for tool\n"
-FLOW_BIN=bin/flow ./node_modules/.bin/jest --config .jest-tool.config.js
+# FLOW_BIN is relative to packages/flow-dev-tools
+FLOW_BIN=../../bin/flow make -C packages/flow-dev-tools test
 printf "travis_fold:end:test_tool\n"
 
 printf "travis_fold:start:runtests\nRunning flow tests\n"

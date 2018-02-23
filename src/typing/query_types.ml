@@ -31,77 +31,81 @@
    necessary.
 *)
 
-open Utils_js
-
 type result =
 | FailureNoMatch
-| FailureUnparseable of Loc.t * Type.t * Type.t list
-| Success of Loc.t * Type.t * Type.t list
+| FailureUnparseable of Loc.t * Type.t * string
+| Success of Loc.t * Ty.t
+
+module QueryTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = false
+  let expand_internal_types = false
+  let expand_annots = false
+end)
 
 let query_type cx loc =
-  let result = ref FailureNoMatch in
-  let diff = ref (max_int, max_int) in
-  Type_table.iter (fun range t ->
-    if Reason.in_range loc range
-    then (
-      let d = Reason.diff_range range in
-      if d < !diff then (
-        diff := d;
-        Type_normalizer.suggested_type_cache := IMap.empty;
-        let ground_t = Type_normalizer.normalize_type cx t in
-        let possible_ts = Flow_js.possible_types_of_type cx t in
-        result := if Type_printer.is_printed_type_parsable cx ground_t
-          then Success (range, ground_t, possible_ts)
-          else FailureUnparseable (range, ground_t, possible_ts)
-      )
-    )
-  ) (Context.type_table cx);
-  !result
+  let pred = fun range -> Reason.in_range loc range in
+  let type_table = Context.type_table cx in
+  match Type_table.find_type_info ~pred type_table with
+  | None -> FailureNoMatch
+  | Some (loc, t) ->
+    (match QueryTypeNormalizer.from_type ~cx t with
+    | Ok ty -> Success (loc, ty)
+    | Error msg ->
+      FailureUnparseable (loc, t, Ty_normalizer.error_to_string msg))
 
-let dump_types printer raw_printer cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Type_table.fold (fun loc t list ->
-    let ground_t = Type_normalizer.normalize_type cx t in
-    let possible_ts = Flow_js.possible_types_of_type cx t in
-    let possible_reasons = possible_ts
-      |> List.map Type.reason_of_t
-    in
-    let ctor = Type.string_of_ctor ground_t in
-    let pretty = printer cx ground_t in
-    let raw = raw_printer cx ground_t in
-    (loc, ctor, pretty, raw, possible_reasons)::list
-  ) (Context.type_table cx) [] in
-  lst |> List.sort (fun
-    (a_loc, _, _, _, _) (b_loc, _, _, _, _) -> Loc.compare a_loc b_loc
+
+module DumpTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = false
+  let expand_internal_types = false
+  let expand_annots = false
+end)
+
+let dump_types ~printer cx =
+  Type_table.coverage_to_list (Context.type_table cx)
+  |> DumpTypeNormalizer.from_types ~cx
+  |> Core_list.filter_map ~f:(function
+    | l, Ok t -> Some (l, printer t)
+    | _ -> None
   )
+  |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
 
 let is_covered = function
-  | Type.DefT (_, Type.AnyT)
-  | Type.DefT (_, Type.EmptyT) -> false
+  | Ty.Any
+  | Ty.Bot -> false
   | _ -> true
 
+module CoverageTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = true
+  let expand_internal_types = false
+  let expand_annots = false
+end)
+
 let covered_types cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Type_table.fold (fun loc t list ->
-    let ground_t = Type_normalizer.normalize_type cx t in
-    (loc, is_covered ground_t)::list
-  ) (Context.type_table cx) [] in
-  lst |> List.sort (fun
-    (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc
+  Context.type_table cx
+  |> Type_table.coverage_to_list
+  |> CoverageTypeNormalizer.from_types ~cx
+  |> List.map (function
+    | (l, Ok t) -> (l, is_covered t)
+    | (l, Error _) -> (l, false)
   )
+  |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
 
 
 (********)
 (* Fill *)
 (********)
 
+module FillTypeNormalizer = Ty_normalizer.Make(struct
+  let fall_through_merged = false
+  let expand_internal_types = false
+  let expand_annots = false
+end)
+
 let fill_types cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  Hashtbl.fold Loc.(fun loc t list ->
-    let line = loc._end.line in
-    let end_ = loc._end.column in
-    let t = Type_normalizer.normalize_type cx t in
-    if Type_printer.is_printed_type_parsable cx t then
-      (line, end_, spf ": %s" (Type_printer.string_of_t cx t))::list
-    else list
-  ) (Context.annot_table cx) []
+  Type_table.coverage_to_list (Context.type_table cx)
+  |> FillTypeNormalizer.from_types ~cx
+  |> Core_list.filter_map ~f:(function
+   | l, Ok s -> Some (l, s)
+   | _ -> None
+   )
+  |> List.map Loc.(fun (l, t) -> (l._end.line, l._end.column, t))

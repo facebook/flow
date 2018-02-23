@@ -86,7 +86,7 @@ module Config = Flowtestgen_config;;
    the style of the traditional type rule where preconditions are
    written separately. With the power of backtracking, users could
    write rules with simple require and assert functions and we
-   recommend users writting rules this way. *)
+   recommend users writing rules this way. *)
 
 (* An exception indicating we want to backtrack *)
 exception Backtrack

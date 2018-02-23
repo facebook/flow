@@ -10,7 +10,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -85,7 +84,7 @@ class ruleset_func = object(self)
 
        TODO: This is a hacky way to account for parameters. The
        correct way to do this is to change every expression
-       that has the variable occurences whose type is the super
+       that has the variable occurrences whose type is the super
        type of the parameter *)
     let fenv = (Expr (E.Identifier (Loc.none, pname), param_type)) ::
                (let open T.Function in
@@ -223,5 +222,5 @@ end
 class ruleset_random_func = object
   inherit ruleset_func
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 3) > 0) then raise Engine.Backtrack
+    if (not b) && ((Random.int 3) > 0) then raise Engine.Backtrack
 end

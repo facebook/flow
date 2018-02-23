@@ -1,36 +1,76 @@
-Error: license_with_flow.js:4
-  4: ("": void); // error
-      ^^ string. This type is incompatible with
-  4: ("": void); // error
-          ^^^^ undefined
+Error ----------------------------------------------------------------------------------------- license_with_flow.js:4:2
 
-Error: multiple_flows_1.js:2
-  2: /* @flow */
-        ^^^^^ Unexpected @flow declaration. Only one per file is allowed.
+Cannot cast empty string to undefined because string [1] is incompatible with undefined [2].
 
-Error: multiple_flows_2.js:3
-  3:  * @noflow
-        ^^^^^^^ Unexpected @flow declaration. Only one per file is allowed.
+   license_with_flow.js:4:2
+   4| ("": void); // error
+       ^^ [1]
 
-Error: multiple_providesModule_1.js:3
-  3:  * @providesModule Bar
-        ^^^^^^^^^^^^^^^ Unexpected @providesModule declaration. Only one per file is allowed.
+References:
+   license_with_flow.js:4:6
+   4| ("": void); // error
+           ^^^^ [2]
 
-Error: multiple_providesModule_2.js:6
-  6:  * @providesModule Bar
-        ^^^^^^^^^^^^^^^ Unexpected @providesModule declaration. Only one per file is allowed.
 
-Error: use_strict_with_flow.js:4
-  4: ("": void); // error
-      ^^ string. This type is incompatible with
-  4: ("": void); // error
-          ^^^^ undefined
+Error ------------------------------------------------------------------------------------------ multiple_flows_1.js:2:4
 
-Error: with_flow.js:3
-  3: ("": void); // error
-      ^^ string. This type is incompatible with
-  3: ("": void); // error
-          ^^^^ undefined
+Unexpected `@flow` declaration. Only one per file is allowed.
+
+   2| /* @flow */
+         ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ multiple_flows_2.js:3:4
+
+Unexpected `@flow` declaration. Only one per file is allowed.
+
+   3|  * @noflow
+         ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- multiple_providesModule_1.js:3:4
+
+Unexpected `@providesModule` declaration. Only one per file is allowed.
+
+   3|  * @providesModule Bar
+         ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- multiple_providesModule_2.js:6:4
+
+Unexpected `@providesModule` declaration. Only one per file is allowed.
+
+   6|  * @providesModule Bar
+         ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- use_strict_with_flow.js:4:2
+
+Cannot cast empty string to undefined because string [1] is incompatible with undefined [2].
+
+   use_strict_with_flow.js:4:2
+   4| ("": void); // error
+       ^^ [1]
+
+References:
+   use_strict_with_flow.js:4:6
+   4| ("": void); // error
+           ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- with_flow.js:3:2
+
+Cannot cast empty string to undefined because string [1] is incompatible with undefined [2].
+
+   with_flow.js:3:2
+   3| ("": void); // error
+       ^^ [1]
+
+References:
+   with_flow.js:3:6
+   3| ("": void); // error
+           ^^^^ [2]
+
 
 
 Found 7 errors

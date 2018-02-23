@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="ocamlfind ocp-build js_of_ocaml.2.8.1 sedlex.1.99.4"
+OPAM_DEPENDS="ocamlfind ocp-build dtoa.0.3.1 js_of_ocaml.3.0 lwt.3.1.0 lwt_ppx.1.0.1 sedlex.1.99.4 wtf8.1.0.1"
 
 TMP=${TMPDIR:-/tmp}
 
@@ -82,13 +82,7 @@ printf "travis_fold:start:yarn_install\nInstalling yarn dependencies\n"
 
   printf "Using yarn version $(yarn --version)\n"
 
-  printf "travis_fold:start:yarn_install_tool\nRunning yarn install for tool\n"
-    yarn install | cat
-  printf "travis_fold:end:yarn_install_tool\n"
-
-  printf "travis_fold:start:yarn_install_parser\nRunning yarn install for the parser\n"
-    pushd src/parser >/dev/null
-      yarn install | cat
-    popd >/dev/null
-  printf "travis_fold:end:yarn_install_parser\n"
+  printf "travis_fold:start:yarn_install\nRunning yarn install\n"
+  yarn install | cat
+  printf "travis_fold:end:yarn_install\n"
 printf "travis_fold:end:yarn_install\n"

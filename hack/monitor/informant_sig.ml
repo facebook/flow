@@ -13,7 +13,7 @@ type report =
   (** Nothing to see here. *)
   | Move_along
   (** Kill the server (if one is running) and start a new one. *)
-  | Restart_server
+  | Restart_server of ServerMonitorUtils.target_mini_state option
 
 type server_state =
   | Server_not_yet_started
@@ -38,4 +38,5 @@ module type S = sig
    *)
   val is_managing : t -> bool
   val should_start_first_server : t -> bool
+  val should_ignore_hh_version : init_env -> bool
 end

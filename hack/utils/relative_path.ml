@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 open Reordered_argument_collections
 open Utils
 open String_utils
@@ -90,6 +90,16 @@ let create prefix s =
     assert_false_log_backtrace None;
   end;
   prefix, String.sub s prefix_len (String.length s - prefix_len)
+
+(* Strips the root and relativizes the file if possible, otherwise returns
+  original string *)
+let strip_root_if_possible s =
+  let prefix_s = path_of_prefix Root in
+  let prefix_len = String.length prefix_s in
+  if not (string_starts_with s prefix_s)
+  then s else
+  String.sub s prefix_len (String.length s - prefix_len)
+
 
 let from_root (s : string) : t = Root, s
 

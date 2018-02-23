@@ -39,6 +39,20 @@ and Literal : sig
     | RegExp of RegExp.t
 end = Literal
 
+and StringLiteral : sig
+  type t = {
+    value: string;
+    raw: string;
+  }
+end = StringLiteral
+
+and NumberLiteral : sig
+  type t = {
+    value: float;
+    raw: string;
+  }
+end = NumberLiteral
+
 and Variance : sig
   type 'M t = 'M * t'
   and t' = Plus | Minus
@@ -141,24 +155,6 @@ and Type : sig
     }
   end
 
-  module StringLiteral : sig
-    type t = {
-      value: string;
-      raw: string;
-    }
-  end
-
-  module NumberLiteral : sig
-    type t = {
-      value: float;
-      raw: string;
-    }
-  end
-
-  module BooleanLiteral : sig
-    type t = bool
-  end
-
   type 'M t = 'M * 'M t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -182,7 +178,7 @@ and Type : sig
     | Tuple of 'M t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
-    | BooleanLiteral of BooleanLiteral.t
+    | BooleanLiteral of bool
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
@@ -195,7 +191,7 @@ and Type : sig
     module TypeParam : sig
       type 'M t = 'M * 'M t'
       and 'M t' = {
-        name: string;
+        name: 'M Identifier.t;
         bound: 'M Type.annotation option;
         variance: 'M Variance.t option;
         default: 'M Type.t option;
@@ -377,7 +373,16 @@ and Statement : sig
       typeParameters: 'M Type.ParameterDeclaration.t option;
       body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) list;
+    }
+  end
+  module DeclareClass : sig
+    type 'M t = {
+      id: 'M Identifier.t;
+      typeParameters: 'M Type.ParameterDeclaration.t option;
+      body: 'M * 'M Type.Object.t;
+      extends: ('M * 'M Type.Generic.t) option;
       mixins: ('M * 'M Type.Generic.t) list;
+      implements: 'M Class.Implements.t list;
     }
   end
   module DeclareVariable : sig
@@ -396,7 +401,7 @@ and Statement : sig
   module DeclareModule : sig
     type 'M id =
       | Identifier of 'M Identifier.t
-      | Literal of ('M * Literal.t)
+      | Literal of ('M * StringLiteral.t)
 
     type 'M module_kind =
       | CommonJS of 'M
@@ -422,7 +427,7 @@ and Statement : sig
     type 'M t = {
       declaration: 'M Statement.t option;
       specifiers: 'M specifier option;
-      source: ('M * Literal.t) option; (* This will always be a string *)
+      source: ('M * StringLiteral.t) option;
       exportKind: Statement.exportKind;
     }
   end
@@ -431,8 +436,8 @@ and Statement : sig
       | Declaration of 'M Statement.t
       | Expression of 'M Expression.t
     type 'M t = {
+      default: 'M;
       declaration: 'M declaration;
-      exportKind: Statement.exportKind;
     }
   end
   module DeclareExportDeclaration : sig
@@ -442,7 +447,7 @@ and Statement : sig
       (* declare export function *)
       | Function of ('M * 'M DeclareFunction.t)
       (* declare export class *)
-      | Class of ('M * 'M Interface.t)
+      | Class of ('M * 'M DeclareClass.t)
       (* declare export default [type]
        * this corresponds to things like
        * export default 1+1; *)
@@ -455,10 +460,10 @@ and Statement : sig
       | Interface of ('M * 'M Interface.t)
 
     type 'M t = {
-      default: bool;
+      default: 'M option;
       declaration: 'M declaration option;
       specifiers: 'M ExportNamedDeclaration.specifier option;
-      source: ('M * Literal.t) option; (* This will always be a string *)
+      source: ('M * StringLiteral.t) option;
     }
   end
   module ImportDeclaration : sig
@@ -478,7 +483,7 @@ and Statement : sig
 
     type 'M t = {
       importKind: importKind;
-      source: ('M * Literal.t); (* Always a string literal *)
+      source: ('M * StringLiteral.t);
       default: 'M Identifier.t option;
       specifiers: 'M specifier option;
     }
@@ -501,7 +506,7 @@ and Statement : sig
     | ClassDeclaration of 'M Class.t
     | Continue of 'M Continue.t
     | Debugger
-    | DeclareClass of 'M Interface.t
+    | DeclareClass of 'M DeclareClass.t
     | DeclareExportDeclaration of 'M DeclareExportDeclaration.t
     | DeclareFunction of 'M DeclareFunction.t
     | DeclareInterface of 'M Interface.t
@@ -574,27 +579,31 @@ and Expression : sig
     }
   end
   module Object : sig
-    (* This is a slight deviation from the Mozilla spec. In the spec, an object
-      * property is not a proper node, and lacks a location and a "type" field.
-      * Esprima promotes it to a proper node and that is useful, so I'M
-      * following their example *)
     module Property : sig
       type 'M key =
         | Literal of ('M * Literal.t)
         | Identifier of 'M Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of 'M Expression.t
-      type 'M value =
-        | Init of 'M Expression.t
-        | Get of ('M * 'M Function.t)
-        | Set of ('M * 'M Function.t)
       type 'M t = 'M * 'M t'
-      and 'M t' = {
-        key: 'M key;
-        value: 'M value;
-        _method: bool;
-        shorthand: bool;
-      }
+      and 'M t' =
+        | Init of {
+            key: 'M key;
+            value: 'M Expression.t;
+            shorthand: bool;
+          }
+        | Method of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+        | Get of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+        | Set of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
     end
     module SpreadProperty : sig
       type 'M t = 'M * 'M t'
@@ -785,6 +794,7 @@ and Expression : sig
     | Identifier of 'M Identifier.t
     | Import of 'M t
     | JSXElement of 'M JSX.element
+    | JSXFragment of 'M JSX.fragment
     | Literal of Literal.t
     | Logical of 'M Logical.t
     | Member of 'M Member.t
@@ -895,7 +905,9 @@ and JSX : sig
   type 'M child = 'M * 'M child'
   and 'M child' =
     | Element of 'M element
+    | Fragment of 'M fragment
     | ExpressionContainer of 'M ExpressionContainer.t
+    | SpreadChild of 'M Expression.t
     | Text of Text.t
 
   and 'M element = {
@@ -903,6 +915,13 @@ and JSX : sig
     closingElement: 'M Closing.t option;
     children: 'M child list
   }
+
+  and 'M fragment = {
+    frag_openingElement: 'M;
+    frag_closingElement: 'M option;
+    frag_children: 'M child list;
+  }
+
 end = JSX
 
 and Pattern : sig

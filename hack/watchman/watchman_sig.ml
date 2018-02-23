@@ -30,7 +30,6 @@ module Types = struct
     subscribe_mode: subscribe_mode option;
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
-    sync_directory: string;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     root: Path.t;
@@ -100,7 +99,7 @@ module type S = sig
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :
-      env -> Hh_json.json -> env * pushed_changes
+      env -> Hh_json.json option -> env * pushed_changes
   end
 
   module Mocking : sig

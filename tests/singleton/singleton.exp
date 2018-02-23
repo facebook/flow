@@ -1,60 +1,105 @@
-Error: boolean.js:8
-  8: var y : boolean = veryOptimistic(false); // error
-                                      ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
-  3: function veryOptimistic(isThisAwesome: true): boolean {
-                                            ^^^^ boolean literal `true`
+Error -------------------------------------------------------------------------------------------------- boolean.js:8:34
 
-Error: boolean.js:15
- 15: var y : boolean = veryPessimistic(false); // error
-                                       ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
- 10: function veryPessimistic(isThisAwesome: true): boolean {
-                                             ^^^^ boolean literal `true`
+Cannot call `veryOptimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean
+literal `true` [2].
 
-Error: boolean.js:21
- 21:     return x;
-                ^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
- 19: function bar(x: MyOwnBooleanLOL): false {
-                                       ^^^^^ boolean literal `false`
+   boolean.js:8:34
+   8| var y : boolean = veryOptimistic(false); // error
+                                       ^^^^^ [1]
 
-Error: boolean.js:23
- 23:     return !x;
-                ^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
- 19: function bar(x: MyOwnBooleanLOL): false {
-                                       ^^^^^ boolean literal `false`
+References:
+   boolean.js:3:40
+   3| function veryOptimistic(isThisAwesome: true): boolean {
+                                             ^^^^ [2]
 
-Error: boolean.js:29
- 29: bar(1); // error
-         ^ number. This type is incompatible with the expected param type of
- 19: function bar(x: MyOwnBooleanLOL): false {
-                     ^^^^^^^^^^^^^^^ union: boolean literal `true` | boolean literal `false`
-  Member 1:
-   17: type MyOwnBooleanLOL = true | false
-                              ^^^^ boolean literal `true`
-  Error:
-   29: bar(1); // error
-           ^ number. This type is incompatible with
-   17: type MyOwnBooleanLOL = true | false
-                              ^^^^ boolean literal `true`
-  Member 2:
-   17: type MyOwnBooleanLOL = true | false
-                                     ^^^^^ boolean literal `false`
-  Error:
-   29: bar(1); // error
-           ^ number. This type is incompatible with
-   17: type MyOwnBooleanLOL = true | false
-                                     ^^^^^ boolean literal `false`
 
-Error: number.js:8
-  8: highlander(2); // error
-                ^ number. Expected number literal `1`, got `2` instead
-  3: function highlander(howMany: 1): number {
-                                  ^ number literal `1`
+Error ------------------------------------------------------------------------------------------------- boolean.js:15:35
 
-Error: number.js:19
- 19: bar(3); // error
-         ^ number. This type is incompatible with the expected param type of
- 13: function bar(num: Foo): number {
-                       ^^^ number enum
+Cannot call `veryPessimistic` with `false` bound to `isThisAwesome` because boolean [1] is incompatible with boolean
+literal `true` [2].
+
+   boolean.js:15:35
+   15| var y : boolean = veryPessimistic(false); // error
+                                         ^^^^^ [1]
+
+References:
+   boolean.js:10:41
+   10| function veryPessimistic(isThisAwesome: true): boolean {
+                                               ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- boolean.js:21:12
+
+Cannot return `x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+
+   boolean.js:21:12
+   21|     return x;
+                  ^
+
+References:
+   boolean.js:19:17
+   19| function bar(x: MyOwnBooleanLOL): false {
+                       ^^^^^^^^^^^^^^^ [1]
+   boolean.js:19:35
+   19| function bar(x: MyOwnBooleanLOL): false {
+                                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- boolean.js:23:12
+
+Cannot return `!x` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+
+   boolean.js:23:12
+   23|     return !x;
+                  ^^ [1]
+
+References:
+   boolean.js:19:35
+   19| function bar(x: MyOwnBooleanLOL): false {
+                                         ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- boolean.js:29:5
+
+Cannot call `bar` with `1` bound to `x` because number [1] is incompatible with enum [2].
+
+   boolean.js:29:5
+   29| bar(1); // error
+           ^ [1]
+
+References:
+   boolean.js:19:17
+   19| function bar(x: MyOwnBooleanLOL): false {
+                       ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- number.js:8:12
+
+Cannot call `highlander` with `2` bound to `howMany` because number [1] is incompatible with number literal `1` [2].
+
+   number.js:8:12
+   8| highlander(2); // error
+                 ^ [1]
+
+References:
+   number.js:3:30
+   3| function highlander(howMany: 1): number {
+                                   ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- number.js:19:5
+
+Cannot call `bar` with `3` bound to `num` because number [1] is incompatible with enum [2].
+
+   number.js:19:5
+   19| bar(3); // error
+           ^ [1]
+
+References:
+   number.js:13:19
+   13| function bar(num: Foo): number {
+                         ^^^ [2]
+
 
 
 Found 7 errors

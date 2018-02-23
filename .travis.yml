@@ -53,21 +53,6 @@ before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
 
 deploy:
-# upload releases to github, from both Mac and Linux
-- provider: releases
-  api_key:
-    # flow-bot
-    secure: "l3R6GrPhrqUIXlAcknFA7rKllPmVsY/1cOGtctxFQ6++oC3xd+XawIMVAR78ZtUoirZ+/3KYdY6o3SoGMb6olgnSerR/CXktP4DXuUK6XlHGRxqSRCclWra3DnJutlaiafnurhIruRMIvXeTYiO2Q1MU/nyQVKZtOhJJHEBg0Mc="
-  repo: facebook/flow
-  skip_cleanup: true
-  file_glob: true
-  file: flow-*.zip
-  on:
-    tags: true
-    condition:
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.2
-
 # Deploy the parser to npm
 - provider: script
   repo: facebook/flow

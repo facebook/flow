@@ -7,21 +7,40 @@ Expect no errors.
 No errors!
 
 Check contents with dependency, expect errors in contents.
-Error: test.js:3
-  3: (require('./dependency'): string);
-      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-  3: (require('./dependency'): string);
-                               ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
+
+Cannot cast `require(...)` to string because number [1] is incompatible with string [2].
+
+   test.js:3:2
+   3| (require('./dependency'): string);
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   dependency.js:2:28
+   2| module.exports = ("hello": number);
+                                 ^^^^^^ [1]
+   test.js:3:27
+   3| (require('./dependency'): string);
+                                ^^^^^^ [2]
+
 
 
 Found 1 error
 
 Expect errors in dependency.
-Error: dependency.js:2
-  2: module.exports = ("hello": number);
-                       ^^^^^^^ string. This type is incompatible with
-  2: module.exports = ("hello": number);
-                                ^^^^^^ number
+Error ----------------------------------------------------------------------------------------------- dependency.js:2:19
+
+Cannot cast `"hello"` to number because string [1] is incompatible with number [2].
+
+   dependency.js:2:19
+   2| module.exports = ("hello": number);
+                        ^^^^^^^ [1]
+
+References:
+   dependency.js:2:28
+   2| module.exports = ("hello": number);
+                                 ^^^^^^ [2]
+
 
 
 Found 1 error

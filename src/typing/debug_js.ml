@@ -47,7 +47,7 @@ let string_of_polarity = function
 
 let string_of_rw = function
   | Read -> "Read"
-  | Write -> "Write"
+  | Write _ -> "Write"
 
 type json_cx = {
   stack: ISet.t;
@@ -68,19 +68,23 @@ let rec _json_of_t json_cx t =
     check_depth _json_of_t_impl json_cx t
   )
 
+and _json_of_tvar json_cx id = Hh_json.(
+  [
+    "id", int_ id
+  ] @
+  if ISet.mem id json_cx.stack then []
+  else [
+    "node", json_of_node json_cx id
+  ]
+)
+
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
     "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
     "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
-  | OpenT (_, id) -> [
-      "id", int_ id
-    ] @
-    if ISet.mem id json_cx.stack then []
-    else [
-      "node", json_of_node json_cx id
-    ]
+  | OpenT (_, id) -> _json_of_tvar json_cx id
 
   | DefT (_, NumT lit) ->
     begin match lit with
@@ -179,7 +183,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DefT (_, TypeAppT (t, targs)) -> [
+  | DefT (_, TypeAppT (_, t, targs)) -> [
       "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
@@ -239,11 +243,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DiffT (t1, t2) -> [
-      "type1", _json_of_t json_cx t1;
-      "type2", _json_of_t json_cx t2
-    ]
-
   | MatchingPropT (_, x, t) -> [
       "name", JSON_String x;
       "type", _json_of_t json_cx t
@@ -269,8 +268,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | AnnotT (t, use_desc) -> [
-      "assume", _json_of_t json_cx t;
+  | AnnotT ((_, id), use_desc) ->
+    (_json_of_tvar json_cx id) @ [
       "useDesc", JSON_Bool use_desc;
     ]
 
@@ -287,7 +286,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "supertype", st
   ]
 
-  | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}) ->
+  | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}, is_strict) ->
     let tmap = Context.find_exports json_cx.cx exports_tmap in
     let cjs_export = match cjs_export with
     | Some(t) -> _json_of_t json_cx t
@@ -297,6 +296,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "namedExports", json_of_tmap json_cx tmap;
       "cjsExport", cjs_export;
       "hasEveryNamedExport", JSON_Bool has_every_named_export;
+      "isStrict", JSON_Bool is_strict;
     ]
 
   | InternalT (ExtendsT (_, t1, t2)) -> [
@@ -310,7 +310,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       );
     ]
 
-  | TypeDestructorTriggerT (_, s, t) -> [
+  | TypeDestructorTriggerT (_, _, s, t) -> [
       "destructor", json_of_destructor json_cx s;
       "type", _json_of_t json_cx t;
     ]
@@ -388,6 +388,8 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | Mixin -> "mixin"
   | Idx -> "idx"
   | DebugPrint -> "$Flow$DebugPrint"
+  | DebugThrow -> "$Flow$DebugThrow"
+  | DebugSleep -> "$Flow$DebugSleep"
 )
 
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
@@ -411,16 +413,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | BindT (_, funtype, pass) -> [
+  | BindT (_, _, funtype, pass) -> [
       "funType", json_of_funcalltype json_cx funtype;
       "passThrough", JSON_Bool pass
     ]
 
-  | CallT (_, funtype) -> [
+  | CallT (_, _, funtype) -> [
       "funType", json_of_funcalltype json_cx funtype
     ]
 
-  | MethodT (_, _, propref, funtype) -> [
+  | MethodT (_, _, _, propref, funtype, _) -> [
       "propRef", json_of_propref json_cx propref;
       "funType", json_of_funcalltype json_cx funtype
     ]
@@ -436,20 +438,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "useDesc", JSON_Bool use_desc;
     ]
 
-  | SetPropT (_, name, t)
-  | GetPropT (_, name, t)
+  | SetPropT (_, _, name, _, t, _)
+  | GetPropT (_, _, name, t)
   | TestPropT (_, name, t) -> [
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
     ]
-  | SetPrivatePropT (_, name, _, _, t)
-  | GetPrivatePropT (_, name, _, _, t) -> [
+  | SetPrivatePropT (_, _, name, _, _, t, _)
+  | GetPrivatePropT (_, _, name, _, _, t) -> [
       "propRef", JSON_String name;
       "propType", _json_of_t json_cx t
   ]
 
-  | SetElemT (_, indext, elemt)
-  | GetElemT (_, indext, elemt) -> [
+  | SetElemT (_, _, indext, elemt, _)
+  | GetElemT (_, _, indext, elemt) -> [
       "indexType", _json_of_t json_cx indext;
       "elemType", _json_of_t json_cx elemt
     ]
@@ -468,16 +470,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ConstructorT (_, args, t) -> [
+  | ConstructorT (_, _, args, t) -> [
       "argTypes", JSON_Array (List.map (json_of_funcallarg json_cx) args);
       "type", _json_of_t json_cx t
     ]
 
-  | SuperT (_, DerivedInstance i) -> [
+  | SuperT (_, _, DerivedInstance i) -> [
       "instance", json_of_insttype json_cx i
     ]
 
-  | SuperT (_, DerivedStatics o) -> [
+  | SuperT (_, _, DerivedStatics o) -> [
       "statics", json_of_objtype json_cx o
     ]
 
@@ -490,12 +492,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AdderT (_, l, r) -> [
+  | ToStringT (_, t) -> [
+      "type", _json_of_use_t json_cx t
+    ]
+
+  | AdderT (_, _, _, l, r) -> [
       "leftType", _json_of_t json_cx l;
       "rightType", _json_of_t json_cx r
     ]
 
-  | ComparatorT (_, t) -> [
+  | ComparatorT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -514,7 +520,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "sink", _json_of_t json_cx t
     ]
 
-  | EqT (_, t) -> [
+  | EqT (_, _, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -528,7 +534,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SpecializeT (_, _, cache, targs_opt, tvar) -> [
+  | SpecializeT (_, _, _, cache, targs_opt, tvar) -> [
       "cache", json_of_specialize_cache json_cx cache
     ] @ (
       match targs_opt with
@@ -557,7 +563,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) targs)
     ]
 
-  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), will_flip) -> [
+  | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) -> [
       "willFlip", JSON_Bool will_flip;
       "currentTypeArgs", JSON_Array (List.map (_json_of_t json_cx) ts1);
       "currentUpper", _json_of_t json_cx t2;
@@ -621,7 +627,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "resultType", _json_of_t json_cx res
     ]
 
-  | ArrRestT (_, i, t) -> [
+  | ArrRestT (_, _, i, t) -> [
       "index", JSON_Number (string_of_int i);
       "resultType", _json_of_t json_cx t
     ]
@@ -632,10 +638,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | GetKeysT (_, t) -> [
-      "type", _json_of_t json_cx t
+      "type", _json_of_use_t json_cx t
     ]
 
-  | HasOwnPropT (_, key) -> [
+  | HasOwnPropT (_, _, key) -> [
       "key", JSON_Object (_json_of_string_literal key)
     ]
 
@@ -643,32 +649,33 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ElemT (_, base, action) -> [
+  | ElemT (_, _, base, action) -> [
       "baseType", _json_of_t json_cx base;
       match action with
       | ReadElem t -> "readElem", _json_of_t json_cx t
-      | WriteElem t -> "writeElem", _json_of_t json_cx t
+      | WriteElem (t, _) -> "writeElem", _json_of_t json_cx t
       | CallElem (_, funtype) -> "callElem", json_of_funcalltype json_cx funtype
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
 
-  | CJSRequireT (_, export) -> [
+  | CJSRequireT (_, export, _) -> [
       "export",
       _json_of_t json_cx export
     ]
-  | ImportModuleNsT (_, t) -> [
+  | ImportModuleNsT (_, t, _) -> [
       "t_out", _json_of_t json_cx t
     ]
-  | ImportDefaultT (_, import_kind, (local_name, module_name), t) -> [
+  | ImportDefaultT (_, import_kind, (local_name, module_name), t, _) -> [
       "import_kind", _json_of_import_kind import_kind;
       "local_name", JSON_String local_name;
       "module_name", JSON_String module_name;
       "t_out", _json_of_t json_cx t;
     ]
-  | ImportNamedT (_, import_kind, export_name, t) -> [
+  | ImportNamedT (_, import_kind, export_name, module_name, t, _) -> [
       "import_kind", _json_of_import_kind import_kind;
       "export_name", JSON_String export_name;
+      "module_name", JSON_String module_name;
       "t_out", _json_of_t json_cx t;
     ]
   | ImportTypeT (_, export_name, t)
@@ -682,8 +689,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | AssertRestParamT _ -> []
 
-  | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes), t_out) -> [
-      "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes));
+  | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes, is_strict), t_out) -> [
+      "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes, is_strict));
       "t_out", _json_of_t json_cx t_out;
     ]
   | CopyNamedExportsT (_, target_module_t, t_out) -> [
@@ -705,18 +712,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "tmap", _json_of_t json_cx t;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | DebugPrintT _reason -> []
+
+  | DebugPrintT _ -> []
+  | DebugSleepT _ -> []
 
   | MapTypeT (_, kind, t) -> [
       "kind", JSON_String (string_of_type_map kind);
       "t", _json_of_t json_cx t;
     ]
 
-  | ObjKitT (_, _, _, tout) -> [
+  | ObjKitT (_, _, _, _, tout) -> [
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
+  | ReactKitT (_, _, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
       "shape", JSON_Bool shape;
       "config", _json_of_t json_cx config;
       "children", JSON_Array (List.map (_json_of_t json_cx) children);
@@ -793,7 +802,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ("refined_t", _json_of_t_impl json_cx t)
       ]
     ]
-  | ResolveSpreadT (_, {
+  | ResolveSpreadT (_, _, {
     rrt_resolved;
     rrt_unresolved;
     rrt_resolve_to;
@@ -966,8 +975,7 @@ and json_of_changeset_impl _json_cx = Hh_json.(
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 and json_of_funtype_impl json_cx {
   this_t;
-  params_tlist;
-  params_names;
+  params;
   rest_param;
   return_t;
   is_predicate;
@@ -975,14 +983,19 @@ and json_of_funtype_impl json_cx {
   changeset;
   def_reason;
 } = Hh_json.(
+  let rec params_names (any, names_rev) = function
+    | [] -> if any then Some names_rev else None
+    | (None, _)::xs -> params_names (any, "_"::names_rev) xs
+    | (Some name, _)::xs -> params_names (true, name::names_rev) xs
+  in
   JSON_Object ([
     "thisType", _json_of_t json_cx this_t;
-    "paramTypes", JSON_Array (List.map (_json_of_t json_cx) params_tlist)
-  ] @ (match params_names with
+    "paramTypes", JSON_Array (List.map (fun (_, t) -> _json_of_t json_cx t) params)
+  ] @ (match params_names (false, []) params with
     | None -> []
-    | Some names -> [
+    | Some names_rev -> [
         "paramNames",
-        JSON_Array (List.map (fun s -> JSON_String s) names)
+        JSON_Array (List.rev_map (fun s -> JSON_String s) names_rev)
       ]
   ) @ [
     "restParam", (match rest_param with
@@ -1037,7 +1050,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let method_pmap = Context.find_props json_cx.cx insttype.methods_tmap in
   JSON_Object [
     "classId", int_ insttype.class_id;
-    "typeArgs", json_of_tmap json_cx insttype.type_args;
+    "typeArgs", json_of_tmap json_cx (SMap.map snd insttype.type_args);
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
     "fieldTypes", json_of_pmap json_cx field_pmap;
     "methodTypes", json_of_pmap json_cx method_pmap;
@@ -1085,28 +1098,21 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
-  | SpreadType (options, ts) ->
+  | ReadOnlyType -> JSON_Object [
+      "readOnly", JSON_Bool true
+    ]
+  | SpreadType (target, ts) ->
     let open Object.Spread in
-    let {merge_mode; exclude_props} = options in
     JSON_Object (
-      (match merge_mode with
-        | Sound target -> [
-            "mergeMode", JSON_String "Sound";
-          ] @ (match target with
-          | Value -> [
-              "target", JSON_String "Value";
-            ]
-          | Annot { make_exact } -> [
-              "target", JSON_String "Annot";
-              "makeExact", JSON_Bool make_exact;
-            ]
-          )
-        | Diff -> [
-            "mergeMode", JSON_String "Diff";
+      (match target with
+        | Value -> [
+            "target", JSON_String "Value";
+          ]
+        | Annot { make_exact } -> [
+            "target", JSON_String "Annot";
+            "makeExact", JSON_Bool make_exact;
           ]
       ) @ [
-        "excludePropNames",
-          JSON_Array (List.map (fun s -> JSON_String s) exclude_props);
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
@@ -1115,7 +1121,8 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     JSON_Object [
       "mergeMode", JSON_String (match merge_mode with
         | Sound -> "Sound"
-        | IgnoreExactAndOwn -> "IgnoreExactAndOwn");
+        | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
+        | ReactConfigMerge -> "ReactConfigMerge");
       "restType", _json_of_t json_cx t;
     ]
   | ValuesType -> JSON_Object [
@@ -1127,6 +1134,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | TypeMap tmap -> json_of_type_map json_cx tmap
   | ReactElementPropsType -> JSON_Object [
       "reactElementProps", JSON_Bool true
+    ]
+  | ReactElementConfigType -> JSON_Object [
+      "reactElementConfig", JSON_Bool true
     ]
   | ReactElementRefType -> JSON_Object [
       "reactElementRef", JSON_Bool true
@@ -1189,7 +1199,7 @@ and json_of_defer_use_t_impl json_cx = Hh_json.(function
   | DestructuringT (_, s) -> JSON_Object [
       "selector", json_of_selector json_cx s
     ]
-  | TypeDestructorT (_, s) -> JSON_Object [
+  | TypeDestructorT (_, _, s) -> JSON_Object [
       "destructor", json_of_destructor json_cx s
     ]
 )
@@ -1205,21 +1215,21 @@ and json_of_prop_binding_impl json_cx (name, p) = Hh_json.(
 and json_of_prop json_cx = check_depth json_of_prop_impl json_cx
 and json_of_prop_impl json_cx p = Hh_json.(
   JSON_Object (match p with
-  | Field (t, polarity) -> [
+  | Field (_loc, t, polarity) -> [
       "field", _json_of_t json_cx t;
       "polarity", json_of_polarity json_cx polarity
     ]
-  | Get t -> [
+  | Get (_loc, t) -> [
       "getter", _json_of_t json_cx t;
     ]
-  | Set t -> [
+  | Set (_loc, t) -> [
       "setter", _json_of_t json_cx t;
     ]
-  | GetSet (t1, t2) -> [
+  | GetSet (_loc1, t1, _loc2, t2) -> [
       "getter", _json_of_t json_cx t1;
       "setter", _json_of_t json_cx t2;
     ]
-  | Method t -> [
+  | Method (_loc, t) -> [
       "method", _json_of_t json_cx t;
     ]
 ))
@@ -1351,7 +1361,7 @@ and json_of_lookup_action json_cx =
 and json_of_lookup_action_impl json_cx action = Hh_json.(
   JSON_Object (
     match action with
-    | RWProp (_, t, rw) -> [
+    | RWProp (_, _, t, rw) -> [
         "kind", JSON_String "RWProp";
         "rw", JSON_String (string_of_rw rw);
         "t", _json_of_t json_cx t
@@ -1361,7 +1371,7 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "use", JSON_String (string_of_use_op op);
         "prop", json_of_prop json_cx p;
       ]
-    | SuperProp p -> [
+    | SuperProp (_, p) -> [
         "kind", JSON_String "SuperProp";
         "prop", json_of_prop json_cx p;
       ]
@@ -1563,6 +1573,7 @@ and dump_t_ (depth, tvars) cx t =
   | PropertyType x -> spf "property type `%s`" x
   | ElementType _ -> "element type"
   | Bind _ -> "bind"
+  | ReadOnlyType -> "read only"
   | SpreadType _ -> "spread"
   | RestType _ -> "rest"
   | ValuesType -> "values"
@@ -1571,6 +1582,7 @@ and dump_t_ (depth, tvars) cx t =
   | TypeMap (ObjectMap _) -> "object map"
   | TypeMap (ObjectMapi _) -> "object mapi"
   | ReactElementPropsType -> "React element props"
+  | ReactElementConfigType -> "React element config"
   | ReactElementRefType -> "React element instance"
   in
 
@@ -1587,8 +1599,11 @@ and dump_t_ (depth, tvars) cx t =
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
       spf "Destructure %s on %s" (string_of_selector selector) t
-    | TypeDestructorT (_, destructor) ->
-      spf "TypeDestruct %s on %s" (string_of_destructor destructor) t
+    | TypeDestructorT (use_op, _, destructor) ->
+      spf "%s, TypeDestruct %s on %s"
+        (string_of_use_op use_op)
+        (string_of_destructor destructor)
+        t
   in
 
   let string_of_mixed_flavor = function
@@ -1633,6 +1648,8 @@ and dump_t_ (depth, tvars) cx t =
     | Mixin -> "Mixin"
     | Idx -> "Idx"
     | DebugPrint -> "DebugPrint"
+    | DebugThrow -> "DebugThrow"
+    | DebugSleep -> "DebugSleep"
   in
 
   if depth = 0 then string_of_ctor t
@@ -1649,10 +1666,10 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, BoolT c) -> p ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
-  | DefT (_, FunT (_, _, {params_tlist; return_t; this_t; _})) -> p
+  | DefT (_, FunT (_, _, {params; return_t; this_t; _})) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
-        (String.concat "; " (List.map kid params_tlist))
+        (String.concat "; " (List.map (fun (_, t) -> kid t) params))
         (kid return_t)) t
   | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | DefT (_, EmptyT)
@@ -1688,14 +1705,14 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
-  | AnnotT (source, use_desc) -> p t ~reason:false
-      ~extra:(spf "use_desc=%b, %s" use_desc (kid source))
+  | AnnotT ((_, id), use_desc) ->
+    p ~extra:(spf "use_desc=%b, %s" use_desc (tvar id)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
   | DefT (_, OptionalT arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
-  | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"
+  | DefT (_, TypeAppT (_, base, args)) -> p ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
   | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
       ~extra:begin match args_opt with
@@ -1717,7 +1734,6 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
-  | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" s) t
@@ -1727,7 +1743,7 @@ and dump_t_ (depth, tvars) cx t =
   | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | InternalT (ChoiceKitT _) -> p t
-  | TypeDestructorTriggerT (_, s, x) -> p ~extra:(spf "%s on upper, %s"
+  | TypeDestructorTriggerT (_, _, s, x) -> p ~extra:(spf "%s on upper, %s"
     (string_of_destructor s) (kid x)) t
   | InternalT (IdxWrapper (_, inner_obj)) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
@@ -1751,6 +1767,8 @@ and dump_use_t_ (depth, tvars) cx t =
   let use_kid use_t = dump_use_t_ (depth-1, tvars) cx use_t in
   let tvar id = dump_tvar_ (depth-1, tvars) cx id in
   let prop p = dump_prop_ (depth-1, tvars) cx p in
+
+  let string_of_use_op = string_of_use_op_rec in
 
   let call_arg_kid = function
   | Arg t -> kid t
@@ -1780,10 +1798,10 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let lookup_action = function
-  | RWProp (_, t, Read) -> spf "Read %s" (kid t)
-  | RWProp (_, t, Write) -> spf "Write %s" (kid t)
+  | RWProp (_, _, t, Read) -> spf "Read %s" (kid t)
+  | RWProp (_, _, t, Write _) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
-  | SuperProp p -> spf "Super %s" (prop p)
+  | SuperProp (_, p) -> spf "Super %s" (prop p)
   | MatchProp t -> spf "Match %s" (kid t)
   in
 
@@ -1794,7 +1812,7 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let try_flow = function
-    | UnionCases (use_op, t, ts) ->
+    | UnionCases (use_op, t, _rep, ts) ->
         spf "(%s, %s, [%s])"
           (string_of_use_op use_op)
           (kid t)
@@ -1855,6 +1873,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | None -> "")
           (kid tout)) t
     | GetProps tout -> spf "GetProps (%s)" (kid tout)
+    | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
     | GetRef tout -> spf "GetRef (%s)" (kid tout)
     | SimplifyPropType (tool, tout) ->
       spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
@@ -1899,17 +1918,12 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
-    let spread options state =
+    let spread target state =
       let open Object.Spread in
-      let options =
-        let {merge_mode; exclude_props} = options in
-        spf "{merge_mode=%s; exclude_props=[%s]}"
-          (match merge_mode with
-            | Sound target -> spf "Sound (%s)" (match target with
-              | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
-              | Value -> "Value")
-            | Diff -> "Diff")
-          (String.concat "; " exclude_props)
+      let target =
+        (match target with
+          | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
+          | Value -> "Value")
       in
       let state =
         let {todo_rev; acc} = state in
@@ -1917,21 +1931,31 @@ and dump_use_t_ (depth, tvars) cx t =
           (String.concat "; " (List.map kid todo_rev))
           (String.concat "; " (List.map resolved acc))
       in
-      spf "(%s, %s)" options state
+      spf "Spread (%s, %s)" target state
     in
     let rest merge_mode state =
       let open Object.Rest in
-      spf "({merge_mode=%s}, %s)"
+      spf "Rest ({merge_mode=%s}, %s)"
         (match merge_mode with
           | Sound -> "Sound"
-          | IgnoreExactAndOwn -> "IgnoreExactAndOwn")
+          | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
+          | ReactConfigMerge -> "ReactConfigMerge")
         (match state with
           | One t -> spf "One (%s)" (kid t)
           | Done o -> spf "Done (%s)" (resolved o))
     in
+    let react_props state =
+      let open Object.ReactConfig in
+      spf "(%s)"
+        (match state with
+          | Config _ -> "Config"
+          | Defaults _ -> "Defaults")
+    in
     let tool = function
+      | ReadOnly -> "ReadOnly"
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
+      | ReactConfig state -> react_props state
     in
     fun a b ->
       spf "(%s, %s)" (resolve_tool a) (tool b)
@@ -1939,10 +1963,18 @@ and dump_use_t_ (depth, tvars) cx t =
 
   if depth = 0 then string_of_use_ctor t
   else match t with
+  | UseT (use_op, OpenT (r, id)) ->
+    spf "UseT (%s, OpenT (%S, %d))"
+      (string_of_use_op use_op)
+      (dump_reason cx r)
+      id
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
-  | AdderT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | AdderT (use_op, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"
+      (string_of_use_op use_op)
+      (kid x)
+      (kid y)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | ArrRestT _ -> p t
+  | ArrRestT (use_op, _, _, _) -> p ~extra:(string_of_use_op use_op) t
   | AssertArithmeticOperandT _ -> p t
   | AssertBinaryInLHST _ -> p t
   | AssertBinaryInRHST _ -> p t
@@ -1952,8 +1984,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
   | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
-  | CallT (_,{call_args_tlist;call_tout;call_this_t;_}) -> p
-      ~extra:(spf "<this: %s>(%s) => %s"
+  | CallT (use_op,_,{call_args_tlist;call_tout;call_this_t;_}) -> p
+      ~extra:(spf "%s, <this: %s>(%s) => %s"
+        (string_of_use_op use_op)
         (kid call_this_t)
         (String.concat "; " (List.map call_arg_kid call_args_tlist))
         (kid call_tout)) t
@@ -1962,16 +1995,17 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->
       p ~extra:(try_flow spec) t
   | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
-  | ChoiceKitUseT (_, EvalDestructor (_, _, arg)) -> p ~extra:(kid arg) t
+  | ChoiceKitUseT (_, EvalDestructor (_, _, _, _, arg)) -> p ~extra:(kid arg) t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
-  | ComparatorT (_, arg) -> p ~extra:(kid arg) t
+  | ComparatorT (_, _, arg) -> p ~extra:(kid arg) t
   | ConstructorT _ -> p t
   | CopyNamedExportsT _ -> p t
   | CopyTypeExportsT _ -> p t
   | DebugPrintT _ -> p t
+  | DebugSleepT _ -> p t
   | ElemT _ -> p t
-  | EqT (_, arg) -> p ~extra:(kid arg) t
+  | EqT (_, _, arg) -> p ~extra:(kid arg) t
   | ExportNamedT (_, _, tmap, arg) -> p t
       ~extra:(spf "%s, {%s}"
         (kid arg)
@@ -1979,13 +2013,14 @@ and dump_use_t_ (depth, tvars) cx t =
           (List.map (fun (x,_) -> x)
             (SMap.bindings tmap))))
   | ExportTypeT _ -> p t
-  | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
-  | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | GetPropT (use_op, _, prop, ptype) -> p ~extra:(spf "%s, (%s), %s"
+      (string_of_use_op use_op)
       (propref prop)
       (kid ptype)) t
-  | GetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | GetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
       (prop)
       (kid ptype)) t
   | GetProtoT (_, arg) -> p ~extra:(kid arg) t
@@ -2009,7 +2044,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_action action)) t
   | MakeExactT _ -> p t
   | MapTypeT _ -> p t
-  | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
+  | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ObjAssignToT (_, arg1, arg2, _) -> p t
@@ -2025,25 +2060,26 @@ and dump_use_t_ (depth, tvars) cx t =
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
-  | ReactKitT (_, tool) -> p ~extra:(react_kit tool) t
+  | ReactKitT (use_op, _, tool) -> p t
+      ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
   | RefineT _ -> p t
   | ReposLowerT (_, use_desc, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
   | ReposUseT (_, use_desc, use_op, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
-  | ResolveSpreadT (_, {rrt_resolve_to; _;}) ->
+  | ResolveSpreadT (use_op, _, {rrt_resolve_to; _;}) ->
       (match rrt_resolve_to with
       | ResolveSpreadsToTuple (_, tout)
       | ResolveSpreadsToArrayLiteral (_, tout)
       | ResolveSpreadsToArray (_, tout)
       | ResolveSpreadsToMultiflowPartial (_, _, _, tout) ->
-        p ~extra:(kid tout) t
+        p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tout)) t
       | ResolveSpreadsToCallT (_, tin) ->
-        p ~extra:(kid tin) t
+        p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tin)) t
       | ResolveSpreadsToMultiflowCallFull _
       | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToCustomFunCall _
-        -> p t)
+        -> p ~extra:(string_of_use_op use_op) t)
   | SentinelPropTestT (_, l, _key, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
@@ -2059,27 +2095,30 @@ and dump_use_t_ (depth, tvars) cx t =
   | SubstOnPredT _ -> p t
   | SuperT _ -> p t
   | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-  | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetElemT (_, _, ix, etype, _) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | SetPropT (use_op, _, prop, _, ptype, _) -> p ~extra:(spf "%s, (%s), %s"
+      (string_of_use_op use_op)
       (propref prop)
       (kid ptype)) t
-  | SetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+  | SetPrivatePropT (_, _, prop, _, _, ptype, _) -> p ~extra:(spf "(%s), %s"
       (prop)
       (kid ptype)) t
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
-  | SpecializeT (_, _, cache, args_opt, ret) -> p ~extra:begin match args_opt with
+  | SpecializeT (_, _, _, cache, args_opt, ret) -> p ~extra:begin match args_opt with
       | Some args -> spf "%s, [%s], %s"
           (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)
       | None -> spf "%s, %s"
           (specialize_cache cache) (kid ret)
     end t
-  | ObjKitT (_, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s"
+  | ObjKitT (use_op, _, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s, %s"
+      (string_of_use_op use_op)
       (object_kit resolve_tool tool)
       (kid tout)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
   | UnaryMinusT _ -> p t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
@@ -2123,15 +2162,15 @@ and dump_prop ?(depth=3) cx p =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth-1, tvars) cx t in
   match p with
-  | Field (t, polarity) ->
+  | Field (_loc, t, polarity) ->
     spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
-  | Get t ->
+  | Get (_loc, t) ->
     spf "Get %s" (kid t)
-  | Set t ->
+  | Set (_loc, t) ->
     spf "Set %s" (kid t)
-  | GetSet (t1, t2) ->
+  | GetSet (_loc1, t1, _loc2, t2) ->
     spf "Get %s Set %s" (kid t1) (kid t2)
-  | Method t ->
+  | Method (_loc, t) ->
     spf "Method %s" (kid t)
 
 (*****************************************************)
@@ -2230,6 +2269,7 @@ let string_of_destructor = function
   | PropertyType x -> spf "PropertyType %s" x
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
+  | ReadOnlyType -> "ReadOnly"
   | SpreadType _ -> "Spread"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
@@ -2238,6 +2278,7 @@ let string_of_destructor = function
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
   | ReactElementPropsType -> "ReactElementProps"
+  | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
 
 let string_of_default = Default.fold
@@ -2250,10 +2291,10 @@ let string_of_default = Default.fold
 
 let dump_flow_error =
   let open Flow_error in
+  let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
   | PackageHeapNotFound _ -> "PackageHeapNotFound"
   | AbnormalControlFlow -> "AbnormalControlFlow"
-  | UncaughtException _ -> "UncaughtException"
   | MethodNotAFunction -> "MethodNotAFunction"
   | OptionalMethod -> "OptionalMethod"
   | OpenPredWithoutSubst -> "OpenPredWithoutSubst"
@@ -2271,22 +2312,22 @@ let dump_flow_error =
   | ShadowWriteComputed -> "ShadowWriteComputed"
   | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
-  | InferJobException _ -> "InferJobException"
+  | Flow_error.DebugThrow -> "DebugThrow"
+  | MergeTimeout _ -> "MergeTimeout"
   | MergeJobException _ -> "MergeJobException"
-  | UnexpectedUnresolved _ -> "UnexpectedUnresolved"
   in
   let dump_upper_kind = function
-  | IncompatibleGetPropT -> "IncompatibleGetPropT"
-  | IncompatibleSetPropT -> "IncompatibleSetPropT"
-  | IncompatibleMethodT -> "IncompatibleMethodT"
+  | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
+  | IncompatibleSetPropT _ -> "IncompatibleSetPropT"
+  | IncompatibleGetPrivatePropT -> "IncompatibleGetPrivatePropT"
+  | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
+  | IncompatibleMethodT _ -> "IncompatibleMethodT"
   | IncompatibleCallT -> "IncompatibleCallT"
   | IncompatibleConstructorT -> "IncompatibleConstructorT"
-  | IncompatibleGetElemT -> "IncompatibleGetElemT"
-  | IncompatibleSetElemT -> "IncompatibleSetElemT"
-  | IncompatibleCallElemT -> "IncompatibleCallElemT"
-  | IncompatibleElemTRead -> "IncompatibleElemTRead"
-  | IncompatibleElemTWrite -> "IncompatibleElemTWrite"
-  | IncompatibleElemTCall -> "IncompatibleElemTCall"
+  | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
+  | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
+  | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
+  | IncompatibleElemTOfArrT -> "IncompatibleElemTOfArrT"
   | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
   | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
   | IncompatibleObjRestT -> "IncompatibleObjRestT"
@@ -2298,10 +2339,9 @@ let dump_flow_error =
   | IncompatibleThisSpecializeT -> "IncompatibleThisSpecializeT"
   | IncompatibleVarianceCheckT -> "IncompatibleVarianceCheckT"
   | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
-  | IncompatibleHasOwnPropT -> "IncompatibleHasOwnPropT"
+  | IncompatibleHasOwnPropT _ -> "IncompatibleHasOwnPropT"
   | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
   | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
-  | IncompatibleMapTypeTTuple -> "IncompatibleMapTypeTTuple"
   | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
   | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
   | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
@@ -2311,26 +2351,23 @@ let dump_flow_error =
     | EIncompatible {
         lower = (reason_lower, _lower_kind);
         upper = (reason_upper, upper_kind);
-        extras = _;
+        use_op;
+        branches = _;
       } ->
-        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); extras = _ }"
+        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); use_op = %s; branches = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
           (dump_upper_kind upper_kind)
-    | EIncompatibleDefs { reason_lower; reason_upper; extras = _ } ->
-        spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
+          (match use_op with
+          | None -> "None"
+          | Some use_op -> spf "Some(%s)" (string_of_use_op use_op))
+    | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches = _ } ->
+        spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; use_op = %s; branches = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
-    | EIncompatibleProp { reason_prop; reason_obj; special=_; use_op=_ } ->
-        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; use_op = _ }"
-          (dump_reason cx reason_prop)
-          (dump_reason cx reason_obj)
-    | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
-        spf "EIncompatibleGetProp { reason_prop = %s; reason_obj = %s; special = _ }"
-          (dump_reason cx reason_prop)
-          (dump_reason cx reason_obj)
-    | EIncompatibleSetProp { reason_prop; reason_obj; special=_ } ->
-        spf "EIncompatibleSetProp { reason_prop = %s; reason_obj = %s; special = _ }"
+          (string_of_use_op use_op)
+    | EIncompatibleProp { reason_prop; reason_obj; special=_; prop=_; use_op=_ } ->
+        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; prop = _; use_op = _ }"
           (dump_reason cx reason_prop)
           (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) ->
@@ -2341,28 +2378,22 @@ let dump_flow_error =
         spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsValue (reason, str) ->
         spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
-    | EImportTypeofNamespace (reason, local_name, module_name) ->
-        spf "EImportTypeofNamespace (%s, %s, %s)"
-          (dump_reason cx reason) local_name module_name
     | ENoDefaultExport (reason, module_name, _) ->
         spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
-    | EOnlyDefaultExport (reason, export_name) ->
-        spf "EOnlyDefaultExport (%s, %s)" (dump_reason cx reason) export_name
-    | ENoNamedExport (reason, export_name, _) ->
-        spf "ENoNamedExport (%s, %s)" (dump_reason cx reason) export_name
-    | EMissingTypeArgs { reason; min_arity; max_arity } ->
-        spf "EMissingTypeArgs { reason=%s; min_arity=%d; max_arity=%d }"
-          (dump_reason cx reason)
+    | EOnlyDefaultExport (reason, module_name, export_name) ->
+        spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+    | ENoNamedExport (reason, module_name, export_name, _) ->
+        spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+    | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+        spf "EMissingTypeArgs { reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
+          (dump_reason cx reason_tapp)
+          (dump_reason cx reason_arity)
           min_arity
           max_arity
     | EValueUsedAsType (reason1, reason2) ->
         spf "EValueUsedAsType (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EMutationNotAllowed { reason; reason_op } ->
-        spf "EMutationNotAllowed { reason = %s; reason_op = %s }"
-          (dump_reason cx reason)
-          (dump_reason cx reason_op)
     | EExpectedStringLit ((reason1, reason2), expected, literal, use_op) ->
         let literal = match literal with
         | Literal (_, str) -> spf "%S" str
@@ -2398,12 +2429,14 @@ let dump_flow_error =
           expected
           literal
           (string_of_use_op use_op)
-    | EPropNotFound ((prop_reason, obj_reason), _use_op) ->
-        spf "EPropNotFound (%s, %s)"
+    | EPropNotFound (prop, (prop_reason, obj_reason), use_op) ->
+        spf "EPropNotFound (%s, %s, %s, %s)"
+          (match prop with Some prop -> spf "Some %s" prop | None -> "None")
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)
-    | EPropAccess ((reason1, reason2), x, _, _) ->
-        spf "EPropAccess ((%s, %s), %s, _, _)"
+          (string_of_use_op use_op)
+    | EPropAccess ((reason1, reason2), x, _, _, _) ->
+        spf "EPropAccess ((%s, %s), %s, _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")
@@ -2423,59 +2456,46 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (dump_reason cx reason)
-          (match x with Some x -> spf "Some %S" x | None -> "None")
-          (match use_op with Some _ -> "Some use_op" | None -> "None")
-    | EPrivateLookupFailed (reason1, reason2) ->
-        spf "EPrivateLookupFailed (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-    | EFunCallParam (reason1, reason2) ->
-        spf "EFunCallParam (%s, %s)"
+          (match x with Some x -> spf "Some(%S)" x | None -> "None")
+          (match use_op with
+          | Some use_op -> spf "Some(%s)" (string_of_use_op use_op)
+          | None -> "None")
+    | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
+        spf "EPrivateLookupFailed ((%s, %s), %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EFunCallThis (reason1, reason2, reason_call) ->
-        spf "EFunCallThis (%s, %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-          (dump_reason cx reason_call)
-    | EFunReturn (reason1, reason2) ->
-        spf "EFunReturn (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-    | EFunImplicitReturn (reason1, reason2) ->
-        spf "EFunImplicitReturn (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-    | EAddition (reason1, reason2) ->
-        spf "EAddition (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
-    | EAdditionMixed reason ->
-        spf "EAdditionMixed (%s)" (dump_reason cx reason)
-    | ECoercion (reason1, reason2) ->
-        spf "ECoercion (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+          x
+          (string_of_use_op use_op)
+    | EAdditionMixed (reason, use_op) ->
+        spf "EAdditionMixed (%s, %s)"
+          (dump_reason cx reason)
+          (string_of_use_op use_op)
     | EComparison (reason1, reason2) ->
         spf "EComparison (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, _) ->
-        spf "ETupleArityMismatch (%s, %s, %d, %d, _)"
+    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, use_op) ->
+        spf "ETupleArityMismatch (%s, %s, %d, %d, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2
-    | ENonLitArrayToTuple (reason1, reason2) ->
-        spf "ENonLitArrayToTuple (%s, %s)"
+          (string_of_use_op use_op)
+    | ENonLitArrayToTuple ((reason1, reason2), use_op) ->
+        spf "ENonLitArrayToTuple ((%s, %s), %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ETupleOutOfBounds ((reason1, reason2), arity1, arity2) ->
-        spf "ETupleOutOfBounds (%s, %s, %d, %d)"
+          (string_of_use_op use_op)
+    | ETupleOutOfBounds ((reason1, reason2), arity1, arity2, use_op) ->
+        spf "ETupleOutOfBounds (%s, %s, %d, %d, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2
-    | ETupleUnsafeWrite (reason1, reason2) ->
-        spf "ETupleUnsafeWrite (%s, %s)"
+          (string_of_use_op use_op)
+    | ETupleUnsafeWrite ((reason1, reason2), use_op) ->
+        spf "ETupleUnsafeWrite (%s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
         spf "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
           (string_of_use_op use_op)
@@ -2485,10 +2505,11 @@ let dump_flow_error =
         spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIncompatibleWithExact ((reason1, reason2), _) ->
-        spf "EIncompatibleWithExact ((%s, %s), _)"
+    | EIncompatibleWithExact ((reason1, reason2), use_op) ->
+        spf "EIncompatibleWithExact ((%s, %s), %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
         spf "EUnsupportedExact (%s, %s)"
           (dump_reason cx reason1)
@@ -2501,8 +2522,6 @@ let dump_flow_error =
         spf "EIdxUse2 (%s)" (dump_reason cx reason)
     | EUnexpectedThisType loc ->
         spf "EUnexpectedThisType (%s)" (string_of_loc loc)
-    | EInvalidRestParam reason ->
-        spf "EInvalidRestParam (%s)" (dump_reason cx reason)
     | ETypeParamArity (loc, expected) ->
         spf "ETypeParamArity (%s, %d)" (string_of_loc loc) expected
     | ETypeParamMinArity (loc, expected) ->
@@ -2523,10 +2542,11 @@ let dump_flow_error =
         spf "EExportsAnnot (%s)" (string_of_loc loc)
     | ECharSetAnnot loc ->
         spf "ECharSetAnnot (%s)" (string_of_loc loc)
-    | EInvalidCharSet { invalid = (reason, _); valid } ->
-        spf "EInvalidCharSet { invalid = (%s, _); valid = %s }"
+    | EInvalidCharSet { invalid = (reason, _); valid; use_op } ->
+        spf "EInvalidCharSet { invalid = (%s, _); valid = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx valid)
+          (string_of_use_op use_op)
     | EUnsupportedKeyInObjectType loc ->
         spf "EUnsupportedKeyInObjectType (%s)" (string_of_loc loc)
     | EPredAnnot loc ->
@@ -2535,17 +2555,20 @@ let dump_flow_error =
         spf "ERefineAnnot (%s)" (string_of_loc loc)
     | EUnexpectedTypeof loc ->
         spf "EUnexpectedTypeof (%s)" (string_of_loc loc)
-    | ECustom ((reason1, reason2), msg) ->
-        spf "ECustom (%s, %s, %S)"
+    | EFunPredCustom ((reason1, reason2), msg) ->
+        spf "EFunPredCustom (%s, %s, %S)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           msg
+    | EFunctionIncompatibleWithShape (lower, upper, use_op) ->
+        spf "EFunctionIncompatibleWithShape (%s, %s, %s)"
+          (dump_reason cx lower)
+          (dump_reason cx upper)
+          (string_of_use_op use_op)
     | EInternal (loc, err) ->
         spf "EInternal (%s, %s)" (string_of_loc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) ->
         spf "EUnsupportedSyntax (%s, _)" (string_of_loc loc)
-    | EIllegalName loc ->
-        spf "EIllegalName (%s)" (string_of_loc loc)
     | EUseArrayLiteral loc ->
         spf "EUseArrayLiteral (%s)" (string_of_loc loc)
     | EMissingAnnotation reason ->
@@ -2573,10 +2596,11 @@ let dump_flow_error =
         spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_loc loc)
-    | EInvalidObjectKit { reason; reason_op; _ } ->
-        spf "EInvalidObjectKit { reason = %s; reason_op = %s }"
+    | EInvalidObjectKit { reason; reason_op; use_op; _ } ->
+        spf "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
+          (string_of_use_op use_op)
     | EInvalidTypeof (loc, name) ->
         spf "EInvalidTypeof (%s, %S)" (string_of_loc loc) name
     | EBinaryInLHS reason ->
@@ -2604,17 +2628,19 @@ let dump_flow_error =
           (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
-    | EReactKit ((reason1, reason2), _) ->
-        spf "EReactKit (%s, %s, _)"
+    | EReactKit ((reason1, reason2), _, use_op) ->
+        spf "EReactKit (%s, %s, _, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->
         spf "EReactElementFunArity (%s)" (dump_reason cx reason)
-    | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
-        spf "EFunctionCallExtraArg (%s, %s, %d)"
+    | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
+        spf "EFunctionCallExtraArg (%s, %s, %d, %s)"
           (dump_reason cx  unused_reason)
           (dump_reason cx def_reason)
           param_count
+          (string_of_use_op use_op)
     | EUnsupportedSetProto reason ->
         spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
     | EDuplicateModuleProvider { module_name; provider; conflict } ->
@@ -2636,6 +2662,14 @@ let dump_flow_error =
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
     | EUntypedTypeImport (loc, module_name) ->
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
+    | EUntypedImport (loc, module_name) ->
+      spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
+    | ENonstrictImport loc ->
+      spf "ENonstrictImport (%s)" (string_of_loc loc)
+    | EUnclearType loc ->
+      spf "EUnclearType (%s)" (string_of_loc loc)
+    | EUnsafeGettersSetters loc ->
+      spf "EUnclearGettersSetters (%s)" (string_of_loc loc)
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
     | ELintSetting (loc, kind) ->
@@ -2662,5 +2696,7 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
+    | EDeprecatedDeclareExports loc ->
+        spf "EDeprecatedDeclareExports (%s)" (string_of_loc loc)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)

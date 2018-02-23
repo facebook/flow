@@ -1,18 +1,58 @@
-Error: test.js:7
-  7: type A<-T> = Foo<T>; // Error, Foo expects invariant type
-                      ^ T. invariant position (expected `T` to occur only contravariantly)
+Error ----------------------------------------------------------------------------------------------------- test.js:7:18
 
-Error: test.js:8
-  8: type B<+T> = Foo<T>; // Error, Foo expects invariant type
-                      ^ T. invariant position (expected `T` to occur only covariantly)
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
 
-Error: test.js:10
- 10: type D<-T> = Bar<T>; // Error, Bar expects covariant type
-                      ^ T. covariant position (expected `T` to occur only contravariantly)
+   test.js:7:18
+   7| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+                       ^
 
-Error: test.js:15
- 15: type I<+T> = Baz<T>; // Error, Baz expects contravariant type
-                      ^ T. contravariant position (expected `T` to occur only covariantly)
+References:
+   test.js:7:9
+   7| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+              ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:18
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+
+   test.js:8:18
+   8| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+                       ^
+
+References:
+   test.js:8:9
+   8| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+              ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:18
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+
+   test.js:10:18
+   10| type D<-T> = Bar<T>; // Error, Bar expects covariant type
+                        ^
+
+References:
+   test.js:10:9
+   10| type D<-T> = Bar<T>; // Error, Bar expects covariant type
+               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:18
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+
+   test.js:15:18
+   15| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
+                        ^
+
+References:
+   test.js:15:9
+   15| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
+               ^ [1]
+
 
 
 Found 4 errors

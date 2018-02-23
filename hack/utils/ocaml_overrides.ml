@@ -34,4 +34,5 @@ module Sys = struct
   let is_directory = Disk.is_directory
   let rename = Disk.rename
   let file_exists = Disk.file_exists
+  let readdir = Disk.readdir
 end

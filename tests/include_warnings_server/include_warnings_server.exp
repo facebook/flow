@@ -2,102 +2,192 @@ EMPTY FLOWCONFIG
 
 
 Check Without --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
 
 
 Check With --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Check-contents Without --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
 
 
 Check-contents With --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Status Without --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
 
 
 Found 1 error
 
 
 Status With --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
@@ -109,126 +199,246 @@ INCLUDE_WARNINGS FLOWCONFIG
 
 
 Check Without --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Check With --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Check-contents Without --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Check-contents With --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Status Without --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning
 
 
 Status With --include-warnings
-Error: test.js:7
-  7: if (x) {} //Error
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
 
-Warning: test.js:10
- 10: if (x) {} //Warning
-         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: var x: ?number = 0;
-              ^^^^^^^ Potentially null/undefined value.
-    4: var x: ?number = 0;
-               ^^^^^^ Potentially 0 value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
 
 
 Found 1 error and 1 warning

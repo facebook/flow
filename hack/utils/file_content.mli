@@ -8,9 +8,22 @@
  *
  *)
 
-open Ide_api_types
+type position = {
+  line : int; (* 1-based *)
+  column : int; (* 1-based *)
+}
 
-val edit_file : string -> text_edit list -> (string, string) Result.t
+type range = {
+  st : position;
+  ed : position;
+}
+
+type text_edit = {
+  range : range option;
+  text : string;
+}
+
+val edit_file : string -> text_edit list -> (string, string) result
 
 val edit_file_unsafe : string -> text_edit list -> string
 

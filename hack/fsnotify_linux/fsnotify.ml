@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 exception Error of string * Unix.error
 let wrap f () =

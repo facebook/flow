@@ -22,12 +22,13 @@ module Entry :
       | ConstParamBinding
       | ConstVarBinding
     and let_binding_kind =
-        LetVarBinding
-      | LetConstlikeVarBinding
+      | LetVarBinding
+      | ConstlikeLetVarBinding
       | ClassNameBinding
       | CatchParamBinding
       | FunctionBinding
       | ParamBinding
+      | ConstlikeParamBinding
     and var_binding_kind =
       | VarBinding
       | ConstlikeVarBinding
@@ -82,6 +83,7 @@ type var_scope_kind =
   | Module
   | Global
   | Predicate
+  | Ctor
 val string_of_var_scope_kind : var_scope_kind -> string
 type kind = VarScope of var_scope_kind | LexScope
 val string_of_kind : kind -> string

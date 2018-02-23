@@ -63,3 +63,35 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 #    ^
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
+
+printf "class property read = "
+assert_ok "$FLOW" get-def class.js 13 6 --strip-root --pretty
+printf "class property write = "
+assert_ok "$FLOW" get-def class.js 14 6 --strip-root --pretty
+printf "class methods = "
+assert_ok "$FLOW" get-def class.js 15 6 --strip-root --pretty
+printf "refined class properties = "
+assert_ok "$FLOW" get-def class.js 18 8 --strip-root --pretty
+# TODO get private properties working
+printf "private class property access = "
+assert_ok "$FLOW" get-def class.js 7 15 --strip-root --pretty
+printf "private class property assignment = "
+assert_ok "$FLOW" get-def class.js 8 15 --strip-root --pretty
+printf "members of maybe types = "
+assert_ok "$FLOW" get-def class.js 22 5 --strip-root --pretty
+printf "members of unions with null/void = "
+assert_ok "$FLOW" get-def class.js 26 5 --strip-root --pretty
+
+printf "member of a nonexistent imported type with type parameters = "
+assert_ok "$FLOW" get-def imports.js 16 4 --strip-root --pretty 2>&1
+printf "member of a type alias for \`any\` with type parameters = "
+assert_ok "$FLOW" get-def imports.js 22 4 --strip-root --pretty 2>&1
+
+printf "member of an object type alias = "
+assert_ok "$FLOW" get-def objects.js 5 4 --strip-root --pretty
+printf "member of an unannotated object type = "
+assert_ok "$FLOW" get-def objects.js 8 4 --strip-root --pretty
+printf "shadow prop created on write = "
+assert_ok "$FLOW" get-def objects.js 12 4 --strip-root --pretty
+printf "shadow prop created on read = "
+assert_ok "$FLOW" get-def objects.js 14 4 --strip-root --pretty

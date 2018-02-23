@@ -17,8 +17,15 @@
 
 #include <time.h>
 
+#ifdef HH_BUILD_ID
+#include "hphp/runtime/version.h"
+#endif
+
 extern const char* const BuildInfo_kRevision;
 extern const uint64_t BuildInfo_kRevisionCommitTimeUnix;
+
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY_VALUE(x) STRINGIFY_HELPER(x)
 
 /**
  * Export the constants provided by Facebook's build system to ocaml-land, since
@@ -33,10 +40,17 @@ value hh_get_build_revision(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
-  size_t len = strlen(BuildInfo_kRevision);
+#ifdef HH_BUILD_ID
+  const char* const buf =
+    STRINGIFY_VALUE(HH_BUILD_ID) "-" HHVM_VERSION_C_STRING_LITERALS;
+#else
+  const char* const buf = BuildInfo_kRevision;
+#endif
+  const size_t len = strlen(buf);
   result = caml_alloc_string(len);
 
-  memcpy(String_val(result), BuildInfo_kRevision, len);
+  memcpy(String_val(result), buf, len);
+
   CAMLreturn(result);
 }
 
@@ -45,8 +59,15 @@ value hh_get_build_commit_time_string(void) {
   CAMLlocal1(result);
 
   char s[25];
+  unsigned long timestamp = BuildInfo_kRevisionCommitTimeUnix;
+#ifdef HH_BUILD_TIMESTAMP
+  if (timestamp == 0) {
+    timestamp = HH_BUILD_TIMESTAMP;
+  }
+#endif
+
   // A previous version used localtime_r, which is not available on Windows
-  struct tm *p = localtime((time_t*)&BuildInfo_kRevisionCommitTimeUnix);
+  struct tm *p = localtime((time_t*)&timestamp);
   strftime(s, sizeof(s), "%c", p);
 
   result = caml_copy_string(s);

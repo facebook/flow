@@ -332,7 +332,7 @@ var x : string = 123;
 ```
 
 and suppress the error. If there is no error on the next line (the suppression
-is unnecessary), an "Unused suppression" error will be shown instead.
+is unnecessary), an "Unused suppression" warning will be shown instead.
 
 If no suppression comments are specified in your config, Flow will apply one
 default: `// $FlowFixMe`.

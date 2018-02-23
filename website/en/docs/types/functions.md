@@ -141,7 +141,7 @@ method(null);      // Error!
 ### Rest Parameters <a class="toc" id="toc-rest-parameters" href="#toc-rest-parameters"></a>
 
 JavaScript also supports having rest parameters or parameters that collect an
-array of arguments at the end of a list of parameters. These have an elipsis
+array of arguments at the end of a list of parameters. These have an ellipsis
 `...` before them.
 
 You can also add type annotations for rest parameters using the same syntax but
@@ -212,6 +212,82 @@ var num: number = method.call(42);
 // $ExpectError
 var str: string = method.call(42);
 ```
+
+### Predicate Functions <a class="toc" id="toc-function-checks" href="#toc-predicate-functions"></a>
+
+Sometimes you will want to move the condition from an `if` statement into a function:
+
+```js
+function concat(a: ?string, b: ?string): string {
+  if (a && b) {
+    return a + b;
+  }
+  return '';
+}
+```
+
+However, Flow will flag an error in the code below:
+
+```js
+function truthy(a, b): boolean {
+  return a && b;
+}
+
+function concat(a: ?string, b: ?string): string {
+  if (truthy(a, b)) {
+    // $ExpectError
+    return a + b;
+  }
+  return '';
+}
+```
+
+You can fix this by making `truthy` a *predicate function*, by using
+the `%checks` annotation like so:
+
+```js
+function truthy(a, b): boolean %checks {
+  return !!a && !!b;
+}
+
+function concat(a: ?string, b: ?string): string {
+  if (truthy(a, b)) {
+    return a + b;
+  }
+  return '';
+}
+```
+
+The body of these predicate functions need to be expressions (i.e. local variable declarations are not supported).
+But it's possible to call other predicate functions inside a predicate function.
+For example:
+
+```js
+function isString(y): %checks {
+  return typeof y === "string";
+}
+
+function isNumber(y): %checks {
+  return typeof y === "number";
+}
+
+function isNumberOrString(y): %checks {
+  return isString(y) || isNumber(y);
+}
+
+function foo(x): string | number {
+  if (isNumberOrString(x)) {
+    return x + x;
+  } else {
+    return x.length; // no error, because Flow infers that x can only be an array
+  }
+}
+
+foo('a');
+foo(5);
+foo([]);
+```
+
 
 ### `Function` Type <a class="toc" id="toc-function-type" href="#toc-function-type"></a>
 

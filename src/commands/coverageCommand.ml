@@ -25,16 +25,16 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> from_flag
     |> flag "--color" no_arg
-        ~doc:"Print the file with colors showing which parts have unknown types"
+        ~doc:("Print the file with colors showing which parts have unknown types. " ^
+              "Cannot be used with --json or --pretty")
     |> flag "--debug" no_arg
-        ~doc:"Print debugging info about each range in the file to stderr"
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
+        ~doc:("Print debugging info about each range in the file to stderr. " ^
+              "Cannot be used with --json or --pretty")
+    |> path_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
@@ -47,7 +47,7 @@ let handle_error ~json ~pretty err =
   then (
     let open Hh_json in
     let json = JSON_Object ["error", JSON_String err] in
-    prerr_endline (json_to_string ~pretty json);
+    prerr_json_endline ~pretty json;
   ) else (
     prerr_endline err;
   )
@@ -176,55 +176,49 @@ let rec split_overlapping_ranges accum = Loc.(function
 )
 
 let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) content =
-  if color && json then
-    prerr_endline "Error: --color and --json flags cannot be used together"
-  else if debug && json then
-    prerr_endline "Error: --debug and --json flags cannot be used together"
-  else (
-    if debug then List.iter debug_range types;
+  if debug then List.iter debug_range types;
 
-    begin if color then
-      let types = split_overlapping_ranges [] types |> List.rev in
-      let colors, _ = colorize_file content 0 [] types in
-      Tty.cprint (List.rev colors);
-      print_endline ""
-    end;
+  begin if color then
+    let types = split_overlapping_ranges [] types |> List.rev in
+    let colors, _ = colorize_file content 0 [] types in
+    Tty.cprint (List.rev colors);
+    print_endline ""
+  end;
 
-    let covered, total = List.fold_left accum_coverage (0, 0) types in
-    let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
+  let covered, total = List.fold_left accum_coverage (0, 0) types in
+  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
-    if json then
-      let uncovered_locs = types
-        |> List.filter (fun (_, is_covered) -> not is_covered)
-        |> List.map (fun (loc, _) -> loc)
-      in
-      let open Hh_json in
-      JSON_Object [
-        "expressions", JSON_Object [
-          "covered_count", int_ covered;
-          "uncovered_count", int_ (total - covered);
-          "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
-        ];
-      ]
-      |> json_to_string ~pretty
-      |> print_endline
-    else
-      Utils_js.print_endlinef
-        "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
-  )
+  if json then
+    let uncovered_locs = types
+      |> List.filter (fun (_, is_covered) -> not is_covered)
+      |> List.map (fun (loc, _) -> loc)
+    in
+    let open Hh_json in
+    JSON_Object [
+      "expressions", JSON_Object [
+        "covered_count", int_ covered;
+        "uncovered_count", int_ (total - covered);
+        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
+      ];
+    ]
+    |> print_json_endline ~pretty
+  else
+    Utils_js.print_endlinef
+      "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main
-    option_values root json pretty from color debug path respect_pragma
+    option_values json pretty root from color debug path respect_pragma
     all filename () =
   FlowEventLogger.set_from from;
-  let file = get_file_from_filename_or_stdin path filename in
+  let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
+    path filename in
   let root = guess_root (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
 
-  if not json && all && respect_pragma then prerr_endline
+  if not option_values.quiet && all && respect_pragma then prerr_endline
     "Warning: --all and --respect-pragma cannot be used together. --all wins.";
 
   (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
@@ -234,17 +228,22 @@ let main
      be removed. *)
   let all = all || not respect_pragma in
 
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.COVERAGE (file, all));
-
   (* pretty implies json *)
   let json = json || pretty in
 
-  match (Timeout.input_value ic : ServerProt.coverage_response) with
-  | Error err ->
-      handle_error ~json ~pretty err
-  | Ok resp ->
-      let content = File_input.content_of_file_input_unsafe file in
-      handle_response ~json ~pretty ~color ~debug resp content
+  if color && json
+  then raise (CommandSpec.Failed_to_parse ("--color", "Can't be used with json flags"));
+  if debug && json
+  then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
+
+  let request = ServerProt.Request.COVERAGE (file, all) in
+
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.COVERAGE (Error err) ->
+    handle_error ~json ~pretty err
+  | ServerProt.Response.COVERAGE (Ok resp) ->
+    let content = File_input.content_of_file_input_unsafe file in
+    handle_response ~json ~pretty ~color ~debug resp content
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

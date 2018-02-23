@@ -10,6 +10,7 @@
 type options = {
   default_lib_dir: Path.t option;
   ignores: (string * Str.regexp) list;
+  untyped: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -19,6 +20,7 @@ type options = {
 
 let default_lib_dir options = options.default_lib_dir
 let ignores options = options.ignores
+let untyped options = options.untyped
 let includes options = options.includes
 let lib_paths options = options.lib_paths
 let module_file_exts options = options.module_file_exts
@@ -289,6 +291,15 @@ let is_ignored (options: options) =
     let path = Sys_utils.normalize_filename_dir_sep path in
     List.exists (fun rx -> Str.string_match rx path 0) list
 
+(* true if a file path matches an [untyped] entry in config *)
+let is_untyped (options: options) =
+  let list = List.map snd options.untyped in
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
+
 (* true if a file path matches an [include] path in config *)
 let is_included options f =
   Path_matcher.matches options.includes f
@@ -297,9 +308,8 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
-let watched_paths ~root options =
-  let others = Path_matcher.stems options.includes in
-  root::others
+let watched_paths options =
+  Path_matcher.stems options.includes
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
@@ -315,7 +325,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
 
   (* The directories from which we start our search *)
   let starting_points = match subdir with
-  | None -> watched_paths ~root options
+  | None -> watched_paths options
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in

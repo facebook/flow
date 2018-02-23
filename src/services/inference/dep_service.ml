@@ -84,6 +84,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun utils f ->
     let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
+    let required = Modulename.Set.of_list (SMap.values resolved_requires.resolved_modules) in
     let info = get_info_unsafe ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
        in calc_all_dependents.
@@ -98,14 +99,14 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
     *)
     let entry =
       info.module_name,
-    (* For every r in resolved_requires.required, add f to the reverse dependency list for r,
+    (* For every required module m, add f to the reverse dependency list for m,
        stored in `module_dependent_map`. This will be used downstream when computing
        direct_dependents, and also in calc_all_dependents.
 
        TODO: should generate this map once on startup, keep required_by in
        module records and update incrementally on recheck.
     *)
-      resolved_requires.required,
+      required,
     (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_dependents downstream). *)
@@ -221,12 +222,15 @@ let implementation_file ~audit r = Module_js.(
 )
 
 let file_dependencies ~audit file = Module_js.(
-  let { required; _ } = get_resolved_requires_unsafe ~audit file in
-  Modulename.Set.fold (fun r files ->
-    match implementation_file ~audit:Expensive.ok r with
+  let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
+  let { resolved_modules; _ } = get_resolved_requires_unsafe ~audit file in
+  SMap.fold (fun mref _ files ->
+    let m = SMap.find_unsafe mref resolved_modules in
+    match implementation_file m ~audit:Expensive.ok with
     | Some f -> FilenameSet.add f files
     | None -> files
-  ) required FilenameSet.empty
+  ) require_loc FilenameSet.empty
 )
 
 let calc_dependency_graph workers files =
@@ -237,9 +241,9 @@ let calc_dependency_graph workers files =
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
-    ~next: (MultiWorker.next workers files) in
+    ~next: (MultiWorker.next workers (FilenameSet.elements files)) in
   FilenameMap.map (
-    FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph)
+    FilenameSet.filter (fun f -> FilenameSet.mem f files)
   ) dependency_graph
 
 (* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies

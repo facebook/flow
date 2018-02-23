@@ -6,3 +6,4 @@
  *)
 
 val extract_flowlib : no_flowlib:bool -> Path.t -> unit
+val contents : bool -> (string * string) array

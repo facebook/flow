@@ -29,12 +29,17 @@
    Finally, these structures may be huge, so we instead compare their digests,
    tolerating improbable collisions (cf. SharedMem).
 *)
+
+(* NOTE: it's critical that these are all constant constructors, which are
+ * represented as ints, because we hash in C assuming they are ints. Any
+ * non-constant constructors will be blocks, and fail to hash properly. *)
 type hash =
-  | NumH of Type.number_literal Type.literal
-  | StrH of string Type.literal
-  | BoolH of bool option
+  (* def types *)
+  | NumH
+  | StrH
+  | BoolH
   | EmptyH
-  | MixedH of Type.mixed_flavor
+  | MixedH
   | AnyH
   | NullH
   | VoidH
@@ -66,11 +71,10 @@ type hash =
   | AnyObjH
   | AnyFunH
   | ShapeH
-  | DiffH
   | KeysH
-  | SingletonStrH of string
-  | SingletonNumH of Type.number_literal
-  | SingletonBoolH of bool
+  | SingletonStrH
+  | SingletonNumH
+  | SingletonBoolH
   | TypeH
   | AnnotH
   | ModuleH
@@ -79,6 +83,7 @@ type hash =
   | OpenPredH
   | CharSetH
   | ReposH
+  (* use types *)
   | BindH
   | CallH
   | MethodH
@@ -152,6 +157,7 @@ type hash =
   | ChoiceKitUseH
   | IntersectionPreprocessKitH
   | DebugPrintH
+  | DebugSleepH
   | SentinelPropTestH
   | IdxUnwrapH
   | IdxUnMaybeifyH
@@ -162,6 +168,7 @@ type hash =
   | ResolveSpreadH
   | CondH
   | ExtendsUseH
+  | ToStringH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -171,22 +178,22 @@ let hash_of_def_ctor = Type.(function
   | AnyObjT -> AnyObjH
   | AnyT -> AnyH
   | ArrT _ -> ArrH
-  | BoolT b -> BoolH b
+  | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH
   | EmptyT -> EmptyH
   | FunT _ -> FunH
   | IntersectionT _ -> IntersectionH
   | MaybeT _ -> MaybeH
-  | MixedT m -> MixedH m
+  | MixedT _ -> MixedH
   | NullT -> NullH
-  | NumT n -> NumH n
+  | NumT _ -> NumH
   | ObjT _ -> ObjH
   | OptionalT _ -> OptionalH
-  | SingletonBoolT b -> SingletonBoolH b
-  | SingletonNumT n -> SingletonNumH n
-  | SingletonStrT s -> SingletonStrH s
-  | StrT s -> StrH s
+  | SingletonBoolT _ -> SingletonBoolH
+  | SingletonNumT _ -> SingletonNumH
+  | SingletonStrT _ -> SingletonStrH
+  | StrT _ -> StrH
   | TypeT _ -> TypeH
   | TypeAppT _ -> TypeAppH
   | VoidT -> VoidH
@@ -206,7 +213,6 @@ let hash_of_ctor = Type.(function
   | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
   | DefT (_, t) -> hash_of_def_ctor t
-  | DiffT _ -> DiffH
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
@@ -302,6 +308,7 @@ let hash_of_use_ctor = Type.(function
   | ChoiceKitUseT _ -> ChoiceKitUseH
   | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
   | DebugPrintT _ -> DebugPrintH
+  | DebugSleepT _ -> DebugSleepH
   | SentinelPropTestT _ -> SentinelPropTestH
   | IdxUnwrap _ -> IdxUnwrapH
   | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
@@ -312,37 +319,88 @@ let hash_of_use_ctor = Type.(function
   | ResolveSpreadT _ -> ResolveSpreadH
   | CondT _ -> CondH
   | ExtendsUseT _ -> ExtendsUseH
+  | ToStringT _ -> ToStringH
 )
 
-type prop_hash =
-  | FieldH of Type.polarity
-  | GetH
-  | SetH
-  | GetSetH
-  | MethodH
+let add = Xx.update
+let add_int = Xx.update_int
+let add_bool = Xx.update_int (* bools are ints *)
 
-let hash_of_prop = Type.(function
-  | Field (_, polarity) -> FieldH polarity
-  | Get _ -> GetH
-  | Set _ -> SetH
-  | GetSet _ -> GetSetH
-  | Method _ -> MethodH
+let add_option state f = function
+  | None -> add_int state 0
+  | Some x -> add_int state 1; f state x
+
+let add_literal state f = Type.(function
+  | Literal (_, x) -> add_int state 0; f state x
+  | Truthy -> add_int state 1
+  | AnyLiteral -> add_int state 2
 )
 
-type t = Digest.t
-let empty = Digest.string ""
+let add_number_literal state (_, x) = add state x
 
-let add x t =
-  Digest.string (Marshal.to_string (x, t) [])
+let add_type state t =
+  add_int state (hash_of_ctor t);
+  let open Type in
+  match t with
+  | DefT (_, BoolT b) ->
+    add_option state add_bool b
+  | DefT (_, MixedT m) ->
+    add_int state m
+  | DefT (_, NumT n) ->
+    add_literal state add_number_literal n
+  | DefT (_, SingletonBoolT b) ->
+    add_bool state b
+  | DefT (_, SingletonNumT n) ->
+    add_number_literal state n
+  | DefT (_, SingletonStrT s) ->
+    add state s
+  | DefT (_, StrT s) ->
+    add_literal state add s
+  | _ -> ()
 
-let add_type type_ =
-  add (hash_of_ctor type_)
+let add_use state use =
+  add_int state (hash_of_use_ctor use)
 
-let add_use use =
-  add (hash_of_use_ctor use)
+let add_file_key state = File_key.(function
+  | LibFile f ->
+    add_int state 0; add state f
+  | SourceFile f ->
+    add_int state 1; add state f
+  | JsonFile f ->
+    add_int state 2; add state f
+  | ResourceFile f ->
+    add_int state 3; add state f
+  | Builtins ->
+    add_int state 4
+)
 
-let add_props_map pmap =
-  SMap.fold (fun k p h -> h |> add k |>  add (hash_of_prop p)) pmap
+let add_loc state loc =
+  let open Loc in
+  add_option state add_file_key loc.source;
+  add_int state loc.start.line;
+  add_int state loc.start.column;
+  add_int state loc._end.line;
+  add_int state loc._end.column
 
-let add_exports_map tmap =
-  add (SMap.keys tmap)
+let add_reason state r =
+  let open Reason in
+  add_loc state (loc_of_reason r);
+  add_loc state (def_loc_of_reason r)
+
+let add_polarity = add_int
+
+let add_prop state = Type.(function
+  | Field (_, _, polarity) ->
+    add_int state 0;
+    add_int state polarity
+  | Get _ -> add_int state 1
+  | Set _ -> add_int state 2
+  | GetSet _ -> add_int state 3
+  | Method _ -> add_int state 4
+)
+
+let add_props_map state =
+  SMap.iter (fun k p -> add state k; add_prop state p)
+
+let add_exports_map state =
+  SMap.iter (fun k _ -> add state k)

@@ -31,6 +31,7 @@ let spec = {
     |> flag "--strict" no_arg
         ~doc:"Parse in strict mode"
     |> CommandUtils.from_flag
+    |> CommandUtils.path_flag
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
 }
@@ -39,9 +40,10 @@ type ast_file_type =
   | Ast_json
   | Ast_js
 
-let get_file = function
+let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
-  | None -> File_input.FileContent (None, Sys_utils.read_stdin_to_string ())
+  | None ->
+    File_input.FileContent (path, Sys_utils.read_stdin_to_string ())
 
 module Translate = Estree_translator.Translate (Json_of_estree) (struct
   (* TODO: make these configurable via CLI flags *)
@@ -88,9 +90,10 @@ let token_to_json token_result =
     ("value", JSON_String (Token.value_of_token token));
   ]
 
-let main include_tokens pretty file_type_opt use_strict from filename () =
+let main include_tokens pretty file_type_opt use_strict from path filename () =
   FlowEventLogger.set_from from;
-  let file = get_file filename in
+  let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
+  let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in
 
   let file_type =
@@ -129,16 +132,23 @@ let main include_tokens pretty file_type_opt use_strict from filename () =
         use_strict;
       }) in
 
+      let filename = File_input.path_of_file_input file in
+      let filename = if use_relative_path
+        then Option.map filename ~f:(Files.relative_path (Sys.getcwd ()))
+        else filename
+      in
       let (translated_ast, errors) =
         match file_type with
         | Ast_js ->
+          let filekey = Option.map filename ~f:(fun s -> File_key.SourceFile s) in
           let (ocaml_ast, errors) =
-            Parser_flow.program ~fail:false ~parse_options ~token_sink content
+            Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
           in
           Translate.program ocaml_ast, errors
         | Ast_json ->
+          let filekey = Option.map filename ~f:(fun s -> File_key.JsonFile s) in
           let (ocaml_ast, errors) =
-            Parser_flow.json_file ~fail:false ~parse_options ~token_sink content None
+            Parser_flow.json_file ~fail:false ~parse_options ~token_sink content filekey
           in
           Translate.expression ocaml_ast, errors
       in
@@ -151,6 +161,6 @@ let main include_tokens pretty file_type_opt use_strict from filename () =
     with Parse_error.Error l ->
       JSON_Object ["errors", Translate.errors l]
   in
-  print_endline (json_to_string ~pretty results)
+  print_json_endline ~pretty results
 
 let command = CommandSpec.command spec main

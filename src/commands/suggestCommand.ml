@@ -55,22 +55,23 @@ let main option_values root from files () =
       | _ -> failwith "Expected at least one file"
       end
   ) in
-  let ic, oc = connect option_values root in
   let files_and_regions = List.map (fun (file, region) ->
     expand_path file, region
   ) files_and_regions in
-  send_command oc (ServerProt.SUGGEST files_and_regions);
-  let suggestion_map: ServerProt.suggest_response = Timeout.input_value ic in
-  SMap.iter (fun file result ->
-    match result with
-    | Ok insertions ->
-      let content = Sys_utils.cat file in
-      let lines = Str.split_delim (Str.regexp "\n") content in
-      let new_content = Reason.do_patch lines insertions in
-      let patch_content = Diff.diff_of_file_and_string file new_content in
-      Printf.printf "%s\n%s" file patch_content
-    | Error msg -> prerr_endlinef "Could not fill types for %s\n%s" file msg
-  ) suggestion_map;
-  flush stdout
+  let request = ServerProt.Request.SUGGEST files_and_regions in
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.SUGGEST suggestion_map ->
+    SMap.iter (fun file result ->
+      match result with
+      | Ok insertions ->
+        let content = Sys_utils.cat file in
+        let lines = Str.split_delim (Str.regexp "\n") content in
+        let new_content = Reason.do_patch lines insertions in
+        let patch_content = Diff.diff_of_file_and_string file new_content in
+        Printf.printf "%s\n%s" file patch_content
+      | Error msg -> prerr_endlinef "Could not fill types for %s\n%s" file msg
+    ) suggestion_map;
+    flush stdout
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

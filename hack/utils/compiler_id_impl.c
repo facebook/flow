@@ -19,10 +19,18 @@
 static const char section_name[] = "build_id";
 static const char default_id[] = "hackc-unknown-version";
 
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY_VALUE(x) STRINGIFY_HELPER(x)
+
 value hh_get_compiler_id(void) {
   CAMLparam0();
+#ifdef HACKC_COMPILER_ID
+  const char* const buf = STRINGIFY_VALUE(HACKC_COMPILER_ID);
+  const ssize_t len = strlen(buf);
+#else
   char buf[BUF_SIZE];
-  ssize_t len = hphp_read_embedded_data(section_name, buf, BUF_SIZE);
+  const ssize_t len = hphp_read_embedded_data(section_name, buf, BUF_SIZE);
+#endif
   value result;
 
   if (len < 0) {

@@ -1,10 +1,10 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, flowCmd}) => [
   test('named class exports', [
@@ -190,19 +190,27 @@ export default suite(({addFile, addFiles, flowCmd}) => [
   test('type errors halt and print to stderr', [
     addFile('type_error.js'),
     flowCmd(['gen-flow-files', '--quiet', 'type_error.js']).stdout('').stderr(
-      `
-        Error: type_error.js:3
-          3: export var a: string = 42;
-                                    ^^ number. This type is incompatible with
-          3: export var a: string = 42;
-                           ^^^^^^ string
+                                                                        `
+                                                                          Error ----------------------------------------------------------------------------------------------- type_error.js:3:24
 
-        Found 1 error
+                                                                          Cannot assign \`42\` to \`a\` because number [1] is incompatible with string [2].
 
-        In order to generate a shadow file there must be no type errors!
+                                                                             type_error.js:3:24
+                                                                             3| export var a: string = 42;
+                                                                                                       ^^ [1]
 
-      `,
-    )
+                                                                          References:
+                                                                             type_error.js:3:15
+                                                                             3| export var a: string = 42;
+                                                                                              ^^^^^^ [2]
+
+
+                                                                          Found 1 error
+
+                                                                          In order to generate a shadow file there must be no type errors!
+
+                                                                        `,
+                                                                      )
   ]),
 
   test('imported class types arent redefined', [

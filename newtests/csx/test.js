@@ -1,10 +1,10 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('@csx and @jsx pragma are mutually exclusive', [
@@ -15,8 +15,8 @@ export default suite(({addFile, addFiles, addCode}) => [
       .newErrors(
         `
           test.js:5
-            5: // @csx
-                  ^^^^ Unexpected @jsx declaration. Only one per file is allowed.
+            5:       // @csx
+                        ^^^^ Unexpected \`@jsx\` declaration. Only one per file is allowed.
         `,
       ),
   ]),
@@ -29,7 +29,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:5
           5:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ identifier \`Bar\`. Could not resolve name
+                    ^^^ Cannot resolve name \`Bar\`.
       `,
     ),
   ]),
@@ -63,14 +63,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ object type
-          Property \`x\` is incompatible:
-              7:       <Bar x={23} />;
-                               ^^ number. This type is incompatible with
-              5:       type Props = {|x: string|};
-                                         ^^^^^^ string
+                           ^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
+          References:
+            7:       <Bar x={23} />;
+                             ^^ [1]
+            5:       type Props = {|x: string|};
+                                       ^^^^^^ [2]
       `,
     ),
   ]),
@@ -84,6 +82,95 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
     .noNewErrors(),
   ]),
+  test('Should raise no errors if CSX children are passed as spread with list inline', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<string>|};
+      function Foo(props: Props) {}
+      <Foo>{...["foo", "bar"]}</Foo>;
+    `)
+    .noNewErrors(),
+  ]),
+  test('Should raise no errors if CSX children are passed as spread with variable', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<string>|};
+      function Foo(props: Props) {}
+      const arr = ["foo", "bar"];
+      <Foo>{...arr}</Foo>;
+    `)
+    .noNewErrors(),
+  ]),
+  test('Should raise an error if CSX spread children are not a list', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<number>|};
+      function Foo(props: Props) {}
+      const x = 42;
+      <Foo>{...x}</Foo>;
+    `)
+    .newErrors(
+      `
+        test.js:8
+          8:       <Foo>{...x}</Foo>;
+                            ^ property \`@@iterator\` is missing in number [1] but exists in \`$Iterable\` [2].
+          References:
+            7:       const x = 42;
+                               ^^ [1]
+           31: interface $Iterable<+Yield,+Return,-Next> {
+                         ^^^^^^^^^ [2]. See lib: [LIB] prelude.js:31
+      `,
+    )
+  ]),
+  test('Should raise an error if CSX children passed as spread have the wrong type', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<number>|};
+      function Foo(props: Props) {}
+      const arr = ["foo"];
+      <Foo>{...arr}</Foo>;
+    `)
+    .newErrors(
+      `
+        test.js:8
+          8:       <Foo>{...arr}</Foo>;
+                    ^^^ Cannot create \`Foo\` element because string [1] is incompatible with number [2] in array element of property \`children\`.
+          References:
+            7:       const arr = ["foo"];
+                                  ^^^^^ [1]
+            5:       type Props = {|children: Array<number>|};
+                                                    ^^^^^^ [2]
+      `,
+    ),
+  ]),
+  test('Should raise no errors if CSX children are passed as spread with function call', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<number>|};
+      type TProps = {|text: string|};
+      function Foo(props: Props) {}
+      function Title(props: TProps) { return 42; }
+      function get_titles(l) {
+        return [];
+      }
+      var arr = ["foo", "bar"];
+      <Foo>{...get_titles(arr)}</Foo>;
+    `)
+    .noNewErrors(),
+  ]),
+  test('Should raise no errors if CSX children are passed as spread with other children', [
+    addCode(`
+      // @csx
+      type Props = {|children: Array<string>|};
+      function Foo(props: Props) {}
+      <Foo>
+      {"foobar"}
+      {...["foo", "bar"]}
+      {"baz"}
+      </Foo>;
+    `)
+    .noNewErrors(),
+  ]),
   test('Should raise no errors if a JSX spread provides all required attributes for an exact type', [
     addCode(`
       // @csx
@@ -92,15 +179,16 @@ export default suite(({addFile, addFiles, addCode}) => [
       const params = {x: '23'};
       <Bar {...params} />;
     `)
-    .newErrors(  // TODO should not raise any errors.
+    .newErrors(
       `
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Bar(...)\`
-          8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ exact type: object type
+                    ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
+          References:
+            8:       <Bar {...params} />;
+                     ^^^^^^^^^^^^^^^^^^^ [1]
+            6:       function Bar(props: Props) {}
+                                         ^^^^^ [2]
       `,
     ),
   ]),
@@ -126,22 +214,21 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Bar(...)\`
-          8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ exact type: object type
+                    ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
+          References:
+            8:       <Bar {...params} />;
+                     ^^^^^^^^^^^^^^^^^^^ [1]
+            6:       function Bar(props: Props) {}
+                                         ^^^^^ [2]
 
         test.js:8
           8:       <Bar {...params} />;
-                   ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
-          5:       type Props = {|x: string|};
-                                ^^^^^^^^^^^^^ object type
-          Property \`x\` is incompatible:
-              7:       const params = {x: 23};
-                                          ^^ number. This type is incompatible with
-              5:       type Props = {|x: string|};
-                                         ^^^^^^ string
+                    ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.
+          References:
+            7:       const params = {x: 23};
+                                        ^^ [1]
+            5:       type Props = {|x: string|};
+                                       ^^^^^^ [2]
       `,
     ),
   ]),
@@ -198,12 +285,13 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>Test</Bar>
-                   ^^^^^ JSX desugared to \`Bar(...)\`
-          7:       <Bar>Test</Bar>
-                   ^^^^^ property \`children\`. Property not found in
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ object type
-      `
+                    ^^^ Cannot create \`Bar\` element because property \`children\` is missing in \`Props\` [1] but exists in props [2].
+          References:
+            6:       function Bar(props: Props) {}
+                                         ^^^^^ [1]
+            7:       <Bar>Test</Bar>
+                     ^^^^^^^^^^^^^^^ [2]
+      `,
     ),
   ]),
   test('Should raise an error if you pass a JSX child that returns an invalid type', [
@@ -219,19 +307,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:9
           9:       <Foo><Bar /></Foo>
-                   ^^^^^ props of JSX element \`Foo\`. This type is incompatible with the expected param type of
-          6:       function Foo(props: FooProps) {}
-                                       ^^^^^^^^ object type
-          Property \`children\` is incompatible:
-              9:       <Foo><Bar /></Foo>
-                       ^^^^^ JSX element \`Foo\`. Has some incompatible type argument with
-              5:       type FooProps = {|children: Array<string>|};
-                                                   ^^^^^^^^^^^^^ array type
-              Type argument \`T\` is incompatible:
-                  9:       <Foo><Bar /></Foo>
-                                ^^^^^^^ number. This type is incompatible with
-                  5:       type FooProps = {|children: Array<string>|};
-                                                             ^^^^^^ string
+                        ^^^^^^^ Cannot create \`Foo\` element because number [1] is incompatible with string [2] in array element of property \`children\`.
+          References:
+            8:       function Bar(props: BarProps): number {return 0;}
+                                                    ^^^^^^ [1]
+            5:       type FooProps = {|children: Array<string>|};
+                                                       ^^^^^^ [2]
       `,
     ),
   ]),
@@ -269,25 +350,12 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>{42}</Bar>
-                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ object type
-          Property \`children\` is incompatible:
-              5:       type Props = {|children: ['A']|};
-                                                 ^^^ string literal \`A\`. This type is incompatible with
-              7:       <Bar>{42}</Bar>
-                             ^^ number
-
-        test.js:7
-          7:       <Bar>{42}</Bar>
-                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ object type
-          Property \`children\` is incompatible:
-              7:       <Bar>{42}</Bar>
-                             ^^ number. This type is incompatible with
-              5:       type Props = {|children: ['A']|};
-                                                 ^^^ string literal \`A\`
+                         ^^ Cannot create \`Bar\` element because number [1] is incompatible with string literal \`A\` [2] in index 0 of property \`children\`.
+          References:
+            7:       <Bar>{42}</Bar>
+                           ^^ [1]
+            5:       type Props = {|children: ['A']|};
+                                               ^^^ [2]
       `,
     ),
   ]),

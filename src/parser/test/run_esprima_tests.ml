@@ -103,7 +103,7 @@ end = struct
   let find_case name map = try SMap.find name map with Not_found -> empty_case
 
   let parse_options content =
-    let open Result in
+    let open Core_result in
     let get_bool k v =
       try return (Hh_json.get_bool_exn v)
       with Assert_failure _ -> failf "invalid value for %S, expected bool" k
@@ -173,7 +173,7 @@ end = struct
             | "failure" -> { case with expected = Some (Failure content); }
             | "options" ->
               (* TODO: propagate errors better *)
-              let options = Result.ok_or_failwith (parse_options content) in
+              let options = Core_result.ok_or_failwith (parse_options content) in
               { case with options = Some options; }
             | _ -> { case with skipped = file::case.skipped }
             in
@@ -260,12 +260,12 @@ end = struct
     let open Ast.Expression in
     List.fold_left (fun acc prop ->
       match prop with
-      | Object.Property (_loc, { Object.Property.
+      | Object.Property (_loc, Object.Property.Init {
           key = Object.Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name; raw = _
           });
-          value = Object.Property.Init value;
-          _method = false; shorthand = false;
+          value;
+          shorthand = false;
         }) ->
           SMap.add name value acc
       | _ -> failwith "Invalid JSON"
@@ -394,12 +394,12 @@ end = struct
       (spf "%s: Missing key %S" path name)::acc
 
   let prop_name_and_value = Ast.Expression.(function
-    | { Object.Property.
+    | Object.Property.Init {
         key = Object.Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name; raw = _
         });
-        value = Object.Property.Init value;
-        _method = false; shorthand = false;
+        value;
+        shorthand = false;
       } -> name, value
     | _ -> failwith "Invalid JSON"
   )
@@ -426,13 +426,19 @@ end = struct
               Object.Property (diff_loc, diff_prop)::props
             else List.fold_left (fun acc exp -> match exp with
               | Object.Property (exp_loc, exp_prop) ->
+                let exp_key = match exp_prop with
+                | Object.Property.Init { key; _ } -> key
+                | _ -> failwith "Invalid JSON"
+                in
                 let exp_name, exp_value = prop_name_and_value exp_prop in
                 if exp_name = diff_name then
                   (* recursively apply diff *)
                   match apply_diff diff_value exp_value with
                   | Some value ->
-                    let prop = Object.Property (exp_loc, { exp_prop with
-                      Object.Property.value = Object.Property.Init value;
+                    let prop = Object.Property (exp_loc, Object.Property.Init {
+                      key = exp_key;
+                      value;
+                      shorthand = false;
                     }) in
                     prop::acc
                   | None ->
@@ -576,7 +582,8 @@ end = struct
       let filename = (path / test_name / case_name) ^ ".tree.json" in
       let json = parse_file ?parse_options:case.options content in
       let oc = open_out filename in
-      Printf.fprintf oc "%s\n" (Hh_json.json_to_string ~pretty:true json);
+      output_string oc (Hh_json.json_to_multiline json);
+      output_char oc '\n';
       close_out oc;
     | _ -> ()
 

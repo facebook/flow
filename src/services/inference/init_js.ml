@@ -38,7 +38,9 @@ let parse_lib_file options file =
         next
     in
     if not (FilenameSet.is_empty results.Parsing.parse_ok) then
-      Parsing.Parse_ok (Parsing.get_ast_unsafe lib_file)
+      let ast = Parsing.get_ast_unsafe lib_file in
+      let file_sig = Parsing.get_file_sig_unsafe lib_file in
+      Parsing.Parse_ok (ast, file_sig)
     else if List.length results.Parsing.parse_fails > 0 then
       let _, _, parse_fails = List.hd results.Parsing.parse_fails in
       Parsing.Parse_fail parse_fails
@@ -72,7 +74,7 @@ let load_lib_files ~master_cx ~options files =
       let lib_file = File_key.LibFile file in
       let lint_severities = options.Options.opt_lint_severities in
       match parse_lib_file options file with
-      | Parsing.Parse_ok ast ->
+      | Parsing.Parse_ok (ast, file_sig) ->
 
         let metadata =
           let open Context in
@@ -82,7 +84,7 @@ let load_lib_files ~master_cx ~options files =
         in
 
         let cx, syms = Infer.infer_lib_file
-          ~metadata ~exclude_syms ~lint_severities
+          ~metadata ~exclude_syms ~lint_severities ~file_sig
           lib_file ast
         in
 
@@ -104,6 +106,8 @@ let load_lib_files ~master_cx ~options files =
           Inference_utils.set_of_parse_error ~source_file:lib_file error
         | Parsing.Docblock_errors errs ->
           Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
+        | Parsing.File_sig_error error ->
+          Inference_utils.set_of_file_sig_error ~source_file:lib_file error
         in
         let result = lib_file, false, errors, Error_suppressions.empty,
           ExactCover.file_cover lib_file lint_severities in
@@ -142,7 +146,7 @@ let init ~options lib_files =
 
   Flow.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
-  let builtin_module = Flow.mk_object master_cx reason in
+  let builtin_module = Obj_type.mk master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
 

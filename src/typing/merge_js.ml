@@ -8,11 +8,11 @@
 module FilenameMap = Utils_js.FilenameMap
 
 module Reqs = struct
-  type impl = File_key.t * string * string * File_key.t
-  type dep_impl = Context.t * string * string * File_key.t
-  type unchecked = string * Loc.t * File_key.t
-  type res = string * Loc.t * string * File_key.t
-  type decl = string * Loc.t * Modulename.t * File_key.t
+  type impl = File_key.t * string * Loc.t Nel.t * File_key.t
+  type dep_impl = Context.t * string * Loc.t Nel.t * File_key.t
+  type unchecked = string * Loc.t Nel.t * File_key.t
+  type res = Loc.t Nel.t * string * File_key.t
+  type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;
@@ -54,15 +54,15 @@ let implicit_require_strict cx master_cx cx_to =
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
+let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
   let from_t = Flow_js.lookup_module cx_from m in
-  let to_t = Context.find_require cx_to r in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Create the export of a resource file on the fly and connect it to its import
    in cxs_to. This happens in some arbitrary cx, so cx_to should have already
    been copied to cx. *)
-let explicit_res_require_strict cx (r, loc, f, cx_to) =
+let explicit_res_require_strict cx (loc, f, cx_to) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -72,7 +72,7 @@ let explicit_res_require_strict cx (r, loc, f, cx_to) =
      unchecked files: we create the export (`any`) on the fly instead of writing
      / reading it to / from the context of each unchecked file. *)
   let from_t = Import_export.mk_resource_module_t cx loc f in
-  let to_t = Context.find_require cx_to r in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect a export of a declared module to its import in cxs_to. This happens
@@ -86,12 +86,12 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
     |> Modulename.to_string
     |> Reason.internal_module_name
   in
-  let from_t = Flow_js.mk_tvar cx reason in
+  let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
     (Type.Strict reason) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect exports of an unchecked module to its import in cx_to. Note that we
@@ -103,18 +103,18 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Flow_js.mk_tvar cx reason in
+  let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
     (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     let msg = Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc } in
-    Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) msg
+    Flow_error.error_of_msg ~trace_reasons:[] ~source_file:(Context.file cx) msg
     |> Context.add_error cx
   in
 
@@ -207,7 +207,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
   component reqs dep_cxs master_cx =
 
-  let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
+  let rev_cxs, impl_cxs = Nel.fold_left (fun (cxs, impl_cxs) filename ->
     let ast = get_ast_unsafe filename in
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
@@ -239,36 +239,46 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
 
   let open Reqs in
 
-  reqs.impls |> List.iter (fun (fn_from, m, r, fn_to) ->
+  reqs.impls |> List.iter (fun (fn_from, m, locs, fn_to) ->
     let cx_from = FilenameMap.find_unsafe fn_from impl_cxs in
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to);
+    Nel.iter (fun loc ->
+      explicit_impl_require_strict cx (cx_from, m, loc, cx_to);
+    ) locs;
     Context.add_module cx m (Context.find_module cx_from m)
   );
 
-  reqs.dep_impls |> List.iter (fun (cx_from, m, r, fn_to) ->
+  reqs.dep_impls |> List.iter (fun (cx_from, m, locs, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to)
+    Nel.iter (fun loc ->
+      explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
+    ) locs
   );
 
-  reqs.res |> List.iter (fun (r, loc, f, fn_to) ->
+  reqs.res |> List.iter (fun (locs, f, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_res_require_strict cx (r, loc, f, cx_to)
+    Nel.iter (fun loc ->
+      explicit_res_require_strict cx (loc, f, cx_to)
+    ) locs
   );
 
-  reqs.decls |> List.iter (fun (m, loc, resolved_m, fn_to) ->
+  reqs.decls |> List.iter (fun (m, locs, resolved_m, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    Nel.iter (fun loc ->
+      explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    ) locs
   );
 
-  reqs.unchecked |> List.iter (fun (m, loc, fn_to) ->
+  reqs.unchecked |> List.iter (fun (m, locs, fn_to) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_unchecked_require_strict cx (m, loc, cx_to)
+    Nel.iter (fun loc ->
+      explicit_unchecked_require_strict cx (m, loc, cx_to)
+    ) locs
   );
 
   detect_sketchy_null_checks cx;
 
-  cx
+  cx, other_cxs
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
@@ -371,7 +381,6 @@ module ContextOptimizer = struct
     reduced_export_maps : Exports.map;
     reduced_envs : Context.env IMap.t;
     reduced_evaluated : Type.t IMap.t;
-    sig_hash : SigHash.t;
   }
 
   let empty = {
@@ -381,11 +390,13 @@ module ContextOptimizer = struct
     reduced_export_maps = Exports.Map.empty;
     reduced_envs = IMap.empty;
     reduced_evaluated = IMap.empty;
-    sig_hash = SigHash.empty;
   }
 
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
+
+    val sig_hash = Xx.init ()
+    method sig_hash () = Xx.digest sig_hash
 
     val mutable next_stable_id = 0
     method fresh_stable_id =
@@ -394,7 +405,6 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
-    val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_opaque_ids = IMap.empty
@@ -407,13 +417,13 @@ module ContextOptimizer = struct
       self#type_ cx Neutral { quotient with reduced_module_map } export
 
     method! tvar cx pole quotient r id =
-      let root_id, _ = Flow_js.find_constraints cx id in
+      let root_id, _ = Context.find_constraints cx id in
       if id == root_id then
-        let { reduced_graph; sig_hash; _ } = quotient in
+        let { reduced_graph; _ } = quotient in
         if IMap.mem id reduced_graph then
           let stable_id = IMap.find_unsafe root_id stable_tvar_ids in
-          let sig_hash = SigHash.add stable_id sig_hash in
-          { quotient with sig_hash }
+          SigHash.add_int sig_hash stable_id;
+          quotient
         else
           let t = merge_tvar cx r id in
           let node = Root { rank = 0; constraints = Resolved t } in
@@ -430,38 +440,35 @@ module ContextOptimizer = struct
         { quotient with reduced_graph }
 
     method! props cx pole quotient id =
-      let { reduced_property_maps; sig_hash; _ } = quotient in
+      let { reduced_property_maps; _ } = quotient in
       if (Properties.Map.mem id reduced_property_maps)
       then
-        let stable_id = Properties.Map.find_unsafe id stable_propmap_ids in
-        let sig_hash = SigHash.add stable_id sig_hash in
-        { quotient with sig_hash }
+        let () = SigHash.add_int sig_hash (id :> int) in
+        quotient
       else
         let pmap = Context.find_props cx id in
-        let sig_hash = SigHash.add_props_map pmap sig_hash in
+        let () = SigHash.add_props_map sig_hash pmap in
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
-        let stable_id = self#fresh_stable_id in
-        stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
-        super#props cx pole { quotient with reduced_property_maps; sig_hash } id
+        super#props cx pole { quotient with reduced_property_maps } id
 
     method! exports cx pole quotient id =
-      let { reduced_export_maps; sig_hash; _ } = quotient in
+      let { reduced_export_maps; _ } = quotient in
       if (Exports.Map.mem id reduced_export_maps) then quotient
       else
         let tmap = Context.find_exports cx id in
-        let sig_hash = SigHash.add_exports_map tmap sig_hash in
+        SigHash.add_exports_map sig_hash tmap;
         let reduced_export_maps =
           Exports.Map.add id tmap reduced_export_maps in
-        super#exports cx pole { quotient with reduced_export_maps; sig_hash } id
+        super#exports cx pole { quotient with reduced_export_maps } id
 
     method! eval_id cx pole quotient id =
-      let { reduced_evaluated; sig_hash; _ } = quotient in
+      let { reduced_evaluated; _ } = quotient in
       if IMap.mem id reduced_evaluated
       then
         let stable_id = IMap.find_unsafe id stable_eval_ids in
-        let sig_hash = SigHash.add stable_id sig_hash in
-        { quotient with sig_hash }
+        SigHash.add_int sig_hash stable_id;
+        quotient
       else
         let stable_id = self#fresh_stable_id in
         stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
@@ -482,19 +489,15 @@ module ContextOptimizer = struct
         super#fun_type cx pole { quotient with reduced_envs } funtype
 
     method! dict_type cx pole quotient dicttype =
-      let { sig_hash; _ } = quotient in
-      let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
-      super#dict_type cx pole { quotient with sig_hash } dicttype
+      SigHash.add_polarity sig_hash dicttype.dict_polarity;
+      super#dict_type cx pole quotient dicttype
 
     method! type_ cx pole quotient t =
-      let quotient = { quotient with
-        sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
-      } in
+      SigHash.add_reason sig_hash (reason_of_t t);
       match t with
       | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
       | OpenT _ -> super#type_ cx pole quotient t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
-        let { sig_hash; _ } = quotient in
         let id =
           if Context.mem_nominal_id cx class_id
           then match IMap.get class_id stable_nominal_ids with
@@ -504,10 +507,9 @@ module ContextOptimizer = struct
             id
           | Some id -> id
           else class_id in
-        let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx pole { quotient with sig_hash } t
+        SigHash.add_int sig_hash id;
+        super#type_ cx pole quotient t
       | OpaqueT (_, opaquetype) ->
-        let { sig_hash; _ } = quotient in
         let id =
           let {opaque_id; _} = opaquetype in
           if Context.mem_nominal_id cx opaque_id
@@ -519,10 +521,9 @@ module ContextOptimizer = struct
           | Some id -> id
           else opaque_id
         in
-        let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx pole { quotient with sig_hash } t
+        SigHash.add_int sig_hash id;
+        super#type_ cx pole quotient t
       | DefT (_, PolyT (_, _, poly_id)) ->
-        let { sig_hash; _ } = quotient in
         let id =
           if Context.mem_nominal_id cx poly_id
           then match IMap.get poly_id stable_poly_ids with
@@ -533,33 +534,30 @@ module ContextOptimizer = struct
           | Some id -> id
           else poly_id
         in
-        let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx pole { quotient with sig_hash } t
+        SigHash.add_int sig_hash id;
+        super#type_ cx pole quotient t
       | _ ->
-        let { sig_hash; _ } = quotient in
-        let sig_hash = SigHash.add_type t sig_hash in
-        super#type_ cx pole { quotient with sig_hash } t
+        SigHash.add_type sig_hash t;
+        super#type_ cx pole quotient t
 
     method! use_type_ cx quotient use =
-      let quotient = { quotient with
-        sig_hash = SigHash.add (reason_of_use_t use) quotient.sig_hash
-      } in
+      SigHash.add_reason sig_hash (reason_of_use_t use);
       match use with
       | UseT (_, t) -> self#type_ cx Neutral quotient t
       | _ ->
-        let { sig_hash; _ } = quotient in
-        let sig_hash = SigHash.add_use use sig_hash in
-        super#use_type_ cx { quotient with sig_hash } use
+        SigHash.add_use sig_hash use;
+        super#use_type_ cx quotient use
   end
 
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    List.fold_left (reducer#reduce cx) empty module_refs
+    let quotient = List.fold_left (reducer#reduce cx) empty module_refs in
+    reducer#sig_hash (), quotient
 
   (* reduce a context to a "signature context" *)
   let sig_context cx module_refs =
-    let quotient = reduce_context cx module_refs in
+    let sig_hash, quotient = reduce_context cx module_refs in
     Context.set_module_map cx quotient.reduced_module_map;
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
@@ -570,6 +568,6 @@ module ContextOptimizer = struct
       Graph_explorer.new_graph
         (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
     );
-    quotient.sig_hash
+    sig_hash
 
 end

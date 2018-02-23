@@ -545,7 +545,7 @@ module Statement
   ) env
 
   and type_alias env =
-    if Peek.is_identifier ~i:1 env
+    if Peek.ith_is_identifier ~i:1 env
     then
       let loc, type_alias = with_loc type_alias_helper env in
       loc, Statement.TypeAlias type_alias
@@ -558,7 +558,7 @@ module Statement
     Expect.token env T_OPAQUE;
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
-    let id = Parse.identifier env in
+    let id = Type.type_identifier env in
     let typeParameters = Type.type_parameter_declaration_with_defaults env in
     let supertype = match Peek.token env with
     | T_COLON ->
@@ -586,7 +586,7 @@ module Statement
   ) env
 
   and opaque_type env =
-    match Peek.token ~i:1 env with
+    match Peek.ith_token ~i:1 env with
       T_TYPE ->
         let loc, opaque_t = with_loc (opaque_type_helper ~declare:false) env in
         loc, Statement.OpaqueType opaque_t
@@ -606,20 +606,19 @@ module Statement
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeInterface;
       Expect.token env T_INTERFACE;
-      let id = Parse.identifier env in
+      let id = Type.type_identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
       let extends = if Peek.token env = T_EXTENDS
       then begin
         Expect.token env T_EXTENDS;
         supers env []
       end else [] in
-      let body = Type._object ~allow_static:true env in
+      let body = Type._object ~allow_static:false env in
       Statement.Interface.({
         id;
         typeParameters;
         body;
         extends;
-        mixins = [];
       })
 
   and declare_interface env = with_loc (fun env ->
@@ -629,20 +628,22 @@ module Statement
   ) env
 
   and interface env =
-    if Peek.is_identifier ~i:1 env
+    (* disambiguate between a value named `interface`, like `var interface = 1; interface++`,
+       and an interface declaration like `interface Foo {}`.` *)
+    if Peek.ith_is_identifier_name ~i:1 env
     then
       let loc, iface = with_loc interface_helper env in
       loc, Statement.InterfaceDeclaration iface
     else expression env
 
   and declare_class =
-    let rec supers env acc =
+    let rec mixins env acc =
       let super = Type.generic env in
       let acc = super::acc in
       match Peek.token env with
       | T_COMMA ->
         Expect.token env T_COMMA;
-        supers env acc
+        mixins env acc
       | _ -> List.rev acc
 
     (* This is identical to `interface`, except that mixins are allowed *)
@@ -651,22 +652,23 @@ module Statement
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
-      let extends = if Peek.token env = T_EXTENDS
-        then begin
-          Expect.token env T_EXTENDS;
-          supers env []
-        end else [] in
+      let extends = if Expect.maybe env T_EXTENDS then Some (Type.generic env) else None in
       let mixins = match Peek.token env with
-      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; supers env []
+      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
+      | _ -> []
+      in
+      let implements = match Peek.token env with
+      | T_IMPLEMENTS -> Eat.token env; Object.class_implements env []
       | _ -> []
       in
       let body = Type._object ~allow_static:true env in
-      Statement.Interface.({
+      Statement.DeclareClass.({
         id;
         typeParameters;
         body;
         extends;
         mixins;
+        implements;
       })
 
   and declare_class_statement env = with_loc (fun env ->
@@ -795,8 +797,7 @@ module Statement
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          let value = Literal.String value in
-          Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
+          Statement.DeclareModule.Literal (loc, { StringLiteral.value; raw; })
       | _ ->
           Statement.DeclareModule.Identifier (Parse.identifier env) in
       let body_loc, (module_kind, body) = with_loc (fun env ->
@@ -837,7 +838,7 @@ module Statement
     if not (should_parse_types env)
     then error env Error.UnexpectedTypeDeclaration;
     (* eventually, just emit a wrapper AST node *)
-    (match Peek.token ~i:1 env with
+    (match Peek.ith_token ~i:1 env with
       | T_CLASS ->
           declare_class_statement env
       | T_INTERFACE ->
@@ -882,12 +883,10 @@ module Statement
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
-        let value = Literal.String value in
-        loc, { Literal.value; raw; }
+        loc, { StringLiteral.value; raw; }
     | _ ->
         (* Just make up a string for the error case *)
-        let value = Literal.String "" in
-        let ret = Peek.loc env, { Literal.value; raw = ""; } in
+        let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
         error_unexpected env;
         ret
 
@@ -918,12 +917,13 @@ module Statement
 
   and extract_ident_name (_, name) = name
 
-  and export_specifiers env specifiers =
+  and export_specifiers ?(preceding_comma=true) env specifiers =
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
         List.rev specifiers
     | _ ->
+        if not preceding_comma then error env Error.ExportSpecifierMissingComma;
         let specifier = with_loc (fun env ->
           let local = identifier_name env in
           let exported =
@@ -939,9 +939,8 @@ module Statement
           in
           { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported; }
         ) env in
-        if Peek.token env = T_COMMA
-        then Expect.token env T_COMMA;
-        export_specifiers env (specifier::specifiers)
+        let preceding_comma = Expect.maybe env T_COMMA in
+        export_specifiers ~preceding_comma env (specifier::specifiers)
 
   and assert_export_specifier_identifiers env specifiers =
     let open Statement.ExportNamedDeclaration.ExportSpecifier in
@@ -961,7 +960,9 @@ module Statement
     | T_DEFAULT ->
         (* export default ... *)
         let open Statement.ExportDefaultDeclaration in
-        Expect.token env T_DEFAULT;
+        let default, () = with_loc (fun env ->
+          Expect.token env T_DEFAULT
+        ) env in
         record_export env (Loc.btwn start_loc (Peek.loc env), "default");
         let declaration = match Peek.token env with
         | T_FUNCTION ->
@@ -979,15 +980,15 @@ module Statement
             Expression expr
           in
         Statement.ExportDefaultDeclaration {
+          default;
           declaration;
-          exportKind = Statement.ExportValue;
         }
-    | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
+    | T_TYPE when (Peek.ith_token ~i:1 env) <> T_LCURLY ->
         (* export type ... *)
         let open Statement.ExportNamedDeclaration in
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeExport;
-        (match Peek.token ~i:1 env with
+        (match Peek.ith_token ~i:1 env with
         | T_MULT ->
           Expect.token env T_TYPE;
           let specifier_loc = Peek.loc env in
@@ -1147,7 +1148,9 @@ module Statement
     Statement.DeclareExportDeclaration.(match Peek.token env with
     | T_DEFAULT ->
         (* declare export default ... *)
-        Expect.token env T_DEFAULT;
+        let default, () = with_loc (fun env ->
+          Expect.token env T_DEFAULT
+        ) env in
         let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* declare export default function foo (...): ...  *)
@@ -1164,7 +1167,7 @@ module Statement
             Some (DefaultType type_)
           in
         Statement.DeclareExportDeclaration {
-          default = true;
+          default = Some default;
           declaration;
           specifiers = None;
           source = None;
@@ -1195,7 +1198,7 @@ module Statement
             Some (Variable var)
         | _ -> assert false in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration;
           specifiers = None;
           source = None;
@@ -1223,7 +1226,7 @@ module Statement
         let source = export_source env in
         Eat.semicolon env;
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = None;
           specifiers;
           source = Some source;
@@ -1232,7 +1235,7 @@ module Statement
         (* declare export type = ... *)
         let alias = with_loc type_alias_helper env in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = Some (NamedType alias);
           specifiers = None;
           source = None;
@@ -1241,7 +1244,7 @@ module Statement
         (* declare export opaque type = ... *)
         let opaque = with_loc (opaque_type_helper ~declare:true) env in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = Some (NamedOpaqueType opaque);
           specifiers = None;
           source = None;
@@ -1250,7 +1253,7 @@ module Statement
         (* declare export interface ... *)
         let iface = with_loc interface_helper env in
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = Some (Interface iface);
           specifiers = None;
           source = None;
@@ -1274,7 +1277,7 @@ module Statement
         in
         Eat.semicolon env;
         Statement.DeclareExportDeclaration {
-          default = false;
+          default = None;
           declaration = None;
           specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers);
           source;
@@ -1291,12 +1294,10 @@ module Statement
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          let value = Literal.String value in
-          loc, { Literal.value; raw; }
+          loc, { StringLiteral.value; raw; }
       | _ ->
           (* Just make up a string for the error case *)
-          let value = Literal.String "" in
-          let ret = Peek.loc env, { Literal.value; raw = ""; } in
+          let ret = Peek.loc env, { StringLiteral.value = ""; raw = ""; } in
           error_unexpected env;
           ret
 
@@ -1310,7 +1311,7 @@ module Statement
       let identifier env =
         if for_type then Type.type_identifier env else Parse.identifier env
       in
-      match Peek.token ~i:1 env with
+      match Peek.ith_token ~i:1 env with
       | T_IDENTIFIER { raw = "as"; _ } ->
         let remote = identifier_name env in
         Eat.token env; (* as *)
@@ -1325,10 +1326,11 @@ module Statement
         | Some error_if_type, T_TYPE
         | Some error_if_type, T_TYPEOF ->
           error env error_if_type;
-          Eat.token env (* consume `type` or `typeof` *)
-        | _ -> ()
-        end;
-        identifier env, None
+          Eat.token env; (* consume `type` or `typeof` *)
+          Type.type_identifier env, None
+        | _ ->
+          identifier env, None
+        end
 
     (*
       ImportSpecifier[Type]:
@@ -1373,7 +1375,7 @@ module Statement
 
         (* `type as foo` (value named `type`) or `type as,` (type named `as`) *)
         | T_IDENTIFIER { raw = "as"; _ } ->
-          begin match Peek.token ~i:1 env with
+          begin match Peek.ith_token ~i:1 env with
           | T_EOF
           | T_RCURLY
           | T_COMMA ->
@@ -1414,7 +1416,7 @@ module Statement
     (* specifier in an `import typeof { ... }` *)
     in let typeof_specifier env =
       let remote, local = with_maybe_as env
-        ~for_type:false
+        ~for_type:true
         ~error_if_type:Error.ImportTypeShorthandOnlyInPureImport
       in
       { remote; local; kind = None }
@@ -1503,8 +1505,7 @@ module Statement
       | T_STRING (str_loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (str_loc, value, raw, octal));
-        let value = Literal.String value in
-        let source = (str_loc, { Literal.value; raw; }) in
+        let source = (str_loc, { StringLiteral.value; raw; }) in
         Eat.semicolon env;
         Statement.ImportDeclaration {
           importKind = ImportValue;
@@ -1516,13 +1517,17 @@ module Statement
       (* `import type [...] from "ModuleName";`
          note that if [...] is missing, we're importing a value named `type`! *)
       | T_TYPE when should_parse_types env ->
-        begin match Peek.token ~i:1 env with
+        begin match Peek.ith_token ~i:1 env with
         (* `import type, { other, names } from "ModuleName";` *)
         | T_COMMA
         (* `import type from "ModuleName";` *)
         | T_IDENTIFIER { raw = "from"; _ } ->
           with_default ImportValue env
-        | T_MULT
+        | T_MULT ->
+          (* `import type *` is invalid, since the namespace can't be a type *)
+          Eat.token env; (* consume `type` *)
+          error_unexpected env; (* unexpected `*` *)
+          with_specifiers ImportType env
         | T_LCURLY ->
           Eat.token env; (* consume `type` *)
           with_specifiers ImportType env

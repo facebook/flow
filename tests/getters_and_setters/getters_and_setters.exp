@@ -1,0 +1,603 @@
+Error --------------------------------------------------------------------------------------------------- class.js:11:39
+
+Cannot assign `x` to `z` because string [1] is incompatible with number [2].
+
+   class.js:11:39
+   11|   set goodSetterNoAnnotation(x) { z = x; } // TODO: bad error position
+                                             ^
+
+References:
+   class.js:52:30
+   52| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
+                                    ^^^^^^^ [1]
+   class.js:5:8
+    5| var z: number = 123;
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:34:3
+
+Computed property keys not supported.
+
+   34|   set [z](x: string) {}
+         ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:35:3
+
+Computed property keys not supported.
+
+   35|   get [z](): string { return string; }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:44:36
+
+Cannot assign `foo.goodGetterNoAnnotation` to `testGetterWithError1` because number [1] is incompatible with string [2].
+
+   class.js:44:36
+   44| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   class.js:8:41
+    8|   get goodGetterNoAnnotation() { return 4; }
+                                               ^ [1]
+   class.js:44:27
+   44| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:45:36
+
+Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
+string [2].
+
+   class.js:45:36
+   45| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   class.js:9:35
+    9|   get goodGetterWithAnnotation(): number { return 4; }
+                                         ^^^^^^ [1]
+   class.js:45:27
+   45| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:53:32
+
+Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+
+   class.js:53:32
+   53| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                      ^^^^^^^ [1]
+
+References:
+   class.js:12:35
+   12|   set goodSetterWithAnnotation(x: number) { z = x; }
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:55:44
+
+Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
+incompatible with number [2].
+
+   class.js:55:44
+   55| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   class.js:18:43
+   18|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
+                                                 ^^^^^^^ [1]
+   class.js:55:35
+   55| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:57:43
+
+Cannot assign `foo.propOverriddenWithGetter` to `testPropOverridenWithGetter` because string [1] is incompatible with
+number [2].
+
+   class.js:57:43
+   57| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   class.js:29:43
+   29|   get propOverriddenWithGetter() { return "hello"; }
+                                                 ^^^^^^^ [1]
+   class.js:57:34
+   57| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:58:32
+
+Cannot assign `123` to `foo.propOverriddenWithSetter` because number [1] is incompatible with string [2].
+
+   class.js:58:32
+   58| foo.propOverriddenWithSetter = 123; // Error number ~> string
+                                      ^^^ [1]
+
+References:
+   class.js:32:35
+   32|   set propOverriddenWithSetter(x: string) { }
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:37:36
+
+Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
+string [2].
+
+   declare_class.js:37:36
+   37| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_class.js:8:35
+    8|   get goodGetterWithAnnotation(): number;
+                                         ^^^^^^ [1]
+   declare_class.js:37:27
+   37| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:42:32
+
+Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+
+   declare_class.js:42:32
+   42| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                      ^^^^^^^ [1]
+
+References:
+   declare_class.js:9:35
+    9|   set goodSetterWithAnnotation(x: number): void;
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:44:44
+
+Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
+incompatible with number [2].
+
+   declare_class.js:44:44
+   44| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_class.js:15:43
+   15|   get propWithSubtypingGetterAndSetter(): ?number;
+                                                 ^^^^^^^ [1]
+   declare_class.js:44:35
+   44| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:46:43
+
+Cannot assign `foo.propOverriddenWithGetter` to `testPropOverridenWithGetter` because string [1] is incompatible with
+number [2].
+
+   declare_class.js:46:43
+   46| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_class.js:26:35
+   26|   get propOverriddenWithGetter(): string;
+                                         ^^^^^^ [1]
+   declare_class.js:46:34
+   46| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:47:32
+
+Cannot assign `123` to `foo.propOverriddenWithSetter` because number [1] is incompatible with string [2].
+
+   declare_class.js:47:32
+   47| foo.propOverriddenWithSetter = 123; // Error number ~> string
+                                      ^^^ [1]
+
+References:
+   declare_class.js:29:35
+   29|   set propOverriddenWithSetter(x: string): void;
+                                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:15:39
+
+Cannot assign `x` to `z` because string [1] is incompatible with number [2].
+
+   object.js:15:39
+   15|   set goodSetterNoAnnotation(x) { z = x; },
+                                             ^
+
+References:
+   object.js:54:30
+   54| obj.goodSetterNoAnnotation = "hello"; // Error string ~> number
+                                    ^^^^^^^ [1]
+   object.js:5:8
+    5| var z: number = 123;
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- object.js:34:3
+
+Computed getters and setters are not yet supported.
+
+   34|   set [z](x: string) {},
+         ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- object.js:35:3
+
+Computed getters and setters are not yet supported.
+
+   35|   get [z](): string { return string; },
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:47:36
+
+Cannot assign `obj.goodGetterNoAnnotation` to `testGetterWithError1` because number [1] is incompatible with string [2].
+
+   object.js:47:36
+   47| var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object.js:12:41
+   12|   get goodGetterNoAnnotation() { return 4; },
+                                               ^ [1]
+   object.js:47:27
+   47| var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:48:36
+
+Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
+string [2].
+
+   object.js:48:36
+   48| var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object.js:13:35
+   13|   get goodGetterWithAnnotation(): number { return 4; },
+                                         ^^^^^^ [1]
+   object.js:48:27
+   48| var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:55:32
+
+Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+
+   object.js:55:32
+   55| obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                      ^^^^^^^ [1]
+
+References:
+   object.js:16:35
+   16|   set goodSetterWithAnnotation(x: number) { z = x; },
+                                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:57:44
+
+Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
+incompatible with number [2].
+
+   object.js:57:44
+   57| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object.js:22:43
+   22|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // OK
+                                                 ^^^^^^^ [1]
+   object.js:57:35
+   57| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:62:39
+
+Cannot assign `new C()` to `obj.exampleOfOrderOfGetterAndSetter` because `C` [1] is incompatible with `B` [2].
+
+   object.js:62:39
+   62| obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+                                             ^^^^^^^ [1]
+
+References:
+   object.js:29:42
+   29|   set exampleOfOrderOfGetterAndSetter(x: B) {},
+                                                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- object.js:66:3
+
+Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
+`A` [1] is incompatible with number [2].
+
+   object.js:66:3
+   66|   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object.js:32:51
+   32|   get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
+                                                         ^ [1]
+   object.js:65:51
+   65| var testExampleOrOrderOfGetterAndSetterReordered: number =
+                                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- object.js:68:2
+
+Cannot cast `obj["stringLiteral"]` to string because number [1] is incompatible with string [2].
+
+   object.js:68:2
+   68| (obj["stringLiteral"]: string); // err, num !~> string
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object.js:38:26
+   38|   get "stringLiteral"(): number { return 4; },
+                                ^^^^^^ [1]
+   object.js:68:24
+   68| (obj["stringLiteral"]: string); // err, num !~> string
+                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:69:24
+
+Cannot assign `"foo"` to `obj["stringLiteral"]` because string [1] is incompatible with number [2].
+
+   object.js:69:24
+   69| obj["stringLiteral"] = "foo"; // err, string !~> num
+                              ^^^^^ [1]
+
+References:
+   object.js:37:26
+   37|   set "stringLiteral"(x: number) { },
+                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_type.js:36:38
+
+Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
+string [2].
+
+   object_type.js:36:38
+   36|   var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_type.js:12:35
+   12|   get goodGetterWithAnnotation(): number,
+                                         ^^^^^^ [1]
+   object_type.js:36:29
+   36|   var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_type.js:41:34
+
+Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+
+   object_type.js:41:34
+   41|   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                        ^^^^^^^ [1]
+
+References:
+   object_type.js:13:35
+   13|   set goodSetterWithAnnotation(x: number): void,
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_type.js:43:46
+
+Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
+incompatible with number [2].
+
+   object_type.js:43:46
+   43|   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_type.js:19:43
+   19|   get propWithSubtypingGetterAndSetter(): ?number, // OK
+                                                 ^^^^^^^ [1]
+   object_type.js:43:37
+   43|   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_type.js:48:41
+
+Cannot assign `new C()` to `obj.exampleOfOrderOfGetterAndSetter` because `C` [1] is incompatible with `B` [2].
+
+   object_type.js:48:41
+   48|   obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+                                               ^^^^^^^ [1]
+
+References:
+   object_type.js:26:42
+   26|   set exampleOfOrderOfGetterAndSetter(x: B): void,
+                                                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_type.js:52:5
+
+Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
+`A` [1] is incompatible with number [2].
+
+   object_type.js:52:5
+   52|     obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_type.js:29:51
+   29|   get exampleOfOrderOfGetterAndSetterReordered(): A,
+                                                         ^ [1]
+   object_type.js:51:53
+   51|   var testExampleOrOrderOfGetterAndSetterReordered: number =
+                                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:15:2
+
+Cannot create `Example` element because property `a` is missing in props [1] but exists in propTypes of React
+component [2].
+
+   react.js:15:2
+   15| (<Example />); // error: property `a` not found
+        ^^^^^^^^^^^ [1]
+
+References:
+   react.js:8:14
+                    v
+    8|   propTypes: {
+    9|     get a() { return React.PropTypes.number.isRequired; },
+   10|     set b(x: number) { this.c = x; },
+   11|     c: React.PropTypes.string,
+   12|   }
+         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:17:2
+
+Cannot create `Example` element because string [1] is incompatible with number [2] in property `a`.
+
+   react.js:17:2
+    17| (<Example a="bad" />); // error: number ~> string
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
+   react.js:17:13
+    17| (<Example a="bad" />); // error: number ~> string
+                    ^^^^^ [1]
+   <BUILTINS>/react.js:294:36
+   294|   number: React$PropType$Primitive<number>;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- react.js:18:2
+
+Cannot create `Example` element because number [1] is incompatible with string [2] in property `c`.
+
+   react.js:18:2
+    18| (<Example a={0} c={0} />); // error: number ~> string
+         ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   react.js:18:20
+    18| (<Example a={0} c={0} />); // error: number ~> string
+                           ^ [1]
+   <BUILTINS>/react.js:296:36
+   296|   string: React$PropType$Primitive<string>;
+                                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:21:2
+
+Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is read-only in `<<anonymous class>>` [2] but
+writable in `Base` [3].
+
+   variance.js:21:2
+        v-------------------
+   21| (class extends Base {
+   22|   // error: getter incompatible with read/write property
+   23|   get x(): B { return b }
+   24| });
+       ^ [2]
+
+References:
+   variance.js:21:16
+   21| (class extends Base {
+                      ^^^^ [1]
+   variance.js:11:7
+   11| class Base {
+             ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:26:2
+
+Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is write-only in `<<anonymous class>>` [2] but
+readable in `Base` [3].
+
+   variance.js:26:2
+        v-------------------
+   26| (class extends Base {
+   27|   // error: setter incompatible with read/write property
+   28|   set x(value: B): void {}
+   29| });
+       ^ [2]
+
+References:
+   variance.js:26:16
+   26| (class extends Base {
+                      ^^^^ [1]
+   variance.js:11:7
+   11| class Base {
+             ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:37:2
+
+Cannot extend `Base` [1] with `<<anonymous class>>` because property `pos` is write-only in `<<anonymous class>>` [2]
+but read-only in `Base` [3].
+
+   variance.js:37:2
+        v-------------------
+   37| (class extends Base {
+   38|   // error: setter incompatible with read-only property
+   39|   set pos(value: B): void {}
+   40| });
+       ^ [2]
+
+References:
+   variance.js:37:16
+   37| (class extends Base {
+                      ^^^^ [1]
+   variance.js:11:7
+   11| class Base {
+             ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:47:2
+
+Cannot extend `Base` [1] with `<<anonymous class>>` because property `neg` is read-only in `<<anonymous class>>` [2] but
+write-only in `Base` [3].
+
+   variance.js:47:2
+        v-------------------
+   47| (class extends Base {
+   48|   // error: getter incompatible with write-only property
+   49|   get neg(): B { return b }
+   50| });
+       ^ [2]
+
+References:
+   variance.js:47:16
+   47| (class extends Base {
+                      ^^^^ [1]
+   variance.js:11:7
+   11| class Base {
+             ^^^^ [3]
+
+
+
+Found 37 errors

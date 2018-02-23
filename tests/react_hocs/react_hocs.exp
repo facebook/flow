@@ -1,84 +1,113 @@
-Error: Bad.js:11
- 11: const Bad = (props: Props) => null;
-                 ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-     11: const Bad = (props: Props) => null;
-                     ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      This parameter is incompatible:
-                                     v-
-         15: ): (React.ComponentType<{|
-         16:   ...Props,
-         17:   ...ExtraProps,
-         18: |}>) => React.ComponentType<Props> {
-             -^ object type. This type is incompatible with. See: hocs.js:15
-         11: const Bad = (props: Props) => null;
-                                 ^^^^^ object type
-          Property `bar` is incompatible:
-             18:     bar: buz,
-                          ^^^ string. This type is incompatible with
-              8:   bar: number,
-                        ^^^^^^ number
+Error ----------------------------------------------------------------------------------------------------- Bad.js:11:13
 
-Error: Bad.js:11
- 11: const Bad = (props: Props) => null;
-                 ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-137:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:137
-  Callable property is incompatible:
-     11: const Bad = (props: Props) => null;
-                     ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-    122:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:122
-      This parameter is incompatible:
-                                     v-
-         15: ): (React.ComponentType<{|
-         16:   ...Props,
-         17:   ...ExtraProps,
-         18: |}>) => React.ComponentType<Props> {
-             -^ object type. This type is incompatible with. See: hocs.js:15
-         11: const Bad = (props: Props) => null;
-                                 ^^^^^ object type
-          Property `foo` is incompatible:
-             11: const Bad = (props: Props) => null;
-                                     ^^^^^ property `foo`. Property not found in
-                                         v-
-             15: ): (React.ComponentType<{|
-             16:   ...Props,
-             17:   ...ExtraProps,
-             18: |}>) => React.ComponentType<Props> {
-                 -^ object type. See: hocs.js:15
+Property `foo` is missing in object type [1] but exists in `Props` [2] in the first argument.
 
-Error: Good.js:15
- 15:   mapProps(({ foo, buz, qux }) => ({
-                   ^^^ property `foo`. Property not found in
-  9: <Good buz={2} qux={3} />; // Error: Missing foo
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Good`. See: Good_use.js:9
+   Bad.js:11:13
+   11| const Bad = (props: Props) => null;
+                   ^^^^^^^^^^^^^^^^^^^^^^
 
-Error: Good.js:15
- 15:   mapProps(({ foo, buz, qux }) => ({
-                        ^^^ property `buz`. Property not found in
-  8: <Good foo={1} qux={3} />; // Error: Missing buz
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Good`. See: Good_use.js:8
+References:
+   hocs.js:15:25
+                               v-
+   15| ): (React.ComponentType<{|
+   16|   ...Props,
+   17|   ...ExtraProps,
+   18| |}>) => React.ComponentType<Props> {
+       -^ [1]
+   Bad.js:11:21
+   11| const Bad = (props: Props) => null;
+                           ^^^^^ [2]
 
-Error: Good.js:15
- 15:   mapProps(({ foo, buz, qux }) => ({
-                             ^^^ property `qux`. Property not found in
-  7: <Good foo={1} buz={2} />; // Error: Missing qux
-     ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Good`. See: Good_use.js:7
 
-Error: Good.js:17
- 17:     buz: buz * 2,
-              ^^^ string. The operand of an arithmetic operation must be a number.
+Error ----------------------------------------------------------------------------------------------------- Bad.js:11:21
 
-Error: Good.js:18
- 18:     qux,
-         ^^^ string. This type is incompatible with
-  9:   qux: number,
-            ^^^^^^ number
+number [1] is incompatible with string [2] in property `bar` of the first argument.
+
+   Bad.js:11:21
+    11| const Bad = (props: Props) => null;
+                            ^^^^^
+
+References:
+   Bad.js:8:8
+     8|   bar: number,
+               ^^^^^^ [1]
+   <BUILTINS>/core.js:157:31
+   157|     toString(radix?: number): string;
+                                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Good.js:15:15
+
+Property `foo` is missing in props [1].
+
+   Good.js:15:15
+   15|   mapProps(({ foo, buz, qux }) => ({
+                     ^^^
+
+References:
+   Good_use.js:9:1
+    9| <Good buz={2} qux={3} />; // Error: Missing foo
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Good.js:15:20
+
+Property `buz` is missing in props [1].
+
+   Good.js:15:20
+   15|   mapProps(({ foo, buz, qux }) => ({
+                          ^^^
+
+References:
+   Good_use.js:8:1
+    8| <Good foo={1} qux={3} />; // Error: Missing buz
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Good.js:15:25
+
+Property `qux` is missing in props [1].
+
+   Good.js:15:25
+   15|   mapProps(({ foo, buz, qux }) => ({
+                               ^^^
+
+References:
+   Good_use.js:7:1
+    7| <Good foo={1} buz={2} />; // Error: Missing qux
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Good.js:17:10
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   Good.js:17:10
+   17|     buz: buz * 2,
+                ^^^
+
+References:
+   Good_use.js:10:19
+   10| <Good foo={1} buz="nope" qux={3} />; // Error: Cannot multiply string
+                         ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- Good.js:18:5
+
+string [1] is incompatible with number [2].
+
+   Good.js:18:5
+   18|     qux,
+           ^^^
+
+References:
+   Good_use.js:11:27
+   11| <Good foo={1} buz={2} qux="nope" />; // Error: string ~> number
+                                 ^^^^^^ [1]
+   Good.js:9:8
+    9|   qux: number,
+              ^^^^^^ [2]
+
 
 
 Found 7 errors

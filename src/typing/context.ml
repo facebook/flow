@@ -26,8 +26,6 @@ type local_metadata = {
 
 type global_metadata = {
   enable_const_params: bool;
-  enable_unsafe_getters_and_setters: bool;
-  enforce_strict_type_args: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
@@ -58,8 +56,6 @@ module Global = struct
   }
 
   let enable_const_params t = t.metadata.enable_const_params
-  let enable_unsafe_getters_and_setters t = t.metadata.enable_unsafe_getters_and_setters
-  let enforce_strict_type_args t = t.metadata.enforce_strict_type_args
   let enforce_strict_call_arity t = t.metadata.enforce_strict_call_arity
   let esproposal_class_static_fields t = t.metadata.esproposal_class_static_fields
   let esproposal_class_instance_fields t = t.metadata.esproposal_class_instance_fields
@@ -115,7 +111,7 @@ type local_t = {
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
 
-  mutable require_map: Type.t SMap.t;
+  mutable require_map: Type.t LocMap.t;
 
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
@@ -130,7 +126,7 @@ type local_t = {
   annot_table: (Loc.t, Type.t) Hashtbl.t;
   refs_table: (Loc.t, Loc.t) Hashtbl.t;
 
-  mutable declare_module_t: Type.t option;
+  mutable declare_module_ref: string option;
 
   (* map from exists proposition locations to the types of values running through them *)
   mutable exists_checks: ExistsCheck.t LocMap.t;
@@ -143,8 +139,7 @@ type local_t = {
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t LocMap.t;
 
-  mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
-  mutable use_def_map : Loc.t LocMap.t;
+  mutable use_def : Scope_api.info * Ssa_api.values;
 }
 
 type cacheable_t = local_t
@@ -157,9 +152,7 @@ type t = {
 
 let global_metadata_of_options options = {
   enable_const_params = Options.enable_const_params options;
-  enable_unsafe_getters_and_setters = Options.enable_unsafe_getters_and_setters options;
   enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-  enforce_strict_type_args = Options.enforce_strict_type_args options;
   esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
   esproposal_class_static_fields = Options.esproposal_class_static_fields options;
   esproposal_decorators = Options.esproposal_decorators options;
@@ -186,6 +179,8 @@ let metadata_of_options options =
   } in
   { global_metadata; local_metadata; }
 
+let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, LocMap.empty
+
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
@@ -211,7 +206,7 @@ let make metadata file module_ref = {
     evaluated = IMap.empty;
     type_graph = Graph_explorer.new_graph ISet.empty;
     all_unresolved = IMap.empty;
-    require_map = SMap.empty;
+    require_map = LocMap.empty;
     module_map = SMap.empty;
 
     errors = Errors.ErrorSet.empty;
@@ -224,24 +219,30 @@ let make metadata file module_ref = {
     annot_table = Hashtbl.create 0;
     refs_table = Hashtbl.create 0;
 
-    declare_module_t = None;
+    declare_module_ref = None;
 
     exists_checks = LocMap.empty;
     exists_excuses = LocMap.empty;
 
-    dep_map = Dep_mapper.DepMap.empty;
-    use_def_map = LocMap.empty;
+    use_def = empty_use_def;
   }
 }
+
+let push_declare_module cx module_ref =
+  match cx.local.declare_module_ref with
+  | Some _ -> failwith "declare module must be one level deep"
+  | None -> cx.local.declare_module_ref <- Some module_ref
+
+let pop_declare_module cx =
+  match cx.local.declare_module_ref with
+  | None -> failwith "pop empty declare module"
+  | Some _ -> cx.local.declare_module_ref <- None
 
 (* accessors *)
 let all_unresolved cx = cx.local.all_unresolved
 let annot_table cx = cx.local.annot_table
-let declare_module_t cx = cx.local.declare_module_t
 let envs cx = cx.local.envs
-let enable_const_params cx = Global.enable_const_params cx.global
-let enable_unsafe_getters_and_setters cx = Global.enable_unsafe_getters_and_setters cx.global
-let enforce_strict_type_args cx = Global.enforce_strict_type_args cx.global
+let enable_const_params cx = Global.enable_const_params cx.global || cx.local.metadata.strict
 let enforce_strict_call_arity cx = Global.enforce_strict_call_arity cx.global
 let errors cx = cx.local.errors
 let error_suppressions cx = cx.local.error_suppressions
@@ -257,9 +258,9 @@ let find_props cx id =
 let find_exports cx id =
   try Type.Exports.Map.find_unsafe id cx.local.export_maps
   with Not_found -> raise (Exports_not_found id)
-let find_require cx r =
-  try SMap.find_unsafe r cx.local.require_map
-  with Not_found -> raise (Require_not_found r)
+let find_require cx loc =
+  try LocMap.find_unsafe loc cx.local.require_map
+  with Not_found -> raise (Require_not_found (Loc.to_string ~include_source:true loc))
 let find_module cx m =
   try SMap.find_unsafe m cx.local.module_map
   with Not_found -> raise (Module_not_found m)
@@ -274,12 +275,16 @@ let imported_ts cx = cx.local.imported_ts
 let is_checked cx = cx.local.metadata.checked
 let is_verbose cx = cx.local.metadata.verbose <> None
 let is_weak cx = cx.local.metadata.weak
+let is_strict cx = (Option.is_some cx.local.declare_module_ref) || cx.local.metadata.strict
 let severity_cover cx = cx.local.severity_cover
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
 let require_map cx = cx.local.require_map
 let module_map cx = cx.local.module_map
-let module_ref cx = cx.local.module_ref
+let module_ref cx =
+  match cx.local.declare_module_ref with
+  | Some module_ref -> module_ref
+  | None -> cx.local.module_ref
 let property_maps cx = cx.local.property_maps
 let refs_table cx = cx.local.refs_table
 let export_maps cx = cx.local.export_maps
@@ -297,8 +302,7 @@ let max_workers cx = Global.max_workers cx.global
 let jsx cx = cx.local.metadata.jsx
 let exists_checks cx = cx.local.exists_checks
 let exists_excuses cx = cx.local.exists_excuses
-let dep_map cx = cx.local.dep_map
-let use_def_map cx = cx.local.use_def_map
+let use_def cx = cx.local.use_def
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -327,8 +331,8 @@ let add_import_stmt cx stmt =
   cx.local.import_stmts <- stmt::cx.local.import_stmts
 let add_imported_t cx name t =
   cx.local.imported_ts <- SMap.add name t cx.local.imported_ts
-let add_require cx name tvar =
-  cx.local.require_map <- SMap.add name tvar cx.local.require_map
+let add_require cx loc tvar =
+  cx.local.require_map <- LocMap.add loc tvar cx.local.require_map
 let add_module cx name tvar =
   cx.local.module_map <- SMap.add name tvar cx.local.module_map
 let add_property_map cx id pmap =
@@ -349,8 +353,6 @@ let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =
   cx.local.all_unresolved <- all_unresolved
-let set_declare_module_t cx t =
-  cx.local.declare_module_t <- t
 let set_envs cx envs =
   cx.local.envs <- envs
 let set_evaluated cx evaluated =
@@ -381,10 +383,8 @@ let set_exists_checks cx exists_checks =
   cx.local.exists_checks <- exists_checks
 let set_exists_excuses cx exists_excuses =
   cx.local.exists_excuses <- exists_excuses
-let set_dep_map cx dep_map =
-  cx.local.dep_map <- dep_map
-let set_use_def_map cx use_def_map =
-  cx.local.use_def_map <- use_def_map
+let set_use_def cx use_def =
+  cx.local.use_def <- use_def
 let set_module_map cx module_map =
   cx.local.module_map <- module_map
 
@@ -395,9 +395,8 @@ let clear_intermediates cx =
   cx.local.all_unresolved <- IMap.empty;
   cx.local.exists_checks <- LocMap.empty;
   cx.local.exists_excuses <- LocMap.empty;
-  cx.local.dep_map <- Dep_mapper.DepMap.empty;
-  cx.local.use_def_map <- LocMap.empty;
-  cx.local.require_map <- SMap.empty
+  cx.local.use_def <- empty_use_def;
+  cx.local.require_map <- LocMap.empty
 
 
 (* utils *)
@@ -437,6 +436,11 @@ let make_export_map cx tmap =
   add_export_map cx id tmap;
   id
 
+let make_nominal cx =
+  let nominal = Reason.mk_id () in
+  add_nominal_id cx nominal;
+  nominal
+
 (* Copy context from cx_other to cx *)
 let merge_into cx cx_other =
   set_envs cx (IMap.union (envs cx_other) (envs cx));
@@ -462,3 +466,41 @@ let from_cache ~options local =
     global = { Global.metadata = global_metadata_of_options options };
     local;
   }
+
+(* Find the constraints of a type variable in the graph.
+
+   Recall that type variables are either roots or goto nodes. (See
+   Constraint for details.) If the type variable is a root, the
+   constraints are stored with the type variable. Otherwise, the type variable
+   is a goto node, and it points to another type variable: a linked list of such
+   type variables must be traversed until a root is reached. *)
+let rec find_graph cx id =
+  let _, constraints = find_constraints cx id in
+  constraints
+
+and find_constraints cx id =
+  let root_id, root = find_root cx id in
+  root_id, root.Constraint.constraints
+
+(* Find the root of a type variable, potentially traversing a chain of type
+   variables, while short-circuiting all the type variables in the chain to the
+   root during traversal to speed up future traversals. *)
+and find_root cx id =
+  let open Constraint in
+  match IMap.get id (graph cx) with
+  | Some (Goto next_id) ->
+      let root_id, root = find_root cx next_id in
+      if root_id != next_id then replace_node cx id (Goto root_id) else ();
+      root_id, root
+
+  | Some (Root root) ->
+      id, root
+
+  | None ->
+      let msg = Utils_js.spf "find_root: tvar %d not found in file %s" id
+        (File_key.to_string @@ file cx)
+      in
+      Utils_js.assert_false msg
+
+(* Replace the node associated with a type variable in the graph. *)
+and replace_node cx id node = set_tvar cx id node

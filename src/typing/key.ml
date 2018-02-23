@@ -37,3 +37,13 @@ and proj_uses_propname ~private_ propname = function
 let compare = Pervasives.compare
 
 let is_simple (_, ps) = List.length ps = 0
+
+let reason_desc = Reason.(function
+| name, [] when not (is_internal_name name) -> RIdentifier name
+| name, [] -> RCustom name
+| _, projs ->
+  (match List.hd (List.rev projs) with
+  | Prop x -> RProperty (Some x)
+  | PrivateField x -> RPrivateProperty x
+  | Elem _ -> RProperty None)
+)

@@ -43,7 +43,7 @@ type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
  * the result of the job when the task is done (cf multiWorker.ml).
  *)
 (*****************************************************************************)
-type 'a handle
+type ('a, 'b) handle
 
 type 'a entry
 val register_entry_point:
@@ -61,20 +61,27 @@ val make:
     t list
 
 (* Call in a sub-process (CAREFUL, GLOBALS ARE COPIED) *)
-val call: t -> ('a -> 'b) -> 'a -> 'b handle
+val call: t -> ('a -> 'b) -> 'a -> ('a, 'b) handle
+
+(* Retrieves the job that the worker is currently processing *)
+val get_job: ('a, 'b) handle -> 'a
 
 (* Retrieves the result (once the worker is done) hangs otherwise *)
-val get_result: 'a handle -> 'a
+val get_result: ('a, 'b) handle -> 'b
 
 (* Selects among multiple handles those which are ready. *)
-type 'a selected = {
-  readys: 'a handle list;
-  waiters: 'a handle list;
+type ('a, 'b) selected = {
+  readys: ('a, 'b) handle list;
+  waiters: ('a, 'b) handle list;
+  (* Additional (non worker) ready fds that we selected on. *)
+  ready_fds: Unix.file_descr list;
 }
-val select: 'a handle list -> 'a selected
+val select: ('a, 'b) handle list -> Unix.file_descr list -> ('a, 'b) selected
 
 (* Returns the worker which produces this handle *)
-val get_worker: 'a handle -> t
+val get_worker: ('a, 'b) handle -> t
 
 (* Killall the workers *)
 val killall: unit -> unit
+
+val cancel : ('a, 'b) handle list -> unit

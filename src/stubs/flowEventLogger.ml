@@ -32,24 +32,13 @@ let killed _ = ()
 let lock_lost _ = ()
 let lock_stolen _ = ()
 let out_of_date _ = ()
-let autocomplete_member_result
-    ~client_context:_
-    ~result_str:_
-    ~json_data:_
-    ~profiling:_ = ()
-let get_def_member_result
-    ~client_context:_
-    ~result_str:_
-    ~json_data:_
-    ~profiling:_ = ()
-let type_at_pos_result
-    ~client_context:_
-    ~result_str:_
-    ~json_data:_
-    ~profiling:_ = ()
 let exit _ _ = ()
 let recheck
     ~modified_count:_
     ~deleted_count:_
     ~dependent_file_count:_
     ~profiling:_ = ()
+let murdered_by_oom_killer _ = ()
+let ephemeral_command_success ?json_data:_ ~client_context:_ ~profiling:_ = ()
+let ephemeral_command_failure ?json_data:_ ~client_context:_ = ()
+let persistent_command_success ?json_data:_ ~request:_ ~client_context:_ ~profiling:_ = ()

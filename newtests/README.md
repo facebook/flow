@@ -2,6 +2,8 @@
 
 `./tool` is a script in the root of this project. `./tool test` runs the tests in this directory.
 
+To make it work: run `yarn install` in the flow directory. This is needed both for `tool` to run, and also for `flow check` to work in the newtests directory.
+
 ## Motivation behind `./tool test`
 
 * Tests should pair small examples with the expectations for each example.
@@ -23,8 +25,8 @@ Check out [tool_test_example](https://github.com/facebook/flow/blob/master/newte
 The only way to create a `Suite` is to call the `suite()` function. The `suite()` function takes a callback, like so
 
 ```JavaScript
-import {suite} from '../../tsrc/test/Tester';
-import type TestStep from '../../tsrc/test/TestStep';
+import {suite} from 'flow-dev-tools/src/test/Tester';
+import type TestStep from 'flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [ < List of Tests >]);
 ```
 
@@ -35,8 +37,8 @@ export default suite((emptyTestStep: TestStep) => [ < List of Tests >]);
 The only way to create a `Test` is to call the `test()` function. The `test()` function takes a test name and a list of `TestStep`s, like so
 
 ```JavaScript
-import {suite, test} from '../../tsrc/test/Tester';
-import type TestStep from '../../tsrc/test/TestStep';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type TestStep from 'flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [
   test('My first test, [ < List of TestSteps > ]'),
 ]);
@@ -47,10 +49,10 @@ export default suite((emptyTestStep: TestStep) => [
 A `TestStep` is made up of 0 or more actions and 0 or more assertions. The `emptyTestStep` passed to `suite()`'s callback is a `TestStep` with 0 actions and 0 assertions. `TestStep`s are immutable, so when you call `emptyTestStep.addFile('foo.js')` you get back a new `TestStep` with 1 action and 0 assertions. So a test looks like
 
 ```JavaScript
-import {suite, test} from '../../tsrc/test/Tester';
-import type TestStep from '../../tsrc/test/TestStep';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type TestStep from 'flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [
-  test('My first test', [ 
+  test('My first test', [
     emptyTestStep
       .addCode('var x = 123')
       .noNewErrors(),
@@ -64,9 +66,9 @@ export default suite((emptyTestStep: TestStep) => [
 More concisely, this can be written
 
 ```JavaScript
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 export default suite(({addCode}) => [
-  test('My first test', [ 
+  test('My first test', [
     addCode('var x = 123')
       .noNewErrors(),
     addCode('var y = "hello"')

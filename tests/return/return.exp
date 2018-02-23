@@ -1,18 +1,69 @@
-Error: function_return.js:7
-  7: function f(x): number {
-                    ^^^^^^ number. This type is incompatible with an implicitly-returned undefined.
+Error ------------------------------------------------------------------------------------------ function_return.js:7:16
 
-Error: function_return.js:23
- 23:   return;
-       ^^^^^^^ undefined. This type is incompatible with the expected return type of
- 19: function h(x): number {
-                    ^^^^^^ number
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined.
 
-Error: void.js:12
- 12: (f(true): void); // error: string ~> void
-      ^^^^^^^ string. This type is incompatible with
- 12: (f(true): void); // error: string ~> void
-               ^^^^ undefined
+   7| function f(x): number {
+                     ^^^^^^ [1]
 
 
-Found 3 errors
+Error ------------------------------------------------------------------------------------------ function_return.js:23:3
+
+Cannot return undefined because undefined [1] is incompatible with number [2].
+
+   function_return.js:23:3
+   23|   return;
+         ^^^^^^^ [1]
+
+References:
+   function_return.js:19:16
+   19| function h(x): number {
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- implicit.js:6:22
+
+Cannot expect number as the return type of async function because number [1] is incompatible with implicitly-returned
+`Promise`.
+
+   6| async function g1(): number {}
+                           ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- implicit.js:7:22
+
+Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
+undefined in type argument `R` [2].
+
+   implicit.js:7:22
+     7| async function g2(): Promise<number> {}
+                             ^^^^^^^^^^^^^^^
+
+References:
+   implicit.js:7:30
+     7| async function g2(): Promise<number> {}
+                                     ^^^^^^ [1]
+   <BUILTINS>/core.js:604:24
+   604| declare class Promise<+R> {
+                               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- void.js:12:2
+
+Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   void.js:12:2
+   12| (f(true): void); // error: string ~> void
+        ^^^^^^^
+
+References:
+   void.js:8:12
+    8|     return "nope";
+                  ^^^^^^ [1]
+   void.js:12:11
+   12| (f(true): void); // error: string ~> void
+                 ^^^^ [2]
+
+
+
+Found 5 errors

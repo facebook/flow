@@ -15,6 +15,12 @@ let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1::xs)
 
+let mem y (x1, xs) =
+  x1 = y || List.mem y xs
+
+let exists f (x1, xs) =
+  f x1 || List.exists f xs
+
 let iter f (x, xs) =
   f x;
   List.iter f xs
@@ -60,3 +66,5 @@ let length (_, xs) = 1 + List.length xs
 let fold_left f acc (x, xs) = List.fold_left f acc (x::xs)
 
 let hd (x, _) = x
+
+let nth nel n = List.nth (to_list nel) n

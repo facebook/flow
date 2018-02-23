@@ -41,12 +41,12 @@
                 "callProperties":[
                   {
                     "type":"ObjectTypeCallProperty",
-                    "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":2,"column":0}},
-                    "range":[10,15],
+                    "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":14}},
+                    "range":[10,14],
                     "value":{
                       "type":"FunctionTypeAnnotation",
-                      "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":2,"column":0}},
-                      "range":[10,15],
+                      "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":14}},
+                      "range":[10,14],
                       "params":[],
                       "returnType":{
                         "type":"AnyTypeAnnotation",

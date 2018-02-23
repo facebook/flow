@@ -7,9 +7,13 @@ Expect no errors.
 No errors!
 
 Delete @flow file with a @flow dependent file, expect error.
-Error: b.js:2
-  2: require('./a');
-             ^^^^^ ./a. Required module not found
+Error --------------------------------------------------------------------------------------------------------- b.js:2:9
+
+Cannot resolve module `./a`.
+
+   2| require('./a');
+              ^^^^^
+
 
 
 Found 1 error

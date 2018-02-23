@@ -3,12 +3,17 @@ var defaults = require("ast-types/lib/shared").defaults;
 var def = types.Type.def;
 var or = types.Type.or;
 
+def("Variance")
+  .bases("Node")
+  .build("kind")
+  .field("kind", or("plus", "minus"));
+
 def("TypeParameter")
   .bases("Type")
   .build("name", "variance", "bound", "default")
   .field("name", String)
   .field("variance",
-    or("plus", "minus", null),
+    or(def("Variance"), null),
     defaults["null"])
   .field("bound",
     or(def("TypeAnnotation"), null),

@@ -26,6 +26,11 @@ let id: 'node 'a. ('node -> 'node) -> 'node -> 'a -> ('node -> 'a) -> 'a =
     let item' = map item in
     if item == item' then same else diff item'
 
+let map_loc: 'node. ('node -> 'node) -> (Loc.t * 'node) -> (Loc.t * 'node) =
+  fun map same ->
+    let loc, item = same in
+    id map item same (fun diff -> (loc, diff))
+
 class mapper = object(this)
   method program (program: Loc.t Ast.program) =
     let (loc, statements, comments) = program in
@@ -49,11 +54,30 @@ class mapper = object(this)
     | (loc, Continue cont) ->
       id this#continue cont stmt (fun cont -> loc, Continue cont)
 
+    | (_loc, Debugger) ->
+      this#debugger ();
+      stmt
+
+    | (loc, DeclareClass stuff) ->
+      id this#declare_class stuff stmt (fun stuff -> loc, DeclareClass stuff)
+
     | (loc, DeclareExportDeclaration decl) ->
-      id this#declare_export_declaration decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
+      id (this#declare_export_declaration loc) decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
+
+    | (loc, DeclareFunction stuff) ->
+      id this#declare_function stuff stmt (fun stuff -> loc, DeclareFunction stuff)
+
+    | (loc, DeclareInterface stuff) ->
+      id this#declare_interface stuff stmt (fun stuff -> loc, DeclareInterface stuff)
 
     | (loc, DeclareModule m) ->
       id (this#declare_module loc) m stmt (fun m -> loc, DeclareModule m)
+
+    | (loc, DeclareTypeAlias stuff) ->
+      id this#declare_type_alias stuff stmt (fun stuff -> loc, DeclareTypeAlias stuff)
+
+    | (loc, DeclareVariable stuff) ->
+      id this#declare_variable stuff stmt (fun stuff -> loc, DeclareVariable stuff)
 
     | (loc, DeclareModuleExports annot) ->
       id (this#declare_module_exports loc) annot stmt (fun annot -> loc, DeclareModuleExports annot)
@@ -62,13 +86,14 @@ class mapper = object(this)
       id this#do_while stuff stmt (fun stuff -> loc, DoWhile stuff)
 
     | (_loc, Empty) ->
+      this#empty ();
       stmt
 
     | (loc, ExportDefaultDeclaration decl) ->
-      id this#export_default_declaration decl stmt (fun decl -> loc, ExportDefaultDeclaration decl)
+      id (this#export_default_declaration loc) decl stmt (fun decl -> loc, ExportDefaultDeclaration decl)
 
     | (loc, ExportNamedDeclaration decl) ->
-      id this#export_named_declaration decl stmt (fun decl -> loc, ExportNamedDeclaration decl)
+      id (this#export_named_declaration loc) decl stmt (fun decl -> loc, ExportNamedDeclaration decl)
 
     | (loc, Expression expr) ->
       id this#expression_statement expr stmt (fun expr -> loc, Expression expr)
@@ -89,10 +114,16 @@ class mapper = object(this)
       id this#if_statement if_stmt stmt (fun if_stmt -> loc, If if_stmt)
 
     | (loc, ImportDeclaration decl) ->
-      id this#import_declaration decl stmt (fun decl -> loc, ImportDeclaration decl)
+      id (this#import_declaration loc) decl stmt (fun decl -> loc, ImportDeclaration decl)
+
+    | (loc, InterfaceDeclaration stuff) ->
+      id this#interface_declaration stuff stmt (fun stuff -> loc, InterfaceDeclaration stuff)
 
     | (loc, Labeled label) ->
       id this#labeled_statement label stmt (fun label -> loc, Labeled label)
+
+    | (loc, OpaqueType otype) ->
+      id this#opaque_type otype stmt (fun otype -> loc, OpaqueType otype)
 
     | (loc, Return ret) ->
       id this#return ret stmt (fun ret -> loc, Return ret)
@@ -115,17 +146,11 @@ class mapper = object(this)
     | (loc, With stuff) ->
       id this#with_ stuff stmt (fun stuff -> loc, With stuff)
 
-    (* TODO: ES6 or Flow specific stuff *)
-    | (_loc, Debugger) -> stmt
-    | (_loc, DeclareClass _) -> stmt
-    | (_loc, DeclareFunction _) -> stmt
-    | (_loc, DeclareInterface _) -> stmt
-    | (_loc, DeclareTypeAlias _) -> stmt
+    | (loc, TypeAlias stuff) ->
+      id this#type_alias stuff stmt (fun stuff -> loc, TypeAlias stuff)
+
+    (* TODO: Flow specific stuff *)
     | (_loc, DeclareOpaqueType _) -> stmt
-    | (_loc, DeclareVariable _) -> stmt
-    | (_loc, InterfaceDeclaration _) -> stmt
-    | (_loc, TypeAlias _) -> stmt
-    | (_loc, OpaqueType _) -> stmt
 
   method comment (c: Loc.t Ast.Comment.t) = c
 
@@ -138,15 +163,16 @@ class mapper = object(this)
     | loc, ArrowFunction x -> id this#arrow_function x expr (fun x -> loc, ArrowFunction x)
     | loc, Assignment x -> id this#assignment x expr (fun x -> loc, Assignment x)
     | loc, Binary x -> id this#binary x expr (fun x -> loc, Binary x)
-    | loc, Call x -> id this#call x expr (fun x -> loc, Call x)
+    | loc, Call x -> id (this#call loc) x expr (fun x -> loc, Call x)
     | loc, Class x -> id this#class_ x expr (fun x -> loc, Class x)
     | loc, Comprehension x -> id this#comprehension x expr (fun x -> loc, Comprehension x)
     | loc, Conditional x -> id this#conditional x expr (fun x -> loc, Conditional x)
     | loc, Function x -> id this#function_ x expr (fun x -> loc, Function x)
     | loc, Generator x -> id this#generator x expr (fun x -> loc, Generator x)
     | loc, Identifier x -> id this#identifier x expr (fun x -> loc, Identifier x)
-    | loc, Import x -> id this#import x expr (fun x -> loc, Import x)
+    | loc, Import x -> id (this#import loc) x expr (fun x -> loc, Import x)
     | loc, JSXElement x -> id this#jsx_element x expr (fun x -> loc, JSXElement x)
+    | loc, JSXFragment x -> id this#jsx_fragment x expr (fun x -> loc, JSXFragment x)
     | loc, Literal x -> id this#literal x expr (fun x -> loc, Literal x)
     | loc, Logical x -> id this#logical x expr (fun x -> loc, Logical x)
     | loc, Member x -> id this#member x expr (fun x -> loc, Member x)
@@ -199,7 +225,7 @@ class mapper = object(this)
     let label' = map_opt this#label_identifier label in
     if label == label' then break else { label = label' }
 
-  method call (expr: Loc.t Ast.Expression.Call.t) =
+  method call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
     let { callee; arguments } = expr in
     let callee' = this#expression callee in
@@ -211,10 +237,7 @@ class mapper = object(this)
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
     let param' = this#catch_clause_pattern param in
-    let body' =
-      let (body_loc, block) = body in
-      id this#block block body (fun block -> body_loc, block)
-    in
+    let body' = map_loc this#block body in
     if param == param' && body == body' then clause
     else { param = param'; body = body' }
 
@@ -252,9 +275,7 @@ class mapper = object(this)
     let open Ast.Class.Method in
     let { kind = _; key; value; static = _; decorators = _; } = meth in
     let key' = this#object_key key in
-    let value' =
-      let loc, fn = value in
-      id this#function_ fn value (fun fn -> loc, fn) in
+    let value' = map_loc this#function_ value in
     if key == key' && value == value' then meth
     else { meth with key = key'; value = value' }
 
@@ -282,7 +303,7 @@ class mapper = object(this)
   method conditional (expr: Loc.t Ast.Expression.Conditional.t) =
     let open Ast.Expression.Conditional in
     let { test; consequent; alternate } = expr in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     let consequent' = this#expression consequent in
     let alternate' = this#expression alternate in
     if test == test' && consequent == consequent' && alternate == alternate'
@@ -295,7 +316,23 @@ class mapper = object(this)
     let label' = map_opt this#label_identifier label in
     if label == label' then cont else { label = label' }
 
-  method declare_export_declaration (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
+  method debugger () =
+    ()
+
+  method declare_class (decl: Loc.t Ast.Statement.DeclareClass.t) =
+    let open Ast.Statement.DeclareClass in
+    let { id = ident; typeParameters; body; extends; mixins; implements } = decl in
+    let id' = this#class_identifier ident in
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let body' = map_loc this#object_type body in
+    let extends' = map_opt (map_loc this#generic_type) extends in
+    let mixins' = map_list (map_loc this#generic_type) mixins in
+    if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
+      && mixins' == mixins then decl
+    else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends';
+           mixins = mixins'; implements }
+
+  method declare_export_declaration _loc (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
     let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
     let specifiers' = map_opt this#export_named_specifier specifiers in
@@ -303,36 +340,61 @@ class mapper = object(this)
     if specifiers == specifiers' && declaration == declaration' then decl
     else { default; source; specifiers = specifiers'; declaration = declaration' }
 
-  (* TODO *)
+  (* TODO(T22777134): Implement this when the mapper supports OpaqueType. *)
   method declare_export_declaration_decl (decl: Loc.t Ast.Statement.DeclareExportDeclaration.declaration) =
     decl
+
+  method declare_function (decl: Loc.t Ast.Statement.DeclareFunction.t) =
+    let open Ast.Statement.DeclareFunction in
+    let { id = ident; typeAnnotation; predicate } = decl in
+    let id' = this#function_identifier ident in
+    let typeAnnotation' = this#type_annotation typeAnnotation in
+    (* TODO: walk predicate *)
+    if id' == ident && typeAnnotation' == typeAnnotation then decl
+    else { id = id'; typeAnnotation = typeAnnotation'; predicate }
+
+  method declare_interface (decl: Loc.t Ast.Statement.Interface.t) =
+    this#interface decl
 
   method declare_module _loc (m: Loc.t Ast.Statement.DeclareModule.t) =
     let open Ast.Statement.DeclareModule in
     let { id; body; kind } = m in
-    let loc, block = body in
-    let block' = this#block block in
-    if block == block' then m
-    else { id; body = (loc, block'); kind }
+    let body' = map_loc this#block body in
+    if body' == body then m
+    else { id; body = body'; kind }
 
   (* TODO *)
   method declare_module_exports _loc (annot: Loc.t Ast.Type.annotation) =
     annot
 
+  method declare_type_alias (decl: Loc.t Ast.Statement.TypeAlias.t) =
+    this#type_alias decl
+
+  method declare_variable (decl: Loc.t Ast.Statement.DeclareVariable.t) =
+    let open Ast.Statement.DeclareVariable in
+    let { id = ident; typeAnnotation } = decl in
+    let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
+    let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
+    if id' == ident && typeAnnotation' == typeAnnotation then decl
+    else { id = id'; typeAnnotation = typeAnnotation' }
+
   method do_while (stuff: Loc.t Ast.Statement.DoWhile.t) =
     let open Ast.Statement.DoWhile in
     let { body; test } = stuff in
     let body' = this#statement body in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     if body == body' && test == test' then stuff
     else { body = body'; test = test' }
 
-  method export_default_declaration (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
+  method empty () =
+    ()
+
+  method export_default_declaration _loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement.ExportDefaultDeclaration in
-    let { exportKind; declaration } = decl in
+    let { default; declaration } = decl in
     let declaration' = this#export_default_declaration_decl declaration in
-    if declaration == declaration' then decl
-    else { exportKind; declaration = declaration' }
+    if declaration' = declaration then decl
+    else { default; declaration = declaration' }
 
   method export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =
     let open Ast.Statement.ExportDefaultDeclaration in
@@ -340,7 +402,7 @@ class mapper = object(this)
     | Declaration stmt -> id this#statement stmt decl (fun stmt -> Declaration stmt)
     | Expression expr -> id this#expression expr decl (fun expr -> Expression expr)
 
-  method export_named_declaration (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
+  method export_named_declaration _loc (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration } = decl in
     let specifiers' = map_opt this#export_named_specifier specifiers in
@@ -403,7 +465,7 @@ class mapper = object(this)
     let open Ast.Statement.For in
     let { init; test; update; body } = stmt in
     let init' = map_opt this#for_statement_init init in
-    let test' = map_opt this#expression test in
+    let test' = map_opt this#predicate_expression test in
     let update' = map_opt this#expression update in
     let body' = this#statement body in
     if init == init' &&
@@ -486,12 +548,35 @@ class mapper = object(this)
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
     | _ -> git (* TODO *)
 
+  method type_parameter_instantiation (pi: Loc.t Ast.Type.ParameterInstantiation.t) =
+    let open Ast.Type.ParameterInstantiation in
+    let loc, { params; } = pi in
+    let params' = map_list this#type_ params in
+    if params' == params then pi
+    else loc, { params = params'; }
+
+  method type_parameter_declaration (pd: Loc.t Ast.Type.ParameterDeclaration.t) =
+    let open Ast.Type.ParameterDeclaration in
+    let loc, { params; } = pd in
+    let params' = map_list this#type_parameter_declaration_type_param params in
+    if params' == params then pd
+    else loc, { params = params'; }
+
+  method type_parameter_declaration_type_param (type_param: Loc.t Ast.Type.ParameterDeclaration.TypeParam.t) =
+    let open Ast.Type.ParameterDeclaration.TypeParam in
+    let loc, { name; bound; variance; default; } = type_param in
+    let bound' = map_opt this#type_annotation bound in
+    let default' = map_opt this#type_ default in
+    if bound' == bound && default' == default then type_param
+    else loc, { name; bound = bound'; variance; default = default'; }
+
   method generic_type (gt: Loc.t Ast.Type.Generic.t) =
     let open Ast.Type.Generic in
     let { id; typeParameters; } = gt in
     let id' = this#generic_identifier_type id in
-    if id' == id then gt
-    else { id = id'; typeParameters }
+    let typeParameters' = map_opt this#type_parameter_instantiation typeParameters in
+    if id' == id && typeParameters' == typeParameters then gt
+    else { id = id'; typeParameters = typeParameters' }
 
   method type_ (t: Loc.t Ast.Type.t) =
     let open Ast.Type in
@@ -533,8 +618,7 @@ class mapper = object(this)
       else loc, Tuple ts'
 
   method type_annotation (annot: Loc.t Ast.Type.annotation) =
-    let loc, t = annot in
-    id this#type_ t annot (fun t -> loc, t)
+    map_loc this#type_ annot
 
   method function_ (expr: Loc.t Ast.Function.t) =
     let open Ast.Function in
@@ -553,17 +637,21 @@ class mapper = object(this)
     let returnType' = map_opt this#type_annotation returnType in
     let body' = match body with
       | BodyBlock (loc, block) ->
-        id this#block block body (fun block -> BodyBlock (loc, block))
+        id this#function_body block body (fun block -> BodyBlock (loc, block))
       | BodyExpression expr ->
         id this#expression expr body (fun expr -> BodyExpression expr)
     in
     (* TODO: walk predicate *)
-    (* TODO: walk typeParameters *)
-    if ident == ident' && params == params' && body == body' && returnType == returnType' then expr
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    if ident == ident' && params == params' && body == body' && returnType == returnType'
+      && typeParameters == typeParameters' then expr
     else {
       id = ident'; params = params'; returnType = returnType'; body = body';
-      async; generator; expression; predicate; typeParameters;
+      async; generator; expression; predicate; typeParameters = typeParameters';
     }
+
+  method function_body (block: Loc.t Ast.Statement.Block.t) =
+    this#block block
 
   method function_identifier (ident: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
@@ -576,9 +664,23 @@ class mapper = object(this)
 
   method identifier (expr: Loc.t Ast.Identifier.t) = expr
 
+  method interface (interface: Loc.t Ast.Statement.Interface.t) =
+    let open Ast.Statement.Interface in
+    let { id = ident; typeParameters; body; extends } = interface in
+    let id' = this#class_identifier ident in
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let body' = map_loc this#object_type body in
+    let extends' = map_list (map_loc this#generic_type) extends in
+    if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
+    then interface
+    else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends' }
+
+  method interface_declaration (decl: Loc.t Ast.Statement.Interface.t) =
+    this#interface decl
+
   method private_name (expr: Loc.t Ast.PrivateName.t) = expr
 
-  method import (expr: Loc.t Ast.Expression.t) = expr
+  method import _loc (expr: Loc.t Ast.Expression.t) = expr
 
   method if_consequent_statement ~has_else (stmt: Loc.t Ast.Statement.t) =
     ignore has_else;
@@ -587,7 +689,7 @@ class mapper = object(this)
   method if_statement (stmt: Loc.t Ast.Statement.If.t) =
     let open Ast.Statement.If in
     let { test; consequent; alternate } = stmt in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     let consequent' =
       this#if_consequent_statement ~has_else:(alternate <> None) consequent in
     let alternate' = map_opt this#statement alternate in
@@ -595,16 +697,17 @@ class mapper = object(this)
     then stmt
     else { test = test'; consequent = consequent'; alternate = alternate' }
 
-  method import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     match importKind with
-    | ImportValue ->
+    | ImportValue
+    | ImportType ->
       let specifiers' = map_opt this#import_specifier specifiers in
       let default' = map_opt this#import_default_specifier default in
       if specifiers == specifiers' && default == default' then decl
       else { importKind; source; specifiers = specifiers'; default = default' }
-    | ImportType | ImportTypeof -> decl (* TODO *)
+    | ImportTypeof -> decl (* TODO *)
 
   method import_specifier (specifier: Loc.t Ast.Statement.ImportDeclaration.specifier) =
     let open Ast.Statement.ImportDeclaration in
@@ -642,18 +745,32 @@ class mapper = object(this)
 
   method jsx_element (expr: Loc.t Ast.JSX.element) =
     let open Ast.JSX in
-    let { openingElement; closingElement = _; children } = expr in
+    let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
+    let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
     let children' = map_list this#jsx_child children in
-    if openingElement == openingElement' && children == children' then expr
-    else { expr with openingElement = openingElement'; children = children' }
+    if openingElement == openingElement' && closingElement == closingElement' && children == children' then expr
+    else { openingElement = openingElement'; closingElement = closingElement'; children = children' }
+
+  method jsx_fragment (expr: Loc.t Ast.JSX.fragment) =
+    let open Ast.JSX in
+    let { frag_children; _ } = expr in
+    let children' = map_list this#jsx_child frag_children in
+    { expr with frag_children = children' }
 
   method jsx_opening_element (elem: Loc.t Ast.JSX.Opening.t) =
     let open Ast.JSX.Opening in
     let loc, { name; selfClosing; attributes } = elem in
+    let name' = this#jsx_name name in
     let attributes' = map_list this#jsx_opening_attribute attributes in
-    if attributes == attributes' then elem
+    if name == name' && attributes == attributes' then elem
     else loc, { name; selfClosing; attributes = attributes' }
+
+  method jsx_closing_element (elem: Loc.t Ast.JSX.Closing.t) =
+    let open Ast.JSX.Closing in
+    let loc, {name} = elem in
+    let name' = this#jsx_name name in
+    if name == name' then elem else loc, {name=name'}
 
   method jsx_opening_attribute (jsx_attr: Loc.t Ast.JSX.Opening.attribute) =
     let open Ast.JSX.Opening in
@@ -688,8 +805,12 @@ class mapper = object(this)
     match child' with
     | Element elem ->
       id this#jsx_element elem child (fun elem -> loc, Element elem)
+    | Fragment frag ->
+      id this#jsx_fragment frag child (fun frag -> loc, Fragment frag)
     | ExpressionContainer expr ->
       id this#jsx_expression expr child (fun expr -> loc, ExpressionContainer expr)
+    | SpreadChild expr ->
+      id this#expression expr child (fun expr -> loc, SpreadChild expr)
     | Text _ -> child
 
   method jsx_expression (jsx_expr: Loc.t Ast.JSX.ExpressionContainer.t) =
@@ -699,6 +820,52 @@ class mapper = object(this)
     | Expression expr ->
       id this#expression expr jsx_expr (fun expr -> { expression = Expression expr})
     | EmptyExpression _ -> jsx_expr
+
+  method jsx_name (name: Loc.t Ast.JSX.name) =
+    let open Ast.JSX in
+    let name' = match name with
+      | Identifier id -> Identifier (this#jsx_identifier id)
+      | NamespacedName namespaced_name ->
+          NamespacedName (this#jsx_namespaced_name namespaced_name)
+      | MemberExpression member_exp ->
+          MemberExpression (this#jsx_member_expression member_exp)
+    in
+    (* structural equality since it's easier than checking equality in each branch of the match
+     * above *)
+    if name = name' then name else name'
+
+  method jsx_namespaced_name (namespaced_name: Loc.t Ast.JSX.NamespacedName.t) =
+    let open Ast.JSX in
+    let open NamespacedName in
+    let loc, {namespace; name} = namespaced_name in
+    let namespace' = this#jsx_identifier namespace in
+    let name' = this#jsx_identifier name in
+    if namespace == namespace' && name == name' then
+      namespaced_name
+    else
+      loc, {namespace=namespace'; name=name'}
+
+  method jsx_member_expression (member_exp: Loc.t Ast.JSX.MemberExpression.t) =
+    let open Ast.JSX in
+    let loc, {MemberExpression._object; MemberExpression.property} = member_exp in
+    let _object' = match _object with
+      | MemberExpression.Identifier id ->
+          let id' = this#jsx_identifier id in
+          if id' == id then _object else MemberExpression.Identifier id'
+      | MemberExpression.MemberExpression nested_exp ->
+          let nested_exp' = this#jsx_member_expression nested_exp in
+          if nested_exp' == nested_exp then
+            _object
+          else
+            MemberExpression.MemberExpression nested_exp'
+    in
+    let property' = this#jsx_identifier property in
+    if _object == _object' && property == property' then
+      member_exp
+    else
+      loc, MemberExpression.({_object=_object'; property=property'})
+
+  method jsx_identifier (id: Loc.t Ast.JSX.Identifier.t) = id
 
   method labeled_statement (stmt: Loc.t Ast.Statement.Labeled.t) =
     let open Ast.Statement.Labeled in
@@ -775,21 +942,30 @@ class mapper = object(this)
 
   method object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
     let open Ast.Expression.Object.Property in
-    let (loc, { key; value; _method; shorthand }) = prop in
-    let key' = this#object_key key in
-    let value' = match value with
-      | Init expr ->
-        let expr' = this#expression expr in
-        if expr == expr' then value else Init expr'
-      | Get (loc, fn) ->
-        let fn' = this#function_ fn in
-        if fn == fn' then value else Get (loc, fn')
-      | Set (loc, fn) ->
-        let fn' = this#function_ fn in
-        if fn == fn' then value else Set (loc, fn')
-    in
-    if key == key' && value == value' then prop
-    else (loc, { key = key'; value = value'; _method; shorthand })
+    match prop with
+    | loc, Init { key; value; shorthand } ->
+      let key' = this#object_key key in
+      let value' = this#expression value in
+      if key == key' && value == value' then prop
+      else (loc, Init { key = key'; value = value'; shorthand })
+
+    | loc, Method { key; value = (fn_loc, fn) } ->
+      let key' = this#object_key key in
+      let fn' = this#function_ fn in
+      if key == key' && fn == fn' then prop
+      else (loc, Method { key = key'; value = (fn_loc, fn') })
+
+    | loc, Get { key; value = (fn_loc, fn) } ->
+      let key' = this#object_key key in
+      let fn' = this#function_ fn in
+      if key == key' && fn == fn' then prop
+      else (loc, Get { key = key'; value = (fn_loc, fn') })
+
+    | loc, Set { key; value = (fn_loc, fn) } ->
+      let key' = this#object_key key in
+      let fn' = this#function_ fn in
+      if key == key' && fn == fn' then prop
+      else (loc, Set { key = key'; value = (fn_loc, fn') })
 
   method object_key (key: Loc.t Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in
@@ -806,6 +982,26 @@ class mapper = object(this)
   method object_key_identifier (ident: Loc.t Ast.Identifier.t) =
     this#identifier ident
 
+  method opaque_type (otype: Loc.t Ast.Statement.OpaqueType.t) =
+    let open Ast.Statement.OpaqueType in
+    let { id; typeParameters; impltype; supertype } = otype in
+    let id' = this#identifier id in
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let impltype' = map_opt this#type_ impltype in
+    let supertype' = map_opt this#type_ supertype  in
+    if id == id' &&
+       impltype == impltype' &&
+       typeParameters == typeParameters' &&
+       impltype == impltype' &&
+       supertype == supertype'
+    then otype
+    else {
+      id = id';
+      typeParameters = typeParameters';
+      impltype = impltype';
+      supertype = supertype'
+    }
+
   method function_param_pattern (expr: Loc.t Ast.Pattern.t) =
     this#binding_pattern expr
 
@@ -813,7 +1009,7 @@ class mapper = object(this)
     this#binding_pattern ~kind expr
 
   method catch_clause_pattern (expr: Loc.t Ast.Pattern.t) =
-    this#binding_pattern expr
+    this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
 
   method for_in_assignment_pattern (expr: Loc.t Ast.Pattern.t) =
     this#assignment_pattern expr
@@ -856,7 +1052,6 @@ class mapper = object(this)
         if name == name' && typeAnnotation == typeAnnotation' then patt
         else Identifier { Identifier.name = name'; typeAnnotation = typeAnnotation'; optional }
       | Expression e ->
-        (* TODO: wtf is this? *)
         id this#pattern_expression e patt (fun e -> Expression e)
     in
     if patt == patt' then expr else (loc, patt')
@@ -920,6 +1115,9 @@ class mapper = object(this)
   method pattern_expression (expr: Loc.t Ast.Expression.t) =
     this#expression expr
 
+  method predicate_expression (expr: Loc.t Ast.Expression.t) =
+    this#expression expr
+
   (* TODO *)
   method function_rest_element (expr: Loc.t Ast.Function.RestElement.t) = expr
 
@@ -952,10 +1150,7 @@ class mapper = object(this)
     let open Ast.Statement.Switch in
     let { discriminant; cases } = switch in
     let discriminant' = this#expression discriminant in
-    let cases' = map_list (fun stuff ->
-      let (loc, case) = stuff in
-      id this#switch_case case stuff (fun case -> loc, case)
-    ) cases in
+    let cases' = map_list (map_loc this#switch_case) cases in
     if discriminant == discriminant' && cases == cases' then switch
     else { discriminant = discriminant'; cases = cases' }
 
@@ -971,9 +1166,7 @@ class mapper = object(this)
     let open Ast.Expression.TaggedTemplate in
     let { tag; quasi } = expr in
     let tag' = this#expression tag in
-    let quasi' =
-      let loc, templ = quasi in
-      id this#template_literal templ quasi (fun templ -> loc, templ) in
+    let quasi' = map_loc this#template_literal quasi in
     if tag == tag' && quasi == quasi' then expr
     else { tag = tag'; quasi = quasi' }
 
@@ -1053,7 +1246,7 @@ class mapper = object(this)
   method while_ (stuff: Loc.t Ast.Statement.While.t) =
     let open Ast.Statement.While in
     let { test; body } = stuff in
-    let test' = this#expression test in
+    let test' = this#predicate_expression test in
     let body' = this#statement body in
     if test == test' && body == body' then stuff
     else { test = test'; body = body' }
@@ -1065,6 +1258,15 @@ class mapper = object(this)
     let body' = this#statement body in
     if _object == _object' && body == body' then stuff
     else { _object = _object'; body = body' }
+
+  method type_alias (stuff: Loc.t Ast.Statement.TypeAlias.t) =
+    let open Ast.Statement.TypeAlias in
+    let { id; typeParameters; right } = stuff in
+    let id' = this#identifier id in
+    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let right' = this#type_ right in
+    if id == id' && right == right' && typeParameters == typeParameters' then stuff
+    else { id = id'; typeParameters = typeParameters'; right = right' }
 
   (* TODO *)
   method yield (expr: Loc.t Ast.Expression.Yield.t) = expr

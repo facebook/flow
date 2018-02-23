@@ -11,7 +11,8 @@
 type t = (DfindServer.msg, unit) Daemon.handle
 
 let init log_fds (scuba_table, roots) =
-  Daemon.spawn log_fds DfindServer.entry_point (scuba_table, roots)
+  let name = Printf.sprintf "file watching process for server %d" (Unix.getpid ()) in
+  Daemon.spawn ~name log_fds DfindServer.entry_point (scuba_table, roots)
 
 let pid handle = handle.Daemon.pid
 

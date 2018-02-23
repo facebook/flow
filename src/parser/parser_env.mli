@@ -126,17 +126,25 @@ val is_reserved_type : string -> bool
 val token_is_restricted : Token.t -> bool
 
 module Peek : sig
-  val token : ?i:int -> env -> Token.t
-  val loc : ?i:int -> env -> Loc.t
-  val errors : ?i:int -> env -> (Loc.t * Parse_error.t) list
-  val comments : ?i:int -> env -> Loc.t Ast.Comment.t list
+  val token : env -> Token.t
+  val loc : env -> Loc.t
+  val errors : env -> (Loc.t * Parse_error.t) list
+  val comments : env -> Loc.t Ast.Comment.t list
   val is_line_terminator : env -> bool
   val is_implicit_semicolon : env -> bool
-  val is_identifier : ?i:int -> env -> bool
-  val is_type_identifier : ?i:int -> env -> bool
-  val is_literal_property_name : ?i:int -> env -> bool
-  val is_function : ?i:int -> env -> bool
-  val is_class : ?i:int -> env -> bool
+  val is_identifier : env -> bool
+  val is_type_identifier : env -> bool
+  val is_identifier_name : env -> bool
+  val is_function : env -> bool
+  val is_class : env -> bool
+
+  val ith_token : i:int -> env -> Token.t
+  val ith_loc : i:int -> env -> Loc.t
+  val ith_errors : i:int -> env -> (Loc.t * Parse_error.t) list
+  val ith_comments : i:int -> env -> Loc.t Ast.Comment.t list
+  val ith_is_identifier : i:int -> env -> bool
+  val ith_is_identifier_name : i:int -> env -> bool
+  val ith_is_type_identifier : i:int -> env -> bool
 end
 
 module Eat : sig

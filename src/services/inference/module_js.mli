@@ -8,8 +8,6 @@
 open Utils_js
 
 type resolved_requires = {
-  required: Modulename.Set.t;      (* required module names *)
-  require_loc: Loc.t SMap.t;  (* statement locations *)
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
 }
@@ -44,7 +42,7 @@ type resolution_acc = {
 val imported_module:
   options: Options.t ->
   node_modules_containers: SSet.t ->
-  File_key.t -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
+  File_key.t -> Loc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t
@@ -97,10 +95,13 @@ val commit_modules:
     error list FilenameMap.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires:
-  (options:Options.t ->
-   node_modules_containers: SSet.t ->
-   File_key.t -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
+val add_parsed_resolved_requires: (
+  options:Options.t ->
+  node_modules_containers: SSet.t ->
+  File_key.t ->
+  Errors.ErrorSet.t
+) Expensive.t
+
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 

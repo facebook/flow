@@ -90,11 +90,11 @@ class hoister = object(this)
 
   (* Ignore import declarations, since they are lexical bindings (thus not
      hoisted). *)
-  method! import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method! import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     decl
 
-  (* This is visited by function parameters and variable declarations (but not
-     assignment expressions or catch patterns). *)
+  (* This is visited by function parameters, variable declarations, and catch patterns (but not
+     assignment expressions). *)
   method! pattern ?kind (expr: Loc.t Ast.Pattern.t) =
     match Utils.unsafe_opt kind with
     | Ast.Statement.VariableDeclaration.Var ->
@@ -111,6 +111,21 @@ class hoister = object(this)
       expr
     | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
       expr (* don't hoist let/const bindings *)
+
+  method! declare_variable (decl: Loc.t Ast.Statement.DeclareVariable.t) =
+    let open Ast.Statement.DeclareVariable in
+    this#add_binding decl.id;
+    super#declare_variable decl
+
+  method! declare_class (decl: Loc.t Ast.Statement.DeclareClass.t) =
+    let open Ast.Statement.DeclareClass in
+    this#add_binding decl.id;
+    super#declare_class decl
+
+  method! declare_function (decl: Loc.t Ast.Statement.DeclareFunction.t) =
+    let open Ast.Statement.DeclareFunction in
+    this#add_binding decl.id;
+    super#declare_function decl
 
   method! function_declaration (expr: Loc.t Ast.Function.t) =
     let open Ast.Function in

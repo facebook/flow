@@ -268,7 +268,7 @@ function createEditor(
 ) {
   const defaultFlow = initFlow(flowVersion);
 
-  require([
+  requirejs([
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
     'codemirror/mode/xml/xml',
@@ -354,6 +354,7 @@ function createEditor(
       value: getHashedValue(location.hash) || defaultValue,
       autofocus: true,
       lineNumbers: true,
+      showCursorWhenSelecting: true,
       mode: "jsx",
       flow: defaultFlow,
       lint: getAnnotations
@@ -375,8 +376,8 @@ function createEditor(
         '-', value, cursor.line + 1, cursor.ch
       ))
       .then(typeAtPos => {
-        typeAtPosNode.title = typeAtPos ? typeAtPos[1].c : '';
-        typeAtPosNode.textContent = typeAtPos ? typeAtPos[1].c : '';
+        typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
+        typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
       })
       .catch(() => {
         typeAtPosNode.title = '';
@@ -407,7 +408,14 @@ function createEditor(
           flowProxy.supportsParse()
           .then(supportsParse => {
             if (supportsParse) {
-              flowProxy.parse(editor.getValue(), {}).then(ast => {
+              const options = {
+                esproposal_class_instance_fields: true,
+                esproposal_class_static_fields: true,
+                esproposal_decorators: true,
+                esproposal_export_star_as: true,
+                types: true,
+              };
+              flowProxy.parse(editor.getValue(), options).then(ast => {
                 removeChildren(astNode);
                 astNode.appendChild(
                   document.createTextNode(JSON.stringify(ast, null, 2))

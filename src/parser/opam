@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flow_parser"
-version: "0.57.3"
+version: "0.66.0"
 maintainer: "gabe@fb.com"
 authors: [
   "Avik Chaudhuri"
@@ -22,6 +22,7 @@ depends: [
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "sedlex"
+  "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]
 dev-repo: "https://github.com/facebook/flow.git"

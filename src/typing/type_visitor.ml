@@ -26,7 +26,7 @@ class ['a] t = object(self)
 
   | InternalT (ChoiceKitT (_, Trigger)) -> acc
 
-  | TypeDestructorTriggerT (_, d, t) ->
+  | TypeDestructorTriggerT (_, _, d, t) ->
     let acc = self#destructor cx acc d in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -61,17 +61,11 @@ class ['a] t = object(self)
 
   | ShapeT t -> self#type_ cx pole acc t
 
-  | DiffT (t1, t2) ->
-    let acc = self#type_ cx pole_TODO acc t1 in
-    let acc = self#type_ cx pole_TODO acc t2 in
-    acc
-
   | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t
 
   | KeysT (_, t) -> self#type_ cx Positive acc t
 
-  | AnnotT (t, _) ->
-    self#type_ cx pole_TODO acc t
+  | AnnotT ((r, id), _) -> self#tvar cx pole_TODO acc r id
 
   | OpaqueT (_, ot) ->
     let {
@@ -82,7 +76,7 @@ class ['a] t = object(self)
       opaque_arg_polarities;
       opaque_name = _;
     } = ot in
-    let acc = SMap.fold (fun x t acc ->
+    let acc = SMap.fold (fun x (_, t) acc ->
       let pole' = SMap.find_unsafe x opaque_arg_polarities in
       self#type_ cx (P.mult (pole, pole')) acc t
     ) opaque_type_args acc in
@@ -90,7 +84,7 @@ class ['a] t = object(self)
     let acc = self#opt (self#type_ cx pole) acc super_t in
     acc
 
-  | ModuleT (_, exporttypes) ->
+  | ModuleT (_, exporttypes, _) ->
     self#export_types cx pole acc exporttypes
 
   | InternalT (ExtendsT (_, t1, t2)) ->
@@ -166,7 +160,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole acc t in
     acc
 
-  | TypeAppT (t, ts) ->
+  | TypeAppT (_, t, ts) ->
     let acc = self#type_ cx Positive acc t in
     (* If we knew what `t` resolved to, we could determine the polarities for
        `ts`, but in general `t` might be unresolved. Subclasses which have more
@@ -184,7 +178,7 @@ class ['a] t = object(self)
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
-  | TypeDestructorT (_, d) -> self#destructor cx acc d
+  | TypeDestructorT (_, _, d) -> self#destructor cx acc d
 
   method private selector cx acc = function
   | Prop _ -> acc
@@ -221,7 +215,9 @@ class ['a] t = object(self)
   | NonMaybeType
   | PropertyType _
   | ValuesType
+  | ReadOnlyType
   | ReactElementPropsType
+  | ReactElementConfigType
   | ReactElementRefType
     -> acc
   | ElementType t -> self#type_ cx pole_TODO acc t
@@ -249,36 +245,54 @@ class ['a] t = object(self)
   | Mixin
   | Idx
   | DebugPrint
+  | DebugThrow
+  | DebugSleep
     -> acc
 
   method use_type_ cx (acc: 'a) = function
   | UseT (_, t) ->
     self#type_ cx Negative acc t
 
-  | BindT (_, fn, _)
-  | CallT (_, fn) ->
+  | BindT (_, _, fn, _)
+  | CallT (_, _, fn) ->
     self#fun_call_type cx acc fn
 
-  | MethodT (_, _, p, fn) ->
+  | MethodT (_, _, _, p, fn, prop_t) ->
     let acc = self#propref cx acc p in
     let acc = self#fun_call_type cx acc fn in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
     acc
 
-  | SetPropT (_, p, t)
-  | GetPropT (_, p, t)
+  | SetPropT (_, _, p, _, t, prop_t) ->
+    let acc = self#propref cx acc p in
+    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
+    acc
+
+  | GetPropT (_, _, p, t)
   | TestPropT (_, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SetPrivatePropT (_, _, scopes, _, t)
-  | GetPrivatePropT (_, _, scopes, _, t) ->
+  | SetPrivatePropT (_, _, _, scopes, _, t, prop_t) ->
+    let acc = List.fold_left (self#class_binding cx) acc scopes in
+    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#opt (self#type_ cx pole_TODO) acc prop_t in
+    acc
+
+  | GetPrivatePropT (_, _, _, scopes, _, t) ->
     let acc = List.fold_left (self#class_binding cx) acc scopes in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SetElemT (_, e, t)
-  | GetElemT (_, e, t) ->
+  | SetElemT (_, _, e, tin, tout) ->
+    let acc = self#type_ cx pole_TODO acc e in
+    let acc = self#type_ cx pole_TODO acc tin in
+    let acc = self#opt (self#type_ cx pole_TODO) acc tout in
+    acc
+
+  | GetElemT (_, _, e, t) ->
     let acc = self#type_ cx pole_TODO acc e in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -296,22 +310,23 @@ class ['a] t = object(self)
   | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
   | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
 
-  | ConstructorT (_, args, t) ->
+  | ConstructorT (_, _, args, t) ->
     let acc = List.fold_left (self#call_arg cx) acc args in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SuperT (_, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
-  | SuperT (_, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
+  | SuperT (_, _, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
+  | SuperT (_, _, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
+  | ToStringT (_, t) -> self#use_type_ cx acc t
 
-  | AdderT (_, a, b) ->
+  | AdderT (_, _, _, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
     let acc = self#type_ cx pole_TODO acc b in
     acc
 
-  | ComparatorT (_, t) -> self#type_ cx pole_TODO acc t
+  | ComparatorT (_, _, t) -> self#type_ cx pole_TODO acc t
   | UnaryMinusT (_, t) -> self#type_ cx pole_TODO acc t
 
   | AssertArithmeticOperandT _
@@ -331,7 +346,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
 
-  | EqT (_, t)
+  | EqT (_, _, t)
   | NotT (_, t) ->
     self#type_ cx pole_TODO acc t
 
@@ -341,7 +356,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc b in
     acc
 
-  | SpecializeT (_, _, _, ts, t) ->
+  | SpecializeT (_, _, _, _, ts, t) ->
     let acc = self#opt (List.fold_left (self#type_ cx pole_TODO)) acc ts in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -360,7 +375,7 @@ class ['a] t = object(self)
       acc
     ) acc ts
 
-  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), _) ->
+  | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), _) ->
     let acc = List.fold_left (self#type_ cx pole_TODO) acc ts1 in
     let acc = self#type_ cx pole_TODO acc t2 in
     let acc = List.fold_left (self#type_ cx pole_TODO) acc ts2 in
@@ -385,7 +400,7 @@ class ['a] t = object(self)
   | ObjFreezeT (_, t)
   | ObjRestT (_, _, t)
   | ObjSealT (_, t)
-  | ArrRestT (_, _, t) ->
+  | ArrRestT (_, _, _, t) ->
     self#type_ cx pole_TODO acc t
 
   | UnifyT (t1, t2) ->
@@ -395,30 +410,29 @@ class ['a] t = object(self)
 
   | BecomeT (_, t) -> self#type_ cx pole_TODO acc t
 
-  | GetKeysT (_, t)
-  | GetValuesT (_, t) ->
-    self#type_ cx pole_TODO acc t
+  | GetKeysT (_, t) -> self#use_type_ cx acc t
+  | GetValuesT (_, t) -> self#type_ cx pole_TODO acc t
 
   | HasOwnPropT _ -> acc
 
-  | ElemT (_, t, action) ->
+  | ElemT (_, _, t, action) ->
     let acc = self#type_ cx pole_TODO acc t in
     let acc = self#elem_action cx acc action in
     acc
 
   | MakeExactT (_, cont) -> self#cont cx acc cont
 
-  | CJSRequireT (_, t)
-  | ImportModuleNsT (_, t)
-  | ImportDefaultT (_, _, _, t)
-  | ImportNamedT (_, _, _, t)
+  | CJSRequireT (_, t, _)
+  | ImportModuleNsT (_, t, _)
+  | ImportDefaultT (_, _, _, t, _)
+  | ImportNamedT (_, _, _, _, t, _)
   | ImportTypeT (_, _, t)
   | ImportTypeofT (_, _, t)
     -> self#type_ cx Negative acc t
 
   | AssertImportIsValueT _ -> acc
 
-  | CJSExtractNamedExportsT (_, (_, ts), t) ->
+  | CJSExtractNamedExportsT (_, (_, ts, _), t) ->
     let acc = self#export_types cx pole_TODO acc ts in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -440,8 +454,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | ReactKitT (_, tool) -> (match tool with
-    | React.GetProps t | React.GetRef t
+  | ReactKitT (_, _, tool) -> (match tool with
+    | React.GetProps t | React.GetConfig t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
     | React.CreateElement (_, t1, (ts, t2), t3) ->
       let acc = self#type_ cx pole_TODO acc t1 in
@@ -470,7 +484,7 @@ class ['a] t = object(self)
       let acc = self#type_ cx pole_TODO acc tout in
       acc)
 
-  | ObjKitT (_, resolve_tool, tool, tout) ->
+  | ObjKitT (_, _, resolve_tool, tool, tout) ->
     let open Object in
     let acc =
       match resolve_tool with
@@ -481,6 +495,7 @@ class ['a] t = object(self)
         acc
     in
     let acc = match tool with
+      | ReadOnly -> acc
       | Spread (_, state) ->
         let open Object.Spread in
         let { todo_rev; acc = object_spread_acc } = state in
@@ -495,11 +510,23 @@ class ['a] t = object(self)
         (match state with
           | One t -> self#type_ cx pole_TODO acc t
           | Done o -> Nel.fold_left (self#object_kit_slice cx) acc o)
+      | ReactConfig state ->
+        let open Object.ReactConfig in
+        (match state with
+          | Config { defaults; children } ->
+            let acc = self#opt (self#type_ cx pole_TODO) acc defaults in
+            let acc = self#opt (self#type_ cx pole_TODO) acc children in
+            acc
+          | Defaults { config; children } ->
+            let acc = Nel.fold_left (self#object_kit_slice cx) acc config in
+            let acc = self#opt (self#type_ cx pole_TODO) acc children in
+            acc)
     in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
   | DebugPrintT _ -> acc
+  | DebugSleepT _ -> acc
 
   | SentinelPropTestT (_, t, _, _, _, tout) ->
     let acc = self#type_ cx pole_TODO acc t in
@@ -523,7 +550,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | ResolveSpreadT (_, { rrt_resolved; rrt_unresolved; rrt_resolve_to }) ->
+  | ResolveSpreadT (_, _, { rrt_resolved; rrt_unresolved; rrt_resolve_to }) ->
     let acc = List.fold_left (fun (acc: 'a) -> function
       | ResolvedArg t -> self#type_ cx pole_TODO acc t
       | ResolvedAnySpreadArg _ -> acc
@@ -608,11 +635,11 @@ class ['a] t = object(self)
     |> self#smap (self#prop cx pole) acc
 
   method private prop cx pole acc = function
-    | Field (t, p) -> self#type_ cx (P.mult (pole, p)) acc t
-    | Method t -> self#type_ cx pole acc t
-    | Get t -> self#type_ cx pole acc t
-    | Set t -> self#type_ cx (P.inv pole) acc t
-    | GetSet (t1, t2) ->
+    | Field (_, t, p) -> self#type_ cx (P.mult (pole, p)) acc t
+    | Method (_, t) -> self#type_ cx pole acc t
+    | Get (_, t) -> self#type_ cx pole acc t
+    | Set (_, t) -> self#type_ cx (P.inv pole) acc t
+    | GetSet (_, t1, _, t2) ->
       let acc = self#type_ cx pole acc t1 in
       let acc = self#type_ cx (P.inv pole) acc t2 in
       acc
@@ -641,8 +668,7 @@ class ['a] t = object(self)
   method fun_type cx pole acc ft =
     let {
       this_t;
-      params_tlist;
-      params_names = _;
+      params;
       rest_param;
       return_t;
       closure_t = _;
@@ -651,7 +677,7 @@ class ['a] t = object(self)
       def_reason = _;
     } = ft in
     let acc = self#type_ cx pole acc this_t in
-    let acc = self#list (self#type_ cx (P.inv pole)) acc params_tlist in
+    let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
     let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
     let acc = self#type_ cx pole acc return_t in
     acc
@@ -688,10 +714,11 @@ class ['a] t = object(self)
       methods_tmap;
       class_id = _;
       initialized_field_names = _;
+      initialized_static_field_names = _;
       mixins = _;
       structural = _;
     } = i in
-    let acc = SMap.fold (fun x t acc ->
+    let acc = SMap.fold (fun x (_, t) acc ->
       let pole' = SMap.find_unsafe x arg_polarities in
       self#type_ cx (P.mult (pole, pole')) acc t
     ) type_args acc in
@@ -740,21 +767,30 @@ class ['a] t = object(self)
     Nel.fold_left (self#props cx pole_TODO) acc props
 
   method private lookup_action cx acc = function
-  | RWProp (t1, t2, _) ->
+  | RWProp (_, t1, t2, rw) ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
+    let acc = self#read_write cx acc rw in
     acc
   | LookupProp (_, prop)
-  | SuperProp prop ->
+  | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
   | MatchProp t ->
     self#type_ cx pole_TODO acc t
 
+  method private read_write cx acc = function
+  | Read -> acc
+  | Write (_, prop_t) -> self#opt (self#type_ cx pole_TODO) acc prop_t
+
   method private elem_action cx acc = function
-  | ReadElem t
-  | WriteElem t
-    -> self#type_ cx pole_TODO acc t
-  | CallElem (_, fn) -> self#fun_call_type cx acc fn
+  | ReadElem t ->
+    self#type_ cx pole_TODO acc t
+  | WriteElem (tin, tout) ->
+    let acc = self#type_ cx pole_TODO acc tin in
+    let acc = self#opt (self#type_ cx pole_TODO) acc tout in
+    acc
+  | CallElem (_, fn) ->
+    self#fun_call_type cx acc fn
 
   method private cont cx acc = function
   | Lower (_, l) -> self#type_ cx pole_TODO acc l
@@ -771,9 +807,9 @@ class ['a] t = object(self)
     acc
   | TryFlow (_, spec) ->
     self#try_flow_spec cx acc spec
-  | EvalDestructor (id, d, tout) ->
+  | EvalDestructor (_, id, _, d, tout) ->
     let acc = self#tvar cx pole_TODO acc r id in
-    let acc = self#destructor cx acc d in
+    let acc = self#defer_use_type cx acc d in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
@@ -798,7 +834,7 @@ class ['a] t = object(self)
     acc
 
   method private try_flow_spec cx acc = function
-  | UnionCases (_, t, ts) ->
+  | UnionCases (_, t, _rep, ts) ->
     let acc = self#type_ cx pole_TODO acc t in
     let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
     acc

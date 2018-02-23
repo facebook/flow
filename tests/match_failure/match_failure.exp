@@ -1,74 +1,79 @@
-Error: disjoint_union.js:8
-  8:   if (shape.type === 'square') { // error
-           ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
-  7: function area(shape: Shape): number {
-                          ^^^^^ union: object type(s)
-  Member 1:
-    4:   {type: 'rectangle', width: number, height: number} |
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-    8:   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
-    4:   {type: 'rectangle', width: number, height: number} |
-                ^^^^^^^^^^^ string literal `rectangle`
-  Member 2:
-    5:   {type: 'circle', radius: number};
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-    8:   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
-    5:   {type: 'circle', radius: number};
-                ^^^^^^^^ string literal `circle`
+Error -------------------------------------------------------------------------------------------- disjoint_union.js:8:7
 
-Error: disjoint_union.js:21
- 21:   if (shape.type === 'square') { // error
-           ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
- 20: function area2(shape: ExactShape): number {
-                           ^^^^^^^^^^ union: exact type: object type(s)
-  Member 1:
-   17:   {|type: 'rectangle', width: number, height: number|} |
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
-  Error:
-   21:   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
-   17:   {|type: 'rectangle', width: number, height: number|} |
-                 ^^^^^^^^^^^ string literal `rectangle`
-  Member 2:
-   18:   {|type: 'circle', radius: number|};
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
-  Error:
-   21:   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
-   18:   {|type: 'circle', radius: number|};
-                 ^^^^^^^^ string literal `circle`
+All branches are incompatible:
+ - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
+   `rectangle` [2].
+ - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
+   `circle` [3].
 
-Error: disjoint_union.js:34
- 34:   if (shape.type === 'square') { // error
-           ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
- 33: function area3(shape: ReadOnlyShape): number {
-                           ^^^^^^^^^^^^^ union: object type(s)
-  Member 1:
-   30:   {+type: 'rectangle', width: number, height: number} |
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   34:   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
-   30:   {+type: 'rectangle', width: number, height: number} |
-                 ^^^^^^^^^^^ string literal `rectangle`
-  Member 2:
-   31:   {+type: 'circle', radius: number};
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   34:   if (shape.type === 'square') { // error
-             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
-   31:   {+type: 'circle', radius: number};
-                 ^^^^^^^^ string literal `circle`
+   disjoint_union.js:8:7
+   8|   if (shape.type === 'square') { // error
+            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
-Error: enum.js:8
-  8:   } else if (binary === 2) { // oops
-                             ^ number literal `2`. This type is incompatible with
-  5: function stringifyBinary(binary: Binary): string {
-                                      ^^^^^^ number enum
+References:
+   disjoint_union.js:4:10
+   4|   {type: 'rectangle', width: number, height: number} |
+               ^^^^^^^^^^^ [2]
+   disjoint_union.js:5:10
+   5|   {type: 'circle', radius: number};
+               ^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- disjoint_union.js:21:7
+
+All branches are incompatible:
+ - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
+   `rectangle` [2].
+ - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
+   `circle` [3].
+
+   disjoint_union.js:21:7
+   21|   if (shape.type === 'square') { // error
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   disjoint_union.js:17:11
+   17|   {|type: 'rectangle', width: number, height: number|} |
+                 ^^^^^^^^^^^ [2]
+   disjoint_union.js:18:11
+   18|   {|type: 'circle', radius: number|};
+                 ^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- disjoint_union.js:34:7
+
+All branches are incompatible:
+ - Either object with property `type` that matches string literal `square` [1] is incompatible with string literal
+   `rectangle` [2].
+ - Or object with property `type` that matches string literal `square` [1] is incompatible with string literal
+   `circle` [3].
+
+   disjoint_union.js:34:7
+   34|   if (shape.type === 'square') { // error
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   disjoint_union.js:30:11
+   30|   {+type: 'rectangle', width: number, height: number} |
+                 ^^^^^^^^^^^ [2]
+   disjoint_union.js:31:11
+   31|   {+type: 'circle', radius: number};
+                 ^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- enum.js:8:25
+
+number literal `2` [1] is incompatible with enum [2].
+
+   enum.js:8:25
+   8|   } else if (binary === 2) { // oops
+                              ^ [1]
+
+References:
+   enum.js:5:34
+   5| function stringifyBinary(binary: Binary): string {
+                                       ^^^^^^ [2]
+
 
 
 Found 4 errors

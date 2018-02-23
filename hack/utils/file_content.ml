@@ -7,8 +7,22 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Core
-open Ide_api_types
+open Hh_core
+
+type position = {
+  line : int; (* 1-based *)
+  column : int; (* 1-based *)
+}
+
+type range = {
+  st : position;
+  ed : position;
+}
+
+type text_edit = {
+  range : range option;
+  text : string;
+}
 
 (* UTF-8 encoding character lengths.
  *
@@ -78,8 +92,7 @@ let get_offset (content : string) (position : position) : int =
 (* It is okay to ask for the position of the offset of the end of the file.   *)
 (* In case of multi-byte characters, if you give an offset inside a character,*)
 (* it still gives the position immediately after.                             *)
-let offset_to_position (content: string) (offset: int)
-  : Ide_api_types.position =
+let offset_to_position (content: string) (offset: int) : position =
   let rec helper ~(line: int) ~(column: int) ~(index: int) =
     if index >= offset then
       {line; column;}
@@ -116,18 +129,18 @@ let print_edit b edit =
 
 let edit_file content (edits: text_edit list) =
   try
-    Result.Ok (List.fold ~init:content ~f:apply_edit edits)
+    Ok (List.fold ~init:content ~f:apply_edit edits)
   with e ->
     let b = Buffer.create 1024 in
     Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
     Printf.bprintf b "Original content:\n%s\n" content;
     Printf.bprintf b "Edits:\n";
     List.iter edits ~f:(print_edit b);
-    Result.Error (Buffer.contents b)
+    Error (Buffer.contents b)
 
 let edit_file_unsafe fc edits =
   match edit_file fc edits with
-  | Result.Ok r -> r
-  | Result.Error e ->
+  | Ok r -> r
+  | Error e ->
       Printf.eprintf "%s" e;
       failwith e

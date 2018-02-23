@@ -1,80 +1,156 @@
-Error: main.js:6
-  6: <div id={42} />; // Error: (`id` prop) number ~> string
-      ^^^ props of React element `div`. This type is incompatible with
-  4:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
-  Property `id` is incompatible:
-      6: <div id={42} />; // Error: (`id` prop) number ~> string
-                  ^^ number. This type is incompatible with
-      4:   div: $JSXIntrinsic<{id: string}>,
-                                   ^^^^^^ string. See lib: lib/jsx.js:4
+Error ------------------------------------------------------------------------------------------------------ main.js:6:1
 
-Error: main.js:9
-  9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
-                                 ^^^^^^ number
+Cannot create `div` element because number [1] is incompatible with string [2] in property `id`.
 
-Error: strings.js:6
-  6: var Bad = 'bad';
-               ^^^^^ React element `bad`. Property not found in
-  6: var Bad = 'bad';
-               ^^^^^ object type
+   main.js:6:1
+   6| <div id={42} />; // Error: (`id` prop) number ~> string
+      ^^^^^^^^^^^^^^^
 
-Error: strings.js:9
-  9: <Div />; // This is fine
-     ^^^^^^^ React element `Div`
-  9: <Div />; // This is fine
-     ^^^^^^^ props of React element `Div`. This type is incompatible with
-  4:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
-  Property `id` is incompatible:
-      4:   div: $JSXIntrinsic<{id: string}>,
-                              ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
-      9: <Div />; // This is fine
-         ^^^^^^^ props of React element `Div`
+References:
+   main.js:6:10
+   6| <div id={42} />; // Error: (`id` prop) number ~> string
+               ^^ [1]
+   lib/jsx.js:4:27
+   4|   div: $JSXIntrinsic<{id: string}>,
+                                ^^^^^^ [2]
 
-Error: strings.js:11
- 11: <Str />; // Error: string ~> keys of JSXIntrinsics
-     ^^^^^^^ React element `Str`
-  7: var Str: string = 'str';
-              ^^^^^^ string. Property not found in
-  7: var Str: string = 'str';
-              ^^^^^^ object type
 
-Error: strings.js:13
- 13: React.createElement('div', {}); // This is fine
-                                ^^ props of React element. This type is incompatible with
-  4:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
-  Property `id` is incompatible:
-      4:   div: $JSXIntrinsic<{id: string}>,
-                              ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
-     13: React.createElement('div', {}); // This is fine
-                                    ^^ props of React element
+Error ------------------------------------------------------------------------------------------------------ main.js:9:2
 
-Error: strings.js:14
- 14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ React element `bad`. Property not found in
- 14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ object type
+Cannot cast `<div />.props.id` to number because string [1] is incompatible with number [2].
 
-Error: strings.js:15
- 15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                         ^^^ string. Property not found in
- 15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                         ^^^ object type
+   main.js:9:2
+   9| (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: strings.js:18
- 18: <Div id={42} />; // Not an error but should be eventually
-     ^^^^^^^^^^^^^^^ props of React element `Div`. This type is incompatible with
-  4:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
-  Property `id` is incompatible:
-     18: <Div id={42} />; // Not an error but should be eventually
-                  ^^ number. This type is incompatible with
-      4:   div: $JSXIntrinsic<{id: string}>,
-                                   ^^^^^^ string. See lib: lib/jsx.js:4
+References:
+   lib/jsx.js:4:27
+   4|   div: $JSXIntrinsic<{id: string}>,
+                                ^^^^^^ [1]
+   main.js:9:29
+   9| (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
+                                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- strings.js:9:1
+
+Cannot create `Div` element because property `id` is missing in props [1] but exists in object type [2].
+
+   strings.js:9:1
+   9| <Div />; // This is fine
+      ^^^^^^^ [1]
+
+References:
+   lib/jsx.js:4:22
+   4|   div: $JSXIntrinsic<{id: string}>,
+                           ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- strings.js:10:2
+
+Cannot create `bad` element because property `bad` is missing in `$JSXIntrinsics` [1].
+
+   strings.js:10:2
+   10| <Bad />; // Error: 'bad' not in JSXIntrinsics
+        ^^^
+
+References:
+   lib/jsx.js:3:23
+                             v
+    3| type $JSXIntrinsics = {
+    4|   div: $JSXIntrinsic<{id: string}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string}>,
+    6| };
+       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- strings.js:11:2
+
+Cannot create string element because an indexer property is missing in `$JSXIntrinsics` [1].
+
+   strings.js:11:2
+   11| <Str />; // Error: string ~> keys of JSXIntrinsics
+        ^^^
+
+References:
+   lib/jsx.js:3:23
+                             v
+    3| type $JSXIntrinsics = {
+    4|   div: $JSXIntrinsic<{id: string}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string}>,
+    6| };
+       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- strings.js:13:1
+
+Cannot call `React.createElement` because property `id` is missing in props [1] but exists in object type [2].
+
+   strings.js:13:1
+   13| React.createElement('div', {}); // This is fine
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   strings.js:13:28
+   13| React.createElement('div', {}); // This is fine
+                                  ^^ [1]
+   lib/jsx.js:4:22
+    4|   div: $JSXIntrinsic<{id: string}>,
+                            ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- strings.js:14:21
+
+Cannot create `bad` element because property `bad` is missing in `$JSXIntrinsics` [1].
+
+   strings.js:14:21
+   14| React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
+                           ^^^^^
+
+References:
+   lib/jsx.js:3:23
+                             v
+    3| type $JSXIntrinsics = {
+    4|   div: $JSXIntrinsic<{id: string}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string}>,
+    6| };
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- strings.js:15:21
+
+Cannot create string element because an indexer property is missing in `$JSXIntrinsics` [1].
+
+   strings.js:15:21
+   15| React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+                           ^^^
+
+References:
+   lib/jsx.js:3:23
+                             v
+    3| type $JSXIntrinsics = {
+    4|   div: $JSXIntrinsic<{id: string}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string}>,
+    6| };
+       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- strings.js:18:1
+
+Cannot create `Div` element because number [1] is incompatible with string [2] in property `id`.
+
+   strings.js:18:1
+   18| <Div id={42} />; // Not an error but should be eventually
+       ^^^^^^^^^^^^^^^
+
+References:
+   strings.js:18:10
+   18| <Div id={42} />; // Not an error but should be eventually
+                ^^ [1]
+   lib/jsx.js:4:27
+    4|   div: $JSXIntrinsic<{id: string}>,
+                                 ^^^^^^ [2]
+
 
 
 Found 9 errors

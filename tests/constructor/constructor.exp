@@ -1,18 +1,51 @@
-Error: constructor.js:6
-  6:     constructor():number { }
-                       ^^^^^^ number. This type is incompatible with an implicitly-returned undefined.
+Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
-Error: constructor.js:15
- 15: (new Foo(123): Bar<string>); // error, number !~> string
-              ^^^ number. This type is incompatible with
- 15: (new Foo(123): Bar<string>); // error, number !~> string
-                        ^^^^^^ string
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined.
 
-Error: constructor.js:22
- 22: (new Baz(123): Baz<string>); // error, number !~> string
-              ^^^ number. This type is incompatible with
- 22: (new Baz(123): Baz<string>); // error, number !~> string
-                        ^^^^^^ string
+   6|     constructor():number { }
+                        ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:15:2
+
+Cannot cast `new Foo(...)` to `Bar` because number [1] is incompatible with string [2] in type argument `T` [3].
+
+   constructor.js:15:2
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+        ^^^^^^^^^^^^
+
+References:
+   constructor.js:15:10
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+                ^^^ [1]
+   constructor.js:15:20
+   15| (new Foo(123): Bar<string>); // error, number !~> string
+                          ^^^^^^ [2]
+   constructor.js:10:19
+   10| declare class Bar<T> {}
+                         ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:22:2
+
+Cannot cast `new Baz(...)` to `Baz` because number [1] is incompatible with string [2] in type argument `T` [3].
+
+   constructor.js:22:2
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+        ^^^^^^^^^^^^
+
+References:
+   constructor.js:22:10
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+                ^^^ [1]
+   constructor.js:22:20
+   22| (new Baz(123): Baz<string>); // error, number !~> string
+                          ^^^^^^ [2]
+   constructor.js:18:19
+   18| declare class Baz<T> {
+                         ^ [3]
+
 
 
 Found 3 errors

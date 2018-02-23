@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 (*****************************************************************************
  * Module building workers
@@ -110,11 +110,13 @@ type t = {
  *
  *****************************************************************************)
 
-type 'a handle = 'a delayed ref
+type ('a, 'b) handle = ('a, 'b) delayed ref
 
-and 'a delayed =
-  | Processing of 'a slave
-  | Cached of 'a
+and ('a, 'b) delayed = 'a * 'b worker_handle
+
+and 'b worker_handle =
+  | Processing of 'b slave
+  | Cached of 'b
   | Failed of exn
 
 and 'a slave = {
@@ -129,9 +131,19 @@ and 'a slave = {
   (* A blocking function that returns the job result. *)
   result: unit -> 'a;
 
+  (* A blocking function that waits for job cancellation (see Worker.cancel)
+   * to finish *)
+  wait_for_cancel: unit -> unit;
+
 }
 
-
+(* If we cancel before sending results, master will be left blocking waiting
+* for results. We need to send something back *)
+let on_slave_cancelled parent_oc =
+   (* The cancelling master will ignore result of cancelled job anyway (see
+    * wait_for_cancel function), so we can send back anything. *)
+   Daemon.output_string parent_oc (Marshal.to_string "anything" []);
+   Daemon.flush parent_oc
 
 (*****************************************************************************
  * Entry point for spawned worker.
@@ -139,15 +151,32 @@ and 'a slave = {
  *****************************************************************************)
 
 let slave_main ic oc =
-  let start_user_time = ref 0.0 in
-  let start_system_time = ref 0.0 in
+  let start_user_time = ref 0. in
+  let start_system_time = ref 0. in
+  let start_minor_words = ref 0. in
+  let start_promoted_words = ref 0. in
+  let start_major_words = ref 0. in
+  let start_minor_collections = ref 0 in
+  let start_major_collections = ref 0 in
   let send_result data =
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
     let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
+    let { Gc.
+      minor_words = end_minor_words;
+      promoted_words = end_promoted_words;
+      major_words = end_major_words;
+      minor_collections = end_minor_collections;
+      major_collections = end_major_collections;
+      _;
+    } = Gc.quick_stat () in
     Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
     Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
-
+    Measure.sample "minor_words" (end_minor_words -. !start_minor_words);
+    Measure.sample "promoted_words" (end_promoted_words -. !start_promoted_words);
+    Measure.sample "major_words" (end_major_words -. !start_major_words);
+    Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
+    Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
     let stats = Measure.serialize (Measure.pop_global ()) in
     let s = Marshal.to_string (data,stats) [Marshal.Closures] in
     let len = String.length s in
@@ -159,14 +188,23 @@ let slave_main ic oc =
       Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
         (Printexc.get_callstack 100));
     end;
+    (* If we got so far, just let it finish "naturally" *)
+    SharedMem.set_on_worker_cancelled (fun () -> ());
     Daemon.output_string oc s;
     Daemon.flush oc in
   try
     Measure.push_global ();
     let Request do_process = Daemon.from_channel ic in
+    SharedMem.set_on_worker_cancelled (fun () -> on_slave_cancelled oc);
     let tm = Unix.times () in
+    let gc = Gc.quick_stat () in
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
     start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
+    start_minor_words := gc.Gc.minor_words;
+    start_promoted_words := gc.Gc.promoted_words;
+    start_major_words := gc.Gc.major_words;
+    start_minor_collections := gc.Gc.minor_collections;
+    start_major_collections := gc.Gc.major_collections;
     do_process { send = send_result };
     exit 0
   with
@@ -216,7 +254,7 @@ let unix_worker_main restore state (ic, oc) =
       | 0 -> slave_main ic oc
       | pid ->
           (* Wait for the slave termination... *)
-          match snd (Unix.waitpid [] pid) with
+          match snd (Sys_utils.waitpid_non_intr [] pid) with
           | Unix.WEXITED 0 -> ()
           | Unix.WEXITED 1 ->
               raise End_of_file
@@ -271,10 +309,11 @@ let make_one ?call_wrapper spawn id =
 (** Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
 let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
-  let spawn log_fd =
+  let spawn name log_fd =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     let handle =
       Daemon.spawn
+        ~name
         (Daemon.null_fd (), Unix.stdout, Unix.stderr)
         entry
         (saved_state, gc_control, heap_handle) in
@@ -282,8 +321,10 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
     handle
   in
   let made_workers = ref [] in
+  let pid = Unix.getpid () in
   for n = 1 to nbr_procs do
-    made_workers := make_one ?call_wrapper spawn n :: !made_workers
+    let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
+    made_workers := make_one ?call_wrapper (spawn name) n :: !made_workers
   done;
   !made_workers
 
@@ -292,7 +333,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
  *
  **************************************************************************)
 
-let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
+let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   if w.killed then Printf.ksprintf failwith "killed worker (%d)" w.id;
   if w.busy then raise Worker_busy;
   (* Spawn the slave, if not prespawned. *)
@@ -300,14 +341,10 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
     match w.prespawned with
     | None -> w.spawn ()
     | Some handle -> handle in
-  (* Prepare ourself to read answer from the slave. *)
-  let result () : b =
+  let with_exit_status_check slave_pid f =
     match Unix.waitpid [Unix.WNOHANG] slave_pid with
     | 0, _ | _, Unix.WEXITED 0 ->
-        let res : b * Measure.record_data = Daemon.input_value inc in
-        if w.prespawned = None then Daemon.close h;
-        Measure.merge (Measure.deserialize (snd res));
-        fst res
+        f ()
     | _, Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
         raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->
@@ -317,9 +354,27 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
         Printf.ksprintf failwith "Subprocess(%d): stopped %d" slave_pid i
     | _, Unix.WSIGNALED i ->
         Printf.ksprintf failwith "Subprocess(%d): signaled %d" slave_pid i in
+  (* Prepare ourself to read answer from the slave. *)
+  let result () : b =
+    with_exit_status_check slave_pid begin fun () ->
+      let res : b * Measure.record_data = Daemon.input_value inc in
+      if w.prespawned = None then Daemon.close h;
+      Measure.merge (Measure.deserialize (snd res));
+      fst res
+    end in
+  let wait_for_cancel () : unit =
+    with_exit_status_check slave_pid begin fun () ->
+      (* Depending on whether we manage to kill the slave before it starts writing
+       * results back, this will return either actual results, or "anything"
+       * (written by interrupt signal that exited). The types don't match, but we
+       * ignore both of them anyway. *)
+      let _ : 'c = Daemon.input_value inc in
+      ()
+    end in
+
   (* Mark the worker as busy. *)
   let infd = Daemon.descr_of_in_channel inc in
-  let slave = { result; slave_pid; infd; worker = w; } in
+  let slave = { result; slave_pid; infd; worker = w; wait_for_cancel } in
   w.busy <- true;
   let request = match w.call_wrapper with
     | Some { wrap } ->
@@ -340,7 +395,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
     end
   in
   (* And returned the 'handle'. *)
-  ref (Processing slave)
+  ref (x, Processing slave)
 
 
 (**************************************************************************
@@ -353,24 +408,26 @@ let is_oom_failure msg =
   (String_utils.string_starts_with msg "Subprocess") &&
   (String_utils.is_substring "signaled -7" msg)
 
+let with_worker_exn (handle : ('a, 'b) handle) slave f =
+  try f () with
+  | Failure (msg) when is_oom_failure msg ->
+    raise Worker_oomed
+  | exn ->
+    slave.worker.busy <- false;
+    handle := fst !handle, Failed exn;
+    raise exn
+
 let get_result d =
-  match !d with
+  match snd !d with
   | Cached x -> x
   | Failed exn -> raise exn
   | Processing s ->
-      try
-        let res = s.result () in
-        s.worker.busy <- false;
-        d := Cached res;
-        res
-      with
-      | Failure (msg) when is_oom_failure msg ->
-        raise Worker_oomed
-      | exn ->
-        s.worker.busy <- false;
-        d := Failed exn;
-        raise exn
-
+    with_worker_exn d s begin fun () ->
+      let res = s.result () in
+      s.worker.busy <- false;
+      d := fst !d, Cached res;
+      res
+    end
 
 (*****************************************************************************
  * Our polling primitive on workers
@@ -378,41 +435,46 @@ let get_result d =
  *
  *****************************************************************************)
 
-type 'a selected = {
-  readys: 'a handle list;
-  waiters: 'a handle list;
+type ('a, 'b) selected = {
+  readys: ('a, 'b) handle list;
+  waiters: ('a, 'b) handle list;
+  ready_fds: Unix.file_descr list;
 }
 
 let get_processing ds =
   List.rev_filter_map
     ds
-    ~f:(fun d -> match !d with Processing p -> Some p | _ -> None)
+    ~f:(fun d -> match snd !d with Processing p -> Some p | _ -> None)
 
-let select ds =
+let select ds additional_fds =
   let processing = get_processing ds in
   let fds = List.map ~f:(fun {infd; _} -> infd) processing in
   let ready_fds, _, _ =
     if fds = [] || List.length processing <> List.length ds then
       [], [], []
     else
-      Sys_utils.select_non_intr fds [] [] ~-.1. in
+      Sys_utils.select_non_intr (fds @ additional_fds) [] [] ~-.1. in
+  let additional_ready_fds =
+    List.filter ~f:(List.mem ready_fds) additional_fds in
   List.fold_right
-    ~f:(fun d { readys ; waiters } ->
-      match !d with
+    ~f:(fun d acc ->
+      match snd !d with
       | Cached _ | Failed _ ->
-          { readys = d :: readys ; waiters }
+          { acc with readys = d :: acc.readys }
       | Processing s when List.mem ready_fds s.infd ->
-          { readys = d :: readys ; waiters }
+          { acc with readys = d :: acc.readys }
       | Processing _ ->
-          { readys ; waiters = d :: waiters})
-    ~init:{ readys = [] ; waiters = [] }
+          { acc with waiters = d :: acc.waiters})
+    ~init:{ readys = [] ; waiters = []; ready_fds = additional_ready_fds }
     ds
 
 let get_worker h =
-  match !h with
+  match snd !h with
   | Processing {worker; _} -> worker
   | Cached _
   | Failed _ -> invalid_arg "Worker.get_worker"
+
+let get_job h = fst !h
 
 (**************************************************************************
  * Worker termination
@@ -428,3 +490,18 @@ let kill w =
 
 let killall () =
   List.iter ~f:kill !workers
+
+let wait_for_cancel d =
+  match snd !d with
+  | Processing s ->
+    with_worker_exn d s begin fun () ->
+      s.wait_for_cancel ();
+      s.worker.busy <- false
+    end
+  | _ -> ()
+
+let cancel handles =
+  SharedMem.stop_workers ();
+  List.iter handles ~f:(fun x -> wait_for_cancel x);
+  SharedMem.resume_workers ();
+  ()

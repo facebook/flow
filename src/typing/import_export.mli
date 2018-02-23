@@ -9,11 +9,9 @@ val mk_module_t : Context.t -> Reason.t -> Type.t
 val mk_commonjs_module_t :
   Context.t -> Reason.t -> Reason.t -> Type.t -> Type.t
 val mk_resource_module_t : Context.t -> Loc.t -> string -> Type.t
-val require : Context.t -> SMap.key -> Loc.t -> Type.t
-val import :
-  ?reason:Reason.t -> Context.t -> SMap.key -> Loc.t -> Type.t
-val import_ns : Context.t -> Reason.t -> SMap.key -> Loc.t -> Type.t
-val add_require_tvar : Context.t -> string -> Loc.t -> unit
+val require : Context.t -> (Loc.t * string) -> Loc.t -> Type.t
+val import : Context.t -> (Loc.t * string) -> Loc.t -> Type.t
+val import_ns : Context.t -> Reason.t -> (Loc.t * string) -> Loc.t -> Type.t
 val module_t_of_cx : Context.t -> Type.t
 val set_module_t : Context.t -> Reason.t -> (Type.t -> unit) -> unit
 val set_module_kind : Context.t -> Loc.t -> Context.module_kind -> unit

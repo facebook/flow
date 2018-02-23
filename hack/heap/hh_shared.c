@@ -409,6 +409,8 @@ static uintptr_t* counter;
  */
 static size_t* log_level;
 
+static size_t* workers_should_exit;
+
 /* This should only be used before forking */
 static uintptr_t early_counter = 1;
 
@@ -796,9 +798,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   log_level = (size_t*)(mem + 5*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  workers_should_exit = (size_t*)(mem + 6*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 6*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 7*CACHE_LINE_SIZE + (int)sizeof(int));
 
   /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
    * page_size - it should be since page_size is quite big for a string
@@ -856,6 +861,8 @@ static void init_shared_globals(size_t config_log_level) {
   *dcounter = 0;
   *counter = early_counter + 1;
   *log_level = config_log_level;
+  *workers_should_exit = 0;
+
   // Initialize top heap pointers
   *heap = heap_init;
 
@@ -1029,6 +1036,28 @@ void assert_not_master() {
 }
 
 /*****************************************************************************/
+
+CAMLprim value hh_stop_workers() {
+  CAMLparam0();
+  assert_master();
+  *workers_should_exit = 1;
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_resume_workers() {
+  CAMLparam0();
+  assert_master();
+  *workers_should_exit = 0;
+  CAMLreturn(Val_unit);
+}
+
+void check_should_exit() {
+  if(*workers_should_exit) {
+    static value *exn = NULL;
+    if (!exn) exn = caml_named_value("worker_should_exit");
+    caml_raise_constant(*exn);
+  }
+}
 
 /*****************************************************************************/
 /* Global storage */
@@ -1256,6 +1285,7 @@ static void add_dep(uint32_t key, uint32_t val) {
 
 void hh_add_dep(value ocaml_dep) {
   CAMLparam1(ocaml_dep);
+  check_should_exit();
   uint64_t dep = Long_val(ocaml_dep);
   add_dep((uint32_t)(dep >> 31), (uint32_t)(dep & 0x7FFFFFFF));
   CAMLreturn0;
@@ -1281,6 +1311,7 @@ CAMLprim value hh_dep_slots(void) {
 /* Given a key, returns the list of values bound to it. */
 CAMLprim value hh_get_dep(value ocaml_key) {
   CAMLparam1(ocaml_key);
+  check_should_exit();
   CAMLlocal2(result, cell);
 
   volatile deptbl_entry_t* const table = deptbl;
@@ -1497,7 +1528,11 @@ static char* hh_alloc(hh_header_t header) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
+static char* hh_store_ocaml(
+  value data,
+  /*out*/size_t *alloc_size,
+  /*out*/size_t *orig_size
+) {
   char* value;
   size_t size;
   storage_kind kind;
@@ -1550,6 +1585,7 @@ static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
   if (header.kind == KIND_SERIALIZED) free(value);
 
   *alloc_size = header.size;
+  *orig_size = size;
   return addr;
 }
 
@@ -1573,6 +1609,9 @@ static uint64_t get_hash(value key) {
  */
 /*****************************************************************************/
 static value write_at(unsigned int slot, value data) {
+  CAMLparam1(data);
+  CAMLlocal1(result);
+  result = caml_alloc_tuple(2);
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
      __sync_bool_compare_and_swap(
@@ -1582,10 +1621,15 @@ static value write_at(unsigned int slot, value data) {
      )
   ) {
     size_t alloc_size;
-    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size);
-    return Val_long(alloc_size);
+    size_t orig_size;
+    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
+    Field(result, 0) = Val_long(alloc_size);
+    Field(result, 1) = Val_long(orig_size);
+  } else {
+    Field(result, 0) = Min_long;
+    Field(result, 1) = Min_long;
   }
-  return Min_long;
+  CAMLreturn(result);
 }
 
 static void raise_hash_table_full() {
@@ -1604,6 +1648,7 @@ static void raise_hash_table_full() {
 /*****************************************************************************/
 value hh_add(value key, value data) {
   CAMLparam2(key, data);
+  check_should_exit();
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
   unsigned int init_slot = slot;
@@ -1687,6 +1732,7 @@ static unsigned int find_slot(value key) {
 /*****************************************************************************/
 value hh_mem(value key) {
   CAMLparam1(key);
+  check_should_exit ();
   unsigned int slot = find_slot(key);
   if(hashtbl[slot].hash == get_hash(key) &&
      hashtbl[slot].addr != NULL) {
@@ -1746,6 +1792,7 @@ CAMLprim value hh_deserialize(char *src) {
 /*****************************************************************************/
 CAMLprim value hh_get_and_deserialize(value key) {
   CAMLparam1(key);
+  check_should_exit();
   CAMLlocal1(result);
 
   unsigned int slot = find_slot(key);
@@ -1857,7 +1904,7 @@ static void assert_sql_with_line(
 }
 
 // Expects the database to be open
-static void create_sqlite_header(sqlite3 *db) {
+static void create_sqlite_header(sqlite3 *db, const char* const buildInfo) {
   // Create Header
   const char *sql = "CREATE TABLE HEADER(" \
                "MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
@@ -1871,7 +1918,7 @@ static void create_sqlite_header(sqlite3 *db) {
   assert_sql(sqlite3_prepare_v2(db, sql, -1, &insert_stmt, NULL), SQLITE_OK);
   assert_sql(sqlite3_bind_int64(insert_stmt, 1, MAGIC_CONSTANT), SQLITE_OK);
   assert_sql(sqlite3_bind_text(insert_stmt, 2,
-        BuildInfo_kRevision, -1,
+        buildInfo, -1,
         SQLITE_TRANSIENT),
         SQLITE_OK);
   assert_sql(sqlite3_step(insert_stmt), SQLITE_DONE);
@@ -1879,7 +1926,7 @@ static void create_sqlite_header(sqlite3 *db) {
 }
 
 // Expects the database to be open
-static void verify_sqlite_header(sqlite3 *db) {
+static void verify_sqlite_header(sqlite3 *db, int ignore_hh_version) {
   sqlite3_stmt *select_stmt = NULL;
   const char *sql = "SELECT * FROM HEADER;";
   assert_sql(sqlite3_prepare_v2(db, sql, -1, &select_stmt, NULL), SQLITE_OK);
@@ -1887,8 +1934,10 @@ static void verify_sqlite_header(sqlite3 *db) {
   if (sqlite3_step(select_stmt) == SQLITE_ROW) {
       // Columns are 0 indexed
       assert(sqlite3_column_int64(select_stmt, 0) == MAGIC_CONSTANT);
-      assert(strcmp((char *)sqlite3_column_text(select_stmt, 1),
-                    BuildInfo_kRevision) == 0);
+      if (!ignore_hh_version) {
+        assert(strcmp((char *)sqlite3_column_text(select_stmt, 1),
+                      BuildInfo_kRevision) == 0);
+      }
   }
   assert_sql(sqlite3_finalize(select_stmt), SQLITE_OK);
 }
@@ -1913,13 +1962,10 @@ size_t deptbl_entry_count_for_slot(size_t slot) {
   return count;
 }
 
-/*
- * Assumption: When we save the dependency table, we do a fresh load
- * aka there is saved state
- */
-CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
-  CAMLparam1(out_filename);
-
+static long hh_save_dep_table_helper_sqlite(
+    const char* const out_filename,
+    const char* const build_info
+) {
   // This can only happen in the master
   assert_master();
 
@@ -1929,10 +1975,10 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
 
   sqlite3 *db_out;
   // sqlite3_open creates the db
-  assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
+  assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
 
   // Create header for verification while we read from the db
-  create_sqlite_header(db_out);
+  create_sqlite_header(db_out, build_info);
 
   // Create Dep able
   const char *sql = "CREATE TABLE DEPTABLE(" \
@@ -2014,10 +2060,29 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
   tv2 = log_duration("Writing dependency file with sqlite", tv);
   int secs = tv2.tv_sec - tv.tv_sec;
   // Reporting only seconds, ignore milli seconds
-  CAMLreturn(Val_long(secs));
+  return secs;
 }
 
-CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
+/*
+ * Assumption: When we save the dependency table, we do a fresh load
+ * aka there is saved state
+ */
+CAMLprim value hh_save_dep_table_sqlite(
+    value out_filename,
+    value build_revision
+) {
+  CAMLparam2(out_filename, build_revision);
+  char *out_filename_raw = String_val(out_filename);
+  char *build_revision_raw = String_val(build_revision);
+  long retVal =
+    hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
+  CAMLreturn(Val_long(retVal));
+}
+
+CAMLprim value hh_load_dep_table_sqlite(
+    value in_filename,
+    value ignore_hh_version
+) {
   CAMLparam1(in_filename);
   struct timeval tv;
   struct timeval tv2;
@@ -2042,7 +2107,7 @@ CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
     SQLITE_OK);
 
   // Verify the header
-  verify_sqlite_header(db);
+  verify_sqlite_header(db, Bool_val(ignore_hh_version));
 
   tv2 = log_duration("Reading the dependency file with sqlite", tv);
   int secs = tv2.tv_sec - tv.tv_sec;
@@ -2144,7 +2209,7 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
   assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
 
   // Create header for verification while we read from the db
-  create_sqlite_header(db_out);
+  create_sqlite_header(db_out, BuildInfo_kRevision);
 
   // Create Dep able
   const char *sql = "CREATE TABLE HASHTABLE(" \
@@ -2212,7 +2277,7 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
 
   sqlite3 *db_out;
   assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
-  create_sqlite_header(db_out);
+  create_sqlite_header(db_out, BuildInfo_kRevision);
 
   const char *sql =
     "CREATE TABLE HASHTABLE(" \
@@ -2291,7 +2356,7 @@ CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
 
   // Verify the header
   if (Bool_val(verify)) {
-    verify_sqlite_header(hashtable_db);
+    verify_sqlite_header(hashtable_db, 0);
   }
 
   gettimeofday(&tv2, NULL);
@@ -2364,12 +2429,17 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
 }
 
 #else
-CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
+CAMLprim value hh_save_dep_table_sqlite(
+    value out_filename,
+    value build_revision
+) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
 }
 
-CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
+CAMLprim value hh_load_dep_table_sqlite(
+    value in_filename,
+    value ignore_hh_version) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
 }

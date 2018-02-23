@@ -8,6 +8,7 @@
 open Constraint
 open Type
 
+module LocMap = Utils_js.LocMap
 module P = Type.Polarity
 
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
@@ -98,7 +99,7 @@ let gc = object (self)
     match Marked.add id pole marked with
     | None -> marked
     | Some (pole, marked) ->
-      let root_id, constraints = Flow_js.find_constraints cx id in
+      let root_id, constraints = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx pole marked r root_id
       else
@@ -133,7 +134,7 @@ let gc = object (self)
     match Marked.add id pole marked with
     | None -> marked
     | Some (pole, marked) ->
-      let root_id, constraints = Flow_js.find_constraints cx id in
+      let root_id, constraints = Context.find_constraints cx id in
       if id != root_id then
         self#tvar_bounds cx pole marked root_id
       else
@@ -159,7 +160,7 @@ end
 
 (* Keep a reachable type variable around. *)
 let live cx marked p id =
-  let constraints = Flow_js.find_graph cx id in
+  let constraints = Context.find_graph cx id in
   match constraints with
   | Resolved _ -> ()
   | Unresolved bounds ->
@@ -208,7 +209,7 @@ let do_gc ~master_cx cx =
    * prevents the visitor from walking their bounds. *)
   |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph master_cx)
   (* Mark tvars reachable from imports. *)
-  |> SMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
+  |> LocMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
   (* Mark tvars reachable from exports. *)
   |> SMap.fold (fun _ t acc -> gc#type_ cx Positive acc t) (Context.module_map cx)
   (* Collect unmarked tvars from the graph. *)

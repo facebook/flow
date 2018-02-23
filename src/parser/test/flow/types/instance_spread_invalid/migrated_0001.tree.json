@@ -38,8 +38,8 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":22}},
-            "range":[17,22],
+            "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":21}},
+            "range":[17,21],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":20}},
@@ -53,6 +53,7 @@
               "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
               "range":[21,22]
             },
+            "method":false,
             "optional":false,
             "static":false,
             "variance":null,

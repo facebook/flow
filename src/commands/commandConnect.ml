@@ -11,8 +11,8 @@ type env = {
   root : Path.t;
   autostart : bool;
   retries : int;
-  retry_if_init : bool;
   expiry : float option;
+  autostop : bool;
   tmp_dir : string;
   shm_dirs : string list option;
   shm_min_avail : int option;
@@ -24,57 +24,6 @@ type env = {
   emoji : bool;
   quiet : bool;
 }
-
-(* During initialization, we can provide the client with some clue as to what
- * the server is doing, even though we can't talk to the server yet through the
- * socket. The general idea is to tail the log file, match the last line
- * against a bunch of regexes, and show a message depending on the match *)
-let parsing_re = Str.regexp_string "Parsing"
-
-let infer_re = Str.regexp_string "Running local inference"
-
-let calc_deps_re = Str.regexp_string "Calculating dependencies"
-
-let merging_re = Str.regexp_string "Merging"
-
-let server_ready_re = Str.regexp_string "Server is READY"
-
-let matches_re re s =
-  let pos = try Str.search_forward re s 0 with Not_found -> -1 in
-  pos > -1
-
-let re_list =
-  [
-    parsing_re;
-    infer_re;
-    merging_re;
-    server_ready_re;
-  ]
-
-let is_valid_line s =
-  List.exists (fun re -> matches_re re s) re_list
-
-let msg_of_tail env tail_env =
-  let line = Tail.last_line tail_env in
-  let use_emoji = env.emoji && Tty.supports_emoji () in
-  if matches_re parsing_re line then
-    Printf.sprintf "[%sparsing]"
-      (if use_emoji then (* Ghost *) "\xf0\x9f\x91\xbb  " else "")
-  else if matches_re infer_re line then
-    Printf.sprintf "[%slocal inference]"
-      (if use_emoji then (* Surfer *) "\xf0\x9f\x8f\x84  " else "")
-  else if matches_re calc_deps_re line then
-    Printf.sprintf "[%scalculating dependencies]"
-      (if use_emoji then (* Taco *) "\xf0\x9f\x8c\xae  " else "")
-  else if matches_re merging_re line then
-    Printf.sprintf "[%smerging inference]"
-      (if use_emoji then (* Cyclist *) "\xf0\x9f\x9a\xb4  " else "")
-  else if matches_re server_ready_re line then
-    Printf.sprintf "[%sserver is ready]"
-      (if use_emoji then (* Unicorn Face *) "\xf0\x9f\xa6\x84  " else "")
-  else
-    Printf.sprintf "[%sprocessing]"
-      (if use_emoji then (* Panda Face *) "\xf0\x9f\x90\xbc  " else "")
 
 let arg name value arr = match value with
 | None -> arr
@@ -91,6 +40,7 @@ let flag name value arr =
 let start_flow_server env =
   let {
     tmp_dir;
+    autostop;
     shm_dirs;
     shm_min_avail;
     shm_dep_table_pow;
@@ -115,22 +65,26 @@ let start_flow_server env =
   |> arg "--from" FlowEventLogger.((get_context ()).from)
   |> flag "--ignore-version" ignore_version
   |> flag "--quiet" quiet
+  |> flag "--autostop" autostop
   in
   try
     let server_pid =
       Unix.(create_process exe
               (Array.of_list (exe::"start"::args))
               stdin stdout stderr) in
-    match Unix.waitpid [] server_pid with
-      | _, Unix.WEXITED 0 -> true
-      | _, Unix.WEXITED code when
-          code = FlowExitStatus.(error_code Lock_stolen) -> false
+    match Sys_utils.waitpid_non_intr [] server_pid with
+      | _, Unix.WEXITED 0 ->
+        Ok ()
+      | _, Unix.WEXITED code when code = FlowExitStatus.(error_code Lock_stolen) ->
+        Error ("Lock stolen", FlowExitStatus.Lock_stolen)
       | _, status ->
         let msg = "Could not start Flow server!" in
-        FlowExitStatus.(exit ~msg (Server_start_failed status))
-  with _ ->
-    let msg = "Could not start Flow server!" in
-    FlowExitStatus.(exit ~msg Unknown_error)
+        Error (msg, FlowExitStatus.Server_start_failed status)
+  with exn ->
+    let msg = Printf.sprintf
+      "Could not start Flow server! Unexpected exception: %s"
+      (Printexc.to_string exn) in
+    Error (msg, FlowExitStatus.Unknown_error)
 
 type retry_info = {
   retries_remaining: int;
@@ -139,13 +93,15 @@ type retry_info = {
 }
 
 let reset_retries_if_necessary retries = function
-  | Result.Error CCS.Server_missing
-  | Result.Error CCS.Server_busy -> retries
-  | Result.Ok _
-  | Result.Error CCS.Build_id_mismatch
-  | Result.Error CCS.Server_rechecking
-  | Result.Error CCS.Server_gcollecting
-  | Result.Error CCS.Server_initializing ->
+  | Error (CCS.Server_busy CCS.Fail_on_init) ->
+    { retries with
+      retries_remaining = 0;
+    }
+  | Error CCS.Server_missing
+  | Error CCS.Server_busy _ -> retries
+  | Ok _
+  | Error CCS.Server_socket_missing
+  | Error CCS.Build_id_mismatch ->
       { retries with
         retries_remaining = retries.original_retries;
       }
@@ -165,74 +121,43 @@ let consume_retry retries =
 (* A featureful wrapper around CommandConnectSimple.connect_once. This
  * function handles retries, timeouts, displaying messages during
  * initialization, etc *)
-let rec connect env retries start_time tail_env =
+let rec connect ~client_type env retries start_time =
   if retries.retries_remaining < 0
   then
     FlowExitStatus.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries);
   let has_timed_out = match env.expiry with
     | None -> false
-    | Some t -> Unix.time() > t
+    | Some t -> Unix.gettimeofday() > t
   in
   if has_timed_out
   then FlowExitStatus.(exit ~msg:"\nTimeout exceeded, exiting" Out_of_time);
   let retries = { retries with last_connect_time = Unix.gettimeofday () } in
-  let conn = CCS.connect_once ~tmp_dir:env.tmp_dir env.root in
-
-  if not (Tail.is_tailing_current_file tail_env)
-  then begin
-    Tail.close_env tail_env;
-    Tail.open_env tail_env
-  end;
-  Tail.update_env is_valid_line tail_env;
-  Tail.set_lines tail_env [];
-  let tail_msg = msg_of_tail env tail_env in
+  let conn = CCS.connect_once ~client_type ~tmp_dir:env.tmp_dir env.root in
 
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   let retries = reset_retries_if_necessary retries conn in
   match conn with
-  | Result.Ok (ic, oc) -> (ic, oc)
-  | Result.Error CCS.Server_missing ->
-      if env.autostart then begin
-        (* Windows doesn't let us move open files, and flow start
-         * tries to move the log file, so let's close our tail for
-         * now. It will be reopened when we next call connect *)
-        Tail.close_env tail_env;
-        let retries =
-          if start_flow_server env
-          then begin
-            if not env.quiet then Printf.eprintf
-              "Started a new flow server: %s%!"
-              (Tty.spinner());
-            retries
-          end else begin
-            if not env.quiet then Printf.eprintf
-              "Failed to start a new flow server (%d %s remaining): %s%!"
-              retries.retries_remaining
-              (if retries.retries_remaining = 1 then "retry" else "retries")
-              (Tty.spinner());
-            consume_retry retries
-          end in
-        connect env retries start_time tail_env
-      end else begin
-        let msg = Utils_js.spf
-          "\nError: There is no Flow server running in '%s'."
-          (Path.to_string env.root) in
-        FlowExitStatus.(exit ~msg No_server_running)
-      end
-  | Result.Error CCS.Server_busy ->
+  | Ok (ic, oc) -> (ic, oc)
+  | Error CCS.Server_missing ->
+      handle_missing_server ~client_type env retries start_time
+  | Error CCS.Server_busy busy_reason ->
+      let busy_reason = match busy_reason with
+      | CCS.Too_many_clients -> "has too many clients and rejected our connection"
+      | CCS.Not_responding -> "is not responding"
+      | CCS.Fail_on_init -> "is still initializing and the client used --retry-if-init false"
+      in
       if not env.quiet then Printf.eprintf
-        "The flow server is not responding (%d %s remaining): %s %s%!"
+        "The flow server %s (%d %s remaining): %s%!"
+        busy_reason
         retries.retries_remaining
         (if retries.retries_remaining = 1 then "retry" else "retries")
-        tail_msg
         (Tty.spinner());
-      connect env (consume_retry retries) start_time tail_env
-  | Result.Error CCS.Build_id_mismatch ->
-      let msg = "The flow server's version didn't match the client's, so it \
-      exited." in
+      connect ~client_type env (consume_retry retries) start_time
+  | Error CCS.Build_id_mismatch ->
+      let msg = "The flow server's version didn't match the client's, so it exited." in
       if env.autostart
       then
-        let start_time = Unix.time () in
+        let start_time = Unix.gettimeofday () in
         begin
           if not env.quiet then
             Utils_js.prerr_endlinef "%s\nGoing to launch a new one.\n%!" msg;
@@ -241,46 +166,62 @@ let rec connect env retries start_time tail_env =
            * before that will actually start the server -- we need to make
            * sure that happens.
            *)
-          Tail.close_env tail_env;
-          connect env retries start_time tail_env
+          connect ~client_type env retries start_time
         end
       else
         let msg = "\n"^msg in
         FlowExitStatus.(exit ~msg Build_id_mismatch)
-  | Result.Error CCS.Server_initializing ->
-      let msg = "flow is still initializing; this can take some time." in
-      if env.retry_if_init then begin
-        if not env.quiet then Printf.eprintf
-          "%s %s %s%!" msg tail_msg (Tty.spinner());
-        rate_limit retries;
-        connect env retries start_time tail_env
-      end else begin
-        let msg = "\n"^msg^" Not retrying since --retry-if-init is false." in
-        FlowExitStatus.(exit ~msg Server_initializing)
+  | Error CCS.Server_socket_missing ->
+      begin try
+        if not env.quiet then Utils_js.prerr_endlinef
+          "Attempting to kill server for `%s`"
+          (Path.to_string env.root);
+        CommandMeanKill.mean_kill ~tmp_dir:env.tmp_dir env.root;
+        if not env.quiet then Utils_js.prerr_endlinef
+          "Successfully killed server for `%s`"
+          (Path.to_string env.root);
+        let start_time = Unix.gettimeofday () in
+        handle_missing_server ~client_type env retries start_time
+      with CommandMeanKill.FailedToKill err ->
+        begin if not env.quiet then match err with
+        | Some err -> prerr_endline err
+        | None -> ()
+        end;
+        let msg = Utils_js.spf "Failed to kill server for `%s`" (Path.to_string env.root) in
+        FlowExitStatus.(exit ~msg Kill_error)
       end
-  | Result.Error CCS.Server_rechecking ->
-      let msg = "flow is rechecking" in
-      if not env.quiet then Printf.eprintf
-        "%s %s %s%!" msg tail_msg (Tty.spinner());
-      rate_limit retries;
-      connect env retries start_time tail_env
-  | Result.Error CCS.Server_gcollecting ->
-      let msg = "flow is cleaning up some unused memory; this should not take long" in
-      if not env.quiet then Printf.eprintf
-        "%s %s %s%!" msg tail_msg (Tty.spinner());
-      rate_limit retries;
-      connect env retries start_time tail_env
 
-let connect env =
-  let log_file = env.log_file in
-  let start_time = Unix.time () in
-  let tail_env = Tail.create_env log_file in
+and handle_missing_server ~client_type env retries start_time =
+  if env.autostart then begin
+    let retries = match start_flow_server env with
+      | Ok () ->
+        if not env.quiet then Printf.eprintf "Started a new flow server: %s%!" (Tty.spinner());
+        retries
+      | Error (_, FlowExitStatus.Lock_stolen) ->
+        if not env.quiet then
+          Printf.eprintf "Failed to start a new flow server (%d %s remaining): %s%!"
+            retries.retries_remaining
+            (if retries.retries_remaining = 1 then "retry" else "retries")
+            (Tty.spinner());
+        consume_retry retries
+      | Error (msg, code) ->
+        FlowExitStatus.exit ~msg code
+    in
+    connect ~client_type env retries start_time
+  end else begin
+    let msg = Utils_js.spf
+      "\nError: There is no Flow server running in '%s'."
+      (Path.to_string env.root) in
+    FlowExitStatus.(exit ~msg No_server_running)
+  end
+
+let connect ~client_type env =
+  let start_time = Unix.gettimeofday () in
   let retries = {
     retries_remaining = env.retries;
     original_retries = env.retries;
     last_connect_time = Unix.gettimeofday ();
   } in
 
-  let res = connect env retries start_time tail_env in
-  Tail.close_env tail_env;
+  let res = connect ~client_type env retries start_time in
   res

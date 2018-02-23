@@ -1,9 +1,10 @@
 // check coverage of declare module
 
+// TODO(easy) there is currently no normalized type for a module
 declare module foo {
 }
 
-Covered: 100.00% (1 of 1 expressions)
+Covered: 0.00% (0 of 1 expressions)
 
 // This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
@@ -15,9 +16,9 @@ declare module foo {
 declare module bar {
 }
 
-// TODO
+// TODO(easy) there is currently no normalized type for a module
 
-Covered: 100.00% (2 of 2 expressions)
+Covered: 0.00% (0 of 2 expressions)
 
 // This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
@@ -29,12 +30,12 @@ declare module foo {
 declare module bar {
 }
 
-// TODO
+// TODO(easy) there is currently no normalized type for a module
 
 declare class qux {
 }
 
-Covered: 100.00% (3 of 3 expressions)
+Covered: 33.33% (1 of 3 expressions)
 
 Covered: 75.00% (3 of 4 expressions)
 
@@ -42,6 +43,5 @@ Covered: 75.00% (3 of 4 expressions)
 
 Covered: 0.00% (0 of 4 expressions)
 
-Warning: --all and --respect-pragma cannot be used together. --all wins.
 Covered: 75.00% (3 of 4 expressions)
 

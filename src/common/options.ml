@@ -32,12 +32,14 @@ type jsx_mode =
    *)
   | CSX
 
+type file_watcher =
+| NoFileWatcher
+| DFind
+
 type t = {
   opt_all : bool;
   opt_debug : bool;
   opt_enable_const_params: bool;
-  opt_enable_unsafe_getters_and_setters: bool;
-  opt_enforce_strict_type_args: bool;
   opt_enforce_strict_call_arity: bool;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
@@ -52,6 +54,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_warnings: bool;
   opt_max_workers: int;
+  opt_merge_timeout: float option;
   opt_module: module_system;
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
@@ -65,6 +68,7 @@ type t = {
   opt_suppress_types : SSet.t;
   opt_temp_dir: string;
   opt_traces : int;
+  opt_file_watcher: file_watcher;
   opt_verbose : Verbose.t option;
   opt_weak : bool;
   opt_max_header_tokens: int;
@@ -74,9 +78,6 @@ type t = {
 
 let all opts = opts.opt_all
 let enable_const_params opts = opts.opt_enable_const_params
-let enable_unsafe_getters_and_setters opts =
-  opts.opt_enable_unsafe_getters_and_setters
-let enforce_strict_type_args opts = opts.opt_enforce_strict_type_args
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let esproposal_class_static_fields opts =
   opts.opt_esproposal_class_static_fields
@@ -96,6 +97,7 @@ let is_quiet opts = opts.opt_quiet
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
+let merge_timeout opts = opts.opt_merge_timeout
 let module_name_mappers opts = opts.opt_module_name_mappers
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
@@ -110,6 +112,7 @@ let should_strip_root opts = opts.opt_strip_root
 let suppress_comments opts = opts.opt_suppress_comments
 let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
+let use_file_watcher opts = opts.opt_file_watcher <> NoFileWatcher
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
 

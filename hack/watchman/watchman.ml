@@ -8,7 +8,7 @@
  *
  **)
 
-open Core
+open Hh_core
 open Utils
 
 (*
@@ -27,7 +27,6 @@ module Testing_common = struct
   let test_settings = {
     subscribe_mode = Some Defer_changes;
     init_timeout = 0;
-    sync_directory = "";
     expression_terms = [];
     root = Path.dummy_path;
   }
@@ -252,7 +251,7 @@ module Watchman_actual = struct
          raise Exit_status.(Exit_with Watchman_fresh_instance)
        end
        else
-         Result.Ok ((), trace)
+         Ok ((), trace)
       ) in
     ()
 
@@ -331,25 +330,6 @@ module Watchman_actual = struct
   (* Initialization, reinitialization, and crash-tracking. *)
   (****************************************************************************)
 
-  exception Watchman_sync_directory_error
-
-  let assert_sync_dir_exists path =
-    let stats = try Unix.stat path with
-      | Unix.Unix_error (Unix.ENOENT, _, _) ->
-        Hh_logger.log "Watchman sync directory doesn't exist: %s" path;
-        raise Watchman_sync_directory_error
-    in
-    let () = if stats.Unix.st_kind <> Unix.S_DIR then begin
-      Hh_logger.log "Watchman sync directory is not a directory: %s" path;
-      raise Watchman_sync_directory_error
-    end
-    else () in
-    try Unix.access path [Unix.R_OK; Unix.W_OK] with
-    | Unix.Unix_error (Unix.EACCES, _, _) ->
-      Hh_logger.log "Dont have read-write access to watchman sync directory: %s"
-        path;
-      raise Watchman_sync_directory_error
-
   let with_crash_record_exn root source f =
     try f ()
     with e ->
@@ -364,9 +344,9 @@ module Watchman_actual = struct
     (** Projects down from the boolean error monad into booleans.
      * Error states go to false, values are projected directly. *)
     let project_bool m = match m with
-      | Result.Ok (v, _) ->
+      | Ok (v, _) ->
         v
-      | Result.Error _ ->
+      | Error _ ->
         false
     in
     let open Hh_json.Access in
@@ -376,10 +356,9 @@ module Watchman_actual = struct
       |> project_bool
 
   let re_init ?prior_clockspec
-    { init_timeout; subscribe_mode; sync_directory; expression_terms; root } =
+    { init_timeout; subscribe_mode; expression_terms; root } =
     with_crash_record_opt root "init" @@ fun () ->
     let root_s = Path.to_string root in
-    assert_sync_dir_exists (Filename.concat root_s sync_directory);
     let conn = open_watchman_connection ~timeout:(float_of_int init_timeout) in
     let capabilities = exec ~conn
       (capability_check ~optional:[ flush_subscriptions_cmd ]
@@ -400,7 +379,6 @@ module Watchman_actual = struct
       settings = {
         init_timeout;
         subscribe_mode;
-        sync_directory;
         expression_terms;
         root;
       };
@@ -417,15 +395,11 @@ module Watchman_actual = struct
 
   let init settings = re_init settings
 
-  let no_updates_response clockspec =
-    let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
-    Hh_json.json_of_string timeout_str
-
   let poll_for_updates ?timeout env =
     let timeout = Option.value timeout ~default:0.0 in
     let ready = has_input timeout @@ fst env.socket in
     if not ready then
-      if timeout = 0.0 then no_updates_response env.clockspec
+      if timeout = 0.0 then None
       else raise Timeout
     else
       (* Use the timeout mechanism to limit maximum time to read payload (cap
@@ -440,7 +414,7 @@ module Watchman_actual = struct
           raise Read_payload_too_long
         end
       in
-      sanitize_watchman_response output
+      Some (sanitize_watchman_response output)
 
   let extract_file_names env json =
     let files = try J.get_array_val "files" json with
@@ -582,21 +556,25 @@ module Watchman_actual = struct
     let files = set_of_list @@ extract_file_names env data in
     env.clockspec <- clock;
     let response = Changed_merge_base (mergebase, files) in
-    Result.Ok ((env, response), keytrace)
+    Ok ((env, response), keytrace)
 
-  let transform_asynchronous_get_changes_response env data =
-    match make_mergebase_changed_response env data with
-    | Result.Ok ((env, response), _) -> env, response
-    | Result.Error _ ->
-      env.clockspec <- J.get_string_val "clock" data;
-      assert_no_fresh_instance data;
-      try env, make_state_change_response `Enter
-        (J.get_string_val "state-enter" data) data with
-      | Not_found ->
-      try env, make_state_change_response `Leave
-        (J.get_string_val "state-leave" data) data with
-      | Not_found ->
-        env, Files_changed (set_of_list @@ extract_file_names env data)
+  let transform_asynchronous_get_changes_response env data = match data with
+    | None ->
+      env, Files_changed (SSet.empty)
+    | Some data -> begin
+      match make_mergebase_changed_response env data with
+      | Ok ((env, response), _) -> env, response
+      | Error _ ->
+        env.clockspec <- J.get_string_val "clock" data;
+        assert_no_fresh_instance data;
+        try env, make_state_change_response `Enter
+          (J.get_string_val "state-enter" data) data with
+        | Not_found ->
+        try env, make_state_change_response `Leave
+          (J.get_string_val "state-leave" data) data with
+        | Not_found ->
+          env, Files_changed (set_of_list @@ extract_file_names env data)
+    end
 
   let get_changes ?deadline instance =
     let timeout = Option.map deadline ~f:(fun deadline ->
@@ -626,28 +604,33 @@ module Watchman_actual = struct
     ]
 
   let rec poll_until_sync ~deadline env acc =
-    let is_finished_flush_response json =
-      let open Hh_json.Access in
-      let synced = (return json) >>= get_array "synced" |> begin function
-        | Result.Error _ -> false
-        | Result.Ok (vs, _) ->
-          List.fold_left vs ~init:false ~f:(fun acc v ->
-            acc || ((Hh_json.get_string_exn v) = subscription_name)) end
-      in
-      let not_needed = (return json) >>= get_array "no_sync_needed"
-        |> begin function
-          | Result.Error _ -> false
-          | Result.Ok (vs, _) ->
+    let is_finished_flush_response json = match json with
+      | None -> false
+      | Some json -> begin
+        let open Hh_json.Access in
+        let synced = (return json) >>= get_array "synced" |> begin function
+          | Error _ -> false
+          | Ok (vs, _) ->
             List.fold_left vs ~init:false ~f:(fun acc v ->
               acc || ((Hh_json.get_string_exn v) = subscription_name)) end
-      in
-      synced || not_needed
+        in
+        let not_needed = (return json) >>= get_array "no_sync_needed"
+          |> begin function
+            | Error _ -> false
+            | Ok (vs, _) ->
+              List.fold_left vs ~init:false ~f:(fun acc v ->
+                acc || ((Hh_json.get_string_exn v) = subscription_name)) end
+        in
+        synced || not_needed
+      end
     in
     let timeout = deadline -. Unix.time () in
     if timeout < 0.0 then raise Timeout else ();
     let json = poll_for_updates ~timeout env in
     if is_finished_flush_response json then (env, acc) else
-      let env, result = transform_synchronous_get_changes_response env json in
+      let env, result = match json with
+        | None -> env, SSet.empty
+        | Some json -> transform_synchronous_get_changes_response env json in
       poll_until_sync ~deadline env (SSet.union acc result)
 
   let poll_until_sync ~deadline env =

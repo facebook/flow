@@ -31,9 +31,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
     |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
@@ -68,7 +67,7 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values root json pretty strip_root from args () =
+let main option_values json pretty root strip_root from args () =
   FlowEventLogger.set_from from;
   let file = parse_args args in
   let root = guess_root (
@@ -77,23 +76,24 @@ let main option_values root json pretty strip_root from args () =
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.AUTOCOMPLETE file);
-  let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
+  let request = ServerProt.Request.AUTOCOMPLETE file in
+  let results = match connect_and_make_request option_values root request with
+  | ServerProt.Response.AUTOCOMPLETE response -> response
+  | response -> failwith_bad_response ~request ~response
+  in
   if json || pretty
   then (
     results
       |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
-      |> Hh_json.json_to_string ~pretty
-      |> print_endline
+      |> Hh_json.print_json_endline ~pretty
   ) else (
     match results with
     | Error error ->
       prerr_endlinef "Error: %s" error
     | Ok completions ->
       List.iter (fun res ->
-        let name = res.AutocompleteService_js.res_name in
-        let ty = res.AutocompleteService_js.res_ty in
+        let name = res.ServerProt.Response.res_name in
+        let ty = res.ServerProt.Response.res_ty in
         print_endline (Printf.sprintf "%s %s" name ty)
       ) completions
   )

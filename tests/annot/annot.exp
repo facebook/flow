@@ -1,129 +1,193 @@
-Error: annot.js:4
-  4: var bar: (str:number, i:number)=> string = foo;
-                                                ^^^ function. This type is incompatible with
-  4: var bar: (str:number, i:number)=> string = foo;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
-      4: var bar: (str:number, i:number)=> string = foo;
-                       ^^^^^^ number. This type is incompatible with
-      1: function foo(str:string, i:number):string {
-                          ^^^^^^ string
+Error ---------------------------------------------------------------------------------------------------- annot.js:4:44
 
-Error: annot.js:6
-  6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                                              ^^^^^^^^^^ string. This type is incompatible with the expected return type of
-  6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                              ^^^^^^ number
+Cannot assign `foo` to `bar` because string [1] is incompatible with number [2] in the first argument.
 
-Error: annot.js:8
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `i` is incompatible:
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                                      ^^^^^ string. This type is incompatible with
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                 ^^^^^^ number
+   annot.js:4:44
+   4| var bar: (str:number, i:number)=> string = foo;
+                                                 ^^^
 
-Error: annot.js:8
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `j` is incompatible:
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `j`. Property not found in
-      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+References:
+   annot.js:1:18
+   1| function foo(str:string, i:number):string {
+                       ^^^^^^ [1]
+   annot.js:4:15
+   4| var bar: (str:number, i:number)=> string = foo;
+                    ^^^^^^ [2]
 
-Error: annot.js:10
- 10: var arr: Array<number> = [1,2,"..."];
-                              ^^^^^^^^^^^ array literal. Has some incompatible type argument with
- 10: var arr: Array<number> = [1,2,"..."];
-              ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     10: var arr: Array<number> = [1,2,"..."];
-                                       ^^^^^ string. This type is incompatible with
-     10: var arr: Array<number> = [1,2,"..."];
-                        ^^^^^^ number
 
-Error: annot.js:13
- 13: var array: number[] = [1,2,"..."];
-                           ^^^^^^^^^^^ array literal. Has some incompatible type argument with
- 13: var array: number[] = [1,2,"..."];
-                ^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     13: var array: number[] = [1,2,"..."];
-                                    ^^^^^ string. This type is incompatible with
-     13: var array: number[] = [1,2,"..."];
-                    ^^^^^^ number
+Error ---------------------------------------------------------------------------------------------------- annot.js:6:58
 
-Error: annot.js:27
- 27: var test_obj: ObjType = { 'bar-foo': '23' };
-                             ^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 27: var test_obj: ObjType = { 'bar-foo': '23' };
-                   ^^^^^^^ object type
-  Property `foo-bar` is incompatible:
-     27: var test_obj: ObjType = { 'bar-foo': '23' };
-                       ^^^^^^^ property `foo-bar`. Property not found in
-     27: var test_obj: ObjType = { 'bar-foo': '23' };
-                                 ^^^^^^^^^^^^^^^^^^^ object literal
+Cannot return `foo(...)` because string [1] is incompatible with number [2].
 
-Error: annot.js:31
- 31:   n = "hey"; // error
-           ^^^^^ string. This type is incompatible with
- 30: function param_anno(n:number):void {
-                           ^^^^^^ number
+   annot.js:6:58
+   6| var qux = function(str:string, i:number):number { return foo(str,i); }
+                                                               ^^^^^^^^^^
 
-Error: annot.js:45
-                         v-------------------------------
- 45:     batchRequests = batchRequests.map((request) => {
- 46:       return {
- 47:         method: request.method,
-...:
- 51:     });
-         -^ array type. Has some incompatible type argument with
- 37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-                      v
-     46:       return {
-     47:         method: request.method,
-     48:         params: request.params,
-     49:         relative_url: request.path,
-     50:       };
-               ^ object literal. This type is incompatible with
-     37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-      Property `path` is incompatible:
-         37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `path`. Property not found in
-                          v
-         46:       return {
-         47:         method: request.method,
-         48:         params: request.params,
-         49:         relative_url: request.path,
-         50:       };
-                   ^ object literal
+References:
+   annot.js:1:36
+   1| function foo(str:string, i:number):string {
+                                         ^^^^^^ [1]
+   annot.js:6:42
+   6| var qux = function(str:string, i:number):number { return foo(str,i); }
+                                               ^^^^^^ [2]
 
-Error: annot.js:55
- 55: var toz : null = 3;
-                      ^ number. This type is incompatible with
- 55: var toz : null = 3;
-               ^^^^ null
 
-Error: forward_ref.js:1
-  1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                                    ^^^^ null. This type is incompatible with
-  1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
-                          ^^^^^^^ MyClass
+Error ---------------------------------------------------------------------------------------------------- annot.js:8:46
 
-Error: forward_ref.js:4
-  4:   return null; // forward ref ok, null ~> class error
-              ^^^^ null. This type is incompatible with the expected return type of
-  3: function bar(): MyClass {
-                     ^^^^^^^ MyClass
+Cannot assign object literal to `obj` because:
+ - property `j` is missing in object literal [1] but exists in object type [2].
+ - string [3] is incompatible with number [4] in property `i`.
+
+   annot.js:8:46
+   8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   annot.js:8:10
+   8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   annot.js:8:62
+   8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                                                   ^^^^^ [3]
+   annot.js:8:25
+   8| var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                              ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- annot.js:10:26
+
+Cannot assign array literal to `arr` because string [1] is incompatible with number [2] in array element.
+
+   annot.js:10:26
+   10| var arr: Array<number> = [1,2,"..."];
+                                ^^^^^^^^^^^
+
+References:
+   annot.js:10:31
+   10| var arr: Array<number> = [1,2,"..."];
+                                     ^^^^^ [1]
+   annot.js:10:16
+   10| var arr: Array<number> = [1,2,"..."];
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- annot.js:13:23
+
+Cannot assign array literal to `array` because string [1] is incompatible with number [2] in array element.
+
+   annot.js:13:23
+   13| var array: number[] = [1,2,"..."];
+                             ^^^^^^^^^^^
+
+References:
+   annot.js:13:28
+   13| var array: number[] = [1,2,"..."];
+                                  ^^^^^ [1]
+   annot.js:13:12
+   13| var array: number[] = [1,2,"..."];
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- annot.js:27:25
+
+Cannot assign object literal to `test_obj` because property `foo-bar` is missing in object literal [1] but exists in
+`ObjType` [2].
+
+   annot.js:27:25
+   27| var test_obj: ObjType = { 'bar-foo': '23' };
+                               ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   annot.js:27:15
+   27| var test_obj: ObjType = { 'bar-foo': '23' };
+                     ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- annot.js:31:7
+
+Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2].
+
+   annot.js:31:7
+   31|   n = "hey"; // error
+             ^^^^^ [1]
+
+References:
+   annot.js:30:23
+   30| function param_anno(n:number):void {
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- annot.js:45:21
+
+Cannot assign `batchRequests.map(...)` to `batchRequests` because property `path` is missing in object literal [1] but
+exists in object type [2] in array element.
+
+   annot.js:45:21
+                           v-------------------------------
+   45|     batchRequests = batchRequests.map((request) => {
+   46|       return {
+   47|         method: request.method,
+   48|         params: request.params,
+   49|         relative_url: request.path,
+   50|       };
+   51|     });
+           -^
+
+References:
+   annot.js:46:14
+                    v
+   46|       return {
+   47|         method: request.method,
+   48|         params: request.params,
+   49|         relative_url: request.path,
+   50|       };
+             ^ [1]
+   annot.js:37:26
+   37|     batchRequests: Array<{method: string; path: string; params: ?Object}>,
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- annot.js:55:18
+
+Cannot assign `3` to `toz` because number [1] is incompatible with null [2].
+
+   annot.js:55:18
+   55| var toz : null = 3;
+                        ^ [1]
+
+References:
+   annot.js:55:11
+   55| var toz : null = 3;
+                 ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- forward_ref.js:1:32
+
+Cannot assign `null` to `myClassInstance` because null [1] is incompatible with `MyClass` [2].
+
+   forward_ref.js:1:32
+   1| let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
+                                     ^^^^ [1]
+
+References:
+   forward_ref.js:1:22
+   1| let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
+                           ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- forward_ref.js:4:10
+
+Cannot return `null` because null [1] is incompatible with `MyClass` [2].
+
+   forward_ref.js:4:10
+   4|   return null; // forward ref ok, null ~> class error
+               ^^^^ [1]
+
+References:
+   forward_ref.js:3:17
+   3| function bar(): MyClass {
+                      ^^^^^^^ [2]
+
 
 
 Found 12 errors

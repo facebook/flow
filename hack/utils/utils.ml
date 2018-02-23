@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 
 let () = Random.self_init ()
 let debug = ref false

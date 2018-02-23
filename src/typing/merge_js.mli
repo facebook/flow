@@ -6,11 +6,11 @@
  *)
 
 module Reqs : sig
-  type impl = File_key.t * string * string * File_key.t
-  type dep_impl = Context.t * string * string * File_key.t
-  type unchecked = string * Loc.t * File_key.t
-  type res = string * Loc.t * string * File_key.t
-  type decl = string * Loc.t * Modulename.t * File_key.t
+  type impl = File_key.t * string * Loc.t Nel.t * File_key.t
+  type dep_impl = Context.t * string * Loc.t Nel.t * File_key.t
+  type unchecked = string * Loc.t Nel.t * File_key.t
+  type res = Loc.t Nel.t * string * File_key.t
+  type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;
@@ -35,15 +35,15 @@ val merge_component_strict:
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   ?do_gc: bool ->
   (* component *)
-  File_key.t list ->
+  File_key.t Nel.t ->
   (* requires *)
   Reqs.t ->
   (* dependency cxs *)
   Context.t list ->
   (* master cx *)
   Context.t ->
-  (* merged cx *)
-  Context.t
+  (* cxs in component order, hd is merged leader *)
+  Context.t Nel.t
 
 val clear_master_shared: Context.t -> Context.t -> unit
 
@@ -55,5 +55,5 @@ val merge_lib_file:
 val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
-  val sig_context : Context.t -> string list -> SigHash.t
+  val sig_context : Context.t -> string list -> Xx.hash
 end

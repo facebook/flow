@@ -1,11 +1,11 @@
 declare module "copyProperties" {
-  declare var exports: Object$Assign;
+  declare module.exports: Object$Assign;
 }
 
 declare module "mergeInto" {
-  declare var exports: $Facebookism$MergeInto;
+  declare module.exports: $Facebookism$MergeInto;
 }
 
 declare module "mixin" {
-  declare var exports: $Facebookism$Mixin;
+  declare module.exports: $Facebookism$Mixin;
 }

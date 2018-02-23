@@ -1,16 +1,35 @@
-Error: test.js:12
- 12: var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 12: var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
-            ^^^^^^^ boolean
+Error ---------------------------------------------------------------------------------------------------- test.js:12:18
 
-Error: test.js:22
- 22: var buffer2 = require("./buffer");
-                           ^^^^^^^^^^ ./buffer. Required module not found
+Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible with boolean [2].
 
-Error: test.js:25
- 25: var buffer3 = require("./buffer.js");
-                           ^^^^^^^^^^^^^ ./buffer.js. Required module not found
+   test.js:12:18
+    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:118:34
+   118|   declare var INSPECT_MAX_BYTES: number;
+                                         ^^^^^^ [1]
+   test.js:12:8
+    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+               ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:22:23
+
+Cannot resolve module `./buffer`.
+
+   22| var buffer2 = require("./buffer");
+                             ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:25:23
+
+Cannot resolve module `./buffer.js`.
+
+   25| var buffer3 = require("./buffer.js");
+                             ^^^^^^^^^^^^^
+
 
 
 Found 3 errors

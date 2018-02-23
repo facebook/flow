@@ -18,6 +18,7 @@ val infer_lib_file:
   metadata: Context.metadata ->
   exclude_syms: SSet.t ->
   lint_severities: Severity.severity LintSettings.t ->
+  file_sig: File_sig.t ->
   File_key.t ->
   Loc.t Ast.program ->
   Context.t * string list

@@ -179,6 +179,7 @@
               },
               "typeParameters":null
             },
+            "method":true,
             "optional":false,
             "static":false,
             "variance":null,

@@ -13,7 +13,7 @@ exception Docblock_not_found of string
 exception Requires_not_found of string
 
 type result =
-  | Parse_ok of Loc.t Ast.program
+  | Parse_ok of Loc.t Ast.program * File_sig.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -24,6 +24,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
+  | File_sig_error of File_sig.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -248,7 +249,7 @@ let extract_docblock =
     |> List.fold_left Loc.(fun _end elem ->
       match elem with
       | Str.Delim delim ->
-          let line_incr = if "delim" = "\r" then 0 else 1 in
+          let line_incr = if delim = "\r" then 0 else 1 in
           let column = 0 in
           let line = _end.line + line_incr in
           let offset = _end.offset + (String.length delim) in
@@ -338,7 +339,7 @@ let extract_docblock =
         ) ([], info) comments
     | None -> [], info
 
-let get_docblock
+let parse_docblock
   ~max_tokens file content
 : docblock_error list * Docblock.t =
   match file with
@@ -364,21 +365,28 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
     | File_key.JsonFile _ ->
-      Parse_ok (parse_json_file ~fail content file)
+      let ast = parse_json_file ~fail content file in
+      Parse_ok (ast, File_sig.empty_file_sig)
     | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
-      let types =
-        (* either all=true or @flow pragma exists *)
-        types_checked types_mode info ||
-        (* always parse types for .flow files -- NB: will _not_ be inferred *)
-        Docblock.isDeclarationFile info
-      in
-      (* don't bother to parse if types are disabled *)
-      if types
-      then Parse_ok (parse_source_file ~fail ~types ~use_strict content file)
-      else Parse_skip Skip_non_flow_file
-  )
+      (* either all=true or @flow pragma exists *)
+      let types_checked = types_checked types_mode info in
+      (* always parse types for .flow files -- NB: will _not_ be inferred *)
+      let types = types_checked || Docblock.isDeclarationFile info in
+      if not types
+      then Parse_skip Skip_non_flow_file
+      else
+        let ast = parse_source_file ~fail ~types ~use_strict content file in
+        (* Only calculate file sigs for files which will actually be inferred.
+         * The only files which are parsed but not inferred are .flow files with
+         * no @flow pragma. *)
+        if types_checked then
+          match File_sig.program ~ast with
+          | Ok file_sig -> Parse_ok (ast, file_sig)
+          | Error e -> Parse_fail (File_sig_error e)
+        else
+          Parse_ok (ast, File_sig.empty_file_sig))
   with
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
@@ -388,13 +396,10 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_file_sig ~ast =
-  File_sig.program ~ast
-
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens ~lazy_mode
+  ~types_mode ~use_strict ~max_header_tokens ~lazy_mode ~noflow
   parse_results
   file
 : results =
@@ -414,10 +419,14 @@ let reducer
       None in
   match content with
   | Some content ->
-      begin match get_docblock ~max_tokens:max_header_tokens file content with
+      begin match parse_docblock ~max_tokens:max_header_tokens file content with
       | [], info ->
+        let info =
+          if noflow file then { info with Docblock.flow = Some Docblock.OptOut }
+          else info
+        in
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
-        | Parse_ok ast ->
+        | Parse_ok (ast, file_sig) ->
             (* Consider the file unchanged if its reparsing info is the same as
              * its old parsing info. A complication is that we don't want to
              * drop a .flow file, even if it is unchanged, since it might have
@@ -434,15 +443,6 @@ let reducer
               && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
-              (* Only calculate file sigs for files which will actually be
-                 inferred. The only files which are parsed (thus, Parse_ok) but
-                 not inferred are .flow files with no @flow pragma and .json
-                 files. *)
-              let file_sig =
-                if types_checked types_mode info
-                then calc_file_sig ~ast
-                else File_sig.empty_file_sig
-              in
               ParsingHeaps.add file ast info file_sig;
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
@@ -495,20 +495,31 @@ let get_defaults ~types_mode ~use_strict options =
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
   let lazy_mode = Options.is_lazy_mode options in
-  types_mode, use_strict, profile, max_header_tokens, lazy_mode
+  let noflow fn =
+    Files.is_untyped (Options.file_options options) (File_key.to_string fn)
+  in
+  types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow
 
 (***************************** public ********************************)
 
-let next_of_filename_set workers filenames =
-  MultiWorker.next workers (FilenameSet.elements filenames)
+let progress_fn ~total ~start ~length:_ =
+  let finished = start in
+  MonitorRPC.status_update
+    ServerStatus.(Parsing_progress { total = Some total; finished })
 
-let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
+let next_of_filename_set ?(with_progress=false) workers filenames =
+  if with_progress
+  then MultiWorker.next ~progress_fn workers (FilenameSet.elements filenames)
+  else MultiWorker.next workers (FilenameSet.elements filenames)
+
+let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow
   workers next
 : results =
   let t = Unix.gettimeofday () in
+  let reducer = reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode ~noflow in
   let results = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode))
+    ~job: (List.fold_left reducer)
     ~neutral: empty_result
     ~merge: merge
     ~next: next in
@@ -526,13 +537,13 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
 
   results
 
-let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
-    ~options workers files =
+let reparse
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow ?with_progress workers files =
   (* save old parsing info for files *)
   ParsingHeaps.oldify_batch files;
-  let next = next_of_filename_set workers files in
+  let next = next_of_filename_set ?with_progress workers files in
   let results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next in
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next in
   let modified = results.parse_ok in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
@@ -545,24 +556,30 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParsingHeaps.revive_batch unchanged;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
-  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
+  let types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow =
     get_defaults ~types_mode ~use_strict options
   in
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next
+  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next
 
-let reparse_with_defaults ?types_mode ?use_strict options workers files =
-  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
+let reparse_with_defaults ?types_mode ?use_strict ?with_progress options workers files =
+  let types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow =
     get_defaults ~types_mode ~use_strict options
   in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~options workers files
+  reparse
+    ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow ?with_progress
+    workers files
 
 let has_ast = ASTHeap.mem
 
 let get_ast = ASTHeap.get
+
+let get_docblock = DocblockHeap.get
+
+let get_file_sig = FileSigHeap.get
 
 let get_ast_unsafe file =
   try ASTHeap.find_unsafe file

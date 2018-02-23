@@ -37,8 +37,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_flags
-        |> json_flags
+        |> server_and_json_flags
+        |> json_version_flag
         |> error_flags
         |> strip_root_flag
         |> from_flag
@@ -78,8 +78,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_flags
-        |> json_flags
+        |> server_and_json_flags
+        |> json_version_flag
         |> error_flags
         |> strip_root_flag
         |> from_flag
@@ -93,34 +93,37 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     from: string;
     output_json: bool;
+    output_json_version: Errors.Json_output.json_version option;
     pretty: bool;
     error_flags: Errors.Cli_output.error_flags;
     strip_root: bool;
   }
 
-  let rec check_status (args:args) server_flags =
+  let check_status (args:args) server_flags =
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
-    let ic, oc = connect server_flags args.root in
-    send_command oc (ServerProt.STATUS (args.root, include_warnings));
-    let response = wait_for_response ic in
+    let request = ServerProt.Request.STATUS (args.root, include_warnings) in
+    let response = match connect_and_make_request server_flags args.root request with
+    | ServerProt.Response.STATUS response -> response
+    | response -> failwith_bad_response ~request ~response
+    in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
-      ~out_channel:stdout ~strip_root ~pretty:args.pretty
+      ~out_channel:stdout ~strip_root ~pretty:args.pretty ?version:args.output_json_version
       ~suppressed_errors:([])
     in
     match response with
-    | ServerProt.DIRECTORY_MISMATCH d ->
+    | ServerProt.Response.DIRECTORY_MISMATCH d ->
       let msg = Printf.sprintf
         ("%s is running on a different directory.\n" ^^
          "server_root: %s, client_root: %s")
         name
-        (Path.to_string d.ServerProt.server)
-        (Path.to_string d.ServerProt.client)
+        (Path.to_string d.ServerProt.Response.server)
+        (Path.to_string d.ServerProt.Response.client)
       in
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
-    | ServerProt.ERRORS {errors; warnings} ->
+    | ServerProt.Response.ERRORS {errors; warnings} ->
       let error_flags = args.error_flags in
       begin if args.output_json then
         print_json ~errors ~warnings ()
@@ -136,29 +139,17 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           ~warnings
           ()
       end;
-      let open FlowExitStatus in
-      if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
-    | ServerProt.NO_ERRORS ->
+      FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+    | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
         print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
-    | ServerProt.NOT_COVERED ->
+    | ServerProt.Response.NOT_COVERED ->
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  and retry (args, server_flags) sleep msg =
-    check_timeout ();
-    let retries = server_flags.retries in
-    if retries > 0
-    then begin
-      Printf.fprintf stderr "%s\n%!" msg;
-      CommandUtils.sleep sleep;
-      check_status args { server_flags with retries = retries - 1 }
-    end else
-      FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
-
-  let main server_flags json pretty error_flags strip_root from version root () =
+  let main server_flags json pretty json_version error_flags strip_root from version root () =
     FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
@@ -168,15 +159,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     );
 
     let root = guess_root root in
-    let timeout_arg = server_flags.timeout in
-    if timeout_arg > 0 then set_timeout timeout_arg;
 
-    let json = json || pretty in
+    let json = json || Option.is_some json_version || pretty in
 
     let args = {
       root;
       from = server_flags.CommandUtils.from;
       output_json = json;
+      output_json_version = json_version;
       pretty;
       error_flags;
       strip_root;

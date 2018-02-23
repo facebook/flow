@@ -1,80 +1,177 @@
-Error: constructor.js:15
- 15:     this.y; // error (no super call)
-              ^ property `y`. Property cannot be accessed on possibly undefined value
- 15:     this.y; // error (no super call)
-         ^^^^ uninitialized this (expected super constructor call)
+Error ---------------------------------------------------------------------------------------------- constructor.js:15:5
 
-Error: constructor.js:16
- 16:     this.x; // error (no super call)
-              ^ property `x`. Property cannot be accessed on possibly undefined value
- 16:     this.x; // error (no super call)
-         ^^^^ uninitialized this (expected super constructor call)
+Cannot get `this.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
 
-Error: constructor.js:36
- 36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ function call
- 30:   f.y; // error
-         ^ property `y`. Property cannot be accessed on possibly undefined value
- 30:   f.y; // error
-       ^ uninitialized this (expected super constructor call)
+   constructor.js:15:5
+   15|     this.y; // error (no super call)
+           ^^^^^^
 
-Error: constructor.js:36
- 36:     leak(this); // error (no super call yet)
-         ^^^^^^^^^^ function call
- 31:   f.x; // error
-         ^ property `x`. Property cannot be accessed on possibly undefined value
- 31:   f.x; // error
-       ^ uninitialized this (expected super constructor call)
+References:
+   constructor.js:12:7
+   12| class D extends A {
+             ^ [1]
 
-Error: constructor.js:45
- 45:     super.x; // error (no super call)
-               ^ property `x`. Property cannot be accessed on possibly undefined value
- 45:     super.x; // error (no super call)
-         ^^^^^ uninitialized this (expected super constructor call)
 
-Error: constructor.js:69
- 69:     super(this); // error (no super call yet)
-         ^^^^^^^^^^^ function call
- 63:     leaked_this.foo()
-         ^^^^^^^^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
- 63:     leaked_this.foo()
-         ^^^^^^^^^^^ uninitialized this (expected super constructor call)
+Error ---------------------------------------------------------------------------------------------- constructor.js:16:5
 
-Error: constructor.js:83
- 83:     super(() => this.foo()); // error (no super call yet)
-                     ^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
- 83:     super(() => this.foo()); // error (no super call yet)
-                     ^^^^ uninitialized this (expected super constructor call)
+Cannot get `this.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
 
-Error: super.js:10
- 10:     super(x);
-               ^ string. This type is incompatible with the expected param type of
-  3:   constructor(x:number) { }
-                     ^^^^^^ number
+   constructor.js:16:5
+   16|     this.x; // error (no super call)
+           ^^^^^^
 
-Error: super.js:14
- 14:     (super.staticMethod('foo'): number); // error, string !~> number
-          ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
- 14:     (super.staticMethod('foo'): number); // error, string !~> number
-                                     ^^^^^^ number
+References:
+   constructor.js:12:7
+   12| class D extends A {
+             ^ [1]
 
-Error: super.js:15
- 15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
-                ^^^^^^^^^^^ property `doesntExist`. Property not found in
- 15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
-          ^^^^^ statics of A
 
-Error: super.js:19
- 19:     super.f(0);
-                 ^ number. This type is incompatible with the expected param type of
-  5:   f(x:string) { }
-           ^^^^^^ string
+Error ---------------------------------------------------------------------------------------------- constructor.js:30:3
 
-Error: super.js:20
- 20:     return super.g;
-                      ^ property `g`. Property not found in
-  8: class B extends A {
-                     ^ A
+Cannot get `f.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
+
+   constructor.js:30:3
+   30|   f.y; // error
+         ^^^
+
+References:
+   constructor.js:33:7
+   33| class F extends A {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:31:3
+
+Cannot get `f.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+
+   constructor.js:31:3
+   31|   f.x; // error
+         ^^^
+
+References:
+   constructor.js:33:7
+   33| class F extends A {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:45:5
+
+Cannot get `super.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+
+   constructor.js:45:5
+   45|     super.x; // error (no super call)
+           ^^^^^^^
+
+References:
+   constructor.js:43:7
+   43| class G extends A {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:63:5
+
+Cannot call `leaked_this.foo` because property `foo` is missing in uninitialized this (expected super constructor
+call) [1].
+
+   constructor.js:63:5
+   63|     leaked_this.foo()
+           ^^^^^^^^^^^^^^^^^
+
+References:
+   constructor.js:67:7
+   67| class I extends I_ {
+             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:83:17
+
+Cannot call `this.foo` because property `foo` is missing in uninitialized this (expected super constructor call) [1].
+
+   constructor.js:83:17
+   83|     super(() => this.foo()); // error (no super call yet)
+                       ^^^^^^^^^^
+
+References:
+   constructor.js:81:7
+   81| class J extends J_ {
+             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- super.js:10:11
+
+Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2].
+
+   super.js:10:11
+   10|     super(x);
+                 ^
+
+References:
+   super.js:9:17
+    9|   constructor(x:string,y:number) {
+                       ^^^^^^ [1]
+   super.js:3:17
+    3|   constructor(x:number) { }
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- super.js:14:6
+
+Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2].
+
+   super.js:14:6
+   14|     (super.staticMethod('foo'): number); // error, string !~> number
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   super.js:4:34
+    4|   static staticMethod(x:string): string { return x; }
+                                        ^^^^^^ [1]
+   super.js:14:33
+   14|     (super.staticMethod('foo'): number); // error, string !~> number
+                                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- super.js:15:6
+
+Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1].
+
+   super.js:15:6
+   15|     (super.doesntExist()); // error, A doesn't have a doesntExist method
+            ^^^^^^^^^^^^^^^^^^^
+
+References:
+   super.js:2:7
+    2| class A {
+             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- super.js:19:13
+
+Cannot call `super.f` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   super.js:19:13
+   19|     super.f(0);
+                   ^ [1]
+
+References:
+   super.js:5:7
+    5|   f(x:string) { }
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- super.js:20:12
+
+Cannot get `super.g` because property `g` is missing in `A` [1].
+
+   super.js:20:12
+   20|     return super.g;
+                  ^^^^^^^
+
+References:
+   super.js:2:7
+    2| class A {
+             ^ [1]
+
 
 
 Found 12 errors

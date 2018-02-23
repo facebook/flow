@@ -1,0 +1,3 @@
+declare var sleep: $Flow$DebugSleep;
+
+sleep(10); // sleep for 10 seconds

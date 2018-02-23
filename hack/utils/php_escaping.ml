@@ -26,22 +26,21 @@ let is_oct c = c >= '0' && c <= '7'
  * don't actually have the same rules but this should safely fit in both.
  * It will escape $ in octal so that it can also be used as a PHP double
  * string. *)
-let escape s =
+
+let escape_char = function
+  | '\n' -> "\\n"
+  | '\r' -> "\\r"
+  | '\t' -> "\\t"
+  | '\\' -> "\\\\"
+  | '"' -> "\\\""
+  | '$' -> "$"
+  | '?' -> "\\?"
+  | c when is_lit_printable c -> String.make 1 c
+  | c -> Printf.sprintf "\\%03o" (Char.code c)
+
+let escape ?(f = escape_char) s =
   let buf = Buffer.create (String.length s) in
-
-  let process_char = function
-    | '\n' -> Buffer.add_string buf "\\n"
-    | '\r' -> Buffer.add_string buf "\\r"
-    | '\t' -> Buffer.add_string buf "\\t"
-    | '\\' -> Buffer.add_string buf "\\\\"
-    | '"' -> Buffer.add_string buf "\\\""
-    | '$' -> Buffer.add_string buf "$"
-    | '?' -> Buffer.add_string buf "\\?"
-    | c when is_lit_printable c -> Buffer.add_char buf c
-    | c -> Buffer.add_string buf (Printf.sprintf "\\%03o" (Char.code c))
-  in
-  String.iter process_char s;
-
+  String.iter (fun c -> Buffer.add_string buf @@ f c) s;
   Buffer.contents buf
 
 (* Convert a codepoint to utf-8, appending the the bytes to a buffer *)
@@ -75,7 +74,12 @@ let parse_numeric_escape ?(trim_to_byte = false) s =
     Char.chr v
   with _ -> raise (Invalid_string "escaped character too large")
 
-let unescape_double_or_heredoc ~is_heredoc s =
+type literal_kind =
+  | Literal_heredoc
+  | Literal_double_quote
+  | Literal_backtick
+
+let unescape_literal literal_kind s =
   let len = String.length s in
   let buf = Buffer.create len in
   let idx = ref 0 in
@@ -93,7 +97,8 @@ let unescape_double_or_heredoc ~is_heredoc s =
 
   while !idx < len do
     let c = next () in
-    if c <> '\\' then Buffer.add_char buf c else begin
+    (* If it's the last character we're done *)
+    if c <> '\\' || !idx = len then Buffer.add_char buf c else begin
       let c = next () in
       match c with
       | '\'' -> Buffer.add_string buf "\\\'"
@@ -105,10 +110,14 @@ let unescape_double_or_heredoc ~is_heredoc s =
       | 'f'  -> Buffer.add_char buf '\x0c'
       | '\\' -> Buffer.add_char buf '\\'
       | '$'  -> Buffer.add_char buf '$'
+      | '`' ->
+        if literal_kind = Literal_backtick
+        then Buffer.add_char buf '`'
+        else Buffer.add_string buf "\\`"
       | '\"' ->
-        if is_heredoc
-        then Buffer.add_string buf "\\\""
-        else Buffer.add_char buf '\"'
+        if literal_kind = Literal_double_quote
+        then Buffer.add_char buf '\"'
+        else Buffer.add_string buf "\\\""
       | 'u' when !idx < len && s.[!idx] = '{' ->
         let _ = next () in
         let unicode_count = count_f (fun c -> c <> '}') ~max:6 0 in
@@ -117,7 +126,7 @@ let unescape_double_or_heredoc ~is_heredoc s =
         idx := !idx + unicode_count;
         if next () <> '}' then
           raise (Invalid_string "Invalid UTF-8 escape sequence")
-      | 'x' ->
+      | 'x' | 'X' ->
         let hex_count = count_f is_hex ~max:2 0 in
         if hex_count = 0 then
           Buffer.add_string buf "\\x"
@@ -143,10 +152,13 @@ let unescape_double_or_heredoc ~is_heredoc s =
   Buffer.contents buf
 
 let unescape_double s =
-  unescape_double_or_heredoc ~is_heredoc:false s
+  unescape_literal Literal_double_quote s
+
+let unescape_backtick s =
+  unescape_literal Literal_backtick s
 
 let unescape_heredoc s =
-  unescape_double_or_heredoc ~is_heredoc:true s
+  unescape_literal Literal_heredoc s
 
 let unescape_single_or_nowdoc ~is_nowdoc s =
   let len = String.length s in
@@ -162,7 +174,7 @@ let unescape_single_or_nowdoc ~is_nowdoc s =
     if c <> '\\' then Buffer.add_char buf c else begin
       let c = next () in
       match c with
-      | '\'' ->Buffer.add_char buf '\''
+      | '\'' when not is_nowdoc -> Buffer.add_char buf '\''
       | '\\' when not is_nowdoc -> Buffer.add_char buf '\\'
       (* unrecognized escapes are just copied over *)
       | c ->

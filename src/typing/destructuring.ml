@@ -110,7 +110,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             | { Property.key = Property.Computed key; pattern = p; _; } ->
                 let key_t = expr cx key in
                 let loc = fst key in
-                let reason = mk_reason (RCustom "computed property/element") loc in
+                let reason = mk_reason (RProperty None) loc in
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
@@ -144,7 +144,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       )
     )
 
-  | loc, Identifier { Identifier.name = (_, name); _ } ->
+  | loc, Identifier { Identifier.name = (id_loc, name); _ } ->
       Type_inference_hooks_js.dispatch_lval_hook cx name loc (
         match parent_pattern_t with
         (**
@@ -163,11 +163,25 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
          *)
         | None -> Type_inference_hooks_js.Id
       );
-      f loc name default curr_t
+      let curr_t = mod_reason_of_t (replace_reason (function
+      | RDefaultValue
+      | RArrayPatternRestProp
+      | RObjectPatternRestProp
+        -> RIdentifier name
+      | desc -> desc
+      )) curr_t in
+      Type_table.set_info (Context.type_table cx) id_loc curr_t;
+      let use_op = Op (AssignVar {
+        var = Some (mk_reason (RIdentifier name) loc);
+        init = (match init with
+        | Some init -> mk_expression_reason init
+        | None -> reason_of_t curr_t);
+      }) in
+      f ~use_op loc name default curr_t
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
-      let reason = mk_reason (RCustom "default value") loc in
+      let reason = mk_reason RDefaultValue loc in
       let tvar =
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in
@@ -192,8 +206,8 @@ let type_of_pattern = Ast.Pattern.(function
 )
 (* instantiate pattern visitor for assignments *)
 let destructuring_assignment cx ~expr rhs_t init =
-  let f loc name _default t =
+  let f ~use_op loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
-    ignore Env.(set_var cx name t loc)
+    ignore Env.(set_var cx ~use_op name t loc)
   in
   destructuring cx ~expr rhs_t (Some init) None ~f

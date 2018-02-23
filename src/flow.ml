@@ -20,8 +20,8 @@ end = struct
     CheckCommands.CheckCommand.command;
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
-    ConfigCommands.Init.command;
     CoverageCommand.command;
+    CycleCommand.command;
     DumpTypesCommand.command;
     FindModuleCommand.command;
     FindRefsCommand.command;
@@ -30,6 +30,7 @@ end = struct
     GetDefCommand.command;
     GetImportsCommand.command;
     IdeCommand.command;
+    InitCommand.command;
     LsCommand.command;
     PortCommand.command;
     ServerCommand.command;
@@ -111,6 +112,8 @@ let _ =
      normally would cause a SIGPIPE instead throws an EPIPE exception. We handle exceptions and
      exit via FlowExitStatus.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
+
+  let () = Printexc.record_backtrace true in
 
   try
     Daemon.check_entry_point (); (* this call might not return *)

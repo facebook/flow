@@ -25,6 +25,8 @@ let string_of_float_trunc x =
   else
     result
 
+module LocSet = Set.Make(Loc)
+
 module LocMap = MyMap.Make(Loc)
 
 module FilenameSet = Set.Make(File_key)
@@ -64,42 +66,9 @@ let fmt_exc exc = Printexc.((to_string exc) ^ "\n" ^ (get_backtrace ()))
 
 let fmt_file_exc file exc = file ^ ": " ^ (fmt_exc exc)
 
-let opt_map f = function
-  | None -> None
-  | Some x -> Some (f x)
-
-let opt_map_default f def = function
-  | None -> def
-  | Some x -> f x
-
-let opt_default def = function
-  | None -> def
-  | Some x -> x
-
-let rec zip lst1 lst2 = match lst1,lst2 with
-  | [], _ -> []
-  | _, [] -> []
-  | (x::xs), (y::ys) -> (x,y) :: zip xs ys
-
-let zipi xs ys =
-  zip xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
-
 let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
 let map_snd g (a,b) = (a, g b)
-
-let range_with f a b =
-  if a > b then []
-  else
-    let rec loop j acc =
-      if a <= j then loop (j-1) (f j :: acc)
-      else acc
-    in
-    loop (b-1) []
-
-let range = range_with (fun x -> x)
-
-let repeat n a = range_with (fun _ -> a) 0 n
 
 let rec iter2opt f = function
   | x::xs, y::ys ->
@@ -112,6 +81,13 @@ let rec iter2opt f = function
     f None (Some y);
     iter2opt f ([], ys)
   | [], [] -> ()
+
+let rec toFixpoint f x =
+  let x' = f x in
+  if x = x' then x else toFixpoint f x'
+
+let uncurry f (x,y) = f x y
+let curry f x y = f (x, y)
 
 (**
  * Useful for various places where a user might have typoed a string and the
@@ -208,10 +184,25 @@ let extension_of_filename filename =
 
 (* ordinal of a number *)
 let ordinal = function
-  | 1 -> "1st"
-  | 2 -> "2nd"
-  | 3 -> "3rd"
-  | n -> spf "%dth" n
+  | 1 -> "first"
+  | 2 -> "second"
+  | 3 -> "third"
+  | 4 -> "fourth"
+  | 5 -> "fifth"
+  | 6 -> "sixth"
+  | 7 -> "seventh"
+  | 8 -> "eigth"
+  | 9 -> "ninth"
+  | n ->
+    let n = string_of_int n in
+    let th = String.get n ((String.length n) - 1) in
+    let th = match th with
+    | '1' -> "st"
+    | '2' -> "nd"
+    | '3' -> "rd"
+    | _ -> "th"
+    in
+    n ^ th
 
 
 (* Module implementing the recommended way to augment a map.
@@ -231,3 +222,27 @@ module Augmentable(M: MyMap.S) = struct
 end
 
 module AugmentableSMap = Augmentable(SMap)
+
+let try_with f =
+  try f () with exn -> Error (Printexc.to_string exn)
+
+let try_with_json f = try f () with exn -> Error (Printexc.to_string exn, None)
+
+let split_result = function
+| Ok (success, extra) -> Ok success, extra
+| Error (error, extra) -> Error error, extra
+
+let debug_print_current_stack_trace () =
+  let open Printexc in
+  get_callstack 200 |> raw_backtrace_to_string |> Hh_logger.info "Current backtrace:\n%s"
+
+(* Pass through a result; logging if it is an Error. Includes the provided string context, which is
+ * computed lazily under the assumption that the error case is the uncommon case *)
+let log_when_error (context: string Lazy.t) (result: ('a, string) result) : ('a, string) result =
+  begin match result with
+    | Ok _ -> ()
+    | Error msg ->
+        let lazy context = context in
+        Hh_logger.error "Error (%s): %s" context msg
+  end;
+  result

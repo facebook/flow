@@ -34,7 +34,7 @@ type errors = {
 type collated_errors = {
   collated_errorset: Errors.ErrorSet.t;
   collated_warning_map: Errors.ErrorSet.t Utils_js.FilenameMap.t;
-  collated_suppressed_errors: (Errors.error * Loc.LocSet.t) list;
+  collated_suppressed_errors: (Errors.error * Utils_js.LocSet.t) list;
 }
 
 type env = {
@@ -47,10 +47,3 @@ type env = {
     collated_errors: collated_errors option ref;
     connections: Persistent_connection.t;
 }
-
-(*****************************************************************************)
-(* Killing the server  *)
-(*****************************************************************************)
-
-let die() =
-  exit(0)

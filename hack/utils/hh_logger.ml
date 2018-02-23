@@ -54,6 +54,7 @@ module Level : sig
     | Debug
   val min_level : unit -> t
   val set_min_level : t -> unit
+  val passes_min_level: t -> bool
   val log : t -> ('a, unit, string, string, string, unit) format6 -> 'a
   val log_duration : t -> string -> float -> float
 end = struct
@@ -77,13 +78,16 @@ end = struct
   let min_level () = !min_level_ref
   let set_min_level level = min_level_ref := level
 
+  let passes_min_level level =
+    int_of_level level >= int_of_level !min_level_ref
+
   let log level fmt =
-    if int_of_level level >= int_of_level !min_level_ref
+    if passes_min_level level
     then print fmt
     else Printf.ifprintf () fmt
 
   let log_duration level fmt t =
-    if int_of_level level >= int_of_level !min_level_ref
+    if passes_min_level level
     then print_duration fmt t
     else t
 

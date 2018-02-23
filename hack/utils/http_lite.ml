@@ -8,7 +8,7 @@
  *
 *)
 
-open Core
+open Hh_core
 
 (* This is a lightweight library for reading and writing messages in the HTTP
    format, with headers and body. So far it only supports the small set of
