@@ -282,7 +282,7 @@ class scope_builder = object(this)
       let bindings = match id with
         | Some name -> Bindings.singleton name
         | None -> Bindings.empty in
-      this#with_bindings bindings (fun () ->
+      this#with_bindings ~lexical:true bindings (fun () ->
         run_opt this#function_identifier id;
         this#lambda params body;
       ) ();
