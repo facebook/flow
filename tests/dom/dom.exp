@@ -681,10 +681,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:186:52
 
-Cannot call `document.createNodeIterator` with function bound to `filter` because in the return value:
- - Either string [1] is incompatible with number literal `1` [2].
- - Or string [1] is incompatible with number literal `2` [3].
- - Or string [1] is incompatible with number literal `3` [4].
+Cannot call `document.createNodeIterator` with function bound to `filter` because string [1] is incompatible with
+enum [2] in the return value.
 
    traversal.js:186:52
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
@@ -694,24 +692,18 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3219:25
-   3219|   static FILTER_ACCEPT: 1;
-                                 ^ [2]
-   <BUILTINS>/dom.js:3220:25
-   3220|   static FILTER_REJECT: 2;
-                                 ^ [3]
-   <BUILTINS>/dom.js:3221:23
-   3221|   static FILTER_SKIP: 3;
-                               ^ [4]
+   <BUILTINS>/dom.js:3197:1
+         v--------------------------------
+   3197| typeof NodeFilter.FILTER_ACCEPT |
+   3198| typeof NodeFilter.FILTER_REJECT |
+   3199| typeof NodeFilter.FILTER_SKIP;
+         ----------------------------^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:188:52
 
-Cannot call `document.createNodeIterator` with object literal bound to `filter` because in the return value of property
-`acceptNode`:
- - Either string [1] is incompatible with number literal `1` [2].
- - Or string [1] is incompatible with number literal `2` [3].
- - Or string [1] is incompatible with number literal `3` [4].
+Cannot call `document.createNodeIterator` with object literal bound to `filter` because string [1] is incompatible with
+enum [2] in the return value of property `acceptNode`.
 
    traversal.js:188:52
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -721,15 +713,12 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3219:25
-   3219|   static FILTER_ACCEPT: 1;
-                                 ^ [2]
-   <BUILTINS>/dom.js:3220:25
-   3220|   static FILTER_REJECT: 2;
-                                 ^ [3]
-   <BUILTINS>/dom.js:3221:23
-   3221|   static FILTER_SKIP: 3;
-                               ^ [4]
+   <BUILTINS>/dom.js:3197:1
+         v--------------------------------
+   3197| typeof NodeFilter.FILTER_ACCEPT |
+   3198| typeof NodeFilter.FILTER_REJECT |
+   3199| typeof NodeFilter.FILTER_SKIP;
+         ----------------------------^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:189:5
@@ -776,10 +765,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:193:50
 
-Cannot call `document.createTreeWalker` with function bound to `filter` because in the return value:
- - Either string [1] is incompatible with number literal `1` [2].
- - Or string [1] is incompatible with number literal `2` [3].
- - Or string [1] is incompatible with number literal `3` [4].
+Cannot call `document.createTreeWalker` with function bound to `filter` because string [1] is incompatible with enum [2]
+in the return value.
 
    traversal.js:193:50
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
@@ -789,24 +776,18 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3219:25
-   3219|   static FILTER_ACCEPT: 1;
-                                 ^ [2]
-   <BUILTINS>/dom.js:3220:25
-   3220|   static FILTER_REJECT: 2;
-                                 ^ [3]
-   <BUILTINS>/dom.js:3221:23
-   3221|   static FILTER_SKIP: 3;
-                               ^ [4]
+   <BUILTINS>/dom.js:3197:1
+         v--------------------------------
+   3197| typeof NodeFilter.FILTER_ACCEPT |
+   3198| typeof NodeFilter.FILTER_REJECT |
+   3199| typeof NodeFilter.FILTER_SKIP;
+         ----------------------------^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:195:50
 
-Cannot call `document.createTreeWalker` with object literal bound to `filter` because in the return value of property
-`acceptNode`:
- - Either string [1] is incompatible with number literal `1` [2].
- - Or string [1] is incompatible with number literal `2` [3].
- - Or string [1] is incompatible with number literal `3` [4].
+Cannot call `document.createTreeWalker` with object literal bound to `filter` because string [1] is incompatible with
+enum [2] in the return value of property `acceptNode`.
 
    traversal.js:195:50
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -816,15 +797,12 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3219:25
-   3219|   static FILTER_ACCEPT: 1;
-                                 ^ [2]
-   <BUILTINS>/dom.js:3220:25
-   3220|   static FILTER_REJECT: 2;
-                                 ^ [3]
-   <BUILTINS>/dom.js:3221:23
-   3221|   static FILTER_SKIP: 3;
-                               ^ [4]
+   <BUILTINS>/dom.js:3197:1
+         v--------------------------------
+   3197| typeof NodeFilter.FILTER_ACCEPT |
+   3198| typeof NodeFilter.FILTER_REJECT |
+   3199| typeof NodeFilter.FILTER_SKIP;
+         ----------------------------^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- traversal.js:196:5

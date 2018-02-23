@@ -29,10 +29,13 @@ let union_flatten =
       else begin
         seen := ISet.add id !seen;
         match Context.find_graph cx id with
-        | Constraint.Resolved (DefT (_, UnionT rep)) -> union_flatten cx seen @@ UnionRep.members rep
+        | Constraint.Resolved t' -> flatten cx seen t'
         | _ -> [t]
       end
     | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
+    | DefT (r, MaybeT t) -> (DefT (r, NullT))::(DefT (r, VoidT))::(flatten cx seen t)
+    | DefT (r, OptionalT t) -> (DefT (r, VoidT))::(flatten cx seen t)
+    | DefT (_, EmptyT) -> []
     | _ -> [t]
   in
   fun cx ts -> union_flatten cx (ref ISet.empty) ts
