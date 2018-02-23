@@ -2656,7 +2656,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Call {
       Call.callee = _, Identifier (_, "requireLazy");
       arguments
-    } -> (
+    } when not (Env.local_scope_entry_exists "requireLazy") -> (
       match arguments with
       | [Expression(_, Array({Array.elements;})); Expression(callback_expr);] ->
         (**
