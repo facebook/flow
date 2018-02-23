@@ -2,6 +2,8 @@
 
 `./tool` is a script in the root of this project. `./tool test` runs the tests in this directory.
 
+To make it work: run `yarn install` in the flow directory. This is needed both for `tool` to run, and also for `flow check` to work in the newtests directory.
+
 ## Motivation behind `./tool test`
 
 * Tests should pair small examples with the expectations for each example.
@@ -50,7 +52,7 @@ A `TestStep` is made up of 0 or more actions and 0 or more assertions. The `empt
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 import type TestStep from 'flow-dev-tools/src/test/TestStep';
 export default suite((emptyTestStep: TestStep) => [
-  test('My first test', [ 
+  test('My first test', [
     emptyTestStep
       .addCode('var x = 123')
       .noNewErrors(),
@@ -66,7 +68,7 @@ More concisely, this can be written
 ```JavaScript
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 export default suite(({addCode}) => [
-  test('My first test', [ 
+  test('My first test', [
     addCode('var x = 123')
       .noNewErrors(),
     addCode('var y = "hello"')
