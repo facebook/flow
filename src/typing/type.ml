@@ -1449,6 +1449,7 @@ end = struct
 
   type finally_optimized_rep =
     | Enum of EnumSet.t
+    | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t list
     | Unoptimized (* TODO: should record why optimization failed *)
 
   (** union rep is:
@@ -1461,12 +1462,14 @@ end = struct
     TypeTerm.t * TypeTerm.t * TypeTerm.t list *
     finally_optimized_rep option ref
 
-  (* helper: add t to enum set *)
-  let acc_enum tset t =
-    match canon t with
-    | Some tcanon when is_base t ->
-      Some (EnumSet.add tcanon tset)
-    | _ -> None
+  (* helper: add t to enum set or others list *)
+  let split_enum =
+    List.fold_left (fun (tset, others) t ->
+      match canon t with
+        | Some tcanon when is_base t ->
+          EnumSet.add tcanon tset, others
+        | _ -> tset, t::others
+    ) (EnumSet.empty, [])
 
   let optimize ?flatten (t0, t1, ts, enum_ref) =
     let ts, default = match flatten with
@@ -1474,19 +1477,16 @@ end = struct
       | None -> t0::t1::ts, None in
     (* TODO: Since ts might be derived through flattening, it might have 0 or 1 elements, in which
        case the union should be considered degenerate and optimized further. *)
-    match ts with
-      | t::ts ->
-        let enum = match canon t with
-          | Some tcanon when is_base t ->
-            let tset = EnumSet.singleton tcanon in
-            ListUtils.fold_left_opt acc_enum tset ts
-          | _ -> None
-        in
-        let enum = match enum with
-          | None -> default
-          | Some enum -> Some (Enum enum) in
-        enum_ref := enum
-      | [] -> ()
+    let tset, others = split_enum ts in
+    let enum =
+      if others = [] then Some (Enum tset)
+      else begin match flatten with
+        | None -> default
+        | Some _ ->
+          if EnumSet.is_empty tset then default
+          else Some (PartiallyOptimizedEnum (tset, List.rev others))
+      end in
+    enum_ref := enum
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
@@ -1505,8 +1505,8 @@ end = struct
     match !enum_ref with
     | None -> r
     | Some Unoptimized -> r
-    | Some (Enum _) ->
-      replace_reason_const REnum r
+    | Some (PartiallyOptimizedEnum _) -> r
+    | Some (Enum _) -> replace_reason_const REnum r
 
   let members (t0, t1, ts, _) = t0::t1::ts
   let members_nel (t0, t1, ts, _) = t0, (t1, ts)
@@ -1548,7 +1548,16 @@ end = struct
       Some false
     | Some tcanon, Some (Enum tset) ->
       Some (EnumSet.mem tcanon tset)
-
+    | None, Some (PartiallyOptimizedEnum (_, others)) ->
+      if List.mem t others
+      then Some true
+      else None
+    | Some tcanon, Some (PartiallyOptimizedEnum (tset, others)) ->
+      if EnumSet.mem tcanon tset
+      then Some true
+      else if List.mem t others
+      then Some true
+      else None
 end
 
 (* We encapsulate IntersectionT's internal structure.
