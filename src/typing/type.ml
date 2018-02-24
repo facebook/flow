@@ -171,7 +171,7 @@ module rec TypeTerm : sig
     | InternalT of internal_t
 
     (* upper bound trigger for type destructors *)
-    | TypeDestructorTriggerT of use_op * reason * destructor * t
+    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * t
 
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
@@ -1026,7 +1026,6 @@ module rec TypeTerm : sig
   and choice_use_tool =
   | FullyResolveType of ident
   | TryFlow of int * spec
-  | EvalDestructor of reason * int * bool * defer_use_t * t_out
 
   and intersection_preprocess_tool =
   | ConcretizeTypes of t list * t list * t * use_t
@@ -1845,7 +1844,7 @@ end = struct
     | MergedT (reason, _) -> reason
     | BoundT typeparam -> typeparam.reason
     | InternalT (ChoiceKitT (reason, _)) -> reason
-    | TypeDestructorTriggerT (_, reason, _, _) -> reason
+    | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
     | CustomFunT (reason, _) -> reason
     | DefT (reason, _) -> reason
     | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
@@ -1989,7 +1988,8 @@ end = struct
     | BoundT { reason; name; bound; polarity; default; } ->
         BoundT { reason = f reason; name; bound; polarity; default; }
     | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
-    | TypeDestructorTriggerT (use_op, reason, d, t) -> TypeDestructorTriggerT (use_op, f reason, d, t)
+    | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
+        TypeDestructorTriggerT (use_op, f reason, repos, d, t)
     | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
     | DefT (reason, t) -> DefT (f reason, t)
     | EvalT (t, defer_use_t, id) ->
@@ -2736,7 +2736,6 @@ let string_of_use_ctor = function
     spf "ChoiceKitUseT %s" begin match tool with
     | FullyResolveType _ -> "FullyResolveType"
     | TryFlow _ -> "TryFlow"
-    | EvalDestructor _ -> "EvalDestructor"
     end
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | CJSRequireT _ -> "CJSRequireT"

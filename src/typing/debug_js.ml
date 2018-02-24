@@ -310,7 +310,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       );
     ]
 
-  | TypeDestructorTriggerT (_, _, s, t) -> [
+  | TypeDestructorTriggerT (_, _, _, s, t) -> [
       "destructor", json_of_destructor json_cx s;
       "type", _json_of_t json_cx t;
     ]
@@ -741,7 +741,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "tool", JSON_String (match tool with
       | FullyResolveType _ -> "fullyResolveType"
       | TryFlow _ -> "tryFlow"
-      | EvalDestructor _ -> "evalDestructor"
       );
     ]
 
@@ -1743,7 +1742,7 @@ and dump_t_ (depth, tvars) cx t =
   | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | InternalT (ChoiceKitT _) -> p t
-  | TypeDestructorTriggerT (_, _, s, x) -> p ~extra:(spf "%s on upper, %s"
+  | TypeDestructorTriggerT (_, _, _, s, x) -> p ~extra:(spf "%s on upper, %s"
     (string_of_destructor s) (kid x)) t
   | InternalT (IdxWrapper (_, inner_obj)) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
@@ -1995,7 +1994,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->
       p ~extra:(try_flow spec) t
   | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
-  | ChoiceKitUseT (_, EvalDestructor (_, _, _, _, arg)) -> p ~extra:(kid arg) t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
   | ComparatorT (_, _, arg) -> p ~extra:(kid arg) t

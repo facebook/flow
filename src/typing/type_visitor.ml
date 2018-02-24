@@ -26,7 +26,7 @@ class ['a] t = object(self)
 
   | InternalT (ChoiceKitT (_, Trigger)) -> acc
 
-  | TypeDestructorTriggerT (_, _, d, t) ->
+  | TypeDestructorTriggerT (_, _, _, d, t) ->
     let acc = self#destructor cx acc d in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -589,8 +589,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | ChoiceKitUseT (r, tool) ->
-    self#choice_use_tool cx acc r tool
+  | ChoiceKitUseT (_, tool) ->
+    self#choice_use_tool cx acc tool
 
   | ExtendsUseT (_, _, ts, t1, t2) ->
     let acc = self#list (self#type_ cx pole_TODO) acc ts in
@@ -801,17 +801,12 @@ class ['a] t = object(self)
   | ObjectMap t
   | ObjectMapi t -> self#type_ cx pole_TODO acc t
 
-  method private choice_use_tool cx acc r = function
+  method private choice_use_tool cx acc = function
   | FullyResolveType id ->
     let _, acc = self#type_graph cx (ISet.empty, acc) id in
     acc
   | TryFlow (_, spec) ->
     self#try_flow_spec cx acc spec
-  | EvalDestructor (_, id, _, d, tout) ->
-    let acc = self#tvar cx pole_TODO acc r id in
-    let acc = self#defer_use_type cx acc d in
-    let acc = self#type_ cx pole_TODO acc tout in
-    acc
 
   method private type_graph cx (seen, acc) id =
     let open Graph_explorer in

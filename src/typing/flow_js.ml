@@ -1426,10 +1426,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * run into non-termination scenarios. *)
     | TypeDestructorTriggerT _, UseT (_, TypeDestructorTriggerT _) -> ()
 
-    | l, UseT (_, TypeDestructorTriggerT (use_op', reason, d, tout)) ->
+    | l, UseT (_, TypeDestructorTriggerT (use_op', reason, repos, d, tout)) ->
+      let l = match repos with
+      | None -> l
+      | Some (reason, use_desc) -> reposition_reason cx ~trace reason ~use_desc l
+      in
       eval_destructor cx ~trace use_op' reason l d tout
 
-    | TypeDestructorTriggerT (use_op', reason, d, tout), UseT (use_op, u) ->
+    | TypeDestructorTriggerT (use_op', reason, _, d, tout), UseT (use_op, AnnotT (tvar, use_desc)) ->
+      let tout' = Tvar.mk_where cx reason (fun tout' ->
+        let repos = Some (fst tvar, use_desc) in
+        rec_flow cx trace (OpenT tvar, UseT (use_op, TypeDestructorTriggerT (use_op', reason, repos, d, tout')))
+      ) in
+      rec_flow cx trace (tout', ReposUseT (reason, false, use_op, tout))
+
+    | TypeDestructorTriggerT (use_op', reason, _, d, tout), UseT (use_op, u) ->
       (* With the same "slingshot" trick used by AnnotT, hold the lower bound
        * at bay until result itself gets concretized, and then flow the lower
        * bound to that concrete type. *)
@@ -1491,30 +1502,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | InternalT (ChoiceKitT (_, Trigger)), ChoiceKitUseT (reason, TryFlow (i, spec)) ->
       speculative_matches cx trace reason i spec
-
-    | InternalT (ChoiceKitT (_, Trigger)),
-      ChoiceKitUseT (r, EvalDestructor (reason_tvar, id, use_desc, d, tout)) ->
-      (match Context.find_graph cx id with
-      | Resolved t ->
-        (* EvalDestructor are currently only created for AnnotT. A big part of
-         * AnnotT's job is repositioning the source type. Do that
-         * repositioning here. *)
-        let t = reposition_reason ~trace cx reason_tvar ~use_desc t in
-        (* Create the EvalT and send it to our tout. *)
-        let eval = EvalT (t, d, mk_id ()) in
-        rec_flow_t cx trace (eval, tout)
-      (* Sometimes we may have 0->1 types that are not resolved in annotations.
-       * e.g. polymorphic types, existential types, or a type returned by $Call.
-       * Eventually, it would be nice for all annotations to actually,
-       * recursively, be 0->1. Then we would want to error here.
-       *
-       * Until then, use an OpenT with EvalT. This will miss the special cases
-       * in EvalT for resolved types like UnionT unfortunately. *)
-      | Unresolved _ ->
-        let t = OpenT (r, id) in
-        let eval = EvalT (t, d, mk_id ()) in
-        rec_flow_t cx trace (eval, tout)
-      )
 
     (* Intersection types need a preprocessing step before they can be checked;
        this step brings it closer to parity with the checking of union types,
@@ -7010,11 +6997,18 @@ and mk_type_destructor cx ~trace use_op reason t d id =
   | OpenT _, None ->
     false, Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add id tvar evaluated);
-      let x = TypeDestructorTriggerT (use_op, reason, d, tvar) in
+      let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
       rec_flow_t cx trace (t, x);
       rec_flow_t cx trace (x, t);
     )
   | _, Some t -> true, t
+  | AnnotT (annot_tvar, use_desc), None ->
+    true, Tvar.mk_where cx reason (fun tvar ->
+      Context.set_evaluated cx (IMap.add id tvar evaluated);
+      let repos = Some (fst annot_tvar, use_desc) in
+      let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
+      rec_flow_t cx trace (OpenT annot_tvar, x);
+    )
   | _, None ->
     true, Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add id tvar evaluated);
@@ -7022,16 +7016,6 @@ and mk_type_destructor cx ~trace use_op reason t d id =
     )
 
 and eval_destructor cx ~trace use_op reason t d tout = match t with
-(* The type this annotation resolves to might be a union-like type which
-   requires special handling (see below). However, the tout inside the
-   AnnotT might not be resolved yet. *)
-| AnnotT (tvar, use_desc) ->
-  let reason_tvar, id = tvar in
-  let destructor = TypeDestructorT (use_op, reason, d) in
-  (* Use full type resolution to wait for the tout to become resolved. *)
-  let k = tvar_with_constraint cx ~trace
-    (choice_kit_use reason (EvalDestructor (reason_tvar, id, use_desc, destructor, tout))) in
-  resolve_bindings_init cx trace reason [(id, tvar)] k
 (* Specialize TypeAppTs before evaluating them so that we can handle special
    cases. Like the union case below. mk_typeapp_instance will return an AnnotT
    which will be fully resolved using the AnnotT case above. *)

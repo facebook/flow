@@ -135,11 +135,11 @@ class ['a] t = object(self)
           if t1' == t1 && t2' == t2 then t
           else InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
-      | TypeDestructorTriggerT (u, r, d, x) ->
+      | TypeDestructorTriggerT (u, r, repos, d, x) ->
           let d' = self#destructor cx map_cx d in
           let x' = self#type_ cx map_cx x in
           if d == d' && x == x' then t
-          else TypeDestructorTriggerT (u, r, d', x')
+          else TypeDestructorTriggerT (u, r, repos, d', x')
       | CustomFunT (r, kind) ->
           let kind' = self#custom_fun_kind cx map_cx kind in
           if kind' == kind then t
@@ -1143,11 +1143,6 @@ class ['a] t = object(self)
         let spec' = self#spec cx map_cx spec in
         if spec' == spec then t
         else TryFlow (i, spec')
-    | EvalDestructor (r, id, u, d, tout) ->
-        let d' = self#defer_use_type cx map_cx d in
-        let tout' = self#type_ cx map_cx tout in
-        if d' == d && tout' == tout then t
-        else EvalDestructor (r, id, u, d', tout')
 
   method resolve_spread cx map_cx ({rrt_resolved; rrt_unresolved; rrt_resolve_to} as t)=
     let rrt_resolved' = ListUtils.ident_map (self#resolved_param cx map_cx) rrt_resolved in
