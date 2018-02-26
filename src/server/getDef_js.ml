@@ -57,19 +57,6 @@ let getdef_lval (state, loc1) _cx name loc2 rhs =
   | Type_inference_hooks_js.Id ->
     id state name
 
-let getdef_member (state, loc1) _cx name loc2 this_t =
-  if (Reason.in_range loc1 loc2)
-  then (
-    state.getdef_type <- Some (Gdmem (name, this_t))
-  );
-  false
-
-let getdef_call (state, loc1) _cx name loc2 this_t =
-  if (Reason.in_range loc1 loc2)
-  then (
-    state.getdef_type <- Some (Gdmem (name, this_t))
-  )
-
 let getdef_import (state, user_requested_loc) _cx source import_loc =
   if (Reason.in_range user_requested_loc import_loc)
   then (
@@ -79,10 +66,53 @@ let getdef_import (state, user_requested_loc) _cx source import_loc =
 let getdef_require_pattern state loc =
   state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
+let extract_member_def cx this name =
+  let this_t = Flow_js.resolve_type cx this in
+  let member_result = Flow_js.Members.extract cx this_t in
+
+  let result_str, t = Flow_js.Members.(match member_result with
+    | Success _ -> "SUCCESS", this
+    | SuccessModule _ -> "SUCCESS", this
+    | FailureNullishType -> "FAILURE_NULLABLE", this
+    | FailureAnyType -> "FAILURE_NO_COVERAGE", this
+    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
+
+  let json_data_to_log = Hh_json.(JSON_Object [
+    "type", Debug_js.json_of_t ~depth:3 cx t;
+    "gd_name", JSON_String name;
+    "result", JSON_String result_str;
+  ]) in
+
+  let command_result = Flow_js.Members.to_command_result member_result in
+  Done begin match command_result with
+  | Error _ -> Loc.none
+  | Ok result_map ->
+    begin match SMap.get name result_map with
+    | Some (loc, t) ->
+        begin match loc with
+          | None -> Type.loc_of_t t
+          | Some x -> x
+        end
+    | None -> Loc.none
+    end
+  end, Some json_data_to_log
+
+let getdef_from_type_table cx loc =
+  let typetable = Context.type_table cx in
+  let type_info =
+    Type_table.find_type_info typetable ~pred:(fun l -> Loc.contains l loc)
+  in
+  Option.bind type_info begin function
+    | _, (_, _, Type_table.Import (name, obj_t))
+    | _, (name, _, Type_table.PropertyAccess obj_t) ->
+        Some (extract_member_def cx obj_t name)
+    | _ -> None
+  end
+
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
-let getdef_get_result ~options cx state =
+let getdef_get_result_from_hooks ~options cx state =
   Ok begin match state.getdef_type with
   | Some Gdloc loc ->
     if List.exists (fun range -> Loc.contains range loc) state.getdef_require_patterns
@@ -99,35 +129,7 @@ let getdef_get_result ~options cx state =
     | _ -> Loc.none
     end, None
   | Some Gdmem (name, this) ->
-      let this_t = Flow_js.resolve_type cx this in
-      let member_result = Flow_js.Members.extract cx this_t in
-
-      let result_str, t = Flow_js.Members.(match member_result with
-        | Success _ -> "SUCCESS", this
-        | SuccessModule _ -> "SUCCESS", this
-        | FailureNullishType -> "FAILURE_NULLABLE", this
-        | FailureAnyType -> "FAILURE_NO_COVERAGE", this
-        | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
-
-      let json_data_to_log = Hh_json.(JSON_Object [
-        "type", Debug_js.json_of_t ~depth:3 cx t;
-        "gd_name", JSON_String name;
-        "result", JSON_String result_str;
-      ]) in
-
-      let command_result = Flow_js.Members.to_command_result member_result in
-      Done begin match command_result with
-      | Error _ -> Loc.none
-      | Ok result_map ->
-        begin match SMap.get name result_map with
-        | Some (loc, t) ->
-            begin match loc with
-              | None -> Type.loc_of_t t
-              | Some x -> x
-            end
-        | None -> Loc.none
-        end
-      end, Some json_data_to_log
+      extract_member_def cx this name
   | Some Gdrequire ((source_loc, name), require_loc) ->
       let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
       (* function just so we don't do the work unless it's actually needed. *)
@@ -168,12 +170,15 @@ let getdef_get_result ~options cx state =
   | None -> Done Loc.none, None
   end
 
+let getdef_get_result ~options cx state loc =
+  match getdef_from_type_table cx loc with
+  | Some x -> Ok x
+  | None -> getdef_get_result_from_hooks ~options cx state
+
 let getdef_set_hooks pos =
   let state = { getdef_type = None; getdef_require_patterns = [] } in
   Type_inference_hooks_js.set_id_hook (getdef_id (state, pos));
   Type_inference_hooks_js.set_lval_hook (getdef_lval (state, pos));
-  Type_inference_hooks_js.set_member_hook (getdef_member (state, pos));
-  Type_inference_hooks_js.set_call_hook (getdef_call (state, pos));
   Type_inference_hooks_js.set_import_hook (getdef_import (state, pos));
   Type_inference_hooks_js.set_require_pattern_hook (getdef_require_pattern state);
   state
@@ -195,7 +200,7 @@ let rec get_def ~options ~workers ~env ~profiling ~depth (file_input, line, col)
       )
       |> map_error ~f:(fun str -> str, None)
       >>= (fun (cx, _info) -> Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
-        try_with_json (fun () -> getdef_get_result ~options cx state)
+        try_with_json (fun () -> getdef_get_result ~options cx state loc)
       ))
       |> split_result
     in
