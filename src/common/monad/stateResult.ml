@@ -23,6 +23,7 @@ module type S = sig
 
   val put : s -> (unit, 'b) t
   val get : (s, 'b) t
+  val option : ('a -> ('c, 'b) t) -> 'a option -> ('c option, 'b) t
   val modify : (s -> s) -> (unit, 'b) t
   val error : 'b -> ('a, 'b) t
   val run : s -> ('a, 'b) t -> ('a, 'b) r * s
@@ -60,6 +61,10 @@ module Make(S: State) : S with type s = S.t = struct
   let modify f =
     get >>= fun st ->
     put (f st)
+
+  let option f = function
+    | Some x -> f x >>| Option.some
+    | None -> return None
 
   let error x = fun s -> (Error x, s)
 

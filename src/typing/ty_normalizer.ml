@@ -548,7 +548,7 @@ end = struct
     | KeysT (_, t) ->
       type__ ~env t >>= fun ty ->
       named_t "$Keys" ~targs:[ty]
-    | OpaqueT (_, { opaque_name; _ }) -> named_t opaque_name
+    | OpaqueT (r, o) -> opaque_t ~env r o None
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
     | TypeDestructorTriggerT _ -> return Ty.Any
@@ -856,6 +856,13 @@ end = struct
 
   (* Type Aliases - Local and imported *)
   and type_t ~env r t ta_tparams =
+    match t with
+    | Type.OpaqueT (r, o) ->
+      opaque_t ~env r o ta_tparams
+    | _ ->
+      type_t_with_reason ~env r t ta_tparams
+
+  and type_t_with_reason ~env r t ta_tparams =
     match desc_of_reason r with
     (* Locally defined alias *)
     | RType ta_name ->
@@ -919,6 +926,33 @@ end = struct
       )
     )
 
+  (* We are being a bit lax here with opaque types so that we don't have to
+     introduce a new constructor in Ty.t to support all kinds of OpaqueT.
+     If an underlying type is available, then we use that as the alias body.
+     If not, we check for a super type and use that if there is one.
+     Otherwise, we fall back to a bodyless TypeAlias.
+  *)
+  and opaque_t ~env reason opaque_type ta_tparams =
+    let open Type in
+    let name = opaque_type.opaque_name in
+    get_cx >>= fun cx ->
+    let current_source = Context.file cx in
+    let opaque_source = Loc.source (def_loc_of_reason reason) in
+    (* Compare the current file (of the query) and the file that the opaque
+       type is defined. If they differ, then hide the underlying/super type.
+       Otherwise, display the underlying/super type. *)
+    if Some current_source <> opaque_source then
+      named_alias ?ta_tparams name
+    else
+      let t_opt = match opaque_type with
+      | { underlying_t = Some t; _ }       (* opaque type A = number; *)
+      | { super_t = Some t; _ } -> Some t  (* declare opaque type B: number; *)
+      | _ -> None                          (* declare opaque type C; *)
+      (* TODO: This will potentially report a remote name.
+         The same fix for T25963804 should be applied here as well. *)
+      in
+      option (type__ ~env) t_opt >>= fun ta_type ->
+      named_alias ?ta_tparams ?ta_type name
 
   and custom_fun_expanded ~env =
     let open Type in
