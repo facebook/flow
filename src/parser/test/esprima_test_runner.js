@@ -426,7 +426,7 @@ function compare(esprima, flow, env) {
     }
   } else if (esprima_type == "object") {
     handleSpecialObjectCompare(esprima, flow, env);
-    for (prop in esprima) {
+    for (var prop in esprima) {
       if (!esprima.hasOwnProperty(prop)) {
         continue;
       }
@@ -438,7 +438,7 @@ function compare(esprima, flow, env) {
       }
       env.pop_path();
     }
-    for (prop in flow) {
+    for (var prop in flow) {
       if (flow.hasOwnProperty(prop) && !esprima.hasOwnProperty(prop)) {
         env.push_path(prop);
         env.diff("Unexpected property");
@@ -478,11 +478,11 @@ function runTest(test, esprima_options, test_options) {
     result.passed = false;
     return result;
   }
+  var options = { loc: true, comment: true, range: true };
+  for (var opt in esprima_options) {
+    options[opt] = esprima_options[opt];
+  }
   try {
-    var options = { loc: true, comment: true, range: true };
-    for (opt in esprima_options) {
-      options[opt] = esprima_options[opt];
-    }
     var esprima_ast = esprima.parse(test.content, options);
   } catch (e) {
     comparing_errors = true;
@@ -572,7 +572,7 @@ function runTest(test, esprima_options, test_options) {
   var missing_diffs = [];
   var unexpected_differences = [];
   var mismatched_diffs = [];
-  for (path in expected) {
+  for (var path in expected) {
     if (!expected.hasOwnProperty(path)) {
       continue;
     }
@@ -590,7 +590,7 @@ function runTest(test, esprima_options, test_options) {
     }
   }
 
-  for (path in actual) {
+  for (var path in actual) {
     if (actual.hasOwnProperty(path) && !expected.hasOwnProperty(path)) {
       unexpected_differences.push(actual[path]);
     }

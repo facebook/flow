@@ -9,6 +9,8 @@ var argv = parseArgs(
   process.argv.slice(2),
   {
     string: [
+      "esprima-tests",
+      "hardcoded-tests",
       "filter",
       "section-filter",
       "numTests",
@@ -78,7 +80,11 @@ function apply_filters(sections) {
 }
 
 function get_esprima_tests() {
-  var spec = require('./esprima_tests.js');
+  var spec = require(
+    argv['esprima-tests'] ?
+      path.resolve(argv['esprima-tests']) :
+      './esprima_tests.js'
+  );
 
   var sections = {};
   for (var section_name in spec.sections) {
@@ -157,7 +163,11 @@ function get_tests(root_dir) {
 }
 
 function get_hardcoded_tests() {
-  var tests = get_tests(path.join(__dirname, 'flow'));
+  var tests = get_tests(
+    argv['hardcoded-tests'] ?
+      path.resolve(argv['hardcoded-tests']) :
+      path.join(__dirname, 'flow')
+  );
   var result = {};
   for (var section in tests) {
     if (tests.hasOwnProperty(section)) {
@@ -237,10 +247,10 @@ function report_results(results) {
       results.num_failures
     );
 
-    for (section_name in results.failures) {
+    for (var section_name in results.failures) {
       if (results.failures.hasOwnProperty(section_name)) {
         console.log("===%s Failures===".bold, section_name);
-        for (test in results.failures[section_name]) {
+        for (var test in results.failures[section_name]) {
           if (results.failures[section_name].hasOwnProperty(test)) {
             var result = results.failures[section_name][test];
             console.log('Test failure: "%s"'.redBG.white, escape_content(test));
@@ -346,6 +356,8 @@ function go() {
 function usage() {
   console.log("usage: %s [OPTIONS] [all] [esprima] [hardcoded]", process.argv[1]);
   console.log("Supported options");
+  console.log("\t--esprima-tests", "Path to legacy esprima tests");
+  console.log("\t--hardcoded-tests", "Directory containing the hardcoded tests");
   console.log("\t--dumpAst", "Dumps the esprima & flow ASTs before each test");
   console.log("\t--filter=regex", "Only run tests that match the regex");
   console.log("\t--section-filter=regex", "Only run tests from sections that match the regex");
