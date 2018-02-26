@@ -549,6 +549,7 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
     let result = sort_find_refs_result result in
     let json_data =
       ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE"))
+      :: ("global", Hh_json.JSON_Bool global)
       :: json_data
     in
     result, Some (Hh_json.JSON_Object json_data)
