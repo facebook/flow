@@ -1842,6 +1842,8 @@ and statement cx = Ast.Statement.(
               let import_kind = type_kind_of_kind (Option.value ~default:importKind kind) in
               get_imported_t import_reason import_kind remote_name local_name
           in
+          let id_info = local_name, imported_t, Type_table.Import (remote_name, module_t) in
+          Type_table.set_info (Context.type_table cx) loc id_info;
           (loc, local_name, imported_t, kind)
         )
 
@@ -1908,6 +1910,8 @@ and statement cx = Ast.Statement.(
               let import_kind = type_kind_of_kind importKind in
               get_imported_t import_reason import_kind "default" local_name
           in
+          let id_info = local_name, imported_t, Type_table.Import ("default", module_t) in
+          Type_table.set_info (Context.type_table cx) loc id_info;
           (loc, local_name, imported_t, None) :: specifiers
       | None -> specifiers
     in
