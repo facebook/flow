@@ -47,7 +47,7 @@ let query_type cx loc =
   let type_table = Context.type_table cx in
   match Type_table.find_type_info ~pred type_table with
   | None -> FailureNoMatch
-  | Some (loc, t) ->
+  | Some (loc, (_, t, _)) ->
     (match QueryTypeNormalizer.from_type ~cx t with
     | Ok ty -> Success (loc, ty)
     | Error msg ->

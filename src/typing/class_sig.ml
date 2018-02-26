@@ -164,7 +164,8 @@ let add_field cx ~static name fld =
   | _ -> None
   in
   Option.iter ~f:(fun (loc, t) ->
-    Type_table.set_info (Context.type_table cx) loc t
+    let id_info = name, t, Type_table.Other in
+    Type_table.set_info (Context.type_table cx) loc id_info
   ) loc_type_opt;
   add_field_ ~static name fld
 
@@ -265,13 +266,14 @@ let elements cx ?constructor s =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
-    SMap.map Type.(fun xs ->
+    SMap.mapi Type.(fun name xs ->
       let ms = Nel.rev_map (fun (loc, x) -> loc, Func_sig.methodtype cx x) xs in
       (* Keep track of these before intersections are merged, to enable
        * type information on every member of the intersection. *)
       ms |> Nel.iter (fun (loc, t) ->
         Option.iter loc ~f:(fun loc ->
-          Type_table.set_info (Context.type_table cx) loc t
+          let id_info = name, t, Type_table.Other in
+          Type_table.set_info (Context.type_table cx) loc id_info
         )
       );
       match ms with
@@ -569,7 +571,8 @@ let mk cx _loc reason self ~expr =
       | None -> loc in
       let reason = mk_reason (RType name) super_loc in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
-      Type_table.set_info (Context.type_table cx) loc c;
+      let id_info = name, c, Type_table.Other in
+      Type_table.set_info (Context.type_table cx) loc id_info;
       let params = Anno.extract_type_param_instantiations typeParameters in
       let t = Anno.mk_nominal_type cx reason tparams_map (c, params) in
       Flow.reposition cx super_loc ~annot_loc:super_loc t
@@ -788,14 +791,15 @@ let add_interface_properties cx properties s =
   ) s properties
 
 let of_interface cx reason { Ast.Statement.Interface.
-  id = (id_loc, _);
+  id = (id_loc, id_name);
   typeParameters;
   body = (_, { Ast.Type.Object.properties; _ });
   extends;
   _;
 } =
   let self = Tvar.mk cx reason in
-  Type_table.set_info (Context.type_table cx) id_loc self;
+  let id_info = id_name, self, Type_table.Other in
+  Type_table.set_info (Context.type_table cx) id_loc id_info;
 
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx typeParameters in

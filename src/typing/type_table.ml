@@ -5,6 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type id_kind =
+  | PropertyAccess of Type.t (* receiver type *)
+  | Other
+
+type id_info = string (* name *) * Type.t * id_kind
 
 type t = {
   (* This stores type information about expressions. Every expression in the program should have a
@@ -13,7 +18,7 @@ type t = {
   coverage: (Loc.t, Type.t) Hashtbl.t;
   (* This stores type information about identifiers only. There should be no overlap or nesting of
    * locations here. *)
-  type_info: (Loc.t, Type.t) Hashtbl.t;
+  type_info: (Loc.t, id_info) Hashtbl.t;
 }
 
 let create () = {
