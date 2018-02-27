@@ -83,7 +83,7 @@ function get_esprima_tests() {
   var spec = require(
     argv['esprima-tests'] ?
       path.resolve(argv['esprima-tests']) :
-      './esprima_tests.js'
+      '../../../src/parser/test/esprima_tests.js'
   );
 
   var sections = {};
@@ -166,7 +166,7 @@ function get_hardcoded_tests() {
   var tests = get_tests(
     argv['hardcoded-tests'] ?
       path.resolve(argv['hardcoded-tests']) :
-      path.join(__dirname, 'flow')
+      path.resolve(__dirname, '../../../src/parser/test/flow')
   );
   var result = {};
   for (var section in tests) {

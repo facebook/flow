@@ -117,7 +117,7 @@ function compare(env, ast, spec) {
       env.diff("Not an array");
     }
   } else if (spec != null && typeof spec == "object") {
-    for (prop in spec) {
+    for (var prop in spec) {
       if (spec.hasOwnProperty(prop)) {
         var path = prop.split(".");
         var sub_ast = ast;

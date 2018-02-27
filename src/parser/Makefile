@@ -80,8 +80,8 @@ js:
 		_build/$(REL_DIR)/flow_parser_dot_js.byte; \
 	rm flow_parser_dot_js.byte
 
-test-js: build-parser js
-	npm test
+test-js: js
+	cd $(TOP)/packages/flow-parser; npm test
 
 ../../_build/$(REL_DIR)/test/run_esprima_tests.native: build-parser
 	cd $(TOP); \
@@ -119,20 +119,6 @@ test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
 test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
 test: test-js test-ocaml
-
-npm-pack:
-	mv README.md README-backup.md
-	mv README-npm.md README.md
-	-npm pack
-	mv README.md README-npm.md
-	mv README-backup.md README.md
-
-npm-publish:
-	mv README.md README-backup.md
-	mv README-npm.md README.md
-	-npm publish
-	mv README.md README-npm.md
-	mv README-backup.md README.md
 
 ocamlfind-install:
 	cd $(TOP); \

@@ -13,11 +13,11 @@ source "$DIR/setup_node.sh"
 NPM_V=$(sed -n 's/.*"version":.*\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\).*/\1/p' src/parser/package.json)
 TAG_V=$(echo "${TRAVIS_TAG}" | sed -n 's/v\{0,\}\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\)/\1/p')
 if [[ "$TAG_V" == "$NPM_V" ]]; then
-  pushd src/parser > /dev/null
+  pushd packages/flow-parser > /dev/null
   echo "Publishing flow-parser@${TAG_V}";
   if [ -f ~/.npmrc ]; then mv ~/.npmrc ~/.npmrc.bak; fi
   echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-  make npm-publish
+  npm publish
   if [ -f ~/.npmrc.bak ]; then mv ~/.npmrc.bak ~/.npmrc; fi
   echo "Success"
   popd > /dev/null

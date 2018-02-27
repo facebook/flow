@@ -2,6 +2,6 @@
   "private": true,
   "workspaces": [
     "packages/flow-dev-tools",
-    "src/parser"
+    "packages/flow-parser"
   ]
 }
