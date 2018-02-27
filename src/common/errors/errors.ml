@@ -2551,7 +2551,7 @@ module Cli_output = struct
     in
 
     fun ~out_channel ~flags ?(stdin_file=None)
-      ~strip_root ~errors ~warnings () ->
+      ~strip_root ~errors ~warnings ~lazy_msg () ->
       let truncate = not (flags.show_all_errors) in
       let max_count = if truncate then Some 50 else None in
       let err_count = ErrorSet.cardinal errors in
@@ -2607,6 +2607,7 @@ module Cli_output = struct
           "\nOnly showing the most relevant union/intersection branches.\n\
           To see all branches, re-run Flow with --show-all-branches\n"
       );
+      Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
       ()
 end
 

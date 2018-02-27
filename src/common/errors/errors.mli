@@ -113,6 +113,7 @@ module Cli_output : sig
     strip_root: Path.t option ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
+    lazy_msg: string option ->
     unit ->
     unit
 end

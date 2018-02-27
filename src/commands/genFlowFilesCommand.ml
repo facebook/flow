@@ -136,6 +136,7 @@ let main option_values root error_flags strip_root ignore_flag
       ~strip_root
       ~errors
       ~warnings
+      ~lazy_msg:None
       ();
     let msg =
       "\nIn order to generate a shadow file there must be no type errors!"

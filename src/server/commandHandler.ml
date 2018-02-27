@@ -23,25 +23,33 @@ let convert_errors ~errors ~warnings =
 
 let get_status genv env client_root =
   let server_root = Options.root genv.options in
-  if server_root <> client_root then begin
-    ServerProt.Response.DIRECTORY_MISMATCH {
-      ServerProt.Response.server=server_root;
-      ServerProt.Response.client=client_root
-    }
-  end else begin
-    (* collate errors by origin *)
-    let errors, warnings, _ = ErrorCollator.get env in
-    let warnings = if Options.should_include_warnings genv.options
-      then warnings
-      else Errors.ErrorSet.empty
-    in
+  let lazy_stats = { ServerProt.Response.
+    lazy_mode = Options.lazy_mode genv.options;
+    checked_files = CheckedSet.all env.checked_files |> Utils_js.FilenameSet.cardinal;
+    total_files = Utils_js.FilenameSet.cardinal env.files;
+  } in
+  let status_response =
+    if server_root <> client_root then begin
+      ServerProt.Response.DIRECTORY_MISMATCH {
+        ServerProt.Response.server=server_root;
+        ServerProt.Response.client=client_root
+      }
+    end else begin
+      (* collate errors by origin *)
+      let errors, warnings, _ = ErrorCollator.get env in
+      let warnings = if Options.should_include_warnings genv.options
+        then warnings
+        else Errors.ErrorSet.empty
+      in
 
-    (* TODO: check status.directory *)
-    status_log errors;
-    FlowEventLogger.status_response
-      ~num_errors:(Errors.ErrorSet.cardinal errors);
-    convert_errors errors warnings
-  end
+      (* TODO: check status.directory *)
+      status_log errors;
+      FlowEventLogger.status_response
+        ~num_errors:(Errors.ErrorSet.cardinal errors);
+      convert_errors errors warnings
+    end
+  in
+  status_response, lazy_stats
 
 let autocomplete ~options ~workers ~env ~profiling file_input =
   let path, content = match file_input with
@@ -388,9 +396,9 @@ let handle_ephemeral_unsafe
               opt_include_warnings = genv.options.opt_include_warnings || include_warnings
             }
           } in
-          let status = get_status genv !env client_root in
-          respond (ServerProt.Response.STATUS status);
-          begin match status with
+          let status_response, lazy_stats = get_status genv !env client_root in
+          respond (ServerProt.Response.STATUS {status_response; lazy_stats});
+          begin match status_response with
             | ServerProt.Response.DIRECTORY_MISMATCH {ServerProt.Response.server; client} ->
                 Hh_logger.fatal "Status: Error";
                 Hh_logger.fatal "server_dir=%s, client_dir=%s"

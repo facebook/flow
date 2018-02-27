@@ -58,6 +58,7 @@
     - path: "/docs/lang/width-subtyping/"
 
     - path: "/docs/lang/refinements/"
+    - path: "/docs/lang/lazy-modes/"
     # - path: "/docs/lang/sealing/"
 
 - id: cli

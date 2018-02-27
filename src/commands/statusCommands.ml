@@ -104,8 +104,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
     let request = ServerProt.Request.STATUS (args.root, include_warnings) in
-    let response = match connect_and_make_request server_flags args.root request with
-    | ServerProt.Response.STATUS response -> response
+    let response, lazy_stats = match connect_and_make_request server_flags args.root request with
+    | ServerProt.Response.STATUS {status_response; lazy_stats} -> status_response, lazy_stats
     | response -> failwith_bad_response ~request ~response
     in
     let strip_root = if args.strip_root then Some args.root else None in
@@ -113,6 +113,16 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       ~out_channel:stdout ~strip_root ~pretty:args.pretty ?version:args.output_json_version
       ~suppressed_errors:([])
     in
+    let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
+    | Some mode -> Some (
+        Printf.sprintf
+          ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n" ^^
+          "To learn more, visit flow.org/en/docs/lang/lazy-modes")
+        Options.(match mode with | LAZY_MODE_FILESYSTEM -> "filesystem" | LAZY_MODE_IDE -> "IDE")
+        lazy_stats.ServerProt.Response.checked_files
+        lazy_stats.ServerProt.Response.total_files
+      )
+    | None -> None in
     match response with
     | ServerProt.Response.DIRECTORY_MISMATCH d ->
       let msg = Printf.sprintf
@@ -137,13 +147,17 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           ~out_channel:stdout
           ~errors
           ~warnings
+          ~lazy_msg
           ()
       end;
       FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
         print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
-      else Printf.printf "No errors!\n%!";
+      else begin
+        Printf.printf "No errors!\n%!";
+        Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
+      end;
       FlowExitStatus.(exit No_error)
     | ServerProt.Response.NOT_COVERED ->
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
