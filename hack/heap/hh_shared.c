@@ -437,10 +437,6 @@ static char* heap_init;
 /* Where the heap will end (top) */
 static char* heap_max;
 
-/* The size of the heap after initialization of the server */
-/* This should only be used by the master */
-static size_t heap_init_size = 0;
-
 /* Size of the heap since the last garbage collect*/
 static size_t latest_heap_size = 0;
 
@@ -1417,9 +1413,8 @@ static void temp_memory_unmap(char * tmp_heap) {
 /*****************************************************************************/
 void hh_call_after_init() {
   CAMLparam0();
-  heap_init_size = used_heap_size();
-  latest_heap_size = heap_init_size;
-  if(2 * heap_init_size >= heap_size) {
+  latest_heap_size = used_heap_size();
+  if (2 * latest_heap_size >= heap_size) {
     caml_failwith("Heap init size is too close to max heap size; "
       "GC will never get triggered!");
   }
