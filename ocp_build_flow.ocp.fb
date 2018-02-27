@@ -377,6 +377,9 @@ begin library "flow-monitor"
   comp = [
       "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
+  dep = [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
 end
 
 begin library "flow-monitor-logger"
