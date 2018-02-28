@@ -3,5 +3,8 @@
   "workspaces": [
     "packages/flow-dev-tools",
     "packages/flow-parser"
-  ]
+  ],
+  "scripts": {
+    "prepublish": "yarn workspace flow-parser run prepublish"
+  }
 }
