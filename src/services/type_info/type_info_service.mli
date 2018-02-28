@@ -7,7 +7,7 @@
 
 val type_at_pos :
   options:Options.t ->
-  workers:WorkerController.worker list option ->
+  workers:MultiWorker.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->
@@ -19,7 +19,7 @@ val type_at_pos :
 
 val dump_types :
   options:Options.t ->
-  workers:WorkerController.worker list option ->
+  workers:MultiWorker.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->
@@ -28,7 +28,7 @@ val dump_types :
 
 val coverage :
   options:Options.t ->
-  workers:WorkerController.worker list option ->
+  workers:MultiWorker.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   force:bool ->
@@ -37,7 +37,7 @@ val coverage :
 
 val suggest :
   options:Options.t ->
-  workers:WorkerController.worker list option ->
+  workers:MultiWorker.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->

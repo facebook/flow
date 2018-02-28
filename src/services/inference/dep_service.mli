@@ -8,7 +8,7 @@
 open Utils_js
 
 val dependent_files:
-  WorkerController.worker list option -> (* workers *)
+  MultiWorker.worker list option -> (* workers *)
   unchanged:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
   changed_modules:Modulename.Set.t ->
@@ -16,7 +16,7 @@ val dependent_files:
   FilenameSet.t * FilenameSet.t
 
 val calc_dependency_graph:
-  WorkerController.worker list option -> (* workers *)
+  MultiWorker.worker list option -> (* workers *)
   FilenameSet.t -> (* files *)
   FilenameSet.t FilenameMap.t
 

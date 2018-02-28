@@ -113,7 +113,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
   let procs = Sys_utils.nbr_procs in
   fun () ->
     let jobs = List.length !stream in
-    if jobs = 0 && !blocked <> 0 then MultiWorker.Wait
+    if jobs = 0 && !blocked <> 0 then Bucket.Wait
     else
       let bucket_size =
         if jobs < procs * max_bucket_size
@@ -131,9 +131,9 @@ let make dependency_graph leader_map component_map recheck_leader_map =
           total = Some !total_number_of_files;
         });
         files_merged_so_far := !files_merged_so_far + length;
-        MultiWorker.Job result
+        Bucket.Job result
       end else
-        MultiWorker.Done
+        Bucket.Done
 
 (* We know when files are done by having jobs return the files they processed,
    and trapping the function that joins results. ;), yeah. *)

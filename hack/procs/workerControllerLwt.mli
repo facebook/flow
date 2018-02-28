@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017, Facebook, Inc.
+ * Copyright (c) 2018, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,5 +8,5 @@
  *
  *)
 
- val to_fd_with_preamble: ?flags:Marshal.extern_flags list -> Lwt_unix.file_descr -> 'a -> int Lwt.t
- val from_fd_with_preamble: Lwt_unix.file_descr -> 'a Lwt.t
+(* Call in a sub-process *)
+val call: WorkerController.worker -> ('a -> 'b) -> 'a -> 'b Lwt.t

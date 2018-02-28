@@ -38,7 +38,7 @@ val merge_runner:
   job: 'a merge_job ->
   intermediate_result_callback: ('a merge_results Lazy.t -> unit) ->
   options: Options.t ->
-  workers: WorkerController.worker list option ->
+  workers: MultiWorker.worker list option ->
   FilenameSet.t FilenameMap.t ->
   (File_key.t Nel.t) FilenameMap.t ->
   bool FilenameMap.t ->
@@ -50,7 +50,7 @@ val merge_strict:
       Error_suppressions.t *
       ExactCover.lint_severity_cover) merge_results Lazy.t -> unit) ->
   options: Options.t ->
-  workers: WorkerController.worker list option ->
+  workers: MultiWorker.worker list option ->
   FilenameSet.t FilenameMap.t ->
   (File_key.t Nel.t) FilenameMap.t ->
   bool FilenameMap.t ->

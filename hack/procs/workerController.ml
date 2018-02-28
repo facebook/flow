@@ -58,7 +58,6 @@ type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
  *****************************************************************************)
 
 type worker = {
-
   id: int; (* Simple id for the worker. This is not the worker pid: on
               Windows, we spawn a new worker for each job. *)
 
@@ -85,8 +84,33 @@ type worker = {
 
   (* On Windows, a function to spawn a slave. *)
   spawn: unit -> (void, request) Daemon.handle;
-
 }
+
+let worker_id w = w.id
+
+(* Has the worker been killed *)
+let is_killed w = w.killed
+
+(* Mark the worker as busy. Throw if it is already busy *)
+let mark_busy w =
+  if w.busy then raise Worker_busy;
+  w.busy <- true
+
+(* Mark the worker as free *)
+let mark_free w = w.busy <- false
+
+(* If the worker isn't prespawned, spawn the worker *)
+let spawn w = match w.prespawned with
+| None -> w.spawn ()
+| Some handle -> handle
+
+(* If the worker isn't prespawned, close the worker *)
+let close w h = if w.prespawned = None then Daemon.close h
+
+(* If there is a call_wrapper, apply it and create the Request *)
+let wrap_request w f x = match w.call_wrapper with
+  | Some { wrap } -> Request (fun { send } -> send (wrap f x))
+  | None -> Request (fun { send } -> send (f x))
 
 (*****************************************************************************
  * The handle is what we get back when we start a job. It's a "future"
@@ -183,13 +207,11 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
  **************************************************************************)
 
 let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
-  if w.killed then Printf.ksprintf failwith "killed worker (%d)" w.id;
-  if w.busy then raise Worker_busy;
+  if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
+  mark_busy w;
+
   (* Spawn the slave, if not prespawned. *)
-  let { Daemon.pid = slave_pid; channels = (inc, outc) } as h =
-    match w.prespawned with
-    | None -> w.spawn ()
-    | Some handle -> handle in
+  let { Daemon.pid = slave_pid; channels = (inc, outc) } as h = spawn w in
 
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
@@ -211,7 +233,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   let result () : b =
     with_exit_status_check slave_pid begin fun () ->
       let res : b * Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
-      if w.prespawned = None then Daemon.close h;
+      close w h;
       Measure.merge (Measure.deserialize (snd res));
       fst res
     end in
@@ -227,13 +249,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
 
   (* Mark the worker as busy. *)
   let slave = { result; slave_pid; infd; worker = w; wait_for_cancel } in
-  w.busy <- true;
-  let request = match w.call_wrapper with
-    | Some { wrap } ->
-      (Request (fun { send } -> send (wrap f x)))
-    | None -> (Request (fun { send } -> send (f x)))
+  let request = wrap_request w f x in
 
-  in
   (* Send the job to the slave. *)
   let () =
     try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd request |> ignore
@@ -333,11 +350,9 @@ let get_job h = fst !h
  **************************************************************************)
 
 let kill w =
-  if not w.killed then begin
+  if not (is_killed w) then begin
     w.killed <- true;
-    match w.prespawned with
-    | None -> ()
-    | Some handle -> Daemon.kill handle
+    Option.iter ~f:Daemon.kill w.prespawned
   end
 
 let killall () =

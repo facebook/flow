@@ -50,13 +50,50 @@ end
 
 begin library "hh-procs"
   sort = true
-  files = begin fb-glob "hack/procs"
-  end
+  files = [
+    "hack/procs/bucket.mli"
+    "hack/procs/bucket.ml"
+    "hack/procs/multiThreadedCall.mli"
+    "hack/procs/multiThreadedCall.ml"
+    "hack/procs/multiWorker.mli"
+    "hack/procs/multiWorker.ml"
+    "hack/procs/workerController.mli"
+    "hack/procs/workerController.ml"
+    "hack/procs/worker.mli"
+    "hack/procs/worker.ml"
+  ]
+
   requires += [
     "hh-stubs"
     "hh-heap"
     "tp-core"
     "hh-utils"
+  ]
+end
+
+begin library "hh-procs-lwt"
+  sort = true
+  files = [
+    "hack/procs/multiWorkerLwt.mli"
+    "hack/procs/multiWorkerLwt.ml"
+    "hack/procs/workerControllerLwt.mli"
+    "hack/procs/workerControllerLwt.ml"
+  ]
+  requires += [
+    "hh-heap"
+    "hh-procs"
+    "hh-stubs"
+    "hh-utils"
+    "tp-core"
+    "lwt"
+    "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp = [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep = [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 

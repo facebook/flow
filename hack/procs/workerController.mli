@@ -32,6 +32,22 @@ exception Worker_failed_to_send_job of send_job_failure
 
 (* The type of a worker visible to the outside world *)
 type worker
+(* An empty type *)
+type void
+(* Get the worker's id *)
+val worker_id: worker -> int
+(* Has the worker been killed *)
+val is_killed: worker -> bool
+(* Mark the worker as busy. Throw if it is already busy *)
+val mark_busy: worker -> unit
+(* Mark the worker as free *)
+val mark_free: worker -> unit
+(* If the worker isn't prespawned, spawn the worker *)
+val spawn: worker -> (void, Worker.request) Daemon.handle
+(* If the worker isn't prespawned, close the worker *)
+val close: worker -> (void, Worker.request) Daemon.handle -> unit
+(* If there is a call_wrapper, apply it and create the Request *)
+val wrap_request: worker -> ('x -> 'b) -> 'x -> Worker.request
 
 type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
 
@@ -49,7 +65,7 @@ val register_entry_point:
 
 (* Creates a pool of workers. *)
 val make:
-  (** See docs in Worker.t for call_wrapper. *)
+  (** See docs in WorkerController.worker for call_wrapper. *)
   ?call_wrapper: call_wrapper ->
   saved_state : 'a ->
   entry       : 'a entry ->

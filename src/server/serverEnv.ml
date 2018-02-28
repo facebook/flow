@@ -11,7 +11,7 @@
 
 type genv = {
     options          : Options.t;
-    workers          : WorkerController.worker list option;
+    workers          : MultiWorker.worker list option;
   }
 
 (*****************************************************************************)

@@ -21,7 +21,7 @@ val make :
   (* recheck_leader_map *)
   bool FilenameMap.t ->
   unit ->
-  element list MultiWorker.bucket
+  element list Bucket.bucket
 
 val join :
   (* intermediate result callback *)
