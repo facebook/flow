@@ -121,6 +121,7 @@ module Opts = struct
     |> SSet.add ".js"
     |> SSet.add ".jsx"
     |> SSet.add ".json"
+    |> SSet.add ".mjs"
 
   let module_resource_exts = SSet.empty
     |> SSet.add ".css"
