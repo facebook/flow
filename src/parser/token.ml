@@ -94,6 +94,7 @@ type t =
   | T_MINUS_ASSIGN
   | T_PLUS_ASSIGN
   | T_ASSIGN
+  | T_PLING_PERIOD
   | T_PLING
   | T_COLON
   | T_OR
@@ -247,6 +248,7 @@ let token_to_string = function
   | T_MINUS_ASSIGN -> "T_MINUS_ASSIGN"
   | T_PLUS_ASSIGN -> "T_PLUS_ASSIGN"
   | T_ASSIGN -> "T_ASSIGN"
+  | T_PLING_PERIOD -> "T_PLING_PERIOD"
   | T_PLING -> "T_PLING"
   | T_COLON -> "T_COLON"
   | T_OR -> "T_OR"
@@ -376,6 +378,7 @@ let value_of_token = function
   | T_MINUS_ASSIGN -> "-="
   | T_PLUS_ASSIGN -> "+="
   | T_ASSIGN -> "="
+  | T_PLING_PERIOD -> "?."
   | T_PLING -> "?"
   | T_COLON -> ":"
   | T_OR -> "||"

@@ -253,7 +253,7 @@ class requires_calculator ~ast = object(this)
 
   method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
-    let { Call.callee; arguments } = expr in
+    let { Call.callee; arguments; optional = _ } = expr in
     this#handle_call call_loc callee arguments None;
     super#call call_loc expr
 
@@ -534,7 +534,7 @@ class requires_calculator ~ast = object(this)
     | _ -> None
     end in
     begin match right with
-    | call_loc, Call { Call.callee; arguments } ->
+    | call_loc, Call { Call.callee; arguments; optional = _ } ->
       this#handle_call call_loc callee arguments bindings
     | _ -> ()
     end

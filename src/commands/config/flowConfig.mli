@@ -42,6 +42,7 @@ val esproposal_class_instance_fields: config -> Options.esproposal_feature_mode
 val esproposal_class_static_fields: config -> Options.esproposal_feature_mode
 val esproposal_decorators: config -> Options.esproposal_feature_mode
 val esproposal_export_star_as: config -> Options.esproposal_feature_mode
+val esproposal_optional_chaining: config -> Options.esproposal_feature_mode
 val facebook_fbt: config -> string option
 val haste_name_reducers: config -> (Str.regexp * string) list
 val haste_paths_blacklist: config -> string list

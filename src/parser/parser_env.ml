@@ -157,6 +157,7 @@ type parse_options = {
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
+  esproposal_optional_chaining: bool;
   types: bool;
   use_strict: bool;
 }
@@ -165,6 +166,7 @@ let default_parse_options = {
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
   esproposal_export_star_as = false;
+  esproposal_optional_chaining = false;
   types = true;
   use_strict = false;
 }
@@ -614,6 +616,7 @@ module Peek = struct
       | T_MINUS_ASSIGN
       | T_PLUS_ASSIGN
       | T_ASSIGN
+      | T_PLING_PERIOD
       | T_PLING
       | T_COLON
       | T_OR

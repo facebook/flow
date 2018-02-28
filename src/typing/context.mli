@@ -33,6 +33,7 @@ type global_metadata = {
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
+  esproposal_optional_chaining: Options.esproposal_feature_mode;
   facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
@@ -68,6 +69,7 @@ val esproposal_class_static_fields: t -> Options.esproposal_feature_mode
 val esproposal_class_instance_fields: t -> Options.esproposal_feature_mode
 val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
+val esproposal_optional_chaining: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t

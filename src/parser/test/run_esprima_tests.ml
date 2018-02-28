@@ -129,6 +129,9 @@ end = struct
         | "esproposal_export_star_as" -> get_bool k v >>= fun v ->
           return { opts with Parser_env.esproposal_export_star_as = v }
 
+        | "esproposal_optional_chaining" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.esproposal_optional_chaining = v }
+
         | "types" -> get_bool k v >>= fun v ->
           return { opts with Parser_env.types = v }
 

@@ -152,6 +152,7 @@ type error_message =
     }
   | EInvalidPrototype of reason
   | EDeprecatedDeclareExports of Loc.t
+  | EExperimentalOptionalChaining of Loc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -362,6 +363,7 @@ let util_use_op_of_msg nope util = function
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
 | EInvalidPrototype (_)
 | EDeprecatedDeclareExports (_)
+| EExperimentalOptionalChaining (_)
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -1920,3 +1922,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EInvalidPrototype reason ->
     mk_error ~trace_infos (loc_of_reason reason)
       [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."]
+
+  | EExperimentalOptionalChaining loc ->
+    mk_error ~trace_infos ~kind:ParseError loc [
+      text "Experimental optional chaining ("; code "?."; text ") usage. ";
+      text "Optional chaining is an active early-stage feature proposal that ";
+      text "may change. You may opt in to using it anyway by putting ";
+      code "esproposal.optional_chaining=enable"; text " into the ";
+      code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+    ]

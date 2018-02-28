@@ -485,6 +485,7 @@ end with type t = Impl.t) = struct
         node "CallExpression" loc [
           "callee", expression call.callee;
           "arguments", array_of_list expression_or_spread call.arguments;
+          "optional", bool call.optional;
         ]
       )
     | loc, Member member -> Member.(
@@ -497,6 +498,7 @@ end with type t = Impl.t) = struct
           "object", expression member._object;
           "property", property;
           "computed", bool member.computed;
+          "optional", bool member.optional;
         ]
       )
     | loc, Yield yield -> Yield.(

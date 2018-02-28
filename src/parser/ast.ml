@@ -727,6 +727,7 @@ and Expression : sig
     type 'M t = {
       callee: 'M Expression.t;
       arguments: 'M expression_or_spread list;
+      optional: bool;
     }
   end
   module Member : sig
@@ -738,6 +739,7 @@ and Expression : sig
       _object: 'M Expression.t;
       property: 'M property;
       computed: bool;
+      optional: bool;
     }
   end
   module Yield : sig
