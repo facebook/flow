@@ -190,6 +190,10 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
     match w.prespawned with
     | None -> w.spawn ()
     | Some handle -> handle in
+
+  let infd = Daemon.descr_of_in_channel inc in
+  let outfd = Daemon.descr_of_out_channel outc in
+
   let with_exit_status_check slave_pid f =
     match Unix.waitpid [Unix.WNOHANG] slave_pid with
     | 0, _ | _, Unix.WEXITED 0 ->
@@ -206,7 +210,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   (* Prepare ourself to read answer from the slave. *)
   let result () : b =
     with_exit_status_check slave_pid begin fun () ->
-      let res : b * Measure.record_data = Daemon.input_value inc in
+      let res : b * Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
       if w.prespawned = None then Daemon.close h;
       Measure.merge (Measure.deserialize (snd res));
       fst res
@@ -217,12 +221,11 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
        * results back, this will return either actual results, or "anything"
        * (written by interrupt signal that exited). The types don't match, but we
        * ignore both of them anyway. *)
-      let _ : 'c = Daemon.input_value inc in
+      let _ : 'c = Marshal_tools.from_fd_with_preamble infd in
       ()
     end in
 
   (* Mark the worker as busy. *)
-  let infd = Daemon.descr_of_in_channel inc in
   let slave = { result; slave_pid; infd; worker = w; wait_for_cancel } in
   w.busy <- true;
   let request = match w.call_wrapper with
@@ -232,9 +235,9 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
 
   in
   (* Send the job to the slave. *)
-  let () = try Daemon.to_channel outc
-    ~flush:true ~flags:[Marshal.Closures]
-    request with
+  let () =
+    try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd request |> ignore
+    with
     | e -> begin
       match Unix.waitpid [Unix.WNOHANG] slave_pid with
       | 0, _ ->

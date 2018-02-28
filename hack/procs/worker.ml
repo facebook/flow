@@ -24,11 +24,11 @@ and serializer = { send: 'a. 'a -> unit }
 
 (* If we cancel before sending results, master will be left blocking waiting
 * for results. We need to send something back *)
-let on_slave_cancelled parent_oc =
-   (* The cancelling master will ignore result of cancelled job anyway (see
-    * wait_for_cancel function), so we can send back anything. *)
-   Daemon.output_string parent_oc (Marshal.to_string "anything" []);
-   Daemon.flush parent_oc
+let on_slave_cancelled parent_outfd =
+  (* The cancelling master will ignore result of cancelled job anyway (see
+   * wait_for_cancel function), so we can send back anything. *)
+  Marshal_tools.to_fd_with_preamble parent_outfd "anything"
+  |> ignore
 
 (*****************************************************************************
  * Entry point for spawned worker.
@@ -43,6 +43,10 @@ let slave_main ic oc =
   let start_major_words = ref 0. in
   let start_minor_collections = ref 0 in
   let start_major_collections = ref 0 in
+
+  let infd = Daemon.descr_of_in_channel ic in
+  let outfd = Daemon.descr_of_out_channel oc in
+
   let send_result data =
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
@@ -63,8 +67,9 @@ let slave_main ic oc =
     Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
     let stats = Measure.serialize (Measure.pop_global ()) in
-    let s = Marshal.to_string (data,stats) [Marshal.Closures] in
-    let len = String.length s in
+    (* If we got so far, just let it finish "naturally" *)
+    SharedMem.set_on_worker_cancelled (fun () -> ());
+    let len = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd (data,stats) in
     if len > 30 * 1024 * 1024 (* 30 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
         which may have an adverse performance impact. If you are sending \
@@ -72,15 +77,13 @@ let slave_main ic oc =
         values in their environment." len;
       Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
         (Printexc.get_callstack 100));
-    end;
-    (* If we got so far, just let it finish "naturally" *)
-    SharedMem.set_on_worker_cancelled (fun () -> ());
-    Daemon.output_string oc s;
-    Daemon.flush oc in
+    end
+  in
+
   try
     Measure.push_global ();
-    let Request do_process = Daemon.from_channel ic in
-    SharedMem.set_on_worker_cancelled (fun () -> on_slave_cancelled oc);
+    let Request do_process = Marshal_tools.from_fd_with_preamble infd in
+    SharedMem.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
     let tm = Unix.times () in
     let gc = Gc.quick_stat () in
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
