@@ -12,6 +12,20 @@ module Result = Core_result
 let (>>=) = Result.(>>=)
 let (>>|) = Result.(>>|)
 
+(* The problem with Core_result's >>= and >>| is that the function second argument cannot return
+ * an Lwt.t. These helper infix operators handle that case *)
+let (%>>=) (result: ('ok, 'err) Result.t) (f: 'ok -> ('a, 'err) Result.t Lwt.t) : ('a, 'err) Result.t Lwt.t =
+  match result with
+  | Error e -> Lwt.return (Error e)
+  | Ok x -> f x
+
+let (%>>|) (result: ('ok, 'err) Result.t) (f: 'ok -> 'a Lwt.t) : ('a, 'err) Result.t Lwt.t =
+  match result with
+  | Error e -> Lwt.return (Error e)
+  | Ok x ->
+    let%lwt new_x = f x in
+    Lwt.return (Ok new_x)
+
 let compute_docblock file content =
   let open Parsing_service_js in
   let max_tokens = docblock_max_tokens in
@@ -65,9 +79,8 @@ let get_dependents options workers env file_key content =
     ~changed_modules:(Modulename.Set.singleton modulename)
 
 let lazy_mode_focus genv env path =
-  Nel.one path
-  |> Lazy_mode_utils.focus_and_check genv env
-  |> fst
+  let%lwt env, _ = Lazy_mode_utils.focus_and_check genv env (Nel.one path) in
+  Lwt.return env
 
 module VariableRefs: sig
   val find_refs:
@@ -77,7 +90,7 @@ module VariableRefs: sig
     content: string ->
     Loc.t ->
     global: bool ->
-    ((string * Loc.t list * int option) option, string) result
+    ((string * Loc.t list * int option) option, string) result Lwt.t
 end = struct
 
   (* Sometimes we want to find a specific symbol in a dependent file, but other
@@ -162,9 +175,10 @@ end = struct
 
   let find_external_refs genv env file_key ~content ~query local_refs =
     let {options; workers} = genv in
-    File_key.to_path file_key >>= fun path ->
-    env := lazy_mode_focus genv !env path;
-    let _, direct_dependents = get_dependents options workers env file_key content in
+    File_key.to_path file_key %>>= fun path ->
+    let%lwt new_env = lazy_mode_focus genv !env path in
+    env := new_env;
+    let%lwt _, direct_dependents = get_dependents options workers env file_key content in
     (* Get a map from dependent file path to locations where the symbol in question is imported in
     that file *)
     let imported_locations_result: (Loc.t list, string) result =
@@ -173,65 +187,69 @@ end = struct
         Result.all >>= fun loc_lists ->
         Ok (List.concat loc_lists)
     in
-    imported_locations_result >>= fun imported_locations ->
-    let all_external_locations =
-      imported_locations |>
-      List.map begin fun imported_loc ->
-        let filekey_result =
-          Result.of_option
-            Loc.(imported_loc.source)
-            ~error:"local_find_refs should return locs with sources"
-        in
-        filekey_result >>= fun filekey ->
-        File_key.to_path filekey >>= fun path ->
-        let file_input = File_input.FileName path in
-        File_input.content_of_file_input file_input >>= fun content ->
-        local_find_refs filekey ~content imported_loc >>= fun refs_option ->
-        Result.of_option refs_option ~error:"Expected results from local_find_refs" >>= fun (_name, locs) ->
-        Ok locs
-      end |>
-      Result.all >>= fun locs ->
-      Ok (List.concat locs)
-    in
-    all_external_locations >>= fun all_external_locations ->
-    Ok (all_external_locations @ local_refs, FilenameSet.cardinal direct_dependents)
+    Lwt.return (
+      imported_locations_result >>= fun imported_locations ->
+      let all_external_locations =
+        imported_locations |>
+        List.map begin fun imported_loc ->
+          let filekey_result =
+            Result.of_option
+              Loc.(imported_loc.source)
+              ~error:"local_find_refs should return locs with sources"
+          in
+          filekey_result >>= fun filekey ->
+          File_key.to_path filekey >>= fun path ->
+          let file_input = File_input.FileName path in
+          File_input.content_of_file_input file_input >>= fun content ->
+          local_find_refs filekey ~content imported_loc >>= fun refs_option ->
+          Result.of_option refs_option ~error:"Expected results from local_find_refs" >>= fun (_name, locs) ->
+          Ok locs
+        end |>
+        Result.all >>= fun locs ->
+        Ok (List.concat locs)
+      in
+      all_external_locations >>= fun all_external_locations ->
+      Ok (all_external_locations @ local_refs, FilenameSet.cardinal direct_dependents)
+    )
 
   let find_refs genv env file_key ~content loc ~global =
     (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
     first *)
-    local_find_refs file_key content loc >>= function
-      | None -> Ok None
+    local_find_refs file_key content loc %>>= function
+      | None -> Lwt.return (Ok None)
       | Some (name, refs) ->
           if global then
-            compute_ast_result file_key content >>= fun (_, file_sig, _) ->
+            compute_ast_result file_key content %>>= fun (_, file_sig, _) ->
             let open File_sig in
             let find_exported_loc loc query =
               if List.mem loc refs then
-                let all_refs_result = find_external_refs genv env file_key content query refs in
-                all_refs_result >>= fun (all_refs, num_deps) -> Ok (Some (name, all_refs, Some num_deps))
+                let%lwt all_refs_result = find_external_refs genv env file_key content query refs in
+                all_refs_result %>>= fun (all_refs, num_deps) ->
+                Lwt.return (Ok (Some (name, all_refs, Some num_deps)))
               else
-                Ok (Some (name, refs, None)) in
+                Lwt.return (Ok (Some (name, refs, None))) in
             begin match file_sig.module_sig.module_kind with
-              | CommonJS { exports = None } -> Ok (Some (name, refs, None))
+              | CommonJS { exports = None } -> Lwt.return (Ok (Some (name, refs, None)))
               | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) } ->
                 if id_name = name
                 then find_exported_loc id_loc CJSIdent
-                else Ok (Some (name, refs, None))
-              | CommonJS { exports = Some CJSExportOther } -> Ok (Some (name, refs, None))
+                else Lwt.return (Ok (Some (name, refs, None)))
+              | CommonJS { exports = Some CJSExportOther } ->
+                Lwt.return (Ok (Some (name, refs, None)))
               | CommonJS { exports = Some (CJSExportProps props) } ->
                 begin match SMap.get name props with
-                  | None -> Ok (Some (name, refs, None))
+                  | None -> Lwt.return (Ok (Some (name, refs, None)))
                   | Some (CJSExport { loc; _ }) -> find_exported_loc loc (Symbol name)
                 end
               | ES {named; _} -> begin match SMap.get name named with
-                  | None -> Ok (Some (name, refs, None))
-                  | Some (File_sig.ExportDefault _) -> Ok (Some (name, refs, None))
+                  | None -> Lwt.return (Ok (Some (name, refs, None)))
+                  | Some (File_sig.ExportDefault _) -> Lwt.return (Ok (Some (name, refs, None)))
                   | Some (File_sig.ExportNamed { loc; _ } | File_sig.ExportNs { loc; _ }) ->
                       find_exported_loc loc (Symbol name)
                 end
             end
           else
-            Ok (Some (name, refs, None))
+            Lwt.return (Ok (Some (name, refs, None)))
 end
 
 module PropertyRefs: sig
@@ -243,7 +261,7 @@ module PropertyRefs: sig
     File_key.t ->
     Loc.t ->
     global: bool ->
-    ((string * Loc.t list * int option) option, string) result
+    ((string * Loc.t list * int option) option, string) result Lwt.t
 
 end = struct
 
@@ -428,9 +446,8 @@ end = struct
       Ok local_defs
     else begin
       set_get_refs_hook potential_refs name;
-      let cx =
-        let ensure_checked = fun _ -> () in
-        Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+      let cx = Merge_service.merge_contents_context_without_ensure_checked_dependencies
+        options file_key ast info file_sig
       in
       unset_hooks ();
       filter_refs cx !potential_refs file_key local_defs def_locs name
@@ -441,7 +458,7 @@ end = struct
     let {options; workers} = genv in
     let dep_list: File_key.t list = FilenameSet.elements all_deps in
     let node_modules_containers = !Files.node_modules_containers in
-    let result: (Loc.t list, string) result list list = MultiWorker.call workers
+    let%lwt result: (Loc.t list, string) result list list Lwt.t = MultiWorkerLwt.call workers
       ~job: begin fun _acc deps ->
         (* Yay for global mutable state *)
         Files.node_modules_containers := node_modules_containers;
@@ -452,48 +469,51 @@ end = struct
       end
       ~merge: (fun refs acc -> refs::acc)
       ~neutral: []
-      ~next: (MultiWorker.next workers dep_list)
+      ~next: (MultiWorkerLwt.next workers dep_list)
     in
-    List.concat result |> Result.all
+    Lwt.return (List.concat result |> Result.all)
 
   let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
-    let get_def_info: unit -> ((Loc.t Nel.t * string) option, string) result = fun () ->
+    let get_def_info: unit -> ((Loc.t Nel.t * string) option, string) result Lwt.t = fun () ->
       let props_access_info = ref None in
       set_def_loc_hook props_access_info loc;
-      let cx_result =
+      let%lwt cx_result =
         compute_ast_result file_key content
-        >>| fun (ast, file_sig, info) ->
-          Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
+        %>>| fun (ast, file_sig, info) ->
+          Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
             let ensure_checked =
               Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
             Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
           )
       in
       unset_hooks ();
-      cx_result >>= fun cx ->
-      match !props_access_info with
-        | None -> Ok None
-        | Some (`Obj_def (loc, name)) ->
-            Ok (Some (Nel.one loc, name))
-        | Some (`Class_def (ty, name)) ->
-            (* We get the type of the class back here, so we need to extract the type of an instance *)
-            extract_instancet cx ty >>= fun ty ->
-            begin extract_def_loc_resolved cx ty name >>= function
-              | Found locs -> Ok (Some (locs, name))
-              | _ -> Error "Unexpectedly failed to extract definition from known type"
-            end
-        | Some (`Use (ty, name)) ->
-            begin extract_def_loc cx ty name >>= function
-              | Found locs -> Ok (Some (locs, name))
-              | NoDefFound
-              | UnsupportedType
-              | AnyType -> Ok None
-            end
+      Lwt.return (
+        cx_result >>= fun cx ->
+        match !props_access_info with
+          | None -> Ok None
+          | Some (`Obj_def (loc, name)) ->
+              Ok (Some (Nel.one loc, name))
+          | Some (`Class_def (ty, name)) ->
+              (* We get the type of the class back here, so we need to extract the type of an instance *)
+              extract_instancet cx ty >>= fun ty ->
+              begin extract_def_loc_resolved cx ty name >>= function
+                | Found locs -> Ok (Some (locs, name))
+                | _ -> Error "Unexpectedly failed to extract definition from known type"
+              end
+          | Some (`Use (ty, name)) ->
+              begin extract_def_loc cx ty name >>= function
+                | Found locs -> Ok (Some (locs, name))
+                | NoDefFound
+                | UnsupportedType
+                | AnyType -> Ok None
+              end
+      )
     in
-    get_def_info () >>= fun def_info_opt ->
+    let%lwt def_info = get_def_info () in
+    def_info %>>= fun def_info_opt ->
     match def_info_opt with
-      | None -> Ok None
+      | None -> Lwt.return (Ok None)
       | Some (def_locs, name) ->
           if global then
             (* Start from the file where the symbol is defined, instead of the one where find-refs
@@ -502,24 +522,28 @@ end = struct
              * subclasses must depend on the superclasses, then we can safely take the super-est
              * class location and consider that the root. *)
             let last_def_loc = Nel.nth def_locs ((Nel.length def_locs) - 1) in
-            Result.of_option Loc.(last_def_loc.source) ~error:"Expected a location with a source file" >>= fun file_key ->
-            File_key.to_path file_key >>= fun path ->
-            env := lazy_mode_focus genv !env path;
+            Result.of_option Loc.(last_def_loc.source) ~error:"Expected a location with a source file" %>>= fun file_key ->
+            File_key.to_path file_key %>>= fun path ->
+            let%lwt new_env = lazy_mode_focus genv !env path in
+            env := new_env;
             let fileinput = File_input.FileName path in
-            File_input.content_of_file_input fileinput >>= fun content ->
-            compute_ast_result file_key content >>= fun ast_info ->
-            find_refs_in_file options ast_info file_key def_locs name >>= fun refs ->
-            let all_deps, _ = get_dependents options workers env file_key content in
+            File_input.content_of_file_input fileinput %>>= fun content ->
+            compute_ast_result file_key content %>>= fun ast_info ->
+            find_refs_in_file options ast_info file_key def_locs name %>>= fun refs ->
+            let%lwt all_deps, _ = get_dependents options workers env file_key content in
             let dependent_file_count = FilenameSet.cardinal all_deps in
             Hh_logger.info
               "find-refs: searching %d dependent modules for references"
               dependent_file_count;
-            find_external_refs genv all_deps def_locs name >>| fun external_refs ->
-            Some (name, List.concat (refs::external_refs), Some dependent_file_count)
+            let%lwt external_refs = find_external_refs genv all_deps def_locs name in
+            external_refs %>>| fun external_refs ->
+            Lwt.return (Some (name, List.concat (refs::external_refs), Some dependent_file_count))
           else
-            compute_ast_result file_key content >>= fun ast_info ->
-            find_refs_in_file options ast_info file_key def_locs name >>= fun refs ->
-            Ok (Some (name, refs, None))
+            Lwt.return (
+              compute_ast_result file_key content >>= fun ast_info ->
+              find_refs_in_file options ast_info file_key def_locs name >>= fun refs ->
+              Ok (Some (name, refs, None))
+            )
 end
 
 let sort_find_refs_result = function
@@ -533,11 +557,12 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
   match File_input.content_of_file_input file_input with
-  | Error err -> Error err, None
+  | Error err -> Lwt.return (Error err, None)
   | Ok content ->
-    let result =
-      VariableRefs.find_refs genv env file_key ~content loc ~global >>= function
-        | Some _ as result -> Ok result
+    let%lwt result =
+      let%lwt refs = VariableRefs.find_refs genv env file_key ~content loc ~global in
+      refs %>>= function
+        | Some _ as result -> Lwt.return (Ok result)
         | None -> PropertyRefs.find_refs genv env ~profiling ~content file_key loc ~global
     in
     let json_data = match result with
@@ -552,4 +577,4 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
       :: ("global", Hh_json.JSON_Bool global)
       :: json_data
     in
-    result, Some (Hh_json.JSON_Object json_data)
+    Lwt.return (result, Some (Hh_json.JSON_Object json_data))

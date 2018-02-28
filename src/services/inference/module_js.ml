@@ -861,7 +861,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
     SharedMem_js.collect `gentle;
   end;
 
-  MultiWorker.call
+  let%lwt () = MultiWorkerLwt.call
     workers
     ~job: (fun () replace ->
       List.iter (fun (m, f) ->
@@ -870,10 +870,10 @@ let commit_modules workers ~options new_or_changed dirty_modules =
     )
     ~neutral: ()
     ~merge: (fun () () -> ())
-    ~next: (MultiWorker.next workers replace);
-
+    ~next: (MultiWorkerLwt.next workers replace)
+  in
   if debug then prerr_endlinef "*** done committing modules ***";
-  providers, changed_modules, errmap
+  Lwt.return (providers, changed_modules, errmap)
 
 let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
@@ -935,7 +935,7 @@ let calc_old_modules ~options old_file_module_assoc =
   old_modules
 
 let clear_files workers ~options new_or_changed_or_deleted =
-  let old_file_module_assoc = MultiWorker.call workers
+  let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun acc file ->
       match get_info ~audit:Expensive.ok file with
       | Some info ->
@@ -946,14 +946,14 @@ let clear_files workers ~options new_or_changed_or_deleted =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers (FilenameSet.elements new_or_changed_or_deleted)) in
-
+    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
+  in
   (* clear files *)
   InfoHeap.remove_batch new_or_changed_or_deleted;
   ResolvedRequiresHeap.remove_batch new_or_changed_or_deleted;
   SharedMem_js.collect `gentle;
 
-  calc_old_modules ~options old_file_module_assoc
+  Lwt.return (calc_old_modules ~options old_file_module_assoc)
 
 (* Before and after inference, we add per-file module info to the shared heap
    from worker processes. Note that we wait to choose providers until inference
@@ -1015,7 +1015,7 @@ let calc_new_modules ~options file_module_assoc =
 
 let introduce_files workers ~options parsed unparsed =
   (* add tracking modules for unparsed files *)
-  let unparsed_file_module_assoc = MultiWorker.call workers
+  let%lwt unparsed_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
       let m = add_unparsed_info ~audit:Expensive.ok
         ~options filename docblock in
@@ -1024,10 +1024,10 @@ let introduce_files workers ~options parsed unparsed =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers unparsed) in
-
+    ~next: (MultiWorkerLwt.next workers unparsed)
+  in
   (* create info for parsed files *)
-  let parsed_file_module_assoc = MultiWorker.call workers
+  let%lwt parsed_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun file_module_assoc filename ->
       let docblock = Parsing_service_js.get_docblock_unsafe filename in
       let m = add_parsed_info ~audit:Expensive.ok
@@ -1037,9 +1037,9 @@ let introduce_files workers ~options parsed unparsed =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers parsed) in
-
+    ~next: (MultiWorkerLwt.next workers parsed)
+  in
   let new_file_module_assoc =
     List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
 
-  calc_new_modules ~options new_file_module_assoc
+  Lwt.return (calc_new_modules ~options new_file_module_assoc)

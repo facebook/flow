@@ -7,7 +7,7 @@
 
 val type_at_pos :
   options:Options.t ->
-  workers:MultiWorker.worker list option ->
+  workers:MultiWorkerLwt.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->
@@ -15,31 +15,31 @@ val type_at_pos :
   int ->
   int ->
   ((Loc.t * string option) * Hh_json.json option,
-    string * Hh_json.json option) Core_result.t
+    string * Hh_json.json option) Core_result.t Lwt.t
 
 val dump_types :
   options:Options.t ->
-  workers:MultiWorker.worker list option ->
+  workers:MultiWorkerLwt.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->
-  ((Loc.t * string) list, string) Core_result.t
+  ((Loc.t * string) list, string) Core_result.t Lwt.t
 
 val coverage :
   options:Options.t ->
-  workers:MultiWorker.worker list option ->
+  workers:MultiWorkerLwt.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   force:bool ->
   File_key.t ->
-  string -> ((Loc.t * bool) list, string) Core_result.t
+  string -> ((Loc.t * bool) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->
-  workers:MultiWorker.worker list option ->
+  workers:MultiWorkerLwt.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->
   string list ->
-  string -> ((int * int * string) list, string) Core_result.t
+  string -> ((int * int * string) list, string) Core_result.t Lwt.t

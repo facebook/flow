@@ -58,19 +58,23 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
         File_input.filename_of_file_input file_input, content
   in
   let state = Autocomplete_js.autocomplete_set_hooks () in
-  let results, json_data_to_log =
-    let path = File_key.SourceFile path in
+  let path = File_key.SourceFile path in
+  let%lwt check_contents_result =
     Types_js.basic_check_contents ~options ~workers ~env ~profiling content path
-    |> map_error ~f:(fun str -> str, None)
-    >>= (fun (cx, info) ->
-      Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
-        try_with_json (fun () -> AutocompleteService_js.autocomplete_get_results cx state info)
+  in
+  let%lwt autocomplete_result =
+    map_error ~f:(fun str -> str, None) check_contents_result
+    %>>= (fun (cx, info) ->
+      Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
+        try_with_json (fun () ->
+          Lwt.return (AutocompleteService_js.autocomplete_get_results cx state info)
+        )
       )
     )
-    |> split_result
   in
+  let results, json_data_to_log = split_result autocomplete_result in
   Autocomplete_js.autocomplete_unset_hooks ();
-  results, json_data_to_log
+  Lwt.return (results, json_data_to_log)
 
 let check_file ~options ~workers ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
@@ -88,11 +92,12 @@ let check_file ~options ~workers ~env ~profiling ~force file_input =
       in
       if should_check then
         let file = File_key.SourceFile file in
-        let errors, warnings =
-          Types_js.typecheck_contents ~options ~workers ~env ~profiling content file in
-        convert_errors ~errors ~warnings
+        let%lwt errors, warnings =
+          Types_js.typecheck_contents ~options ~workers ~env ~profiling content file
+        in
+        Lwt.return (convert_errors ~errors ~warnings)
       else
-        ServerProt.Response.NOT_COVERED
+        Lwt.return (ServerProt.Response.NOT_COVERED)
 
 let infer_type
     ~options
@@ -104,68 +109,74 @@ let infer_type
   let file = File_key.SourceFile file in
   let options = { options with Options.opt_verbose = verbose } in
   match File_input.content_of_file_input file_input with
-  | Error e -> Error e, None
+  | Error e -> Lwt.return (Error e, None)
   | Ok content ->
-    try_with_json begin fun () ->
+    let%lwt result = try_with_json (fun () ->
       Type_info_service.type_at_pos ~options ~workers ~env ~profiling file content line col
-    end
-    |> split_result
+    ) in
+    Lwt.return (split_result result)
 
 let dump_types ~options ~workers ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input >>= fun content ->
-  try_with begin fun () ->
-    Type_info_service.dump_types
-      ~options ~workers ~env ~profiling file content
-  end
+  File_input.content_of_file_input file_input
+  %>>= fun content ->
+    try_with begin fun () ->
+      Type_info_service.dump_types ~options ~workers ~env ~profiling file content
+    end
 
 let coverage ~options ~workers ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input >>= fun content ->
-  try_with begin fun () ->
-    Type_info_service.coverage ~options ~workers ~env ~profiling ~force file content
-  end
+  File_input.content_of_file_input file_input
+  %>>= fun content ->
+    try_with begin fun () ->
+      Type_info_service.coverage ~options ~workers ~env ~profiling ~force file content
+    end
 
 let get_cycle ~workers ~env fn =
   (* Re-calculate SCC *)
   let parsed = !env.ServerEnv.files in
-  let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-  let components = Sort_js.topsort ~roots:parsed dependency_graph in
+  let%lwt dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+  Lwt.return (
+    let components = Sort_js.topsort ~roots:parsed dependency_graph in
 
-  (* Get component for target file *)
-  let component = List.find (Nel.mem fn) components in
+    (* Get component for target file *)
+    let component = List.find (Nel.mem fn) components in
 
-  (* Restrict dep graph to only in-cycle files *)
-  let subgraph = Nel.fold_left (fun acc f ->
-    Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
-      let subdeps = FilenameSet.filter (fun f -> Nel.mem f component) deps in
-      if FilenameSet.is_empty subdeps
-      then acc
-      else FilenameMap.add f subdeps acc
-    )
-  ) FilenameMap.empty component in
+    (* Restrict dep graph to only in-cycle files *)
+    let subgraph = Nel.fold_left (fun acc f ->
+      Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
+        let subdeps = FilenameSet.filter (fun f -> Nel.mem f component) deps in
+        if FilenameSet.is_empty subdeps
+        then acc
+        else FilenameMap.add f subdeps acc
+      )
+    ) FilenameMap.empty component in
 
-  (* Convert from map/set to lists for serialization to client. *)
-  let subgraph = FilenameMap.fold (fun f dep_fs acc ->
-    let f = File_key.to_string f in
-    let dep_fs = FilenameSet.fold (fun dep_f acc ->
-      (File_key.to_string dep_f)::acc
-    ) dep_fs [] in
-    (f, dep_fs)::acc
-  ) subgraph [] in
+    (* Convert from map/set to lists for serialization to client. *)
+    let subgraph = FilenameMap.fold (fun f dep_fs acc ->
+      let f = File_key.to_string f in
+      let dep_fs = FilenameSet.fold (fun dep_f acc ->
+        (File_key.to_string dep_f)::acc
+      ) dep_fs [] in
+      (f, dep_fs)::acc
+    ) subgraph [] in
 
-  Ok subgraph
+    Ok subgraph
+  )
 
 let suggest =
   let suggest_for_file ~options ~workers ~env ~profiling result_map (file, region) =
-    SMap.add file (try_with begin fun () ->
+    let%lwt result = try_with begin fun () ->
       Type_info_service.suggest ~options ~workers ~env ~profiling
         (File_key.SourceFile file) region (Sys_utils.cat file)
-    end) result_map
-  in fun ~options ~workers ~env ~profiling files ->
-    List.fold_left (suggest_for_file ~options ~workers ~env ~profiling) SMap.empty files
+    end in
+    Lwt.return (SMap.add file result result_map)
+  in
+
+  fun ~options ~workers ~env ~profiling files ->
+    Lwt_list.fold_left_s (suggest_for_file ~options ~workers ~env ~profiling) SMap.empty files
 
 (* NOTE: currently, not only returns list of annotations, but also writes a
    timestamped file with annotations *)
@@ -314,56 +325,57 @@ let handle_ephemeral_unsafe
   Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
-  let profiling, json_data =
-    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
+  let%lwt profiling, json_data =
+    Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.AUTOCOMPLETE fn ->
-          let result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
+          let%lwt result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
           ServerProt.Response.AUTOCOMPLETE result
           |> respond;
-          json_data
+          Lwt.return json_data
       | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
           let options = { options with Options.
             opt_verbose = verbose;
             opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
           } in
-          ServerProt.Response.CHECK_FILE (
-            check_file ~options ~workers ~env ~force ~profiling fn
-          ) |> respond;
-          None
+          let%lwt response = check_file ~options ~workers ~env ~force ~profiling fn in
+          ServerProt.Response.CHECK_FILE response
+          |> respond;
+          Lwt.return None
       | ServerProt.Request.COVERAGE (fn, force) ->
-          ServerProt.Response.COVERAGE (
-            coverage ~options ~workers ~env ~profiling ~force fn
-          ) |> respond;
-          None
+          let%lwt response = coverage ~options ~workers ~env ~profiling ~force fn in
+          ServerProt.Response.COVERAGE response
+          |> respond;
+          Lwt.return None
       | ServerProt.Request.CYCLE fn ->
           let file_options = Options.file_options options in
           let fn = Files.filename_from_string ~options:file_options fn in
-          ServerProt.Response.CYCLE (
-            get_cycle ~workers ~env fn: ServerProt.Response.cycle_response
-          ) |> respond;
-          None
-      | ServerProt.Request.DUMP_TYPES (fn) ->
-          ServerProt.Response.DUMP_TYPES (dump_types ~options ~workers ~env ~profiling fn)
+          let%lwt response = get_cycle ~workers ~env fn in
+          ServerProt.Response.CYCLE response
           |> respond;
-          None
+          Lwt.return None
+      | ServerProt.Request.DUMP_TYPES (fn) ->
+          let%lwt response = dump_types ~options ~workers ~env ~profiling fn in
+          ServerProt.Response.DUMP_TYPES response
+          |> respond;
+          Lwt.return None
       | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
           ServerProt.Response.FIND_MODULE (
             find_module ~options (moduleref, filename): File_key.t option
           ) |> respond;
-          None
+          Lwt.return None
       | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
-          let result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global) in
+          let%lwt result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global) in
           ServerProt.Response.FIND_REFS result |> respond;
-          json_data
+          Lwt.return json_data
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
           (* If we're not profiling the recheck, then respond immediately *)
           if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
           let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
-          let profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
+          let%lwt profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
           env := new_env;
           if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
-          None
+          Lwt.return None
       | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
           let options = { options with Options.
             opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
@@ -371,25 +383,28 @@ let handle_ephemeral_unsafe
           ServerProt.Response.GEN_FLOW_FILES (
             gen_flow_files ~options !env files: ServerProt.Response.gen_flow_files_response
           ) |> respond;
-          None
+          Lwt.return None
       | ServerProt.Request.GET_DEF (fn, line, char) ->
-          let result, json_data = get_def ~options ~workers ~env ~profiling (fn, line, char) in
-          ServerProt.Response.GET_DEF result |> respond;
-          json_data
+          let%lwt result, json_data = get_def ~options ~workers ~env ~profiling (fn, line, char) in
+          ServerProt.Response.GET_DEF result
+          |> respond;
+          Lwt.return json_data
       | ServerProt.Request.GET_IMPORTS module_names ->
           ServerProt.Response.GET_IMPORTS (
             get_imports ~options module_names: ServerProt.Response.get_imports_response
           ) |> respond;
-          None
+          Lwt.return None
       | ServerProt.Request.INFER_TYPE (fn, line, char, verbose) ->
-          let result, json_data =
-            infer_type ~options ~workers ~env ~profiling (fn, line, char, verbose) in
-          ServerProt.Response.INFER_TYPE result |> respond;
-          json_data
+          let%lwt result, json_data =
+            infer_type ~options ~workers ~env ~profiling (fn, line, char, verbose)
+          in
+          ServerProt.Response.INFER_TYPE result
+          |> respond;
+          Lwt.return json_data
       | ServerProt.Request.PORT (files) ->
           ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
           |> respond;
-          None
+          Lwt.return None
       | ServerProt.Request.STATUS (client_root, include_warnings) ->
           let genv = {genv with
             options = let open Options in {genv.options with
@@ -408,24 +423,25 @@ let handle_ephemeral_unsafe
                 FlowExitStatus.(exit Server_client_directory_mismatch)
             | _ -> ()
           end;
-          None
+          Lwt.return None
       | ServerProt.Request.SUGGEST (files) ->
-          ServerProt.Response.SUGGEST (
-            suggest ~options ~workers ~env ~profiling files
-          ) |> respond;
-          None
-    end in
+          let%lwt result = suggest ~options ~workers ~env ~profiling files in
+          ServerProt.Response.SUGGEST result
+          |> respond;
+          Lwt.return None
+    end
+  in
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-  !env, profiling, json_data
+  Lwt.return (!env, profiling, json_data)
 
 let handle_ephemeral genv env (request_id, command) =
-  try
-    let env, profiling, json_data = handle_ephemeral_unsafe genv env (request_id, command) in
+  try%lwt
+    let%lwt env, profiling, json_data = handle_ephemeral_unsafe genv env (request_id, command) in
     FlowEventLogger.ephemeral_command_success
       ?json_data
       ~client_context:command.ServerProt.Request.client_logging_context
       ~profiling;
-    env
+    Lwt.return env
   with exn ->
     let backtrace = String.trim (Printexc.get_backtrace ()) in
     let exn_str = Printf.sprintf
@@ -441,7 +457,7 @@ let handle_ephemeral genv env (request_id, command) =
       ~client_context:command.ServerProt.Request.client_logging_context
       ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
     MonitorRPC.request_failed ~request_id ~exn_str;
-    env
+    Lwt.return env
 
 let handle_persistent genv env client_id msg =
   let env = ref env in
@@ -452,25 +468,25 @@ let handle_persistent genv env client_id msg =
   let client = Persistent_connection.get_client !env.connections client_id in
   let client_logging_context = Persistent_connection.get_logging_context client in
   let should_print_summary = Options.should_profile genv.options in
-  let profiling, (env, json_data) =
-    Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
+  let%lwt profiling, (env, json_data) =
+    Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
       match msg with
       | Persistent_connection_prot.Subscribe ->
           let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings !env in
           let new_connections = Persistent_connection.subscribe_client
             ~clients:!env.connections ~client ~current_errors ~current_warnings
           in
-          { !env with connections = new_connections }, None
+          Lwt.return ({ !env with connections = new_connections }, None)
       | Persistent_connection_prot.Autocomplete (file_input, id) ->
-          let results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
+          let%lwt results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
           let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
           Persistent_connection.send_message wrapped client;
-          !env, json_data
+          Lwt.return (!env, json_data)
       | Persistent_connection_prot.DidOpen filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
 
           begin match Persistent_connection.client_did_open !env.connections client ~filenames with
-          | None -> !env, None (* No new files were opened, so do nothing *)
+          | None -> Lwt.return (!env, None) (* No new files were opened, so do nothing *)
           | Some (connections, client) ->
             let env = {!env with connections} in
 
@@ -485,20 +501,20 @@ let handle_persistent genv env client_id msg =
                * If the newly opened file was already checked, then we'll just send the errors to
                * the client
                *)
-              let env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
+              let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
               if not triggered_recheck then begin
                 (* This open doesn't trigger a recheck, but we'll still send down the errors *)
                 let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
                 Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
               end;
-              env, None
+              Lwt.return (env, None)
             | Some Options.LAZY_MODE_FILESYSTEM
             | None ->
               (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
                * a new file is opened is to send the errors to the client *)
               let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
               Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-              env, None
+              Lwt.return (env, None)
             end
 
       | Persistent_connection_prot.DidClose filenames ->
@@ -510,11 +526,13 @@ let handle_persistent genv env client_id msg =
             Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
             {!env with connections}, None
           end
-  end in
+          |> Lwt.return
+    end
+  in
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
   FlowEventLogger.persistent_command_success
     ?json_data
     ~request:(Persistent_connection_prot.denorm_string_of_request msg)
     ~client_context:client_logging_context
     ~profiling;
-  env
+  Lwt.return env

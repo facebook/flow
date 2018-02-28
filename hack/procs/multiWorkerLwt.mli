@@ -8,14 +8,14 @@
  *
  *)
 
+type worker
+
 val call :
-  WorkerController.worker list option ->
+  worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
   next:'a Bucket.next ->
   'c Lwt.t
-
-type worker
 
 val next :
   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->

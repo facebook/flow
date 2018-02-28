@@ -130,14 +130,14 @@ let process_updates genv env updates =
 (* on notification, execute client commands or recheck files *)
 let recheck genv env ?(force_focus=false) updates =
   if FilenameSet.is_empty updates
-  then None, env
+  then Lwt.return (None, env)
   else begin
     MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
     Persistent_connection.send_start_recheck env.connections;
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
 
-    let profiling, env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
+    let%lwt profiling, env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
 
     Persistent_connection.send_end_recheck env.connections;
     let calc_errors_and_warnings () =
@@ -147,5 +147,5 @@ let recheck genv env ?(force_focus=false) updates =
     Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;
 
     MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-    Some profiling, env
+    Lwt.return (Some profiling, env)
   end

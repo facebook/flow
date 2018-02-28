@@ -8,17 +8,17 @@
 open Utils_js
 
 val dependent_files:
-  MultiWorker.worker list option -> (* workers *)
+  MultiWorkerLwt.worker list option -> (* workers *)
   unchanged:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
   changed_modules:Modulename.Set.t ->
   (* (transitive_dependents, direct_dependents) of changed_modules *)
-  FilenameSet.t * FilenameSet.t
+  (FilenameSet.t * FilenameSet.t) Lwt.t
 
 val calc_dependency_graph:
-  MultiWorker.worker list option -> (* workers *)
+  MultiWorkerLwt.worker list option -> (* workers *)
   FilenameSet.t -> (* files *)
-  FilenameSet.t FilenameMap.t
+  FilenameSet.t FilenameMap.t Lwt.t
 
 val calc_all_dependencies:
   FilenameSet.t FilenameMap.t -> (* dependency graph *)

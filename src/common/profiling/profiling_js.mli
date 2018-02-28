@@ -8,13 +8,13 @@
 type running
 type finished
 
-val with_profiling: should_print_summary:bool -> (running -> 'a) -> finished * 'a
+val with_profiling_lwt: should_print_summary:bool -> (running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
 
-val with_timer_prefix: prefix:string -> f:(unit -> 'a) -> running -> 'a
+val with_timer_prefix_lwt: prefix:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 
 val start_timer: timer:string -> running -> unit
 val stop_timer: timer:string -> running -> unit
-val with_timer: timer:string -> f:(unit -> 'a) -> running -> 'a
+val with_timer_lwt: timer:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 val get_finished_timer: timer:string -> running -> (float * float * float * float) option
 
 val sample_memory: metric:string -> value:float -> running -> unit

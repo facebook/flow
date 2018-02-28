@@ -68,7 +68,6 @@ include MultiWorker.CallFunctor (struct
     Lwt.return (!acc)
 end)
 
-
 (* A separate abstract type from MultiWorker.worker forces users to always use MultiWorkerLwt *)
 type worker = WorkerController.worker
 

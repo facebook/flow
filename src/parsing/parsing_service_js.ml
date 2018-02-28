@@ -512,21 +512,21 @@ let progress_fn ~total ~start ~length:_ =
 
 let next_of_filename_set ?(with_progress=false) workers filenames =
   if with_progress
-  then MultiWorker.next ~progress_fn workers (FilenameSet.elements filenames)
-  else MultiWorker.next workers (FilenameSet.elements filenames)
+  then MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements filenames)
+  else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
 let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow
   workers next
-: results =
+: results Lwt.t =
   let t = Unix.gettimeofday () in
   let reducer = reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode ~noflow in
-  let results = MultiWorker.call
+  let%lwt results = MultiWorkerLwt.call
     workers
     ~job: (List.fold_left reducer)
     ~neutral: empty_result
-    ~merge: merge
-    ~next: next in
-
+    ~merge
+    ~next
+  in
   if profile then
     let t2 = Unix.gettimeofday () in
     let ok_count = FilenameSet.cardinal results.parse_ok in
@@ -537,16 +537,16 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow
       ok_count skip_count fail_count
       (t2 -. t)
   else ();
-
-  results
+  Lwt.return results
 
 let reparse
   ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow ?with_progress workers files =
   (* save old parsing info for files *)
   ParsingHeaps.oldify_batch files;
   let next = next_of_filename_set ?with_progress workers files in
-  let results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next in
+  let%lwt results =
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next
+  in
   let modified = results.parse_ok in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
@@ -560,7 +560,7 @@ let reparse
   (* restore old parsing info for unchanged files *)
   ParsingHeaps.revive_batch unchanged;
   SharedMem_js.collect `gentle;
-  modified, results
+  Lwt.return (modified, results)
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
   let types_mode, use_strict, profile, max_header_tokens, lazy_mode, noflow =

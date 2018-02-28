@@ -279,11 +279,14 @@ let empty = {
   memory = Memory.empty;
 }
 
-let with_timer_prefix ~prefix ~f profile =
+let with_timer_prefix_lwt ~prefix ~f profile =
   profile := { !profile with timing = Timing.push_timer_prefix ~prefix !profile.timing };
-  let ret = f () in
-  profile := { !profile with timing = Timing.pop_timer_prefix !profile.timing };
-  ret
+  Lwt.finalize
+    f
+    (fun () ->
+      profile := { !profile with timing = Timing.pop_timer_prefix !profile.timing };
+      Lwt.return_unit
+    )
 
 let start_timer ~timer profile =
   profile := { !profile with timing = Timing.start_timer ~timer !profile.timing }
@@ -411,13 +414,15 @@ let print_summary =
     (* Print the unknown totals *)
     print_summary_single_raw "<Unknown total>" remaining total
 
-let with_profiling ~should_print_summary f =
+let with_profiling_lwt ~should_print_summary f =
   let profiling = ref empty in
   start_timer ~timer:profiling_timer_name profiling;
-  let ret = f profiling in
-  stop_timer ~timer:profiling_timer_name profiling;
-  if should_print_summary then print_summary !profiling;
-  (!profiling, ret)
+  let%lwt ret = (f profiling) [%lwt.finally
+    stop_timer ~timer:profiling_timer_name profiling;
+    if should_print_summary then print_summary !profiling;
+    Lwt.return_unit
+  ] in
+  Lwt.return (!profiling, ret)
 
 let check_for_reserved_timer_name f ~timer profile =
   if SSet.mem timer reserved_timer_names
@@ -426,11 +431,9 @@ let check_for_reserved_timer_name f ~timer profile =
 
 let start_timer = check_for_reserved_timer_name start_timer
 let stop_timer = check_for_reserved_timer_name stop_timer
-let with_timer ~timer ~f profiling =
+let with_timer_lwt ~timer ~f profiling =
   start_timer ~timer profiling;
-  let ret = f () in
-  stop_timer ~timer profiling;
-  ret
+  Lwt.finalize f (fun () -> stop_timer ~timer profiling; Lwt.return_unit)
 
 let get_finished_timer ~timer profile =
   let results = Timing.get_results !profile.timing in

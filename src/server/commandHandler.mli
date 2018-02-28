@@ -9,11 +9,11 @@ val handle_ephemeral:
   ServerEnv.genv ->
   ServerEnv.env ->
   MonitorProt.request_id * ServerProt.Request.command_with_context ->
-  ServerEnv.env
+  ServerEnv.env Lwt.t
 
 val handle_persistent:
   ServerEnv.genv ->
   ServerEnv.env ->
   Persistent_connection_prot.client_id ->
   Persistent_connection_prot.request ->
-  ServerEnv.env
+  ServerEnv.env Lwt.t

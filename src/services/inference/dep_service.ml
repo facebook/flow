@@ -120,21 +120,26 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
   (* merge results *)
   let merge = List.rev_append in
 
-  let utils = MultiWorker.call workers ~job ~merge
-    ~neutral: []
-    ~next: (MultiWorker.next workers (FilenameSet.elements fileset))
+  let%lwt result =
+    MultiWorkerLwt.call workers ~job ~merge
+      ~neutral: []
+      ~next: (MultiWorkerLwt.next workers (FilenameSet.elements fileset))
   in
-  List.fold_left (fun (modules, module_dependent_map, resolution_path_files) (f, (m, rs, b)) ->
-    FilenameMap.add f m modules,
-    Modulename.Set.fold (fun r module_dependent_map ->
-      Modulename.Map.add r FilenameSet.(
-        match Modulename.Map.get r module_dependent_map with
-          | None -> singleton f
-          | Some files -> add f files
-      ) module_dependent_map
-    ) rs module_dependent_map,
-    if b then FilenameSet.add f resolution_path_files else resolution_path_files
-  ) (FilenameMap.empty, Modulename.Map.empty, FilenameSet.empty) utils
+  List.fold_left
+    (fun (modules, module_dependent_map, resolution_path_files) (f, (m, rs, b)) ->
+      FilenameMap.add f m modules,
+      Modulename.Set.fold (fun r module_dependent_map ->
+        Modulename.Map.add r FilenameSet.(
+          match Modulename.Map.get r module_dependent_map with
+            | None -> singleton f
+            | Some files -> add f files
+        ) module_dependent_map
+      ) rs module_dependent_map,
+      if b then FilenameSet.add f resolution_path_files else resolution_path_files
+    )
+    (FilenameMap.empty, Modulename.Map.empty, FilenameSet.empty)
+    result
+  |> Lwt.return
 )
 
 (* given a reverse dependency map (from modules to the files which
@@ -186,10 +191,9 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
   (* Get the modules provided by unchanged files, the reverse dependency map
      for unchanged files, and the subset of unchanged files whose resolution
      paths may encounter new or changed modules. *)
-  let modules,
-    module_dependent_map,
-    resolution_path_files
-    = dependent_calc_utils workers unchanged new_or_changed in
+  let%lwt modules, module_dependent_map, resolution_path_files =
+    dependent_calc_utils workers unchanged new_or_changed
+  in
 
   (* resolution_path_files, plus files that require changed_modules *)
   let direct_dependents = Modulename.Set.fold (fun m acc ->
@@ -199,8 +203,10 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
   ) changed_modules resolution_path_files in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
-  calc_all_dependents modules module_dependent_map direct_dependents,
-  direct_dependents
+  Lwt.return (
+    calc_all_dependents modules module_dependent_map direct_dependents,
+    direct_dependents
+  )
 
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big
@@ -234,17 +240,18 @@ let file_dependencies ~audit file = Module_js.(
 )
 
 let calc_dependency_graph workers files =
-  let dependency_graph = MultiWorker.call
-    workers
-    ~job: (List.fold_left (fun dependency_graph file ->
-      FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
-    ))
-    ~neutral: FilenameMap.empty
-    ~merge: FilenameMap.union
-    ~next: (MultiWorker.next workers (FilenameSet.elements files)) in
-  FilenameMap.map (
-    FilenameSet.filter (fun f -> FilenameSet.mem f files)
-  ) dependency_graph
+  let%lwt result =
+    MultiWorkerLwt.call
+      workers
+      ~job: (List.fold_left (fun dependency_graph file ->
+        FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
+      ))
+      ~neutral: FilenameMap.empty
+      ~merge: FilenameMap.union
+      ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files))
+  in
+  FilenameMap.map (FilenameSet.filter (fun f -> FilenameSet.mem f files)) result
+  |> Lwt.return
 
 (* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
  * of `files`. This set does include `files`.

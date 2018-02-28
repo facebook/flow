@@ -62,9 +62,9 @@ val parse:
   max_header_tokens: int ->
   lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
-  MultiWorker.worker list option ->       (* Some=parallel, None=serial *)
+  MultiWorkerLwt.worker list option ->       (* Some=parallel, None=serial *)
   File_key.t list Bucket.next ->  (* delivers buckets of filenames *)
-  results                       (* job results, not asts *)
+  results Lwt.t                       (* job results, not asts *)
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
 individually *)
@@ -72,9 +72,9 @@ val parse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   Options.t ->
-  MultiWorker.worker list option ->
+  MultiWorkerLwt.worker list option ->
   File_key.t list Bucket.next ->
-  results
+  results Lwt.t
 
 (* for non-initial passes: updates asts for passed file set. *)
 val reparse:
@@ -85,18 +85,18 @@ val reparse:
   lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
   ?with_progress: bool ->
-  MultiWorker.worker list option ->   (* Some=parallel, None=serial *)
+  MultiWorkerLwt.worker list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
-  FilenameSet.t * results   (* modified files and job results *)
+  (FilenameSet.t * results) Lwt.t   (* modified files and job results *)
 
 val reparse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   ?with_progress: bool ->
   Options.t ->
-  MultiWorker.worker list option ->
+  MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
-  FilenameSet.t * results
+  (FilenameSet.t * results) Lwt.t
 
 val has_ast: File_key.t -> bool
 
@@ -131,6 +131,6 @@ val do_parse:
 (* Utility to create the `next` parameter that `parse` requires *)
 val next_of_filename_set:
   ?with_progress:bool ->
-  MultiWorker.worker list option ->
+  MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
   File_key.t list Bucket.next

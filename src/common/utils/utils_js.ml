@@ -223,10 +223,19 @@ end
 
 module AugmentableSMap = Augmentable(SMap)
 
-let try_with f =
-  try f () with exn -> Error (Printexc.to_string exn)
+(* The problem with Core_result's >>= is that the function second argument cannot return
+ * an Lwt.t. This helper infix operator handles that case *)
+let (%>>=)
+  (result: ('ok, 'err) Core_result.t)
+  (f: 'ok -> ('a, 'err) Core_result.t Lwt.t)
+  : ('a, 'err) Core_result.t Lwt.t =
+  match result with
+  | Error e -> Lwt.return (Error e)
+  | Ok x -> f x
 
-let try_with_json f = try f () with exn -> Error (Printexc.to_string exn, None)
+let try_with_json f = try%lwt f () with exn -> Lwt.return (Error (Printexc.to_string exn, None))
+
+let try_with f = try%lwt f () with exn -> Lwt.return (Error (Printexc.to_string exn))
 
 let split_result = function
 | Ok (success, extra) -> Ok success, extra

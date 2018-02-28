@@ -24,6 +24,7 @@ begin library "flow-commands"
     "flow-common"
     "flow-common-errors"
     "flow-common-lints"
+    "flow-common-lwt"
     "flow-common-profiling"
     "flow-common-utils"
     "flow-flowlib"
@@ -47,6 +48,14 @@ begin library "flow-commands"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -227,6 +236,14 @@ begin library "flow-common-profiling"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -238,6 +255,14 @@ begin library "flow-common-utils"
     "flow-parser"
     "hh-utils"
     "hh-utils-collections"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -294,7 +319,7 @@ begin library "flow-flowlib"
   comp_requires = [
     "flow-ppx-gen-flowlib:asm"
   ]
-  comp = [
+  comp += [
     "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/ prelude/"
   ]
 end
@@ -353,11 +378,19 @@ begin library "flow-parsing"
     "flow-parser"
     "flow-parser-utils"
     "flow-shmem"
-    "hh-procs"
+    "hh-procs-lwt"
     "hh-heap"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -385,10 +418,10 @@ begin library "flow-monitor"
     "lwt.unix"
     "lwt_ppx"
   ]
-  comp = [
+  comp += [
       "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
-  dep = [
+  dep += [
       "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
@@ -517,6 +550,7 @@ begin library "flow-server"
   requires = [
     "flow-common"
     "flow-common-lints"
+    "flow-common-lwt"
     "flow-common-utils"
     "flow-shmem"
     "flow-stubs"
@@ -531,13 +565,19 @@ begin library "flow-server"
     "flow-typing"
     "hh-stubs"
     "hh-dfind"
-    "hh-procs"
+    "hh-procs-lwt"
     "hh-socket"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
     "hh-utils-lsp"
     "tp-core"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -620,18 +660,23 @@ begin library "flow-services-type-info"
     "flow-parsing"
     "flow-services-inference"
     "flow-typing"
+    "hh-procs-lwt"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
 begin library "flow-services-inference"
   sort = true
   files = begin fb-glob "src/services/inference"
-    excludes = [ "module_js.ml" ]
   end
-  files += [
-    "src/services/inference/module_js.ml" (comp += [ "-w" "-3" ])
-  ]
   requires = [
     "flow-common"
     "flow-common-audit"
@@ -648,11 +693,19 @@ begin library "flow-services-inference"
     "flow-shmem"
     "flow-typing"
     "hh-heap"
-    "hh-procs"
+    "hh-procs-lwt"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 

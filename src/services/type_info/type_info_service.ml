@@ -16,8 +16,9 @@ let mk_loc file line col =
   }
 
 let type_at_pos ~options ~workers ~env ~profiling file content line col =
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
-  |> map_error ~f:(fun str -> str, None) >>| fun (cx, _info) ->
+  let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
+  map_error ~f:(fun str -> str, None) result
+  >>| (fun (cx, _info) ->
     let loc = mk_loc file line col in
     let json_data, loc, ty =
       let mk_data result_str loc ty_json = Hh_json.JSON_Object [
@@ -39,14 +40,16 @@ let type_at_pos ~options ~workers ~env ~profiling file content line col =
     in
     let ty = Option.map ~f:Ty_printer.string_of_t ty in
     (loc, ty), Some json_data
+  ) |> Lwt.return
 
 let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
 
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
-  >>| fun (cx, _info) ->
-    Query_types.dump_types ~printer cx
+  let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
+  result
+  >>| (fun (cx, _info) -> Query_types.dump_types ~printer cx)
+  |> Lwt.return
 
 let coverage ~options ~workers ~env ~profiling ~force file content =
   let should_check =
@@ -57,18 +60,21 @@ let coverage ~options ~workers ~env ~profiling ~force file content =
         Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
-  >>| fun (cx, _info) ->
+  let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
+  result
+  >>| (fun (cx, _info) ->
     let types = Query_types.covered_types cx in
     if should_check then
       types
     else
       types |> List.map (fun (loc, _) -> (loc, false))
+  ) |> Lwt.return
 
 
 let suggest ~options ~workers ~env ~profiling file region content =
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
-  >>| fun (cx, _info) ->
+  let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
+  result
+  >>| (fun (cx, _info) ->
     Query_types.fill_types cx
     |> List.sort Pervasives.compare
     |> List.map (fun (l,c,t) -> (l, c, Ty_printer.string_of_t t))
@@ -85,3 +91,4 @@ let suggest ~options ~workers ~env ~profiling file region content =
             (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
           )
       | _ -> assert false
+  ) |> Lwt.return

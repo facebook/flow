@@ -8,7 +8,6 @@
 open Utils_js
 module Reqs = Merge_js.Reqs
 
-
 type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
   options:Options.t ->
@@ -126,29 +125,47 @@ let merge_contents_context options file ast info file_sig ~ensure_checked_depend
   in
   let file_sigs = FilenameMap.singleton file file_sig in
 
-  ensure_checked_dependencies resolved_rs;
+  ensure_checked_dependencies resolved_rs (fun () ->
 
-  let component = Nel.one file in
+    let component = Nel.one file in
 
-  let master_cx, dep_cxs, file_reqs =
-    begin try reqs_of_component ~options component required with
-      | Key_not_found _  ->
-        failwith "not all dependencies are ready yet, aborting..."
-      | e -> raise e
-    end
+    let master_cx, dep_cxs, file_reqs =
+      begin try reqs_of_component ~options component required with
+        | Key_not_found _  ->
+          failwith "not all dependencies are ready yet, aborting..."
+        | e -> raise e
+      end
+    in
+
+    let metadata = Context.metadata_of_options options in
+    let lint_severities = Options.lint_severities options in
+    let strict_mode = Options.strict_mode options in
+    let cx, _ = Merge_js.merge_component_strict
+      ~metadata ~lint_severities ~strict_mode ~file_sigs
+      ~get_ast_unsafe:(fun _ -> ast)
+      ~get_docblock_unsafe:(fun _ -> info)
+      component file_reqs dep_cxs master_cx
+    in
+
+    cx
+  )
+
+(* This is a version of merge_contents_context which doesn't call ensure_checked_dependencies.
+ * This makes it a little unsafe, so only use it if you're 100% sure all the needed dependencies
+ * have already been checked.
+ *
+ * The advantage to this function is that, since we know all the dependencies have been checked,
+ * we never need to call MultiWorkerLwt and this function doesn't return an Lwt.t *)
+let merge_contents_context_without_ensure_checked_dependencies options file ast info file_sig =
+  let ensure_checked_dependencies _resolved_rs callback = callback () in
+  merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
+
+let merge_contents_context options file ast info file_sig ~ensure_checked_dependencies =
+  let ensure_checked_dependencies resolved_rs callback =
+    let%lwt () = ensure_checked_dependencies resolved_rs in
+    Lwt.return (callback ())
   in
-
-  let metadata = Context.metadata_of_options options in
-  let lint_severities = Options.lint_severities options in
-  let strict_mode = Options.strict_mode options in
-  let cx, _ = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~strict_mode ~file_sigs
-    ~get_ast_unsafe:(fun _ -> ast)
-    ~get_docblock_unsafe:(fun _ -> info)
-    component file_reqs dep_cxs master_cx
-  in
-
-  cx
+  merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
 
 (* Entry point for merging a component *)
 let merge_strict_component ~options merged_acc component =
@@ -245,17 +262,19 @@ let merge_strict_job ~job ~options merged elements =
           )
         )
         ~f:(fun () ->
-          Profile_utils.checktime ~options ~limit:1.0
-            ~msg:(fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
-            ~log:(fun merge_time ->
-              let length = Nel.length component in
-              let leader = Nel.hd component |> File_key.to_string in
-              Flow_server_profile.merge ~length ~merge_time ~leader)
-            ~f:(fun () ->
-              (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-              job ~options merged component
-            )
-          )
+          let start_time = Unix.gettimeofday () in
+          (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
+          let ret = job ~options merged component in
+          let merge_time = Unix.gettimeofday () -. start_time in
+          if Options.should_profile options then begin
+            let length = Nel.length component in
+            let leader = Nel.hd component |> File_key.to_string in
+            Flow_server_profile.merge ~length ~merge_time ~leader;
+            if merge_time > 1.0
+            then Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid()) files merge_time
+          end;
+          ret
+        )
       with
       | SharedMem_js.Out_of_shared_memory
       | SharedMem_js.Heap_full
@@ -298,17 +317,19 @@ let merge_runner ~job ~intermediate_result_callback ~options ~workers
   let recheck_leader_map = FilenameMap.map (
     Nel.exists (fun f -> FilenameMap.find_unsafe f recheck_map)
   ) component_map in
-  Profile_utils.logtime ~options
-    ~msg:(fun t -> spf "merged (strict) in %f" t)
-    ~f:(fun () ->
-      (* returns parallel lists of filenames, error sets, and suppression sets *)
-      MultiWorker.call
-        workers
-        ~job: (merge_strict_job ~options ~job)
-        ~neutral: []
-        ~merge: (Merge_stream.join intermediate_result_callback)
-        ~next: (Merge_stream.make
-                  dependency_graph leader_map component_map recheck_leader_map)
-    )
+
+  let start_time = Unix.gettimeofday () in
+  (* returns parallel lists of filenames, error sets, and suppression sets *)
+  let%lwt ret = MultiWorkerLwt.call
+    workers
+    ~job: (merge_strict_job ~options ~job)
+    ~neutral: []
+    ~merge: (Merge_stream.join intermediate_result_callback)
+    ~next: (Merge_stream.make
+              dependency_graph leader_map component_map recheck_leader_map)
+  in
+  let elapsed = Unix.gettimeofday () -. start_time in
+  if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
+  Lwt.return ret
 
 let merge_strict = merge_runner ~job:merge_strict_component

@@ -40,9 +40,8 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
   let should_print_summary = Options.should_profile options in
-  let env = Profiling_js.with_profiling ~should_print_summary begin fun profiling ->
-    let parsed, libs, libs_ok, errors =
-      Types_js.init ~profiling ~workers options in
+  let%lwt env = Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
+    let%lwt parsed, libs, libs_ok, errors = Types_js.init ~profiling ~workers options in
 
     (* If any libs errored, skip typechecking and just show lib errors. Note
      * that `init` above has done all parsing, not just lib parsing, resolved
@@ -50,9 +49,9 @@ let init ~focus_targets genv =
      *
      * Furthermore, if we're in lazy mode, we forego typechecking until later,
      * when it proceeds on an as-needed basis. *)
-    let checked, errors =
+    let%lwt checked, errors =
       if not libs_ok || Options.is_lazy_mode options then
-        CheckedSet.empty, errors
+        Lwt.return (CheckedSet.empty, errors)
       else
         Types_js.full_check ~profiling ~workers ~focus_targets ~options parsed errors
     in
@@ -72,10 +71,10 @@ let init ~focus_targets genv =
       collated_errors = ref None;
       connections = Persistent_connection.empty;
     } in
-    env
+    Lwt.return env
   end in
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-  env
+  Lwt.return env
 
 let get_watch_paths options =
   Files.watched_paths (Options.file_options options)
@@ -115,9 +114,9 @@ let rec recheck_loop ~dfind genv env =
       | End_of_file as e -> exit_due_to_dfind_dying ~genv e
     else SSet.empty
   in
-  if SSet.is_empty raw_updates then env else begin
+  if SSet.is_empty raw_updates then Lwt.return env else begin
     let updates = Rechecker.process_updates genv env raw_updates in
-    let _profiling, env = Rechecker.recheck genv env updates in
+    let%lwt _profiling, env = Rechecker.recheck genv env updates in
     recheck_loop ~dfind genv env
   end
 
@@ -127,13 +126,15 @@ let process_message genv env request =
   | MonitorProt.Request (request_id, command) ->
     CommandHandler.handle_ephemeral genv env (request_id, command)
   | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
-    { env with
-      connections = Persistent_connection.add_client env.connections client_id logging_context lsp
-    }
+    Lwt.return
+      { env with
+        connections = Persistent_connection.add_client env.connections client_id logging_context lsp
+      }
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
     CommandHandler.handle_persistent genv env client_id request
   | MonitorProt.DeadPersistentConnection client_id ->
-    { env with connections = Persistent_connection.remove_client env.connections client_id }
+    Lwt.return
+      { env with connections = Persistent_connection.remove_client env.connections client_id }
 
 let rec serve ~dfind ~genv ~env =
   MonitorRPC.status_update ~event:ServerStatus.Ready;
@@ -141,9 +142,11 @@ let rec serve ~dfind ~genv ~env =
   ServerPeriodical.call_before_sleeping ();
   let message = sleep_and_check () in
 
-  let env = recheck_loop ~dfind genv env in
+  let%lwt env = recheck_loop ~dfind genv env in
 
-  let env = Option.value_map ~default:env ~f:(process_message genv env) message in
+  let%lwt env = Option.value_map message
+    ~default:(Lwt.return env)
+    ~f:(process_message genv env) in
 
   EventLogger.flush ();
   serve ~dfind ~genv ~env
@@ -152,11 +155,11 @@ let rec serve ~dfind ~genv ~env =
 let with_init_lock init_fun =
   let t = Unix.gettimeofday () in
   Hh_logger.info "Initializing Server (This might take some time)";
-  let _profiling, env = init_fun () in
+  let%lwt _profiling, env = init_fun () in
   Hh_logger.info "Server is READY";
   let t' = Unix.gettimeofday () in
   Hh_logger.info "Took %f seconds to initialize." (t' -. t);
-  env
+  Lwt.return env
 
 let init_dfind options =
   let tmp_dir = Options.temp_dir options in
@@ -179,10 +182,12 @@ let init_dfind options =
 let create_program_init ~shared_mem_config ~focus_targets options =
   let handle = SharedMem_js.init shared_mem_config in
   let genv = ServerEnvBuild.make_genv options handle in
+  (* Only set up lwt after the workers are created *)
+  LwtInit.set_engine ();
   let program_init = fun () ->
-    let profiling, env = init ~focus_targets genv in
+    let%lwt profiling, env = init ~focus_targets genv in
     FlowEventLogger.init_done ~profiling;
-    profiling, env
+    Lwt.return (profiling, env)
   in
   genv, program_init
 
@@ -193,14 +198,17 @@ let run ~monitor_channels ~shared_mem_config options =
 
   let dfind = init_dfind options in
 
-  let env = with_init_lock (fun () ->
-    ServerPeriodical.init ();
-    let env = program_init () in
-    DfindLib.wait_until_ready dfind;
-    env
-  ) in
+  let initial_lwt_thread =
+    let%lwt env = with_init_lock (fun () ->
+      ServerPeriodical.init ();
+      let%lwt env = program_init () in
+      DfindLib.wait_until_ready dfind;
+      Lwt.return env
+    ) in
 
-  serve ~dfind ~genv ~env
+    serve ~dfind ~genv ~env
+  in
+  Lwt_main.run initial_lwt_thread
 
 let run_from_daemonize ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config options
@@ -218,16 +226,20 @@ let run_from_daemonize ~monitor_channels ~shared_mem_config options =
 let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
   PidLog.disable ();
   MonitorRPC.disable ();
-  let _, program_init =
-    create_program_init ~shared_mem_config ~focus_targets options in
-  let profiling, env = program_init () in
 
-  let errors, warnings, suppressed_errors = ErrorCollator.get env in
-  let warnings = if client_include_warnings || Options.should_include_warnings options
-    then warnings
-    else Errors.ErrorSet.empty
+  let initial_lwt_thread =
+    let _, program_init =
+      create_program_init ~shared_mem_config ~focus_targets options in
+    let%lwt profiling, env = program_init () in
+
+    let errors, warnings, suppressed_errors = ErrorCollator.get env in
+    let warnings = if client_include_warnings || Options.should_include_warnings options
+      then warnings
+      else Errors.ErrorSet.empty
+    in
+    Lwt.return (profiling, errors, warnings, suppressed_errors)
   in
-  profiling, errors, warnings, suppressed_errors
+  Lwt_main.run initial_lwt_thread
 
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in

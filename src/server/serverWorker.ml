@@ -26,7 +26,7 @@ let entry =
 let gc_control = Gc.get ()
 
 let make ~n heap_handle =
-  MultiWorker.make
+  MultiWorkerLwt.make
     ?call_wrapper:None
     ~saved_state: (
       Hh_logger.Level.min_level (),
