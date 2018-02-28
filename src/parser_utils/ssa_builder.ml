@@ -951,7 +951,7 @@ class ssa_builder = object(this)
     let open Ast.Expression.Call in
     let { callee; arguments; optional = _ } = expr in
     ignore @@ this#expression callee;
-    ignore @@ Flow_ast_mapper.map_list this#expression_or_spread arguments;
+    ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
     this#havoc_current_ssa_env;
     expr
 

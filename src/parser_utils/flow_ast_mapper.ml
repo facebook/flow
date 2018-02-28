@@ -13,14 +13,6 @@ let map_opt: 'node. ('node -> 'node) -> 'node option -> 'node option =
       if item == item' then opt else Some item'
     | None -> opt
 
-let map_list: 'node. ('node -> 'node) -> 'node list -> 'node list =
-  fun map list ->
-    let rev_list, changed = List.fold_left (fun (list', changed) item ->
-      let item' = map item in
-      item'::list', changed || item' != item
-    ) ([], false) list in
-    if changed then List.rev rev_list else list
-
 let id: 'node 'a. ('node -> 'node) -> 'node -> 'a -> ('node -> 'a) -> 'a =
   fun map item same diff ->
     let item' = map item in
@@ -35,7 +27,7 @@ class mapper = object(this)
   method program (program: Loc.t Ast.program) =
     let (loc, statements, comments) = program in
     let statements' = this#statement_list statements in
-    let comments' = map_list (this#comment) comments in
+    let comments' = ListUtils.ident_map (this#comment) comments in
     if statements == statements' && comments == comments' then program
     else loc, statements', comments'
 
@@ -190,7 +182,7 @@ class mapper = object(this)
   method array (expr: Loc.t Ast.Expression.Array.t) =
     let open Ast.Expression in
     let { Array.elements } = expr in
-    let elements' = map_list (map_opt this#expression_or_spread) elements in
+    let elements' = ListUtils.ident_map (map_opt this#expression_or_spread) elements in
     if elements == elements' then expr
     else { Array.elements = elements' }
 
@@ -229,7 +221,7 @@ class mapper = object(this)
     let open Ast.Expression.Call in
     let { callee; arguments; optional } = expr in
     let callee' = this#expression callee in
-    let arguments' = map_list this#expression_or_spread arguments in
+    let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
     if callee == callee' && arguments == arguments' then expr
     else { callee = callee'; arguments = arguments'; optional }
 
@@ -259,7 +251,7 @@ class mapper = object(this)
   method class_body (cls_body: Loc.t Ast.Class.Body.t) =
     let open Ast.Class.Body in
     let loc, { body } = cls_body in
-    let body' = map_list this#class_element body in
+    let body' = ListUtils.ident_map this#class_element body in
     if body == body' then cls_body
     else loc, { body = body' }
 
@@ -326,7 +318,7 @@ class mapper = object(this)
     let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
     let body' = map_loc this#object_type body in
     let extends' = map_opt (map_loc this#generic_type) extends in
-    let mixins' = map_list (map_loc this#generic_type) mixins in
+    let mixins' = ListUtils.ident_map (map_loc this#generic_type) mixins in
     if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
       && mixins' == mixins then decl
     else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends';
@@ -505,7 +497,7 @@ class mapper = object(this)
       returnType;
       typeParameters;
     } = ft in
-    let ps' = map_list this#function_param_type ps in
+    let ps' = ListUtils.ident_map this#function_param_type ps in
     let rpo' = map_opt this#function_rest_param_type rpo in
     let returnType' = this#type_ returnType in
     if ps' == ps && rpo' == rpo && returnType' == returnType then ft
@@ -535,7 +527,7 @@ class mapper = object(this)
   method object_type (ot: Loc.t Ast.Type.Object.t) =
     let open Ast.Type.Object in
     let { properties ; exact; } = ot in
-    let properties' = map_list (fun p -> match p with
+    let properties' = ListUtils.ident_map (fun p -> match p with
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
       | _ -> p (* TODO *)
     ) properties in
@@ -551,14 +543,14 @@ class mapper = object(this)
   method type_parameter_instantiation (pi: Loc.t Ast.Type.ParameterInstantiation.t) =
     let open Ast.Type.ParameterInstantiation in
     let loc, { params; } = pi in
-    let params' = map_list this#type_ params in
+    let params' = ListUtils.ident_map this#type_ params in
     if params' == params then pi
     else loc, { params = params'; }
 
   method type_parameter_declaration (pd: Loc.t Ast.Type.ParameterDeclaration.t) =
     let open Ast.Type.ParameterDeclaration in
     let loc, { params; } = pd in
-    let params' = map_list this#type_parameter_declaration_type_param params in
+    let params' = ListUtils.ident_map this#type_parameter_declaration_type_param params in
     if params' == params then pd
     else loc, { params = params'; }
 
@@ -603,17 +595,17 @@ class mapper = object(this)
     | loc, Union (t0, t1, ts) ->
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in
-      let ts' = map_list this#type_ ts in
+      let ts' = ListUtils.ident_map this#type_ ts in
       if t0' == t0 && t1' == t1 && ts' == ts then t
       else loc, Union (t0', t1', ts')
     | loc, Intersection (t0, t1, ts) ->
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in
-      let ts' = map_list this#type_ ts in
+      let ts' = ListUtils.ident_map this#type_ ts in
       if t0' == t0 && t1' == t1 && ts' == ts then t
       else loc, Intersection (t0', t1', ts')
     | loc, Tuple ts ->
-      let ts' = map_list this#type_ ts in
+      let ts' = ListUtils.ident_map this#type_ ts in
       if ts' == ts then t
       else loc, Tuple ts'
 
@@ -629,7 +621,7 @@ class mapper = object(this)
     let ident' = map_opt this#function_identifier ident in
     let params' =
       let (loc, { Params.params = params_list; rest }) = params in
-      let params_list' = map_list this#function_param_pattern params_list in
+      let params_list' = ListUtils.ident_map this#function_param_pattern params_list in
       let rest' = map_opt this#function_rest_element rest in
       if params_list == params_list' && rest == rest' then params
       else (loc, { Params.params = params_list'; rest = rest' })
@@ -670,7 +662,7 @@ class mapper = object(this)
     let id' = this#class_identifier ident in
     let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
     let body' = map_loc this#object_type body in
-    let extends' = map_list (map_loc this#generic_type) extends in
+    let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
     if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
     then interface
     else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends' }
@@ -713,7 +705,7 @@ class mapper = object(this)
     let open Ast.Statement.ImportDeclaration in
     match specifier with
     | ImportNamedSpecifiers named_specifiers ->
-      let named_specifiers' = map_list this#import_named_specifier named_specifiers in
+      let named_specifiers' = ListUtils.ident_map this#import_named_specifier named_specifiers in
       if named_specifiers == named_specifiers' then specifier
       else ImportNamedSpecifiers named_specifiers'
     | ImportNamespaceSpecifier (loc, ident) ->
@@ -748,21 +740,21 @@ class mapper = object(this)
     let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
     let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
-    let children' = map_list this#jsx_child children in
+    let children' = ListUtils.ident_map this#jsx_child children in
     if openingElement == openingElement' && closingElement == closingElement' && children == children' then expr
     else { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
   method jsx_fragment (expr: Loc.t Ast.JSX.fragment) =
     let open Ast.JSX in
     let { frag_children; _ } = expr in
-    let children' = map_list this#jsx_child frag_children in
+    let children' = ListUtils.ident_map this#jsx_child frag_children in
     { expr with frag_children = children' }
 
   method jsx_opening_element (elem: Loc.t Ast.JSX.Opening.t) =
     let open Ast.JSX.Opening in
     let loc, { name; selfClosing; attributes } = elem in
     let name' = this#jsx_name name in
-    let attributes' = map_list this#jsx_opening_attribute attributes in
+    let attributes' = ListUtils.ident_map this#jsx_opening_attribute attributes in
     if name == name' && attributes == attributes' then elem
     else loc, { name; selfClosing; attributes = attributes' }
 
@@ -921,14 +913,14 @@ class mapper = object(this)
     let open Ast.Expression.New in
     let { callee; arguments } = expr in
     let callee' = this#expression callee in
-    let arguments' = map_list this#expression_or_spread arguments in
+    let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
     if callee == callee' && arguments == arguments' then expr
     else { callee = callee'; arguments = arguments' }
 
   method object_ (expr: Loc.t Ast.Expression.Object.t) =
     let open Ast.Expression.Object in
     let { properties } = expr in
-    let properties' = map_list (fun prop ->
+    let properties' = ListUtils.ident_map (fun prop ->
       match prop with
       | Property p ->
         let p' = this#object_property p in
@@ -1032,12 +1024,12 @@ class mapper = object(this)
     let (loc, patt) = expr in
     let patt' = match patt with
       | Object { Object.properties; typeAnnotation } ->
-        let properties' = map_list (this#pattern_object_p ?kind) properties in
+        let properties' = ListUtils.ident_map (this#pattern_object_p ?kind) properties in
         let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
         if properties' == properties && typeAnnotation' == typeAnnotation then patt
         else Object { Object.properties = properties'; typeAnnotation = typeAnnotation' }
       | Array { Array.elements; typeAnnotation } ->
-        let elements' = map_list (map_opt (this#pattern_array_e ?kind)) elements in
+        let elements' = ListUtils.ident_map (map_opt (this#pattern_array_e ?kind)) elements in
         let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
         if elements' == elements && typeAnnotation' == typeAnnotation then patt
         else Array { Array.elements = elements'; typeAnnotation = typeAnnotation' }
@@ -1130,11 +1122,11 @@ class mapper = object(this)
   method sequence (expr: Loc.t Ast.Expression.Sequence.t) =
     let open Ast.Expression.Sequence in
     let { expressions } = expr in
-    let expressions' = map_list this#expression expressions in
+    let expressions' = ListUtils.ident_map this#expression expressions in
     if expressions == expressions' then expr else { expressions = expressions' }
 
   method statement_list (stmts: Loc.t Ast.Statement.t list) =
-    map_list this#statement stmts
+    ListUtils.ident_map this#statement stmts
 
   method spread_element (expr: Loc.t Ast.Expression.SpreadElement.t) =
     let open Ast.Expression.SpreadElement in
@@ -1150,7 +1142,7 @@ class mapper = object(this)
     let open Ast.Statement.Switch in
     let { discriminant; cases } = switch in
     let discriminant' = this#expression discriminant in
-    let cases' = map_list (map_loc this#switch_case) cases in
+    let cases' = ListUtils.ident_map (map_loc this#switch_case) cases in
     if discriminant == discriminant' && cases == cases' then switch
     else { discriminant = discriminant'; cases = cases' }
 
@@ -1173,8 +1165,8 @@ class mapper = object(this)
   method template_literal (expr: Loc.t Ast.Expression.TemplateLiteral.t) =
     let open Ast.Expression.TemplateLiteral in
     let { quasis; expressions } = expr in
-    let quasis' = map_list this#template_literal_element quasis in
-    let expressions' = map_list this#expression expressions in
+    let quasis' = ListUtils.ident_map this#template_literal_element quasis in
+    let expressions' = ListUtils.ident_map this#expression expressions in
     if quasis == quasis' && expressions == expressions' then expr
     else { quasis = quasis'; expressions = expressions' }
 
@@ -1231,7 +1223,7 @@ class mapper = object(this)
   method variable_declaration (decl: Loc.t Ast.Statement.VariableDeclaration.t) =
     let open Ast.Statement.VariableDeclaration in
     let { declarations; kind } = decl in
-    let decls' = map_list (this#variable_declarator ~kind) declarations in
+    let decls' = ListUtils.ident_map (this#variable_declarator ~kind) declarations in
     if declarations == decls' then decl
     else { declarations = decls'; kind }
 
