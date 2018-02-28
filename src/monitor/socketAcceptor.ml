@@ -135,7 +135,7 @@ let perform_handshake_and_get_client_type ~client_fd =
         server_bin = Sys.executable_name;
       }) in
       Marshal_tools_lwt.to_fd_with_preamble client_fd handshake
-      >>= (fun () ->
+      >>= (fun _size ->
         FlowEventLogger.out_of_date ();
         let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
         Logger.fatal "%s" msg;
@@ -158,23 +158,23 @@ let perform_handshake_and_get_client_type ~client_fd =
       if too_many_clients
       then
         Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Too_many_clients
-        >|= (fun () -> failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int))
+        >|= (fun _ -> failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int))
       else if is_lsp && not (StatusStream.ever_been_free ()) then
         let status = StatusStream.get_status () in
         Marshal_tools_lwt.to_fd_with_preamble client_fd (SocketHandshake.Still_initializing status)
-        >|= (fun () -> failwith (ServerStatus.string_of_status status))
+        >|= (fun _ -> failwith (ServerStatus.string_of_status status))
       else begin
         match client_type with
         | SocketHandshake.Ephemeral {fail_on_init=true} when not (StatusStream.ever_been_free ()) ->
           Marshal_tools_lwt.to_fd_with_preamble
             client_fd (SocketHandshake.Still_initializing (StatusStream.get_status ()))
-          >|= (fun () ->
+          >|= (fun _ ->
             failwith "Client used --retry-on-init false, and the server is still initializing"
           )
         | _ ->
           (* Nothing else has gone wrong with the handshake. Send Ok and return the client_type *)
           Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
-          >|= (fun () -> client_type)
+          >|= (fun _ -> client_type)
       end
     end
   )

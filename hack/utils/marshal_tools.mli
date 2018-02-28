@@ -21,8 +21,16 @@ type remote_exception_data = {
   stack : string;
 }
 
-val to_fd_with_preamble: ?timeout:Timeout.t -> Unix.file_descr -> 'a -> unit
-val from_fd_with_preamble: ?timeout:Timeout.t -> Unix.file_descr -> 'a
+val to_fd_with_preamble:
+  ?timeout:Timeout.t ->
+  ?flags:Marshal.extern_flags list ->
+  Unix.file_descr ->
+  'a ->
+  int
+val from_fd_with_preamble:
+  ?timeout:Timeout.t ->
+  Unix.file_descr ->
+  'a
 
 module type WRITER_READER = sig
   type 'a result
@@ -39,6 +47,14 @@ module type WRITER_READER = sig
 end
 
 module MarshalToolsFunctor :  functor (WriterReader: WRITER_READER) -> sig
-  val to_fd_with_preamble: ?timeout:Timeout.t -> WriterReader.fd -> 'a -> unit WriterReader.result
-  val from_fd_with_preamble: ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
+  val to_fd_with_preamble:
+    ?timeout:Timeout.t ->
+    ?flags:Marshal.extern_flags list ->
+    WriterReader.fd ->
+    'a ->
+    int WriterReader.result
+  val from_fd_with_preamble:
+    ?timeout:Timeout.t ->
+    WriterReader.fd ->
+    'a WriterReader.result
 end

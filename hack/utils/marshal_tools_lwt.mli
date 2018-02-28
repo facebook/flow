@@ -8,5 +8,5 @@
  *
  *)
 
- val to_fd_with_preamble: Lwt_unix.file_descr -> 'a -> unit Lwt.t
+ val to_fd_with_preamble: Lwt_unix.file_descr -> 'a -> int Lwt.t
  val from_fd_with_preamble: Lwt_unix.file_descr -> 'a Lwt.t

@@ -96,7 +96,12 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
 end
 
 module MarshalToolsFunctor (WriterReader: WRITER_READER): sig
-  val to_fd_with_preamble: ?timeout:Timeout.t -> WriterReader.fd -> 'a -> unit WriterReader.result
+  val to_fd_with_preamble:
+    ?timeout:Timeout.t ->
+    ?flags:Marshal.extern_flags list ->
+    WriterReader.fd ->
+    'a ->
+    int WriterReader.result
   val from_fd_with_preamble: ?timeout:Timeout.t -> WriterReader.fd -> 'a WriterReader.result
 end = struct
 
@@ -145,9 +150,9 @@ end = struct
       )
     end
 
-  let to_fd_with_preamble ?timeout fd obj =
-    let flag_list = [] in
-    let payload = Marshal.to_string obj flag_list in
+  (* Returns the size of the marshaled payload *)
+  let to_fd_with_preamble ?timeout ?(flags=[]) fd obj =
+    let payload = Marshal.to_string obj flags in
     let size = String.length payload in
     let preamble = make_preamble size in
     write_payload ?timeout fd preamble 0 expected_preamble_size
@@ -159,7 +164,7 @@ end = struct
     >>= (fun bytes_written ->
       if bytes_written <> size
       then WriterReader.fail Writing_Payload_Exception
-      else WriterReader.return ())
+      else WriterReader.return size)
 
   let rec read_payload ?timeout fd buffer offset to_read =
     if to_read = 0 then WriterReader.return offset else begin

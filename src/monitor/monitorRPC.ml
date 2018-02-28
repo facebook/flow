@@ -71,7 +71,7 @@ let send ~msg =
     ~on_disabled:(fun () -> ())
     ~f:(fun oc ->
       let fd = Daemon.descr_of_out_channel oc in
-      Marshal_tools.to_fd_with_preamble fd msg
+      Marshal_tools.to_fd_with_preamble fd msg |> ignore
     )
 
 (* Respond to a request from an ephemeral client *)

@@ -106,11 +106,11 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
 
   let handle_command conn = function
   | Write msg ->
-    Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg
+    Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg >|= ignore
   | WriteAndClose msg ->
     Lwt.cancel conn.command_thread;
     Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg
-    >>= (fun () -> close_immediately conn)
+    >>= (fun _size -> close_immediately conn)
 
   (* Write everything available in the stream and then close the connection *)
   let flush_and_close conn =

@@ -298,7 +298,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
     { pending_requests }
 
   let send_server_request fd msg =
-    Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
+    Marshal_tools.to_fd_with_preamble fd (msg: Prot.request) |> ignore
 
   let handle_stdin_message buffered_stdin local_env =
     match Protocol.server_request_of_stdin_message buffered_stdin with

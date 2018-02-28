@@ -63,7 +63,7 @@ let open_connection ~timeout ~client_type sockaddr =
       (* It's important that we only write this once per connection *)
       let fd = Unix.descr_of_out_channel (snd conn) in
       let handshake = SocketHandshake.({ client_build_id = build_revision; client_type } )in
-      Marshal_tools.to_fd_with_preamble fd handshake;
+      Marshal_tools.to_fd_with_preamble fd handshake |> ignore;
       conn
 
 let close_connection sockaddr =

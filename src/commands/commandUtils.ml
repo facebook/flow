@@ -954,7 +954,7 @@ let rec connect_and_make_request =
       client_logging_context = FlowEventLogger.get_context ();
       command = cmd;
     } in
-    Marshal_tools.to_fd_with_preamble ?timeout (Unix.descr_of_out_channel oc) command;
+    Marshal_tools.to_fd_with_preamble ?timeout (Unix.descr_of_out_channel oc) command |> ignore;
     flush oc
   in
 

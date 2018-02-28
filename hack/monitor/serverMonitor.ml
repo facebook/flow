@@ -128,6 +128,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * buffering to happen here, so the server process doesn't get what was
      * meant for it. *)
     Marshal_tools.to_fd_with_preamble fd msg
+    |> ignore
 
   let setup_handler_for_signals handler signals =
     List.iter signals begin fun signal ->

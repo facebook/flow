@@ -146,7 +146,7 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
             | Hh_json.Syntax_error _ -> true, Recoverable_exception edata
             | _ -> false, Fatal_exception edata
           in
-          Marshal_tools.to_fd_with_preamble out_fd marshal;
+          Marshal_tools.to_fd_with_preamble out_fd marshal |> ignore;
           should_continue
         end
       | Write ->
@@ -154,7 +154,7 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
         let timestamped_json = Queue.pop messages_to_send in
         (* We can assume that the entire write will succeed, since otherwise
            Marshal_tools.to_fd_with_preamble will throw an exception. *)
-        Marshal_tools.to_fd_with_preamble out_fd (Timestamped_json timestamped_json);
+        Marshal_tools.to_fd_with_preamble out_fd (Timestamped_json timestamped_json) |> ignore;
         true
     in
     if should_continue then loop ()
@@ -177,6 +177,7 @@ let internal_run_daemon
       let out_fd = Daemon.descr_of_out_channel oc in
       Marshal_tools.to_fd_with_preamble out_fd
         (Fatal_exception { Marshal_tools.message; stack; })
+      |> ignore
     with _ ->
       (* There may be a broken pipe, for example. We should just give up on
          reporting the error. *)

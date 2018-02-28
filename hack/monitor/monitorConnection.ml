@@ -29,7 +29,7 @@ let wait_on_server_restart ic =
 
 let send_version oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
-    Build_id.build_revision;
+    Build_id.build_revision |> ignore;
   (** For backwards-compatibility, newline has always followed the version *)
   let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
   ()
@@ -37,10 +37,12 @@ let send_version oc =
 let send_server_handoff_rpc handoff_options oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
     (MonitorRpc.HANDOFF_TO_SERVER handoff_options)
+  |> ignore
 
 let send_shutdown_rpc oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
     MonitorRpc.SHUT_DOWN
+  |> ignore
 
 let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
