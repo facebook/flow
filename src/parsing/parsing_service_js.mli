@@ -62,7 +62,7 @@ val parse:
   max_header_tokens: int ->
   lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
-  Worker.t list option ->       (* Some=parallel, None=serial *)
+  WorkerController.worker list option ->       (* Some=parallel, None=serial *)
   File_key.t list Bucket.next ->  (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
 
@@ -72,7 +72,7 @@ val parse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   Options.t ->
-  Worker.t list option ->
+  WorkerController.worker list option ->
   File_key.t list Bucket.next ->
   results
 
@@ -85,7 +85,7 @@ val reparse:
   lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
   ?with_progress: bool ->
-  Worker.t list option ->   (* Some=parallel, None=serial *)
+  WorkerController.worker list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
   FilenameSet.t * results   (* modified files and job results *)
 
@@ -94,7 +94,7 @@ val reparse_with_defaults:
   ?use_strict: bool ->
   ?with_progress: bool ->
   Options.t ->
-  Worker.t list option ->
+  WorkerController.worker list option ->
   FilenameSet.t ->
   FilenameSet.t * results
 
@@ -131,6 +131,6 @@ val do_parse:
 (* Utility to create the `next` parameter that `parse` requires *)
 val next_of_filename_set:
   ?with_progress:bool ->
-  Worker.t list option ->
+  WorkerController.worker list option ->
   FilenameSet.t ->
   File_key.t list Bucket.next

@@ -60,10 +60,10 @@ let multi_threaded_call
 
   (* When a job is cancelled, return all the jobs that were not started OR were
    * cancelled in the middle (so you better hope they are idempotent).*)
-  let check_cancel workers handles ready_fds acc =
+  let check_cancel handles ready_fds acc =
     if ready_fds <> [] && interrupt_handler ready_fds then begin
-      Worker.cancel handles;
-      let unfinished = List.map handles ~f:Worker.get_job in
+      WorkerController.cancel handles;
+      let unfinished = List.map handles ~f:WorkerController.get_job in
       let unfinished = add_pending unfinished in
       acc, Some unfinished
     end else acc, None in
@@ -87,21 +87,21 @@ let multi_threaded_call
         | Job bucket ->
             (* ... send a job to the worker.*)
             let handle =
-              Worker.call worker
+              WorkerController.call worker
                 (fun xl -> job neutral xl)
                 bucket in
             dispatch workers (handle :: handles) acc
   and collect workers handles acc =
-    let { Worker.readys; waiters; ready_fds } =
-      Worker.select handles interrupt_fds in
-    let workers = List.map ~f:Worker.get_worker readys @ workers in
+    let { WorkerController.readys; waiters; ready_fds } =
+      WorkerController.select handles interrupt_fds in
+    let workers = List.map ~f:WorkerController.get_worker readys @ workers in
     (* Collect the results. *)
     let acc =
       List.fold_left
-        ~f:(fun acc h -> merge (Worker.get_result h) acc)
+        ~f:(fun acc h -> merge (WorkerController.get_result h) acc)
         ~init:acc
         readys in
-    match check_cancel workers waiters ready_fds acc with
+    match check_cancel waiters ready_fds acc with
     | acc, Some unfinished -> acc, unfinished
     | acc, None ->
       (* And continue.. *)

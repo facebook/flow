@@ -20,7 +20,7 @@ type interrupt_handler = Unix.file_descr list -> bool
 val next :
   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->
   ?max_size: int ->
-  Worker.t list option ->
+  WorkerController.worker list option ->
   'a list ->
   'a list Bucket.next
 
@@ -31,14 +31,14 @@ type 'a bucket = 'a Bucket.bucket =
   | Done
 
 val call :
-  Worker.t list option ->
+  WorkerController.worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
   next:'a Bucket.next ->
   'c
 
 val call_with_interrupt :
-  Worker.t list option ->
+  WorkerController.worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
   next:'a Bucket.next ->

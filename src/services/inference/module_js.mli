@@ -69,7 +69,7 @@ val checked_file: (File_key.t -> bool) Expensive.t
    returns the set of modules added
 *)
 val introduce_files:
-  Worker.t list option ->
+  WorkerController.worker list option ->
   options: Options.t ->
   File_key.t list ->
   (File_key.t * Docblock.t) list ->
@@ -79,14 +79,14 @@ val introduce_files:
    returns the set of modules removed
 *)
 val clear_files:
-  Worker.t list option ->
+  WorkerController.worker list option ->
   options:Options.t ->
   FilenameSet.t ->
     (Modulename.t * File_key.t option) list
 
 (* repick providers for old and new modules *)
 val commit_modules:
-  Worker.t list option ->
+  WorkerController.worker list option ->
   options: Options.t ->
   File_key.t list ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)
