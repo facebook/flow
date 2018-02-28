@@ -426,17 +426,12 @@ let tests = "require" >::: [
     let {module_sig = {module_kind; _}; _} = visit source in
     assert_cjs module_kind ~assert_exports:(function
       | Some (CJSExportProps map) ->
-        assert_equal ~ctxt 2 (SMap.cardinal map);
-        let foo_loc, bar_loc = match SMap.find_unsafe "foo" map with
-        | CJSExport { loc; local = Some (loc', "bar") } -> loc, loc'
-        | _ -> assert_failure "Unexpected export"
-        in
+        assert_equal ~ctxt 1 (SMap.cardinal map);
+        assert_equal ~ctxt false (SMap.mem "foo" map);
         let baz_loc, qux_loc = match SMap.find_unsafe "baz" map with
         | CJSExport { loc; local = Some (loc', "qux") } -> loc, loc'
         | _ -> assert_failure "Unexpected export"
         in
-        assert_substring_equal ~ctxt "foo" source foo_loc;
-        assert_substring_equal ~ctxt "bar" source bar_loc;
         assert_substring_equal ~ctxt "baz" source baz_loc;
         assert_substring_equal ~ctxt "qux" source qux_loc;
       | _ -> assert_failure "Unexpected export"

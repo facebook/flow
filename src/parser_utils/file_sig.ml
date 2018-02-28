@@ -446,10 +446,6 @@ class requires_calculator ~ast = object(this)
 
     (* Handle exports *)
     begin match operator, left with
-    (* exports = ... *)
-    | Assign, (mod_exp_loc as module_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-      name = (_, "exports"); _
-    })
     (* module.exports = ... *)
     | Assign, (mod_exp_loc, Ast.Pattern.Expression (_, Member { Member.
         _object = module_loc, Identifier (_, "module");
