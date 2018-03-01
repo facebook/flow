@@ -1729,7 +1729,7 @@ and dump_t_ (depth, tvars) cx t =
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
   | MergedT (_, uses) -> p ~extra:("[" ^
-      (String.concat ", " (List.map (dump_use_t cx) uses))
+      (String.concat ", " (List.map (dump_use_t_ (depth - 1, tvars) cx) uses))
     ^ "]") t
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
