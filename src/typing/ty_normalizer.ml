@@ -185,9 +185,8 @@ end = struct
   (* Error reporting *)
 
   let terr ~kind ?msg t =
-    get_cx >>= fun cx ->
     let t_str = Option.map t
-      ~f:(fun t -> spf "Raised on type: %s" (Debug_js.dump_t cx t))
+      ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t))
     in
     let msg = ListUtils.cat_maybes [msg; t_str] |> String.concat "\n" in
     error (kind, msg)
@@ -774,9 +773,7 @@ end = struct
     function
     | T.Method (_, t) -> intersection t |> multi_call
     | T.Field (_, t, _) -> intersection t |> multi_call
-    | p ->
-      get_cx >>= fun cx ->
-      terr ~kind:BadCallProp ~msg:(Debug_js.dump_prop cx p) None
+    | _ -> terr ~kind:BadCallProp None
 
   and index_prop ~env d =
     let {T.dict_polarity; dict_name; key; value} = d in
@@ -1203,8 +1200,7 @@ end = struct
     | T.UseT (_, t) -> type__ ~env t
     | T.ReposLowerT (_, _, u) -> use_t ~env u
     | u ->
-      get_cx >>= fun cx ->
-      let msg = spf "Use: %s" (Debug_js.dump_use_t cx u) in
+      let msg = spf "Use: %s" (Type.string_of_use_ctor u) in
       terr ~kind:BadUse ~msg None
 
   and merged_t ~env uses =

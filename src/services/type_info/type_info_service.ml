@@ -30,7 +30,7 @@ let type_at_pos ~options ~workers ~env ~profiling file content line col =
         | FailureNoMatch ->
           Hh_json.JSON_Object ["result", Hh_json.JSON_String "FAILURE_NO_MATCH"], Loc.none, None
         | FailureUnparseable (loc, gt, _) ->
-          mk_data "FAILURE_UNPARSEABLE" loc (Debug_js.json_of_t cx gt), loc, None
+          mk_data "FAILURE_UNPARSEABLE" loc (Hh_json.JSON_String (Type.string_of_ctor gt)), loc, None
         | Success (loc, ty) ->
           (* TODO use Ty_debug.json_of_t after making it faster using
              count_calls *)
