@@ -1448,8 +1448,7 @@ end = struct
 
   type finally_optimized_rep =
     | Enum of EnumSet.t
-    | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t list
-    | Unoptimized (* TODO: should record why optimization failed *)
+    | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t Nel.t
 
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
@@ -1471,20 +1470,21 @@ end = struct
     ) (EnumSet.empty, [])
 
   let optimize ?flatten (t0, t1, ts, enum_ref) =
-    let ts, default = match flatten with
-      | Some f -> f (t0::t1::ts), Some Unoptimized
-      | None -> t0::t1::ts, None in
+    let ts = match flatten with
+      | Some f -> f (t0::t1::ts)
+      | None -> t0::t1::ts in
     (* TODO: Since ts might be derived through flattening, it might have 0 or 1 elements, in which
        case the union should be considered degenerate and optimized further. *)
     let tset, others = split_enum ts in
     let enum =
-      if others = [] then Some (Enum tset)
-      else begin match flatten with
-        | None -> default
-        | Some _ ->
-          if EnumSet.is_empty tset then default
-          else Some (PartiallyOptimizedEnum (tset, List.rev others))
-      end in
+      match others with
+        | [] -> Some (Enum tset)
+        | x::xs ->
+          begin match flatten with
+            | Some _ -> Some (PartiallyOptimizedEnum (tset, Nel.rev (x, xs)))
+            | None -> None
+          end
+    in
     enum_ref := enum
 
   (** given a list of members, build a rep.
@@ -1503,7 +1503,6 @@ end = struct
   let enum_reason r (_, _, _, enum_ref) =
     match !enum_ref with
     | None -> r
-    | Some Unoptimized -> r
     | Some (PartiallyOptimizedEnum _) -> r
     | Some (Enum _) -> replace_reason_const REnum r
 
@@ -1539,7 +1538,7 @@ end = struct
 
   let quick_mem t (t0, t1, ts, enum_ref) =
     match canon t, !enum_ref with
-    | _, (None | Some Unoptimized) ->
+    | _, None ->
       if List.mem t (t0::t1::ts)
       then Some true
       else None
@@ -1548,13 +1547,13 @@ end = struct
     | Some tcanon, Some (Enum tset) ->
       Some (EnumSet.mem tcanon tset)
     | None, Some (PartiallyOptimizedEnum (_, others)) ->
-      if List.mem t others
+      if Nel.mem t others
       then Some true
       else None
     | Some tcanon, Some (PartiallyOptimizedEnum (tset, others)) ->
       if EnumSet.mem tcanon tset
       then Some true
-      else if List.mem t others
+      else if Nel.mem t others
       then Some true
       else None
 end
