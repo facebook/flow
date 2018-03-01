@@ -1413,20 +1413,23 @@ and UnionRep : sig
 
 end = struct
 
-  type canon_t =
-    | StrCanon of string
-    | NumCanon of TypeTerm.number_literal
-    | BoolCanon of bool
-    | VoidCanon
-    | NullCanon
+  module Enum = struct
+    type t =
+      | Str of string
+      | Num of TypeTerm.number_literal
+      | Bool of bool
+      | Void
+      | Null
+    let compare = Pervasives.compare
+  end
 
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
-    | DefT (_, SingletonStrT lit) | DefT (_, StrT (Literal (_, lit))) -> Some (StrCanon lit)
-    | DefT (_, SingletonNumT lit) | DefT (_, NumT (Literal (_, lit))) -> Some (NumCanon lit)
-    | DefT (_, SingletonBoolT lit) | DefT (_, BoolT (Some lit)) -> Some (BoolCanon lit)
-    | DefT (_, VoidT) -> Some (VoidCanon)
-    | DefT (_, NullT) -> Some (NullCanon)
+    | DefT (_, SingletonStrT lit) | DefT (_, StrT (Literal (_, lit))) -> Some (Enum.Str lit)
+    | DefT (_, SingletonNumT lit) | DefT (_, NumT (Literal (_, lit))) -> Some (Enum.Num lit)
+    | DefT (_, SingletonBoolT lit) | DefT (_, BoolT (Some lit)) -> Some (Enum.Bool lit)
+    | DefT (_, VoidT) -> Some (Enum.Void)
+    | DefT (_, NullT) -> Some (Enum.Null)
     | _ -> None
   )
 
@@ -1441,10 +1444,7 @@ end = struct
   )
 
   (* enums are stored as singleton type sets *)
-  module EnumSet : Set.S with type elt = canon_t = Set.Make(struct
-    type t = canon_t
-    let compare = Pervasives.compare
-  end)
+  module EnumSet = Set.Make(Enum)
 
   type finally_optimized_rep =
     | Enum of EnumSet.t
