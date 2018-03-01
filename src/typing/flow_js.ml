@@ -8100,34 +8100,17 @@ and optimize_spec_try_quick_mem cx trace reason_op = function
 
 and guess_and_record_sentinel_prop cx ts =
 
-  let props_of_object = function
-    | AnnotT ((_, id), _) ->
-      let constraints = Context.find_graph cx id in
-      begin match constraints with
-      | Resolved (DefT (_, ObjT { props_tmap; _ }))
-      | Resolved (ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
-        Context.find_props cx props_tmap
-      | _ -> SMap.empty
-      end
-    | DefT (_, ObjT { props_tmap; _ })
-    | ExactT (_, DefT (_, ObjT { props_tmap; _ }))
-      -> Context.find_props cx props_tmap
-    | _
-      -> SMap.empty
-  in
+  let props_of_object t =
+    match Context.find_resolved cx t with
+    | Some (DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
+      Context.find_props cx props_tmap
+    | _ -> SMap.empty in
 
-  let is_singleton_type = function
-    | AnnotT ((_, id), _) ->
-      let constraints = Context.find_graph cx id in
-      begin match constraints with
-      | Resolved (DefT (_,
-          (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | NullT | VoidT)
-        )) -> true
-      | _ -> false
-      end
-    | DefT (_,
+  let is_singleton_type t =
+    match Context.find_resolved cx t with
+    | Some (DefT (_,
         (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | NullT | VoidT)
-      ) -> true
+      )) -> true
     | _ -> false in
 
   (* Compute the intersection of properties of objects *)
@@ -8146,18 +8129,10 @@ and guess_and_record_sentinel_prop cx ts =
   if not (SMap.is_empty acc) then
     (* Record the guessed sentinel properties for each object *)
     let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
-    List.iter (function
-      | AnnotT ((_, id), _) ->
-        let constraints = Context.find_graph cx id in
-        begin match constraints with
-        | Resolved (DefT (_, ObjT { props_tmap; _ }))
-        | Resolved (ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
-          Cache.SentinelProp.add props_tmap keys
-        | _ -> ()
-        end
-      | DefT (_, ObjT { props_tmap; _ })
-      | ExactT (_, DefT (_, ObjT { props_tmap; _ }))
-        -> Cache.SentinelProp.add props_tmap keys
+    List.iter (fun t ->
+      match Context.find_resolved cx t with
+      | Some (DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
+        Cache.SentinelProp.add props_tmap keys
       | _ -> ()
     ) ts
 
