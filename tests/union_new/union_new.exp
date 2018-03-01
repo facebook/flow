@@ -175,31 +175,23 @@ exists in `Cons` [2].
               ^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test11.js:16:19
-   16| type List = Nil | Cons;
-                         ^^^^ [2]
+   test11.js:18:13
+   18| type Cons = { kind: "cons", next: List };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test11.js:14:8
 
-Cannot call `length` with object literal bound to `list` because:
- - Either string [1] is incompatible with string literal `nil` [2] in property `kind`.
- - Or string [1] is incompatible with string literal `cons` [3] in property `kind`.
+Cannot call `length` with object literal bound to `list` because object literal [1] is incompatible with `List` [2].
 
    test11.js:14:8
    14| length({ kind: "empty" }); // `kind` not found
-              ^^^^^^^^^^^^^^^^^
+              ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test11.js:14:16
-   14| length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ [1]
-   test11.js:17:20
-   17| type Nil = { kind: "nil" };
-                          ^^^^^ [2]
-   test11.js:18:21
-   18| type Cons = { kind: "cons", next: List };
-                           ^^^^^^ [3]
+   test11.js:5:23
+    5| function length(list: List) {
+                             ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test14.js:12:9

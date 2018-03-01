@@ -2679,28 +2679,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- sentinel.js:12:2
 
-Cannot cast object literal to `X` because:
- - Either string [1] is incompatible with string literal `A` [2] in property `type`.
- - Or string [1] is incompatible with string literal `B` [3] in property `type`.
- - Or string [1] is incompatible with string literal `C` [4] in property `type`.
+Cannot cast object literal to `X` because object literal [1] is incompatible with `X` [2].
 
    sentinel.js:12:2
    12| ({type: 'D'}: X);
-        ^^^^^^^^^^^
+        ^^^^^^^^^^^ [1]
 
 References:
-   sentinel.js:12:9
+   sentinel.js:12:15
    12| ({type: 'D'}: X);
-               ^^^ [1]
-   sentinel.js:7:12
-    7|   | {type: 'A', p: number}
-                  ^^^ [2]
-   sentinel.js:8:12
-    8|   | {type: 'B', p: string}
-                  ^^^ [3]
-   sentinel.js:9:12
-    9|   | {type: 'C', p: boolean};
-                  ^^^ [4]
+                     ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:18:2

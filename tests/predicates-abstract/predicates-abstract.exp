@@ -39,24 +39,19 @@ References:
 
 Error -------------------------------------------------------------------------------------- sanity-filter-union.js:17:2
 
-Cannot cast `my_filter(...)` to array type because in array element:
- - Either string literal `B` [1] is incompatible with string literal `A` [2] in property `kind`.
- - Or string literal `B` [1] is incompatible with string literal `C` [3] in property `kind`.
+Cannot cast `my_filter(...)` to array type because `B` [1] is incompatible with union type [2] in array element.
 
    sanity-filter-union.js:17:2
    17| (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   sanity-filter-union.js:9:18
-    9| type B = { kind: 'B', v: string }
-                        ^^^ [1]
-   sanity-filter-union.js:8:18
-    8| type A = { kind: 'A', u: number }
-                        ^^^ [2]
-   sanity-filter-union.js:10:18
-   10| type C = { kind: 'C', y: boolean }
-                        ^^^ [3]
+   sanity-filter-union.js:14:25
+   14| declare var ab: Array<A|B|C>;
+                               ^ [1]
+   sanity-filter-union.js:17:55
+   17| (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                             ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- sanity-filter.js:8:2

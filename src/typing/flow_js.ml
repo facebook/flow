@@ -7545,7 +7545,10 @@ and try_union cx trace use_op l reason rep =
   Speculation.init_speculation cx speculation_id;
 
   (* collect parts of the union type to be fully resolved *)
-  let imap = ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
+  let imap =
+    (* since any final optimization must have happened after full resolution *)
+    if UnionRep.is_disjoint_union rep then IMap.empty
+    else ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
   (* collect parts of the lower bound to be fully resolved, while logging
      unresolved tvars *)
   let imap = ResolvableTypeJob.collect_of_type
@@ -7906,7 +7909,7 @@ and speculative_match cx trace branch l u =
 *)
 and speculative_matches cx trace r speculation_id spec =
   (* explore optimization opportunities *)
-  if optimize_spec_try_quick_mem cx trace r spec then ()
+  if optimize_spec_try_shortcut cx trace r spec then ()
   else long_path_speculative_matches cx trace r speculation_id spec
 
 and long_path_speculative_matches cx trace r speculation_id spec = Speculation.Case.(
@@ -8077,73 +8080,56 @@ and ignore_of_spec = function
    during speculative matching, by checking sentinel properties first we force immediate match
    failures in the vast majority of cases without having to do any useless additional work.
 *)
-and optimize_spec_try_quick_mem cx trace reason_op = function
-  | UnionCases (use_op, l, rep, ts) -> begin match l with
+and optimize_spec_try_shortcut cx trace reason_op = function
+  | UnionCases (use_op, l, rep, _ts) -> begin match l with
     | DefT (_,
         (StrT _ | NumT _ | BoolT _ |
          SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ |
          VoidT | NullT)) ->
       enum_optimize cx rep;
-      begin match UnionRep.quick_mem l rep with
-        | Some true -> (* membership check succeeded *)
-          true (* Our work here is done, so no need to continue. *)
-        | Some false -> (* membership check failed *)
-          let r = UnionRep.enum_reason reason_op rep in
-          rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
-          true (* Our work here is done, so no need to continue. *)
-        | _ -> (* membership check was inconclusive *)
-          false (* Continue to speculative matching. *)
-      end
+      shortcut_enum cx trace reason_op use_op l rep
     | DefT (_, ObjT _) | ExactT (_, DefT (_, ObjT _)) ->
-      guess_and_record_sentinel_prop cx ts;
-      (* No quick mem check for this case yet. The benefits of this optimization will kick in during
-         speculative matching. *)
-      false
+      disjoint_union_optimize cx rep;
+      shortcut_disjoint_union cx trace reason_op use_op l rep
     | _ -> false
     end
   | IntersectionCases _ -> false
 
-and guess_and_record_sentinel_prop cx ts =
-
-  let props_of_object t =
-    match Context.find_resolved cx t with
-    | Some (DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
-      Context.find_props cx props_tmap
-    | _ -> SMap.empty in
-
-  let is_singleton_type t =
-    match Context.find_resolved cx t with
-    | Some (DefT (_,
-        (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | NullT | VoidT)
-      )) -> true
-    | _ -> false in
-
-  (* Compute the intersection of properties of objects *)
-  let prop_maps = List.map props_of_object ts in
-  let acc = List.fold_left (fun acc map ->
-    SMap.filter (fun s _ -> SMap.mem s map) acc
-  ) (List.hd prop_maps) (List.tl prop_maps) in
-
-  (* Keep only fields that have singleton types *)
-  let acc = SMap.filter (fun _ p ->
-    match p with
-    | Field (_, t, _) -> is_singleton_type t
-    | _ -> false
-  ) acc in
-
-  if not (SMap.is_empty acc) then
-    (* Record the guessed sentinel properties for each object *)
-    let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
-    List.iter (fun t ->
-      match Context.find_resolved cx t with
-      | Some (DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
-        Cache.SentinelProp.add props_tmap keys
-      | _ -> ()
-    ) ts
-
 and enum_optimize cx rep =
   if not (UnionRep.is_optimized_finally rep) then
     UnionRep.optimize ~flatten:(Type_mapper.union_flatten cx) rep
+
+and shortcut_enum cx trace reason_op use_op l rep =
+  match UnionRep.quick_mem l rep with
+    | Some true -> (* membership check succeeded *)
+      true (* Our work here is done, so no need to continue. *)
+    | Some false -> (* membership check failed *)
+      let r = UnionRep.enum_reason reason_op rep in
+      rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
+      true (* Our work here is done, so no need to continue. *)
+    | _ -> (* membership check was inconclusive *)
+      false (* Continue to speculative matching. *)
+
+and disjoint_union_optimize cx rep =
+  if not (UnionRep.is_optimized_finally rep)
+  then UnionRep.guess_and_record_sentinel_prop rep
+    ~flatten:(Type_mapper.union_flatten cx)
+    ~find_resolved:(Context.find_resolved cx)
+    ~find_props:(Context.find_props cx)
+    ~cache_sentinel_prop:Cache.SentinelProp.add
+
+and shortcut_disjoint_union cx trace reason_op use_op l rep =
+  match UnionRep.quick_match l rep
+    ~find_resolved:(Context.find_resolved cx)
+    ~find_props:(Context.find_props cx)
+  with
+    | Some (Some t) ->
+      rec_flow cx trace (l, UseT (use_op, t));
+      true
+    | Some None ->
+      rec_flow cx trace (l, UseT (use_op, DefT (reason_op, EmptyT)));
+      true
+    | None -> false
 
 (* When we fire_actions we also need to reconstruct the use_op for each action
  * since before beginning speculation we replaced each use_op with

@@ -120,10 +120,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
-Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because:
- - Either property `kind` is missing in `BadType` [1] but exists in `Name` [2].
- - Or property `kind` is missing in `BadType` [1] but exists in `ListType` [3].
- - Or property `kind` is missing in `BadType` [1] but exists in `NonNullType` [4].
+Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because `BadType` [1] is incompatible with
+`Type` [2].
 
    cond_prop.js:11:25
    11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -133,15 +131,9 @@ References:
    cond_prop.js:6:66
     6| type NonNullType = {kind: 'NonNullType', type: Name | ListType | BadType};
                                                                         ^^^^^^^ [1]
-   cond_prop.js:3:13
-    3| type Type = Name | ListType | NonNullType;
-                   ^^^^ [2]
-   cond_prop.js:3:20
-    3| type Type = Name | ListType | NonNullType;
-                          ^^^^^^^^ [3]
-   cond_prop.js:3:31
-    3| type Type = Name | ListType | NonNullType;
-                                     ^^^^^^^^^^^ [4]
+   cond_prop.js:9:34
+    9| function getTypeASTName(typeAST: Type): string {
+                                        ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:12

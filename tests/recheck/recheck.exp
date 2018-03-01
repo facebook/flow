@@ -199,24 +199,16 @@ Found 1 error
 Test e:
 Error ------------------------------------------------------------------------------------------------------- e2.js:6:10
 
-Cannot return object literal because:
- - Either string [1] is incompatible with string literal `FOO` [2] in property `type`.
- - Or string [1] is incompatible with string literal `BAR` [3] in property `type`.
+Cannot return object literal because object literal [1] is incompatible with `Action` [2].
 
    e2.js:6:10
    6|   return { type: 'QUX' };
-               ^^^^^^^^^^^^^^^
+               ^^^^^^^^^^^^^^^ [1]
 
 References:
-   e2.js:6:18
-   6|   return { type: 'QUX' };
-                       ^^^^^ [1]
-   e1.js:4:13
-   4|   | { type: 'FOO' }
-                  ^^^^^ [2]
-   e1.js:5:13
-   5|   | { type: 'BAR' }
-                  ^^^^^ [3]
+   e2.js:5:15
+   5| const f = (): Action => {
+                    ^^^^^^ [2]
 
 
 
