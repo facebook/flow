@@ -8089,7 +8089,7 @@ and optimize_spec_try_quick_mem cx trace reason_op = function
         | _ -> (* membership check was inconclusive *)
           false (* Continue to speculative matching. *)
       end
-    | DefT (_, ObjT _) ->
+    | DefT (_, ObjT _) | ExactT (_, DefT (_, ObjT _)) ->
       guess_and_record_sentinel_prop cx ts;
       (* No quick mem check for this case yet. The benefits of this optimization will kick in during
          speculative matching. *)
@@ -8104,7 +8104,8 @@ and guess_and_record_sentinel_prop cx ts =
     | AnnotT ((_, id), _) ->
       let constraints = Context.find_graph cx id in
       begin match constraints with
-      | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
+      | Resolved (DefT (_, ObjT { props_tmap; _ }))
+      | Resolved (ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
         Context.find_props cx props_tmap
       | _ -> SMap.empty
       end
@@ -8149,7 +8150,8 @@ and guess_and_record_sentinel_prop cx ts =
       | AnnotT ((_, id), _) ->
         let constraints = Context.find_graph cx id in
         begin match constraints with
-        | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
+        | Resolved (DefT (_, ObjT { props_tmap; _ }))
+        | Resolved (ExactT (_, DefT (_, ObjT { props_tmap; _ }))) ->
           Cache.SentinelProp.add props_tmap keys
         | _ -> ()
         end
