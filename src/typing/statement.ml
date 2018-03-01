@@ -2581,7 +2581,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       optional;
       _
     } -> (
-      warn_or_ignore_optional_chaining optional cx loc
+      warn_or_ignore_optional_chaining optional cx loc;
       let expr_reason = mk_reason (RProperty (Some name)) loc in
       let tobj = expression cx _object in
       if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
