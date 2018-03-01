@@ -2921,10 +2921,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         TODO: (1) Define a more general partial equality, that takes into
         account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
     | DefT (_, UnionT rep1), UseT (_, DefT (_, UnionT rep2)) when
-        let l1, l2 = UnionRep.members rep1, UnionRep.members rep2 in
-        l1 |> List.for_all (fun t1 ->
-          l2 |> List.exists (fun t2 ->
-            reasonless_eq t1 t2)) ->
+        let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
+        Type_mapper.union_flatten cx @@ UnionRep.members rep1 |> List.for_all (fun t1 ->
+          List.exists (reasonless_eq t1) ts2
+        ) ->
       ()
 
     | DefT (r, UnionT rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result) ->
@@ -2974,6 +2974,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, IntersectionT rep), UseT (_, u)
       when List.mem u (InterRep.members rep) ->
+      ()
+
+    | _, UseT (_, DefT (_, UnionT rep)) when
+        not (UnionRep.is_optimized_finally rep) &&
+        let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
+        List.exists (reasonless_eq l) ts ->
       ()
 
     | _, UseT (use_op, DefT (r, UnionT rep)) -> (
@@ -8082,9 +8088,8 @@ and optimize_spec_try_quick_mem cx trace reason_op = function
         | Some true -> (* membership check succeeded *)
           true (* Our work here is done, so no need to continue. *)
         | Some false -> (* membership check failed *)
-          let reason = reason_of_t l in
-          add_output cx ~trace
-            (Flow_error.EUnionSpeculationFailed { use_op; reason; reason_op; branches = [] });
+          let r = UnionRep.enum_reason reason_op rep in
+          rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
           true (* Our work here is done, so no need to continue. *)
         | _ -> (* membership check was inconclusive *)
           false (* Continue to speculative matching. *)

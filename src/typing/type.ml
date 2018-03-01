@@ -1536,24 +1536,22 @@ end = struct
       make_optimized ?flatten t0_ t1_ ts_
     else rep
 
-  let quick_mem t (t0, t1, ts, enum_ref) =
+  let quick_mem t (_t0, _t1, _ts, enum_ref) =
     match canon t, !enum_ref with
     | _, None ->
-      if List.mem t (t0::t1::ts)
-      then Some true
-      else None
+      None
     | None, Some (Enum _) ->
       Some false
     | Some tcanon, Some (Enum tset) ->
       Some (EnumSet.mem tcanon tset)
     | None, Some (PartiallyOptimizedEnum (_, others)) ->
-      if Nel.mem t others
+      if Nel.exists (TypeUtil.reasonless_eq t) others
       then Some true
       else None
     | Some tcanon, Some (PartiallyOptimizedEnum (tset, others)) ->
       if EnumSet.mem tcanon tset
       then Some true
-      else if Nel.mem t others
+      else if Nel.exists (TypeUtil.reasonless_eq t) others
       then Some true
       else None
 end

@@ -1,8 +1,8 @@
 flow check --json-version=2
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow check --json-version=2 --json
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow check --json-version=2 --pretty
 {
@@ -81,18 +81,79 @@ flow check --json-version=2 --pretty
         "end":{"line":10,"column":5,"offset":108},
         "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
       },
-      "messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
-      "referenceLocs":{}
+      "messageMarkup":{
+        "kind":"UnorderedList",
+        "message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
+        "items":[
+          [
+            {"kind":"Text","text":"Either "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"2",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ],
+          [
+            {"kind":"Text","text":"Or "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"3",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ]
+        ]
+      },
+      "referenceLocs":{
+        "1":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":8,"column":16,"offset":85},
+          "end":{"line":8,"column":17,"offset":87},
+          "context":"const o2 = {p: 42};"
+        },
+        "2":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":10,"column":13,"offset":115},
+          "end":{"line":10,"column":25,"offset":128},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        },
+        "3":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":10,"column":36,"offset":138},
+          "end":{"line":10,"column":48,"offset":151},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        }
+      }
     }
   ],
   "passed":false
 }
 
 flow focus-check test.js --json-version=2
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow focus-check test.js --json-version=2 --json
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow focus-check test.js --json-version=2 --pretty
 {
@@ -171,18 +232,79 @@ flow focus-check test.js --json-version=2 --pretty
         "end":{"line":10,"column":5,"offset":108},
         "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
       },
-      "messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
-      "referenceLocs":{}
+      "messageMarkup":{
+        "kind":"UnorderedList",
+        "message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
+        "items":[
+          [
+            {"kind":"Text","text":"Either "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"2",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ],
+          [
+            {"kind":"Text","text":"Or "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"3",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ]
+        ]
+      },
+      "referenceLocs":{
+        "1":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":8,"column":16,"offset":85},
+          "end":{"line":8,"column":17,"offset":87},
+          "context":"const o2 = {p: 42};"
+        },
+        "2":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":10,"column":13,"offset":115},
+          "end":{"line":10,"column":25,"offset":128},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        },
+        "3":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":10,"column":36,"offset":138},
+          "end":{"line":10,"column":48,"offset":151},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        }
+      }
     }
   ],
   "passed":false
 }
 
 flow check-contents --json-version=2 < test.js
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"-","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"-","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow check-contents --json-version=2 --json < test.js
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"-","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"-","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow check-contents --json-version=2 --pretty < test.js
 {
@@ -261,18 +383,79 @@ flow check-contents --json-version=2 --pretty < test.js
         "end":{"line":10,"column":5,"offset":108},
         "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
       },
-      "messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
-      "referenceLocs":{}
+      "messageMarkup":{
+        "kind":"UnorderedList",
+        "message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
+        "items":[
+          [
+            {"kind":"Text","text":"Either "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"2",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ],
+          [
+            {"kind":"Text","text":"Or "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"3",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ]
+        ]
+      },
+      "referenceLocs":{
+        "1":{
+          "source":"-",
+          "type":"SourceFile",
+          "start":{"line":8,"column":16,"offset":85},
+          "end":{"line":8,"column":17,"offset":87},
+          "context":"const o2 = {p: 42};"
+        },
+        "2":{
+          "source":"-",
+          "type":"SourceFile",
+          "start":{"line":10,"column":13,"offset":115},
+          "end":{"line":10,"column":25,"offset":128},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        },
+        "3":{
+          "source":"-",
+          "type":"SourceFile",
+          "start":{"line":10,"column":36,"offset":138},
+          "end":{"line":10,"column":48,"offset":151},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        }
+      }
     }
   ],
   "passed":false
 }
 
 flow status --json-version=2
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow status --json-version=2 --json
-{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"referenceLocs":{}}],"passed":false}
+{"flowVersion":"0.66.0","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":"([o1]: [O]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":"([o1]: [O]);"},"messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to tuple type because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":"const o1 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":"type O = {p: empty};"}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],"items":[[{"kind":"Text","text":"Either "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}],[{"kind":"Text","text":"Or "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"enum"}]},{"kind":"Text","text":" in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" of index 0."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":"const o2 = {p: 42};"},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":25,"offset":128},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":48,"offset":151},"context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}],"passed":false}
 
 flow status --json-version=2 --pretty
 {
@@ -351,8 +534,69 @@ flow status --json-version=2 --pretty
         "end":{"line":10,"column":5,"offset":108},
         "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
       },
-      "messageMarkup":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
-      "referenceLocs":{}
+      "messageMarkup":{
+        "kind":"UnorderedList",
+        "message":[{"kind":"Text","text":"Cannot cast array literal to union type because:"}],
+        "items":[
+          [
+            {"kind":"Text","text":"Either "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"2",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ],
+          [
+            {"kind":"Text","text":"Or "},
+            {
+              "kind":"Reference",
+              "referenceId":"1",
+              "message":[{"kind":"Text","text":"number"}]
+            },
+            {"kind":"Text","text":" is incompatible with "},
+            {
+              "kind":"Reference",
+              "referenceId":"3",
+              "message":[{"kind":"Text","text":"enum"}]
+            },
+            {"kind":"Text","text":" in property "},
+            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":" of index 0."}
+          ]
+        ]
+      },
+      "referenceLocs":{
+        "1":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":8,"column":16,"offset":85},
+          "end":{"line":8,"column":17,"offset":87},
+          "context":"const o2 = {p: 42};"
+        },
+        "2":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":10,"column":13,"offset":115},
+          "end":{"line":10,"column":25,"offset":128},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        },
+        "3":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":10,"column":36,"offset":138},
+          "end":{"line":10,"column":48,"offset":151},
+          "context":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"
+        }
+      }
     }
   ],
   "passed":false
