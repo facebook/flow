@@ -106,3 +106,6 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 28 4
 
 printf "Use of a property that came through type spread: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 35 25
+
+printf "Use as a JSX component class: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root jsx.js 5 7

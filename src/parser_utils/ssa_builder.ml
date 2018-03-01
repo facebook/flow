@@ -393,14 +393,22 @@ class ssa_builder = object(this)
     super#identifier ident
 
   (* read *)
-  method! identifier (ident: Loc.t Ast.Identifier.t) =
-    let loc, x = ident in
+  method any_identifier (loc: Loc.t) (x: string) =
     begin match SMap.get x ssa_env with
       | Some { val_ref; _ } ->
         values <- LocMap.add loc !val_ref values
       | None -> ()
     end;
+
+  method! identifier (ident: Loc.t Ast.Identifier.t) =
+    let loc, x = ident in
+    this#any_identifier loc x;
     super#identifier ident
+
+  method! jsx_identifier (ident: Loc.t Ast.JSX.Identifier.t) =
+    let loc, {Ast.JSX.Identifier.name} = ident in
+    this#any_identifier loc name;
+    super#jsx_identifier ident
 
   (* Order of evaluation matters *)
   method! assignment (expr: Loc.t Ast.Expression.Assignment.t) =
