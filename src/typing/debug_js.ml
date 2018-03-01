@@ -1552,10 +1552,7 @@ let dump_reason cx reason =
     else None in
   Reason.dump_reason ~strip_root reason
 
-let rec dump_t ?(depth=3) cx t =
-  dump_t_ (depth, ISet.empty) cx t
-
-and dump_t_ (depth, tvars) cx t =
+let rec dump_t_ (depth, tvars) cx t =
 
   let p ?(reason=true) ?(extra="") t =
     spf "%s (%s%s%s)"
@@ -1749,9 +1746,6 @@ and dump_t_ (depth, tvars) cx t =
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
   | ReposT (_, arg)
   | InternalT (ReposUpperT (_, arg)) -> p ~extra:(kid arg) t
-
-and dump_use_t ?(depth=3) cx t =
-  dump_use_t_ (depth, ISet.empty) cx t
 
 and dump_use_t_ (depth, tvars) cx t =
 
@@ -2129,9 +2123,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
 
-and dump_tvar ?(depth=3) cx id =
-  dump_tvar_ (depth, ISet.empty) cx id
-
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then spf "%d, ^" id else
   let stack = ISet.add id tvars in
@@ -2156,9 +2147,6 @@ and dump_tvar_ (depth, tvars) cx id =
   with Context.Tvar_not_found _ ->
     string_of_int id
 
-and dump_prop ?(depth=3) cx p =
-  dump_prop_ (depth, ISet.empty) cx p
-
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth-1, tvars) cx t in
   match p with
@@ -2172,6 +2160,22 @@ and dump_prop_ (depth, tvars) cx p =
     spf "Get %s Set %s" (kid t1) (kid t2)
   | Method (_loc, t) ->
     spf "Method %s" (kid t)
+
+(* This is the type-dump debugging API.
+   We should make sure these are not called recursively to avoid circumventing
+   one of the termination mechanisms: depth or tvar-set.
+*)
+let dump_t ?(depth=3) cx t =
+  dump_t_ (depth, ISet.empty) cx t
+
+let dump_use_t ?(depth=3) cx t =
+  dump_use_t_ (depth, ISet.empty) cx t
+
+let dump_prop ?(depth=3) cx p =
+  dump_prop_ (depth, ISet.empty) cx p
+
+let dump_tvar ?(depth=3) cx id =
+  dump_tvar_ (depth, ISet.empty) cx id
 
 (*****************************************************)
 
