@@ -706,7 +706,8 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
           expression_with_parens ~precedence ~ctxt right
         end;
       ]
-    | E.Call { E.Call.callee; arguments } ->
+    | E.Call { E.Call.callee; arguments; optional } ->
+      let lparen = if optional then ".?(" else "(" in
       begin match callee, arguments with
       (* __d hack, force parens around factory function.
         More details at: https://fburl.com/b1wv51vj
@@ -715,7 +716,7 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
         fuse [
           Atom "__d";
           list
-            ~wrap:(Atom "(", Atom ")")
+            ~wrap:(Atom lparen, Atom ")")
             ~sep:(Atom ",")
             [
               expression_or_spread a;
@@ -729,7 +730,7 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
         fuse [
           expression_with_parens ~precedence ~ctxt callee;
           list
-            ~wrap:(Atom "(", Atom ")")
+            ~wrap:(Atom lparen, Atom ")")
             ~sep:(Atom ",")
             (List.map expression_or_spread arguments)
         ]
@@ -770,7 +771,13 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
           fuse [flat_pretty_space; right];
         ])
       ]
-    | E.Member { E.Member._object; property; computed } ->
+    | E.Member { E.Member._object; property; computed; optional } ->
+      let ldelim, rdelim = begin match computed, optional with
+      | false, false -> Atom ".", Empty
+      | false, true -> Atom "?.", Empty
+      | true, false -> Atom "[", Atom "]"
+      | true, true -> Atom "?.[", Atom "]"
+      end in
       fuse [
         begin match _object with
         | (_, E.Call _) -> expression ~ctxt _object
@@ -779,13 +786,13 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
           number_literal ~in_member_object:true raw num
         | _ -> expression_with_parens ~precedence ~ctxt _object
         end;
-        if computed then Atom "[" else Atom ".";
+        ldelim;
         begin match property with
         | E.Member.PropertyIdentifier (loc, id) -> SourceLocation (loc, Atom id)
         | E.Member.PropertyPrivateName (loc, (_, id)) -> SourceLocation (loc, Atom ("#" ^id))
         | E.Member.PropertyExpression expr -> expression ~ctxt expr
         end;
-        if computed then Atom "]" else Empty;
+        rdelim;
       ]
     | E.New { E.New.callee; arguments } ->
       let callee_layout =

@@ -805,6 +805,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
     opt_esproposal_class_instance_fields =
       FlowConfig.esproposal_class_instance_fields flowconfig;
+    opt_esproposal_optional_chaining = FlowConfig.esproposal_optional_chaining flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
     opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;

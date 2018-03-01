@@ -187,6 +187,7 @@ module rec Parse : PARSER = struct
     | T_RBRACKET
     | T_COMMA
     | T_PERIOD
+    | T_PLING_PERIOD
     | T_ARROW
     | T_IN
     | T_INSTANCEOF

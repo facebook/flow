@@ -108,6 +108,9 @@ type t =
   | ComputedShorthandProperty
   | MethodInDestructuring
   | TrailingCommaAfterRestElement
+  | OptionalChainingDisabled
+  | OptionalChainNew
+  | OptionalChainTemplate
 
 exception Error of (Loc.t * t) list
 
@@ -272,4 +275,10 @@ module PP =
       | ComputedShorthandProperty -> "Computed properties must have a value."
       | MethodInDestructuring -> "Object pattern can't contain methods"
       | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"
+      | OptionalChainingDisabled -> "The optional chaining plugin must be enabled in order to \
+        use the optional chaining operator (`?.`). Optional chaining is an active early-stage \
+        feature proposal which may change and is not enabled by default. To enable support in \
+        the parser, use the `esproposal_optional_chaining` option."
+      | OptionalChainNew -> "`new` may not be combined with an optional chain."
+      | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
   end

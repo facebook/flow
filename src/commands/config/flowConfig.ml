@@ -40,6 +40,7 @@ module Opts = struct
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
+    esproposal_optional_chaining: Options.esproposal_feature_mode;
     facebook_fbt: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_blacklist: string list;
@@ -142,6 +143,7 @@ module Opts = struct
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
+    esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
     facebook_fbt = None;
     haste_name_reducers = [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
     haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
@@ -507,6 +509,15 @@ let parse_options config lines =
       optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> Ok {
         opts with esproposal_export_star_as = v;
+      });
+    }
+
+    |> define_opt "esproposal.optional_chaining" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_esproposal_feature_flag ~allow_enable:false;
+      setter = (fun opts v -> Ok {
+        opts with esproposal_optional_chaining = v;
       });
     }
 
@@ -983,6 +994,7 @@ let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instanc
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators
 let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
+let esproposal_optional_chaining c = c.options.Opts.esproposal_optional_chaining
 let facebook_fbt c = c.options.Opts.facebook_fbt
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist

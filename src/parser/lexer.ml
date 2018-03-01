@@ -821,6 +821,15 @@ let token (env: Lex_env.t) lexbuf : result =
   | ";" -> Token (env, T_SEMICOLON)
   | "," -> Token (env, T_COMMA)
   | ":" -> Token (env, T_COLON)
+
+  | "?.", digit ->
+    Sedlexing.rollback lexbuf;
+    begin match%sedlex lexbuf with
+    | "?" -> Token (env, T_PLING)
+    | _ -> failwith "expected ?"
+    end
+
+  | "?." -> Token (env, T_PLING_PERIOD)
   | "?" -> Token (env, T_PLING)
   | "&&" -> Token (env, T_AND)
   | "||" -> Token (env, T_OR)

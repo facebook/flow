@@ -133,7 +133,8 @@
                           "optional":false
                         }
                       },
-                      "computed":false
+                      "computed":false,
+                      "optional":false
                     },
                     "directive":null
                   },
@@ -162,7 +163,8 @@
                           "typeAnnotation":null,
                           "optional":false
                         },
-                        "computed":false
+                        "computed":false,
+                        "optional":false
                       },
                       "property":{
                         "type":"PrivateName",
@@ -177,7 +179,8 @@
                           "optional":false
                         }
                       },
-                      "computed":false
+                      "computed":false,
+                      "optional":false
                     },
                     "directive":null
                   }

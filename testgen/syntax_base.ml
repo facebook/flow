@@ -93,7 +93,7 @@ let mk_runtime_check (expr : Loc.t E.t') (etype : Loc.t T.t') : t =
     [E.Expression (Loc.none, expr);
      E.Expression (Loc.none, (mk_literal_expr etype))] in
   let call = let open E.Call in
-    E.Call {callee = (Loc.none, callee); arguments} in
+    E.Call {callee = (Loc.none, callee); arguments; optional = false} in
   Stmt (S.Expression.(S.Expression {expression = (Loc.none, call);
                                            directive = None}))
 
@@ -107,7 +107,8 @@ let mk_check_opt_prop (expr : Loc.t E.t') (etype : Loc.t T.t') : t =
     match read with
     | E.Member {_object = (_, obj);
                 property = _;
-                computed = _} -> get_obj obj (obj :: acc)
+                computed = _;
+                optional = _} -> get_obj obj (obj :: acc)
     | _ -> List.rev acc in
 
   (* We want to make sure the parent is not undefined *)
@@ -121,7 +122,7 @@ let mk_check_opt_prop (expr : Loc.t E.t') (etype : Loc.t T.t') : t =
      E.Expression (Loc.none, expr);
      E.Expression (Loc.none, (mk_literal_expr etype))] in
   let call = let open E.Call in
-    E.Call {callee = (Loc.none, callee); arguments} in
+    E.Call {callee = (Loc.none, callee); arguments; optional = false} in
   Stmt (S.Expression.(S.Expression {expression = (Loc.none, call);
                                     directive = None}))
 
@@ -172,7 +173,8 @@ let mk_func_def
 
 let mk_func_call (fid : Loc.t E.t') (param : Loc.t E.t') : t =
   Expr (E.Call.(E.Call {callee = (Loc.none, fid);
-                        arguments = [E.Expression (Loc.none, param)]}))
+                        arguments = [E.Expression (Loc.none, param)];
+                        optional = false}))
 
 let mk_literal (t : Loc.t T.t') : t = match t with
   | T.Number ->
@@ -192,7 +194,8 @@ let mk_prop_read
   let open E.Member in
   Expr (E.Member {_object = (Loc.none, E.Identifier (Loc.none, obj_name));
                   property = PropertyIdentifier (Loc.none, prop_name);
-                  computed = false})
+                  computed = false;
+                  optional = false})
 
 let mk_prop_write
     (oname : string)

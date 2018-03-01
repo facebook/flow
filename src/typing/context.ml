@@ -31,6 +31,7 @@ type global_metadata = {
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
+  esproposal_optional_chaining: Options.esproposal_feature_mode;
   facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
@@ -61,6 +62,7 @@ module Global = struct
   let esproposal_class_instance_fields t = t.metadata.esproposal_class_instance_fields
   let esproposal_decorators t = t.metadata.esproposal_decorators
   let esproposal_export_star_as t = t.metadata.esproposal_export_star_as
+  let esproposal_optional_chaining t = t.metadata.esproposal_optional_chaining
   let max_trace_depth t = t.metadata.max_trace_depth
   let root t = t.metadata.root
   let facebook_fbt t = t.metadata.facebook_fbt
@@ -157,6 +159,7 @@ let global_metadata_of_options options = {
   esproposal_class_static_fields = Options.esproposal_class_static_fields options;
   esproposal_decorators = Options.esproposal_decorators options;
   esproposal_export_star_as = Options.esproposal_export_star_as options;
+  esproposal_optional_chaining = Options.esproposal_optional_chaining options;
   facebook_fbt = Options.facebook_fbt options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
@@ -250,6 +253,7 @@ let esproposal_class_static_fields cx = Global.esproposal_class_static_fields cx
 let esproposal_class_instance_fields cx = Global.esproposal_class_instance_fields cx.global
 let esproposal_decorators cx = Global.esproposal_decorators cx.global
 let esproposal_export_star_as cx = Global.esproposal_export_star_as cx.global
+let esproposal_optional_chaining cx = Global.esproposal_optional_chaining cx.global
 let evaluated cx = cx.local.evaluated
 let file cx = cx.local.file
 let find_props cx id =

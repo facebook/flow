@@ -501,7 +501,7 @@ module Expression
         end else
           super
       in
-      call env loc super
+      call ~allow_optional_chain:false env loc super
     | T_LPAREN ->
       let super =
         if not call_allowed then begin
@@ -510,7 +510,7 @@ module Expression
         end else
           super
       in
-      call env loc super
+      call ~allow_optional_chain:false env loc super
     | _ ->
       if not allowed
         then error_at env (loc, Parse_error.UnexpectedSuper)
@@ -525,19 +525,23 @@ module Expression
     Expression.Import arg
   ) env
 
-  and call_cover env start_loc left =
-    let left = member_cover env start_loc left in
+  and call_cover ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left =
+    let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
+    let optional = last_token env = Some T_PLING_PERIOD in
     match Peek.token env with
     | T_LPAREN when not (no_call env) ->
         let args_loc, arguments = arguments env in
         let loc = Loc.btwn start_loc args_loc in
-        call_cover env start_loc (Cover_expr (loc, Expression.(Call { Call.
-          callee = as_expression env left;
-          arguments;
-        })))
+        call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+          (Cover_expr (loc, Expression.(Call { Call.
+            callee = as_expression env left;
+            arguments;
+            optional;
+          })))
     | _ -> left
 
-  and call env start_loc left = as_expression env (call_cover env start_loc (Cover_expr left))
+  and call ?(allow_optional_chain=true) env start_loc left =
+    as_expression env (call_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and new_expression env =
     let start_loc = Peek.loc env in
@@ -565,7 +569,7 @@ module Expression
       | T_SUPER -> super (env |> with_no_call true)
       | _ when Peek.is_function env -> _function env
       | _ -> primary env in
-      let callee = member (env |> with_no_call true) callee_loc expr in
+      let callee = member ~allow_optional_chain:false (env |> with_no_call true) callee_loc expr in
       (* You can do something like
        *   new raw`42`
        *)
@@ -614,43 +618,84 @@ module Expression
       Expect.token env T_RPAREN;
       Loc.btwn start_loc end_loc, args
 
-  and member_cover env start_loc left =
-    match Peek.token env with
-    | T_LBRACKET ->
-        Expect.token env T_LBRACKET;
-        let expr = Parse.expression (env |> with_no_call false) in
-        let last_loc = Peek.loc env in
-        Expect.token env T_RBRACKET;
-        let loc = Loc.btwn start_loc last_loc in
-        call_cover env start_loc (Cover_expr (loc, Expression.(Member { Member.
+  and member_cover =
+    let dynamic ?(allow_optional_chain=true) ?(in_optional_chain=false)
+                ?(optional=false) env start_loc left =
+      let expr = Parse.expression (env |> with_no_call false) in
+      let last_loc = Peek.loc env in
+      Expect.token env T_RBRACKET;
+      let loc = Loc.btwn start_loc last_loc in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, Expression.(Member { Member.
           _object  = as_expression env left;
           property = Member.PropertyExpression expr;
           computed = true;
+          optional;
         })))
-    | T_PERIOD ->
-        Expect.token env T_PERIOD;
-        let id_loc, id, is_private = property_name_include_private env in
-        if is_private then add_used_private env (snd id) id_loc;
-        let loc = Loc.btwn start_loc id_loc in
-        let open Expression.Member in
-        let property = if is_private then PropertyPrivateName (id_loc, id)
-        else PropertyIdentifier id in
-        (* super.PrivateName is a syntax error *)
-        begin match left with
-        | Cover_expr (_, Ast.Expression.Super) when is_private ->
-            error_at env (loc, Error.SuperPrivate)
-        | _ -> () end;
-        call_cover env start_loc (Cover_expr (loc, Expression.(Member { Member.
+    in
+    let static ?(allow_optional_chain=true) ?(in_optional_chain=false)
+               ?(optional=false) env start_loc left =
+      let id_loc, id, is_private = property_name_include_private env in
+      if is_private then add_used_private env (snd id) id_loc;
+      let loc = Loc.btwn start_loc id_loc in
+      let open Expression.Member in
+      let property = if is_private then PropertyPrivateName (id_loc, id)
+      else PropertyIdentifier id in
+      (* super.PrivateName is a syntax error *)
+      begin match left with
+      | Cover_expr (_, Ast.Expression.Super) when is_private ->
+          error_at env (loc, Error.SuperPrivate)
+      | _ -> () end;
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, Expression.(Member { Member.
           _object = as_expression env left;
           property;
           computed = false;
+          optional;
         })))
-    | T_TEMPLATE_PART part ->
-        let expr = tagged_template env start_loc (as_expression env left) part in
-        call_cover env start_loc (Cover_expr expr)
-    | _ -> left
+    in
+    fun ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left ->
+      let options = parse_options env in
+      match Peek.token env with
+      | T_PLING_PERIOD ->
+          if not options.esproposal_optional_chaining
+          then error env Parse_error.OptionalChainingDisabled;
 
-  and member env start_loc left = as_expression env (member_cover env start_loc (Cover_expr left))
+          if not allow_optional_chain
+          then error env Parse_error.OptionalChainNew;
+
+          Expect.token env T_PLING_PERIOD;
+          if Expect.maybe env T_LBRACKET
+          then dynamic ~allow_optional_chain ~in_optional_chain:true
+                       ~optional:true env start_loc left
+          else if Peek.is_identifier env
+          then static ~allow_optional_chain ~in_optional_chain:true
+                      ~optional:true env start_loc left
+          else begin match Peek.token env with
+          | T_TEMPLATE_PART _ ->
+            error env Parse_error.OptionalChainTemplate;
+            left
+          | T_LPAREN -> left
+          | _ ->
+            error_unexpected env;
+            left
+          end
+      | T_LBRACKET ->
+          Expect.token env T_LBRACKET;
+          dynamic ~allow_optional_chain ~in_optional_chain env start_loc left
+      | T_PERIOD ->
+          Expect.token env T_PERIOD;
+          static ~allow_optional_chain ~in_optional_chain env start_loc left
+      | T_TEMPLATE_PART part ->
+          if in_optional_chain
+          then error env Parse_error.OptionalChainTemplate;
+
+          let expr = tagged_template env start_loc (as_expression env left) part in
+          call_cover ~allow_optional_chain:false env start_loc (Cover_expr expr)
+      | _ -> left
+
+  and member ?(allow_optional_chain=true) env start_loc left =
+    as_expression env (member_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and _function env =
     let start_loc = Peek.loc env in

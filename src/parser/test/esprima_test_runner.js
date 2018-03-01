@@ -260,6 +260,13 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         delete param.typeAnnotation;
         delete param.optional;
       }
+    /* Esprima doesn't implement optional chaining, so ignore the `optional`
+     * fields on `Member` and `Call` Flow AST nodes.
+     */
+    case 'MemberExpression':
+    case 'CallExpression':
+      delete flow.optional;
+      break;
   }
 
   switch (esprima.type) {

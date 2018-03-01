@@ -62,6 +62,11 @@ let parse_options jsopts = Parser_env.(
     then { opts with esproposal_export_star_as = Js.to_bool export_star_as; }
     else opts in
 
+  let optional_chaining = Js.Unsafe.get jsopts "esproposal_optional_chaining" in
+  let opts = if Js.Optdef.test optional_chaining
+    then { opts with esproposal_optional_chaining = Js.to_bool optional_chaining; }
+    else opts in
+
   let types = Js.Unsafe.get jsopts "types" in
   let opts = if Js.Optdef.test types
     then { opts with types = Js.to_bool types; }

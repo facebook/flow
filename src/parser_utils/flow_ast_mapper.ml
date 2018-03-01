@@ -227,11 +227,11 @@ class mapper = object(this)
 
   method call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
-    let { callee; arguments } = expr in
+    let { callee; arguments; optional } = expr in
     let callee' = this#expression callee in
     let arguments' = map_list this#expression_or_spread arguments in
     if callee == callee' && arguments == arguments' then expr
-    else { callee = callee'; arguments = arguments' }
+    else { callee = callee'; arguments = arguments'; optional }
 
   method catch_clause (clause: Loc.t Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -887,11 +887,11 @@ class mapper = object(this)
 
   method member (expr: Loc.t Ast.Expression.Member.t) =
     let open Ast.Expression.Member in
-    let { _object; property; computed = _; } = expr in
+    let { _object; property; computed = _; optional } = expr in
     let _object' = this#expression _object in
     let property' = this#member_property property in
     if _object == _object' && property == property' then expr
-    else { expr with _object = _object'; property = property' }
+    else { expr with _object = _object'; property = property'; optional }
 
   method member_property (expr: Loc.t Ast.Expression.Member.property) =
     let open Ast.Expression.Member in

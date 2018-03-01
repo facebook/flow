@@ -45,6 +45,7 @@ type t = {
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
+  opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_facebook_fbt: string option;
   opt_file_options: Files.options;
   opt_haste_name_reducers: (Str.regexp * string) list;
@@ -85,6 +86,7 @@ let esproposal_class_instance_fields opts =
   opts.opt_esproposal_class_instance_fields
 let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
+let esproposal_optional_chaining opts = opts.opt_esproposal_optional_chaining
 let haste_name_reducers opts = opts.opt_haste_name_reducers
 let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
 let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist

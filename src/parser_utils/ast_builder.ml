@@ -183,8 +183,8 @@ module Expressions = struct
   let identifier name =
     Loc.none, Identifier (Loc.none, name)
 
-  let call ?(args=[]) callee =
-    Loc.none, Call { Call.callee; arguments = args; }
+  let call ?(optional=false) ?(args=[]) callee =
+    Loc.none, Call { Call.callee; arguments = args; optional }
 
   let function_ ?(generator=false) ?(params=[]) ?body () =
     let fn = Functions.make ~generator ~params ~id:None ?body ~expression:true () in
@@ -249,26 +249,29 @@ module Expressions = struct
     Loc.none, Object { Object.properties }
 
   (* _object.property *)
-  let member ~property _object =
+  let member ?(optional=false) ~property _object =
     { Member.
       _object;
       property = Member.PropertyIdentifier (Loc.none, property);
       computed = false;
+      optional;
     }
 
   (* _object[property] *)
-  let member_computed ~property _object =
+  let member_computed ?(optional=false) ~property _object =
     { Member.
       _object;
       property = Member.PropertyIdentifier (Loc.none, property);
       computed = true;
+      optional;
     }
 
-  let member_computed_expr ~property _object =
+  let member_computed_expr ?(optional=false) ~property _object =
     { Member.
       _object;
       property = Member.PropertyExpression property;
       computed = true;
+      optional;
     }
 
   let member_expression expr =
@@ -306,6 +309,7 @@ let ast_of_string ~parser str =
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
     esproposal_export_star_as = true;
+    esproposal_optional_chaining = true;
     types = true;
     use_strict = false;
   }) in

@@ -2704,3 +2704,5 @@ let dump_flow_error =
         spf "EDeprecatedDeclareExports (%s)" (string_of_loc loc)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
+    | EExperimentalOptionalChaining loc ->
+        spf "EExperimentalOptionalChaining (%s)" (string_of_loc loc)

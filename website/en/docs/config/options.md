@@ -22,6 +22,7 @@ can be overridden with command line flags.
 * [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
 * [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
 * [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
+* [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
 * [`log.file`](#toc-log-file-string)
@@ -102,6 +103,21 @@ syntax from [leebyron's proposal](https://github.com/leebyron/ecmascript-more-ex
 You may also set this to `ignore` to indicate that Flow should simply ignore
 the syntax. The default value of this option is `warn`, which gives a warning
 on use since this proposal is still very early-stage.
+
+#### `esproposal.optional_chaining` _`(ignore|warn)`_ <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
+
+Set this to `warn` to indicate that Flow should support the use of
+[optional chaining](https://github.com/tc39/proposal-optional-chaining)
+per the pending spec. Flow will give a warning on
+use since this proposal is still very early-stage.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`.
+
+**WARNING:** This feature currently lacks type support and should only be enabled
+for parsing.
 
 #### `experimental.const_params` _`(boolean)`_ <a class="toc" id="toc-experimental-const-params-boolean" href="#toc-experimental-const-params-boolean"></a>
 
