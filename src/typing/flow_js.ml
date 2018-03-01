@@ -2414,6 +2414,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
       rec_flow cx trace (t, u)
 
+    | DefT (_, OptionalT t), UseT (_, DefT (_, OptionalT _))
+    | DefT (_, OptionalT t), UseT (_, DefT (_, MaybeT _)) ->
+      rec_flow cx trace (t, u)
+
     | DefT (r, OptionalT t), _ ->
       rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u)
