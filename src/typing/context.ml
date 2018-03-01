@@ -508,3 +508,12 @@ and find_root cx id =
 
 (* Replace the node associated with a type variable in the graph. *)
 and replace_node cx id node = set_tvar cx id node
+
+let find_resolved cx = function
+  | Type.OpenT (_, id)
+  | Type.AnnotT ((_, id), _) ->
+    begin match find_graph cx id with
+      | Constraint.Resolved t -> Some t
+      | Constraint.Unresolved _ -> None
+    end
+  | t -> Some t

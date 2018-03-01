@@ -176,3 +176,4 @@ val find_constraints:
 val find_graph: t -> Constraint.ident -> Constraint.constraints
 val replace_node: t -> Constraint.ident -> Constraint.node -> unit
 val find_root: t -> Constraint.ident -> Constraint.ident * Constraint.root
+val find_resolved: t -> Type.t -> Type.t option
