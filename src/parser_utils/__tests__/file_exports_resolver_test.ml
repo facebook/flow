@@ -40,25 +40,25 @@ let assert_exports ?assert_default ?assert_named source =
   | None, None -> ()
 
 let tests = "require" >::: [
-  "empty" >:: begin fun ctxt ->
+  "empty" >:: begin fun _ctxt ->
     let source = "" in
     (* Expect nothing *)
     assert_exports source;
   end;
 
-  "cjs_rebound_module" >:: begin fun ctxt ->
+  "cjs_rebound_module" >:: begin fun _ctxt ->
     let source = "var module = {}; module.exports = 0;" in
     (* Expect nothing *)
     assert_exports source;
   end;
 
-  "cjs_rebound_exports" >:: begin fun ctxt ->
+  "cjs_rebound_exports" >:: begin fun _ctxt ->
     let source = "var exports = {}; exports.foo = 0;" in
     (* Expect nothing *)
     assert_exports source;
   end;
 
-  "cjs_clobber_module" >:: begin fun ctxt ->
+  "cjs_clobber_module" >:: begin fun _ctxt ->
     let source = "module = {}; module.exports = 0;" in
     (* Expect nothing *)
     assert_exports source ~assert_default:(fun _ ->
@@ -67,7 +67,7 @@ let tests = "require" >::: [
     );
   end;
 
-  "cjs_clobber_exports" >:: begin fun ctxt ->
+  "cjs_clobber_exports" >:: begin fun _ctxt ->
     let source = "exports = {}; exports.baz = 0;" in
     (* Expect nothing *)
     assert_exports source ~assert_named:(fun _ ->
