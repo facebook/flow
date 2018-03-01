@@ -37,7 +37,7 @@ let parse_lib_file options file =
       next
     in
     Lwt.return (
-      if not (FilenameSet.is_empty results.Parsing.parse_ok) then
+      if not (FilenameMap.is_empty results.Parsing.parse_ok) then
         let ast = Parsing.get_ast_unsafe lib_file in
         let file_sig = Parsing.get_file_sig_unsafe lib_file in
         Parsing.Parse_ok (ast, file_sig)

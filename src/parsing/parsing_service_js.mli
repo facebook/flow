@@ -36,7 +36,7 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: FilenameSet.t;
+  parse_ok: File_sig.t FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;

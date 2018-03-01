@@ -749,6 +749,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
      removal of unchanged files *)
   let%lwt new_or_changed, freshparsed, unparsed, new_local_errors =
      reparse ~options ~profiling ~workers modified in
+  let freshparsed = freshparsed |> FilenameMap.keys |> FilenameSet.of_list in
   let new_or_changed_count = FilenameSet.cardinal new_or_changed in
 
   (* clear errors for new, changed and deleted files *)
@@ -1128,6 +1129,7 @@ let init ~profiling ~workers options =
   Hh_logger.info "Parsing";
   let%lwt parsed, unparsed, local_errors =
     parse ~options ~profiling ~workers next_files in
+  let parsed = parsed |> FilenameMap.keys |> FilenameSet.of_list in
 
   Hh_logger.info "Building package heap";
   let%lwt () = init_package_heap ~options ~profiling parsed in

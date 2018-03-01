@@ -36,7 +36,7 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: FilenameSet.t;
+  parse_ok: File_sig.t FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
@@ -46,7 +46,7 @@ type results = {
 }
 
 let empty_result = {
-  parse_ok = FilenameSet.empty;
+  parse_ok = FilenameMap.empty;
   parse_skips = [];
   parse_fails = [];
 }
@@ -447,7 +447,7 @@ let reducer
             then parse_results
             else begin
               ParsingHeaps.add file ast info file_sig;
-              let parse_ok = FilenameSet.add file parse_results.parse_ok in
+              let parse_ok = FilenameMap.add file file_sig parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
         | Parse_fail converted ->
@@ -472,7 +472,7 @@ let reducer
 (* merge is just memberwise union/concat of results *)
 let merge r1 r2 =
   {
-    parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
+    parse_ok = FilenameMap.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
   }
@@ -529,7 +529,7 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow
   in
   if profile then
     let t2 = Unix.gettimeofday () in
-    let ok_count = FilenameSet.cardinal results.parse_ok in
+    let ok_count = FilenameMap.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
     let fail_count = List.length results.parse_fails in
     prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed) in %f"
@@ -547,7 +547,7 @@ let reparse
   let%lwt results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow workers next
   in
-  let modified = results.parse_ok in
+  let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
   ) modified results.parse_fails in
