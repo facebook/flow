@@ -32,6 +32,7 @@ let union_flatten =
         | Constraint.Resolved t' -> flatten cx seen t'
         | _ -> [t]
       end
+    | ReposT (_, t) -> flatten cx seen t
     | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
     | DefT (r, MaybeT t) -> (DefT (r, NullT))::(DefT (r, VoidT))::(flatten cx seen t)
     | DefT (r, OptionalT t) -> (DefT (r, VoidT))::(flatten cx seen t)

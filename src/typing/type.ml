@@ -1470,7 +1470,7 @@ end = struct
     | Enum of EnumSet.t
     | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t Nel.t
     | DisjointUnion of TypeTerm.t EnumMap.t SMap.t
-    | UnoptimizedDisjointUnion
+    | PartiallyOptimizedDisjointUnion of TypeTerm.t EnumMap.t SMap.t * TypeTerm.t Nel.t
     (* TODO: what about partially optimized disjoint unions? *)
 
   (** union rep is:
@@ -1529,7 +1529,7 @@ end = struct
     | Some (PartiallyOptimizedEnum _) -> r
     | Some (Enum _) -> replace_reason_const REnum r
     | Some (DisjointUnion _) -> r
-    | Some (UnoptimizedDisjointUnion) -> r
+    | Some (PartiallyOptimizedDisjointUnion _) -> r
 
   let members (t0, t1, ts, _) = t0::t1::ts
   let members_nel (t0, t1, ts, _) = t0, (t1, ts)
@@ -1565,7 +1565,7 @@ end = struct
     match canon t, !enum_ref with
     | _, None ->
       None
-    | _, Some (DisjointUnion _ | UnoptimizedDisjointUnion) ->
+    | _, Some (DisjointUnion _ | PartiallyOptimizedDisjointUnion _) ->
       if List.mem t (_t0::_t1::_ts)
       then Some true
       else None
@@ -1586,7 +1586,7 @@ end = struct
 
   let is_disjoint_union (_t0, _t1, _ts, specialization) =
     match !specialization with
-      | Some (DisjointUnion _ | UnoptimizedDisjointUnion) -> true
+      | Some (DisjointUnion _ | PartiallyOptimizedDisjointUnion _) -> true
       | _ -> false
 
   let canon_prop find_resolved p =
@@ -1609,19 +1609,25 @@ end = struct
         ) prop_map SMap.empty
       | _ -> SMap.empty
 
-  let index find_resolved find_props ts =
-    match ts with
-      | [] -> SMap.empty
+  let index =
+    let rec index find_resolved find_props ts others =
+      match ts with
+      | [] -> SMap.empty, others
       | t::ts ->
-        let init = SMap.map (fun enum_t -> [enum_t])
-          (base_props_of find_resolved find_props t) in
-        List.fold_left (fun acc t ->
-          SMap.merge (fun _key enum_t_opt values_opt ->
-            Option.(both enum_t_opt values_opt >>| (fun (enum_t, values) ->
-              List.cons enum_t values
-            ))
-          ) (base_props_of find_resolved find_props t) acc
-        ) init ts
+        let base_props = base_props_of find_resolved find_props t in
+        if SMap.is_empty base_props then index find_resolved find_props ts (t::others) else
+          let init = SMap.map (fun enum_t -> [enum_t]) base_props in
+          List.fold_left (fun (acc, others) t ->
+            let base_props = base_props_of find_resolved find_props t in
+            if SMap.is_empty base_props then acc, t::others else
+              SMap.merge (fun _key enum_t_opt values_opt ->
+                Option.(both enum_t_opt values_opt >>| (fun (enum_t, values) ->
+                  List.cons enum_t values
+                ))
+              ) base_props acc, others
+          ) (init, others) ts
+    in fun find_resolved find_props ts ->
+      index find_resolved find_props ts []
 
   let unique_values =
     let rec unique_values idx = function
@@ -1644,48 +1650,85 @@ end = struct
         | Some idx -> SMap.add key idx acc
     ) idx SMap.empty
 
+  (* Private helper, must be called after full resolution. Ideally would be returned as a bit by
+     TypeTerm.union_flatten, and kept in sync there. *)
+  let contains_only_flattened_types =
+    List.for_all TypeTerm.(function
+      (* the only unresolved tvars at this point are those that instantiate polymorphic types *)
+      | OpenT _
+      (* some types may not be evaluated yet; TODO *)
+      | EvalT _
+      | DefT (_, TypeAppT _)
+      | KeysT _
+      | DefT (_, IntersectionT _)
+      (* other types might wrap parts that are accessible directly *)
+      | OpaqueT _
+      | DefT (_, InstanceT _)
+      | DefT (_, PolyT _)
+        -> false
+      | _ -> true
+    )
+
   let guess_and_record_sentinel_prop ~flatten ~find_resolved ~find_props ~cache_sentinel_prop (t0, t1, ts, specialization) =
     (* Compute the intersection of properties of objects that have singleton types *)
     let ts = flatten (t0::t1::ts) in
-    let idx = index find_resolved find_props ts in
+    if contains_only_flattened_types ts then
+    let disjoint_union = match ts with
+      | [] -> DisjointUnion SMap.empty
+      | t::ts' ->
+        let idx, others = index find_resolved find_props ts in
+        let ts = t, ts' in
 
-    if not (SMap.is_empty idx) then begin
-      (* Record the guessed sentinel properties for each object *)
-      let open TypeTerm in
-      let keys = SSet.of_list @@ SMap.keys idx in
-      List.iter (function
-        | DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ })) ->
-          cache_sentinel_prop props_tmap keys
-        | _ -> ()
-      ) ts;
+        if SMap.is_empty idx then PartiallyOptimizedDisjointUnion (SMap.empty, ts)
+        else begin
+          (* Record the guessed sentinel properties for each object *)
+          let open TypeTerm in
+          let keys = SSet.of_list @@ SMap.keys idx in
+          Nel.iter (function
+            | DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ })) ->
+              cache_sentinel_prop props_tmap keys
+            | _ -> ()
+          ) ts;
 
-      (* Ensure that enums map to unique types *)
-      let map = unique idx in
-      if not (SMap.is_empty map) then specialization := Some (DisjointUnion map)
-      else specialization := Some (UnoptimizedDisjointUnion)
-    end
-    else specialization := Some (UnoptimizedDisjointUnion)
+          (* Ensure that enums map to unique types *)
+          let map = unique idx in
+          if SMap.is_empty map then PartiallyOptimizedDisjointUnion (SMap.empty, ts)
+          else match others with
+            | [] -> DisjointUnion map
+            | other::others -> PartiallyOptimizedDisjointUnion (map, Nel.rev (other, others))
+        end in
+    specialization := Some disjoint_union
+
+  let lookup_disjoint_union find_resolved prop_map ~partial map =
+    SMap.fold (fun key idx acc ->
+      if acc <> None then acc
+      else match SMap.get key prop_map with
+        | Some p ->
+          begin match canon_prop find_resolved p with
+            | Some enum ->
+              begin match EnumMap.get enum idx with
+                | Some t' -> Some (Some t')
+                | None -> if partial then None else Some None
+              end
+            | None -> None
+          end
+        | None -> if partial then None else Some None
+    ) map None
 
   let quick_match ~find_resolved ~find_props l (_t0, _t1, _ts, specialization) =
     let open TypeTerm in
     match l, !specialization with
       | (ExactT (_, DefT (_, ObjT { props_tmap; _ })) | DefT (_, ObjT { props_tmap; _ })),
         Some (DisjointUnion map) ->
-        let prop_map = find_props props_tmap in
-        SMap.fold (fun key idx acc ->
-          if acc <> None then acc
-          else match SMap.get key prop_map with
-            | Some p ->
-              begin match canon_prop find_resolved p with
-                | Some enum ->
-                  begin match EnumMap.get enum idx with
-                    | Some t' -> Some (Some t')
-                    | None -> Some None
-                  end
-                | None -> None
-              end
-            | None -> Some None
-        ) map None
+        lookup_disjoint_union find_resolved (find_props props_tmap) ~partial:false map
+      | (ExactT (_, DefT (_, ObjT { props_tmap; _ })) | DefT (_, ObjT { props_tmap; _ })),
+        Some (PartiallyOptimizedDisjointUnion (map, ts)) ->
+        let result =
+          if SMap.is_empty map then None
+          else lookup_disjoint_union find_resolved (find_props props_tmap) ~partial:true map in
+        if result <> None then result
+        else if Nel.exists (TypeUtil.reasonless_eq l) ts then Some (Some l)
+        else None
       | _ -> None
 
 end
