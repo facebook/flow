@@ -103,6 +103,8 @@ const o = {
 
 #### `deprecated-declare-exports` <a class="toc" id="toc-deprecated-declare-exports" href="#toc-deprecated-declare-exports"></a>
 
+Note: This lint was removed in Flow version 0.68, along with the `declare var exports` syntax.
+
 Triggers when the deprecated syntax is used to declare the default export of a [declared CommonJS module](../../libdefs/creation/#toc-declaring-a-commonjs-module).
 
 Before Flow version 0.25, the way to declare the default exports looked like this:

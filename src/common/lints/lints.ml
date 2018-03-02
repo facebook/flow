@@ -18,7 +18,6 @@ type lint_kind =
   | NonstrictImport
   | UnclearType
   | UnsafeGettersSetters
-  | DeprecatedDeclareExports
 
 let string_of_sketchy_null_kind = function
   | SketchyBool -> "sketchy-null-bool"
@@ -33,7 +32,6 @@ let string_of_kind = function
   | NonstrictImport -> "nonstrict-import"
   | UnclearType -> "unclear-type"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
-  | DeprecatedDeclareExports -> "deprecated-declare-exports"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -51,7 +49,6 @@ let kinds_of_string = function
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
-  | "deprecated-declare-exports" -> Some [DeprecatedDeclareExports]
   | _ -> None
 
 module LintKind = struct

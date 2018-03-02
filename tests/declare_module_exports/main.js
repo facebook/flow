@@ -16,9 +16,9 @@ import type {str2} from "declare_m_e_with_other_type_declares";
  * syntaxes will work.
  */
 
-import DEPRECATED__declare_var_exports from "DEPRECATED__declare_var_exports";
-(DEPRECATED__declare_var_exports: number);
-(DEPRECATED__declare_var_exports: string); // Error: number ~> string
+import declare_var_exports from "declare_var_exports";
+(declare_var_exports.exports: number); // ok
+(declare_var_exports.exports: string); // Error: number ~> string
 
 import declare_m_e_with_declare_var_e from "declare_m_e_with_declare_var_e";
 (declare_m_e_with_declare_var_e: number);

@@ -151,7 +151,6 @@ type error_message =
       falsy_loc: Loc.t;
     }
   | EInvalidPrototype of reason
-  | EDeprecatedDeclareExports of Loc.t
   | EExperimentalOptionalChaining of Loc.t
 
 and binding_error =
@@ -362,7 +361,6 @@ let util_use_op_of_msg nope util = function
 | ELintSetting (_)
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
 | EInvalidPrototype (_)
-| EDeprecatedDeclareExports (_)
 | EExperimentalOptionalChaining (_)
   -> nope
 
@@ -1870,10 +1868,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EUnsafeGettersSetters loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.UnsafeGettersSetters) loc
       [text "Getters and setters can have side effects and are unsafe."]
-
-  | EDeprecatedDeclareExports loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedDeclareExports) loc
-      [text "Deprecated syntax. Use "; code "declare module.exports"; text " instead."]
 
   | EUnusedSuppression loc ->
     mk_error ~trace_infos loc

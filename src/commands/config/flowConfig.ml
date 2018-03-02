@@ -925,7 +925,6 @@ let is_not_comment =
       comment_regexps)
 
 let default_lint_severities = [
-  Lints.DeprecatedDeclareExports, (Severity.Err, None);
 ]
 
 let read filename =

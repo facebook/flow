@@ -2698,8 +2698,6 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
-    | EDeprecatedDeclareExports loc ->
-        spf "EDeprecatedDeclareExports (%s)" (string_of_loc loc)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->

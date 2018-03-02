@@ -1596,14 +1596,9 @@ and statement cx = Ast.Statement.(
     | Context.CommonJSModule clobbered ->
       let open Scope in
       let open Entry in
-      (* TODO: drop `declare var exports` in favor of `declare module.exports` *)
-      let legacy_exports = Scope.get_entry "exports" module_scope in
-      let cjs_exports = match clobbered, legacy_exports with
-      | Some loc, _ -> get_module_exports cx loc
-      | None, Some (Value {specific; value_declare_loc; _}) ->
-        Flow.add_output cx (Flow_error.EDeprecatedDeclareExports value_declare_loc);
-        specific
-      | None, _ ->
+      let cjs_exports = match clobbered with
+      | Some loc -> get_module_exports cx loc
+      | None ->
         let props = SMap.fold (fun x entry acc ->
           match entry with
           | Value {specific; _} ->
