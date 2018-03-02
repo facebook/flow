@@ -379,7 +379,6 @@ module ContextOptimizer = struct
     reduced_graph : node IMap.t;
     reduced_property_maps : Properties.map;
     reduced_export_maps : Exports.map;
-    reduced_envs : Context.env IMap.t;
     reduced_evaluated : Type.t IMap.t;
   }
 
@@ -388,7 +387,6 @@ module ContextOptimizer = struct
     reduced_graph = IMap.empty;
     reduced_property_maps = Properties.Map.empty;
     reduced_export_maps = Exports.Map.empty;
-    reduced_envs = IMap.empty;
     reduced_evaluated = IMap.empty;
   }
 
@@ -479,15 +477,6 @@ module ContextOptimizer = struct
           let reduced_evaluated = IMap.add id t reduced_evaluated in
           super#eval_id cx pole { quotient with reduced_evaluated } id
 
-    method! fun_type cx pole quotient funtype =
-      let id = funtype.closure_t in
-      if id = 0 then super#fun_type cx pole quotient funtype
-      else
-        let { reduced_envs; _ } = quotient in
-        let closure = IMap.find_unsafe id (Context.envs cx) in
-        let reduced_envs = IMap.add id closure reduced_envs in
-        super#fun_type cx pole { quotient with reduced_envs } funtype
-
     method! dict_type cx pole quotient dicttype =
       SigHash.add_polarity sig_hash dicttype.dict_polarity;
       super#dict_type cx pole quotient dicttype
@@ -562,7 +551,6 @@ module ContextOptimizer = struct
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_export_maps cx quotient.reduced_export_maps;
-    Context.set_envs cx quotient.reduced_envs;
     Context.set_evaluated cx quotient.reduced_evaluated;
     Context.set_type_graph cx (
       Graph_explorer.new_graph
