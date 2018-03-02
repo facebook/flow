@@ -119,7 +119,6 @@ type local_t = {
   mutable module_map: Type.t SMap.t;
 
   mutable errors: Errors.ErrorSet.t;
-  mutable globals: SSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover;
@@ -213,7 +212,6 @@ let make metadata file module_ref = {
     module_map = SMap.empty;
 
     errors = Errors.ErrorSet.empty;
-    globals = SSet.empty;
 
     error_suppressions = Error_suppressions.empty;
     severity_cover = ExactCover.empty;
@@ -272,7 +270,6 @@ let find_tvar cx id =
   try IMap.find_unsafe id cx.local.graph
   with Not_found -> raise (Tvar_not_found id)
 let mem_nominal_id cx id = ISet.mem id cx.local.nominal_ids
-let globals cx = cx.local.globals
 let graph cx = cx.local.graph
 let import_stmts cx = cx.local.import_stmts
 let imported_ts cx = cx.local.imported_ts
@@ -329,8 +326,6 @@ let add_error cx error =
 let add_error_suppression cx loc =
   cx.local.error_suppressions <-
     Error_suppressions.add loc cx.local.error_suppressions
-let add_global cx name =
-  cx.local.globals <- SSet.add name cx.local.globals
 let add_import_stmt cx stmt =
   cx.local.import_stmts <- stmt::cx.local.import_stmts
 let add_imported_t cx name t =
@@ -361,8 +356,6 @@ let set_envs cx envs =
   cx.local.envs <- envs
 let set_evaluated cx evaluated =
   cx.local.evaluated <- evaluated
-let set_globals cx globals =
-  cx.local.globals <- globals
 let set_graph cx graph =
   cx.local.graph <- graph
 let set_errors cx errors =
@@ -455,7 +448,6 @@ let merge_into cx cx_other =
   set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
   set_type_graph cx (Graph_explorer.union (type_graph cx_other) (type_graph cx));
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
-  set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx));
   set_errors cx (Errors.ErrorSet.union (errors cx_other) (errors cx));
   set_error_suppressions cx (Error_suppressions.union (error_suppressions cx_other) (error_suppressions cx));

@@ -78,7 +78,6 @@ val find_require: t -> Loc.t -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
-val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
 val import_stmts: t -> Loc.t Ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
@@ -122,7 +121,6 @@ val pop_declare_module: t -> unit
 val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
-val add_global: t -> string -> unit
 val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_require: t -> Loc.t -> Type.t -> unit
@@ -139,7 +137,6 @@ val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
-val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
 val set_errors: t -> Errors.ErrorSet.t -> unit
 val set_error_suppressions: t -> Error_suppressions.t -> unit

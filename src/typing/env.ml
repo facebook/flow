@@ -346,7 +346,6 @@ let cache_global cx name ?desc loc global_scope =
   in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
-  Context.add_global cx name;
   global_scope, entry
 
 let local_scope_entry_exists name =
