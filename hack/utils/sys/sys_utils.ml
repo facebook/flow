@@ -505,3 +505,23 @@ let find_oom_in_dmesg_output pid name lines =
 let check_dmesg_for_oom pid name =
     let dmesg = exec_read_lines ~reverse:true "dmesg" in
     find_oom_in_dmesg_output pid name dmesg
+
+(* Be careful modifying the rusage type! Like other types that interact with C, the order matters!
+ * If you change things here you must update hh_getrusage too! *)
+type rusage = {
+  ru_maxrss: int;        (* maximum resident set size *)
+  ru_ixrss: int;         (* integral shared memory size *)
+  ru_idrss: int;         (* integral unshared data size *)
+  ru_isrss: int;         (* integral unshared stack size *)
+  ru_minflt: int;        (* page reclaims (soft page faults) *)
+  ru_majflt: int;        (* page faults (hard page faults) *)
+  ru_nswap: int;         (* swaps *)
+  ru_inblock: int;       (* block input operations *)
+  ru_oublock: int;       (* block output operations *)
+  ru_msgsnd: int;        (* IPC messages sent *)
+  ru_msgrcv: int;        (* IPC messages received *)
+  ru_nsignals: int;      (* signals received *)
+  ru_nvcsw: int;         (* voluntary context switches *)
+  ru_nivcsw: int;        (* involuntary context switches *)
+}
+external getrusage: unit -> rusage = "hh_getrusage"

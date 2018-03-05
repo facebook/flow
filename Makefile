@@ -127,6 +127,7 @@ NATIVE_C_FILES=\
   hack/heap/hh_shared.c\
   hack/utils/get_build_id.c\
   hack/utils/sys/files.c\
+  hack/utils/sys/getrusage.c\
   hack/utils/sys/handle_stubs.c\
   hack/utils/sys/nproc.c\
   hack/utils/sys/priorities.c\
