@@ -31,4 +31,18 @@ let string_of_signal n =
   | _ when n = Sys.sigttou -> "sigttou"
   | _ when n = Sys.sigvtalrm -> "sigvtalrm"
   | _ when n = Sys.sigprof -> "sigprof"
+  (**** Signals added in 4.03 ****)
+  | _ when n = Sys.sigbus -> "sigbus"
+  | _ when n = Sys.sigpoll -> "sigpoll"
+  | _ when n = Sys.sigsys -> "sigsys"
+  | _ when n = Sys.sigtrap -> "sigtrap"
+  | _ when n = Sys.sigurg -> "sigurg"
+  | _ when n = Sys.sigxcpu -> "sigxcpu"
+  | _ when n = Sys.sigxfsz -> "sigxfsz"
+  (*******************************)
+
+  (* The integer value in the OCaml signal Sys.sigkill is -7. In POSIX, sigkill is 9. This
+   * illustrates that it's generally a bad idea to interact with the integer values inside of
+   * OCaml's signals. To be honest, I'm not sure why OCaml doesn't just use some abstract type for
+   * its signals, since you generally can't use the integer values directly *)
   | _ -> Printf.sprintf "unknown signal %d" n

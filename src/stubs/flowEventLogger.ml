@@ -33,6 +33,7 @@ let lock_lost _ = ()
 let lock_stolen _ = ()
 let out_of_date _ = ()
 let exit _ _ = ()
+let report_from_monitor_server_exit_due_to_signal _ = ()
 let recheck
     ~modified_count:_
     ~deleted_count:_

@@ -344,6 +344,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
           Logger.error "Flow server (pid %d) was killed with %s signal"
             pid
             (PrintSignal.string_of_signal signal);
+          FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
           Lwt.return_unit
         | Unix.WSTOPPED signal ->
           (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
