@@ -13,7 +13,7 @@ export default suite(({
     ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -31,7 +31,7 @@ export default suite(({
 
     addCode('var x: string = 123')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -59,7 +59,7 @@ export default suite(({
 
     ideNotification('didOpen', 'test.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -305,7 +305,7 @@ export default suite(({
 
     ideNotification('didClose', 'test.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -474,7 +474,7 @@ export default suite(({
     ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -491,7 +491,7 @@ export default suite(({
       ),
     addFiles('focused.js', 'dependency.js', 'otherDependent.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -517,7 +517,7 @@ export default suite(({
       .because('Nothing is open, so we just get the recheck start and end'),
     ideNotification('didOpen', 'focused.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1043,7 +1043,7 @@ export default suite(({
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'errors.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1079,7 +1079,7 @@ export default suite(({
       ),
     addFile('errorsWithFlowPragma.js', 'errors.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1337,7 +1337,7 @@ export default suite(({
     addFile('errorsWithNoFlowPragma.js', 'errors.js')
       .flowCmd(['status', '--strip-root'])
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1391,7 +1391,7 @@ export default suite(({
     ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1408,7 +1408,7 @@ export default suite(({
       ),
     addFiles('cycleA.js', 'cycleB.js', 'focusedWithCyclicDependency.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1433,7 +1433,7 @@ export default suite(({
       ),
     ideNotification('didOpen', 'focusedWithCyclicDependency.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1708,7 +1708,7 @@ export default suite(({
     ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1795,7 +1795,7 @@ export default suite(({
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1953,7 +1953,7 @@ export default suite(({
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -2075,7 +2075,7 @@ export default suite(({
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -2198,7 +2198,7 @@ export default suite(({
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",

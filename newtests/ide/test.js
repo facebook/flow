@@ -26,7 +26,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('We are connected, but not subscribed'),
     ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -153,7 +153,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -286,7 +286,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       ),
     addCode('var notAnError: number = 123;')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -416,7 +416,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('No errors should be streamed during the recheck'),
     addCode('var newError: string = 123;')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "startRecheck",
@@ -772,7 +772,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
     ideStart()
       .ideRequest('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "result": [
@@ -802,7 +802,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('Starting the IDE does not fire any messages'),
     ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -830,7 +830,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
     ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -957,7 +957,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
     ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -976,7 +976,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
     ideNotification('didOpen', 'fileWithWarning.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1116,7 +1116,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
     ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1139,7 +1139,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
     ideStart()
       .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1158,7 +1158,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
     ideNotification('didOpen', 'fileWithWarning.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
@@ -1281,7 +1281,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
     ideNotification('didClose', 'fileWithWarning.js')
       .ideNewMessagesWithTimeout(
-        5000,
+        10000,
         [
           {
             "method": "diagnosticsNotification",
