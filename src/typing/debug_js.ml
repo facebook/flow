@@ -440,7 +440,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | SetPropT (_, _, name, _, t, _)
   | GetPropT (_, _, name, t)
-  | TestPropT (_, name, t) -> [
+  | TestPropT (_, _, name, t) -> [
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
     ]
@@ -572,11 +572,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | LookupT (_, rstrict, _, propref, action) ->
     (match rstrict with
-      | NonstrictReturning None -> []
-      | NonstrictReturning (Some (default, result)) -> [
-          "defaultType", _json_of_t json_cx default;
-          "resultType", _json_of_t json_cx result;
-        ]
+      | NonstrictReturning (default_opt, test_opt) ->
+        let ret = match default_opt with
+        | Some (default, result) ->
+          [
+            "defaultType", _json_of_t json_cx default;
+            "resultType", _json_of_t json_cx result;
+          ]
+        | None -> []
+        in
+        Option.value_map test_opt ~default:ret ~f:(fun (id, _) -> ("testID", int_ id) :: ret)
       | Strict r -> [
           "strictReason", json_of_reason ~strip_root:json_cx.strip_root r
         ]
@@ -1781,8 +1786,10 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let lookup_kind = function
-  | NonstrictReturning None -> "Nonstrict"
-  | NonstrictReturning (Some (t, _)) -> spf "Nonstrict returning %s" (kid t)
+  | NonstrictReturning (default_opt, testid_opt) ->
+    spf "Nonstrict%s%s"
+      (Option.value_map default_opt ~default:"" ~f:(fun (t, _) -> spf " returning %s" (kid t)))
+      (Option.value_map testid_opt ~default:"" ~f:(fun (id, _) -> spf " for test id %d" id))
   | Strict r -> spf "Strict %S" (dump_reason cx r)
   | ShadowRead (_, ids) -> spf "ShadowRead [%s]"
       (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
@@ -2106,7 +2113,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (string_of_use_op use_op)
       (object_kit resolve_tool tool)
       (kid tout)) t
-  | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+  | TestPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t

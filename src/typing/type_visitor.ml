@@ -270,7 +270,7 @@ class ['a] t = object(self)
     acc
 
   | GetPropT (_, _, p, t)
-  | TestPropT (_, p, t) ->
+  | TestPropT (_, _, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -757,11 +757,11 @@ class ['a] t = object(self)
 
   method private lookup_kind cx acc = function
   | Strict _ -> acc
-  | NonstrictReturning (Some (t1, t2)) ->
+  | NonstrictReturning (Some (t1, t2), _) ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
-  | NonstrictReturning None -> acc
+  | NonstrictReturning (None, _) -> acc
   | ShadowRead (_, props)
   | ShadowWrite props ->
     Nel.fold_left (self#props cx pole_TODO) acc props

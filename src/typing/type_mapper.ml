@@ -514,11 +514,11 @@ class ['a] t = object(self)
         let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
         if t'' == t' && scopes' == scopes then t
         else GetPrivatePropT (use_op, r, prop, scopes', static, t'')
-    | TestPropT (r, prop, t') ->
+    | TestPropT (r, id, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
-        else TestPropT (r, prop', t'')
+        else TestPropT (r, id, prop', t'')
     | SetElemT (use_op, r, t1, t2, t3) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -924,13 +924,13 @@ class ['a] t = object(self)
   method lookup_kind cx map_cx t =
     match t with
     | Strict _ -> t
-    | NonstrictReturning tpairopt ->
+    | NonstrictReturning (tpairopt, testopt) ->
         begin match tpairopt with
         | Some (t1, t2) ->
             let t1' = self#type_ cx map_cx t1 in
             let t2' = self#type_ cx map_cx t2 in
             if t1' == t1 && t2' == t2 then t
-            else NonstrictReturning (Some (t1', t2'))
+            else NonstrictReturning (Some (t1', t2'), testopt)
         | None -> t
         end
     | ShadowRead (r, pidlist) ->

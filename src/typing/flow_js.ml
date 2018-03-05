@@ -146,6 +146,62 @@ let visit_eval_id cx id f =
   | None -> ()
   | Some t -> f t
 
+(* Flow allows you test test if a property exists inside a conditional. However, we only wan to
+ * allow this test if there's a chance that the property might exist. So `if (foo.bar)` should be
+ *
+ * - Allowed for the types `{ bar: string }`, `any`, `mixed`, `{ bar: string } | number`, etc
+ *
+ * - Disallowed for the types ` { baz: string }`, `number`, ` { baz: string} | number`
+ *
+ * It's really difficult to say that something never happens in Flow. Our best way of approximating
+ * this is waiting until typechecking is done and then seeing if something happened. In this case,
+ * we record if testing a property ever succeeds. If if never succeeds after typechecking is done,
+ * we emit an error.
+ *)
+module TestPropHits : sig
+  val hit: ident -> unit
+  val miss: ident -> string option -> (Reason.t * Reason.t) -> use_op -> unit
+  val clear: unit -> unit
+  val get_never_hit: unit -> (string option * (Reason.t * Reason.t) * use_op) list
+end = struct
+  type kind =
+    | Hit
+    | Miss of string option * (Reason.t * Reason.t) * use_op
+
+  (* A map of test prop IDs to Hit or Miss. If this test prop hit even once, the ID will map to Hit.
+   * Otherwise, it will map to Miss *)
+  let hits_and_misses = ref IMap.empty
+
+  let clear () =
+    hits_and_misses := IMap.empty
+
+  (* A test prop succeeded, so we don't need to complain about this test *)
+  let hit id =
+    hits_and_misses := IMap.add id Hit !hits_and_misses
+
+  (* A test prop missed *)
+  let miss id name reasons use =
+    if not (IMap.mem id !hits_and_misses)
+    then hits_and_misses := IMap.add id (Miss (name, reasons, use)) !hits_and_misses
+
+  (* Get the test props that we need to complain about. *)
+  let get_never_hit () =
+    List.fold_left (fun acc (_, hit_or_miss) ->
+      match hit_or_miss with
+      | Hit -> acc
+      | Miss (name, reasons, use_op) -> (name, reasons, use_op)::acc
+    ) [] (IMap.bindings !hits_and_misses)
+end
+
+(* Warning: DO NOT PASS cx TO THIS FUNCTION! We do NOT want this function to do any typechecking!
+ * It must be called after all typechecking is done, and must not trigger any more flows. *)
+let get_post_merge_errors () =
+  let misses = TestPropHits.get_never_hit () in
+  TestPropHits.clear ();
+  List.map (fun (name, reasons, use_op) ->
+    FlowError.EPropNotFound (name, reasons, use_op)
+  ) misses
+
 (***************)
 (* strict mode *)
 (***************)
@@ -3025,7 +3081,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (List.hd ts,
          LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
 
-    | DefT (_, IntersectionT _), TestPropT (reason, prop, tout) ->
+    | DefT (_, IntersectionT _), TestPropT (reason, _, prop, tout) ->
       rec_flow cx trace (l, GetPropT (unknown_use, reason, prop, tout))
 
     (** extends **)
@@ -3147,7 +3203,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          typeapp, eval, maybe, optional, and intersection should have boiled
          away by this point. *)
       let propref = Named (reason, x) in
-      let strict = NonstrictReturning None in
+      let strict = NonstrictReturning (None, None) in
       let u = LookupT (reason, strict, [], propref, MatchProp t) in
       rec_flow cx trace (l, u)
 
@@ -3444,7 +3500,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
-    | DefT (_, NullT), TestPropT (reason_op, propref, tout) ->
+    | DefT (_, NullT), TestPropT (reason_op, _, propref, tout) ->
       (* The wildcard TestPropT implementation forwards the lower bound to
          LookupT. This is unfortunate, because LookupT is designed to terminate
          (successfully) on NullT, but property accesses on null should be type
@@ -3453,18 +3509,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          surround it. *)
       rec_flow cx trace (l, GetPropT (unknown_use, reason_op, propref, tout))
 
-    | _, TestPropT (reason_op, propref, tout) ->
+    | _, TestPropT (reason_op, id, propref, tout) ->
       (* NonstrictReturning lookups unify their result, but we don't want to
          unify with the tout tvar directly, so we create an indirection here to
          ensure we only supply lower bounds to tout. *)
       let lookup_default = Tvar.mk_where cx reason_op (fun tvar ->
         rec_flow_t cx trace (tvar, tout)
       ) in
-      let lookup_kind = NonstrictReturning (match l with
+      let name = name_of_propref propref in
+      let test_info = Some (id, (reason_op, reason_of_t l)) in
+      let lookup_default = match l with
         | DefT (_, ObjT { flags; _ })
             when flags.exact ->
           if sealed_in_op reason_op flags.sealed then
-            let name = name_of_propref propref in
             let r = replace_reason_const (RMissingProperty name) reason_op in
             Some (DefT (r, VoidT), lookup_default)
           else
@@ -3478,10 +3535,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              any other exact types. Considering exact types inexact is sound, so
              there is no problem falling back to the same conservative
              approximation we use for inexact types in those cases. *)
-          let name = name_of_propref propref in
           let r = replace_reason_const (RUnknownProperty name) reason_op in
           Some (DefT (r, MixedT Mixed_everything), lookup_default)
-      ) in
+      in
+      let lookup_kind = NonstrictReturning (lookup_default, test_info) in
       rec_flow cx trace (l,
         LookupT (reason_op, lookup_kind, [], propref,
           RWProp (unknown_use, l, tout, Read)))
@@ -4171,7 +4228,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           match up with
           | Field (_, DefT (_, OptionalT ut), upolarity) ->
             rec_flow cx trace (l,
-              LookupT (ureason, NonstrictReturning None, [], propref,
+              LookupT (ureason, NonstrictReturning (None, None), [], propref,
                 LookupProp (use_op, Field (None, ut, upolarity))))
           | _ ->
             let u =
@@ -4211,7 +4268,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let pass = Tvar.mk_where cx reason_op (fun t ->
             rec_flow_t cx trace (t, call_tout)
           ) in
-          NonstrictReturning (Some (l, pass))
+          NonstrictReturning (Some (l, pass), None)
         | _ -> Strict reason
       in
       let action = match u with
@@ -4585,12 +4642,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            mixins, then lookup should become nonstrict, as the searched-for
            property may be found in a mixin. *)
         let kind = match instance.mixins, kind with
-        | true, Strict _ -> NonstrictReturning None
+        | true, Strict _ -> NonstrictReturning (None, None)
         | _ -> kind
         in
         rec_flow cx trace (super,
           LookupT (reason_op, kind, try_ts_on_failure, propref, action))
       | Some p ->
+        (match kind with
+        | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+        | _ -> ());
         perform_lookup_action cx trace propref p lreason reason_op action)
     | DefT (_, InstanceT _), LookupT (reason_op, _, _, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
@@ -4657,7 +4717,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict =
-        if instance.mixins then NonstrictReturning None
+        if instance.mixins then NonstrictReturning (None, None)
         else Strict reason_c
       in
       get_prop cx trace ~use_op reason_prop reason_op strict l super x fields tout
@@ -4704,7 +4764,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let methods = SMap.union fields_tmap methods_tmap in
       let funt = Tvar.mk cx reason_lookup in
       let strict =
-        if instance.mixins then NonstrictReturning None
+        if instance.mixins then NonstrictReturning (None, None)
         else Strict reason_c
       in
       get_prop cx trace ~use_op reason_prop reason_lookup strict l super x methods funt;
@@ -4992,6 +5052,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       LookupT (reason_op, strict, try_ts_on_failure, propref, action) ->
       (match get_obj_prop cx trace o propref reason_op with
       | Some p ->
+        (match strict with
+        | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+        | _ -> ());
         perform_lookup_action cx trace propref p reason_obj reason_op action
       | None ->
         let strict = match sealed_in_op reason_op o.flags.sealed, strict with
@@ -5005,7 +5068,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
 
     | DefT (reason, (AnyT | AnyObjT)),
-      LookupT (reason_op, _, _, propref, action) ->
+      LookupT (reason_op, kind, _, propref, action) ->
       (match action with
       | SuperProp (_, lp) when Property.write_t lp = None ->
         (* Without this exception, we will call rec_flow_p where
@@ -5015,6 +5078,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ()
       | _ ->
         let p = Field (None, AnyT.why reason_op, Neutral) in
+        (match kind with
+        | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+        | _ -> ());
         perform_lookup_action cx trace propref p reason reason_op action)
 
     (*****************************************)
@@ -5329,7 +5395,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | DefT (reason_fun, AnyFunT), LookupT (reason_op, _, _, x, action) ->
+    | DefT (reason_fun, AnyFunT), LookupT (reason_op, kind, _, x, action) ->
+      (match kind with
+      | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+      | _ -> ());
       let p = Field (None, AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace x p reason_fun reason_op action
 
@@ -5994,7 +6063,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        FunProtoT _ |
        (* TODO: why would mixed appear here? *)
        DefT (_, MixedT (Mixed_truthy | Mixed_non_maybe))),
-      LookupT (_, NonstrictReturning t_opt, [], _, action) ->
+      LookupT (_, NonstrictReturning (t_opt, test_opt), [], propref, action) ->
       (* don't fire
 
          ...unless a default return value is given. Two examples:
@@ -6008,6 +6077,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          `mixed`.
       *)
       let use_op = Option.value ~default:unknown_use (use_op_of_lookup_action action) in
+
+      Option.iter test_opt ~f:(fun (id, reasons) ->
+        (* TODO - as mentioned above, it's unclear why mixed is included in this case. Since you
+         * can read any property from mixed, we donm't want to treat it as a miss *)
+        match l with
+        | DefT (_, MixedT _) -> TestPropHits.hit id
+        | _ -> TestPropHits.miss id (name_of_propref propref) reasons use_op
+      );
+
       begin match t_opt with
       | Some (not_found, t) ->
         rec_unify cx trace ~use_op ~unify_any:true t not_found
@@ -6451,7 +6529,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         let strict = match sealed_in_op ureason lflags.sealed, ldict with
         | false, None -> ShadowRead (Some lreason, Nel.one lflds)
         | true, None -> Strict lreason
-        | _ -> NonstrictReturning None
+        | _ -> NonstrictReturning (None, None)
         in
         rec_flow cx trace (lproto,
           LookupT (ureason, strict, [], propref,
@@ -6820,7 +6898,7 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, NonstrictReturning None, [], propref,
+        LookupT (reason_struct, NonstrictReturning (None, None), [], propref,
           LookupProp (use_op, Field (None, t, polarity))))
     | _ ->
       let propref =
@@ -6861,7 +6939,7 @@ and check_super cx trace ~use_op lreason ureason t x p =
     ) ureason;
     is_sentinel = false;
   }, use_op) in
-  let strict = NonstrictReturning None in
+  let strict = NonstrictReturning (None, None) in
   let reason_prop = replace_reason_const (RProperty (Some x)) lreason in
   lookup_prop cx trace t reason_prop lreason strict x (SuperProp (use_op, p))
 

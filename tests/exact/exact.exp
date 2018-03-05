@@ -109,6 +109,20 @@ References:
                                                            ^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ prop_test.js:12:7
+
+Property `xxx` is missing in `Person` [1].
+
+   prop_test.js:12:7
+   12|   if (p.xxx) {     // Error - xxx doesn't exist in the exact type
+             ^^^^^
+
+References:
+   prop_test.js:11:36
+   11| function prop_test_exact(p: $Exact<Person>): string {
+                                          ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- prop_test.js:28:10
 
 Cannot get `pc.state` because property `state` is missing in `Person` [1].
@@ -197,4 +211,4 @@ References:
 
 
 
-Found 12 errors
+Found 13 errors

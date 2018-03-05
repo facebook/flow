@@ -105,3 +105,5 @@ module Members : sig
   val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
   val extract_members: Context.t -> (Type.t, Type.t) generic_t -> t
 end
+
+val get_post_merge_errors: unit -> Flow_error.error_message list

@@ -267,7 +267,7 @@ let run cx trace ~use_op reason_op l u
          * stateful assumption that `defaultProps` was already written to
          * the component statics which may not always be true. *)
         let strict = NonstrictReturning (Some
-          (DefT (reason_missing, VoidT), tvar)) in
+          (DefT (reason_missing, VoidT), tvar), None) in
         let propref = Named (reason_prop, name) in
         let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
         (* Lookup the `defaultProps` property. *)
@@ -376,7 +376,7 @@ let run cx trace ~use_op reason_op l u
       (* Create the key type. *)
       let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
       (* Flow the config input key type to the key type. *)
-      let kind = NonstrictReturning None in
+      let kind = NonstrictReturning (None, None) in
       let propref = Named (reason_key, "key") in
       let use_op = Frame (PropertyCompatibility {
         prop = Some "key";
@@ -401,7 +401,7 @@ let run cx trace ~use_op reason_op l u
       (* Create the ref type. *)
       let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
       (* Flow the config input ref type to the ref type. *)
-      let kind = NonstrictReturning None in
+      let kind = NonstrictReturning (None, None) in
       let propref = Named (reason_ref, "ref") in
       let use_op = Frame (PropertyCompatibility {
         prop = Some "ref";

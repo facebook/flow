@@ -367,7 +367,7 @@ module rec TypeTerm : sig
     | GetPropT of use_op * reason * propref * t
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
-    | TestPropT of reason * propref * t
+    | TestPropT of reason * ident * propref * t
     (* SetElemT has a `tout` parameter to serve as a trigger for ordering
        operations. We only need this in one place: object literal initialization.
        In particular, a computed property in the object initializer users SetElemT
@@ -823,7 +823,7 @@ module rec TypeTerm : sig
      compatible. *)
   and lookup_kind =
   | Strict of reason
-  | NonstrictReturning of (t * t) option
+  | NonstrictReturning of (t * t) option * (ident * (reason * reason)) option
   | ShadowRead of reason option * Properties.id Nel.t
   | ShadowWrite of Properties.id Nel.t
 
@@ -2126,7 +2126,7 @@ end = struct
     | ObjKitT (_, reason, _, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_,reason,_) -> reason
-    | TestPropT (reason, _, _) -> reason
+    | TestPropT (reason, _, _, _) -> reason
     | ThisSpecializeT(reason,_,_) -> reason
     | ToStringT (reason, _) -> reason
     | UnaryMinusT (reason, _) -> reason
@@ -2291,7 +2291,7 @@ end = struct
         ObjKitT (use_op, f reason, resolve_tool, tool, tout)
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
-    | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
+    | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
     | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
     | ToStringT (reason, t) -> ToStringT (f reason, t)
     | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
@@ -2349,7 +2349,7 @@ end = struct
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
   | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
   | ExtendsUseT (op, r, ts, a, b) -> util op (fun op -> ExtendsUseT (op, r, ts, a, b))
-  | TestPropT (_, _, _)
+  | TestPropT (_, _, _, _)
   | CallElemT (_, _, _, _)
   | GetStaticsT (_, _)
   | GetProtoT (_, _)

@@ -460,6 +460,9 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx;
 
+  Flow_js.get_post_merge_errors ()
+  |> List.iter (Flow_js.add_output cx);
+
   ()
 
 

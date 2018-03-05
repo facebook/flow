@@ -4797,7 +4797,7 @@ and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
   Tvar.mk_where cx reason (fun t ->
     let get_prop_u =
       if is_cond
-      then TestPropT (reason, Named (prop_reason, name), t)
+      then TestPropT (reason, mk_id (), Named (prop_reason, name), t)
       else GetPropT (use_op, reason, Named (prop_reason, name), t)
     in
     Flow.flow cx (tobj, get_prop_u)
