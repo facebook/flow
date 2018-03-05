@@ -2,6 +2,7 @@
 
 import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
+import {createWriteStream} from 'fs';
 import {tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
@@ -49,6 +50,7 @@ export class TestBuilder {
   tmpDir: string;
   testErrors = [];
   allowFlowServerToDie = false;
+  logStream: stream$Writable | null;
 
   constructor(
     bin: string,
@@ -88,9 +90,44 @@ export class TestBuilder {
     return path.split(dir_sep).join('/');
   }
 
+  async log(fmt: string, ...args: Array<mixed>): Promise<void> {
+    const {logStream} = this;
+    if (logStream != null) {
+      const now = new Date();
+      function fixWidth(num: number, width: number): string {
+        const str = String(num);
+        return str.length < width ? "0".repeat(width - str.length) + str : str;
+      }
+      const msg = format(
+        "[%s %s:%s:%s.%s] %s\n",
+        now.toLocaleDateString('en-US'),
+        fixWidth(now.getHours(), 2),
+        fixWidth(now.getMinutes(), 2),
+        fixWidth(now.getSeconds(), 2),
+        fixWidth(now.getMilliseconds(), 3),
+        format(fmt, ...args),
+      );
+      return new Promise((resolve, reject) => {
+        logStream.write(msg, 'utf8', resolve)
+      });
+    }
+  }
+
+  async closeLog(): Promise<void> {
+    const {logStream} = this;
+    if (logStream != null) {
+      this.logStream = null;
+      return new Promise((resolve, reject) => {
+        logStream.end('', 'utf8', resolve)
+      });
+    }
+  }
+
   async createFreshDir(): Promise<void> {
     await mkdirp(this.dir);
     await mkdirp(this.tmpDir);
+
+    this.logStream = createWriteStream(join(this.tmpDir, 'test.log'));
 
     let configBuffer = null;
     const files = await readdir(this.sourceDir);
@@ -371,6 +408,8 @@ export class TestBuilder {
         stderr.push(data.toString());
       });
 
+      await this.log("Created IDE process with pid %d", ideProcess.pid);
+
       this.ide = { process: ideProcess, connection, messages, stderr, emitter };
     }
   }
@@ -385,15 +424,21 @@ export class TestBuilder {
     }
   }
 
-  sendIDENotification(methodName: string, args: Array<mixed>): void {
-    if (this.ide != null) {
-      this.ide.connection.sendNotification(methodName, ...args);
+  async sendIDENotification(
+    methodName: string,
+    args: Array<mixed>,
+  ): Promise<void> {
+    const ide = this.ide;
+    if (ide != null) {
+      await this.log("Sending '%s' notification to IDE process", methodName);
+      ide.connection.sendNotification(methodName, ...args);
     }
   }
 
   async sendIDERequest(methodName: string, args: Array<mixed>): Promise<void> {
     const ide = this.ide;
     if (ide != null) {
+      await this.log("Sending '%s' request to IDE process", methodName);
       ide.messages.push(
         await ide.connection.sendRequest(methodName, ...args),
       );
@@ -406,6 +451,7 @@ export class TestBuilder {
   ): Promise<void> {
     const ide = this.ide;
     const messages = [...expected];
+    const expectedCount = messages.length;
 
     return new Promise(resolve => {
       if (ide == null) {
@@ -424,16 +470,29 @@ export class TestBuilder {
           done();
         }
       };
+      var timeout = null;
       const done = () => {
         this.ide &&
           this.ide.emitter.removeListener('notification', onNotification);
-        resolve();
+        timeout && clearTimeout(timeout);
+        this.log(
+          "Received all %d messages in under %dms",
+          expectedCount,
+          timeoutMs,
+        ).then(resolve);
       }
 
       // If we've already received some notifications then process them.
       ide.messages.forEach(onNotification);
 
-      setTimeout(done, timeoutMs);
+      this.log("Starting to wait %dms for messages", timeoutMs)
+      .then(() => {
+        const onTimeout = () => {
+          this.log("%dms timeout fired", timeoutMs)
+            .then(done);
+        }
+        timeout = setTimeout(onTimeout, timeoutMs);
+      });
 
       ide.emitter.on('notification', onNotification);
     });
@@ -458,6 +517,7 @@ export class TestBuilder {
   cleanup(): void {
     this.cleanupIDEConnection();
     this.stopFlowServer();
+    this.closeLog();
   }
 
   assertNoErrors(): void {
