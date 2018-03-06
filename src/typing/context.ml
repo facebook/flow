@@ -389,6 +389,8 @@ let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
   Type_table.reset cx.local.type_table;
   Hashtbl.reset cx.local.annot_table;
+  cx.local.import_stmts <- [];
+  cx.local.imported_ts <- SMap.empty;
   cx.local.envs <- IMap.empty;
   cx.local.all_unresolved <- IMap.empty;
   cx.local.exists_checks <- LocMap.empty;
