@@ -1390,8 +1390,8 @@ and UnionRep : sig
   (** build a rep from list of members *)
   val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
-  (** replace reason with enum desc, if any *)
-  val enum_reason: reason -> t -> reason
+  (** replace reason with specialized desc, if any *)
+  val specialized_reason: reason -> t -> reason
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
@@ -1476,6 +1476,7 @@ end = struct
     | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t Nel.t
     | DisjointUnion of TypeTerm.t EnumMap.t SMap.t
     | PartiallyOptimizedDisjointUnion of TypeTerm.t EnumMap.t SMap.t * TypeTerm.t Nel.t
+    | Empty
     | Unoptimized
 
   (** union rep is:
@@ -1500,7 +1501,8 @@ end = struct
         end in
 
     fun t0 t1 ts ->
-      let enum = Option.(mk_enum EnumSet.empty (t0::t1::ts) >>| fun tset -> Enum tset) in
+      let enum = Option.(mk_enum EnumSet.empty (t0::t1::ts) >>| fun tset ->
+        if EnumSet.is_empty tset then Empty else Enum tset) in
       t0, t1, ts, ref enum
 
   let members (t0, t1, ts, _) = t0::t1::ts
@@ -1522,14 +1524,11 @@ end = struct
     if changed then make t0_ t1_ ts_
     else rep
 
-  let enum_reason r (_, _, _, specialization) =
+  let specialized_reason r (_, _, _, specialization) =
     match !specialization with
-    | None -> r
-    | Some (PartiallyOptimizedEnum _) -> r
+    | Some Empty -> replace_reason_const REmpty r
     | Some (Enum _) -> replace_reason_const REnum r
-    | Some (DisjointUnion _) -> r
-    | Some (PartiallyOptimizedDisjointUnion _) -> r
-    | Some Unoptimized -> r
+    | _ -> r
 
   (********** Optimizations **********)
 
@@ -1569,7 +1568,9 @@ end = struct
          case the union should be considered degenerate and optimized further. *)
       let tset, others = split_enum ts in
       match others with
-      | [] -> Enum tset
+      | [] ->
+        if EnumSet.is_empty tset then Empty
+        else Enum tset
       | x::xs ->
         if EnumSet.is_empty tset then Unoptimized
         else PartiallyOptimizedEnum (tset, Nel.rev (x, xs))
@@ -1597,28 +1598,12 @@ end = struct
           | Some enum -> SMap.add key (enum, t) acc
           | _ -> acc
         ) prop_map SMap.empty) in
-    let index =
-      let rec index find_resolved find_props ts others =
-        match ts with
-        | [] -> SMap.empty, others
-        | t::ts ->
-          begin match base_props_of find_resolved find_props t with
-          | None -> index find_resolved find_props ts (t::others)
-          | Some base_props ->
-            let init = SMap.map (fun enum_t -> [enum_t]) base_props in
-            List.fold_left (fun (acc, others) t ->
-              match base_props_of find_resolved find_props t with
-              | None -> acc, t::others
-              | Some base_props ->
-                SMap.merge (fun _key enum_t_opt values_opt ->
-                  Option.(both enum_t_opt values_opt >>| (fun (enum_t, values) ->
-                      List.cons enum_t values
-                  ))
-                ) base_props acc, others
-            ) (init, others) ts
-          end
-      in fun find_resolved find_props ts ->
-        index find_resolved find_props ts [] in
+    let split_disjoint_union find_resolved find_props ts =
+      List.fold_left (fun (candidates, others) t ->
+        match base_props_of find_resolved find_props t with
+        | None -> candidates, t::others
+        | Some base_props -> base_props::candidates, others
+    ) ([], []) ts in
     let unique_values =
       let rec unique_values idx = function
       | [] -> Some idx
@@ -1638,17 +1623,33 @@ end = struct
         | None -> acc
         | Some idx -> SMap.add key idx acc
       ) idx SMap.empty in
+    let index candidates =
+      match candidates with
+        | [] -> SMap.empty
+        | base_props::candidates ->
+          (* Compute the intersection of properties of objects that have singleton types *)
+          let init = SMap.map (fun enum_t -> [enum_t]) base_props in
+          let idx = List.fold_left (fun acc base_props ->
+            SMap.merge (fun _key enum_t_opt values_opt ->
+              Option.(both enum_t_opt values_opt >>| (fun (enum_t, values) ->
+                List.cons enum_t values
+              ))
+            ) base_props acc
+          ) init candidates in
+          (* Ensure that enums map to unique types *)
+          unique idx in
 
     fun ~find_resolved ~find_props ts ->
-      (* Compute the intersection of properties of objects that have singleton types *)
-      let idx, others = index find_resolved find_props ts in
-      (* Ensure that enums map to unique types *)
-      let map = unique idx in
+      let candidates, others = split_disjoint_union find_resolved find_props ts in
+      let map = index candidates in
+      let others = if SMap.is_empty map then ts else List.rev others in
       match others with
-      | [] -> DisjointUnion map
+      | [] ->
+        if SMap.is_empty map then Empty
+        else DisjointUnion map
       | x::xs ->
         if SMap.is_empty map then Unoptimized
-        else PartiallyOptimizedDisjointUnion (map, Nel.rev (x, xs))
+        else PartiallyOptimizedDisjointUnion (map, (x, xs))
 
   let optimize rep ~flatten ~find_resolved ~find_props =
     let ts = flatten (members rep) in
@@ -1669,6 +1670,7 @@ end = struct
       begin match !specialization with
         | None -> None
         | Some Unoptimized -> None
+        | Some Empty -> Some false
         | Some (DisjointUnion _) -> Some false
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
           if Nel.exists (TypeUtil.reasonless_eq t) others
@@ -1706,7 +1708,8 @@ end = struct
       | Some prop_map ->
         begin match !specialization with
           | None -> None
-          | Some (Unoptimized) -> None
+          | Some Unoptimized -> None
+          | Some Empty -> Some None
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
           | Some (PartiallyOptimizedDisjointUnion (map, others)) ->

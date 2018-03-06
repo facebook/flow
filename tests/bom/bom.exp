@@ -617,30 +617,58 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:18:1
 
-Cannot call `o.observe` because function [1] requires another argument.
+Cannot call `o.observe` because:
+ - function [1] requires another argument.
+ - all branches are incompatible:
+    - Either undefined [2] is incompatible with object type [3].
+    - Or undefined [2] is incompatible with object type [4].
+    - Or undefined [2] is incompatible with object type [5].
 
    MutationObserver.js:18:1
     18| o.observe(); // incorrect
-        ^^^^^^^^^^^
+        ^^^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/bom.js:369:5
    369|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:356:7
+   356|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:357:7
+   357|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:358:7
+   358|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:19:1
 
-Cannot call `o.observe` because function [1] requires another argument.
+Cannot call `o.observe` because:
+ - function [1] requires another argument.
+ - all branches are incompatible:
+    - Either undefined [2] is incompatible with object type [3].
+    - Or undefined [2] is incompatible with object type [4].
+    - Or undefined [2] is incompatible with object type [5].
 
    MutationObserver.js:19:1
     19| o.observe('invalid'); // incorrect
-        ^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/bom.js:369:5
    369|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:356:7
+   356|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:357:7
+   357|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:358:7
+   358|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:19:11
@@ -659,16 +687,30 @@ References:
 
 Error ----------------------------------------------------------------------------------------- MutationObserver.js:20:1
 
-Cannot call `o.observe` because function [1] requires another argument.
+Cannot call `o.observe` because:
+ - function [1] requires another argument.
+ - all branches are incompatible:
+    - Either undefined [2] is incompatible with object type [3].
+    - Or undefined [2] is incompatible with object type [4].
+    - Or undefined [2] is incompatible with object type [5].
 
    MutationObserver.js:20:1
     20| o.observe(div); // incorrect
-        ^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/bom.js:369:5
    369|     observe(target: Node, options: MutationObserverInit): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:356:7
+   356|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:357:7
+   357|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:358:7
+   358|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:21:16
@@ -736,7 +778,7 @@ References:
 
 
 
-Found 49 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

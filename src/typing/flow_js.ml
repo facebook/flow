@@ -8151,7 +8151,7 @@ and shortcut_enum cx trace reason_op use_op l rep =
     | Some true -> (* membership check succeeded *)
       true (* Our work here is done, so no need to continue. *)
     | Some false -> (* membership check failed *)
-      let r = UnionRep.enum_reason reason_op rep in
+      let r = UnionRep.specialized_reason reason_op rep in
       rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
       true (* Our work here is done, so no need to continue. *)
     | None -> (* membership check was inconclusive *)
