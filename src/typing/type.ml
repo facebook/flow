@@ -1476,6 +1476,7 @@ end = struct
     | PartiallyOptimizedEnum of EnumSet.t * TypeTerm.t Nel.t
     | DisjointUnion of TypeTerm.t EnumMap.t SMap.t
     | PartiallyOptimizedDisjointUnion of TypeTerm.t EnumMap.t SMap.t * TypeTerm.t Nel.t
+    | Unoptimized
 
   (** union rep is:
       - list of members in declaration order, with at least 2 elements
@@ -1528,6 +1529,7 @@ end = struct
     | Some (Enum _) -> replace_reason_const REnum r
     | Some (DisjointUnion _) -> r
     | Some (PartiallyOptimizedDisjointUnion _) -> r
+    | Some Unoptimized -> r
 
   (********** Optimizations **********)
 
@@ -1568,7 +1570,9 @@ end = struct
       let tset, others = split_enum ts in
       match others with
       | [] -> Enum tset
-      | x::xs -> PartiallyOptimizedEnum (tset, Nel.rev (x, xs))
+      | x::xs ->
+        if EnumSet.is_empty tset then Unoptimized
+        else PartiallyOptimizedEnum (tset, Nel.rev (x, xs))
 
   let canon_prop find_resolved p =
     Option.(Property.read_t p >>= find_resolved >>= canon)
@@ -1636,25 +1640,22 @@ end = struct
       ) idx SMap.empty in
 
     fun ~find_resolved ~find_props ts ->
-      match ts with
-      | [] -> DisjointUnion SMap.empty
-      | t::ts' ->
-        (* Compute the intersection of properties of objects that have singleton types *)
-        let idx, others = index find_resolved find_props ts in
-        (* Ensure that enums map to unique types *)
-        let map = unique idx in
-        if SMap.is_empty map then PartiallyOptimizedDisjointUnion (map, (t, ts'))
-        else match others with
-          | [] -> DisjointUnion map
-          | other::others -> PartiallyOptimizedDisjointUnion (map, Nel.rev (other, others))
+      (* Compute the intersection of properties of objects that have singleton types *)
+      let idx, others = index find_resolved find_props ts in
+      (* Ensure that enums map to unique types *)
+      let map = unique idx in
+      match others with
+      | [] -> DisjointUnion map
+      | x::xs ->
+        if SMap.is_empty map then Unoptimized
+        else PartiallyOptimizedDisjointUnion (map, Nel.rev (x, xs))
 
   let optimize rep ~flatten ~find_resolved ~find_props =
     let ts = flatten (members rep) in
     if contains_only_flattened_types ts then
       let opt = enum_optimize ts in
       let opt = match opt with
-        | PartiallyOptimizedEnum (tset, _) when EnumSet.is_empty tset ->
-          disjoint_union_optimize ~find_resolved ~find_props ts
+        | Unoptimized -> disjoint_union_optimize ~find_resolved ~find_props ts
         | _ -> opt in
       let _, _, _, specialization = rep in
       specialization := Some opt
@@ -1667,6 +1668,7 @@ end = struct
     | Some tcanon ->
       begin match !specialization with
         | None -> None
+        | Some Unoptimized -> None
         | Some (DisjointUnion _) -> Some false
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
           if Nel.exists (TypeUtil.reasonless_eq t) others
@@ -1703,20 +1705,21 @@ end = struct
     match props_of find_props l with
       | Some prop_map ->
         begin match !specialization with
+          | None -> None
+          | Some (Unoptimized) -> None
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
-          | Some (PartiallyOptimizedDisjointUnion (map, ts)) ->
+          | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
             let result =
               if SMap.is_empty map then None
               else lookup_disjoint_union find_resolved prop_map ~partial:true map in
             if result <> None then result
-            else if Nel.exists (TypeUtil.reasonless_eq l) ts then Some (Some None)
+            else if Nel.exists (TypeUtil.reasonless_eq l) others then Some (Some None)
             else None
           | Some (Enum _) -> Some None
           | Some (PartiallyOptimizedEnum (_, others)) ->
             if Nel.exists (TypeUtil.reasonless_eq l) others then Some (Some None)
             else None
-          | _ -> None
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
 
