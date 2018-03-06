@@ -1390,7 +1390,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:52:1
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with enum [2] in property `children`.
+Cannot create `TextLiteral` element because in property `children`:
+ - Either children array [1] is incompatible with string literal `foo` [2].
+ - Or children array [1] is incompatible with string literal `bar` [3].
 
    text.js:52:1
    52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1402,12 +1404,17 @@ References:
                     ^^^^^^^^^ [1]
    text.js:7:54
     7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                            ^^^^^^^^^^^^^ [2]
+                                                            ^^^^^ [2]
+   text.js:7:62
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                                    ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- text.js:53:1
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with enum [2] in property `children`.
+Cannot create `TextLiteral` element because in property `children`:
+ - Either children array [1] is incompatible with string literal `foo` [2].
+ - Or children array [1] is incompatible with string literal `bar` [3].
 
    text.js:53:1
    53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.
@@ -1419,7 +1426,10 @@ References:
                     ^^^^^^^^^ [1]
    text.js:7:54
     7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                            ^^^^^^^^^^^^^ [2]
+                                                            ^^^^^ [2]
+   text.js:7:62
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+                                                                    ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:9:1

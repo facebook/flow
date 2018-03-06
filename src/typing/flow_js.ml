@@ -2969,7 +2969,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | SentinelBool v -> SingletonBoolT v
           | SentinelVoid -> VoidT
           | SentinelNull -> NullT in
-        match UnionRep.quick_mem (DefT (r, def)) rep with
+        match UnionRep.quick_mem_enum (DefT (r, def)) rep with
         | Some false -> ()  (* provably unreachable, so prune *)
         | Some true -> rec_flow_t cx trace (l, result)
         | None -> (* inconclusive: the union is not concretized *)
@@ -3010,23 +3010,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ()
 
     | _, UseT (_, DefT (_, UnionT rep)) when
-        not (UnionRep.is_optimized_finally rep) &&
         let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
         List.exists (reasonless_eq l) ts ->
       ()
 
-    | _, UseT (use_op, DefT (r, UnionT rep)) -> (
-      match UnionRep.quick_mem l rep with
-      | Some true -> ()
-      | Some false ->
-        let r = UnionRep.enum_reason r rep in
-        rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)))
-      | None ->
-        (* Try the branches of the union in turn, with the goal of selecting the
-           correct branch. This process is reused for intersections as well. See
-           comments on try_union and try_intersection. *)
-        try_union cx trace use_op l r rep
-    )
+    | _, UseT (use_op, DefT (r, UnionT rep)) ->
+      (* Try the branches of the union in turn, with the goal of selecting the correct branch. This
+         process is reused for intersections as well. See comments on try_union and
+         try_intersection. *)
+      try_union cx trace use_op l r rep
 
     (* maybe and optional types are just special union types *)
 
@@ -8136,54 +8128,50 @@ and ignore_of_spec = function
    failures in the vast majority of cases without having to do any useless additional work.
 *)
 and optimize_spec_try_shortcut cx trace reason_op = function
-  | UnionCases (use_op, l, rep, _ts) -> begin match l with
+  | UnionCases (use_op, l, rep, _ts) ->
+    if not (UnionRep.is_optimized_finally rep)
+    then UnionRep.optimize rep
+      ~flatten:(Type_mapper.union_flatten cx)
+      ~find_resolved:(Context.find_resolved cx)
+      ~find_props:(Context.find_props cx);
+    begin match l with
     | DefT (_,
-        (StrT _ | NumT _ | BoolT _ |
+        (StrT (Literal _) | NumT (Literal _) | BoolT (Some _) |
          SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ |
          VoidT | NullT)) ->
-      enum_optimize cx rep;
       shortcut_enum cx trace reason_op use_op l rep
     | DefT (_, ObjT _) | ExactT (_, DefT (_, ObjT _)) ->
-      disjoint_union_optimize cx rep;
       shortcut_disjoint_union cx trace reason_op use_op l rep
     | _ -> false
     end
   | IntersectionCases _ -> false
 
-and enum_optimize cx rep =
-  if not (UnionRep.is_optimized_finally rep) then
-    UnionRep.optimize ~flatten:(Type_mapper.union_flatten cx) rep
-
 and shortcut_enum cx trace reason_op use_op l rep =
-  match UnionRep.quick_mem l rep with
+  match UnionRep.quick_mem_enum l rep with
     | Some true -> (* membership check succeeded *)
       true (* Our work here is done, so no need to continue. *)
     | Some false -> (* membership check failed *)
       let r = UnionRep.enum_reason reason_op rep in
       rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
       true (* Our work here is done, so no need to continue. *)
-    | _ -> (* membership check was inconclusive *)
+    | None -> (* membership check was inconclusive *)
       false (* Continue to speculative matching. *)
 
-and disjoint_union_optimize cx rep =
-  if not (UnionRep.is_optimized_finally rep)
-  then UnionRep.guess_and_record_sentinel_prop rep
-    ~flatten:(Type_mapper.union_flatten cx)
-    ~find_resolved:(Context.find_resolved cx)
-    ~find_props:(Context.find_props cx)
-
 and shortcut_disjoint_union cx trace reason_op use_op l rep =
-  match UnionRep.quick_match l rep
+  match UnionRep.quick_mem_disjoint_union l rep
     ~find_resolved:(Context.find_resolved cx)
     ~find_props:(Context.find_props cx)
   with
-    | Some (Some t) ->
+    | Some (Some (Some t)) -> (* conditional match *)
       rec_flow cx trace (l, UseT (use_op, t));
       true
-    | Some None ->
+    | Some (Some None) -> (* success *)
+      true
+    | Some None -> (* failure *)
       rec_flow cx trace (l, UseT (use_op, DefT (reason_op, EmptyT)));
       true
-    | None -> false
+    | None -> (* inconclusive *)
+      false
 
 (* When we fire_actions we also need to reconstruct the use_op for each action
  * since before beginning speculation we replaced each use_op with
