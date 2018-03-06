@@ -812,40 +812,13 @@ module Cache = struct
       Hashtbl.add cache cache_key tvar
   end
 
-  (* Cache that records sentinel properties for objects. Cache entries are
-     populated before checking against a union of object types, and are used
-     while checking against each object type in the union. *)
-  module SentinelProp = struct
-    let cache = ref Properties.Map.empty
-
-    let add id more_keys =
-      match Properties.Map.get id !cache with
-      | Some keys ->
-        cache := Properties.Map.add id (SSet.union keys more_keys) !cache
-      | None ->
-        cache := Properties.Map.add id more_keys !cache
-
-    let ordered_iter id f map =
-      let map = match Properties.Map.get id !cache with
-        | Some keys ->
-          SSet.fold (fun s map ->
-            match SMap.get s map with
-            | Some t -> f ~is_sentinel:true s t; SMap.remove s map
-            | None -> map
-          ) keys map
-        | _ -> map in
-      SMap.iter (f ~is_sentinel:false) map
-
-  end
-
   let clear () =
     FlowConstraint.cache := FlowSet.empty;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
-    Hashtbl.clear Fix.cache;
-    SentinelProp.cache := Properties.Map.empty
+    Hashtbl.clear Fix.cache
 
   let stats_poly_instantiation () =
     Hashtbl.stats PolyInstantiation.cache
@@ -875,7 +848,7 @@ end
 let iter_real_props cx id f =
   Context.find_props cx id
   |> SMap.filter (fun x _ -> not (is_internal_name x))
-  |> Cache.SentinelProp.ordered_iter id f
+  |> SMap.iter (f ~is_sentinel:false)
 
 (* Helper module for full type resolution as needed to check union and
    intersection types.
@@ -8198,7 +8171,6 @@ and disjoint_union_optimize cx rep =
     ~flatten:(Type_mapper.union_flatten cx)
     ~find_resolved:(Context.find_resolved cx)
     ~find_props:(Context.find_props cx)
-    ~cache_sentinel_prop:Cache.SentinelProp.add
 
 and shortcut_disjoint_union cx trace reason_op use_op l rep =
   match UnionRep.quick_match l rep

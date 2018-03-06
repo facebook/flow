@@ -1417,7 +1417,6 @@ and UnionRep : sig
     flatten:(TypeTerm.t list -> TypeTerm.t list) ->
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
-    cache_sentinel_prop:(Properties.id -> SSet.t -> unit) ->
     t -> unit
 
   val quick_match :
@@ -1669,7 +1668,7 @@ end = struct
       | _ -> true
     )
 
-  let guess_and_record_sentinel_prop ~flatten ~find_resolved ~find_props ~cache_sentinel_prop (t0, t1, ts, specialization) =
+  let guess_and_record_sentinel_prop ~flatten ~find_resolved ~find_props (t0, t1, ts, specialization) =
     (* Compute the intersection of properties of objects that have singleton types *)
     let ts = flatten (t0::t1::ts) in
     if contains_only_flattened_types ts then
@@ -1677,26 +1676,14 @@ end = struct
       | [] -> DisjointUnion SMap.empty
       | t::ts' ->
         let idx, others = index find_resolved find_props ts in
+        (* Ensure that enums map to unique types *)
+        let map = unique idx in
         let ts = t, ts' in
-
-        if SMap.is_empty idx then PartiallyOptimizedDisjointUnion (SMap.empty, ts)
-        else begin
-          (* Record the guessed sentinel properties for each object *)
-          let open TypeTerm in
-          let keys = SSet.of_list @@ SMap.keys idx in
-          Nel.iter (function
-            | DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ })) ->
-              cache_sentinel_prop props_tmap keys
-            | _ -> ()
-          ) ts;
-
-          (* Ensure that enums map to unique types *)
-          let map = unique idx in
-          if SMap.is_empty map then PartiallyOptimizedDisjointUnion (SMap.empty, ts)
-          else match others with
-            | [] -> DisjointUnion map
-            | other::others -> PartiallyOptimizedDisjointUnion (map, Nel.rev (other, others))
-        end in
+        if SMap.is_empty map then PartiallyOptimizedDisjointUnion (SMap.empty, ts)
+        else match others with
+          | [] -> DisjointUnion map
+          | other::others -> PartiallyOptimizedDisjointUnion (map, Nel.rev (other, others))
+    in
     specialization := Some disjoint_union
 
   let lookup_disjoint_union find_resolved prop_map ~partial map =
