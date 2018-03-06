@@ -81,16 +81,32 @@ let load_lib_files ~master_cx ~options files =
           let metadata =
             let open Context in
             let metadata = metadata_of_options options in
-            let local_metadata = { metadata.local_metadata with checked = false; weak = false; } in
-            { metadata with local_metadata }
+            { metadata with checked = false; weak = false }
           in
 
-          let cx, syms = Infer.infer_lib_file
-            ~metadata ~exclude_syms ~lint_severities ~file_sig
-            lib_file ast
+          let sig_cx = Context.make_sig () in
+          let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
+          Flow.mk_builtins cx;
+
+          let syms = Infer.infer_lib_file cx ast
+            ~exclude_syms ~lint_severities ~file_sig
           in
 
-          let errs, suppressions, severity_cover = Merge_js.merge_lib_file cx master_cx in
+          Context.merge_into (Context.sig_cx master_cx) sig_cx;
+
+          let () =
+            let from_t = Context.find_module master_cx Files.lib_module_ref in
+            let to_t = Context.find_module cx Files.lib_module_ref in
+            Flow.flow_t master_cx (from_t, to_t)
+          in
+
+          let errors = Context.errors cx in
+          let suppressions = Context.error_suppressions cx in
+          let severity_cover = Context.severity_cover cx in
+
+          Context.remove_all_errors cx;
+          Context.remove_all_error_suppressions cx;
+          Context.remove_all_lint_severities cx;
 
           (if verbose != None then
             prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -99,7 +115,7 @@ let load_lib_files ~master_cx ~options files =
           (* symbols loaded from this file are suppressed
              if found in later ones *)
           let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-          let result = (lib_file, true, errs, suppressions, severity_cover) in
+          let result = (lib_file, true, errors, suppressions, severity_cover) in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_fail fail ->
@@ -133,16 +149,17 @@ let load_lib_files ~master_cx ~options files =
    returns list of (lib file, success) pairs.
  *)
 let init ~options lib_files =
-
   let master_cx =
+    let sig_cx = Context.make_sig () in
     let metadata =
       let open Context in
       let metadata = metadata_of_options options in
-      let local_metadata = { metadata.local_metadata with checked = false; weak = false; } in
-      { metadata with local_metadata }
+      { metadata with checked = false; weak = false }
     in
-    Flow.fresh_context metadata File_key.Builtins Files.lib_module_ref
+    Context.make sig_cx metadata File_key.Builtins Files.lib_module_ref
   in
+
+  Flow_js.mk_builtins master_cx;
 
   let result = load_lib_files ~master_cx ~options lib_files in
 
@@ -151,6 +168,8 @@ let init ~options lib_files =
   let builtin_module = Obj_type.mk master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
+
+  Context.clear_intermediates master_cx;
 
   (* store master signature context to heap *)
   Context_cache.add_sig ~audit:Expensive.ok master_cx;

@@ -6,7 +6,7 @@
  *)
 
 val add_sig: (Context.t -> unit) Expensive.t
-val find_sig: options:Options.t -> File_key.t -> Context.t
+val find_sig: File_key.t -> Context.sig_t
 
 val find_leader: File_key.t -> File_key.t
 

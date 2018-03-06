@@ -72,16 +72,32 @@ let load_lib_files ~master_cx ~metadata files
       let lib_file = File_key.LibFile file in
       match parse_content lib_file lib_content with
       | Ok (ast, file_sig) ->
-        let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms ~file_sig
-          ~lint_severities:LintSettings.empty_severities
-          lib_file ast
+        let sig_cx = Context.make_sig () in
+        let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
+        Flow_js.mk_builtins cx;
+        let syms = Type_inference_js.infer_lib_file cx ast
+          ~exclude_syms ~file_sig ~lint_severities:LintSettings.empty_severities
         in
 
-        let errs, suppressions, lint_suppressions = Merge_js.merge_lib_file cx master_cx in
-        save_infer_errors lib_file errs;
+        Context.merge_into (Context.sig_cx master_cx) sig_cx;
+
+        let () =
+          let from_t = Context.find_module master_cx Files.lib_module_ref in
+          let to_t = Context.find_module cx Files.lib_module_ref in
+          Flow_js.flow_t master_cx (from_t, to_t)
+        in
+
+        let errors = Context.errors cx in
+        let suppressions = Context.error_suppressions cx in
+        let severity_cover = Context.severity_cover cx in
+
+        Context.remove_all_errors cx;
+        Context.remove_all_error_suppressions cx;
+        Context.remove_all_lint_severities cx;
+
+        save_infer_errors lib_file errors;
         save_suppressions lib_file suppressions;
-        save_lint_suppressions lib_file lint_suppressions;
+        save_lint_suppressions lib_file severity_cover;
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
@@ -106,31 +122,30 @@ let stub_docblock = { Docblock.
 }
 
 let stub_metadata ~root ~checked = { Context.
-  local_metadata = { Context.
-    checked;
-    munge_underscores = false;
-    verbose = None;
-    weak = false;
-    jsx = None;
-    strict = false;
-  };
-  global_metadata = { Context.
-    enable_const_params = false;
-    enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
-    facebook_fbt = None;
-    ignore_non_literal_requires = false;
-    max_trace_depth = 0;
-    max_workers = 0;
-    root;
-    strip_root = true;
-    suppress_comments = [];
-    suppress_types = SSet.empty;
-  };
+  (* local *)
+  checked;
+  munge_underscores = false;
+  verbose = None;
+  weak = false;
+  jsx = None;
+  strict = false;
+
+  (* global *)
+  enable_const_params = false;
+  enforce_strict_call_arity = true;
+  esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+  esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+  esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
+  facebook_fbt = None;
+  ignore_non_literal_requires = false;
+  max_trace_depth = 0;
+  max_workers = 0;
+  root;
+  strip_root = true;
+  suppress_comments = [];
+  suppress_types = SSet.empty;
 }
 
 let get_master_cx =
@@ -139,10 +154,12 @@ let get_master_cx =
     match !master_cx with
     | Some (prev_root, cx) -> assert (prev_root = root); cx
     | None ->
-      let cx = Flow_js.fresh_context
+      let sig_cx = Context.make_sig () in
+      let cx = Context.make sig_cx
         (stub_metadata ~root ~checked:false)
         File_key.Builtins
         Files.lib_module_ref in
+      Flow_js.mk_builtins cx;
       master_cx := Some (root, cx);
       cx
 
@@ -186,7 +203,7 @@ let infer_and_merge ~root filename ast file_sig =
     ~metadata ~lint_severities ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
-    (Nel.one filename) reqs [] master_cx
+    (Nel.one filename) reqs [] (Context.sig_cx master_cx)
   in
   cx
 

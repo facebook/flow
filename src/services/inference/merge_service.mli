@@ -17,7 +17,7 @@ type 'a merge_job =
 type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
-  master_cx: Context.t;
+  master_cx: Context.sig_t;
 }
 
 val merge_strict_context:

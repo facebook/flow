@@ -9,7 +9,7 @@ module FilenameMap = Utils_js.FilenameMap
 
 module Reqs = struct
   type impl = File_key.t * string * Loc.t Nel.t * File_key.t
-  type dep_impl = Context.t * string * Loc.t Nel.t * File_key.t
+  type dep_impl = Context.sig_t * string * Loc.t Nel.t * File_key.t
   type unchecked = string * Loc.t Nel.t * File_key.t
   type res = Loc.t Nel.t * string * File_key.t
   type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
@@ -48,14 +48,14 @@ end
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
-  let from_t = Flow_js.lookup_module master_cx Files.lib_module_ref in
-  let to_t = Flow_js.lookup_module cx_to Files.lib_module_ref in
+  let from_t = Context.find_module_sig master_cx Files.lib_module_ref in
+  let to_t = Context.find_module cx_to Files.lib_module_ref in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
 let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
-  let from_t = Flow_js.lookup_module cx_from m in
+  let from_t = Context.find_module_sig cx_from m in
   let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
@@ -145,30 +145,28 @@ let detect_sketchy_null_checks cx =
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
-  let local_metadata = metadata.local_metadata in
+  let metadata = { metadata with jsx = Docblock.jsx docblock_info } in
 
-  let local_metadata = { local_metadata with jsx = Docblock.jsx docblock_info } in
-
-  let local_metadata = match Docblock.flow docblock_info with
-  | None -> local_metadata
-  | Some Docblock.OptIn -> { local_metadata with checked = true; }
-  | Some Docblock.OptInStrict -> { local_metadata with checked = true; strict = true; }
-  | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
+  let metadata = match Docblock.flow docblock_info with
+  | None -> metadata
+  | Some Docblock.OptIn -> { metadata with checked = true; }
+  | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true; }
+  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
      currently no scenarios where we'd change checked = true to false. in the
      future, there may be a case where checked defaults to true (but is not
      forced to be true ala --all), but for now we do *not* want to force
      checked = false here. *)
-  | Some Docblock.OptOut -> local_metadata
+  | Some Docblock.OptOut -> metadata
   in
 
-  let local_metadata = match Docblock.preventMunge docblock_info with
-  | Some value -> { local_metadata with munge_underscores = not value; }
-  | None -> local_metadata
+  let metadata = match Docblock.preventMunge docblock_info with
+  | Some value -> { metadata with munge_underscores = not value; }
+  | None -> metadata
   in
 
-  { metadata with local_metadata }
+  metadata
 
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
@@ -205,27 +203,41 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 *)
 let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
-  component reqs dep_cxs master_cx =
+  component reqs dep_cxs (master_cx: Context.sig_t) =
+
+  let sig_cx = Context.make_sig () in
+  let need_merge_master_cx = ref true in
 
   let rev_cxs, impl_cxs = Nel.fold_left (fun (cxs, impl_cxs) filename ->
-    let ast = get_ast_unsafe filename in
+    (* create cx *)
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
+    let module_ref = Files.module_ref filename in
+    let cx = Context.make sig_cx metadata filename module_ref in
+
+    (* create builtins *)
+    if !need_merge_master_cx then (
+      need_merge_master_cx := false;
+      Flow_js.mk_builtins cx;
+      Context.merge_into sig_cx master_cx;
+      implicit_require_strict cx master_cx cx
+    );
+
+    (* local inference *)
+    let ast = get_ast_unsafe filename in
     let lint_severities =
-      if metadata.Context.local_metadata.Context.strict
+      if metadata.Context.strict
       then StrictModeSettings.fold
         (fun lint_kind lint_severities ->
           LintSettings.set_value lint_kind (Severity.Err, None) lint_severities
         ) strict_mode lint_severities
       else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
-    let module_ref = Files.module_ref filename in
-    let cx = Flow_js.fresh_context metadata filename module_ref in
-    Context.merge_into cx master_cx;
-    implicit_require_strict cx master_cx cx;
     Type_inference_js.infer_ast cx filename ast
       ~lint_severities ~file_sig;
+
     if do_gc then Gc_js.do_gc ~master_cx cx;
+
     cx::cxs, FilenameMap.add filename cx impl_cxs
   ) ([], FilenameMap.empty) component in
   let cxs = List.rev rev_cxs in
@@ -234,18 +246,16 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
 
   Flow_js.Cache.clear();
 
-  dep_cxs |> List.iter (Context.merge_into cx);
-  other_cxs |> List.iter (Context.merge_into cx);
+  dep_cxs |> List.iter (Context.merge_into sig_cx);
 
   let open Reqs in
 
   reqs.impls |> List.iter (fun (fn_from, m, locs, fn_to) ->
-    let cx_from = FilenameMap.find_unsafe fn_from impl_cxs in
+    ignore fn_from; (* TODO: remove if unneeded *)
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
     Nel.iter (fun loc ->
-      explicit_impl_require_strict cx (cx_from, m, loc, cx_to);
+      explicit_impl_require_strict cx (sig_cx, m, loc, cx_to);
     ) locs;
-    Context.add_module cx m (Context.find_module cx_from m)
   );
 
   reqs.dep_impls |> List.iter (fun (cx_from, m, locs, fn_to) ->
@@ -279,31 +289,6 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   detect_sketchy_null_checks cx;
 
   cx, other_cxs
-
-(* Given a sig context, it makes sense to clear the parts that are shared with
-   the master sig context. Why? The master sig context, which contains global
-   declarations, is an implicit dependency for every file, and so will be
-   "merged in" anyway, thus making those shared parts redundant to carry around
-   in other sig contexts. This saves a lot of shared memory as well as
-   deserialization time. *)
-let clear_master_shared cx master_cx =
-  Context.set_graph cx (Context.graph cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.graph master_cx))));
-  Context.set_property_maps cx (Context.property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
-    (Type.Properties.Map.mem id (Context.property_maps master_cx))));
-  Context.set_envs cx (Context.envs cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.envs master_cx))));
-  Context.set_evaluated cx (Context.evaluated cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.evaluated master_cx))))
-
-let merge_lib_file cx master_cx =
-  Context.merge_into master_cx cx;
-  implicit_require_strict master_cx master_cx cx;
-
-  let errs = Context.errors cx in
-  Context.remove_all_errors cx;
-
-  errs, Context.error_suppressions cx, Context.severity_cover cx
 
 let merge_tvar =
   let open Type in
@@ -410,7 +395,7 @@ module ContextOptimizer = struct
 
     method reduce cx quotient module_ref =
       let { reduced_module_map; _ } = quotient in
-      let export = Flow_js.lookup_module cx module_ref in
+      let export = Context.find_module cx module_ref in
       let reduced_module_map = SMap.add module_ref export reduced_module_map in
       self#type_ cx Neutral { quotient with reduced_module_map } export
 

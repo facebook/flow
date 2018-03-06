@@ -15,10 +15,9 @@ val infer_ast:
   unit
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
-  metadata: Context.metadata ->
   exclude_syms: SSet.t ->
   lint_severities: Severity.severity LintSettings.t ->
   file_sig: File_sig.t ->
-  File_key.t ->
+  Context.t ->
   Loc.t Ast.program ->
-  Context.t * string list
+  string list

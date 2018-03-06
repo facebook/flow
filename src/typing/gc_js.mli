@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val do_gc: master_cx:Context.t -> Context.t -> unit
+val do_gc: master_cx:Context.sig_t -> Context.t -> unit

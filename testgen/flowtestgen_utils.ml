@@ -516,34 +516,32 @@ end
 
 (* Metadata for involing flow type checking *)
 let stub_metadata ~root ~checked = { Context.
-  local_metadata = { Context.
-    checked;
-    munge_underscores = false;
-    (*
-    verbose = Some { Verbose.depth = 2; indent = 2 };
-       *)
-    verbose = None;
-    weak = false;
-    jsx = None;
-    strict = true;
-  };
-  global_metadata = { Context.
-    enable_const_params = false;
-    enforce_strict_call_arity = true;
-    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
-    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-    esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
-    facebook_fbt = None;
-    ignore_non_literal_requires = false;
-    max_trace_depth = 0;
-    max_workers = 0;
-    root;
-    strip_root = true;
-    suppress_comments = [];
-    suppress_types = SSet.empty;
-  };
+  (* local *)
+  checked;
+  munge_underscores = false;
+  (*
+  verbose = Some { Verbose.depth = 2; indent = 2 };
+     *)
+  verbose = None;
+  weak = false;
+  jsx = None;
+  strict = true;
+  (* global *)
+  enable_const_params = false;
+  enforce_strict_call_arity = true;
+  esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+  esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+  esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
+  facebook_fbt = None;
+  ignore_non_literal_requires = false;
+  max_trace_depth = 0;
+  max_workers = 0;
+  root;
+  strip_root = true;
+  suppress_comments = [];
+  suppress_types = SSet.empty;
 }
 
 (* Invoke flow for type checking *)
@@ -553,10 +551,11 @@ let flow_check (code : string) : string option =
   else
     try
       let root = Path.dummy_path in
-      let master_cx = Flow_js.fresh_context
-          (stub_metadata ~root ~checked:false)
-          File_key.Builtins
-          Files.lib_module_ref in
+      let master_sig_cx = Context.make_sig () in
+      let master_cx = Context.make master_sig_cx
+        (stub_metadata ~root ~checked:false)
+        File_key.Builtins
+        Files.lib_module_ref in
 
       (* Merge builtins *)
       let builtin_metadata = stub_metadata ~root ~checked:true in
@@ -566,10 +565,17 @@ let flow_check (code : string) : string option =
       | Ok file_sig -> file_sig
       | Error _ -> failwith "error calculating builtins file sig"
       in
-      let builtins_cx, _ = Type_inference_js.infer_lib_file   (* The crucial bit *)
-          ~metadata:builtin_metadata ~exclude_syms:SSet.empty ~lint_severities
-          ~file_sig:builtins_file_sig File_key.Builtins builtins_ast in
-      let _ = Merge_js.merge_lib_file builtins_cx master_cx in
+      let builtins_sig_cx = Context.make_sig () in
+      let builtins_cx = Context.make builtins_sig_cx builtin_metadata
+        File_key.Builtins Files.lib_module_ref in
+      let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
+        ~exclude_syms:SSet.empty ~lint_severities ~file_sig:builtins_file_sig in
+      let () =
+        let from_t = Context.find_module master_cx Files.lib_module_ref in
+        let to_t = Context.find_module builtins_cx Files.lib_module_ref in
+        Context.merge_into master_sig_cx builtins_sig_cx;
+        Flow_js.flow_t master_cx (from_t, to_t)
+      in
       let reason = Reason.builtin_reason (Reason.RCustom "module") in
       let builtin_module = Obj_type.mk master_cx reason in
       Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
@@ -597,7 +603,7 @@ let flow_check (code : string) : string option =
           ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
           ~get_ast_unsafe:(fun _ -> input_ast)
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
-          (Nel.one filename) reqs [] master_cx in  (* merge_component_strict expects the master's sig context here. *)
+          (Nel.one filename) reqs [] master_sig_cx in
       let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
           Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
       in

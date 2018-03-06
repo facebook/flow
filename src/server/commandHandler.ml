@@ -184,17 +184,10 @@ let port = Port_service_js.port_files
 
 let find_module ~options (moduleref, filename) =
   let file = File_key.SourceFile filename in
-  let metadata =
-    let open Context in
-    let metadata = metadata_of_options options in
-    let local_metadata = { metadata.local_metadata with checked = false } in
-    { metadata with local_metadata }
-  in
-  let cx = Context.make metadata file (Files.module_ref file) in
-  let loc = {Loc.none with Loc.source = Some file;} in
+  let loc = {Loc.none with Loc.source = Some file} in
   let module_name = Module_js.imported_module
     ~options ~node_modules_containers:!Files.node_modules_containers
-    (Context.file cx) (Nel.one loc) moduleref in
+    file (Nel.one loc) moduleref in
   Module_js.get_file ~audit:Expensive.warn module_name
 
 let gen_flow_files ~options env files =

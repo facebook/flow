@@ -10,21 +10,21 @@ open Utils_js
 (****************** shared context heap *********************)
 
 module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
-  type t = Context.cacheable_t
+  type t = Context.sig_t
   let prefix = Prefix.make()
   let description = "SigContext"
 end)
 
-let master_sig: Context.cacheable_t option option ref = ref None
+let master_sig: Context.sig_t option option ref = ref None
 
-let add_sig_context = Expensive.wrap (fun file cx -> SigContextHeap.add file (Context.to_cache cx))
+let add_sig_context = Expensive.wrap SigContextHeap.add
 
 let add_sig ~audit cx =
   let cx_file = Context.file cx in
   if cx_file = File_key.Builtins then master_sig := None;
-  add_sig_context ~audit cx_file cx
+  add_sig_context ~audit cx_file (Context.sig_cx cx)
 
-let find_sig ~options file =
+let find_sig file =
   let cx_opt =
     if file = File_key.Builtins then
       match !master_sig with
@@ -36,7 +36,7 @@ let find_sig ~options file =
     else SigContextHeap.get file
   in
   match cx_opt with
-  | Some cx -> Context.from_cache ~options cx
+  | Some cx -> cx
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
 module SigHashHeap = SharedMem_js.NoCache (File_key) (struct
@@ -70,16 +70,17 @@ let add_merge_on_diff ~audit leader_cx component_files xx =
   in
   if diff then (
     Nel.iter (fun f -> LeaderHeap.add f leader_f) component_files;
-    add_sig_context ~audit leader_f leader_cx;
+    add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
     SigHashHeap.add leader_f xx;
   )
 
 let add_merge_on_exn ~audit ~options component =
   let leader_f = Nel.hd component in
+  let sig_cx = Context.make_sig () in
   let cx =
     let metadata = Context.metadata_of_options options in
     let module_ref = Files.module_ref leader_f in
-    Context.make metadata leader_f module_ref
+    Context.make sig_cx metadata leader_f module_ref
   in
   let module_refs = List.map (fun f ->
     let module_ref = Files.module_ref f in
@@ -89,7 +90,7 @@ let add_merge_on_exn ~audit ~options component =
     module_ref
   ) (Nel.to_list component) in
   let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
-  add_sig_context ~audit leader_f cx;
+  add_sig_context ~audit leader_f sig_cx;
   SigHashHeap.add leader_f xx
 
 let sig_hash_changed f =

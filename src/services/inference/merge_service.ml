@@ -18,7 +18,7 @@ type 'a merge_job =
 type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
-  master_cx: Context.t;
+  master_cx: Context.sig_t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -45,7 +45,7 @@ type merge_strict_context_result = {
    (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
 *)
-let reqs_of_component ~options component required =
+let reqs_of_component component required =
   let dep_cxs, reqs =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, loc, resolved_r, file = req in
@@ -63,7 +63,7 @@ let reqs_of_component ~options component required =
           else
             (* look up impl sig_context *)
             let leader = Context_cache.find_leader dep in
-            let dep_cx = Context_cache.find_sig ~options leader in
+            let dep_cx = Context_cache.find_sig leader in
             dep_cx::dep_cxs, Reqs.add_dep_impl (dep_cx, m, loc, file) reqs
         else
           (* unchecked implementation exists *)
@@ -75,7 +75,7 @@ let reqs_of_component ~options component required =
     ) ([], Reqs.empty) required
   in
 
-  let master_cx = Context_cache.find_sig ~options File_key.Builtins in
+  let master_cx = Context_cache.find_sig File_key.Builtins in
 
   master_cx, dep_cxs, reqs
 
@@ -93,7 +93,7 @@ let merge_strict_context ~options component =
     ) ([], FilenameMap.empty) component in
 
   let master_cx, dep_cxs, file_reqs =
-    reqs_of_component ~options component required
+    reqs_of_component component required
   in
 
   let metadata = Context.metadata_of_options options in
@@ -130,7 +130,7 @@ let merge_contents_context options file ast info file_sig ~ensure_checked_depend
     let component = Nel.one file in
 
     let master_cx, dep_cxs, file_reqs =
-      begin try reqs_of_component ~options component required with
+      begin try reqs_of_component component required with
         | Key_not_found _  ->
           failwith "not all dependencies are ready yet, aborting..."
         | e -> raise e
@@ -190,7 +190,7 @@ let merge_strict_component ~options merged_acc component =
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
 
-    Merge_js.clear_master_shared cx master_cx;
+    Context.clear_master_shared cx master_cx;
 
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in

@@ -556,13 +556,6 @@ let lookup_module cx m = Context.find_module cx m
 let builtins cx =
   lookup_module cx Files.lib_module_ref
 
-(* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context metadata file module_ref =
-  let cx = Context.make metadata file module_ref in
-  (* add types for pervasive builtins *)
-  mk_builtins cx;
-  cx
-
 (***********************)
 (* instantiation utils *)
 (***********************)

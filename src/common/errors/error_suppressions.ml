@@ -44,7 +44,10 @@ let union a b = {
   unused_lint_suppressions = LocSet.union a.unused_lint_suppressions b.unused_lint_suppressions;
 }
 
-let set_unused_lint_suppressions unused_lint_suppressions t = {t with unused_lint_suppressions}
+let add_unused_lint_suppressions unused_lint_suppressions t = {
+  t with
+  unused_lint_suppressions = LocSet.union t.unused_lint_suppressions unused_lint_suppressions;
+}
 
 let check_loc ((result, consumed,
       { suppressions; unused; unused_lint_suppressions; },

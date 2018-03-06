@@ -16,17 +16,17 @@ exception Tvar_not_found of Constraint.ident
 type env = Scope.t list
 
 type t
-type cacheable_t
+type sig_t
 
-type local_metadata = {
+type metadata = {
+  (* local *)
   checked: bool;
   munge_underscores: bool;
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
   strict: bool;
-}
-type global_metadata = {
+  (* global *)
   enable_const_params: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
@@ -43,19 +43,18 @@ type global_metadata = {
   suppress_types: SSet.t;
   max_workers: int;
 }
-type metadata = {
-  local_metadata: local_metadata;
-  global_metadata: global_metadata;
-}
+
 type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> File_key.t -> string -> t
+val make_sig: unit -> sig_t
+val make: sig_t -> metadata -> File_key.t -> string -> t
 val metadata_of_options: Options.t -> metadata
 
-val to_cache: t -> cacheable_t
-val from_cache: options:Options.t -> cacheable_t -> t
+val sig_cx: t -> sig_t
+val graph_sig: sig_t -> Constraint.node IMap.t
+val find_module_sig: sig_t -> string -> Type.t
 
 (* accessors *)
 val all_unresolved: t -> ISet.t IMap.t
@@ -112,7 +111,7 @@ val use_def: t -> Scope_api.info * Ssa_api.values
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
-val merge_into: t -> t -> unit
+val merge_into: sig_t -> sig_t -> unit
 
 val push_declare_module: t -> string -> unit
 val pop_declare_module: t -> unit
@@ -121,6 +120,8 @@ val pop_declare_module: t -> unit
 val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
+val add_severity_cover: t -> ExactCover.lint_severity_cover -> unit
+val add_unused_lint_suppressions: t -> LocSet.t -> unit
 val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_require: t -> Loc.t -> Type.t -> unit
@@ -138,20 +139,17 @@ val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
-val set_errors: t -> Errors.ErrorSet.t -> unit
-val set_error_suppressions: t -> Error_suppressions.t -> unit
-val set_severity_cover: t -> ExactCover.lint_severity_cover -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
-val set_unused_lint_suppressions: t -> LocSet.t -> unit
 val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
 val set_use_def: t -> Scope_api.info * Ssa_api.values -> unit
 val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit
+val clear_master_shared: t -> sig_t -> unit
 
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit

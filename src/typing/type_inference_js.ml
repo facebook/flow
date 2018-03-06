@@ -339,8 +339,8 @@ let scan_for_lint_suppressions =
       (process_comment cx) (severity_cover_builder, base_settings, Utils.LocSet.empty) comments
     in
     let severity_cover = ExactCover.bake severity_cover_builder in
-    Context.set_severity_cover cx severity_cover;
-    Context.set_unused_lint_suppressions cx suppression_locs
+    Context.add_severity_cover cx severity_cover;
+    Context.add_unused_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx base_settings comments =
   scan_for_error_suppressions cx comments;
@@ -471,11 +471,9 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~metadata ~exclude_syms ~lint_severities ~file_sig file ast =
+let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let _, statements, comments = ast in
   Flow_js.Cache.clear();
-
-  let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
 
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
@@ -493,4 +491,4 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities ~file_sig file ast =
     Flow_js.set_builtin cx name (actual_type entry)
   ));
 
-  cx, SMap.keys Scope.(module_scope.entries)
+  SMap.keys Scope.(module_scope.entries)

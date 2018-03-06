@@ -191,7 +191,7 @@ let die cx id =
 (* Prune the graph given a GC state contained marked type variables. *)
 let cleanup ~master_cx cx marked =
   let graph = Context.graph cx in
-  let master_graph = Context.graph master_cx in
+  let master_graph = Context.graph_sig master_cx in
   IMap.iter (fun id _ ->
     (* Don't collect tvars from the master cx, which are explicitly excluded
      * from GC. Because the master cx is part of every cx, we can simply remove
@@ -207,7 +207,7 @@ let do_gc ~master_cx cx =
   Marked.empty
   (* Exclude tvars from the master cx. Adding these ids to the marked set
    * prevents the visitor from walking their bounds. *)
-  |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph master_cx)
+  |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph_sig master_cx)
   (* Mark tvars reachable from imports. *)
   |> LocMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
   (* Mark tvars reachable from exports. *)
