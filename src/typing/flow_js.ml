@@ -197,7 +197,6 @@ end
  * It must be called after all typechecking is done, and must not trigger any more flows. *)
 let get_post_merge_errors () =
   let misses = TestPropHits.get_never_hit () in
-  TestPropHits.clear ();
   List.map (fun (name, reasons, use_op) ->
     FlowError.EPropNotFound (name, reasons, use_op)
   ) misses
@@ -818,7 +817,8 @@ module Cache = struct
     repos_cache := Repos_cache.empty;
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
-    Hashtbl.clear Fix.cache
+    Hashtbl.clear Fix.cache;
+    TestPropHits.clear ()
 
   let stats_poly_instantiation () =
     Hashtbl.stats PolyInstantiation.cache
