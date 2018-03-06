@@ -1,3 +1,29 @@
+### 0.67.0
+
+Likely to cause new Flow errors:
+* [Replace](https://github.com/facebook/flow/commit/8e8f9ffc7f82b7fcb1e9fc01860845905767ac9a) some `any`-typed API definitions with actual types. This may cause errors in code that uses those APIs.
+
+New Features:
+* `find-refs` now has support for object type properties.
+
+Notable bug fixes:
+* `find-refs` can now find identifiers used as JSX component classes (e.g. `<Foo/>`).
+* Fix nontermination that could occur when printing types (e.g. for `type-at-pos`).
+
+Misc:
+* Fix `type-at-pos` on method calls that have been affected by type refinements.
+* Add `--profile` flag to `flow force-recheck`.
+* Fix `--retry-if-init false`.
+* Improve `type-at-pos` location for opaque type declarations.
+* Add a message to the `flow status` output when the server is in lazy mode.
+* Include filename in flow ast output.
+* Add typings for `ReactDOM.hydrate()`.
+* Make `process.umask`'s argument optional.
+* Some miscellaneous improvements to code quality.
+
+Parser:
+* [Optional chaining](https://github.com/tc39/proposal-optional-chaining) parser support. This feature does not yet have type system support and should not be used.
+
 ### 0.66.0
 
 #### New Features:
