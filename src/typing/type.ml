@@ -1405,13 +1405,10 @@ and UnionRep : sig
 
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
       returns the physically-identical rep. *)
-  val ident_map: (TypeTerm.t -> TypeTerm.t) ->
-    ?flatten:(TypeTerm.t list -> TypeTerm.t list) -> t -> t
+  val ident_map: (TypeTerm.t -> TypeTerm.t) -> t -> t
 
   (** quick membership test: Some true/false or None = needs full check *)
   val quick_mem: TypeTerm.t -> t -> bool option
-
-  val is_disjoint_union: t -> bool
 
   val guess_and_record_sentinel_prop:
     flatten:(TypeTerm.t list -> TypeTerm.t list) ->
@@ -1511,13 +1508,10 @@ end = struct
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
-  let make_optimized ?flatten t0 t1 ts =
-    let rep = t0, t1, ts, ref None in
-    optimize ?flatten rep;
-    rep
-
   let make t0 t1 ts =
-    make_optimized t0 t1 ts
+    let rep = t0, t1, ts, ref None in
+    optimize rep;
+    rep
 
   let is_optimized_finally (_, _, _, enum_ref) =
     !enum_ref <> None
@@ -1541,7 +1535,7 @@ end = struct
     | t0::t1::ts -> make t0 t1 ts
     | _ -> failwith "impossible"
 
-  let ident_map f ?flatten ((t0, t1, ts, _) as rep) =
+  let ident_map f ((t0, t1, ts, _) as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
     let ts_ = ListUtils.ident_map f ts in
@@ -1557,7 +1551,7 @@ end = struct
          type substantially enough to create a fresh optimization state, which seems brittle (2) to
          place a cache from union types to optimization states, which enable automatic reuse of
          optimization states. *)
-      make_optimized ?flatten t0_ t1_ ts_
+      make t0_ t1_ ts_
     else rep
 
   let quick_mem t (_t0, _t1, _ts, enum_ref) =
@@ -1582,11 +1576,6 @@ end = struct
       else if Nel.exists (TypeUtil.reasonless_eq t) others
       then Some true
       else None
-
-  let is_disjoint_union (_t0, _t1, _ts, specialization) =
-    match !specialization with
-      | Some (DisjointUnion _ | PartiallyOptimizedDisjointUnion _) -> true
-      | _ -> false
 
   let canon_prop find_resolved p =
     Option.(Property.read_t p >>= find_resolved >>= canon)

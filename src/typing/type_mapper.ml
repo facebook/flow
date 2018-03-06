@@ -232,7 +232,7 @@ class ['a] t = object(self)
           if irep == irep' then t
           else IntersectionT irep'
       | UnionT urep ->
-          let urep' = UnionRep.ident_map (self#type_ cx map_cx) ~flatten:(union_flatten cx) urep in
+          let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
           if urep' == urep then t
           else UnionT urep'
       | AnyObjT

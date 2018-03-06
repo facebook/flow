@@ -7602,7 +7602,7 @@ and try_union cx trace use_op l reason rep =
   (* collect parts of the union type to be fully resolved *)
   let imap =
     (* since any final optimization must have happened after full resolution *)
-    if UnionRep.is_disjoint_union rep then IMap.empty
+    if UnionRep.is_optimized_finally rep then IMap.empty
     else ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
   (* collect parts of the lower bound to be fully resolved, while logging
      unresolved tvars *)
