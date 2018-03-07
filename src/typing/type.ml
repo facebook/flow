@@ -1677,11 +1677,11 @@ end = struct
         | Some Unoptimized -> Unknown
         | Some Empty -> No
         | Some (Singleton t) ->
-          if TypeUtil.reasonless_eq l t then Yes
+          if TypeUtil.quick_subtype l t then Yes
           else Conditional t
         | Some (DisjointUnion _) -> No
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
-          if Nel.exists (TypeUtil.reasonless_eq l) others
+          if Nel.exists (TypeUtil.quick_subtype l) others
           then Yes
           else Unknown
         | Some (Enum tset) ->
@@ -1691,7 +1691,7 @@ end = struct
         | Some (PartiallyOptimizedEnum (tset, others)) ->
           if EnumSet.mem tcanon tset
           then Yes
-          else if Nel.exists (TypeUtil.reasonless_eq l) others
+          else if Nel.exists (TypeUtil.quick_subtype l) others
           then Yes
           else Unknown
       end
@@ -1722,18 +1722,18 @@ end = struct
           | Some Unoptimized -> Unknown
           | Some Empty -> No
           | Some (Singleton t) ->
-            if TypeUtil.reasonless_eq l t then Yes
+            if TypeUtil.quick_subtype l t then Yes
             else Conditional t
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
           | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
             let result = lookup_disjoint_union find_resolved prop_map ~partial:true map in
             if result <> Unknown then result
-            else if Nel.exists (TypeUtil.reasonless_eq l) others then Yes
+            else if Nel.exists (TypeUtil.quick_subtype l) others then Yes
             else Unknown
           | Some (Enum _) -> No
           | Some (PartiallyOptimizedEnum (_, others)) ->
-            if Nel.exists (TypeUtil.reasonless_eq l) others then Yes
+            if Nel.exists (TypeUtil.quick_subtype l) others then Yes
             else Unknown
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
@@ -2009,6 +2009,12 @@ and TypeUtil : sig
 
   val reasonless_compare: TypeTerm.t -> TypeTerm.t -> int
   val reasonless_eq: TypeTerm.t -> TypeTerm.t -> bool
+
+  val literal_eq: string -> string TypeTerm.literal -> bool
+  val number_literal_eq: TypeTerm.number_literal -> TypeTerm.number_literal TypeTerm.literal -> bool
+  val boolean_literal_eq: bool -> bool option -> bool
+
+  val quick_subtype: TypeTerm.t -> TypeTerm.t -> bool
 end = struct
   open TypeTerm
 
@@ -2447,6 +2453,39 @@ end = struct
 
   let reasonless_eq t1 t2 =
     reasonless_compare t1 t2 = 0
+
+  let literal_eq x = function
+    | Literal (_, y) -> x = y
+    | Truthy -> false
+    | AnyLiteral -> false
+
+  let number_literal_eq (x, _) = function
+    | Literal (_, (y, _)) -> x = y
+    | Truthy -> false
+    | AnyLiteral -> false
+
+  let boolean_literal_eq x = function
+    | Some y -> x = y
+    | None -> false
+
+  let quick_subtype t1 t2 =
+    match t1, t2 with
+    | DefT (_, NumT _), DefT (_, NumT _)
+    | DefT (_, SingletonNumT _), DefT (_, NumT _)
+    | DefT (_, StrT _), DefT (_, StrT _)
+    | DefT (_, SingletonStrT _), DefT (_, StrT _)
+    | DefT (_, BoolT _), DefT (_, BoolT _)
+    | DefT (_, SingletonBoolT _), DefT (_, BoolT _)
+    | DefT (_, NullT), DefT (_, NullT)
+    | DefT (_, VoidT), DefT (_, VoidT)
+    | DefT (_, EmptyT), _
+    | _, DefT (_, MixedT _)
+      -> true
+    | DefT (_, StrT actual), DefT (_, SingletonStrT expected) -> literal_eq expected actual
+    | DefT (_, NumT actual), DefT (_, SingletonNumT expected) -> number_literal_eq expected actual
+    | DefT (_, BoolT actual), DefT (_, SingletonBoolT expected) -> boolean_literal_eq expected actual
+    | _ -> reasonless_eq t1 t2
+
 end
 
 include TypeTerm
@@ -3045,20 +3084,6 @@ let rec string_of_predicate = function
 
   | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
-
-let literal_eq x = function
-  | Literal (_, y) -> x = y
-  | Truthy -> false
-  | AnyLiteral -> false
-
-let number_literal_eq (x, _) = function
-  | Literal (_, (y, _)) -> x = y
-  | Truthy -> false
-  | AnyLiteral -> false
-
-let boolean_literal_eq x = function
-  | Some y -> x = y
-  | None -> false
 
 let name_of_propref = function
   | Named (_, x) -> Some x

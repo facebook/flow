@@ -2746,7 +2746,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         exactly matching string literal types may flow to SingletonStrT).  **)
 
     | DefT (rl, StrT actual), UseT (use_op, DefT (ru, SingletonStrT expected)) ->
-      if literal_eq expected actual
+      if TypeUtil.literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
@@ -2754,7 +2754,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (FlowError.EExpectedStringLit (reasons, expected, actual, use_op))
 
     | DefT (rl, NumT actual), UseT (use_op, DefT (ru, SingletonNumT expected)) ->
-      if number_literal_eq expected actual
+      if TypeUtil.number_literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
@@ -2762,7 +2762,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (FlowError.EExpectedNumberLit (reasons, expected, actual, use_op))
 
     | DefT (rl, BoolT actual), UseT (use_op, DefT (ru, SingletonBoolT expected)) ->
-      if boolean_literal_eq expected actual
+      if TypeUtil.boolean_literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
@@ -2949,7 +2949,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, UnionT rep1), UseT (_, DefT (_, UnionT rep2)) when
         let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
         Type_mapper.union_flatten cx @@ UnionRep.members rep1 |> List.for_all (fun t1 ->
-          List.exists (reasonless_eq t1) ts2
+          List.exists (TypeUtil.quick_subtype t1) ts2
         ) ->
       ()
 
@@ -3004,7 +3004,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (_, DefT (_, UnionT rep)) when
         let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
-        List.exists (reasonless_eq l) ts ->
+        List.exists (TypeUtil.quick_subtype l) ts ->
       ()
 
     | _, UseT (use_op, DefT (r, UnionT rep)) ->
@@ -6603,6 +6603,9 @@ and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
     not (SMap.is_empty props_not_found)
   | None -> false
 
+(* NOTE: The following function looks similar to TypeUtil.quick_subtype, but is in fact more
+   complicated: it avoids deep structural checks, admits `any`, etc. It might be worth it to
+   simplify this function later. *)
 and ground_subtype = function
   | TypeDestructorTriggerT _, UseT (_, TypeDestructorTriggerT _) -> false
   (* tvars are not considered ground, so they're not part of this relation *)
