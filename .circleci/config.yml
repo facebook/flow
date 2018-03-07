@@ -179,7 +179,7 @@ jobs:
           at: ~/flow
       - run:
           name: Install tool deps from yarn
-          command: yarn install | cat # Force no tty mode
+          command: (cd packages/flow-dev-tools && yarn install | cat) # Force no tty mode
       - run:
           name: Run tool tests
           command: ./tool test --bin bin/linux/flow | cat
@@ -193,7 +193,7 @@ jobs:
           at: ~/flow
       - run:
           name: Install tool deps from yarn
-          command: yarn install | cat # Force no tty mode
+          command: (cd packages/flow-dev-tools && yarn install | cat) # Force no tty mode
       - run:
           name: Run tool tests
           command: ./tool test --bin bin/macos/flow | cat
