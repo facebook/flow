@@ -1,3 +1,7 @@
+### 0.67.1
+
+Restore accidentally-deleted Object.setPrototypeOf library definition.
+
 ### 0.67.0
 
 Likely to cause new Flow errors:
