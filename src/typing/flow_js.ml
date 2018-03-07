@@ -2963,9 +2963,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | SentinelVoid -> VoidT
           | SentinelNull -> NullT in
         match UnionRep.quick_mem_enum (DefT (r, def)) rep with
-        | Some None -> ()  (* provably unreachable, so prune *)
-        | Some (Some None) -> rec_flow_t cx trace (l, result)
-        | Some (Some (Some _)) | None -> (* inconclusive: the union is not concretized *)
+        | UnionRep.No -> ()  (* provably unreachable, so prune *)
+        | UnionRep.Yes -> rec_flow_t cx trace (l, result)
+        | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
           UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
       else
         (* for l.key !== sentinel where l.key is a union, we can't really prove
@@ -8150,16 +8150,16 @@ and shortcut_disjoint_union cx trace reason_op use_op l rep =
     ~find_props:(Context.find_props cx)
 
 and quick_mem_result cx trace reason_op use_op l rep = function
-  | Some (Some None) -> (* membership check succeeded *)
+  | UnionRep.Yes -> (* membership check succeeded *)
     true (* Our work here is done, so no need to continue. *)
-  | Some None -> (* membership check failed *)
+  | UnionRep.No -> (* membership check failed *)
     let r = UnionRep.specialized_reason reason_op rep in
     rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
     true (* Our work here is done, so no need to continue. *)
-  | Some (Some (Some t)) -> (* conditional match *)
+  | UnionRep.Conditional t -> (* conditional match *)
     rec_flow cx trace (l, UseT (use_op, t));
     true (* Our work here is done, so no need to continue. *)
-  | None -> (* membership check was inconclusive *)
+  | UnionRep.Unknown -> (* membership check was inconclusive *)
     false (* Continue to speculative matching. *)
 
 (* When we fire_actions we also need to reconstruct the use_op for each action

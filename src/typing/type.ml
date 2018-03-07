@@ -1412,21 +1412,22 @@ and UnionRep : sig
     unit
   val is_optimized_finally: t -> bool
 
-  (** quick membership tests for enums and disjoint unions:
-      - Some None = error
-      - Some (Some None) = ok
-      - Some (Some (Some t)) = conditional matching with t
-      - None = needs full check
-  *)
+  (** quick membership tests for enums and disjoint unions *)
+  type quick_mem_result =
+    | Yes
+    | No
+    | Conditional of TypeTerm.t
+    | Unknown
+
   val quick_mem_enum:
     TypeTerm.t ->
-    t -> TypeTerm.t option option option
+    t -> quick_mem_result
 
   val quick_mem_disjoint_union:
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
     TypeTerm.t ->
-    t -> TypeTerm.t option option option
+    t -> quick_mem_result
 end = struct
 
   module Enum = struct
@@ -1661,75 +1662,79 @@ end = struct
 
   (********** Quick matching **********)
 
+  type quick_mem_result =
+    | Yes
+    | No
+    | Conditional of TypeTerm.t
+    | Unknown
+
   (* assume we know that l is a canonizable type *)
   let quick_mem_enum l (_t0, _t1, _ts, specialization) =
     match canon l with
     | Some tcanon ->
       begin match !specialization with
-        | None -> None
-        | Some Unoptimized -> None
-        | Some Empty -> Some None
+        | None -> Unknown
+        | Some Unoptimized -> Unknown
+        | Some Empty -> No
         | Some (Singleton t) ->
-          if TypeUtil.reasonless_eq l t then Some (Some None)
-          else Some (Some (Some t))
-        | Some (DisjointUnion _) -> Some None
+          if TypeUtil.reasonless_eq l t then Yes
+          else Conditional t
+        | Some (DisjointUnion _) -> No
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
           if Nel.exists (TypeUtil.reasonless_eq l) others
-          then Some (Some None)
-          else None
+          then Yes
+          else Unknown
         | Some (Enum tset) ->
           if EnumSet.mem tcanon tset
-          then Some (Some None)
-          else Some None
+          then Yes
+          else No
         | Some (PartiallyOptimizedEnum (tset, others)) ->
           if EnumSet.mem tcanon tset
-          then Some (Some None)
+          then Yes
           else if Nel.exists (TypeUtil.reasonless_eq l) others
-          then Some (Some None)
-          else None
+          then Yes
+          else Unknown
       end
     | None -> failwith "quick_mem_enum is defined only for canonizable type"
 
   let lookup_disjoint_union find_resolved prop_map ~partial map =
     SMap.fold (fun key idx acc ->
-      if acc <> None then acc
+      if acc <> Unknown then acc
       else match SMap.get key prop_map with
         | Some p ->
           begin match canon_prop find_resolved p with
             | Some enum ->
               begin match EnumMap.get enum idx with
-                | Some t' -> Some (Some (Some (t')))
-                | None -> if partial then None else Some None
+                | Some t' -> Conditional t'
+                | None -> if partial then Unknown else No
               end
-            | None -> None
+            | None -> Unknown
           end
-        | None -> if partial then None else Some None
-    ) map None
+        | None -> if partial then Unknown else No
+    ) map Unknown
 
   (* we know that l is an object type or exact object type *)
   let quick_mem_disjoint_union ~find_resolved ~find_props l (_t0, _t1, _ts, specialization) =
     match props_of find_props l with
       | Some prop_map ->
         begin match !specialization with
-          | None -> None
-          | Some Unoptimized -> None
-          | Some Empty -> Some None
+          | None -> Unknown
+          | Some Unoptimized -> Unknown
+          | Some Empty -> No
           | Some (Singleton t) ->
-            if TypeUtil.reasonless_eq l t then Some (Some None)
-            else Some (Some (Some t))
+            if TypeUtil.reasonless_eq l t then Yes
+            else Conditional t
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
           | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
-            let result =
-              if SMap.is_empty map then None
-              else lookup_disjoint_union find_resolved prop_map ~partial:true map in
-            if result <> None then result
-            else if Nel.exists (TypeUtil.reasonless_eq l) others then Some (Some None)
-            else None
-          | Some (Enum _) -> Some None
+            let result = lookup_disjoint_union find_resolved prop_map ~partial:true map in
+            if result <> Unknown then result
+            else if Nel.exists (TypeUtil.reasonless_eq l) others then Yes
+            else Unknown
+          | Some (Enum _) -> No
           | Some (PartiallyOptimizedEnum (_, others)) ->
-            if Nel.exists (TypeUtil.reasonless_eq l) others then Some (Some None)
-            else None
+            if Nel.exists (TypeUtil.reasonless_eq l) others then Yes
+            else Unknown
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
 
