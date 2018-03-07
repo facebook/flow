@@ -1412,19 +1412,16 @@ and UnionRep : sig
     unit
   val is_optimized_finally: t -> bool
 
-  (** quick membership test for enums:
-      - Some false = error
-      - Some true = ok
-      - None = needs full check
-  *)
-  val quick_mem_enum: TypeTerm.t -> t -> bool option
-
-  (** quick membership test for disjoint unions:
+  (** quick membership tests for enums and disjoint unions:
       - Some None = error
       - Some (Some None) = ok
       - Some (Some (Some t)) = conditional matching with t
       - None = needs full check
   *)
+  val quick_mem_enum:
+    TypeTerm.t ->
+    t -> TypeTerm.t option option option
+
   val quick_mem_disjoint_union:
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
@@ -1477,6 +1474,7 @@ end = struct
     | DisjointUnion of TypeTerm.t EnumMap.t SMap.t
     | PartiallyOptimizedDisjointUnion of TypeTerm.t EnumMap.t SMap.t * TypeTerm.t Nel.t
     | Empty
+    | Singleton of TypeTerm.t
     | Unoptimized
 
   (** union rep is:
@@ -1501,8 +1499,7 @@ end = struct
         end in
 
     fun t0 t1 ts ->
-      let enum = Option.(mk_enum EnumSet.empty (t0::t1::ts) >>| fun tset ->
-        if EnumSet.is_empty tset then Empty else Enum tset) in
+      let enum = Option.(mk_enum EnumSet.empty (t0::t1::ts) >>| fun tset -> Enum tset) in
       t0, t1, ts, ref enum
 
   let members (t0, t1, ts, _) = t0::t1::ts
@@ -1527,6 +1524,7 @@ end = struct
   let specialized_reason r (_, _, _, specialization) =
     match !specialization with
     | Some Empty -> replace_reason_const REmpty r
+    | Some (Singleton t) -> TypeUtil.reason_of_t t
     | Some (Enum _) -> replace_reason_const REnum r
     | _ -> r
 
@@ -1563,17 +1561,16 @@ end = struct
         | _ -> tset, t::others
       ) (EnumSet.empty, []) in
 
-    fun ts ->
-      (* TODO: Since ts might be derived through flattening, it might have 0 or 1 elements, in which
-         case the union should be considered degenerate and optimized further. *)
-      let tset, others = split_enum ts in
-      match others with
-      | [] ->
-        if EnumSet.is_empty tset then Empty
-        else Enum tset
-      | x::xs ->
-        if EnumSet.is_empty tset then Unoptimized
-        else PartiallyOptimizedEnum (tset, Nel.rev (x, xs))
+    function
+      | [] -> Empty
+      | [t] -> Singleton t
+      | ts ->
+        let tset, others = split_enum ts in
+        match others with
+          | [] -> Enum tset
+          | x::xs ->
+            if EnumSet.is_empty tset then Unoptimized
+            else PartiallyOptimizedEnum (tset, Nel.rev (x, xs))
 
   let canon_prop find_resolved p =
     Option.(Property.read_t p >>= find_resolved >>= canon)
@@ -1639,17 +1636,18 @@ end = struct
           (* Ensure that enums map to unique types *)
           unique idx in
 
-    fun ~find_resolved ~find_props ts ->
-      let candidates, others = split_disjoint_union find_resolved find_props ts in
-      let map = index candidates in
-      let others = if SMap.is_empty map then ts else List.rev others in
-      match others with
-      | [] ->
-        if SMap.is_empty map then Empty
-        else DisjointUnion map
-      | x::xs ->
-        if SMap.is_empty map then Unoptimized
-        else PartiallyOptimizedDisjointUnion (map, (x, xs))
+    fun ~find_resolved ~find_props -> function
+      | [] -> Empty
+      | [t] -> Singleton t
+      | ts ->
+        let candidates, others = split_disjoint_union find_resolved find_props ts in
+        let map = index candidates in
+        let others = if SMap.is_empty map then ts else List.rev others in
+        match others with
+          | [] -> DisjointUnion map
+          | x::xs ->
+            if SMap.is_empty map then Unoptimized
+            else PartiallyOptimizedDisjointUnion (map, (x, xs))
 
   let optimize rep ~flatten ~find_resolved ~find_props =
     let ts = flatten (members rep) in
@@ -1664,24 +1662,30 @@ end = struct
   (********** Quick matching **********)
 
   (* assume we know that l is a canonizable type *)
-  let quick_mem_enum t (_t0, _t1, _ts, specialization) =
-    match canon t with
+  let quick_mem_enum l (_t0, _t1, _ts, specialization) =
+    match canon l with
     | Some tcanon ->
       begin match !specialization with
         | None -> None
         | Some Unoptimized -> None
-        | Some Empty -> Some false
-        | Some (DisjointUnion _) -> Some false
+        | Some Empty -> Some None
+        | Some (Singleton t) ->
+          if TypeUtil.reasonless_eq l t then Some (Some None)
+          else Some (Some (Some t))
+        | Some (DisjointUnion _) -> Some None
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
-          if Nel.exists (TypeUtil.reasonless_eq t) others
-          then Some true
+          if Nel.exists (TypeUtil.reasonless_eq l) others
+          then Some (Some None)
           else None
-        | Some (Enum tset) -> Some (EnumSet.mem tcanon tset)
+        | Some (Enum tset) ->
+          if EnumSet.mem tcanon tset
+          then Some (Some None)
+          else Some None
         | Some (PartiallyOptimizedEnum (tset, others)) ->
           if EnumSet.mem tcanon tset
-          then Some true
-          else if Nel.exists (TypeUtil.reasonless_eq t) others
-          then Some true
+          then Some (Some None)
+          else if Nel.exists (TypeUtil.reasonless_eq l) others
+          then Some (Some None)
           else None
       end
     | None -> failwith "quick_mem_enum is defined only for canonizable type"
@@ -1710,6 +1714,9 @@ end = struct
           | None -> None
           | Some Unoptimized -> None
           | Some Empty -> Some None
+          | Some (Singleton t) ->
+            if TypeUtil.reasonless_eq l t then Some (Some None)
+            else Some (Some (Some t))
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
           | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
