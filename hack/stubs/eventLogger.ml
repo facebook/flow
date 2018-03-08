@@ -21,6 +21,7 @@ type init_mode =
   | Event_logger_real of init_settings
 
 let init ?log_pid:_ ?init_id:_ _ _ = ()
+let log _ = ()
 let logger_pid () = None
 let set_init_type _ = ()
 let log_if_initialized _ = ()
