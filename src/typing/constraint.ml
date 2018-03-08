@@ -84,16 +84,6 @@ and bounds = {
   mutable uppertvars: Trace.t IMap.t;
 }
 
-(* Extract bounds from a node. *)
-(** WARNING: This function is unsafe, since not all nodes are roots, and not all
-    roots are unresolved. Use this function only when you are absolutely sure
-    that a node is an unresolved root: this is guaranteed to be the case when
-    the type variable it denotes is never involved in unification. **)
-let bounds_of_unresolved_root node =
-  match node with
-  | Root { constraints = Unresolved bounds; _ } -> bounds
-  | _ -> failwith "expected unresolved root"
-
 let new_bounds () = {
   lower = TypeMap.empty;
   upper = UseTypeMap.empty;

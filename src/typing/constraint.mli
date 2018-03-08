@@ -30,6 +30,5 @@ and bounds = {
 }
 
 val new_unresolved_root: unit -> node
-val bounds_of_unresolved_root: node -> bounds
 
 val copy_node: node -> node
