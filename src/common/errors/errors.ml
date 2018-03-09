@@ -2437,7 +2437,7 @@ module Cli_output = struct
       ) (append_trace_reasons [] trace));
 
       (* Next error: *)
-      [default_style "\n\n"];
+      [default_style "\n"];
     ]
 
   let get_pretty_printed_error
@@ -2529,7 +2529,8 @@ module Cli_output = struct
       else
         styles
     in
-    Tty.cprint ~out_channel ~color_mode:flags.color styles
+    Tty.cprint ~out_channel ~color_mode:flags.color styles;
+    Tty.cprint ~out_channel ~color_mode:flags.color [default_style "\n"]
 
   let print_errors =
     let render_counts =
