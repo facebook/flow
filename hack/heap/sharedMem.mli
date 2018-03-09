@@ -102,6 +102,11 @@ val init_done: unit -> unit
 val save_dep_table_sqlite: string -> string -> int
 
 (*****************************************************************************)
+(* Serializes the dependency table and writes it to a file *)
+(*****************************************************************************)
+val save_file_info_sqlite: string -> int
+
+(*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
 val load_dep_table_sqlite: string -> bool -> int

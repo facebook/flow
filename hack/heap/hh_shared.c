@@ -1966,6 +1966,18 @@ size_t deptbl_entry_count_for_slot(size_t slot) {
   return count;
 }
 
+static long hh_save_file_info_helper_sqlite(
+    const char* const out_filename
+) {
+    assert_master();
+    sqlite3 *db_out;
+    assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
+    static const char sql[] = \
+      "CREATE TABLE DUMMY(DUMMY_KEY INT PRIMARY KEY NOT NULL)";
+    assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
+    return 0;
+}
+
 static long hh_save_dep_table_helper_sqlite(
     const char* const out_filename,
     const char* const build_info
@@ -2080,6 +2092,16 @@ CAMLprim value hh_save_dep_table_sqlite(
   char *build_revision_raw = String_val(build_revision);
   long retVal =
     hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
+  CAMLreturn(Val_long(retVal));
+}
+
+CAMLprim value hh_save_file_info_sqlite(
+    value out_filename
+) {
+  CAMLparam1(out_filename);
+  char *out_filename_raw = String_val(out_filename);
+  long retVal =
+    hh_save_file_info_helper_sqlite(out_filename_raw);
   CAMLreturn(Val_long(retVal));
 }
 

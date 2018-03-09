@@ -163,6 +163,11 @@ external hh_collect: bool -> unit = "hh_collect"
 external save_dep_table_sqlite: string -> string -> int = "hh_save_dep_table_sqlite"
 
 (*****************************************************************************)
+(* Serializes the dependency table and writes it to a file *)
+(*****************************************************************************)
+external save_file_info_sqlite: string -> int = "hh_save_file_info_sqlite"
+
+(*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
 external load_dep_table_sqlite: string -> bool -> int = "hh_load_dep_table_sqlite"
