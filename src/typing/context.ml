@@ -46,6 +46,10 @@ type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
+type test_prop_hit_or_miss =
+  | Hit
+  | Miss of string option * (Reason.t * Reason.t) * Type.use_op
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -86,6 +90,8 @@ type sig_t = {
   (* The above example assumes that x is a string. If it were a different type
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t LocMap.t;
+
+  mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t
 }
 
 type t = {
@@ -163,6 +169,7 @@ let make_sig () = {
   severity_cover = ExactCover.empty;
   exists_checks = LocMap.empty;
   exists_excuses = LocMap.empty;
+  test_prop_hits_and_misses = IMap.empty;
 }
 
 (* create a new context structure.
@@ -355,7 +362,9 @@ let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
   cx.sig_cx.exists_checks <- LocMap.empty;
-  cx.sig_cx.exists_excuses <- LocMap.empty
+  cx.sig_cx.exists_excuses <- LocMap.empty;
+  cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
+  ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
@@ -370,6 +379,22 @@ let clear_master_shared cx master_cx =
     (Type.Properties.Map.mem id master_cx.property_maps)));
   set_evaluated cx (evaluated cx |> IMap.filter (fun id _ -> not
     (IMap.mem id master_cx.evaluated)))
+
+let test_prop_hit cx id =
+  cx.sig_cx.test_prop_hits_and_misses <-
+    IMap.add id Hit cx.sig_cx.test_prop_hits_and_misses
+
+let test_prop_miss cx id name reasons use =
+  if not (IMap.mem id cx.sig_cx.test_prop_hits_and_misses) then
+  cx.sig_cx.test_prop_hits_and_misses <-
+    IMap.add id (Miss (name, reasons, use)) cx.sig_cx.test_prop_hits_and_misses
+
+let test_prop_get_never_hit cx =
+  List.fold_left (fun acc (_, hit_or_miss) ->
+    match hit_or_miss with
+    | Hit -> acc
+    | Miss (name, reasons, use_op) -> (name, reasons, use_op)::acc
+  ) [] (IMap.bindings cx.sig_cx.test_prop_hits_and_misses)
 
 (* utils *)
 let iter_props cx id f =

@@ -561,20 +561,6 @@ References:
              ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:30:7
-
-Property `p` is missing in object literal [1].
-
-   missing-property-cond.js:30:7
-   30|   if (o.p) { o.p(); } // Error, testing for unknown property
-             ^^^
-
-References:
-   missing-property-cond.js:28:13
-   28|   const o = { };
-                   ^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:37:9
 
 Property `bar` is missing in mixed [1].
@@ -601,20 +587,6 @@ References:
    missing-property-cond.js:40:18
    40| function foo7(o: mixed) {
                         ^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:7
-
-Property `foo` is missing in object literal [1].
-
-   missing-property-cond.js:58:7
-   58|   if (actual.foo === undefined) { // Error, reading unknown property
-             ^^^^^^^^^^
-
-References:
-   missing-property-cond.js:57:18
-   57|   const actual = {};
-                        ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:65:12
@@ -2952,4 +2924,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 206 errors
+Found 204 errors

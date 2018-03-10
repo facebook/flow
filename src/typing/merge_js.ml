@@ -142,6 +142,12 @@ let detect_sketchy_null_checks cx =
 
   Utils_js.LocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
+let detect_test_prop_misses cx =
+  let misses = Context.test_prop_get_never_hit cx in
+  List.iter (fun (name, reasons, use_op) ->
+    Flow_js.add_output cx (Flow_error.EPropNotFound (name, reasons, use_op))
+  ) misses
+
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
@@ -290,7 +296,15 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
     ) locs
   );
 
+  (* Post-merge errors.
+   *
+   * At this point, all dependencies have been merged and the component has been
+   * linked together. Any constraints should have already been evaluated, which
+   * means we can complain about things that either haven't happened yet, or
+   * which require complete knowledge of tvar bounds.
+   *)
   detect_sketchy_null_checks cx;
+  detect_test_prop_misses cx;
 
   cx, other_cxs
 

@@ -146,61 +146,6 @@ let visit_eval_id cx id f =
   | None -> ()
   | Some t -> f t
 
-(* Flow allows you test test if a property exists inside a conditional. However, we only wan to
- * allow this test if there's a chance that the property might exist. So `if (foo.bar)` should be
- *
- * - Allowed for the types `{ bar: string }`, `any`, `mixed`, `{ bar: string } | number`, etc
- *
- * - Disallowed for the types ` { baz: string }`, `number`, ` { baz: string} | number`
- *
- * It's really difficult to say that something never happens in Flow. Our best way of approximating
- * this is waiting until typechecking is done and then seeing if something happened. In this case,
- * we record if testing a property ever succeeds. If if never succeeds after typechecking is done,
- * we emit an error.
- *)
-module TestPropHits : sig
-  val hit: ident -> unit
-  val miss: ident -> string option -> (Reason.t * Reason.t) -> use_op -> unit
-  val clear: unit -> unit
-  val get_never_hit: unit -> (string option * (Reason.t * Reason.t) * use_op) list
-end = struct
-  type kind =
-    | Hit
-    | Miss of string option * (Reason.t * Reason.t) * use_op
-
-  (* A map of test prop IDs to Hit or Miss. If this test prop hit even once, the ID will map to Hit.
-   * Otherwise, it will map to Miss *)
-  let hits_and_misses = ref IMap.empty
-
-  let clear () =
-    hits_and_misses := IMap.empty
-
-  (* A test prop succeeded, so we don't need to complain about this test *)
-  let hit id =
-    hits_and_misses := IMap.add id Hit !hits_and_misses
-
-  (* A test prop missed *)
-  let miss id name reasons use =
-    if not (IMap.mem id !hits_and_misses)
-    then hits_and_misses := IMap.add id (Miss (name, reasons, use)) !hits_and_misses
-
-  (* Get the test props that we need to complain about. *)
-  let get_never_hit () =
-    List.fold_left (fun acc (_, hit_or_miss) ->
-      match hit_or_miss with
-      | Hit -> acc
-      | Miss (name, reasons, use_op) -> (name, reasons, use_op)::acc
-    ) [] (IMap.bindings !hits_and_misses)
-end
-
-(* Warning: DO NOT PASS cx TO THIS FUNCTION! We do NOT want this function to do any typechecking!
- * It must be called after all typechecking is done, and must not trigger any more flows. *)
-let get_post_merge_errors () =
-  let misses = TestPropHits.get_never_hit () in
-  List.map (fun (name, reasons, use_op) ->
-    FlowError.EPropNotFound (name, reasons, use_op)
-  ) misses
-
 (***************)
 (* strict mode *)
 (***************)
@@ -811,7 +756,7 @@ module Cache = struct
     Hashtbl.clear Eval.id_cache;
     Hashtbl.clear Eval.repos_cache;
     Hashtbl.clear Fix.cache;
-    TestPropHits.clear ()
+    ()
 
   let stats_poly_instantiation () =
     Hashtbl.stats PolyInstantiation.cache
@@ -3483,7 +3428,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let r = replace_reason_const (RMissingProperty name) reason_op in
             Some (DefT (r, VoidT), lookup_default)
           else
-            (* unsealed, so don't return anything on lookup failure *)
+            (* This is an unsealed object. We don't now when (or even if) this
+             * property access will resolve, since reads and writes can happen
+             * in any order.
+             *
+             * Due to this, we never error on property accesses. TODO: Build a
+             * separate mechanism unsealed objects that errors after merge if a
+             * shadow prop is read but never written.
+             *
+             * We also should not return a default type on lookup failure,
+             * because a later write could make the lookup succeed.
+             *)
+            let () = Context.test_prop_hit cx id in
             None
         | _ ->
           (* Note: a lot of other types could in principle be considered
@@ -4607,7 +4563,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           LookupT (reason_op, kind, try_ts_on_failure, propref, action))
       | Some p ->
         (match kind with
-        | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+        | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
         | _ -> ());
         perform_lookup_action cx trace propref p lreason reason_op action)
     | DefT (_, InstanceT _), LookupT (reason_op, _, _, Computed _, _) ->
@@ -5011,7 +4967,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match get_obj_prop cx trace o propref reason_op with
       | Some p ->
         (match strict with
-        | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+        | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
         | _ -> ());
         perform_lookup_action cx trace propref p reason_obj reason_op action
       | None ->
@@ -5037,7 +4993,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ ->
         let p = Field (None, AnyT.why reason_op, Neutral) in
         (match kind with
-        | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+        | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
         | _ -> ());
         perform_lookup_action cx trace propref p reason reason_op action)
 
@@ -5355,7 +5311,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_fun, AnyFunT), LookupT (reason_op, kind, _, x, action) ->
       (match kind with
-      | NonstrictReturning (_, Some (id, _)) -> TestPropHits.hit id
+      | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
       | _ -> ());
       let p = Field (None, AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace x p reason_fun reason_op action
@@ -6038,10 +5994,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       Option.iter test_opt ~f:(fun (id, reasons) ->
         (* TODO - as mentioned above, it's unclear why mixed is included in this case. Since you
-         * can read any property from mixed, we donm't want to treat it as a miss *)
+         * can read any property from mixed, we don't want to treat it as a miss *)
         match l with
-        | DefT (_, MixedT _) -> TestPropHits.hit id
-        | _ -> TestPropHits.miss id (name_of_propref propref) reasons use_op
+        | DefT (_, MixedT _) -> Context.test_prop_hit cx id
+        | _ -> Context.test_prop_miss cx id (name_of_propref propref) reasons use_op
       );
 
       begin match t_opt with
