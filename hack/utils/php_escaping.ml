@@ -78,6 +78,8 @@ type literal_kind =
   | Literal_heredoc
   | Literal_double_quote
   | Literal_backtick
+  (* string containing C-style char escapes (mimics escapeChar in as.cpp) *)
+  | Literal_long_string
 
 let unescape_literal literal_kind s =
   let len = String.length s in
@@ -101,24 +103,33 @@ let unescape_literal literal_kind s =
     if c <> '\\' || !idx = len then Buffer.add_char buf c else begin
       let c = next () in
       match c with
+      | 'a' when literal_kind = Literal_long_string ->
+        Buffer.add_char buf '\x07'
+      | 'b' when literal_kind = Literal_long_string ->
+        Buffer.add_char buf '\x08'
       | '\'' -> Buffer.add_string buf "\\\'"
-      | 'n'  -> Buffer.add_char buf '\n'
-      | 'r'  -> Buffer.add_char buf '\r'
+      | 'n'  ->
+        if literal_kind <> Literal_long_string then
+          Buffer.add_char buf '\n'
+      | 'r'  ->
+        if literal_kind <> Literal_long_string then
+          Buffer.add_char buf '\r'
       | 't'  -> Buffer.add_char buf '\t'
       | 'v'  -> Buffer.add_char buf '\x0b'
       | 'e'  -> Buffer.add_char buf '\x1b'
       | 'f'  -> Buffer.add_char buf '\x0c'
       | '\\' -> Buffer.add_char buf '\\'
-      | '$'  -> Buffer.add_char buf '$'
-      | '`' ->
+      | '?' when literal_kind = Literal_long_string -> Buffer.add_char buf '\x3f'
+      | '$' when literal_kind <> Literal_long_string -> Buffer.add_char buf '$'
+      | '`' when literal_kind <> Literal_long_string ->
         if literal_kind = Literal_backtick
         then Buffer.add_char buf '`'
         else Buffer.add_string buf "\\`"
       | '\"' ->
-        if literal_kind = Literal_double_quote
+        if literal_kind = Literal_double_quote || literal_kind = Literal_long_string
         then Buffer.add_char buf '\"'
         else Buffer.add_string buf "\\\""
-      | 'u' when !idx < len && s.[!idx] = '{' ->
+      | 'u' when literal_kind <> Literal_long_string && !idx < len && s.[!idx] = '{' ->
         let _ = next () in
         let unicode_count = count_f (fun c -> c <> '}') ~max:6 0 in
         let n = parse_int ("0x" ^ String.sub s (!idx) unicode_count) in
@@ -191,3 +202,6 @@ let unescape_single s =
 
 let unescape_nowdoc s =
   unescape_single_or_nowdoc ~is_nowdoc:true s
+
+let unescape_long_string s =
+  unescape_literal Literal_long_string s
