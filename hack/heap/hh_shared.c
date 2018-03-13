@@ -2463,6 +2463,13 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLreturn(Val_long(0));
 }
 
+CAMLprim value hh_save_file_info_sqlite(
+    value out_filename
+) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
 CAMLprim value hh_load_dep_table_sqlite(
     value in_filename,
     value ignore_hh_version) {
