@@ -6997,9 +6997,12 @@ and mk_type_destructor cx ~trace use_op reason t d id =
    * we have a fall-through branch that only evaluates our type destructor once.
    * The second branch then uses AnnotT to both concretize the result for use
    * as a lower or upper bound and prevent new bounds from being added to
-   * the result. *)
-  | OpenT _, Some t -> false, t
-  | OpenT _, None ->
+   * the result.
+   *
+   * MergedT should also get this treatment as it is a merged "description" of
+   * an OpenT. *)
+  | (OpenT _ | MergedT _), Some t -> false, t
+  | (OpenT _ | MergedT _), None ->
     false, Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add id tvar evaluated);
       let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
