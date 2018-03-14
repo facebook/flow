@@ -27,7 +27,7 @@ function foo4(o: $Exact<{ x: number }>) {
 function foo5() {
   const o = { };
   _foo5();
-  if (o.p) { o.p(); } // Error, testing for unknown property
+  if (o.p) { o.p(); } // OK, unsealed objects are lax
   function _foo5() {
     o.p = function() { }
   }
@@ -55,7 +55,7 @@ type Foo9Expected = {
 
 function foo9() {
   const actual = {};
-  if (actual.foo === undefined) { // Error, reading unknown property
+  if (actual.foo === undefined) { // OK, unsealed objects are lax
     actual.foo = 'foo';
   }
   (actual: Foo9Expected);

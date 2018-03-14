@@ -151,6 +151,22 @@ val set_module_map: t -> Type.t SMap.t -> unit
 val clear_intermediates: t -> unit
 val clear_master_shared: t -> sig_t -> unit
 
+(* Flow allows you test test if a property exists inside a conditional. However, we only wan to
+ * allow this test if there's a chance that the property might exist. So `if (foo.bar)` should be
+ *
+ * - Allowed for the types `{ bar: string }`, `any`, `mixed`, `{ bar: string } | number`, etc
+ *
+ * - Disallowed for the types ` { baz: string }`, `number`, ` { baz: string} | number`
+ *
+ * It's really difficult to say that something never happens in Flow. Our best way of approximating
+ * this is waiting until typechecking is done and then seeing if something happened. In this case,
+ * we record if testing a property ever succeeds. If if never succeeds after typechecking is done,
+ * we emit an error.
+ *)
+val test_prop_hit: t -> Constraint.ident -> unit
+val test_prop_miss: t -> Constraint.ident -> string option -> (Reason.t * Reason.t) -> Type.use_op -> unit
+val test_prop_get_never_hit: t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
+
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 val has_prop: t -> Type.Properties.id -> string -> bool
