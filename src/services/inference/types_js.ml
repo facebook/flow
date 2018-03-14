@@ -447,7 +447,7 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
   let infer_input = Modulename.Set.fold (fun m acc ->
     match Module_js.get_file m ~audit:Expensive.warn with
     | Some f ->
-      if FilenameSet.mem f !env.ServerEnv.files
+      if FilenameSet.mem f !env.ServerEnv.files && Module_js.checked_file f ~audit:Expensive.warn
       then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
       else acc
     | None -> acc (* complain elsewhere about required module not found *)
