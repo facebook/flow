@@ -22,8 +22,8 @@ depends: [
   "dtoa" { >= "0.3.1" }
   "ocamlbuild" {build}
   "sedlex" { >= "1.99.4" }
-  "lwt" { >= "3.0.0" }
-  "lwt_ppx" { >= "1.0.1" }
+  "lwt" { >= "3.3.0" }
+  "lwt_ppx" { >= "1.1.0" }
   "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]
