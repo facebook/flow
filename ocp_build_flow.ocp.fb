@@ -443,6 +443,7 @@ begin library "flow-monitor-connections"
   files = begin fb-glob "src/monitor/connections"
   end
   requires = [
+    "flow-common-lwt"
     "flow-monitor-logger"
     "flow-monitor-utils"
     "flow-server-protocol"
@@ -481,8 +482,17 @@ begin library "flow-monitor-rpc"
     "monitorRPC.ml"
   ]
   requires = [
+    "hh-marshal-tools-lwt"
     "hh-utils-sys"
     "flow-server-protocol"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 

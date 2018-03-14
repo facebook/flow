@@ -5,16 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-
-
-type out_channel = MonitorProt.server_to_monitor_message Daemon.out_channel
 type channels = (MonitorProt.monitor_to_server_message,
                  MonitorProt.server_to_monitor_message) Daemon.channel_pair
 
 val init : channels:channels -> unit
 val disable : unit -> unit
 
-val read : timeout:float -> MonitorProt.monitor_to_server_message option
+val read : unit -> MonitorProt.monitor_to_server_message Lwt.t
 
 val respond_to_request :
   request_id: MonitorProt.request_id ->

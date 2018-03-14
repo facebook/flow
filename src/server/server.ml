@@ -79,8 +79,42 @@ let init ~focus_targets genv =
 let get_watch_paths options =
   Files.watched_paths (Options.file_options options)
 
-let sleep_and_check () =
-  MonitorRPC.read ~timeout:1.0
+let listen_for_messages, get_next_message =
+  let message_stream, push_new_message = Lwt_stream.create () in
+
+  (* This is a thread that just keeps looping in the background. It reads messages from the
+   * monitor process and adds them to a stream *)
+  let module ListenLoop = LwtLoop.Make (struct
+    type acc = unit
+    let main () =
+      let%lwt message = MonitorRPC.read () in
+      push_new_message (Some message);
+      Lwt.return_unit
+    let catch () exn = raise exn
+  end)
+  in
+
+  let listen_for_messages = ListenLoop.run
+  in
+
+  (* This function will return the next message from the monitor process, with a 1 second timeout
+   * if there are no messages *)
+  let get_next_message () =
+    (* A thread that returns None after 1 second *)
+    let timeout =
+      let%lwt () = Lwt_unix.sleep 1.0 in
+      Lwt.return None
+    in
+    (* A thread that returns the next message when it's available *)
+    let get_message =
+      let%lwt message = Lwt_stream.next message_stream in
+      Lwt.return (Some message)
+    in
+    (* Pick the first thread that completes and cancel the other *)
+    Lwt.pick [ timeout; get_message ]
+  in
+
+  listen_for_messages, get_next_message
 
 let exit_due_to_dfind_dying ~genv e =
   let root = Options.root genv.options in
@@ -140,7 +174,7 @@ let rec serve ~dfind ~genv ~env =
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
   ServerPeriodical.call_before_sleeping ();
-  let message = sleep_and_check () in
+  let%lwt message = get_next_message () in
 
   let%lwt env = recheck_loop ~dfind genv env in
 
@@ -199,6 +233,9 @@ let run ~monitor_channels ~shared_mem_config options =
   let dfind = init_dfind options in
 
   let initial_lwt_thread =
+    (* Read messages from the server monitor and add them to a stream as they come in *)
+    let listening_thread = listen_for_messages () in
+
     let%lwt env = with_init_lock (fun () ->
       ServerPeriodical.init ();
       let%lwt env = program_init () in
@@ -206,7 +243,11 @@ let run ~monitor_channels ~shared_mem_config options =
       Lwt.return env
     ) in
 
-    serve ~dfind ~genv ~env
+    (* Run both these threads *)
+    Lwt.join [
+      listening_thread;
+      serve ~dfind ~genv ~env
+    ]
   in
   Lwt_main.run initial_lwt_thread
 

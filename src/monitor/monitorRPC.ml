@@ -7,72 +7,56 @@
 
 open MonitorProt
 
-type out_channel = server_to_monitor_message Daemon.out_channel
 type channels = (monitor_to_server_message, server_to_monitor_message) Daemon.channel_pair
 
 type state =
 | Uninitialized
-| Initialized of channels
+| Initialized of {infd: Lwt_unix.file_descr; outfd: Unix.file_descr}
 | Disabled
 
 let state = ref Uninitialized
 
-let with_ic, with_oc =
-  let with_channel select_channel ~on_disabled ~f = match !state with
-  | Uninitialized ->
-    (* Probably means someone is calling this module from a worker thread *)
-    failwith "MonitorRPC can only be used by the master thread"
-  | Disabled ->
-    (* Probably means that this is a `flow check` and there is no server monitor *)
-    on_disabled ()
-  | Initialized channels ->
-    f (select_channel channels)
-  in
+let with_channel select_channel ~on_disabled ~f = match !state with
+| Uninitialized ->
+  (* Probably means someone is calling this module from a worker thread *)
+  failwith "MonitorRPC can only be used by the master thread"
+| Disabled ->
+  (* Probably means that this is a `flow check` and there is no server monitor *)
+  on_disabled ()
+| Initialized {infd; outfd} ->
+  f (select_channel (infd, outfd))
 
-  (with_channel fst),
-  (with_channel snd)
+let with_infd ~on_disabled ~f = with_channel fst ~on_disabled ~f
+let with_outfd ~on_disabled ~f = with_channel snd ~on_disabled ~f
 
 (* The main server process will initialize this with the channels to the monitor process *)
-let init ~channels =
-  state := Initialized channels
+let init ~channels:(ic,oc) =
+  let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel ic) in
+  let outfd = Daemon.descr_of_out_channel oc in
+  state := Initialized {infd; outfd}
 
 (* If there is no monitor process (like in `flow check`), we can disable MonitorRPC *)
 let disable () =
   state := Disabled
 
-(* Wait with a timeout for a message from the monitor. If the timeout is hit, will return None.
- * Otherwise will return Some single_message.
- *
- * At some point we probably could read multiple messages, but since we have to process them
- * serially, there isn't a major advantage. If the pipe's buffer fills up, the monitor will
- * wait for it to drain before writing anything else
- *
- * This will throw if the MonitorRPC is disabled, since `flow check` should never try to read
- * from the monitor *)
-let read ~timeout =
-  with_ic
+(* Read a single message from the monitor. *)
+let read () =
+  with_infd
     ~on_disabled:(fun () -> failwith "MonitorRPC is disabled")
-    ~f:(fun ic ->
-      let fd = Daemon.descr_of_in_channel ic in
-      match Sys_utils.select_non_intr [ fd ] [] [] timeout with
-      | [], _, _ -> None
-      | _ ->
-        let msg: MonitorProt.monitor_to_server_message = Marshal_tools.from_fd_with_preamble fd in
-        Some msg
-    )
+    ~f:Marshal_tools_lwt.from_fd_with_preamble
 
 (* Sends a message to the monitor.
  *
  * This is a no-op if the MonitorRPC is disabled. This allows the server to stream things like
  * status updates without worrying whether or not there is a monitor
+ *
+ * Unliked read, this is synchronous. We don't currently have a use case for async sends, and it's a
+ * little painful to thread lwt through to everywhere we send data
  *)
 let send ~msg =
-  with_oc
+  with_outfd
     ~on_disabled:(fun () -> ())
-    ~f:(fun oc ->
-      let fd = Daemon.descr_of_out_channel oc in
-      Marshal_tools.to_fd_with_preamble fd msg |> ignore
-    )
+    ~f:(fun outfd -> Marshal_tools.to_fd_with_preamble outfd msg |> ignore)
 
 (* Respond to a request from an ephemeral client *)
 let respond_to_request ~request_id ~response =
