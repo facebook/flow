@@ -47,8 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:261:27
-   261|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:271:27
+   271|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:261:27
-   261|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:271:27
+   271|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -186,23 +186,23 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:241:26
+   <BUILTINS>/react.js:251:26
                                  v-
-   241|   declare export default {|
-   242|     +DOM: typeof DOM,
-   243|     +PropTypes: typeof PropTypes,
-   244|     +version: typeof version,
-   245|     +initializeTouchEvents: typeof initializeTouchEvents,
-   246|     +checkPropTypes: typeof checkPropTypes,
-   247|     +createClass: typeof createClass,
-   248|     +createElement: typeof createElement,
-   249|     +cloneElement: typeof cloneElement,
-   250|     +createFactory: typeof createFactory,
-   251|     +isValidElement: typeof isValidElement,
-   252|     +Component: typeof Component,
-   253|     +PureComponent: typeof PureComponent,
-   254|     +Children: typeof Children,
-   255|   |};
+   251|   declare export default {|
+   252|     +DOM: typeof DOM,
+   253|     +PropTypes: typeof PropTypes,
+   254|     +version: typeof version,
+   255|     +initializeTouchEvents: typeof initializeTouchEvents,
+   256|     +checkPropTypes: typeof checkPropTypes,
+   257|     +createClass: typeof createClass,
+   258|     +createElement: typeof createElement,
+   259|     +cloneElement: typeof cloneElement,
+   260|     +createFactory: typeof createFactory,
+   261|     +isValidElement: typeof isValidElement,
+   262|     +Component: typeof Component,
+   263|     +PureComponent: typeof PureComponent,
+   264|     +Children: typeof Children,
+   265|   |};
           -^ [1]
 
 
@@ -215,23 +215,23 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:241:26
+   <BUILTINS>/react.js:251:26
                                  v-
-   241|   declare export default {|
-   242|     +DOM: typeof DOM,
-   243|     +PropTypes: typeof PropTypes,
-   244|     +version: typeof version,
-   245|     +initializeTouchEvents: typeof initializeTouchEvents,
-   246|     +checkPropTypes: typeof checkPropTypes,
-   247|     +createClass: typeof createClass,
-   248|     +createElement: typeof createElement,
-   249|     +cloneElement: typeof cloneElement,
-   250|     +createFactory: typeof createFactory,
-   251|     +isValidElement: typeof isValidElement,
-   252|     +Component: typeof Component,
-   253|     +PureComponent: typeof PureComponent,
-   254|     +Children: typeof Children,
-   255|   |};
+   251|   declare export default {|
+   252|     +DOM: typeof DOM,
+   253|     +PropTypes: typeof PropTypes,
+   254|     +version: typeof version,
+   255|     +initializeTouchEvents: typeof initializeTouchEvents,
+   256|     +checkPropTypes: typeof checkPropTypes,
+   257|     +createClass: typeof createClass,
+   258|     +createElement: typeof createElement,
+   259|     +cloneElement: typeof cloneElement,
+   260|     +createFactory: typeof createFactory,
+   261|     +isValidElement: typeof isValidElement,
+   262|     +Component: typeof Component,
+   263|     +PureComponent: typeof PureComponent,
+   264|     +Children: typeof Children,
+   265|   |};
           -^ [1]
 
 
@@ -244,23 +244,23 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:241:26
+   <BUILTINS>/react.js:251:26
                                  v-
-   241|   declare export default {|
-   242|     +DOM: typeof DOM,
-   243|     +PropTypes: typeof PropTypes,
-   244|     +version: typeof version,
-   245|     +initializeTouchEvents: typeof initializeTouchEvents,
-   246|     +checkPropTypes: typeof checkPropTypes,
-   247|     +createClass: typeof createClass,
-   248|     +createElement: typeof createElement,
-   249|     +cloneElement: typeof cloneElement,
-   250|     +createFactory: typeof createFactory,
-   251|     +isValidElement: typeof isValidElement,
-   252|     +Component: typeof Component,
-   253|     +PureComponent: typeof PureComponent,
-   254|     +Children: typeof Children,
-   255|   |};
+   251|   declare export default {|
+   252|     +DOM: typeof DOM,
+   253|     +PropTypes: typeof PropTypes,
+   254|     +version: typeof version,
+   255|     +initializeTouchEvents: typeof initializeTouchEvents,
+   256|     +checkPropTypes: typeof checkPropTypes,
+   257|     +createClass: typeof createClass,
+   258|     +createElement: typeof createElement,
+   259|     +cloneElement: typeof cloneElement,
+   260|     +createFactory: typeof createFactory,
+   261|     +isValidElement: typeof isValidElement,
+   262|     +Component: typeof Component,
+   263|     +PureComponent: typeof PureComponent,
+   264|     +Children: typeof Children,
+   265|   |};
           -^ [1]
 
 
