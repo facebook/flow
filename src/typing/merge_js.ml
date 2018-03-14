@@ -208,7 +208,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   let sig_cx = Context.make_sig () in
   let need_merge_master_cx = ref true in
 
-  let rev_cxs, impl_cxs = Nel.fold_left (fun (cxs, impl_cxs) filename ->
+  let rev_cxs, impl_cxs, _ = Nel.fold_left (fun (cxs, impl_cxs, gc_state) filename ->
     (* create cx *)
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
@@ -236,10 +236,14 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
     Type_inference_js.infer_ast cx filename ast
       ~lint_severities ~file_sig;
 
-    if do_gc then Gc_js.do_gc ~master_cx cx;
+    let gc_state = if not do_gc then gc_state else Gc_js.(
+      let gc_state = mark cx gc_state in
+      sweep ~master_cx cx gc_state;
+      gc_state
+    ) in
 
-    cx::cxs, FilenameMap.add filename cx impl_cxs
-  ) ([], FilenameMap.empty) component in
+    cx::cxs, FilenameMap.add filename cx impl_cxs, gc_state
+  ) ([], FilenameMap.empty, Gc_js.init ~master_cx) component in
   let cxs = List.rev rev_cxs in
 
   let cx, other_cxs = List.hd cxs, List.tl cxs in
