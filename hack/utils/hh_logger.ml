@@ -11,9 +11,10 @@
 let timestamp_string () =
   let open Unix in
   let tm = localtime (time ()) in
+  let ms = int_of_float (gettimeofday () *. 1000.) mod 1000 in
   let year = tm.tm_year + 1900 in
-  Printf.sprintf "[%d-%02d-%02d %02d:%02d:%02d]"
-    year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
+  Printf.sprintf "[%d-%02d-%02d %02d:%02d:%02d.%03d]"
+    year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec ms
 
 (* We might want to log to both stderr and a file. Shelling out to tee isn't cross-platform.
  * We could dup2 stderr to a pipe and have a child process write to both original stderr and the
