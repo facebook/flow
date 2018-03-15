@@ -1,3 +1,24 @@
+### 0.68.0
+
+Likely to cause new Flow errors:
+
+Previously, Flow would allow you to write `if (foo.unknownProp) { ... }`.
+
+Now Flow disallows testing unknown properties in conditionals. If `foo` is a
+union type like ` { x: string } | { y: number }`, `x` and `y` are known
+properties and `z` would be an unknown property
+
+New Features:
+* Improve union optimizations
+* Add type declarations for new React 16.3 lifecycle methods
+
+Notable bug fixes:
+* Fix get-def for declare var
+* Fix type-at-pos for opaque types
+
+Misc:
+* Remove special-casing of `declare var exports`, long deprecated
+
 ### 0.67.1
 
 Restore accidentally-deleted Object.setPrototypeOf library definition.
