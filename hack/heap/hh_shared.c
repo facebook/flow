@@ -274,7 +274,7 @@ typedef struct {
 /*****************************************************************************/
 
 /* Total size of allocated shared memory */
-static size_t shared_mem_size;
+static size_t shared_mem_size = 0;
 
 /* Beginning of shared memory */
 static char* shared_mem = NULL;
@@ -282,7 +282,7 @@ static char* shared_mem = NULL;
 /* ENCODING: The first element is the size stored in bytes, the rest is
  * the data. The size is set to zero when the storage is empty.
  */
-static value* global_storage;
+static value* global_storage = NULL;
 
 /* A pair of a 31-bit unsigned number and a tag bit. */
 typedef struct {
@@ -386,40 +386,40 @@ typedef union {
   uint64_t raw;
 } deptbl_entry_t;
 
-static deptbl_entry_t* deptbl;
-static uint64_t* dcounter;
+static deptbl_entry_t* deptbl = NULL;
+static uint64_t* dcounter = NULL;
 
 
 /* ENCODING:
  * The highest 2 bits are unused.
  * The next 31 bits encode the key the lower 31 bits the value.
  */
-static uint64_t* deptbl_bindings;
+static uint64_t* deptbl_bindings = NULL;
 
 /* The hashtable containing the shared values. */
-static helt_t* hashtbl;
-static uint64_t* hcounter;   // the number of slots taken in the table
+static helt_t* hashtbl = NULL;
+static uint64_t* hcounter = NULL;   // the number of slots taken in the table
 
 /* A counter increasing globally across all forks. */
-static uintptr_t* counter;
+static uintptr_t* counter = NULL;
 
 /* Logging level for shared memory statistics
  * 0 = nothing
  * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
  */
-static size_t* log_level;
+static size_t* log_level = NULL;
 
-static size_t* workers_should_exit;
+static size_t* workers_should_exit = NULL;
 
 /* This should only be used before forking */
 static uintptr_t early_counter = 1;
 
 /* The top of the heap */
-static char** heap;
+static char** heap = NULL;
 
 /* Useful to add assertions */
-static pid_t* master_pid;
-static pid_t my_pid;
+static pid_t* master_pid = NULL;
+static pid_t my_pid = 0;
 
 static char *db_filename = NULL;
 static char *hashtable_db_filename = NULL;
@@ -433,9 +433,9 @@ static sqlite3_stmt *get_select_stmt = NULL;
 #endif
 
 /* Where the heap started (bottom) */
-static char* heap_init;
+static char* heap_init = NULL;
 /* Where the heap will end (top) */
-static char* heap_max;
+static char* heap_max = NULL;
 
 /* Size of the heap since the last garbage collect*/
 static size_t latest_heap_size = 0;
@@ -494,7 +494,7 @@ struct timeval log_duration(const char *prefix, struct timeval start_t) {
 #else
 
 struct timeval log_duration(const char *prefix, struct timeval start_t) {
-  struct timeval end_t;
+  struct timeval end_t = {0};
   gettimeofday(&end_t, NULL);
   time_t secs = end_t.tv_sec - start_t.tv_sec;
   suseconds_t usecs = end_t.tv_usec - start_t.tv_usec;
@@ -657,7 +657,7 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
 #ifdef _WIN32
 
 static char *memfd_map(size_t shared_mem_size) {
-  char *mem;
+  char *mem = NULL;
   mem = MapViewOfFileEx(
     memfd,
     FILE_MAP_ALL_ACCESS,
@@ -673,7 +673,7 @@ static char *memfd_map(size_t shared_mem_size) {
 #else
 
 static char *memfd_map(size_t shared_mem_size) {
-  char *mem;
+  char *mem = NULL;
   /* MAP_NORESERVE is because we want a lot more virtual memory than what
    * we are actually going to use.
    */
@@ -948,7 +948,7 @@ CAMLprim value hh_shared_init(
   // stack overflow, but we don't actually handle that exception, so what
   // happens in practice is we terminate at toplevel with an unhandled exception
   // and a useless ocaml backtrace. A core dump is actually more useful. Sigh.
-  struct sigaction sigact;
+  struct sigaction sigact = { 0 };
   sigact.sa_handler = SIG_DFL;
   sigemptyset(&sigact.sa_mask);
   sigact.sa_flags = 0;
@@ -1006,7 +1006,7 @@ CAMLprim value hh_counter_next(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
-  uintptr_t v;
+  uintptr_t v = 0;
   if (counter) {
     v = __sync_fetch_and_add(counter, 1);
   } else {
@@ -1193,7 +1193,7 @@ static uint32_t alloc_deptbl_node(uint32_t key, uint32_t val) {
   // Linked list node to create. Its "next" field will get set by the caller.
   const deptbl_entry_t list_node = { { { val, TAG_VAL }, { ~0, TAG_NEXT } } };
 
-  uint32_t slot;
+  uint32_t slot = 0;
   for (slot = (uint32_t)start_hint; ; ++slot) {
     slot &= dep_size - 1;
 
@@ -1213,7 +1213,7 @@ static uint32_t alloc_deptbl_node(uint32_t key, uint32_t val) {
 static void prepend_to_deptbl_list(uint32_t key, uint32_t val) {
   volatile deptbl_entry_t* const table = deptbl;
 
-  size_t slot;
+  size_t slot = 0;
   for (slot = (size_t)hash_uint64(key); ; ++slot) {
     slot &= dep_size - 1;
 
@@ -1319,8 +1319,7 @@ CAMLprim value hh_get_dep(value ocaml_key) {
 
   result = Val_int(0); // The empty list
 
-  size_t slot;
-  for (slot = (size_t)hash_uint64(key); ; ++slot) {
+  for (size_t slot = (size_t)hash_uint64(key); ; ++slot) {
     slot &= dep_size - 1;
 
     deptbl_entry_t slotval = table[slot];
@@ -1366,7 +1365,7 @@ CAMLprim value hh_get_dep(value ocaml_key) {
 #ifdef _WIN32
 
 static char *temp_memory_map() {
-  char *tmp_heap;
+  char *tmp_heap = NULL;
   tmp_heap = VirtualAlloc(NULL, heap_size, MEM_RESERVE, PAGE_READWRITE);
   if (!tmp_heap) {
     win32_maperr(GetLastError());
@@ -1385,7 +1384,7 @@ static void temp_memory_unmap(char * tmp_heap) {
 #else
 
 static char *temp_memory_map() {
-  char *tmp_heap;
+  char *tmp_heap = NULL;
   int flags       = MAP_PRIVATE | MAP_ANON | MAP_NORESERVE;
   int prot        = PROT_READ | PROT_WRITE;
   tmp_heap = (char*)mmap(NULL, heap_size, prot, flags, 0, 0);
@@ -1439,7 +1438,8 @@ value hh_check_heap_overflow() {
 /*****************************************************************************/
 void hh_collect(value aggressive_val) {
   int aggressive  = Bool_val(aggressive_val);
-  char* tmp_heap, *dest;
+  char* tmp_heap = NULL;
+  char* dest = NULL;
   size_t mem_size = 0;
 
   float space_overhead = aggressive ? 1.2 : 2.0;
@@ -1461,8 +1461,7 @@ void hh_collect(value aggressive_val) {
   assert_master(); // Comes from the master
 
   // Walking the table
-  size_t i;
-  for(i = 0; i < hashtbl_size; i++) {
+  for(size_t i = 0; i < hashtbl_size; i++) {
     if(hashtbl[i].addr != NULL) { // Found a non empty slot
       // No workers should be writing at the moment. If a worker died in the
       // middle of a write, that is also very bad
@@ -1528,9 +1527,9 @@ static char* hh_store_ocaml(
   /*out*/size_t *alloc_size,
   /*out*/size_t *orig_size
 ) {
-  char* value;
-  size_t size;
-  storage_kind kind;
+  char* value = NULL;
+  size_t size = 0;
+  storage_kind kind = 0;
 
   // If the data is an Ocaml string it is more efficient to copy its contents
   // directly in our heap instead of serializing it.
@@ -1615,8 +1614,8 @@ static value write_at(unsigned int slot, value data) {
        HASHTBL_WRITE_IN_PROGRESS
      )
   ) {
-    size_t alloc_size;
-    size_t orig_size;
+    size_t alloc_size = 0;
+    size_t orig_size = 0;
     hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);
     Field(result, 0) = Val_long(alloc_size);
     Field(result, 1) = Val_long(orig_size);
@@ -1970,7 +1969,7 @@ static long hh_save_file_info_helper_sqlite(
     const char* const out_filename
 ) {
     assert_master();
-    sqlite3 *db_out;
+    sqlite3 *db_out = NULL;
     assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
     static const char sql[] = \
       "CREATE TABLE DUMMY(DUMMY_KEY INT PRIMARY KEY NOT NULL)";
@@ -1985,11 +1984,11 @@ static long hh_save_dep_table_helper_sqlite(
   // This can only happen in the master
   assert_master();
 
-  struct timeval tv;
-  struct timeval tv2;
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
   gettimeofday(&tv, NULL);
 
-  sqlite3 *db_out;
+  sqlite3 *db_out = NULL;
   // sqlite3_open creates the db
   assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
 
@@ -2015,11 +2014,11 @@ static long hh_save_dep_table_helper_sqlite(
     SQLITE_OK);
 
   // Create entries on the table
-  size_t slot;
-  size_t count;
+  size_t slot = 0;
+  size_t count = 0;
   size_t prev_count = 0;
   uint32_t *values = NULL;
-  size_t iter;
+  size_t iter = 0;
   sqlite3_stmt *insert_stmt = NULL;
   sql = "INSERT INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
@@ -2110,8 +2109,8 @@ CAMLprim value hh_load_dep_table_sqlite(
     value ignore_hh_version
 ) {
   CAMLparam1(in_filename);
-  struct timeval tv;
-  struct timeval tv2;
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
   gettimeofday(&tv, NULL);
 
   // This can only happen in the master
@@ -2173,8 +2172,9 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   const uint32_t key = (uint32_t)key64;
   assert((key & 0x7FFFFFFF) == key64);
 
-  uint32_t *values;
-  size_t size, count, i;
+  uint32_t *values = NULL;
+  size_t size = 0;
+  size_t count = 0;
 
   if (get_dep_select_stmt == NULL) {
     const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
@@ -2197,7 +2197,7 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
     assert(size % sizeof(uint32_t) == 0);
     count = size / sizeof(uint32_t);
 
-    for (i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
       cell = caml_alloc_tuple(2);
       Field(cell, 0) = Val_long(values[i]);
       Field(cell, 1) = result;
@@ -2226,11 +2226,11 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
   // This can only happen in the master
   assert_master();
 
-  struct timeval tv;
-  struct timeval tv2;
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
   gettimeofday(&tv, NULL);
 
-  sqlite3 *db_out;
+  sqlite3 *db_out = NULL;
   // sqlite3_open creates the db
   assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
 
@@ -2256,12 +2256,11 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
     SQLITE_OK);
 
   // Create entries on the table
-  size_t slot;
   sqlite3_stmt *insert_stmt = NULL;
   sql = "INSERT INTO HASHTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
     SQLITE_OK);
-  for (slot = 0; slot < hashtbl_size; ++slot) {
+  for (size_t slot = 0; slot < hashtbl_size; ++slot) {
     uint64_t slot_hash = hashtbl[slot].hash;
     if (slot_hash == 0) {
       continue;
@@ -2297,11 +2296,11 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
 
   assert_master();
 
-  struct timeval tv;
-  struct timeval tv2;
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
   gettimeofday(&tv, NULL);
 
-  sqlite3 *db_out;
+  sqlite3 *db_out = NULL;
   assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
   create_sqlite_header(db_out, BuildInfo_kRevision);
 
@@ -2325,8 +2324,7 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
     SQLITE_OK);
   int n_keys = Wosize_val(keys);
-  int i;
-  for (i = 0; i < n_keys; ++i) {
+  for (int i = 0; i < n_keys; ++i) {
     unsigned int slot = find_slot(Field(keys, i));
     uint64_t slot_hash = hashtbl[slot].hash;
     if (slot_hash == 0) {
@@ -2356,8 +2354,8 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
 
 CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
   CAMLparam2(in_filename, verify);
-  struct timeval tv;
-  struct timeval tv2;
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
   gettimeofday(&tv, NULL);
 
   // This can only happen in the master
