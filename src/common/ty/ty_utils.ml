@@ -5,20 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module TVarKey = struct
-  type t = Ty.tvar
-  let compare (Ty.TVar x) (Ty.TVar y) = compare x y
-end
-
 
 (* Set and map based on type variables *)
 
 module TVarSet = struct
-  include Set.Make(TVarKey)
+  include ISet
   let append = union
 end
-
-module TVarMap = MyMap.Make(TVarKey)
 
 
 (********************)
@@ -40,7 +33,7 @@ module FreeVars : sig
      body will be walked over. Typically the body is only useful when TypeAlias
      appears as the top-level constructor, and is ignored otherwise.
   *)
-  val is_free_in : is_top:bool -> Ty.tvar -> Ty.t -> bool
+  val is_free_in : is_top:bool -> int -> Ty.t -> bool
 end = struct
 
   (* In computing the set of free variables in a type we use a set of variables
@@ -73,9 +66,9 @@ end = struct
     (* The visitor class is also a mapper. This visitor does not alter its input. *)
     let visitor = object(self) inherit c as super
       method! type_ env = function
-      | Ty.ID v as t when not (TVarSet.mem v env.skip)
+      | Ty.TVar (Ty.RVar i) as t when not (TVarSet.mem i env.skip)
         ->
-        tell (TVarSet.singleton v) >>| fun _ -> t
+        tell (TVarSet.singleton i) >>| fun _ -> t
 
       | Ty.TypeAlias { Ty.ta_tparams; ta_type=Some t_body; _ } as t
         ->

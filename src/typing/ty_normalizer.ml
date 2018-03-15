@@ -10,7 +10,7 @@ open Utils_js
 open Reason
 
 module T = Type
-module VSet = Ty_utils.TVarSet
+module VSet = ISet
 
 (* The type normalizer converts infered types (of type `Type.t`) under a context
    cx to the simplified form of type `Ty.t`. It is called by various modules,
@@ -168,7 +168,6 @@ end = struct
   let concat_fold_m f xs = mapM f xs >>| List.concat
 
   let get_cx = get >>| fun st -> State.(st.cx)
-  (* let get_free_tvars = get >>| fun st -> State.(st.free_tvars) *)
 
   let find_cons i =
     get_cx >>| fun cx -> Context.find_constraints cx i
@@ -179,7 +178,6 @@ end = struct
     let n = st.counter in
     put { st with counter = n + 1 } >>| fun _ -> n
 
-  let fresh_tvar = fresh_num >>| fun n -> Ty.TVar n
 
 
   (* Error reporting *)
@@ -360,7 +358,7 @@ end = struct
             mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
         | Ty.Inter (t0,t1,ts) ->
             mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
-        | Ty.ID v' when v = v' ->
+        | Ty.TVar (Ty.RVar v') when v = v' ->
             tell true >>| fun _ -> Env.zero env
         | Ty.Mu (v, t) ->
             self#type_ env t >>| fun t -> Ty.Mu (v, t)
@@ -400,18 +398,18 @@ end = struct
         an expensive pass, which is why we avoid doing it if it's definitely
         not a recursive type.
   *)
-  let to_recursive free_vars v t =
-    if VSet.mem v free_vars then
+  let to_recursive free_vars i t =
+    if VSet.mem i free_vars then
       (* Maybe recursive (might be a degenerate) *)
-      let t, changed = RemoveTopLevelTvarVisitor.run v t in
+      let t, changed = RemoveTopLevelTvarVisitor.run i t in
       let t = if changed then simplify_unions_inters t else t in
       if not changed then (
         (* If it didn't change then all free_vars are still in *)
-        Ty.Mu (v, t)
+        Ty.Mu (i, t)
       ) else (
         (* If it changed, recompute the free variables. *)
-        if Ty_utils.FreeVars.is_free_in ~is_top:true v t then
-          Ty.Mu (v, t)
+        if Ty_utils.FreeVars.is_free_in ~is_top:true i t then
+          Ty.Mu (i, t)
         else
           t
       )
@@ -479,7 +477,8 @@ end = struct
     (* Bounded type variables are replaced by their bounds during checking. In
        reporting these types we are interested in the original type variable.
     *)
-    | RPolyTest (name, _) -> named_t name
+    | RPolyTest (name, _) ->
+      return Ty.(TVar (TParam name))
 
     | _ -> type_after_reason ~env t
 
@@ -488,7 +487,7 @@ end = struct
     let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
-    | BoundT tp -> named_t tp.name
+    | BoundT tp -> return Ty.(TVar (TParam tp.name))
     | AnnotT ((r, id), _) -> annot_t ~env r id
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
@@ -613,7 +612,7 @@ end = struct
   and type_variable ~env id =
     find_cons id >>= fun (root_id, constraints) ->      (* step 1 *)
     find_tvar root_id >>= function                      (* step 2 *)
-      | Some (Ok (Ty.ID v as t)) ->                     (* step 2a *)
+      | Some (Ok (Ty.TVar (Ty.RVar v) as t)) ->         (* step 2a *)
         modify State.(fun st -> { st with
           free_tvars = VSet.add v st.free_tvars
         }) >>= fun _ ->
@@ -633,9 +632,10 @@ end = struct
   *)
   and resolve_tvar ~env cons root_id =
     let open State in
-    fresh_tvar >>= fun tvar ->
+    fresh_num >>= fun rid ->
+    let rvar = Ty.RVar rid in
     (* Set current variable "under resolution" *)
-    update_tvar_cache root_id (Ok (Ty.ID tvar)) >>= fun _ ->
+    update_tvar_cache root_id (Ok (Ty.TVar rvar)) >>= fun _ ->
     get >>= fun in_st ->
 
     (* Resolve the tvar *)
@@ -643,12 +643,12 @@ end = struct
 
     (* Create a recursive type (if needed) *)
     let ty_res = Core_result.map
-      ~f:(to_recursive out_st.free_tvars tvar) ty_res
+      ~f:(to_recursive out_st.free_tvars rid) ty_res
     in
 
     (* Reset state by removing the current tvar from the free vars set *)
     let out_st =
-      { out_st with free_tvars = VSet.remove tvar out_st.free_tvars }
+      { out_st with free_tvars = VSet.remove rid out_st.free_tvars }
     in
     put out_st >>= fun _ ->
 

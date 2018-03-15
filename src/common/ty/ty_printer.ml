@@ -8,7 +8,6 @@
 open Layout
 open Utils_js
 open Ty
-open Ty_utils
 
 (***********)
 (* Utils   *)
@@ -38,7 +37,7 @@ let option ~f = Option.value_map ~default:Empty ~f
 
 let type_ ?(size=5000) t =
 
-  let env_map: (Layout.layout_node TVarMap.t) ref = ref TVarMap.empty in
+  let env_map: (Layout.layout_node IMap.t) ref = ref IMap.empty in
   let size = ref size in
 
 
@@ -67,7 +66,7 @@ let type_ ?(size=5000) t =
 
   and type_impl ~depth (t: Ty.t) =
     match t with
-    | ID v -> type_var v
+    | TVar v -> type_var v
     | Any -> Atom "any"
     | AnyObj -> Atom "Object"
     | AnyFun -> Atom "Function"
@@ -103,12 +102,14 @@ let type_ ?(size=5000) t =
     | This -> Atom "this"
     | TypeAlias ta -> type_alias ta
     | TypeOf n -> fuse [Atom "typeof"; space; identifier n]
-    | Mu (v, t) ->
+    | Mu (i, t) ->
       let t = type_ ~depth:0 t in
-      env_map := TVarMap.add v t !env_map;
-      type_var v
+      env_map := IMap.add i t !env_map;
+      Atom (varname i)
 
-  and type_var (TVar i) = identifier (varname i)
+  and type_var = function
+    | RVar i -> Atom (varname i)
+    | TParam s -> Atom s
 
   and type_generic ~depth id typeParameters =
     fuse [
@@ -315,10 +316,10 @@ let type_ ?(size=5000) t =
     | Neutral -> Empty
 
   in
-  let env_ (v, layout) =
+  let env_ (i, layout) =
     with_semicolon (fuse [
       Atom "type"; space;
-      type_var v;
+      Atom (varname i);
       pretty_space; Atom "="; pretty_space;
       layout
     ])
@@ -327,7 +328,7 @@ let type_ ?(size=5000) t =
   (* Main call *)
   let type_layout = type_ ~depth:0 t in
   (* Run type_ first so that env_map has been populated *)
-  let env_layout = List.map env_ (TVarMap.bindings !env_map) in
+  let env_layout = List.map env_ (IMap.bindings !env_map) in
   Sequence (
     { break=Break_always; inline=(true, true); indent=0 },
     env_layout @ [type_layout]

@@ -93,13 +93,15 @@ and dump_generics ~depth = function
   | Some ts -> "<" ^ dump_list (dump_t ~depth) ts ^ ">"
   | _ -> ""
 
-and dump_tvar (TVar i) = spf "T_%d" i
+and dump_tvar = function
+  | RVar i -> spf "T_%d" i
+  | TParam s -> s
 
 and dump_t ?(depth = 10) t =
   if depth < 0 then "..." else
   let depth = depth - 1 in
   match t with
-  | ID v -> dump_tvar v
+  | TVar v -> dump_tvar v
   | Generic (s, st, ts) ->
     spf "Generic(%s, struct= %b, params=%s)" s st (dump_generics ~depth ts)
   | Any -> "Any"
@@ -138,7 +140,7 @@ and dump_t ?(depth = 10) t =
   | Class (n, s, ps) ->
     spf "%s(%s, params= %s)" (if s then "Interface" else "Class") n
       (dump_type_params ~depth ps)
-  | Mu (v, t) -> spf "Mu(%s, %s)" (dump_tvar v) (dump_t ~depth t)
+  | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
 
 let dump_binding (v, ty) =
   Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
@@ -151,7 +153,8 @@ let string_of_polarity = function
   | Positive -> "Positive"
 
 let string_of_ctor = function
-  | ID _ -> "ID"
+  | TVar (RVar _) -> "RecVar"
+  | TVar (TParam _) -> "TParam"
   | Generic _ -> "Generic"
   | Any -> "Any"
   | AnyObj -> "AnyObj"
@@ -184,7 +187,7 @@ let rec json_of_t t = Hh_json.(
     "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
-  | ID v -> json_of_tvar v
+  | TVar v -> json_of_tvar v
   | Generic (s, str, targs_opt) -> (
     match targs_opt with
       | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
@@ -241,16 +244,17 @@ let rec json_of_t t = Hh_json.(
     ]
   | This
   | Exists -> []
-  | Mu (v, t) ->
-    json_of_tvar v @ [
+  | Mu (i, t) -> [
+      "mu_var", int_ i;
       "type", json_of_t t;
     ]
   )
 )
 
-and json_of_tvar (TVar id) = Hh_json.([
-  "id", int_ id
-])
+and json_of_tvar = Hh_json.(function
+  | RVar i -> ["id", int_ i]
+  | TParam s -> ["id", JSON_String s]
+)
 
 and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
   Hh_json.(

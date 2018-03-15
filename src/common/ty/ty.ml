@@ -8,8 +8,8 @@
 type identifier = string
 
 type t =
-  | ID of tvar
   | Generic of identifier * bool (* structural *) * t list option
+  | TVar of tvar
   | Any | AnyObj | AnyFun
   | Top | Bot
   | Void | Null
@@ -28,9 +28,11 @@ type t =
   | Class of identifier * bool (* structural *) * type_param list option
   | This
   | Exists
-  | Mu of tvar * t
+  | Mu of int * t
 
-and tvar = TVar of int [@@unboxed]
+and tvar =
+  | RVar of int             (* Recursive variable *)
+  | TParam of identifier    (* Type parameter *)
 
 and fun_t = {
   fun_params: (identifier option * t * fun_param) list;
