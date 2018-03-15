@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type identifier = string
+
 type t =
   | ID of tvar
-  | Generic of string * bool (* structural *) * t list option
+  | Generic of identifier * bool (* structural *) * t list option
   | Any | AnyObj | AnyFun
   | Top | Bot
   | Void | Null
@@ -22,8 +24,8 @@ type t =
   | Union of t * t * t list
   | Inter of t * t * t list
   | TypeAlias of type_alias
-  | TypeOf of string
-  | Class of string * bool (* structural *) * type_param list option
+  | TypeOf of identifier
+  | Class of identifier * bool (* structural *) * type_param list option
   | This
   | Exists
   | Mu of tvar * t
@@ -31,8 +33,8 @@ type t =
 and tvar = TVar of int [@@unboxed]
 
 and fun_t = {
-  fun_params: (string option * t * fun_param) list;
-  fun_rest_param: (string option * t) option;
+  fun_params: (identifier option * t * fun_param) list;
+  fun_rest_param: (identifier option * t) option;
   fun_return: t;
   fun_type_params: type_param list option;
 }
@@ -43,8 +45,8 @@ and obj_t = {
 }
 
 and type_alias = {
-  ta_name: string;
-  ta_imported: string option;
+  ta_name: identifier;
+  ta_imported: identifier option;
   ta_tparams: type_param list option;
   ta_type: t option
 }
@@ -54,7 +56,7 @@ and fun_param = {
 }
 
 and prop =
-  | NamedProp of string * named_prop
+  | NamedProp of identifier * named_prop
   | IndexProp of dict
   | CallProp of fun_t
 
@@ -71,13 +73,13 @@ and field = {
 
 and dict = {
   dict_polarity: polarity;
-  dict_name: string option;
+  dict_name: identifier option;
   dict_key: t;
   dict_value: t;
 }
 
 and type_param = {
-  tp_name: string;
+  tp_name: identifier;
   tp_bound: t option;
   tp_polarity: polarity;
   tp_default: t option;
