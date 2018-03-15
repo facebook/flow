@@ -614,7 +614,7 @@ import_lib.js:7:8 = {
   "end":12
 }
 import_lib.js:7:25 = {
-  "type":"imported Listener from \"./import_interfaces\"",
+  "type":"imported Listener<TFields>",
   "reasons":[],
   "loc":{
     "source":"import_lib.js",
@@ -1949,7 +1949,7 @@ opaque.js:19:14 = {
   "end":18
 }
 opaque.js:19:22 = {
-  "type":"type Opaque",
+  "type":"imported Opaque",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -1979,7 +1979,7 @@ opaque.js:20:16 = {
   "end":27
 }
 opaque.js:20:34 = {
-  "type":"type PolyTransparent<A> = Poly$Opaque<A>",
+  "type":"imported PolyTransparent<A>",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -2009,7 +2009,7 @@ opaque.js:21:19 = {
   "end":22
 }
 opaque.js:21:28 = {
-  "type":"type PolyOpaque<A>",
+  "type":"imported PolyOpaque<A>",
   "reasons":[],
   "loc":{
     "source":"opaque.js",

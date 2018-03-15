@@ -83,7 +83,7 @@ let type_ ?(size=5000) t =
         func
     | Obj obj -> type_object ~depth obj
     | Arr t -> fuse [type_ ~depth t; Atom "[]"]
-    | Generic (n, _, ts) -> type_generic ~depth n ts
+    | Generic (sym, _, ts) -> type_generic ~depth sym ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
     | Inter (t1, t2, ts) ->
@@ -101,7 +101,7 @@ let type_ ?(size=5000) t =
     | Exists -> Atom "*"
     | This -> Atom "this"
     | TypeAlias ta -> type_alias ta
-    | TypeOf n -> fuse [Atom "typeof"; space; identifier n]
+    | TypeOf (_, n) -> fuse [Atom "typeof"; space; identifier n]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
@@ -111,7 +111,7 @@ let type_ ?(size=5000) t =
     | RVar i -> Atom (varname i)
     | TParam s -> Atom s
 
-  and type_generic ~depth id typeParameters =
+  and type_generic ~depth (_, id) typeParameters =
     fuse [
       identifier id;
       option (type_parameter_instantiation ~depth) typeParameters;
@@ -125,23 +125,35 @@ let type_ ?(size=5000) t =
 
   and identifier name = Atom name
 
-  and type_alias { ta_name; ta_imported; ta_tparams; ta_type } =
-    match ta_imported with
-    | Some file -> fuse  @@ [
-        Atom "imported"; space;
-        identifier ta_name; space;
-        Atom "from"; space;
-      ]
-      @ in_quotes file
+  and type_alias { ta_name = (provenance, id); ta_tparams; ta_type } =
+    match provenance with
+    | Remote loc ->
+      (match Loc.source loc with
+      | Some source ->
+        fuse ([
+            Atom "imported"; space;
+            identifier id; space;
+            Atom "from"; space;
+          ]
+          @ in_quotes (File_key.to_string source)
+        )
+      | _ ->
+        identifier id)
 
-    | None -> fuse @@ [
+    | Imported _ -> fuse [
+        Atom "imported"; space;
+        identifier id;
+        option (type_parameter ~depth:0) ta_tparams;
+      ]
+
+    | _ -> fuse ([
         Atom "type"; space;
-        identifier ta_name;
+        identifier id;
         option (type_parameter ~depth:0) ta_tparams;
       ]
       @ Option.value_map ta_type ~default:[] ~f:(fun t -> [
           pretty_space; Atom "="; pretty_space; type_ ~depth:0 t
-        ])
+        ]))
 
   and type_function ~depth ~sep
     { fun_params; fun_rest_param; fun_return; fun_type_params } =
@@ -273,7 +285,7 @@ let type_ ?(size=5000) t =
     | Inter _ -> wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
 
-  and type_class ~depth id structural typeParameters = fuse [
+  and type_class ~depth (_, id) structural typeParameters = fuse [
     Atom (if structural then "interface" else "class");
     space;
     identifier id;

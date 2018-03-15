@@ -97,13 +97,22 @@ and dump_tvar = function
   | RVar i -> spf "T_%d" i
   | TParam s -> s
 
+and dump_symbol (provenance, name) =
+  match provenance with
+  | Local -> name
+  | Imported loc -> spf "%s /* imported from file %s */" name (Reason.string_of_loc loc)
+  | Remote loc -> spf "%s /* defined in file %s */" name (Reason.string_of_loc loc)
+  | Library loc -> spf "%s /* defined in library %s */" name (Reason.string_of_loc loc)
+  | Builtin -> spf "%s /* builtin */" name
+
 and dump_t ?(depth = 10) t =
   if depth < 0 then "..." else
   let depth = depth - 1 in
   match t with
   | TVar v -> dump_tvar v
   | Generic (s, st, ts) ->
-    spf "Generic(%s, struct= %b, params=%s)" s st (dump_generics ~depth ts)
+    spf "Generic(%s, struct= %b, params=%s)"
+      (dump_symbol s) st (dump_generics ~depth ts)
   | Any -> "Any"
   | AnyObj -> "AnyObj"
   | AnyFun -> "AnyFun"
@@ -122,24 +131,23 @@ and dump_t ?(depth = 10) t =
   | Arr t -> spf "Array<%s>" (dump_t ~depth t)
   | This -> "this"
   | Tup ts ->
-    spf "Tup(%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
+    spf "Tup (%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
   | Union (t1,t2,ts) ->
-    spf "Union(%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1::t2::ts)))
+    spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (ListUtils.first_n 10 (t1::t2::ts)))
   | Inter (t1,t2,ts) ->
-    spf "Inter(%s)" (dump_list (dump_t ~depth) ~sep:", " (t1::t2::ts))
-  | TypeAlias { ta_name; ta_imported=None; ta_tparams; ta_type } ->
-    spf "TypeAlias(%s, params=[%s], body=%s)"
-      ta_name
+    spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1::t2::ts))
+  | TypeAlias { ta_name; ta_tparams; ta_type } ->
+    spf "TypeAlias (%s, %s, %s)"
+      (dump_symbol ta_name)
       (dump_type_params ~depth ta_tparams)
       (Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
-  | TypeAlias { ta_name; ta_imported=Some file; _ } ->
-    spf "Import(%s, %s)" ta_name file
   | TypeOf n ->
-    spf "Typeof(%s)" n
+    spf "Typeof(%s)" (dump_symbol n)
   | Exists -> "*"
-  | Class (n, s, ps) ->
-    spf "%s(%s, params= %s)" (if s then "Interface" else "Class") n
-      (dump_type_params ~depth ps)
+  | Class (name, true, ps) ->
+    spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
+  | Class (name, false, ps) ->
+    spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
 
 let dump_binding (v, ty) =
@@ -193,7 +201,7 @@ let rec json_of_t t = Hh_json.(
       | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
       | None -> []
     ) @ [
-      "type", JSON_String s;
+      "type", json_of_symbol s;
       "structural", JSON_Bool str;
     ]
   | Any | AnyObj | AnyFun
@@ -224,21 +232,16 @@ let rec json_of_t t = Hh_json.(
   | Inter (t0,t1,ts) -> [
       "types", JSON_Array (List.map json_of_t (t0::t1::ts));
     ]
-  | TypeAlias { ta_name; ta_imported; ta_tparams; ta_type } -> [
-      "name", JSON_String ta_name;
-      "imported", (
-        match ta_imported with
-        | Some name -> JSON_String name
-        | _ -> JSON_Null
-      );
+  | TypeAlias { ta_name; ta_tparams; ta_type } -> [
+      "name", json_of_symbol ta_name;
       "typeParams", json_of_type_params ta_tparams;
       "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type
     ]
   | TypeOf name -> [
-      "name", JSON_String name;
+      "name", json_of_symbol name;
     ]
   | Class (name, structural, tparams) -> [
-      "name", JSON_String name;
+      "name", json_of_symbol name;
       "structural", JSON_Bool structural;
       "typeParams", json_of_type_params tparams;
     ]
@@ -255,6 +258,8 @@ and json_of_tvar = Hh_json.(function
   | RVar i -> ["id", int_ i]
   | TParam s -> ["id", JSON_String s]
 )
+
+and json_of_symbol (_loc, name) = Hh_json.JSON_String name
 
 and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
   Hh_json.(

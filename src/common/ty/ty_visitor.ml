@@ -38,10 +38,10 @@ module Make(M: Monoid.S)(E: Env) = struct
       | Tup ts -> mapM (self#type_ env) ts >>| fun t -> Tup t
       | Union (t1, t2, ts) -> mapM (self#type_ env) (t1::t2::ts) >>| mk_union
       | Inter (t1, t2, ts) -> mapM (self#type_ env) (t1::t2::ts) >>| mk_inter
-      | TypeAlias { ta_name; ta_imported; ta_tparams; ta_type } ->
+      | TypeAlias { ta_name; ta_tparams; ta_type } ->
         opt (mapM (self#param_t env)) ta_tparams >>= fun ta_tparams ->
         opt (self#type_ env) ta_type >>| fun ta_type ->
-        TypeAlias { ta_name; ta_imported; ta_tparams; ta_type }
+        TypeAlias { ta_name; ta_tparams; ta_type }
       | Class (n, s, ps) ->
         opt (mapM (self#param_t env)) ps >>| fun ps -> Class (n, s, ps)
       | Mu (v, t) -> self#type_ env t >>| fun t -> Mu (v, t)

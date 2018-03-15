@@ -145,6 +145,13 @@ end = struct
          appears free".
        *)
       free_tvars: VSet.t;
+
+      (* In determining whether a symbol is Local, Imported, Remote, etc, it is
+         useful to keep the list of imported names and the corresponding
+         location available. We can then make this decision by comparing the
+         source file with the current context's file information.
+      *)
+      imported_names: Loc.t SMap.t;
     }
 
     let empty ~cx = {
@@ -152,6 +159,7 @@ end = struct
       tvar_cache = IMap.empty;
       cx;
       free_tvars = VSet.empty;
+      imported_names = SMap.empty;
     }
 
   end
@@ -495,11 +503,11 @@ end = struct
     | InternalT i -> internal_t ~env t i
     | MatchingPropT _ -> return Ty.Bot
     | AnyWithUpperBoundT t ->
-      type__ ~env t >>= fun ty ->
-      named_t "$SubType" ~targs:[ty]
+      type__ ~env t >>| fun ty ->
+      Ty.generic_builtin_t "$SubType" [ty]
     | AnyWithLowerBoundT t ->
-      type__ ~env t >>= fun ty ->
-      named_t "$SuperType" ~targs:[ty]
+      type__ ~env t >>| fun ty ->
+      Ty.generic_builtin_t "$SuperType" [ty]
     | DefT (_, MixedT _) -> return Ty.Top
     | DefT (_, AnyT) -> return Ty.Any
     | DefT (_, AnyObjT) -> return Ty.AnyObj
@@ -544,16 +552,16 @@ end = struct
     | ThisTypeAppT (_, c, _, None) -> type__ ~env c
     | ThisTypeAppT (_, c, _, Some ts) -> type_app ~env c ts
     | KeysT (_, t) ->
-      type__ ~env t >>= fun ty ->
-      named_t "$Keys" ~targs:[ty]
+      type__ ~env t >>| fun ty ->
+      Ty.generic_builtin_t "$Keys" [ty]
     | OpaqueT (r, o) -> opaque_t ~env r o None
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
     | TypeDestructorTriggerT _ -> return Ty.Any
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return Ty.Exists
-    | ObjProtoT _ -> named_t "Object.prototype"
-    | FunProtoT _ -> named_t "Function.prototype"
+    | ObjProtoT _ -> return (Ty.builtin_t "Object.prototype")
+    | FunProtoT _ -> return (Ty.builtin_t "Function.prototype")
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
@@ -566,7 +574,7 @@ end = struct
           ]
           Any)
       else
-        return (Ty.TypeOf "Function.prototype.apply")
+        return Ty.(TypeOf (Builtin, "Function.prototype.apply"))
 
     | FunProtoBindT _ ->
       if C.expand_internal_types then
@@ -576,7 +584,7 @@ end = struct
           ~rest:(Some "argArray", Arr Any)
           Any)
       else
-        return (Ty.TypeOf "Function.prototype.bind")
+         return Ty.(TypeOf (Builtin, "Function.prototype.bind"))
 
     | FunProtoCallT _ ->
       if C.expand_internal_types then
@@ -586,7 +594,7 @@ end = struct
           ~rest:(Some "argArray", Arr Any)
           Any)
       else
-        return (Ty.TypeOf "Function.prototype.call")
+         return Ty.(TypeOf (Builtin, "Function.prototype.call"))
 
     | DefT (_, CharSetT _)
     | NullProtoT _
@@ -672,11 +680,37 @@ end = struct
       mapM (type__ ~env) ts >>|
       uniq_union
 
-  and named_t ?targs name =
-    return Ty.(Generic (name, false, targs))
-
-  and named_alias ?ta_imported ?ta_tparams ?ta_type name =
-    return Ty.(TypeAlias { ta_name=name; ta_imported; ta_tparams; ta_type })
+  (* TODO due to repositioninig `reason_loc` may not point to the actual
+     location where `name` was defined. *)
+  and symbol reason name =
+    let open File_key in
+    get >>= fun st ->
+    let cx = State.(st.cx) in
+    let reason_loc = Reason.loc_of_reason reason in
+    let reason_source = Loc.source reason_loc in
+    let provenance =
+      match reason_source with
+      | Some LibFile _ -> Ty.Library reason_loc
+      | Some (SourceFile _) ->
+        let current_source = Context.file cx in
+        (* Locally defined name *)
+        if Some current_source = reason_source then
+          Ty.Local
+        else (
+          (* Otherwise it is one of:
+             - Imported, or
+             - Remote (defined in a different file but not imported in this one)
+          *)
+          match SMap.get name st.State.imported_names with
+          | Some loc when reason_loc = loc -> Ty.Imported loc
+          | _ -> Ty.Remote reason_loc
+        )
+      | Some (JsonFile _)
+      | Some (ResourceFile _) -> Ty.Local
+      | Some Builtins -> Ty.Builtin
+      | None -> Ty.Local
+    in
+    return (provenance, name)
 
   and annot_t ~env r id =
     if C.expand_annots then
@@ -685,16 +719,16 @@ end = struct
       match desc_of_reason r with
       (* Named aliases *)
       | RType name
-      | RJSXIdentifier (_, name) -> named_t name
-      | RFbt -> named_t "Fbt"
-      | RRegExp -> named_t "regexp"
+      | RJSXIdentifier (_, name) -> symbol r name >>| Ty.named_t
+      | RFbt -> symbol r "Fbt" >>| Ty.named_t
+      | RRegExp -> symbol r "regexp" >>| Ty.named_t
 
       (* Imported Alias: descend to get the actual name *)
-      | RNamedImportedType ta_imported ->
-        type_variable ~env id >>= (function
-        | Ty.Generic (name, false, _) ->
-          named_alias ~ta_imported name
-        | ty -> return ty
+      | RNamedImportedType _ ->
+        type_variable ~env id >>| (function
+        | Ty.Generic (import_symbol, false, _) ->
+          Ty.named_alias import_symbol
+        | ty -> ty
         )
       (* The rest of the case will have to go through full resolution *)
       | _ -> type_variable ~env id
@@ -805,10 +839,11 @@ end = struct
   and instance_t ~env r inst =
     let open Type in
     name_of_instance_reason r >>= fun name ->
+    symbol r name >>= fun symbol ->
     let args = SMap.bindings inst.type_args in
     mapM (fun (_, (_, t)) -> type__ ~env t) args >>| function
-    | [] -> Ty.Generic (name, inst.structural, None)
-    | xs -> Ty.Generic (name, inst.structural, Some xs)
+    | [] -> Ty.Generic (symbol, inst.structural, None)
+    | xs -> Ty.Generic (symbol, inst.structural, Some xs)
 
   and class_t ~env t ps =
     let rec class_t_aux = function
@@ -851,7 +886,7 @@ end = struct
     | _ ->
       terr ~kind:BadPoly (Some t)
 
-  (* Type Aliases - Local and imported *)
+  (* Type Aliases *)
   and type_t ~env r t ta_tparams =
     match t with
     | Type.OpaqueT (r, o) ->
@@ -862,18 +897,19 @@ end = struct
   and type_t_with_reason ~env r t ta_tparams =
     match desc_of_reason r with
     (* Locally defined alias *)
-    | RType ta_name ->
+    | RType name ->
       type__ ~env t >>= fun ta_type ->
+      symbol r name >>| fun symbol ->
       (* TODO option to skip computing this *)
-      named_alias ta_name ?ta_tparams ~ta_type
+      Ty.named_alias symbol ?ta_tparams ~ta_type
 
     (* Imported Alias: descend to get the actual name *)
-    | RNamedImportedType ta_imported ->
-      type__ ~env t >>= (function
-        | (Ty.Generic (ta_name, _, _)) as ta_type ->
-          named_alias ta_name ~ta_imported ?ta_tparams ~ta_type
+    | RNamedImportedType _ ->
+      type__ ~env t >>| (function
+        | (Ty.Generic (import_symbol, _, _)) as ta_type ->
+          Ty.named_alias import_symbol ?ta_tparams ~ta_type
         | ty ->
-          return ty
+          ty
       )
     | _ ->
       let msg = spf "Parent reason: %s" (string_of_reason r) in
@@ -881,7 +917,7 @@ end = struct
 
   and exact_t ~env t = type__ ~env t >>| function
     | Ty.Obj o -> Ty.Obj { o with Ty.obj_exact = true }
-    | t -> Ty.Generic ("$Exact", false, Some [t])
+    | t -> Ty.generic_builtin_t "$Exact" [t]
 
   and type_app ~env t targs =
     type__ ~env t >>= fun ty ->
@@ -889,7 +925,7 @@ end = struct
     (match ty with
     | Ty.Class (name, _, _)
     | Ty.TypeAlias { Ty.ta_name=name; _ } ->
-      named_t name ~targs
+      return (Ty.generic_t name targs)
     | Ty.Any ->
       return Ty.Any
     | _ ->
@@ -915,12 +951,13 @@ end = struct
 
          This could be a to-do, but this pattern is not that common.
       *)
-      (match desc_of_reason (T.reason_of_t t) with
-      | RType name -> named_t name ~targs
+      let reason = T.reason_of_t t in
+      match desc_of_reason reason with
+      | RType name ->
+        symbol reason name >>| fun s -> Ty.generic_t s targs
       | _ ->
         let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
         terr ~kind:BadTypeApp ~msg (Some t)
-      )
     )
 
   (* We are being a bit lax here with opaque types so that we don't have to
@@ -935,11 +972,12 @@ end = struct
     get_cx >>= fun cx ->
     let current_source = Context.file cx in
     let opaque_source = Loc.source (def_loc_of_reason reason) in
+    symbol reason name >>= fun opaque_symbol ->
     (* Compare the current file (of the query) and the file that the opaque
        type is defined. If they differ, then hide the underlying/super type.
        Otherwise, display the underlying/super type. *)
     if Some current_source <> opaque_source then
-      named_alias ?ta_tparams name
+      return (Ty.named_alias ?ta_tparams opaque_symbol)
     else
       let t_opt = match opaque_type with
       | { underlying_t = Some t; _ }       (* opaque type A = number; *)
@@ -948,8 +986,8 @@ end = struct
       (* TODO: This will potentially report a remote name.
          The same fix for T25963804 should be applied here as well. *)
       in
-      option (type__ ~env) t_opt >>= fun ta_type ->
-      named_alias ?ta_tparams ?ta_type name
+      option (type__ ~env) t_opt >>| fun ta_type ->
+      Ty.named_alias ?ta_tparams ?ta_type opaque_symbol
 
   and custom_fun_expanded ~env =
     let open Type in
@@ -977,7 +1015,7 @@ end = struct
     (* $Facebookism$Mixin: (...objects: Array<Object>): Class *)
     | Mixin -> return Ty.(mk_fun
         ~rest:(Some "objects", Arr AnyObj)
-        (Class ("Object", false, None))
+        (Class ((Builtin, "Object"), false, None))
       )
 
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
@@ -1005,8 +1043,8 @@ end = struct
        => ?IdxResult;
     *)
     | Idx ->
-      let idxObject = Ty.Generic ("IdxObject", false, None) in
-      let idxResult = Ty.Generic ("IdxResult", false, None) in
+      let idxObject = Ty.builtin_t "IdxObject" in
+      let idxResult = Ty.builtin_t "IdxResult" in
       let tparams = [
         mk_tparam ~bound:Ty.AnyObj "IdxObject";
         mk_tparam "IdxResult";
@@ -1042,7 +1080,7 @@ end = struct
     (* reactCreateClass: (spec: any) => ReactClass<any> *)
     | ReactCreateClass -> return Ty.(mk_fun
         ~params:[(Some "spec", Any, non_opt_param)]
-        (Generic ("ReactClass", false, Some [Any]))
+        (generic_builtin_t "ReactClass" [Any])
       )
 
     (* 1. Component class:
@@ -1055,14 +1093,14 @@ end = struct
     | ReactCloneElement
     | ReactElementFactory _ -> return Ty.(
         let tparams = [mk_tparam "T"] in
-        let t = Generic ("T", false, None) in
+        let t = named_t (Local, "T") in
         let params = [
-          (Some "name", Generic ("ReactClass", false, Some [t]), non_opt_param);
+          (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
           (Some "children", Any, opt_param);
         ]
         in
-        let reactElement = Generic ("React$Element", false, Some [t]) in
+        let reactElement = generic_builtin_t "React$Element" [t] in
         let f1 = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "config", t, non_opt_param);
@@ -1086,26 +1124,26 @@ end = struct
   and custom_fun_short ~env =
     let open Type in
     function
-    | ObjectAssign -> return (Ty.Generic ("Object$Assign", false, None))
-    | ObjectGetPrototypeOf -> return (Ty.Generic ("Object$GetPrototypeOf", false, None))
-    | ObjectSetPrototypeOf -> return (Ty.Generic ("Object$SetPrototypeOf", false, None))
-    | Compose false -> return (Ty.Generic ("$Compose", false, None))
-    | Compose true -> return (Ty.Generic ("$ComposeReverse", false, None))
+    | ObjectAssign -> return (Ty.builtin_t "Object$Assign")
+    | ObjectGetPrototypeOf -> return (Ty.builtin_t "Object$GetPrototypeOf")
+    | ObjectSetPrototypeOf -> return (Ty.builtin_t "Object$SetPrototypeOf")
+    | Compose false -> return (Ty.builtin_t "$Compose")
+    | Compose true -> return (Ty.builtin_t "$ComposeReverse")
     | ReactPropType t -> react_prop_type ~env t
-    | ReactCreateClass -> return (Ty.Generic ("React$CreateClass", false, None))
-    | ReactCreateElement -> return (Ty.Generic ("React$CreateElement", false, None))
-    | ReactCloneElement -> return (Ty.Generic ("React$CloneElement", false, None))
+    | ReactCreateClass -> return (Ty.builtin_t "React$CreateClass")
+    | ReactCreateElement -> return (Ty.builtin_t "React$CreateElement")
+    | ReactCloneElement -> return (Ty.builtin_t "React$CloneElement")
     | ReactElementFactory t ->
       type__ ~env t >>| fun t ->
-      Ty.Generic ("React$ElementFactory", false, Some [t])
-    | Merge -> return (Ty.Generic ("$Facebookism$Merge", false, None))
-    | MergeDeepInto -> return (Ty.Generic ("$Facebookism$MergeDeepInto", false, None))
-    | MergeInto -> return (Ty.Generic ("$Facebookism$MergeInto", false, None))
-    | Mixin -> return (Ty.Generic ("$Facebookism$Mixin", false, None))
-    | Idx -> return (Ty.Generic ("$Facebookism$Idx", false, None))
-    | DebugPrint -> return (Ty.Generic ("$Flow$DebugPrint", false, None))
-    | DebugThrow -> return (Ty.Generic ("$Flow$DebugThrow", false, None))
-    | DebugSleep -> return (Ty.Generic ("$Flow$DebugSleep", false, None))
+      Ty.generic_builtin_t "React$ElementFactory" [t]
+    | Merge -> return (Ty.builtin_t "$Facebookism$Merge")
+    | MergeDeepInto -> return (Ty.builtin_t "$Facebookism$MergeDeepInto")
+    | MergeInto -> return (Ty.builtin_t "$Facebookism$MergeInto")
+    | Mixin -> return (Ty.builtin_t "$Facebookism$Mixin")
+    | Idx -> return (Ty.builtin_t "$Facebookism$Idx")
+    | DebugPrint -> return (Ty.builtin_t "$Flow$DebugPrint")
+    | DebugThrow -> return (Ty.builtin_t "$Flow$DebugThrow")
+    | DebugSleep -> return (Ty.builtin_t "$Flow$DebugSleep")
 
   and custom_fun env t =
     if C.expand_internal_types
@@ -1117,13 +1155,13 @@ end = struct
     function
     | Primitive (_, t)   ->
       type__ ~env t >>| fun t ->
-      Ty.Generic ("React$PropType$Primitive", false, Some [t])
-    | Complex ArrayOf -> return (Ty.Generic ("React$PropType$ArrayOf", false, None))
-    | Complex InstanceOf -> return (Ty.Generic ("React$PropType$ArrayOf", false, None))
-    | Complex ObjectOf -> return (Ty.Generic ("React$PropType$dbjectOf", false, None))
-    | Complex OneOf -> return (Ty.Generic ("React$PropType$OneOf", false, None))
-    | Complex OneOfType -> return (Ty.Generic ("React$PropType$OneOfType", false, None))
-    | Complex Shape -> return (Ty.Generic ("React$PropType$Shape", false, None))
+      Ty.generic_builtin_t "React$PropType$Primitive" [t]
+    | Complex ArrayOf -> return (Ty.builtin_t "React$PropType$ArrayOf")
+    | Complex InstanceOf -> return (Ty.builtin_t "React$PropType$ArrayOf")
+    | Complex ObjectOf -> return (Ty.builtin_t "React$PropType$dbjectOf")
+    | Complex OneOf -> return (Ty.builtin_t "React$PropType$OneOf")
+    | Complex OneOfType -> return (Ty.builtin_t "React$PropType$OneOfType")
+    | Complex Shape -> return (Ty.builtin_t "React$PropType$Shape")
 
   and internal_t ~env t =
     let open Type in
@@ -1163,7 +1201,7 @@ end = struct
   and eval_t =
     let from_name env name t =
       type__ ~env t >>| fun ty ->
-      Ty.Generic (name, false, Some [ty])
+      Ty.generic_builtin_t name [ty]
     in
     fun ~env t id d ->
     match d with
@@ -1208,9 +1246,33 @@ end = struct
       then return Ty.Top
       else mapM (use_t ~env) uses >>| uniq_inter
 
+
+(* Before we start normalizing the input type we populate our environment with
+   aliases that are in scope due to typed imports. These are already inside the
+   'imported_ts' portion of the context. This step includes the normalization
+   of all imported types and the creation of a map to hold bindings of imported
+   names to location of definition. This map will be used later to determine
+   whether a located name (symbol) appearing is part of the file's imports or a
+   remote (hidden or non-imported) name.
+*)
+let add_imports ~cx state =
+  let open State in
+  let imported_ts = Context.imported_ts cx in
+  let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
+    match run st (type__ ~env:Env.empty t) with
+    | (Ok (TypeAlias { ta_name = (Remote loc, _); _ }), st)
+    | (Ok (Class ((Remote loc, _), _, _)), st) ->
+      (st, SMap.add x loc m)
+    | (_, st) ->
+      (st, m)
+  )) imported_ts (state, SMap.empty) in
+  { state with imported_names }
+
+
   (* Exposed API *)
   let from_types ~cx ts =
     let state = State.empty ~cx in
+    let state = add_imports ~cx state in
     let _, rts = ListUtils.fold_map (fun st (a, t) ->
       match run st (type__ ~env:Env.empty t) with
       | Ok t, st -> (st, (a, Ok t))
@@ -1219,7 +1281,8 @@ end = struct
     in rts
 
   let from_type ~cx t =
-    let state = State.empty ~cx in
-    fst (run state (type__ ~env:Env.empty t))
+  let state = State.empty ~cx in
+  let state = add_imports ~cx state in
+  fst (run state (type__ ~env:Env.empty t))
 
 end
