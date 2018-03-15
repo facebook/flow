@@ -36,10 +36,10 @@ addons:
     - aspcud
     - yarn
 
-before_install: bash -e resources/travis/before_install.sh
-install: bash -e resources/travis/install_deps.sh
-script: bash -e resources/travis/build.sh
-before_deploy: bash -e resources/travis/before_deploy.sh
+before_install: bash -xe resources/travis/before_install.sh
+install: bash -xe resources/travis/install_deps.sh
+script: bash -xe resources/travis/build.sh
+before_deploy: bash -xe resources/travis/before_deploy.sh
 
 cache:
   directories:
@@ -56,7 +56,7 @@ deploy:
 # Deploy the parser to npm
 - provider: script
   repo: facebook/flow
-  script: bash -e resources/travis/deploy_npm.sh
+  script: bash -xe resources/travis/deploy_npm.sh
   skip_cleanup: true
   on:
     tags: true
@@ -68,7 +68,7 @@ deploy:
 # Deploy the website
 - provider: script
   repo: facebook/flow
-  script: bash -e resources/travis/deploy.sh
+  script: bash -xe resources/travis/deploy.sh
   skip_cleanup: true
   on:
     branch: master
