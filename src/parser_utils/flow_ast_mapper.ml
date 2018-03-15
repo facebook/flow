@@ -26,7 +26,7 @@ let map_loc: 'node. ('node -> 'node) -> (Loc.t * 'node) -> (Loc.t * 'node) =
 class mapper = object(this)
   method program (program: Loc.t Ast.program) =
     let (loc, statements, comments) = program in
-    let statements' = this#statement_list statements in
+    let statements' = this#toplevel_statement_list statements in
     let comments' = ListUtils.ident_map (this#comment) comments in
     if statements == statements' && comments == comments' then program
     else loc, statements', comments'
@@ -1124,6 +1124,9 @@ class mapper = object(this)
     let { expressions } = expr in
     let expressions' = ListUtils.ident_map this#expression expressions in
     if expressions == expressions' then expr else { expressions = expressions' }
+
+  method toplevel_statement_list (stmts: Loc.t Ast.Statement.t list) =
+    this#statement_list stmts
 
   method statement_list (stmts: Loc.t Ast.Statement.t list) =
     ListUtils.ident_map this#statement stmts
