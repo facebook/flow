@@ -425,8 +425,8 @@ static char *db_filename = NULL;
 static char *hashtable_db_filename = NULL;
 
 #ifndef NO_SQLITE3
-// SQLite DB pointer
-static sqlite3 *db = NULL;
+// global SQLite DB pointer
+static sqlite3 *g_db = NULL;
 static sqlite3 *hashtable_db = NULL;
 static sqlite3_stmt *get_dep_select_stmt = NULL;
 static sqlite3_stmt *get_select_stmt = NULL;
@@ -2128,11 +2128,11 @@ CAMLprim value hh_load_dep_table_sqlite(
   db_filename[filename_len] = '\0';
 
   // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
-  assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
+  assert_sql(sqlite3_open_v2(db_filename, &g_db, SQLITE_OPEN_READONLY, NULL),
     SQLITE_OK);
 
   // Verify the header
-  verify_sqlite_header(db, Bool_val(ignore_hh_version));
+  verify_sqlite_header(g_db, Bool_val(ignore_hh_version));
 
   tv2 = log_duration("Reading the dependency file with sqlite", tv);
   int secs = tv2.tv_sec - tv.tv_sec;
@@ -2156,15 +2156,15 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   }
 
   // Now that we know we are in SQL mode, make sure db connection is made
-  if (db == NULL) {
+  if (g_db == NULL) {
     assert(*db_filename != '\0');
     // We are in sql, hence we shouldn't be in the master process,
     // since we are not connected yet, soo.. try to connect
     assert_not_master();
     // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
-    assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
+    assert_sql(sqlite3_open_v2(db_filename, &g_db, SQLITE_OPEN_READONLY, NULL),
       SQLITE_OK);
-    assert(db != NULL);
+    assert(g_db != NULL);
   }
 
   // The caller is required to pass a 32-bit node ID.
@@ -2178,7 +2178,7 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
   if (get_dep_select_stmt == NULL) {
     const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
-    assert_sql(sqlite3_prepare_v2(db, sql, -1, &get_dep_select_stmt, NULL),
+    assert_sql(sqlite3_prepare_v2(g_db, sql, -1, &get_dep_select_stmt, NULL),
       SQLITE_OK);
     assert(get_dep_select_stmt != NULL);
   }
