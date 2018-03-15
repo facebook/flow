@@ -108,7 +108,8 @@ let rec consume_prehandoff_messages ic oc =
       " Be patient waiting for a server to be started.";
     Error Server_dormant
   | PH.Server_not_alive_dormant _ ->
-    Printf.eprintf "Waiting for a server to be started...\n%!";
+    Printf.eprintf "Waiting for a server to be started...%s\n%!"
+      ClientMessages.waiting_for_server_to_be_started_doc;
     consume_prehandoff_messages ic oc
   | PH.Server_died {PH.status; PH.was_oom} ->
     (match was_oom, status with
