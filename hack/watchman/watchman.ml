@@ -265,6 +265,13 @@ module Watchman_actual = struct
        let error = J.get_string_val "error" obj in
        EventLogger.watchman_error error;
        raise @@ Watchman_error error
+     with Not_found -> ());
+    (try
+       let canceled = J.get_bool_val "canceled" obj in
+       if canceled then begin
+       EventLogger.watchman_error "Subscription canceled by watchman";
+       raise @@ Subscription_canceled_by_watchman
+       end else ()
      with Not_found -> ())
 
   let sanitize_watchman_response output =

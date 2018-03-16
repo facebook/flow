@@ -12,6 +12,7 @@ module Types = struct
 
   exception Timeout
   exception Watchman_error of string
+  exception Subscription_canceled_by_watchman
 
 
   type subscribe_mode =

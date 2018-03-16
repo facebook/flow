@@ -21,6 +21,13 @@ let get_string_val key ?default json =
   | None, Some def -> def
   | None, None -> raise Not_found
 
+let get_bool_val key ?default json =
+  let v = try_get_val key json in
+  match v, default with
+  | Some v, _ -> Hh_json.get_bool_exn v
+  | None, Some def -> def
+  | None, None -> raise Not_found
+
 let get_array_val key ?default json =
   let v = try_get_val key json in
   match v, default with
