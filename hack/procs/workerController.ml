@@ -33,7 +33,9 @@ open Worker
  *
  *****************************************************************************)
 
-exception Worker_exited_abnormally of int
+type process_id = int
+
+exception Worker_failed of (process_id * Unix.process_status)
 exception Worker_oomed
 exception Worker_busy
 
@@ -224,11 +226,12 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
         raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->
         Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
-        raise (Worker_exited_abnormally i)
+        raise (Worker_failed (slave_pid, Unix.WEXITED i))
     | _, Unix.WSTOPPED i ->
-        Printf.ksprintf failwith "Subprocess(%d): stopped %d" slave_pid i
+        raise (Worker_failed (slave_pid, Unix.WSTOPPED i))
     | _, Unix.WSIGNALED i ->
-        Printf.ksprintf failwith "Subprocess(%d): signaled %d" slave_pid i in
+        raise (Worker_failed (slave_pid, Unix.WSIGNALED i))
+  in
   (* Prepare ourself to read answer from the slave. *)
   let result () : b =
     with_exit_status_check slave_pid begin fun () ->
@@ -273,13 +276,9 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
  *
  **************************************************************************)
 
-let is_oom_failure msg =
-  (String_utils.string_starts_with msg "Subprocess") &&
-  (String_utils.is_substring "signaled -7" msg)
-
 let with_worker_exn (handle : ('a, 'b) handle) slave f =
   try f () with
-  | Failure (msg) when is_oom_failure msg ->
+  | Worker_failed (_, Unix.WSIGNALED -7)->
     raise Worker_oomed
   | exn ->
     slave.worker.busy <- false;
