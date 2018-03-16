@@ -504,6 +504,17 @@ let print_actionRequired (id: int) (label: string option) : json =
 
 
 (************************************************************************)
+(** telemetry/connectionStatus notification                            **)
+(************************************************************************)
+
+let print_connectionStatus (p: ConnectionStatus.params) : json =
+  let open ConnectionStatus in
+  JSON_Object [
+    "isConnected", JSON_Bool p.isConnected;
+  ]
+
+
+(************************************************************************)
 (** textDocument/hover request                                         **)
 (************************************************************************)
 
@@ -776,6 +787,7 @@ let parse_initialize (params: json option) : Initialize.params =
       workspace = Jget.obj_opt json "workspace" |> parse_workspace;
       textDocument = Jget.obj_opt json "textDocument" |> parse_textDocument;
       window = Jget.obj_opt json "window" |> parse_window;
+      telemetry = Jget.obj_opt json "telemetry" |> parse_telemetry;
     }
   and parse_workspace json =
     {
@@ -811,6 +823,10 @@ let parse_initialize (params: json option) : Initialize.params =
     {
       progress = Jget.obj_opt json "progress" |> Option.is_some;
       actionRequired = Jget.obj_opt json "actionRequired" |> Option.is_some;
+    }
+  and parse_telemetry json =
+    {
+      connectionStatus = Jget.obj_opt json "connectionStatus" |> Option.is_some;
     }
   in
   parse_initialize params
@@ -991,6 +1007,7 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | ShowMessageNotification _ -> "window/showMessage"
   | ProgressNotification _ -> "window/progress"
   | ActionRequiredNotification _ -> "window/actionRequired"
+  | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
 
 let message_to_string (message: lsp_message) : string =
   match message with
@@ -1039,6 +1056,7 @@ let parse_lsp_notification (method_: string) (params: json option) : lsp_notific
   | "window/showMessage"
   | "window/progress"
   | "window/actionRequired"
+  | "telemetry/connectionStatus"
   | _ -> raise (Error.Parse ("Don't know how to parse LSP notification " ^ method_))
 
 let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
@@ -1160,7 +1178,8 @@ let print_lsp_notification (notification: lsp_notification) : json =
     | ShowMessageNotification r -> print_showMessage r.ShowMessage.type_ r.ShowMessage.message
     | ProgressNotification r -> print_progress r.Progress.id r.Progress.label
     | ActionRequiredNotification r ->
-      print_actionRequired r.ActionRequired.id r.ActionRequired.label
+        print_actionRequired r.ActionRequired.id r.ActionRequired.label
+    | ConnectionStatusNotification r -> print_connectionStatus r
     | ExitNotification
     | DidOpenNotification _
     | DidCloseNotification _

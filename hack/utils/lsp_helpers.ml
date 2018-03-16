@@ -56,6 +56,9 @@ let supports_snippets (p: Lsp.Initialize.params) : bool =
   let open Lsp.Initialize in
   p.client_capabilities.textDocument.completion.completionItem.snippetSupport
 
+let supports_connectionStatus (p: Lsp.Initialize.params) : bool =
+  let open Lsp.Initialize in
+  p.client_capabilities.telemetry.connectionStatus
 
 (************************************************************************)
 (** Wrappers for some LSP methods                                      **)
@@ -82,6 +85,17 @@ let dismiss_diagnostics (writer: Jsonrpc.writer) (diagnostic_uris: SSet.t) : SSe
   SSet.iter dismiss_one diagnostic_uris;
   SSet.empty
 
+let notify_connectionStatus
+    (p: Lsp.Initialize.params)
+    (writer: Jsonrpc.writer)
+    (wasConnected: bool)
+    (isConnected: bool)
+  : bool =
+  if supports_connectionStatus p && wasConnected <> isConnected then begin
+    let message = { Lsp.ConnectionStatus.isConnected; } in
+    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus"
+  end;
+  isConnected
 
 (* notify_progress: for sending/updating/closing progress messages.         *)
 (* To start a new indicator: id=None, message=Some, and get back the new id *)

@@ -94,6 +94,7 @@ type initialized_env = {
   i_outstanding_local_handlers: state lsp_handler IdMap.t;
   i_outstanding_local_requests: lsp_request IdMap.t;
   i_outstanding_requests_from_server: Lsp.lsp_request WrappedMap.t;
+  i_isConnected: bool; (* what we've told the client about our connection status *)
 }
 
 and disconnected_env = {
@@ -320,6 +321,11 @@ let dismiss_ui (state: state) : state =
 
 
 let show_connected (start_time: float) (env: connected_env) : state =
+  (* report that we're connected to telemetry/connectionStatus *)
+  let i_isConnected = Lsp_helpers.notify_connectionStatus env.c_ienv.i_initialize_params
+    to_stdout env.c_ienv.i_isConnected true in
+  let env = { env with c_ienv = { env.c_ienv with i_isConnected; }; } in
+  (* show a notification if necessary *)
   let time = Unix.gettimeofday () in
   if (time -. start_time <= 30.0) then
     Connected env
@@ -384,6 +390,12 @@ let show_disconnected
     (msg: string option)
     (env: disconnected_env)
   : state =
+  (* report that we're disconnected to telemetry/connectionStatus *)
+  let i_isConnected = Lsp_helpers.notify_connectionStatus env.d_ienv.i_initialize_params
+    to_stdout env.d_ienv.i_isConnected false in
+  let env = { env with d_ienv = { env.d_ienv with i_isConnected; }; } in
+
+  (* update dialogs/progress as necessary *)
   let d_dialog_connecting = dismiss_showMessageRequest env.d_dialog_connecting in
   let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params to_stdout
     env.d_progress_connecting None in
@@ -793,6 +805,7 @@ begin
       i_outstanding_local_requests = IdMap.empty;
       i_outstanding_local_handlers = IdMap.empty;
       i_outstanding_requests_from_server = WrappedMap.empty;
+      i_isConnected = false;
     } in
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
     let json = Lsp_fmt.print_lsp response in

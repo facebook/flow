@@ -247,6 +247,7 @@ module Initialize = struct
     workspace: workspaceClientCapabilities;
     textDocument: textDocumentClientCapabilities;
     window: windowClientCapabilities;
+    telemetry: telemetryClientCapabilities;
     (* omitted: experimental *)
   }
 
@@ -286,6 +287,10 @@ module Initialize = struct
   and windowClientCapabilities = {
     progress: bool;  (* Nuclide-specific: client supports window/progress *)
     actionRequired: bool;  (* Nuclide-specific: client supports window/actionRequired *)
+  }
+
+  and telemetryClientCapabilities = {
+    connectionStatus: bool;  (* Nuclide-specific: client supports telemetry/connectionStatus *)
   }
 
   (* What capabilities the server provides *)
@@ -793,6 +798,16 @@ module ActionRequired = struct
 end
 
 
+(* ConnectionStatus notification, method="telemetry/connectionStatus" *)
+module ConnectionStatus = struct
+  type params = connectionStatusParams
+
+  and connectionStatusParams = {
+    isConnected: bool;
+  }
+end
+
+
 (* ErrorResponse *)
 module Error = struct
   (* Defined by JSON-RPC. *)
@@ -864,6 +879,7 @@ type lsp_notification =
   | ShowMessageNotification of ShowMessage.params
   | ProgressNotification of Progress.params
   | ActionRequiredNotification of ActionRequired.params
+  | ConnectionStatusNotification of ConnectionStatus.params
 
 type lsp_message =
   | RequestMessage of lsp_id * lsp_request
