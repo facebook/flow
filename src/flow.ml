@@ -31,6 +31,7 @@ end = struct
     GetImportsCommand.command;
     IdeCommand.command;
     InitCommand.command;
+    LspCommand.command;
     LsCommand.command;
     PortCommand.command;
     ServerCommand.command;
