@@ -48,6 +48,7 @@ val next :
   'a list ->
   'a list Bucket.next
 
+(** Can raise MultiThreadedCall.Coalesced_failures unless in single-threaded mode. *)
 val call :
   worker list option ->
   job:('c -> 'a -> 'b) ->

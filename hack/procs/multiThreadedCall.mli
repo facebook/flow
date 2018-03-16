@@ -8,10 +8,21 @@
  *
  *)
 
+(** If a worker process fails, this is raised.
+ *
+ * Note: When one worker process fails, the remaining in-progress workers are checked
+ * for completion/failure, and all their failures (non-zero exit code) are coalesced
+ * together into one of these exceptions.
+ *
+ * No further buckets are distributed to workers.
+ *
+ * Still-in-progress workers are left to their own accord. *)
+exception Coalesced_failures of (Unix.process_status list)
 
 type interrupt_handler = Unix.file_descr list -> bool
 
-val call:
+(** Can raise Coalesced_failures exception. *)
+val call :
   WorkerController.worker list ->
   ('c -> 'a -> 'b) ->
   ('b -> 'c -> 'c) ->

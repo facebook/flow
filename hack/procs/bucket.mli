@@ -37,6 +37,11 @@ val make :
 
 type 'a of_n = { work: 'a; bucket: int; total: int }
 
+(**
+ * Make n buckets (where n = "buckets").
+ *
+ * The "split" function provides the workload for the k'th bucket.
+ *)
 val make_n_buckets : buckets:int -> split:(bucket:int -> 'a) ->
   'a of_n next
 

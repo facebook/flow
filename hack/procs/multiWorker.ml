@@ -30,9 +30,9 @@ let single_threaded_call job merge neutral next =
            there is no hope for ever getting out of this state *)
         failwith "stuck!"
     | Bucket.Job l ->
-        let res = job neutral l in
-        acc := merge res !acc;
-        x := next()
+      let res = job neutral l in
+      acc := merge res !acc;
+      x := next()
     | Bucket.Done -> ()
   done;
   !acc
@@ -61,8 +61,9 @@ module CallFunctor(Caller: CALLER): sig
 end = struct
   let call workers ~job ~merge ~neutral ~next =
     match workers with
-     | None -> Caller.return (single_threaded_call job merge neutral next)
-     | Some workers -> Caller.multi_threaded_call workers job merge neutral next
+      | None ->
+        Caller.return (single_threaded_call job merge neutral next)
+      | Some workers -> Caller.multi_threaded_call workers job merge neutral next
 end
 
 module Call = CallFunctor(struct

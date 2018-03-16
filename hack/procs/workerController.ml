@@ -278,7 +278,9 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
 
 let with_worker_exn (handle : ('a, 'b) handle) slave f =
   try f () with
-  | Worker_failed (_, Unix.WSIGNALED -7)->
+  | Worker_failed (_, Unix.WSIGNALED -7) as exn->
+    slave.worker.busy <- false;
+    handle := fst !handle, Failed exn;
     raise Worker_oomed
   | exn ->
     slave.worker.busy <- false;

@@ -10,11 +10,14 @@
 
 open Hh_core
 
+exception Coalesced_failures of (Unix.process_status list)
+
 type interrupt_handler = Unix.file_descr list -> bool
 
 let multi_threaded_call
   (type a) (type b) (type c)
-  workers (job: c -> a -> b)
+  workers
+  (job: c -> a -> b)
   (merge: b -> c -> c)
   (neutral: c)
   (next: a Bucket.next)
@@ -67,11 +70,24 @@ let multi_threaded_call
       WorkerController.select handles interrupt_fds in
     let workers = List.map ~f:WorkerController.get_worker readys @ workers in
     (* Collect the results. *)
-    let acc =
+    let acc, failures =
+      (** Fold the results of all the finished workers. Also, coalesce the exit
+       * statuses for all the failed workers. *)
       List.fold_left
-        ~f:(fun acc h -> merge (WorkerController.get_result h) acc)
-        ~init:acc
+        ~f:begin fun (acc, failures) h ->
+           try
+             let acc = merge (WorkerController.get_result h) acc in
+             acc, failures
+           with
+           | WorkerController.Worker_failed (_, status) ->
+             acc, (status :: failures)
+        end
+        ~init:(acc, [])
         readys in
+    if (failures <> []) then
+      (** If any single worker failed, we stop fanning out more jobs. *)
+      raise (Coalesced_failures failures)
+    else
     match check_cancel waiters ready_fds acc with
     | acc, Some unfinished -> acc, unfinished
     | acc, None ->
@@ -82,9 +98,8 @@ let multi_threaded_call
 let call workers job merge neutral next =
   let interrupt_fds = [] in
   let interrupt_handler = fun _ -> assert false in
-  let res, unfinished =
-    multi_threaded_call workers job merge neutral next interrupt_fds interrupt_handler
-  in
+  let res, unfinished = multi_threaded_call
+    workers job merge neutral next interrupt_fds interrupt_handler in
   assert (unfinished = []);
   res
 
