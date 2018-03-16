@@ -85,6 +85,7 @@ module HumanReadable: ClientProtocol = struct
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
         ^ (string_of_int warn_count) ^ " warnings")
     | Prot.ServerExit _code -> () (* ignored here; used in lspCommand *)
+    | Prot.LspFromServer _ -> failwith "no lspFromServer to ideCommand"
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
     | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
@@ -126,6 +127,7 @@ module VeryUnstable: ClientProtocol = struct
     | Prot.Errors {errors; warnings} ->
       print_errors ~strip_root ~json_version errors warnings
     | Prot.ServerExit _code -> () (* ignored here, but used in lspCommand *)
+    | Prot.LspFromServer _ -> failwith "no lspFromServer to ideCommand"
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
     | Prot.AutocompleteResult (result, id) -> print_autocomplete ~strip_root result id
@@ -237,6 +239,7 @@ end = struct
     match response, t.outstanding with
       | Errors _, _
       | ServerExit _, _
+      | LspFromServer _, _
       | StartRecheck, _
       | EndRecheck, _ ->
           t
@@ -266,6 +269,7 @@ end = struct
                   (* We do not expect a response from `subscribe` *)
                   | Prot.Subscribe -> None
                   | Prot.Autocomplete _ | Prot.DidOpen _ | Prot.DidClose _ -> Some req
+                  | Prot.LspToServer _ -> failwith "no lspToServer from ideCommand"
                 in
                 (Some req, { outstanding; queue = q })
         end

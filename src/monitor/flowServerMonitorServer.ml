@@ -44,6 +44,7 @@ type command =
   }
 
 (* The long-lived stream of requests *)
+(* This is unbounded, because otherwise lspCommand might deadlock. *)
 let command_stream, push_to_command_stream = Lwt_stream.create ()
 
 (* ServerInstance.t is an individual Flow server instance. The code inside this module handles

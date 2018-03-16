@@ -542,6 +542,7 @@ begin library "flow-server-protocol"
     "flow-typing"
     "hh-utils"
     "hh-utils-collections"
+    "hh-utils-json"
     "hh-utils-lsp"
     "hh-utils-sys"
   ]

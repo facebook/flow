@@ -70,6 +70,9 @@ let send_errors_if_subscribed ~client ~errors ~warnings =
 let send_single_exit code client =
   send_message (Prot.ServerExit code) client
 
+let send_single_lsp message client =
+  send_message (Prot.LspFromServer message) client
+
 let send_single_start_recheck client =
   send_message (Prot.StartRecheck) client
 
@@ -96,6 +99,8 @@ let remove_client clients client_id =
 
 let get_subscribed_clients = List.filter (fun c -> c.subscribed)
 
+let get_subscribed_lsp_clients = List.filter (fun c -> c.subscribed && c.is_lsp)
+
 let update_clients ~clients ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
   let subscribed_client_count = List.length subscribed_clients in
@@ -115,6 +120,11 @@ let send_exit clients code =
   clients
     |> get_subscribed_clients
     |> List.iter (send_single_exit code)
+
+let send_lsp clients json =
+  clients
+    |> get_subscribed_lsp_clients
+    |> List.iter (send_single_lsp json)
 
 let send_start_recheck clients =
   clients

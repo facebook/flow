@@ -28,6 +28,8 @@ val update_clients:
   unit
 val send_exit:
   t -> FlowExitStatus.t -> unit
+val send_lsp:
+  t -> Lsp.lsp_message -> unit
 val send_start_recheck:
   t -> unit
 val send_end_recheck:

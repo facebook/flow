@@ -113,8 +113,6 @@ and connected_env = {
   c_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   c_about_to_exit_code: FlowExitStatus.t option;
   c_dialog_connected: ShowMessageRequest.t; (* "Connected to Flow server" *)
-  c_is_server_ready: bool; (* after handling each request the server says 'ready' *)
-  c_queue_for_server: Lsp.lsp_message ImmQueue.t; (* can only send when server connected+ready *)
   (* if server gets disconnected, we will tidy up these things... *)
   c_outstanding_requests_to_server: Lsp.IdSet.t;
   c_outstanding_progress: ISet.t; (* we'll send progress(null) *)
@@ -144,17 +142,11 @@ type event =
 
 let string_of_state (state: state) : string =
   match state with
-  | Pre_init _ ->
-    "Pre_init"
-  | Disconnected _ ->
-    "Disconnected"
-  | Connected env ->
-    Printf.sprintf "Connected(%s%squeue=%i)"
-      (if env.c_about_to_exit_code = None then "" else "AboutToExit;")
-      (if env.c_is_server_ready then "ready;" else "not-ready;")
-      (ImmQueue.length env.c_queue_for_server)
-  | Post_shutdown ->
-    "Post_shutdown"
+  | Pre_init _ -> "Pre_init"
+  | Disconnected _ -> "Disconnected"
+  | Connected env -> "Connected." ^
+      (Option.value_map env.c_about_to_exit_code ~default:"" ~f:FlowExitStatus.to_string)
+  | Post_shutdown -> "Post_shutdown"
 
 
 let string_of_event (event: event) : string =
@@ -254,6 +246,15 @@ let dismiss_showMessageRequest (dialog: ShowMessageRequest.t) : ShowMessageReque
       to_stdout json
   end;
   ShowMessageRequest.None
+
+
+let send_to_server (env: connected_env) (request: Persistent_connection_prot.request) : unit =
+  let _bytesWritten =
+    Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) request in
+  ()
+
+let send_lsp_to_server (env: connected_env) (message: lsp_message) : unit =
+  send_to_server env (Persistent_connection_prot.LspToServer message)
 
 
 (************************************************************************)
@@ -452,27 +453,26 @@ let try_connect (env: disconnected_env) : state =
       (Unix.descr_of_out_channel oc)
       Persistent_connection_prot.Subscribe in
     let i_server_id = env.d_ienv.i_server_id + 1 in
-    let make_open_message (textDocument: TextDocumentItem.t) : lsp_message =
-      NotificationMessage (DidOpenNotification { DidOpen.textDocument; }) in
-    let c_queue_for_server = env.d_editor_open_files |> SMap.bindings |> List.map ~f:snd
-      |> List.map ~f:make_open_message |> ImmQueue.from_list in
-    let state = dismiss_ui (Disconnected env) in
-    let c_ienv = match state with
-      | Disconnected env -> env.d_ienv
-      | _ -> failwith "unexpected state" in
     let new_env = {
-      c_ienv = { c_ienv with i_server_id; };
+      c_ienv = { env.d_ienv with i_server_id; };
       c_conn = { ic; oc; };
       c_about_to_exit_code = None;
       c_dialog_connected = ShowMessageRequest.None;
-      c_is_server_ready = false;
-      c_queue_for_server;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
       c_outstanding_progress = ISet.empty;
       c_outstanding_action = ISet.empty;
       c_outstanding_diagnostics = SSet.empty;
       c_editor_open_files = env.d_editor_open_files;
     } in
+    (* send the initial messages to the server *)
+    send_to_server new_env Persistent_connection_prot.Subscribe;
+    let make_open_message (textDocument: TextDocumentItem.t) : lsp_message =
+      NotificationMessage (DidOpenNotification { DidOpen.textDocument; }) in
+    let open_messages = env.d_editor_open_files |> SMap.bindings |> List.map ~f:snd
+      |> List.map ~f:make_open_message in
+    List.iter open_messages ~f:(send_lsp_to_server new_env);
+    (* close the old UI and bring up the new *)
+    let _state = dismiss_ui (Disconnected env) in
     let new_state = show_connected env.d_start_time new_env in
     new_state
 
@@ -536,7 +536,7 @@ let apply_edit (text: string) (edit: DidChange.textDocumentContentChangeEvent) :
 (* and dialogs and things it created should be taken down with it.      *)
 (*                                                                      *)
 (* "track_to_server" is called for client->lsp messages when they get   *)
-(*   queued up in c_queue_for_server to be sent to the current server.  *)
+(*   sent to the current server.                                        *)
 (* "track_from_server" is called for server->lsp messages which         *)
 (*   immediately get passed on to the client.                           *)
 (* "dismiss_tracks" is called when a server gets disconnected.          *)
@@ -546,11 +546,10 @@ let apply_edit (text: string) (edit: DidChange.textDocumentContentChangeEvent) :
 (*   didOpen/Change/Save/Close. When a new server starts, we synthesize *)
 (*   didOpen messages to the new server.                                *)
 (* OUTSTANDING_REQUESTS_TO_SERVER - for all client->lsp requests that   *)
-(*   have been queued up in c_queue_for_server to be sent to the server.*)
-(*   Added to this list when we track_to_server(request), and removed   *)
-(*   when we track_from_server(response). When a server dies, we        *)
-(*   synthesize RequestCancelled responses ourselves since the server   *)
-(*   will no longer do that.                                            *)
+(*   have been sent to the server. Added to this list when we           *)
+(*   track_to_server(request); removed on track_from_server(response).  *)
+(*   When a server dies, we synthesize RequestCancelled responses       *)
+(*   ourselves since the server will no longer do that.                 *)
 (* OUTSTANDING_REQUESTS_FROM_SERVER - for all server->lsp requests. We  *)
 (*   generate a "wrapped-id" that encodes which server it came from,    *)
 (*   and send immediately to the client. Added to this list when we     *)
@@ -836,20 +835,33 @@ begin
   | Connected cenv, Server_message (Persistent_connection_prot.ServerExit exit_code) ->
     Connected { cenv with c_about_to_exit_code = Some exit_code; }
 
+  | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer outgoing) ->
+    let state = track_from_server state outgoing in
+    let outgoing = match outgoing with
+      | RequestMessage (id, request) ->
+        let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
+        RequestMessage (encode_wrapped wrapped, request)
+      | _ -> outgoing
+    in
+    to_stdout (Lsp_fmt.print_lsp outgoing);
+    state
+
+  | Connected _cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
+    let err_count = Errors.ErrorSet.cardinal errors in
+    let warn_count = Errors.ErrorSet.cardinal warnings in
+    let _text = Printf.sprintf "Received %d errors, %d warnings" err_count warn_count in
+    (* TODO: report errors properly, either direct from the server, or here *)
+    state
+
   | Connected cenv, Client_message ((ResponseMessage (id, _)) as c) ->
-    (* only forward responses if they are in response to the current server_id *)
-    let wrapped = decode_wrapped id in
-    let state = if wrapped.server_id <> cenv.c_ienv.i_server_id then state
-    else Connected { cenv with c_queue_for_server = ImmQueue.push cenv.c_queue_for_server c } in
-    (* track_to_server also does the same decoding *)
     let state = track_to_server state c in
+    let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
+    if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
     state
 
   | Connected cenv, Client_message c ->
-    let state = Connected { cenv with
-      c_queue_for_server = ImmQueue.push cenv.c_queue_for_server c;
-    } in
     let state = track_to_server state c in
+    send_lsp_to_server cenv c;
     state
 
   | _, Server_message _ ->
@@ -927,13 +939,13 @@ and main_handle_error
 
   | e -> begin
       let (code, message, _data) = get_error_info e in
-      let report = Printf.sprintf "FlowLSP exception %s [%i]\n%s" message code stack in
+      let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" message code stack in
       match event with
       | Some (Client_message (RequestMessage (id, _request))) ->
         let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
         to_stdout json;
       | _ ->
-        Lsp_helpers.telemetry_error to_stdout report
+        Lsp_helpers.telemetry_error to_stdout text
     end;
     state
 

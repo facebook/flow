@@ -8,6 +8,7 @@
 open Core_result
 open ServerEnv
 open Utils_js
+open Lsp
 
 let status_log errors =
   if Errors.ErrorSet.is_empty errors
@@ -452,80 +453,181 @@ let handle_ephemeral genv env (request_id, command) =
     MonitorRPC.request_failed ~request_id ~exn_str;
     Lwt.return env
 
-let handle_persistent genv env client_id msg =
-  let env = ref env in
+
+(** handle_persistent_unsafe:
+   either this method returns Ok (and optionally returns some logging data),
+   or it returns Error for some well-understood reason string,
+   or it might raise/Lwt.fail, indicating a misunderstood coding bug. *)
+let handle_persistent_unsafe genv env client profiling msg
+  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string) result) Lwt.t =
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
+  let lsp_writer: (lsp_message -> unit) = fun payload ->
+    Persistent_connection.send_message (Persistent_connection_prot.LspFromServer payload) client
+  in
+
+  match msg with
+  | Persistent_connection_prot.Subscribe ->
+      let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
+      let new_connections = Persistent_connection.subscribe_client
+        ~clients:env.connections ~client ~current_errors ~current_warnings
+      in
+      Lwt.return (Ok ({ env with connections = new_connections }, None))
+
+  | Persistent_connection_prot.Autocomplete (file_input, id) ->
+      let env = ref env in
+      let%lwt results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
+      let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
+      Persistent_connection.send_message wrapped client;
+      Lwt.return (Ok (!env, json_data))
+
+  | Persistent_connection_prot.DidOpen filenames ->
+      Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
+
+      begin match Persistent_connection.client_did_open env.connections client ~filenames with
+      | None -> Lwt.return (Ok (env, None)) (* No new files were opened, so do nothing *)
+      | Some (connections, client) ->
+        let env = {env with connections} in
+
+        match Options.lazy_mode options with
+        | Some Options.LAZY_MODE_IDE ->
+          (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
+           * opens. So when an IDE opens a new file, that file is now focused.
+           *
+           * If the newly opened file was previously unchecked or checked as a dependency, then
+           * we will do a new recheck.
+           *
+           * If the newly opened file was already checked, then we'll just send the errors to
+           * the client
+           *)
+          let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
+          if not triggered_recheck then begin
+            (* This open doesn't trigger a recheck, but we'll still send down the errors *)
+            let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+            Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
+          end;
+          Lwt.return (Ok (env, None))
+        | Some Options.LAZY_MODE_FILESYSTEM
+        | None ->
+          (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
+           * a new file is opened is to send the errors to the client *)
+          let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+          Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+          Lwt.return (Ok (env, None))
+        end
+
+  | Persistent_connection_prot.DidClose filenames ->
+      Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
+      begin match Persistent_connection.client_did_close env.connections client ~filenames with
+        | None -> Lwt.return (Ok (env, None)) (* No new files were closed, so do nothing *)
+        | Some (connections, client) ->
+          let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+          Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+          Lwt.return (Ok ({env with connections}, None))
+      end
+
+  | Persistent_connection_prot.LspToServer (NotificationMessage (DidOpenNotification _params)) ->
+    (* TODO: track per-client the open editor files, and DidChange/DidClose *)
+    Lwt.return (Ok (env, None))
+
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, DefinitionRequest params)) ->
+    (* TODO: use the open editor file contents, not FileName *)
+    let env = ref env in
+    let open TextDocumentPositionParams in
+    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
+    let line = params.position.line in
+    let char = params.position.character in
+    let%lwt (result, json_data) =
+      get_def ~options ~workers ~env ~profiling (File_input.FileName fn, line, char) in
+    begin match result with
+      | Ok loc ->
+        let default_path = params.textDocument.TextDocumentIdentifier.uri in
+        let uri = match loc.Loc.source with
+          | Some file_key ->
+            file_key |> File_key.to_string |> Lsp_helpers.path_to_lsp_uri ~default_path
+          | None ->
+            default_path in
+        let location = { Lsp.Location.
+          uri;
+          range = { Lsp.
+            start = { Lsp.line=loc.Loc.start.Loc.line; character=loc.Loc.start.Loc.column; };
+            end_ = { Lsp.line=loc.Loc._end.Loc.line; character=loc.Loc._end.Loc.column; };
+          }
+        } in
+        lsp_writer (ResponseMessage (id, DefinitionResult [location]));
+        Lwt.return (Ok (!env, json_data))
+      | Error reason ->
+        Lwt.return (Error (!env, reason))
+    end
+
+  | Persistent_connection_prot.LspToServer unhandled ->
+    let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_to_string unhandled) in
+    Lwt.return (Error (env, reason))
+
+
+let report_lsp_error_if_necessary
+    (client: Persistent_connection.single_client)
+    (msg: Persistent_connection_prot.request)
+    (e: exn)
+    (stack: string)
+  : unit =
+  let lsp_writer: (lsp_message -> unit) = fun payload ->
+    Persistent_connection.send_message (Persistent_connection_prot.LspFromServer payload) client
+  in
+  match msg with
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, _)) ->
+    let response = ResponseMessage (id, ErrorResult (e,stack)) in
+    lsp_writer response
+  | Persistent_connection_prot.LspToServer _ ->
+    let open LogMessage in
+    let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
+    let message = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
+    let notification = NotificationMessage
+      (LogMessageNotification {type_=MessageType.ErrorMessage; message;}) in
+    lsp_writer notification
+  | _ ->
+    ()
+
+
+let handle_persistent
+    (genv: ServerEnv.genv)
+    (env: ServerEnv.env)
+    (client_id: Persistent_connection.Prot.client_id)
+    (msg: Persistent_connection_prot.request)
+  : ServerEnv.env Lwt.t =
   Hh_logger.debug "Persistent request: %s" (Persistent_connection_prot.string_of_request msg);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
-  let client = Persistent_connection.get_client !env.connections client_id in
-  let client_logging_context = Persistent_connection.get_logging_context client in
+
+  let client = Persistent_connection.get_client env.connections client_id in
+  let client_context = Persistent_connection.get_logging_context client in
   let should_print_summary = Options.should_profile genv.options in
-  let%lwt profiling, (env, json_data) =
-    Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
-      match msg with
-      | Persistent_connection_prot.Subscribe ->
-          let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings !env in
-          let new_connections = Persistent_connection.subscribe_client
-            ~clients:!env.connections ~client ~current_errors ~current_warnings
-          in
-          Lwt.return ({ !env with connections = new_connections }, None)
-      | Persistent_connection_prot.Autocomplete (file_input, id) ->
-          let%lwt results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
-          let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
-          Persistent_connection.send_message wrapped client;
-          Lwt.return (!env, json_data)
-      | Persistent_connection_prot.DidOpen filenames ->
-          Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
+  let request = Persistent_connection_prot.denorm_string_of_request msg in
+  try
 
-          begin match Persistent_connection.client_did_open !env.connections client ~filenames with
-          | None -> Lwt.return (!env, None) (* No new files were opened, so do nothing *)
-          | Some (connections, client) ->
-            let env = {!env with connections} in
+    let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
+      (fun profiling -> handle_persistent_unsafe genv env client profiling msg) in
 
-            match Options.lazy_mode options with
-            | Some Options.LAZY_MODE_IDE ->
-              (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
-               * opens. So when an IDE opens a new file, that file is now focused.
-               *
-               * If the newly opened file was previously unchecked or checked as a dependency, then
-               * we will do a new recheck.
-               *
-               * If the newly opened file was already checked, then we'll just send the errors to
-               * the client
-               *)
-              let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
-              if not triggered_recheck then begin
-                (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-                let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-                Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
-              end;
-              Lwt.return (env, None)
-            | Some Options.LAZY_MODE_FILESYSTEM
-            | None ->
-              (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
-               * a new file is opened is to send the errors to the client *)
-              let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-              Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-              Lwt.return (env, None)
-            end
-
-      | Persistent_connection_prot.DidClose filenames ->
-          Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-          begin match Persistent_connection.client_did_close !env.connections client ~filenames with
-          | None -> !env, None (* No new files were closed, so do nothing *)
-          | Some (connections, client) ->
-            let errors, warnings, _ = ErrorCollator.get_with_separate_warnings !env in
-            Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-            {!env with connections}, None
-          end
-          |> Lwt.return
-    end
-  in
-  MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-  FlowEventLogger.persistent_command_success
-    ?json_data
-    ~request:(Persistent_connection_prot.denorm_string_of_request msg)
-    ~client_context:client_logging_context
-    ~profiling;
-  Lwt.return env
+    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+    match result with
+    | Ok (env, json_data) ->
+      FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
+      Lwt.return env
+    | Error (env, reason) ->
+      let json_data = Some (Hh_json.JSON_Object [ "Error", Hh_json.JSON_String reason ]) in
+      FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
+      (* note that persistent_command_success is used even for Errors; *)
+      (* we only use persistent_command_failure for exceptions, i.e. coding bugs *)
+      report_lsp_error_if_necessary client msg (Failure reason) "[no stack]";
+      Lwt.return env
+  with exn ->
+    let backtrace = String.trim (Printexc.get_backtrace ()) in
+    let exn_str = Printf.sprintf "%s%s%s"
+      (Printexc.to_string exn)
+      (if backtrace = "" then "" else "\n")
+      backtrace in
+    Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request exn_str;
+    let json_data = Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ] in
+    FlowEventLogger.persistent_command_failure ~request ~client_context ~json_data;
+    report_lsp_error_if_necessary client msg exn backtrace;
+    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+    Lwt.return env

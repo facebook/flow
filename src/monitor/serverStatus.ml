@@ -24,9 +24,9 @@ type event =
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
-| Finishing_up (* The server is finishing up some typechecking *)
+| Finishing_up (* The server is finishing up some typechecking or other work *)
 | Recheck_start (* The server is starting to recheck *)
-| Handling_request_start (* The server is starting to handle a request *)
+| Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
 | GC_start (* The server is starting to GC *)
 | Collating_errors_start (* The server is collating the errors *)
 
