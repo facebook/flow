@@ -63,12 +63,13 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
           | _ -> raise (Worker_failed_to_send_job (Worker_already_exited status))
     in
     (* Get the job's result *)
-    let%lwt res: (b * Measure.record_data) Lwt.t =
+    let%lwt res =
       try%lwt
         (* Wait in an lwt-friendly manner for the worker to finish the job *)
         let%lwt () = Lwt_unix.wait_read infd_lwt in
         (* Read in a lwt-unfriendly, blocking manner from the worker *)
-        Lwt.return (Marshal_tools.from_fd_with_preamble infd)
+        (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
+        Lwt.return (Marshal_tools.from_fd_with_preamble infd: (b * Measure.record_data))
       with exn ->
         let%lwt pid, status = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
         begin match pid, status with

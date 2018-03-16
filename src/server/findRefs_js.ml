@@ -458,7 +458,7 @@ end = struct
     let {options; workers} = genv in
     let dep_list: File_key.t list = FilenameSet.elements all_deps in
     let node_modules_containers = !Files.node_modules_containers in
-    let%lwt result: (Loc.t list, string) result list list Lwt.t = MultiWorkerLwt.call workers
+    let%lwt result = MultiWorkerLwt.call workers
       ~job: begin fun _acc deps ->
         (* Yay for global mutable state *)
         Files.node_modules_containers := node_modules_containers;
