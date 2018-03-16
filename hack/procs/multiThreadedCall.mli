@@ -17,7 +17,7 @@
  * No further buckets are distributed to workers.
  *
  * Still-in-progress workers are left to their own accord. *)
-exception Coalesced_failures of (Unix.process_status list)
+exception Coalesced_failures of (WorkerController.worker_failure list)
 
 type interrupt_handler = Unix.file_descr list -> bool
 

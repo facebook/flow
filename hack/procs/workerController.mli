@@ -18,9 +18,11 @@
 (*****************************************************************************)
 
 type process_id = int
-exception Worker_failed of (process_id * Unix.process_status)
-(* Worker killed by Out Of Memory. *)
-exception Worker_oomed
+type worker_failure =
+  (* Worker killed by Out Of Memory. *)
+  | Worker_oomed
+  | Worker_quit of Unix.process_status
+exception Worker_failed of (process_id * worker_failure)
 (** Raise this exception when sending work to a worker that is already busy.
  * We should never be doing that, and this is an assertion error. *)
 exception Worker_busy

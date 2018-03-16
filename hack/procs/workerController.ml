@@ -34,9 +34,12 @@ open Worker
  *****************************************************************************)
 
 type process_id = int
+type worker_failure =
+  (* Worker killed by Out Of Memory. *)
+  | Worker_oomed
+  | Worker_quit of Unix.process_status
+exception Worker_failed of (process_id * worker_failure)
 
-exception Worker_failed of (process_id * Unix.process_status)
-exception Worker_oomed
 exception Worker_busy
 
 type send_job_failure =
@@ -226,11 +229,11 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
         raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->
         Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
-        raise (Worker_failed (slave_pid, Unix.WEXITED i))
+        raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
     | _, Unix.WSTOPPED i ->
-        raise (Worker_failed (slave_pid, Unix.WSTOPPED i))
+        raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
     | _, Unix.WSIGNALED i ->
-        raise (Worker_failed (slave_pid, Unix.WSIGNALED i))
+        raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
   in
   (* Prepare ourself to read answer from the slave. *)
   let result () : b =
@@ -278,10 +281,15 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
 
 let with_worker_exn (handle : ('a, 'b) handle) slave f =
   try f () with
-  | Worker_failed (_, Unix.WSIGNALED -7) as exn->
+  | Worker_failed (pid, status) as exn ->
     slave.worker.busy <- false;
     handle := fst !handle, Failed exn;
-    raise Worker_oomed
+    begin match status with
+    | Worker_quit (Unix.WSIGNALED -7) ->
+      raise (Worker_failed (pid, Worker_oomed))
+    | _ ->
+      raise exn
+    end
   | exn ->
     slave.worker.busy <- false;
     handle := fst !handle, Failed exn;

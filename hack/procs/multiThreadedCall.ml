@@ -10,7 +10,7 @@
 
 open Hh_core
 
-exception Coalesced_failures of (Unix.process_status list)
+exception Coalesced_failures of (WorkerController.worker_failure list)
 
 type interrupt_handler = Unix.file_descr list -> bool
 
@@ -79,8 +79,8 @@ let multi_threaded_call
              let acc = merge (WorkerController.get_result h) acc in
              acc, failures
            with
-           | WorkerController.Worker_failed (_, status) ->
-             acc, (status :: failures)
+           | WorkerController.Worker_failed (_, failure) ->
+             acc, (failure :: failures)
         end
         ~init:(acc, [])
         readys in

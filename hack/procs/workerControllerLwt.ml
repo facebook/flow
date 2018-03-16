@@ -80,13 +80,13 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
           raise SharedMem.Out_of_shared_memory
         | _, Unix.WEXITED i ->
           let () = Printf.eprintf "Subprocess(%d): fail %d" slave_pid i in
-          raise (Worker_failed (slave_pid, (Unix.WEXITED i)))
+          raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
         | _, Unix.WSTOPPED i ->
           let () = Printf.eprintf "Subprocess(%d): stopped %d" slave_pid i in
-          raise (Worker_failed (slave_pid, (Unix.WSTOPPED i)))
+          raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
         | _, Unix.WSIGNALED i ->
           let () = Printf.eprintf "Subprocess(%d): signaled %d" slave_pid i in
-          raise (Worker_failed (slave_pid, (Unix.WSIGNALED i)))
+          raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
         end
     in
     close w h;
