@@ -182,11 +182,11 @@ let unescape_single_or_nowdoc ~is_nowdoc s =
 
   while !idx < len do
     let c = next () in
-    if c <> '\\' then Buffer.add_char buf c else begin
+    if is_nowdoc || c <> '\\' then Buffer.add_char buf c else begin
       let c = next () in
       match c with
-      | '\'' when not is_nowdoc -> Buffer.add_char buf '\''
-      | '\\' when not is_nowdoc -> Buffer.add_char buf '\\'
+      | '\'' -> Buffer.add_char buf '\''
+      | '\\' -> Buffer.add_char buf '\\'
       (* unrecognized escapes are just copied over *)
       | c ->
         Buffer.add_char buf '\\';
