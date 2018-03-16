@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
@@ -30,7 +34,6 @@ import type {SuiteResult} from './runTestSuite';
 
 type CheckCommand = 'check' | 'status';
 
-
 export class TestBuilder {
   bin: string;
   dir: string;
@@ -39,11 +42,11 @@ export class TestBuilder {
   lazyMode: 'ide' | 'fs' | null;
   server: null | child_process$ChildProcess = null;
   ide: null | {
-    connection: RpcConnection;
-    process: child_process$ChildProcess;
-    messages: Array<IDEMessage>;
-    stderr: Array<string>;
-    emitter: EventEmitter;
+    connection: RpcConnection,
+    process: child_process$ChildProcess,
+    messages: Array<IDEMessage>,
+    stderr: Array<string>,
+    emitter: EventEmitter,
   } = null;
   sourceDir: string;
   suiteName: string;
@@ -65,19 +68,9 @@ export class TestBuilder {
     // If we're testing lazy mode, then we must use status
     this.errorCheckCommand = lazyMode == null ? errorCheckCommand : 'status';
     this.suiteName = suiteName;
-    this.dir = join(
-      baseDir,
-      String(testNum),
-    );
-    this.sourceDir = join(
-      getTestsDir(),
-      suiteName
-    );
-    this.tmpDir = join(
-      baseDir,
-      "tmp",
-      String(testNum),
-    );
+    this.dir = join(baseDir, String(testNum));
+    this.sourceDir = join(getTestsDir(), suiteName);
+    this.tmpDir = join(baseDir, 'tmp', String(testNum));
     this.flowConfigFilename = flowConfigFilename;
     this.lazyMode = lazyMode;
   }
@@ -96,10 +89,10 @@ export class TestBuilder {
       const now = new Date();
       function fixWidth(num: number, width: number): string {
         const str = String(num);
-        return str.length < width ? "0".repeat(width - str.length) + str : str;
+        return str.length < width ? '0'.repeat(width - str.length) + str : str;
       }
       const msg = format(
-        "[%s %s:%s:%s.%s] %s\n",
+        '[%s %s:%s:%s.%s] %s\n',
         now.toLocaleDateString('en-US'),
         fixWidth(now.getHours(), 2),
         fixWidth(now.getMinutes(), 2),
@@ -108,7 +101,7 @@ export class TestBuilder {
         format(fmt, ...args),
       );
       return new Promise((resolve, reject) => {
-        logStream.write(msg, 'utf8', resolve)
+        logStream.write(msg, 'utf8', resolve);
       });
     }
   }
@@ -118,7 +111,7 @@ export class TestBuilder {
     if (logStream != null) {
       this.logStream = null;
       return new Promise((resolve, reject) => {
-        logStream.end('', 'utf8', resolve)
+        logStream.end('', 'utf8', resolve);
       });
     }
   }
@@ -141,29 +134,29 @@ export class TestBuilder {
     // that is easy. Otherwise we need to read the config. If temp_dir is
     // already set, then we default to that. Otherwise, we need to set it.
     if (configBuffer != null) {
-      let config = configBuffer.toString().split("\n");
+      let config = configBuffer.toString().split('\n');
       let temp_dir = null;
       let options_index = null;
       config.forEach((line, index) => {
-        const match = line.trim().match("^temp_dir=(.*)$");
-        match != null && (temp_dir = match[1])
-        line.trim() == "[options]" && (options_index = index);
+        const match = line.trim().match('^temp_dir=(.*)$');
+        match != null && (temp_dir = match[1]);
+        line.trim() == '[options]' && (options_index = index);
       });
 
       if (temp_dir == null) {
         if (options_index == null) {
-          config.push("[options]");
+          config.push('[options]');
           options_index = config.length - 1;
         }
         config.splice(
           options_index + 1,
           0,
-          "temp_dir=" + this.normalizeForFlowconfig(this.tmpDir),
+          'temp_dir=' + this.normalizeForFlowconfig(this.tmpDir),
         );
       } else {
         this.tmpDir = temp_dir;
       }
-      await writeFile(join(this.dir, ".flowconfig"), config.join("\n"));
+      await writeFile(join(this.dir, '.flowconfig'), config.join('\n'));
     } else {
       await exec(
         format(
@@ -175,12 +168,12 @@ export class TestBuilder {
         {cwd: __dirname},
       );
     }
-    await writeFile(this.getFileName(), "/* @flow */\n");
+    await writeFile(this.getFileName(), '/* @flow */\n');
   }
 
   async addCode(code: string): Promise<void> {
     const filename = this.getFileName();
-    await appendFile(filename, "\n"+code+"\n");
+    await appendFile(filename, '\n' + code + '\n');
     await this.forceRecheck([filename]);
   }
 
@@ -191,7 +184,7 @@ export class TestBuilder {
     let contents = contents_buffer.toString();
     if (contents.match(/@thisWillBeFlowInTest/)) {
       // Undo what the convert command did
-      contents = contents.replace(/@thisWillBeFlowInTest/, "@flow");
+      contents = contents.replace(/@thisWillBeFlowInTest/, '@flow');
     }
     await mkdirp(dirname(dest));
     await writeFile(dest, contents);
@@ -205,7 +198,7 @@ export class TestBuilder {
 
   async addFiles(sources: Array<string>): Promise<void> {
     const filenames = await Promise.all(
-      sources.map(source => this.addFileImpl(source, source))
+      sources.map(source => this.addFileImpl(source, source)),
     );
     await this.forceRecheck(filenames);
   }
@@ -223,7 +216,7 @@ export class TestBuilder {
 
   async removeFiles(files: Array<string>): Promise<void> {
     const filenames = await Promise.all(
-      files.map(file => this.removeFileImpl(file))
+      files.map(file => this.removeFileImpl(file)),
     );
     await this.forceRecheck(filenames);
   }
@@ -233,10 +226,10 @@ export class TestBuilder {
     stdinFile?: string,
   ): Promise<[number, string, string]> {
     let cmd = format(
-      "%s %s %s",
+      '%s %s %s',
       this.bin,
-      args.map(arg => format('"%s"', arg)).join(" "),
-      stdinFile == null ? "" : format("< %s", stdinFile),
+      args.map(arg => format('"%s"', arg)).join(' '),
+      stdinFile == null ? '' : format('< %s', stdinFile),
     );
     const [err, stdout, stderr] = await execManual(cmd, {cwd: this.dir});
     const code = err == null ? 0 : err.code;
@@ -244,11 +237,11 @@ export class TestBuilder {
     return [code, stdout.toString(), stderr.toString()];
   }
 
-  async getFlowErrors(retry?: bool = true): Promise<Object> {
+  async getFlowErrors(retry?: boolean = true): Promise<Object> {
     let cmd;
     if (this.errorCheckCommand === 'check') {
       cmd = format(
-        "%s check --strip-root --temp-dir %s --json %s",
+        '%s check --strip-root --temp-dir %s --json %s',
         this.bin,
         this.tmpDir,
         this.dir,
@@ -257,17 +250,17 @@ export class TestBuilder {
       // No-op if it's already running
       await this.startFlowServer();
       cmd = format(
-        "%s status --no-auto-start --strip-root --temp-dir %s --json %s",
+        '%s status --no-auto-start --strip-root --temp-dir %s --json %s',
         this.bin,
         this.tmpDir,
         this.dir,
       );
     }
 
-    const [err, stdout, stderr] = await execManual(
-      cmd,
-      {cwd: __dirname, maxBuffer: 1024 * 1024},
-    );
+    const [err, stdout, stderr] = await execManual(cmd, {
+      cwd: __dirname,
+      maxBuffer: 1024 * 1024,
+    });
 
     // 0 - no errors
     // 2 - Some errors
@@ -282,44 +275,46 @@ export class TestBuilder {
     if (this.server !== null) {
       return;
     }
-    const lazyMode = this.lazyMode === null
-      ? []
-      : ['--lazy-mode', this.lazyMode];
+    const lazyMode =
+      this.lazyMode === null ? [] : ['--lazy-mode', this.lazyMode];
     const serverProcess = spawn(
       this.bin,
       [
         'server',
         '--strip-root',
         '--debug',
-        '--temp-dir', this.tmpDir,
+        '--temp-dir',
+        this.tmpDir,
         '--no-auto-restart',
-        '--file-watcher', 'none',
-      ].concat(lazyMode)
-      .concat([
-        this.dir,
-      ]),
+        '--file-watcher',
+        'none',
+      ]
+        .concat(lazyMode)
+        .concat([this.dir]),
       {
         // Useful for debugging flow server
         // stdio: ["pipe", "pipe", process.stderr],
         cwd: this.dir,
-        env: { ...process.env, 'OCAMLRUNPARAM': 'b' },
-      }
+        env: {...process.env, OCAMLRUNPARAM: 'b'},
+      },
     );
     this.server = serverProcess;
 
     const stderr = [];
-    serverProcess.stderr.on('data', (data) => {
+    serverProcess.stderr.on('data', data => {
       stderr.push(data.toString());
     });
 
     serverProcess.on('exit', (code, signal) => {
       if (this.server != null && !this.allowFlowServerToDie) {
-        this.testErrors.push(format(
-          "flow server mysteriously died. Code: %d, Signal: %s, stderr:\n%s",
-          code,
-          signal,
-          stderr.join(""),
-        ));
+        this.testErrors.push(
+          format(
+            'flow server mysteriously died. Code: %d, Signal: %s, stderr:\n%s',
+            code,
+            signal,
+            stderr.join(''),
+          ),
+        );
       }
       this.stopFlowServer();
     });
@@ -331,9 +326,12 @@ export class TestBuilder {
         serverProcess.stderr.removeListener('exit', resolveOnExit);
         resolve();
       }
-      const resolveOnReady = (data) => {
-        stderr.concat([data]).join('').match(/Server is free/) && done()
-      }
+      const resolveOnReady = data => {
+        stderr
+          .concat([data])
+          .join('')
+          .match(/Server is free/) && done();
+      };
       const resolveOnExit = done;
 
       serverProcess.stderr.on('data', resolveOnReady);
@@ -358,18 +356,21 @@ export class TestBuilder {
         this.bin,
         [
           'ide',
-          '--protocol', 'very-unstable',
+          '--protocol',
+          'very-unstable',
           '--no-auto-start',
           '--strip-root',
-          '--temp-dir', this.tmpDir,
-          '--root', this.dir,
+          '--temp-dir',
+          this.tmpDir,
+          '--root',
+          this.dir,
         ],
         {
           // Useful for debugging flow ide
           // stdio: ["pipe", "pipe", process.stderr],
           cwd: this.dir,
-          env: { ...process.env, 'OCAMLRUNPARAM': 'b' },
-        }
+          env: {...process.env, OCAMLRUNPARAM: 'b'},
+        },
       );
       const connection = rpc.createMessageConnection(
         new rpc.StreamMessageReader(ideProcess.stdout),
@@ -379,24 +380,26 @@ export class TestBuilder {
 
       ideProcess.on('exit', (code, signal) => {
         if (this.ide != null) {
-          this.testErrors.push(format(
-            "flow ide mysteriously died. Code: %d, Signal: %s, stderr:\n%s",
-            code,
-            signal,
-            this.getIDEStderr(),
-          ));
+          this.testErrors.push(
+            format(
+              'flow ide mysteriously died. Code: %d, Signal: %s, stderr:\n%s',
+              code,
+              signal,
+              this.getIDEStderr(),
+            ),
+          );
         }
         this.cleanupIDEConnection();
       });
       ideProcess.on('close', () => this.cleanupIDEConnection());
 
-      const emitter = new EventEmitter;
+      const emitter = new EventEmitter();
 
       const messages = [];
       connection.onNotification((method: string, ...params: Array<mixed>) => {
         params.forEach(param => {
-          if (typeof param === "object" && param && param.flowVersion) {
-            param.flowVersion = "<VERSION STUBBED FOR TEST>";
+          if (typeof param === 'object' && param && param.flowVersion) {
+            param.flowVersion = '<VERSION STUBBED FOR TEST>';
           }
         });
         messages.push({method, params});
@@ -404,11 +407,11 @@ export class TestBuilder {
       });
 
       const stderr = [];
-      ideProcess.stderr.on('data', (data) => {
+      ideProcess.stderr.on('data', data => {
         stderr.push(data.toString());
       });
 
-      await this.log("Created IDE process with pid %d", ideProcess.pid);
+      await this.log('Created IDE process with pid %d', ideProcess.pid);
 
       // Execing a process can take some time. Let's wait for the ide process
       // to be up and connected to the server
@@ -428,18 +431,19 @@ export class TestBuilder {
           cleanup(resolve);
         }
         function onTimeout() {
-          log("flow ide start up timed out. stderr:\n%s", stderr.join(''))
-            .then(() => {
+          log('flow ide start up timed out. stderr:\n%s', stderr.join('')).then(
+            () => {
               cleanup(() => {
                 reject(new Error('Timed out waiting for flow ide to start up'));
-              })
-            });
+              });
+            },
+          );
         }
         ideProcess.stderr.on('data', onData);
         ideProcess.on('exit', onExit);
       });
 
-      this.ide = { process: ideProcess, connection, messages, stderr, emitter };
+      this.ide = {process: ideProcess, connection, messages, stderr, emitter};
     }
   }
 
@@ -468,9 +472,7 @@ export class TestBuilder {
     const ide = this.ide;
     if (ide != null) {
       await this.log("Sending '%s' request to IDE process", methodName);
-      ide.messages.push(
-        await ide.connection.sendRequest(methodName, ...args),
-      );
+      ide.messages.push(await ide.connection.sendRequest(methodName, ...args));
     }
   }
 
@@ -505,21 +507,19 @@ export class TestBuilder {
           this.ide.emitter.removeListener('notification', onNotification);
         timeout && clearTimeout(timeout);
         this.log(
-          "Received all %d messages in under %dms",
+          'Received all %d messages in under %dms',
           expectedCount,
           timeoutMs,
         ).then(resolve);
-      }
+      };
 
       // If we've already received some notifications then process them.
       ide.messages.forEach(onNotification);
 
-      this.log("Starting to wait %dms for messages", timeoutMs)
-      .then(() => {
+      this.log('Starting to wait %dms for messages', timeoutMs).then(() => {
         const onTimeout = () => {
-          this.log("%dms timeout fired", timeoutMs)
-            .then(done);
-        }
+          this.log('%dms timeout fired', timeoutMs).then(done);
+        };
         timeout = setTimeout(onTimeout, timeoutMs);
       });
 
@@ -532,15 +532,15 @@ export class TestBuilder {
   }
 
   getIDEStderr(): string {
-    return this.ide ? this.ide.stderr.join("") : "";
+    return this.ide ? this.ide.stderr.join('') : '';
   }
 
   clearIDEMessages(): void {
-    this.ide && (this.ide.messages.splice(0, this.ide.messages.length));
+    this.ide && this.ide.messages.splice(0, this.ide.messages.length);
   }
 
   clearIDEStderr(): void {
-    this.ide && (this.ide.stderr.splice(0, this.ide.stderr.length));
+    this.ide && this.ide.stderr.splice(0, this.ide.stderr.length);
   }
 
   cleanup(): void {
@@ -551,12 +551,14 @@ export class TestBuilder {
 
   assertNoErrors(): void {
     if (this.testErrors.length > 0) {
-      throw new Error(format(
-        "%d test error%s: %s",
-        this.testErrors.length,
-        this.testErrors.length == 1 ? "" : "s",
-        this.testErrors.join("\n\n"),
-      ));
+      throw new Error(
+        format(
+          '%d test error%s: %s',
+          this.testErrors.length,
+          this.testErrors.length == 1 ? '' : 's',
+          this.testErrors.join('\n\n'),
+        ),
+      );
     }
   }
 
@@ -573,13 +575,15 @@ export class TestBuilder {
   }
 
   async forceRecheck(files: Array<string>): Promise<void> {
-    if (this.server && await isRunning(this.server.pid)) {
-      const [err, stdout, stderr] = await execManual(format(
-        "%s force-recheck --no-auto-start --temp-dir %s %s",
-        this.bin,
-        this.tmpDir,
-        files.map(s => `"${s}"`).join(" "),
-      ));
+    if (this.server && (await isRunning(this.server.pid))) {
+      const [err, stdout, stderr] = await execManual(
+        format(
+          '%s force-recheck --no-auto-start --temp-dir %s %s',
+          this.bin,
+          this.tmpDir,
+          files.map(s => `"${s}"`).join(' '),
+        ),
+      );
 
       // No server running (6) is ok - the file change might have killed the
       // server and we raced it here
@@ -607,7 +611,7 @@ export default class Builder {
     this.errorCheckCommand = errorCheckCommand;
     this.runID = randomBytes(5).toString('hex');
     this.dir = Builder.getDirForRun(this.runID);
-    process.stderr.write(format("Tests will be built in %s\n", this.dir));
+    process.stderr.write(format('Tests will be built in %s\n', this.dir));
 
     // If something weird happens, lets make sure to stop all the flow servers
     // we started
@@ -616,10 +620,10 @@ export default class Builder {
 
   cleanup = () => {
     Builder.builders.forEach(builder => builder.cleanup());
-  }
+  };
 
   baseDirForSuite(suiteName: string): string {
-    return join(this.dir, suiteName.replace("/", "zS"));
+    return join(this.dir, suiteName.replace('/', 'zS'));
   }
 
   async createFreshTest(
@@ -645,7 +649,7 @@ export default class Builder {
 
   async saveResults(suiteName: string, results: SuiteResult): Promise<void> {
     const dir = this.baseDirForSuite(suiteName);
-    const resultsFile = join(dir, "results.json");
+    const resultsFile = join(dir, 'results.json');
     await mkdirp(dir);
     await writeFile(
       resultsFile,
