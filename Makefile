@@ -202,8 +202,8 @@ all-homebrew:
 	export OPAMYES="1"; \
 	export FLOW_RELEASE="1"; \
 	opam init --no-setup && \
-	opam pin add flowtype . && \
-	opam install flowtype --deps-only && \
+	opam pin add -n flowtype . && \
+	opam config exec -- opam install flowtype --deps-only && \
 	opam config exec -- make
 
 clean:
