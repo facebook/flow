@@ -313,3 +313,121 @@ function method(obj: Object) {
 
 method({ baz: 3.14, bar: "hello" });
 ```
+
+## Object type spreading <a class="toc" id="toc-object-type-spreading" href="#toc-object-type-spreading"></a>
+
+Flow supports object spreading in object types. The result is
+similar, but not identical, to creating an [intersection](intersections) of two
+object types. It works most predictably with [exact](utilities/#toc-exact)
+object types.
+
+```js
+type A = {
+  a: number
+}
+
+type B = {
+  b: number,
+  ...$Exact<A>
+}
+
+// The same as
+
+type C = {
+  a: number,
+  b: number
+};
+```
+
+When spreading non-exact object types there are several corner cases.
+
+Spreading one object into another overrides any shared properties which
+preceed the spread operator. Object types can also be overriden by this
+spread and that means all properties which preceed a non-exact object spread
+become `mixed`.
+
+```js
+type A = { }
+
+type B = {
+  b: number,
+  ...A
+}
+
+// The same as
+
+type C = {
+  b: mixed // every property before a non-exact spread become mixed
+};
+
+// For example
+
+const aa: A = {
+  b: 'foo'
+}
+
+const bb: B = {
+  b: 3,
+  ...aa
+}
+
+typeof bb.b === 'string' // true!
+bb.b === 'foo' // true!
+```
+
+Properties defined after a spread operator are not overriden and so their types
+stay the same.
+
+```js
+type A = { }
+
+type B = {
+  ...A,
+  b: number
+}
+
+// The same as
+
+type C = {
+  b: number // properties after spread stay the same
+};
+```
+
+Properties defined on a non-exact object type become optional when spread. This is
+because Flow typechecks all _enumerable_ properties, but object spreading only
+copies an object's _own_ properties. _Inherited_ properties type check by Flow
+but are not copied by spreading.
+
+```js
+type A = {
+  a: number
+}
+
+type B = {
+  ...A
+}
+
+// The same as
+
+type C = {
+  a?: number, // every property from spread becomes optional
+};
+
+// For example
+
+function FuncClassA(d) { this.d = d }
+FuncClassA.prototype.a = 5
+
+const aa:A = new FuncClassA(4)
+
+const bb:B = {
+  ...aa,
+}
+
+console.log(bb) // { d: 4 }
+```
+
+Object `aa` has two properties. `d` is its _own_ property and `a` is _inherited_.
+Both types of property are typechecked by Flow, making `aa` a valid `A`.
+However, because object spreading does not copy _inherited_ properties `a` is
+missing from `bb`.
