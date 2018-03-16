@@ -4,7 +4,7 @@ This package contains the Flow parser in its compiled-to-JavaScript form.
 
 # What is Flow
 
-See [flowtype.org](http://flowtype.org/). The code for the Flow parser [lives on GitHub](https://github.com/facebook/flow/tree/master/src/parser).
+See [flow.org](https://flow.org/). The code for the Flow parser [lives on GitHub](https://github.com/facebook/flow/tree/master/src/parser).
 
 # What is the Flow Parser
 
