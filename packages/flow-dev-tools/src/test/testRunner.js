@@ -311,6 +311,8 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
 }
 
 export default async function(args: Args): Promise<void> {
+  process.env.IN_FLOW_TEST = "1";
+
   await write(process.stderr, `Using flow binary: ${args.bin}\n`);
 
   if (args.buckCpTestsDir != null) {

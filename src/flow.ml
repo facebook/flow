@@ -58,6 +58,7 @@ end = struct
   let commands = ShellCommand.command :: commands
 
   let main () =
+
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
     let (command, argv) = match argv with
@@ -114,6 +115,8 @@ let _ =
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
 
   let () = Printexc.record_backtrace true in
+
+  let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then EventLogger.disable_logging () in
 
   try
     Daemon.check_entry_point (); (* this call might not return *)
