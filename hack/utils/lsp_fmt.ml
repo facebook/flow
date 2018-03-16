@@ -212,6 +212,16 @@ let parse_textDocumentPositionParams (params: json option)
     position = Jget.obj_exn params "position" |> parse_position;
   }
 
+let parse_textEdit (params: json option) : TextEdit.t option =
+  match params with
+  | None -> None
+  | _ ->
+    let open TextEdit in
+    Some {
+      range = Jget.obj_exn params "range" |> parse_range_exn;
+      newText = Jget.string_exn params "newText";
+    }
+
 let print_textEdit (edit: TextEdit.t) : json =
   let open TextEdit in
   JSON_Object [
@@ -521,6 +531,59 @@ let print_definition (r: Definition.result) : json =
 
 
 (************************************************************************)
+(** completionItem/resolve request                                     **)
+(************************************************************************)
+
+let parse_completionItem (params: json option) : CompletionItemResolve.params =
+  let open Completion in
+  let textEdits =
+    (Jget.obj_opt params "textEdit") :: (Jget.array_d params "additionalTextEdits" ~default:[])
+    |> List.filter_map ~f:parse_textEdit
+  in
+  let command = match Jget.obj_opt params "command" with
+    | None -> None
+    | c -> Some (parse_command c)
+  in
+  {
+    label = Jget.string_exn params "label";
+    kind = Option.bind (Jget.int_opt params "kind") completionItemKind_of_int_opt;
+    detail = Jget.string_opt params "detail";
+    inlineDetail = Jget.string_opt params "inlineDetail";
+    itemType = Jget.string_opt params "itemType";
+    documentation = Jget.string_opt params "documentation";
+    sortText = Jget.string_opt params "sortText";
+    filterText = Jget.string_opt params "filterText";
+    insertText = Jget.string_opt params "insertText";
+    insertTextFormat = Option.bind (Jget.int_opt params "insertTextFormat") insertFormat_of_int_opt;
+    textEdits;
+    command;
+    data = Jget.obj_opt params "data"
+  }
+
+
+let print_completionItem (item: Completion.completionItem) : json =
+  let open Completion in
+  Jprint.object_opt [
+    "label", Some (JSON_String item.label);
+    "kind", Option.map item.kind (fun x -> int_ @@ int_of_completionItemKind x);
+    "detail", Option.map item.detail string_;
+    "inlineDetail", Option.map item.inlineDetail string_;
+    "itemType", Option.map item.itemType string_;
+    "documentation", Option.map item.documentation string_;
+    "sortText", Option.map item.sortText string_;
+    "filterText", Option.map item.filterText string_;
+    "insertText", Option.map item.insertText string_;
+    "insertTextFormat", Option.map item.insertTextFormat (fun x -> int_ @@ int_of_insertFormat x);
+    "textEdit", Option.map (List.hd item.textEdits) print_textEdit;
+    "additionalTextEdit", (match (List.tl item.textEdits) with
+      | None | Some [] -> None
+      | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit)));
+    "command", Option.map item.command print_command;
+    "data", item.data;
+  ]
+
+
+(************************************************************************)
 (** textDocument/completion request                                    **)
 (************************************************************************)
 
@@ -529,48 +592,6 @@ let parse_completion (params: json option) : Definition.params =
 
 let print_completion (r: Completion.result) : json =
   let open Completion in
-  let rec print_completionItem (item: Completion.completionItem) : json =
-    Jprint.object_opt [
-      "label", Some (JSON_String item.label);
-      "kind", Option.map item.kind print_completionItemKind;
-      "detail", Option.map item.detail string_;
-      "inlineDetail", Option.map item.inlineDetail string_;
-      "itemType", Option.map item.itemType string_;
-      "documentation", Option.map item.documentation string_;
-      "sortText", Option.map item.sortText string_;
-      "filterText", Option.map item.filterText string_;
-      "insertText", Option.map item.insertText string_;
-      "insertTextFormat", Some (print_insertFormat item.insertTextFormat);
-      "textEdit", Option.map (List.hd item.textEdits) print_textEdit;
-      "additionalTextEdit", (match (List.tl item.textEdits) with
-        | None | Some [] -> None
-        | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit)));
-      "command", Option.map item.command print_command;
-      "data", item.data;
-    ]
-  and print_completionItemKind = function
-    | Text -> int_ 1
-    | Method -> int_ 2
-    | Function -> int_ 3
-    | Constructor -> int_ 4
-    | Field -> int_ 5
-    | Variable -> int_ 6
-    | Class -> int_ 7
-    | Interface -> int_ 8
-    | Module -> int_ 9
-    | Property -> int_ 10
-    | Unit -> int_ 11
-    | Value -> int_ 12
-    | Enum -> int_ 13
-    | Keyword -> int_ 14
-    | Snippet -> int_ 15
-    | Color -> int_ 16
-    | File -> int_ 17
-    | Reference -> int_ 18
-  and print_insertFormat = function
-    | PlainText -> int_ 1
-    | SnippetFormat -> int_ 2
-  in
   JSON_Object [
     "isIncomplete", JSON_Bool r.isIncomplete;
     "items", JSON_Array (List.map r.items ~f:print_completionItem);

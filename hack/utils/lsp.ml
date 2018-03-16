@@ -490,7 +490,7 @@ module Completion = struct
     sortText: string option;  (* used for sorting; if absent, uses label *)
     filterText: string option;  (* used for filtering; if absent, uses label *)
     insertText: string option;  (* used for inserting; if absent, uses label *)
-    insertTextFormat: insertTextFormat;
+    insertTextFormat: insertTextFormat option;
     textEdits: TextEdit.t list;  (* wire: split into hd and tl *)
     command: Command.t option;  (* if present, is executed after completion *)
     data: Hh_json.json option;
@@ -516,9 +516,68 @@ module Completion = struct
     | File (* 17 *)
     | Reference (* 18 *)
 
-  and insertTextFormat =
+    (** Keep this in sync with `int_of_completionItemKind`. *)
+    and insertTextFormat =
     | PlainText (* 1 *)  (* the insertText/textEdits are just plain strings *)
     | SnippetFormat (* 2 *)  (* wire: just "Snippet" *)
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with completionItemKind_of_int_opt. *)
+  let int_of_completionItemKind = function
+    | Text -> 1
+    | Method -> 2
+    | Function -> 3
+    | Constructor -> 4
+    | Field -> 5
+    | Variable -> 6
+    | Class -> 7
+    | Interface -> 8
+    | Module -> 9
+    | Property -> 10
+    | Unit -> 11
+    | Value -> 12
+    | Enum -> 13
+    | Keyword -> 14
+    | Snippet -> 15
+    | Color -> 16
+    | File -> 17
+    | Reference -> 18
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with int_of_completionItemKind. *)
+  let completionItemKind_of_int_opt = function
+    | 1 -> Some Text
+    | 2 -> Some Method
+    | 3 -> Some Function
+    | 4 -> Some Constructor
+    | 5 -> Some Field
+    | 6 -> Some Variable
+    | 7 -> Some Class
+    | 8 -> Some Interface
+    | 9 -> Some Module
+    | 10 -> Some Property
+    | 11 -> Some Unit
+    | 12 -> Some Value
+    | 13 -> Some Enum
+    | 14 -> Some Keyword
+    | 15 -> Some Snippet
+    | 16 -> Some Color
+    | 17 -> Some File
+    | 18 -> Some Reference
+    | _ -> None
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with insertFormat_of_int_opt. *)
+  let int_of_insertFormat = function
+    | PlainText -> 1
+    | SnippetFormat -> 2
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with int_of_insertFormat. *)
+  let insertFormat_of_int_opt = function
+    | 1 -> Some PlainText
+    | 2 -> Some SnippetFormat
+    | _ -> None
 end
 
 
