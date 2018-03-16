@@ -410,6 +410,35 @@ export class TestBuilder {
 
       await this.log("Created IDE process with pid %d", ideProcess.pid);
 
+      // Execing a process can take some time. Let's wait for the ide process
+      // to be up and connected to the server
+      const log = this.log.bind(this);
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(onTimeout, 20000); // Max 20 seconds
+        function cleanup(then) {
+          ideProcess.stderr.removeListener('data', onData);
+          ideProcess.removeListener('exit', onExit);
+          clearTimeout(timeout);
+          then();
+        }
+        function onData(data) {
+          stderr.join('').match(/Connected to server/) && cleanup(resolve);
+        }
+        function onExit() {
+          cleanup(resolve);
+        }
+        function onTimeout() {
+          log("flow ide start up timed out. stderr:\n%s", stderr.join(''))
+            .then(() => {
+              cleanup(() => {
+                reject(new Error('Timed out waiting for flow ide to start up'));
+              })
+            });
+        }
+        ideProcess.stderr.on('data', onData);
+        ideProcess.on('exit', onExit);
+      });
+
       this.ide = { process: ideProcess, connection, messages, stderr, emitter };
     }
   }

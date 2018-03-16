@@ -358,7 +358,9 @@ let main option_values root from protocol strip_root json_version () =
   let root = CommandUtils.guess_root root in
   let strip_root = if strip_root then Some root else None in
   let client_type = SocketHandshake.Persistent (FlowEventLogger.get_context ()) in
+  Printf.eprintf "Connecting to server...\n%!";
   let ic, oc = connect ~client_type option_values root in
+  Printf.eprintf "Connected to server\n%!";
   let buffered_stdin = stdin |> Unix.descr_of_in_channel |> Buffered_line_reader.create in
   let ic_fd = Timeout.descr_of_in_channel ic in
   let oc_fd = Unix.descr_of_out_channel oc in
