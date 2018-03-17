@@ -435,6 +435,7 @@ begin library "flow-monitor-logger"
   files = begin fb-glob "src/monitor/logger"
   end
   requires = [
+    "flow-common-lwt"
     "lwt"
     "lwt.log"
     "lwt.unix"
