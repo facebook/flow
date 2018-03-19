@@ -3898,77 +3898,23 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
       jsx_desugar cx name c o attributes children locs
     end
 
-  (* In React we use a string literal type instead of fetching a full component
-   * type from $JSXIntrinsics. React.createElement() then handles intrinsic type
-   * checking. *)
-  | (Identifier (loc, { Identifier.name }), _, _) when jsx_mode = None ->
-    let c =
-      let reason = mk_reason (RIdentifier name) loc in
-      DefT (reason, SingletonStrT name)
-    in
-    let reason = mk_reason (RReactElement (Some name)) loc_element in
-    let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children locs
-
   | (Identifier (loc, { Identifier.name }), _, _) ->
-      (**
-       * For JSX intrinsics, we assume a built-in global
-       * object type: $JSXIntrinsics. The keys of this object type correspond to
-       * each JSX intrinsic name, and the type of the value for that key is the
-       * type signature of the intrinsic ReactComponent.
-       *
-       * We use a single object type for this (rather than several individual
-       * globals) to allow for a default `type $JSXIntrinsics = Object;` that
-       * ships with lib/core.js. This allows JSX to work out of the box where
-       * all intrinsics are typed as `any`. Users can then refine the set of
-       * intrinsics their application uses with a more specific libdef.
-       *)
-      let jsx_intrinsics =
-        Flow.get_builtin_type
-          cx
-          (mk_reason (RCustom "JSX Intrinsics lookup") loc)
-          "$JSXIntrinsics"
+    if jsx_mode = None then
+      let c =
+        let reason = mk_reason (RIdentifier name) loc in
+        DefT (reason, SingletonStrT name)
       in
-
-      (**
-       * Because $JSXIntrinsics is a type alias, extracting a property off of it
-       * will result in a TypeT as well. This presents a problem because we need
-       * a value type that can be passed in to React.creatElement; So we first
-       * reify the TypeT into it's value, then pass this along.
-       *
-       * This is a bit strange but it's fallout from the decision to model
-       * $JSXIntrinsics using a type alias rather than a "value". Modeling with
-       * a value would be disingenous because no such value really exists (JSX
-       * intrinsics are just React components that are implicitly defined
-       * dynamically in library code such as `React.createElement`)
-       *)
-     let component_t_reason =
-       let desc = RCustom (spf "`%s`" name) in
-       mk_reason desc loc
-     in
-     let component_t =
-       if jsx_mode = None
-       then Tvar.mk_where cx component_t_reason (fun t ->
-        let prop_t =
-          if Type_inference_hooks_js.dispatch_member_hook
-            cx name loc jsx_intrinsics
-          then AnyT.at loc
-          else
-            let use_op = Op (GetProperty component_t_reason) in
-            get_prop
-              ~is_cond:false
-              cx
-              component_t_reason
-              ~use_op
-              jsx_intrinsics
-              (component_t_reason, name)
-        in
-        Flow.flow_t cx (prop_t, t)
-      )
-      else DefT (component_t_reason, StrT (Literal (None, name))) in
-      let o = jsx_mk_props cx component_t_reason
-        component_t name attributes children in
-      jsx_desugar cx name component_t o attributes children locs
+      let reason = mk_reason (RReactElement (Some name)) loc_element in
+      let o = jsx_mk_props cx reason c name attributes children in
+      jsx_desugar cx name c o attributes children locs
+    else
+      let c =
+        let reason = mk_reason (RIdentifier name) loc in
+        DefT (reason, StrT (Literal (None, name)))
+      in
+      let reason = mk_reason (RCustom (spf "`%s`" name)) loc in
+      let o = jsx_mk_props cx reason c name attributes children in
+      jsx_desugar cx name c o attributes children locs
 
   | MemberExpression member, _, None ->
     let name = jsx_title_member_to_string member in
