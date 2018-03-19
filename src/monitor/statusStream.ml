@@ -12,8 +12,6 @@
  * The main goal of this module is to answer the question "What is the server's current status" and
  * to invoke callbacks when the server becomes free
  *)
-let (>>=) = Lwt.(>>=)
-let (>|=) = Lwt.(>|=)
 
 module Logger = FlowServerMonitorLogger
 
@@ -36,11 +34,13 @@ let significant_transition = Lwt_condition.create ()
 module UpdateLoop = LwtLoop.Make (struct
   type acc = t
 
-  let invoke_all_call_on_free () = Lwt_mutex.with_lock mutex (fun () ->
-    let to_call = !to_call_on_free in
-    to_call_on_free := [];
-    Lwt.return to_call
-  ) >>= Lwt_list.iter_p (fun f -> f())
+  let invoke_all_call_on_free () =
+    let%lwt to_call = Lwt_mutex.with_lock mutex (fun () ->
+      let to_call = !to_call_on_free in
+      to_call_on_free := [];
+      Lwt.return to_call
+    ) in
+    Lwt_list.iter_p (fun f -> f ()) to_call
 
   let process_update t new_status =
     Logger.debug "Server status: %s" (ServerStatus.string_of_status new_status);
@@ -62,8 +62,8 @@ module UpdateLoop = LwtLoop.Make (struct
 
 
   let main t =
-    Lwt_stream.next t.stream
-    >>= process_update t
+    let%lwt new_status = Lwt_stream.next t.stream in
+    process_update t new_status
 
   let catch _ exn =
     match exn with
@@ -112,7 +112,7 @@ let wait_for_signficant_status ~timeout =
   (* If there is a significant transition before the timeout, the cancel the sleep and return the
    * new status. Otherwise, stop waiting on the condition variable and return the current status *)
   Lwt.pick [
-    Lwt_unix.sleep timeout >|= get_status;
+    (let%lwt () = Lwt_unix.sleep timeout in Lwt.return (get_status ()));
     Lwt_condition.wait significant_transition;
   ]
 

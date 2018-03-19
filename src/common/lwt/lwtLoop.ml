@@ -10,8 +10,6 @@
   * bunch of boilerplate. LwtLoop.Make is a functor that tries to hide that boilerplate
   *)
 
-let (>>=) = Lwt.(>>=)
-
 module type LOOP = sig
   type acc
   (* A single iteration of the loop *)
@@ -40,7 +38,7 @@ end = struct
     (* Create a waiting thread *)
     let waiter, wakener = Lwt.task () in
     (* When the waiting thread is woken, it will kick off the loop *)
-    let thread = waiter >>= loop in
+    let thread = (let%lwt ret = waiter in loop ret) in
 
     (* If there is a cancel condition variable, wait for it to fire and then cancel the loop *)
     begin match cancel_condition with
@@ -49,7 +47,7 @@ end = struct
       (* If the condition is hit, cancel the loop thread. If the loop thread finishes, cancel the
        * condition wait *)
       Lwt.async (fun () -> Lwt.pick [
-        Lwt.catch (fun () -> thread) (fun _ -> Lwt.return_unit); (* Ignore exceptions here *)
+        (try%lwt thread with _ -> Lwt.return_unit); (* Ignore exceptions here *)
         Lwt_condition.wait condition;
       ])
     end;

@@ -19,8 +19,6 @@
  * 2. A single thread (WriteLoop) reads the messages and writes them to the various fds directly
  **)
 
-let (>>=) = Lwt.(>>=)
-
 type 'a logger_fn =
   ?exn : exn ->
   ?section : Lwt_log_core.section ->
@@ -37,14 +35,16 @@ module WriteLoop = LwtLoop.Make (struct
   (* Given a list of messages and a fd, write them serially to the fd *)
   let write_msgs msgs fd =
     Lwt_list.iter_s
-      (fun msg -> Lwt_unix.write_string fd msg 0 (String.length msg) >>= (fun _ -> Lwt.return_unit))
+      (fun msg ->
+        let%lwt _ = Lwt_unix.write_string fd msg 0 (String.length msg) in
+        Lwt.return_unit)
       msgs
 
   (* Get a list of messages, write the list in parallel to each fd *)
   let main fds =
-    Lwt_stream.next msg_stream
-    >>= (fun msgs -> Lwt_list.iter_p (write_msgs msgs) fds)
-    >>= (fun () -> Lwt.return fds)
+    let%lwt msgs = Lwt_stream.next msg_stream in
+    let%lwt () = Lwt_list.iter_p (write_msgs msgs) fds in
+    Lwt.return fds
 
   (* If we failed to write to an fd throw an exception and exit. I'm not 100% sure this is the
    * best behavior - should logging errors cause the monitor (and server) to crash? *)

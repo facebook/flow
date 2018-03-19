@@ -8,8 +8,6 @@
 (* This module listens to the socket, accepts new connections, and starts the
  * FlowServerMonitorConnections which handle those connects *)
 
-let (>>=) = Lwt.(>>=)
-let (>|=) = Lwt.(>|=)
 let spf = Printf.sprintf
 
 module Logger = FlowServerMonitorLogger
@@ -29,11 +27,9 @@ module StatusLoop = LwtLoop.Make (struct
   type acc = EphemeralConnection.t
 
   let main conn =
-    StatusStream.wait_for_signficant_status ~timeout:0.5
-    >|= (fun status ->
-      EphemeralConnection.write ~msg:(MonitorProt.Please_hold status) conn;
-      conn
-    )
+    let%lwt status = StatusStream.wait_for_signficant_status ~timeout:0.5 in
+    EphemeralConnection.write ~msg:(MonitorProt.Please_hold status) conn;
+    Lwt.return conn
 
   let catch _ exn =
     begin match exn with
@@ -47,31 +43,32 @@ end)
 let create_ephemeral_connection ~client_fd ~close =
   Logger.debug "Creating a new ephemeral connection";
 
-  EphemeralConnection.create
+  let%lwt (start, conn) = EphemeralConnection.create
     ~name:"some ephemeral connection"
     ~in_fd:client_fd
     ~out_fd:client_fd
     ~close
     ~on_read:handle_ephemeral_request
-  >|= (fun (start, conn) ->
-    (* On exit, do our best to send all pending messages to the waiting client *)
-    let close_on_exit =
-      Lwt_condition.wait ExitSignal.signal
-      >>= (fun () -> EphemeralConnection.flush_and_close conn)
-    in
+  in
+  (* On exit, do our best to send all pending messages to the waiting client *)
+  let close_on_exit =
+    let%lwt () = Lwt_condition.wait ExitSignal.signal in
+    EphemeralConnection.flush_and_close conn
+  in
 
-    (* Lwt.pick returns the first thread to finish and cancels the rest. *)
-    Lwt.async (fun () -> Lwt.pick [ close_on_exit; EphemeralConnection.wait_for_closed conn; ]);
+  (* Lwt.pick returns the first thread to finish and cancels the rest. *)
+  Lwt.async (fun () -> Lwt.pick [ close_on_exit; EphemeralConnection.wait_for_closed conn; ]);
 
-    (* Start the ephemeral connection *)
-    start ();
+  (* Start the ephemeral connection *)
+  start ();
 
-    (* Send the current server state immediate *)
-    EphemeralConnection.write ~msg:(MonitorProt.Please_hold (StatusStream.get_status ())) conn;
+  (* Send the current server state immediate *)
+  EphemeralConnection.write ~msg:(MonitorProt.Please_hold (StatusStream.get_status ())) conn;
 
-    (* Start sending the status to the ephemeral connection *)
-    Lwt.async (fun () -> StatusLoop.run ~cancel_condition:ExitSignal.signal conn);
-  )
+  (* Start sending the status to the ephemeral connection *)
+  Lwt.async (fun () -> StatusLoop.run ~cancel_condition:ExitSignal.signal conn);
+
+  Lwt.return_unit
 
 (* No lock needed, since the socket acceptor runs serially *)
 let create_persistent_id =
@@ -92,92 +89,96 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
     close ()
   in
 
-  PersistentConnection.create
+  let%lwt (start, conn) = PersistentConnection.create
     ~name:(spf "persistent connection #%d" client_id)
     ~in_fd:client_fd
     ~out_fd:client_fd
     ~close
     ~on_read:(handle_persistent_message ~client_id)
-  >|= (fun (start, conn) ->
-    (* On exit, do our best to send all pending messages to the waiting client *)
-    let close_on_exit =
-      Lwt_condition.wait ExitSignal.signal
-      >>= (fun () -> PersistentConnection.flush_and_close conn)
-    in
+  in
+  (* On exit, do our best to send all pending messages to the waiting client *)
+  let close_on_exit =
+    let%lwt () = Lwt_condition.wait ExitSignal.signal in
+    PersistentConnection.flush_and_close conn
+  in
 
-    (* Lwt.pick returns the first thread to finish and cancels the rest. *)
-    Lwt.async (fun () -> Lwt.pick [ close_on_exit; PersistentConnection.wait_for_closed conn; ]);
+  (* Lwt.pick returns the first thread to finish and cancels the rest. *)
+  Lwt.async (fun () -> Lwt.pick [ close_on_exit; PersistentConnection.wait_for_closed conn; ]);
 
-    (* Don't start the connection until we add it to the persistent connection map *)
-    Lwt.async (fun () ->
-      PersistentConnectionMap.add ~client_id ~client:conn;
-      start ();
-      Lwt.return_unit
-    )
-  )
+  (* Don't start the connection until we add it to the persistent connection map *)
+  Lwt.async (fun () ->
+    PersistentConnectionMap.add ~client_id ~client:conn;
+    start ();
+    Lwt.return_unit
+  );
+
+  Lwt.return ()
 
 (* Well...I mean this is a pretty descriptive function name. It performs the handshake and then
  * returns the client type *)
 let perform_handshake_and_get_client_type ~client_fd =
   (* Read the build id *)
-  Marshal_tools_lwt.from_fd_with_preamble client_fd
-  >>= (fun ({SocketHandshake.client_build_id; client_type}) ->
-    let is_lsp = match client_type with
-      | SocketHandshake.PersistentLsp _ -> true
-      | _ -> false in
-    (* If the build id doesn't match, send an error and exit
-     *
-     * Note: glevi hates this behavior. In the future, glevi plans to instead have the client
-     * exec the correct binary and the server survives *)
-    if client_build_id <> SocketHandshake.build_revision then begin
-      let handshake = SocketHandshake.(Build_id_mismatch {
-        server_build_id = build_revision;
-        server_bin = Sys.executable_name;
-      }) in
-      Marshal_tools_lwt.to_fd_with_preamble client_fd handshake
-      >>= (fun _size ->
-        FlowEventLogger.out_of_date ();
-        let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
-        Logger.fatal "%s" msg;
-        FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
-      )
-    end else begin
-      (* We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
-       * So we can't have an unlimited number of clients. So if the new fd is too large, let's
-       * reject it. Never reject a kill handshake, though. *)
+  let%lwt {SocketHandshake.client_build_id; client_type} =
+    Marshal_tools_lwt.from_fd_with_preamble client_fd
+  in
+  let is_lsp = match client_type with
+    | SocketHandshake.PersistentLsp _ -> true
+    | _ -> false in
+  (* If the build id doesn't match, send an error and exit
+   *
+   * Note: glevi hates this behavior. In the future, glevi plans to instead have the client
+   * exec the correct binary and the server survives *)
+  if client_build_id <> SocketHandshake.build_revision then begin
+    let handshake = SocketHandshake.(Build_id_mismatch {
+      server_build_id = build_revision;
+      server_bin = Sys.executable_name;
+    }) in
+    let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble client_fd handshake in
+    FlowEventLogger.out_of_date ();
+    let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
+    Logger.fatal "%s" msg;
+    FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
+  end else begin
+    (* We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
+     * So we can't have an unlimited number of clients. So if the new fd is too large, let's
+     * reject it. Never reject a kill handshake, though. *)
 
-      (* TODO (glevi): Figure out whether this check is needed for Windows *)
-      let fd_as_int: int =
-        if Sys.unix
-        then client_fd |> Lwt_unix.unix_file_descr |> Obj.magic
-        else -1
-      in
-      let too_many_clients = Sys.unix && (
-        client_type <> SocketHandshake.StabbityStabStab && fd_as_int > 500
-      ) in
-      if too_many_clients
-      then
+    (* TODO (glevi): Figure out whether this check is needed for Windows *)
+    let fd_as_int: int =
+      if Sys.unix
+      then client_fd |> Lwt_unix.unix_file_descr |> Obj.magic
+      else -1
+    in
+    let too_many_clients = Sys.unix && (
+      client_type <> SocketHandshake.StabbityStabStab && fd_as_int > 500
+    ) in
+    if too_many_clients
+    then
+      let%lwt _size =
         Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Too_many_clients
-        >|= (fun _ -> failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int))
-      else if is_lsp && not (StatusStream.ever_been_free ()) then
-        let status = StatusStream.get_status () in
-        Marshal_tools_lwt.to_fd_with_preamble client_fd (SocketHandshake.Still_initializing status)
-        >|= (fun _ -> failwith (ServerStatus.string_of_status status))
-      else begin
-        match client_type with
-        | SocketHandshake.Ephemeral {fail_on_init=true} when not (StatusStream.ever_been_free ()) ->
-          Marshal_tools_lwt.to_fd_with_preamble
-            client_fd (SocketHandshake.Still_initializing (StatusStream.get_status ()))
-          >|= (fun _ ->
-            failwith "Client used --retry-on-init false, and the server is still initializing"
-          )
-        | _ ->
-          (* Nothing else has gone wrong with the handshake. Send Ok and return the client_type *)
+      in
+      failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
+    else if is_lsp && not (StatusStream.ever_been_free ()) then
+      let status = StatusStream.get_status () in
+      let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble
+        client_fd (SocketHandshake.Still_initializing status)
+      in
+      failwith (ServerStatus.string_of_status status)
+    else begin
+      match client_type with
+      | SocketHandshake.Ephemeral {fail_on_init=true} when not (StatusStream.ever_been_free ()) ->
+        let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble
+          client_fd (SocketHandshake.Still_initializing (StatusStream.get_status ()))
+        in
+        failwith "Client used --retry-on-init false, and the server is still initializing"
+      | _ ->
+        (* Nothing else has gone wrong with the handshake. Send Ok and return the client_type *)
+        let%lwt _ =
           Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
-          >|= (fun _ -> client_type)
-      end
+        in
+        Lwt.return client_type
     end
-  )
+  end
 
 let close client_fd () =
   (* Close the client_fd, regardless of whether or not we were able to shutdown the connection.
@@ -193,12 +194,12 @@ let close client_fd () =
     | Unix.Unix_error (Unix.EBADF, _, _) -> ()
     | exn -> Logger.error ~exn "Failed to shutdown socket client"
   end;
-  Lwt.catch
-    (fun () -> Lwt_unix.close client_fd)
-    (function
-      (* Already closed *)
-      | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
-      | exn -> Lwt.return (Logger.error ~exn "Failed to close socket client fd"))
+  try%lwt
+    Lwt_unix.close client_fd
+  with
+  (* Already closed *)
+  | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+  | exn -> Lwt.return (Logger.error ~exn "Failed to close socket client fd")
 
 let catch close exn =
   (* We catch all exceptions, since one bad connection shouldn't kill the whole monitor *)
@@ -228,9 +229,9 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
 
   let main (autostop, socket_fd) =
     Logger.debug "Waiting for a new socket connection";
-    Lwt_unix.accept socket_fd
-    >>= Handler.create_socket_connection ~autostop
-    >|= (fun () -> (autostop, socket_fd))
+    let%lwt conn = Lwt_unix.accept socket_fd in
+    let%lwt () = Handler.create_socket_connection ~autostop conn in
+    Lwt.return (autostop, socket_fd)
 
   let catch _ exn =
     Logger.fatal ~exn "Uncaught exception in the socket acceptor";
@@ -241,7 +242,7 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
   let create_socket_connection ~autostop (client_fd, _) =
     let close_without_autostop = close client_fd in
     let close () =
-      close_without_autostop () >>= fun () ->
+      let%lwt () = close_without_autostop () in
       let num_persistent = PersistentConnectionMap.cardinal () in
       let num_ephemeral = RequestMap.cardinal () in
       if autostop && num_persistent = 0 && num_ephemeral = 0 then
@@ -249,24 +250,20 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
       else
         Lwt.return_unit
     in
-    Lwt.catch
-      (fun () ->
-        perform_handshake_and_get_client_type ~client_fd
-        >>= (
-          function
-          | SocketHandshake.Ephemeral _ ->
-            create_ephemeral_connection ~client_fd ~close
-          | SocketHandshake.Persistent logging_context ->
-            create_persistent_connection ~client_fd ~close ~logging_context ~lsp:None
-          | SocketHandshake.PersistentLsp (logging_context, params) ->
-            create_persistent_connection ~client_fd ~close ~logging_context ~lsp:(Some params)
-          | SocketHandshake.StabbityStabStab ->
-            (* Ow my face *)
-            close_without_autostop ()
-            >>= (fun () -> Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error)
-        )
-      )
-      (catch close_without_autostop)
+    try%lwt
+      let%lwt client_type = perform_handshake_and_get_client_type ~client_fd in
+      match client_type with
+      | SocketHandshake.Ephemeral _ ->
+        create_ephemeral_connection ~client_fd ~close
+      | SocketHandshake.Persistent logging_context ->
+        create_persistent_connection ~client_fd ~close ~logging_context ~lsp:None
+      | SocketHandshake.PersistentLsp (logging_context, params) ->
+        create_persistent_connection ~client_fd ~close ~logging_context ~lsp:(Some params)
+      | SocketHandshake.StabbityStabStab ->
+        (* Ow my face *)
+        let%lwt () = close_without_autostop () in
+        Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error
+    with exn ->  catch close_without_autostop exn
       (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
       (* from 1 connections to 0 connections then it might stop the server. *)
       (* But this catch clause is fired when an attempt to connect has      *)
@@ -280,18 +277,14 @@ let run monitor_socket_fd ~autostop =
 module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
   let create_socket_connection ~autostop:_ (client_fd, _) =
     let close = close client_fd in
-    Lwt.catch
-      (fun () ->
-        close ()
-        >>= (fun () ->
-          FlowEventLogger.out_of_date ();
-          let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
-          Logger.fatal "%s" msg;
-          Server.exit FlowExitStatus.Build_id_mismatch
-            ~msg:"Killed by legacy client. Exiting."
-        )
-      )
-      (catch close)
+    try%lwt
+      let%lwt () = close () in
+      FlowEventLogger.out_of_date ();
+      let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
+      Logger.fatal "%s" msg;
+      Server.exit FlowExitStatus.Build_id_mismatch
+        ~msg:"Killed by legacy client. Exiting."
+    with exn -> catch close exn
 end)
 
 let run_legacy legacy_socket_fd =

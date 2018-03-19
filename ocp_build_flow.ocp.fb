@@ -139,6 +139,13 @@ begin library "flow-common-lwt"
   requires = [
     "lwt"
     "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -439,7 +446,14 @@ begin library "flow-monitor-logger"
     "lwt"
     "lwt.log"
     "lwt.unix"
+    "lwt_ppx"
     "tp-core"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -455,6 +469,13 @@ begin library "flow-monitor-connections"
     "hh-marshal-tools-lwt"
     "lwt"
     "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 

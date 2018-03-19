@@ -18,8 +18,6 @@
  * response will be written again to the new server
  *)
 
-let (>>=) = Lwt.(>>=)
-let (>|=) = Lwt.(>|=)
 let spf = Printf.sprintf
 
 module Logger = FlowServerMonitorLogger
@@ -66,25 +64,35 @@ end = struct
     match msg with
     | MonitorProt.Response (request_id, response) ->
       Logger.debug "Read a response to request '%s' from the server!" request_id;
-      RequestMap.remove ~request_id
-      >|= (function
-      | None -> Logger.error "Failed to look up request '%s'" request_id
+      let%lwt request = RequestMap.remove ~request_id in
+      (match request with
+      | None ->
+        Logger.error "Failed to look up request '%s'" request_id;
+        Lwt.return_unit
       | Some (_, client) ->
         let msg = MonitorProt.Data response in
-        try EphemeralConnection.write_and_close ~msg client
-        with Lwt_stream.Closed ->
-          Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
+        begin
+          try EphemeralConnection.write_and_close ~msg client
+          with Lwt_stream.Closed ->
+            Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
+        end;
+        Lwt.return_unit
       )
     | MonitorProt.RequestFailed (request_id, exn_str) ->
       Logger.error "Server threw exception when processing '%s': %s" request_id exn_str;
-      RequestMap.remove ~request_id
-      >|= (function
-      | None -> Logger.error "Failed to look up request '%s'" request_id
+      let%lwt request = RequestMap.remove ~request_id in
+      (match request with
+      | None ->
+        Logger.error "Failed to look up request '%s'" request_id;
+        Lwt.return_unit
       | Some (_, client) ->
         let msg = MonitorProt.ServerException exn_str in
-        try EphemeralConnection.write_and_close ~msg client
-        with Lwt_stream.Closed ->
-          Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
+        begin
+          try EphemeralConnection.write_and_close ~msg client
+          with Lwt_stream.Closed ->
+            Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
+        end;
+        Lwt.return_unit
       )
     | MonitorProt.StatusUpdate status ->
       StatusStream.update ~status;
@@ -100,34 +108,31 @@ end = struct
 
     let send_request ~msg conn =
       ServerConnection.write ~msg conn;
-      conn
+      Lwt.return conn
 
     let main conn =
-      Lwt_stream.next command_stream
-      >>= (function
-        | Write_ephemeral_request { request; client; } ->
-          if not (EphemeralConnection.is_closed client)
-          then begin
-            RequestMap.add ~request ~client
-            >|= (fun request_id ->
-              Logger.debug "Writing '%s' to the server connection" request_id;
-              send_request ~msg:(MonitorProt.Request (request_id, request)) conn
-            )
-          end else begin
-            Logger.debug "Skipping request from a dead ephemeral connection";
-            Lwt.return conn
-          end
-        | Write_persistent_request { client_id; request; } ->
-          let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
-          Lwt.return (send_request ~msg conn)
-        | Notify_new_persistent_connection { client_id; logging_context; lsp; } ->
-          let msg = MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) in
-          Lwt.return (send_request ~msg conn)
-        | Notify_dead_persistent_connection { client_id; } ->
-          let () = PersistentConnectionMap.remove ~client_id in
-          let msg = MonitorProt.DeadPersistentConnection client_id in
-          Lwt.return (send_request ~msg conn)
-      )
+      let%lwt command = Lwt_stream.next command_stream in
+      match command with
+      | Write_ephemeral_request { request; client; } ->
+        if not (EphemeralConnection.is_closed client)
+        then begin
+          let%lwt request_id = RequestMap.add ~request ~client in
+          Logger.debug "Writing '%s' to the server connection" request_id;
+          send_request ~msg:(MonitorProt.Request (request_id, request)) conn
+        end else begin
+          Logger.debug "Skipping request from a dead ephemeral connection";
+          Lwt.return conn
+        end
+      | Write_persistent_request { client_id; request; } ->
+        let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
+        send_request ~msg conn
+      | Notify_new_persistent_connection { client_id; logging_context; lsp; } ->
+        let msg = MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) in
+        send_request ~msg conn
+      | Notify_dead_persistent_connection { client_id; } ->
+        let () = PersistentConnectionMap.remove ~client_id in
+        let msg = MonitorProt.DeadPersistentConnection client_id in
+        send_request ~msg conn
 
     let catch _ exn =
       Logger.fatal ~exn "Uncaught exception in Server command loop";
@@ -193,30 +198,26 @@ end = struct
 
     incr server_num;
     let name = spf "server #%d" !server_num in
-    ServerConnection.create ~name ~in_fd ~out_fd ~close ~on_read:handle_response
-    >|= (fun (start, connection) ->
-      start ();
+    let%lwt (start, connection) =
+      ServerConnection.create ~name ~in_fd ~out_fd ~close ~on_read:handle_response
+    in
+    start ();
 
-      let command_loop = CommandLoop.run ~cancel_condition:ExitSignal.signal connection in
+    let command_loop = CommandLoop.run ~cancel_condition:ExitSignal.signal connection in
 
-      (* Close the connection to the server when we're about to exit *)
-      let on_exit_thread =
-        Lwt.catch
-          (fun () ->
-            Lwt_condition.wait ExitSignal.signal
-            >>= (fun () -> cleanup_on_exit ~connection)
-          )
-          (fun exn ->
-            match exn with
-            | Lwt.Canceled -> Lwt.return_unit
-            | exn ->
-              Logger.fatal ~exn "Uncaught exception in on_exit_thread";
-              raise exn
-          )
-      in
+    (* Close the connection to the server when we're about to exit *)
+    let on_exit_thread =
+      try%lwt
+        let%lwt () = Lwt_condition.wait ExitSignal.signal in
+        cleanup_on_exit ~connection
+      with
+      | Lwt.Canceled -> Lwt.return_unit
+      | exn ->
+        Logger.fatal ~exn "Uncaught exception in on_exit_thread";
+        raise exn
+    in
 
-      { pid = handle.Daemon.pid; connection; command_loop; on_exit_thread }
-    )
+    Lwt.return { pid = handle.Daemon.pid; connection; command_loop; on_exit_thread }
 
   let pid_of t = t.pid
 end
@@ -230,11 +231,9 @@ let exit ~msg exit_status =
 
   (* Protect this thread from getting canceled *)
   Lwt.protected (
-    Lwt_unix.sleep 1.0
-    >>= (fun () ->
-      FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
-      Pervasives.exit (FlowExitStatus.error_code exit_status)
-    )
+    let%lwt () = Lwt_unix.sleep 1.0 in
+    FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
+    Pervasives.exit (FlowExitStatus.error_code exit_status)
   )
 
 (* A loop who's job is to start a server and then wait for it to die *)
@@ -299,75 +298,72 @@ module KeepAliveLoop = LwtLoop.Make (struct
     (* Lwt_unix.waitpid without WNOHANG doesn't work on Windows. As a workaround, we can call the
      * WNOHANG version every .5 seconds. https://github.com/ocsigen/lwt/issues/494 *)
     let rec damn_it_windows_impl pid =
-      Lwt_unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] pid
-      >>= (function
-      (* Still hasn't exited. Let's wait .5s and try again *)
-      | 0, _ ->
-        Lwt_unix.sleep 0.5 >>= (fun () -> damn_it_windows_impl pid)
-      (* Ok, process has exited or died or something. *)
-      | result -> Lwt.return result
-      )
+      let%lwt (pid, status) = Lwt_unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] pid in
+      if pid = 0
+      then
+        (* Still hasn't exited. Let's wait .5s and try again *)
+        let%lwt () = Lwt_unix.sleep 0.5 in
+        damn_it_windows_impl pid
+      else
+        (* Ok, process has exited or died or something. *)
+        Lwt.return (pid, status)
     in
 
     if Sys.win32 then damn_it_windows_impl else reasonable_impl
 
   let wait_for_server_to_die monitor_options server =
     let pid = ServerInstance.pid_of server in
-    blocking_waitpid pid
-    >>= (fun (_, status) ->
-      ServerInstance.cleanup server
-      >>= (fun () ->
-        if Sys.unix && try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false
-        then FlowEventLogger.murdered_by_oom_killer ();
+    let%lwt (_, status) = blocking_waitpid pid in
+    let%lwt () = ServerInstance.cleanup server in
+    if Sys.unix && try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false
+    then FlowEventLogger.murdered_by_oom_killer ();
 
-        match status with
-        | Unix.WEXITED exit_status ->
-          let exit_type =
-            try Some (FlowExitStatus.error_type exit_status)
-            with Not_found -> None in
-          let exit_status_string =
-            Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type in
-          Logger.error "Flow server (pid %d) exited with code %s (%d)"
-            pid
-            exit_status_string
-            exit_status;
-          begin match exit_type with
-          | None ->
-             exit
-              ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
-              FlowExitStatus.Unknown_error
-          | Some exit_type ->
-            if should_monitor_exit_with_server monitor_options exit_type
-            then exit ~msg:"Dying along with server" exit_type
-            else Lwt.return_unit
-          end
-        | Unix.WSIGNALED signal ->
-          Logger.error "Flow server (pid %d) was killed with %s signal"
-            pid
-            (PrintSignal.string_of_signal signal);
-          FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
-          Lwt.return_unit
-        | Unix.WSTOPPED signal ->
-          (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
-           * could try to signal it to resume. Or we could wait for it to start up again. But killing
-           * it and starting a new server seems easier *)
-          Logger.error "Flow server (pid %d) was stopped with %s signal. Sending sigkill"
-            pid
-            (PrintSignal.string_of_signal signal);
-          (* kill is not a blocking system call, which is likely why it is missing from Lwt_unix *)
-          Unix.kill pid Sys.sigkill;
-          Lwt.return_unit
-      )
-    )
+    match status with
+    | Unix.WEXITED exit_status ->
+      let exit_type =
+        try Some (FlowExitStatus.error_type exit_status)
+        with Not_found -> None in
+      let exit_status_string =
+        Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type in
+      Logger.error "Flow server (pid %d) exited with code %s (%d)"
+        pid
+        exit_status_string
+        exit_status;
+      begin match exit_type with
+      | None ->
+          exit
+          ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
+          FlowExitStatus.Unknown_error
+      | Some exit_type ->
+        if should_monitor_exit_with_server monitor_options exit_type
+        then exit ~msg:"Dying along with server" exit_type
+        else Lwt.return_unit
+      end
+    | Unix.WSIGNALED signal ->
+      Logger.error "Flow server (pid %d) was killed with %s signal"
+        pid
+        (PrintSignal.string_of_signal signal);
+      FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
+      Lwt.return_unit
+    | Unix.WSTOPPED signal ->
+      (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
+        * could try to signal it to resume. Or we could wait for it to start up again. But killing
+        * it and starting a new server seems easier *)
+      Logger.error "Flow server (pid %d) was stopped with %s signal. Sending sigkill"
+        pid
+        (PrintSignal.string_of_signal signal);
+      (* kill is not a blocking system call, which is likely why it is missing from Lwt_unix *)
+      Unix.kill pid Sys.sigkill;
+      Lwt.return_unit
 
   (* The RequestMap will contain all the requests which have been sent to the server but never
    * received a response. If we're starting up a new server, we can resend all these requests to
    * the new server *)
   let requeue_stalled_requests () =
-    RequestMap.remove_all ()
-    >>= Lwt_list.iter_p (fun (request, client) ->
+    let%lwt requests = RequestMap.remove_all () in
+    Lwt_list.iter_p (fun (request, client) ->
       Lwt.return (push_to_command_stream (Some (Write_ephemeral_request {request; client;})))
-    )
+    ) requests
 
   (* Ephemeral commands are stateless, so they can survive a server restart. However a persistent
    * connection might have state, so it's wrong to allow it to survive. Maybe in the future we can
@@ -378,11 +374,11 @@ module KeepAliveLoop = LwtLoop.Make (struct
     |> Lwt_list.iter_p PersistentConnection.close_immediately
 
   let main monitor_options =
-    requeue_stalled_requests ()
-    >>= (fun () -> ServerInstance.start monitor_options)
-    >>= (wait_for_server_to_die monitor_options)
-    >>= killall_persistent_connections
-    >|= (fun () -> monitor_options)
+    let%lwt () = requeue_stalled_requests () in
+    let%lwt server = ServerInstance.start monitor_options in
+    let%lwt () = wait_for_server_to_die monitor_options server in
+    let%lwt () = killall_persistent_connections () in
+    Lwt.return monitor_options
 
   let catch _ exn =
     Logger.error ~exn "Exception in KeepAliveLoop";
