@@ -369,6 +369,10 @@ end
 begin library "hh-dfind"
   sort = true
   files = begin fb-glob "hack/dfind"
+    excludes = [
+      "dfindLibLwt.mli"
+      "dfindLibLwt.ml"
+    ]
   end
   requires += [
     "hh-fsnotify"
@@ -377,6 +381,22 @@ begin library "hh-dfind"
     "tp-core"
     "hh-utils"
     "hh-utils-collections"
+  ]
+end
+
+begin library "hh-dfind-lwt"
+  sort = true
+  dirname = "hack/dfind"
+  files = [
+    "dfindLibLwt.mli"
+    "dfindLibLwt.ml"
+  ]
+  requires += [
+    "hh-dfind"
+    "hh-marshal-tools-lwt"
+    "hh-utils"
+    "lwt"
+    "lwt.unix"
   ]
 end
 

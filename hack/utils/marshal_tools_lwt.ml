@@ -31,7 +31,7 @@ end)
 
 include Marshal_tools_lwt
 
-(* The Timeout probably doesn't work terribly well with Lwt. Luckily, timeouts are super easy to
- * write in Lwt, so we don't **really** need them *)
+(* The Timeout module probably doesn't work terribly well with Lwt. Luckily, timeouts are super easy
+ * to write in Lwt, so we don't **really** need them *)
 let to_fd_with_preamble ?flags fd obj = to_fd_with_preamble ?flags fd obj
 let from_fd_with_preamble fd = from_fd_with_preamble fd
