@@ -106,3 +106,23 @@ class MyClass<A, B, C> {
 
 var val: MyClass<number, boolean, string> = new MyClass(1, true, 'three');
 ```
+
+##### Class<> Type <a class="toc" id="toc-class-type" href="#toc-class-type"></a>
+
+The class for a the constructor of a class itself is `Class`. If you would like to
+ensure that you are passing around a constructor that implements an interface, you 
+can do so with the type `Class<MyInterface>`. For example:
+
+```js
+// @flow 
+
+interface MyInterface {}
+
+class MyClass implements MyInterface {
+  // ...
+}
+
+function returnsConstructor(): Class<MyInterface> {
+  return MyClass;
+}
+```
