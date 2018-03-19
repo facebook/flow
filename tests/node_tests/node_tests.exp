@@ -67,8 +67,8 @@ Cannot call `hmac.write` with `123` bound to `chunk` because number [1] is incom
                         ^^^ [1]
 
 References:
-   <BUILTINS>/node.js:1485:21
-   1485|     chunk: Buffer | string,
+   <BUILTINS>/node.js:1487:21
+   1487|     chunk: Buffer | string,
                              ^^^^^^ [2]
 
 
@@ -1334,8 +1334,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1967:21
-   1967|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:1970:21
+   1970|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1353,26 +1353,26 @@ Cannot call `process.emitWarning` because:
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:1939:24
-   1939|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:1942:24
+   1942|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:1939:33
-   1939|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:1942:33
+   1942|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:1940:3
-   1940|   emitWarning(warning: string, typeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:1943:3
+   1943|   emitWarning(warning: string, typeOrCtor: string | Function): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1941:3
-   1941|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:1944:3
+   1944|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:1942:3
+   <BUILTINS>/node.js:1945:3
            v-----------
-   1942|   emitWarning(
-   1943|     warning: string,
-   1944|     type: string,
-   1945|     code: string,
-   1946|     ctor?: Function
-   1947|   ): void;
+   1945|   emitWarning(
+   1946|     warning: string,
+   1947|     type: string,
+   1948|     code: string,
+   1949|     ctor?: Function
+   1950|   ): void;
            ------^ [6]
 
 
@@ -1391,14 +1391,14 @@ References:
    process/process.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:1940:24
-   1940|   emitWarning(warning: string, typeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:1943:24
+   1943|   emitWarning(warning: string, typeOrCtor: string | Function): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:1941:24
-   1941|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:1944:24
+   1944|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:1943:14
-   1943|     warning: string,
+   <BUILTINS>/node.js:1946:14
+   1946|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1416,11 +1416,11 @@ References:
    process/process.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:1941:38
-   1941|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:1944:38
+   1944|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:1944:11
-   1944|     type: string,
+   <BUILTINS>/node.js:1947:11
+   1947|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1436,8 +1436,8 @@ References:
    process/process.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:1945:11
-   1945|     code: string,
+   <BUILTINS>/node.js:1948:11
+   1948|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1450,8 +1450,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1939:41
-   1939|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:1942:41
+   1942|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/process.js:14:31
      14| (process.emitWarning("blah"): string); // error
