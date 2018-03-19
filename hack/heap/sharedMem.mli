@@ -86,8 +86,10 @@ val with_worker_exit: (unit -> 'a) -> 'a
  *)
 (*****************************************************************************)
 
-val collect: [ `gentle | `aggressive ] -> unit
-
+val collect :
+  ?wrapper:((unit -> unit) -> unit) ->
+  [ `aggressive | `gentle ] ->
+  unit
 (*****************************************************************************)
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml).

@@ -244,11 +244,16 @@ let hash_stats () =
     slots = hash_slots ();
   }
 
-let collect (effort : [ `gentle | `aggressive ]) =
+let collect ?wrapper (effort : [ `gentle | `aggressive ]) =
+  let wrapper = Option.value wrapper ~default:(fun f -> f ()) in
   let old_size = heap_size () in
   Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
-  hh_collect (effort = `aggressive);
+  (* The wrapper is used to run the function in a worker instead of master.
+   * Fun fact: the unit returned from hh_collect is apparently different from
+   * the one inlined below. The one from hh_collect fails marshaling with
+   * "Invalid_argument: output_value: abstract value (outside heap)" *)
+  wrapper (fun () -> hh_collect (effort = `aggressive); ());
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
   if old_size <> new_size then begin

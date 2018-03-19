@@ -1433,7 +1433,7 @@ value hh_check_heap_overflow() {
  * Step two, memcopy the values back into the shared heap.
  * We could probably use something smarter, but this is fast enough.
  *
- * The collector should only be called by the master.
+ * The collector should only be executed by single process at the time
  */
 /*****************************************************************************/
 void hh_collect(value aggressive_val) {
@@ -1458,7 +1458,6 @@ void hh_collect(value aggressive_val) {
 
   tmp_heap = temp_memory_map();
   dest = tmp_heap;
-  assert_master(); // Comes from the master
 
   // Walking the table
   for(size_t i = 0; i < hashtbl_size; i++) {
