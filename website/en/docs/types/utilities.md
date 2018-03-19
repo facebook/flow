@@ -337,7 +337,7 @@ type NumberObj = {
 (42: $ElementType<$ElementType<NumberObj, 'nums'>, number>);
 ```
 
-Additionally, one of the things that also makes `$ElementType<T, K>` more powerful that [`$PropertyType<T>`](#toc-propertytype) is that you can use it with generics. For example:
+Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T>`](#toc-propertytype) is that you can use it with generics. For example:
 
 ```js
 // @flow
