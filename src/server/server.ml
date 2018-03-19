@@ -139,14 +139,14 @@ let exit_due_to_dfind_dying ~genv e =
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
 let rec recheck_loop ~dfind genv env =
-  let raw_updates =
+  let%lwt raw_updates =
     if Options.use_file_watcher genv.options
     then
-      try DfindLib.get_changes dfind
+      try%lwt DfindLibLwt.get_changes dfind
       with
       | Sys_error msg as e when msg = "Broken pipe" -> exit_due_to_dfind_dying ~genv e
       | End_of_file as e -> exit_due_to_dfind_dying ~genv e
-    else SSet.empty
+    else Lwt.return SSet.empty
   in
   if SSet.is_empty raw_updates then Lwt.return env else begin
     let updates = Rechecker.process_updates genv env raw_updates in
@@ -204,7 +204,7 @@ let init_dfind options =
   let fds = (in_fd, log_fd, log_fd) in
   let watch_paths = get_watch_paths options in
   Hh_logger.info "Watching paths: \n%s" (String.concat "\n" (List.map (fun p -> spf "\t%s" (Path.to_string p)) watch_paths));
-  DfindLib.init fds ("flow_server_events", watch_paths)
+  DfindLibLwt.init fds ("flow_server_events", watch_paths)
 
 
 (* The main entry point of the daemon
@@ -239,7 +239,7 @@ let run ~monitor_channels ~shared_mem_config options =
     let%lwt env = with_init_lock (fun () ->
       ServerPeriodical.init ();
       let%lwt env = program_init () in
-      DfindLib.wait_until_ready dfind;
+      let%lwt () = DfindLibLwt.wait_until_ready dfind in
       Lwt.return env
     ) in
 
