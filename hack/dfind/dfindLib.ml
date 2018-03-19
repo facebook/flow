@@ -8,20 +8,28 @@
  *
  *)
 
-type t = (DfindServer.msg, unit) Daemon.handle
+type t = {infd: Unix.file_descr; outfd: Unix.file_descr; pid: int }
 
 let init log_fds (scuba_table, roots) =
   let name = Printf.sprintf "file watching process for server %d" (Unix.getpid ()) in
-  Daemon.spawn ~name log_fds DfindServer.entry_point (scuba_table, roots)
+  let {Daemon.channels = (ic, oc); pid} =
+    Daemon.spawn ~name log_fds DfindServer.entry_point (scuba_table, roots)
+  in
+  {
+    infd = Daemon.descr_of_in_channel ic;
+    outfd = Daemon.descr_of_out_channel oc;
+    pid;
+  }
 
-let pid handle = handle.Daemon.pid
+let pid handle = handle.pid
 
-let wait_until_ready {Daemon.channels = (ic, _oc); pid = _} =
-  assert (Daemon.from_channel ic = DfindServer.Ready)
+let wait_until_ready handle =
+  let msg = Marshal_tools.from_fd_with_preamble handle.infd in
+  assert (msg = DfindServer.Ready)
 
-let request_changes ?timeout {Daemon.channels = (ic, oc); pid = _} =
-  Daemon.to_channel oc ();
-  Daemon.from_channel ?timeout ic
+let request_changes ?timeout handle =
+  Marshal_tools.to_fd_with_preamble handle.outfd () |> ignore;
+  Marshal_tools.from_fd_with_preamble ?timeout handle.infd
 
 let get_changes ?timeout daemon =
   let rec loop acc =
