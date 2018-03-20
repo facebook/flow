@@ -14,7 +14,7 @@ type provenance =
 
 type identifier = string
 
-type symbol = provenance * identifier
+type symbol = Symbol of (provenance * identifier) [@@unboxed]
 
 type t =
   | TVar of tvar
@@ -133,14 +133,17 @@ let mk_maybe t =
 let named_t symbol =
   Generic (symbol, false, None)
 
+let builtin_symbol name =
+  Symbol (Builtin, name)
+
 let builtin_t name =
-  named_t (Builtin, name)
+  named_t (builtin_symbol name)
 
 let generic_t symbol targs =
   Generic (symbol, false, Some targs)
 
 let generic_builtin_t name targs =
-  generic_t (Builtin, name) targs
+  generic_t (Symbol (Builtin, name)) targs
 
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }

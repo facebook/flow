@@ -97,7 +97,7 @@ and dump_tvar = function
   | RVar i -> spf "T_%d" i
   | TParam s -> s
 
-and dump_symbol (provenance, name) =
+and dump_symbol (Symbol (provenance, name)) =
   match provenance with
   | Local -> name
   | Imported loc -> spf "%s /* imported from file %s */" name (Reason.string_of_loc loc)
@@ -259,7 +259,7 @@ and json_of_tvar = Hh_json.(function
   | TParam s -> ["id", JSON_String s]
 )
 
-and json_of_symbol (_loc, name) = Hh_json.JSON_String name
+and json_of_symbol (Symbol (_loc, name)) = Hh_json.JSON_String name
 
 and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
   Hh_json.(

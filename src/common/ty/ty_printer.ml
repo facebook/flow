@@ -101,7 +101,7 @@ let type_ ?(size=5000) t =
     | Exists -> Atom "*"
     | This -> Atom "this"
     | TypeAlias ta -> type_alias ta
-    | TypeOf (_, n) -> fuse [Atom "typeof"; space; identifier n]
+    | TypeOf (Symbol (_, n)) -> fuse [Atom "typeof"; space; identifier n]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
@@ -111,7 +111,7 @@ let type_ ?(size=5000) t =
     | RVar i -> Atom (varname i)
     | TParam s -> Atom s
 
-  and type_generic ~depth (_, id) typeParameters =
+  and type_generic ~depth (Symbol (_, id)) typeParameters =
     fuse [
       identifier id;
       option (type_parameter_instantiation ~depth) typeParameters;
@@ -125,7 +125,7 @@ let type_ ?(size=5000) t =
 
   and identifier name = Atom name
 
-  and type_alias { ta_name = (provenance, id); ta_tparams; ta_type } =
+  and type_alias { ta_name = Symbol (provenance, id); ta_tparams; ta_type } =
     match provenance with
     | Remote loc ->
       (match Loc.source loc with
@@ -285,7 +285,7 @@ let type_ ?(size=5000) t =
     | Inter _ -> wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
 
-  and type_class ~depth (_, id) structural typeParameters = fuse [
+  and type_class ~depth (Symbol (_, id)) structural typeParameters = fuse [
     Atom (if structural then "interface" else "class");
     space;
     identifier id;

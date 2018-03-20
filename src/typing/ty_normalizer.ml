@@ -574,7 +574,7 @@ end = struct
           ]
           Any)
       else
-        return Ty.(TypeOf (Builtin, "Function.prototype.apply"))
+        return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.apply"))
 
     | FunProtoBindT _ ->
       if C.expand_internal_types then
@@ -584,7 +584,7 @@ end = struct
           ~rest:(Some "argArray", Arr Any)
           Any)
       else
-         return Ty.(TypeOf (Builtin, "Function.prototype.bind"))
+         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.bind"))
 
     | FunProtoCallT _ ->
       if C.expand_internal_types then
@@ -594,7 +594,7 @@ end = struct
           ~rest:(Some "argArray", Arr Any)
           Any)
       else
-         return Ty.(TypeOf (Builtin, "Function.prototype.call"))
+         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
 
     | DefT (_, CharSetT _)
     | NullProtoT _
@@ -710,7 +710,7 @@ end = struct
       | Some Builtins -> Ty.Builtin
       | None -> Ty.Local
     in
-    return (provenance, name)
+    return (Ty.Symbol (provenance, name))
 
   and annot_t ~env r id =
     if C.expand_annots then
@@ -1015,7 +1015,7 @@ end = struct
     (* $Facebookism$Mixin: (...objects: Array<Object>): Class *)
     | Mixin -> return Ty.(mk_fun
         ~rest:(Some "objects", Arr AnyObj)
-        (Class ((Builtin, "Object"), false, None))
+        (Class (builtin_symbol "Object", false, None))
       )
 
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
@@ -1093,7 +1093,7 @@ end = struct
     | ReactCloneElement
     | ReactElementFactory _ -> return Ty.(
         let tparams = [mk_tparam "T"] in
-        let t = named_t (Local, "T") in
+        let t = named_t (Symbol (Local, "T")) in
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
@@ -1260,8 +1260,8 @@ let add_imports ~cx state =
   let imported_ts = Context.imported_ts cx in
   let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
     match run st (type__ ~env:Env.empty t) with
-    | (Ok (TypeAlias { ta_name = (Remote loc, _); _ }), st)
-    | (Ok (Class ((Remote loc, _), _, _)), st) ->
+    | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
+    | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
       (st, SMap.add x loc m)
     | (_, st) ->
       (st, m)
