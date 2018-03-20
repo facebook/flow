@@ -1093,7 +1093,7 @@ end = struct
     | ReactCloneElement
     | ReactElementFactory _ -> return Ty.(
         let tparams = [mk_tparam "T"] in
-        let t = named_t (Symbol (Local, "T")) in
+        let t = TVar (TParam "T") in
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
