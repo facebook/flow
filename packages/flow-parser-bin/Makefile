@@ -7,13 +7,67 @@ FLOW_VERSION ?= $(shell node -p 'require("./package.json").version')
 HOST ?= https://github.com/facebook/flow/releases/download/v$(FLOW_VERSION)
 PLATFORMS = linux64 osx # TODO: win64
 LIBS = $(patsubst %,lib/%/libflowparser.a,$(PLATFORMS))
-ZIPS = $(patsubst %,dist/libflowparser-%.zip,$(PLATFORMS))
+RELEASE_ZIPS = $(patsubst %,dist/release/libflowparser-%.zip,$(PLATFORMS))
 
-all: include SHASUM256.txt
+ifeq ($(OS), Windows_NT)
+	UNAME_S=Windows
+else
+	UNAME_S=$(shell uname -s)
+endif
+ifeq ($(UNAME_S), Linux)
+	PLATFORM=linux64
+endif
+ifeq ($(UNAME_S), Windows)
+	PLATFORM=win64
+endif
+ifeq ($(UNAME_S), Darwin)
+	PLATFORM=osx
+endif
 
-$(ZIPS):
+.PHONY: local
+local: include lib/$(PLATFORM)/libflowparser.a
+
+.PHONY: dist
+dist: include SHASUM256.txt
+
+.PHONY: download
+download: $(addsuffix .dl,$(RELEASE_ZIPS))
+
+.PHONY: clean
+clean:
+	rm -rf SHASUM256.txt include/ lib/ dist/ build/
+
+# Phony targets for each platform's prebuilt zip file to trigger downloading
+# them from GitHub. Below, we rely on the fact that the zips themselves don't
+# have a build target, in order to prefer building from source when
+# `make download` hasn't been run.
+$(addsuffix .dl,$(RELEASE_ZIPS)):
 	@mkdir -p "$(@D)"
-	curl --max-time 300 -L "$(patsubst dist/%.zip,$(HOST)/%-v$(FLOW_VERSION).zip,$@)" -o "$@" || rm "$@"
+	curl --max-time 300 \
+		-L "$(patsubst dist/release/%.zip.dl,$(HOST)/%-v$(FLOW_VERSION).zip,$@)" \
+		-o "$(subst .dl,,$@)" || rm "$(subst .dl,,$@)"
+
+# Builds libflowparser.zip for the current platform from source. Phony so that
+# ocamlbuild can decide if anything has changed.
+.PHONY: dist/local/libflowparser-$(PLATFORM).zip
+dist/local/libflowparser-$(PLATFORM).zip:
+	@mkdir -p "$(@D)"
+	$(MAKE) -C ../../src/parser dist/libflowparser.zip
+	cp -u ../../src/parser/dist/libflowparser.zip "$@"
+
+# The following two "pattern" rules (because of the %) choose between using
+# the downloaded release builds or building from source, depending on whether
+# the release builds exist. Make doesn't error when a pattern rule's prereq
+# doesn't exist; it tries the next one instead. Here is where we rely on there
+# being no build target for $(RELEASE_ZIPS). If the release zip exists, then
+# the first rule matches; if it doesn't, then it chooses the 2nd rule which
+# kicks off the local build.
+dist/libflowparser-%.zip: dist/release/libflowparser-%.zip
+	@mkdir -p "$(@D)"
+	cp -u "$<" "$@"
+dist/libflowparser-%.zip: dist/local/libflowparser-%.zip
+	@mkdir -p "$(@D)"
+	cp -u "$<" "$@"
 
 $(LIBS): lib/%/libflowparser.a: dist/libflowparser-%.zip
 	DIR="$(basename $<)"; \
@@ -23,7 +77,7 @@ $(LIBS): lib/%/libflowparser.a: dist/libflowparser-%.zip
 	rm -rf "$$DIR"
 	touch "$@"
 
-include: dist/libflowparser-linux64.zip
+include: dist/libflowparser-$(PLATFORM).zip
 	DIR="$(basename $<)"; \
 	mkdir -p "$$DIR" "$(@D)"; \
 	unzip "$<" "libflowparser/include/**" -d "$$DIR" && \
@@ -32,8 +86,3 @@ include: dist/libflowparser-linux64.zip
 
 SHASUM256.txt: $(LIBS)
 	shasum -a 256 $^ > $@
-
-clean:
-	rm -rf SHASUM256.txt include/ lib/ dist/ build/
-
-.PHONY: all deps clean

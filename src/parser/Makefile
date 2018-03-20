@@ -51,13 +51,17 @@ build-parser:
 	cd $(TOP); \
 	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
 
-.PHONY: dist/libflowparser/lib/libflowparser.a
-dist/libflowparser/lib/libflowparser.a:
-	@mkdir -p "$(@D)"
-	cp "$(OCAML_PATH)/libasmrun_pic.a" "$@"
+.PHONY: libflowparser.native.o
+libflowparser.native.o:
 	cd $(TOP) && $(OCB) -no-links -tag "runtime_variant(_pic)" \
 		$(REL_DIR)/libflowparser.native.o
-	ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"
+
+dist/libflowparser/lib/libflowparser.a: libflowparser.native.o
+	@mkdir -p "$(@D)"
+	if [ "$(OCAML_PATH)/libasmrun_pic.a" -nt "$@" -o  "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o" -nt "$@" ]; then \
+		cp "$(OCAML_PATH)/libasmrun_pic.a" "$@"; \
+		ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"; \
+	fi
 
 $(OCAML_HEADERS): dist/libflowparser/include/%: $(OCAML_PATH)/%
 	@mkdir -p "$(@D)"

@@ -11,7 +11,9 @@
     "nan": "^2.8.0"
   },
   "scripts": {
-    "prepublish": "make all",
+    "prepack": "make download && make dist",
+    "preinstall": "make",
+    "install": "node-gyp rebuild",
     "verify": "shasum -c SHASUM256.txt"
   },
   "files": [
