@@ -253,7 +253,7 @@ let collect ?wrapper (effort : [ `gentle | `aggressive ]) =
    * Fun fact: the unit returned from hh_collect is apparently different from
    * the one inlined below. The one from hh_collect fails marshaling with
    * "Invalid_argument: output_value: abstract value (outside heap)" *)
-  wrapper (fun () -> hh_collect (effort = `aggressive); ());
+  wrapper (fun () -> hh_collect (effort = `aggressive));
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
   if old_size <> new_size then begin

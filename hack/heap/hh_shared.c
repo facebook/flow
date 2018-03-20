@@ -1436,7 +1436,11 @@ value hh_check_heap_overflow() {
  * The collector should only be executed by single process at the time
  */
 /*****************************************************************************/
-void hh_collect(value aggressive_val) {
+CAMLprim value hh_collect(value aggressive_val) {
+  // NOTE: explicitly do NOT call CAMLparam or any of the other functions/macros
+  // defined in caml/memory.h .
+  // This function takes a boolean and returns unit.
+  // Those are both immediates in the OCaml runtime.
   int aggressive  = Bool_val(aggressive_val);
   char* tmp_heap = NULL;
   char* dest = NULL;
@@ -1453,7 +1457,7 @@ void hh_collect(value aggressive_val) {
     if (used < latest_heap_size) {
       latest_heap_size = used;
     }
-    return;
+    return Val_unit;
   }
 
   tmp_heap = temp_memory_map();
@@ -1487,6 +1491,7 @@ void hh_collect(value aggressive_val) {
 
   temp_memory_unmap(tmp_heap);
   latest_heap_size = used_heap_size();
+  return Val_unit;
 }
 
 static void raise_heap_full() {
