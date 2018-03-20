@@ -1,4 +1,4 @@
-type BinaryExpression = {_BinaryExpression: void, end: number, innerComments: ?Comment[], leadingComments: ?Comment[], left: Expression, loc: {end: {column: number, line: number}, start: {column: number, line: number}}, operator: BinaryOperator, right: Expression, start: number, trailingComments: ?Comment[], type: "BinaryExpression"}
+imported BinaryExpression
 printBinaryExpression.js:15:9,15:24
 BinaryExpression
 printBinaryExpression.js:17:15,17:18

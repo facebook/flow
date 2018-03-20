@@ -686,15 +686,15 @@ end = struct
     let open File_key in
     get >>= fun st ->
     let cx = State.(st.cx) in
-    let reason_loc = Reason.loc_of_reason reason in
-    let reason_source = Loc.source reason_loc in
+    let def_loc = Reason.def_loc_of_reason reason in
+    let def_source = Loc.source def_loc in
     let provenance =
-      match reason_source with
-      | Some LibFile _ -> Ty.Library reason_loc
+      match def_source with
+      | Some LibFile _ -> Ty.Library def_loc
       | Some (SourceFile _) ->
         let current_source = Context.file cx in
         (* Locally defined name *)
-        if Some current_source = reason_source then
+        if Some current_source = def_source then
           Ty.Local
         else (
           (* Otherwise it is one of:
@@ -702,8 +702,8 @@ end = struct
              - Remote (defined in a different file but not imported in this one)
           *)
           match SMap.get name st.State.imported_names with
-          | Some loc when reason_loc = loc -> Ty.Imported loc
-          | _ -> Ty.Remote reason_loc
+          | Some loc when def_loc = loc -> Ty.Imported loc
+          | _ -> Ty.Remote def_loc
         )
       | Some (JsonFile _)
       | Some (ResourceFile _) -> Ty.Local
