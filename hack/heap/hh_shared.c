@@ -438,7 +438,7 @@ static char* heap_init = NULL;
 static char* heap_max = NULL;
 
 /* Size of the heap since the last garbage collect*/
-static size_t latest_heap_size = 0;
+static size_t* latest_heap_size = NULL;
 
 static size_t used_heap_size(void) {
   return *heap - heap_init;
@@ -446,6 +446,11 @@ static size_t used_heap_size(void) {
 
 void raise_assertion_failure(char * msg) {
   caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
+}
+
+static size_t get_latest_heap_size(void) {
+  assert(latest_heap_size != NULL);
+  return *latest_heap_size;
 }
 
 /* Expose so we can display diagnostics */
@@ -797,9 +802,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   workers_should_exit = (size_t*)(mem + 6*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  latest_heap_size = (size_t*)(mem + 7*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 7*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 8*CACHE_LINE_SIZE + (int)sizeof(int));
 
   /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
    * page_size - it should be since page_size is quite big for a string
@@ -1412,8 +1420,8 @@ static void temp_memory_unmap(char * tmp_heap) {
 /*****************************************************************************/
 void hh_call_after_init() {
   CAMLparam0();
-  latest_heap_size = used_heap_size();
-  if (2 * latest_heap_size >= heap_size) {
+  *latest_heap_size = used_heap_size();
+  if (2 * get_latest_heap_size() >= heap_size) {
     caml_failwith("Heap init size is too close to max heap size; "
       "GC will never get triggered!");
   }
@@ -1448,14 +1456,14 @@ CAMLprim value hh_collect(value aggressive_val) {
 
   float space_overhead = aggressive ? 1.2 : 2.0;
   size_t used = used_heap_size();
-  if(used < (size_t)(space_overhead * latest_heap_size)) {
+  if (used < (size_t)(space_overhead * get_latest_heap_size())) {
     // We have not grown past twice the size since we last gc'd
 
     /* We maintain the invariant that the latest_heap_size
       is at most the current heap size, to make sure the GC
       always collects */
-    if (used < latest_heap_size) {
-      latest_heap_size = used;
+    if (used < get_latest_heap_size()) {
+      *latest_heap_size = used;
     }
     return Val_unit;
   }
@@ -1490,7 +1498,7 @@ CAMLprim value hh_collect(value aggressive_val) {
   *heap = heap_init + mem_size;
 
   temp_memory_unmap(tmp_heap);
-  latest_heap_size = used_heap_size();
+  *latest_heap_size = used_heap_size();
   return Val_unit;
 }
 
