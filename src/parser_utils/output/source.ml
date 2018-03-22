@@ -70,11 +70,15 @@ let add_string ?name str src =
       | Some filename -> File_key.to_string filename
       | None -> "<stdin>"
       in
-      let original = { Sourcemap.
-        line = loc.Loc.start.Loc.line;
-        col = loc.Loc.start.Loc.column;
-      } in
-      Sourcemap.add_mapping ?name ~source ~original ~generated:src.pos sourcemap
+      let original = Sourcemap.({
+        name;
+        source;
+        original_loc = {
+          line = loc.Loc.start.Loc.line;
+          col = loc.Loc.start.Loc.column;
+        }
+      }) in
+      Sourcemap.add_mapping ~original ~generated:src.pos sourcemap
   ) in
   let pos = pos_add_string src.pos str in
   { src with sourcemap; pos }
@@ -115,12 +119,12 @@ let add_source src1 src2 =
 
 let contents b = Buffer.contents b.buffer
 
-module Json = Sourcemap.Make_json (struct
+module Json = Sourcemap.Make_json_writer (struct
   type t = Hh_json.json
-  let string x = Hh_json.JSON_String x
-  let obj props = Hh_json.JSON_Object props
-  let array arr = Hh_json.JSON_Array arr
-  let number x = Hh_json.JSON_Number x
+  let of_string x = Hh_json.JSON_String x
+  let of_obj props = Hh_json.JSON_Object props
+  let of_array arr = Hh_json.JSON_Array arr
+  let of_number x = Hh_json.JSON_Number x
   let null = Hh_json.JSON_Null
 end)
 
