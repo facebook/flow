@@ -9,18 +9,17 @@ open Reason
 open Type
 
 let recurse_into_union filter_fn (r, ts) =
-  let new_ts, updated = List.fold_left (fun (new_ts, updated) t ->
-    let filtered_type, did_update = filter_fn t in
-    let updated = updated || did_update in
+  let new_ts = List.fold_left (fun new_ts t ->
+    let filtered_type = filter_fn t in
     match filtered_type with
-    | DefT (_, EmptyT) -> new_ts, updated
-    | _ -> filtered_type::new_ts, updated
-  ) ([], false) ts in
+    | DefT (_, EmptyT) -> new_ts
+    | _ -> filtered_type::new_ts
+  ) [] ts in
   let new_ts = List.rev new_ts in
   match new_ts with
-  | [] -> DefT (r, EmptyT), updated
-  | [t] -> t, updated
-  | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts)), updated
+  | [] -> DefT (r, EmptyT)
+  | [t] -> t
+  | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
 
 let rec exists = function
   (* falsy things get removed *)
@@ -33,18 +32,18 @@ let rec exists = function
     | StrT (Literal (_, ""))
     | SingletonNumT (0., _)
     | NumT (Literal (_, (0., _)))
-    )) -> DefT (r, EmptyT), true
+    )) -> DefT (r, EmptyT)
 
   (* unknown things become truthy *)
-  | DefT (_, MaybeT t) -> t, true
-  | DefT (_, OptionalT t) -> t |> exists |> fst, true
-  | DefT (r, BoolT None) -> DefT (r, BoolT (Some true)), true
-  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy), true
-  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy), true
-  | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy), true
+  | DefT (_, MaybeT t) -> t
+  | DefT (_, OptionalT t) -> exists t
+  | DefT (r, BoolT None) -> DefT (r, BoolT (Some true))
+  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy)
+  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
+  | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
 
   (* truthy things pass through *)
-  | t -> t, false
+  | t -> t
 
 let not_exists t = match t with
   (* falsy things pass through *)
@@ -57,7 +56,7 @@ let not_exists t = match t with
     | StrT (Literal (_, ""))
     | SingletonNumT (0., _)
     | NumT (Literal (_, (0., _)))
-    )) -> t, false
+    )) -> t
 
   (* truthy things get removed *)
   | DefT (r, (
@@ -74,114 +73,113 @@ let not_exists t = match t with
     | SingletonNumT _
     | NumT (Literal _ | Truthy)
     | MixedT Mixed_truthy
-    )) -> DefT (r, EmptyT), true
+    )) -> DefT (r, EmptyT)
 
-  | DefT (reason, ClassT _) -> DefT (reason, EmptyT), true
+  | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
 
   (* unknown boolies become falsy *)
   | DefT (r, MaybeT _) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) [])), true
-  | DefT (r, BoolT None) -> DefT (r, BoolT (Some false)), true
-  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, ""))), true
-  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0")))), true
+    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
+  | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
+  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, "")))
+  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
 
   (* things that don't track truthiness pass through *)
-  | t -> t, false
+  | t -> t
 
 let maybe = function
   | DefT (r, MaybeT _) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) [])), true
+    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
   | DefT (r, MixedT Mixed_everything) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) [])), true
-  | DefT (r, MixedT Mixed_truthy) -> EmptyT.why r, true
-  | DefT (r, MixedT Mixed_non_maybe) -> EmptyT.why r, true
-  | DefT (r, MixedT Mixed_non_void) -> DefT (r, NullT), true
-  | DefT (r, MixedT Mixed_non_null) -> DefT (r, VoidT), true
-  | DefT (_, NullT) as t -> t, false
-  | DefT (_, VoidT) as t -> t, false
-  | DefT (r, OptionalT _) -> VoidT.why r, true
-  | DefT (_, AnyT) as t -> t, false
+    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
+  | DefT (r, MixedT Mixed_truthy) -> EmptyT.why r
+  | DefT (r, MixedT Mixed_non_maybe) -> EmptyT.why r
+  | DefT (r, MixedT Mixed_non_void) -> DefT (r, NullT)
+  | DefT (r, MixedT Mixed_non_null) -> DefT (r, VoidT)
+  | DefT (_, NullT) as t -> t
+  | DefT (_, VoidT) as t -> t
+  | DefT (r, OptionalT _) -> VoidT.why r
+  | DefT (_, AnyT) as t -> t
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason, true
+    EmptyT.why reason
 
 let rec not_maybe = function
-  | DefT (_, MaybeT t) -> t, true
-  | DefT (_, OptionalT t) -> t |> not_maybe |> fst, true
-  | DefT (r, (NullT | VoidT)) -> DefT (r, EmptyT), true
-  | DefT (r, MixedT Mixed_truthy) -> DefT (r, MixedT Mixed_truthy), false
-  | DefT (r, MixedT Mixed_non_maybe) -> DefT (r, MixedT Mixed_non_maybe), false
+  | DefT (_, MaybeT t) -> t
+  | DefT (_, OptionalT t) -> not_maybe t
+  | DefT (r, (NullT | VoidT)) -> DefT (r, EmptyT)
+  | DefT (r, MixedT Mixed_truthy) -> DefT (r, MixedT Mixed_truthy)
+  | DefT (r, MixedT Mixed_non_maybe) -> DefT (r, MixedT Mixed_non_maybe)
   | DefT (r, MixedT Mixed_everything)
   | DefT (r, MixedT Mixed_non_void)
   | DefT (r, MixedT Mixed_non_null)
-    -> DefT (r, MixedT Mixed_non_maybe), true
-  | t -> t, false
+    -> DefT (r, MixedT Mixed_non_maybe)
+  | t -> t
 
 let null = function
   | DefT (_, OptionalT (DefT (r, MaybeT _)))
-  | DefT (r, MaybeT _) -> NullT.why r, true
-  | DefT (_, NullT) as t -> t, false
+  | DefT (r, MaybeT _) -> NullT.why r
+  | DefT (_, NullT) as t -> t
   | DefT (r, MixedT Mixed_everything)
-  | DefT (r, MixedT Mixed_non_void) -> NullT.why r, true
-  | DefT (_, AnyT) as t -> t, false
+  | DefT (r, MixedT Mixed_non_void) -> NullT.why r
+  | DefT (_, AnyT) as t -> t
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason, true
+    EmptyT.why reason
 
 let rec not_null = function
   | DefT (r, MaybeT t) ->
-    DefT (r, UnionT (UnionRep.make (VoidT.why r) t [])), true
+    DefT (r, UnionT (UnionRep.make (VoidT.why r) t []))
   | DefT (r, OptionalT t) ->
-    let new_t, did_update = not_null t in
-    DefT (r, OptionalT (new_t)), did_update
+    DefT (r, OptionalT (not_null t))
   | DefT (r, UnionT rep) ->
     recurse_into_union not_null (r, UnionRep.members rep)
-  | DefT (r, NullT) -> DefT (r, EmptyT), true
-  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_null), true
-  | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe), true
-  | t -> t, false
+  | DefT (r, NullT) -> DefT (r, EmptyT)
+  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_null)
+  | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe)
+  | t -> t
 
 let undefined = function
-  | DefT (r, MaybeT _) -> VoidT.why r, true
-  | DefT (_, VoidT) as t -> t, false
-  | DefT (r, OptionalT _) -> VoidT.why r, true
+  | DefT (r, MaybeT _) -> VoidT.why r
+  | DefT (_, VoidT) as t -> t
+  | DefT (r, OptionalT _) -> VoidT.why r
   | DefT (r, MixedT Mixed_everything)
-  | DefT (r, MixedT Mixed_non_null) -> VoidT.why r, true
-  | DefT (_, AnyT) as t -> t, false
+  | DefT (r, MixedT Mixed_non_null) -> VoidT.why r
+  | DefT (_, AnyT) as t -> t
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason, true
+    EmptyT.why reason
 
 let rec not_undefined = function
   | DefT (r, MaybeT t) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) t [])), true
+    DefT (r, UnionT (UnionRep.make (NullT.why r) t []))
   | DefT (_, OptionalT t) -> not_undefined t
   | DefT (r, UnionT rep) ->
     recurse_into_union not_undefined (r, UnionRep.members rep)
-  | DefT (r, VoidT) -> DefT (r, EmptyT), true
-  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_void), true
-  | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe), true
-  | t -> t, false
+  | DefT (r, VoidT) -> DefT (r, EmptyT)
+  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_void)
+  | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe)
+  | t -> t
 
 let string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
   let lit_reason = replace_reason_const expected_desc in
   match t with
   | DefT (_, StrT (Literal (_, actual))) ->
-    if actual = expected then t, false
-    else DefT (mk_reason expected_desc expected_loc, StrT (Literal (Some sense, expected))), true
+    if actual = expected then t
+    else DefT (mk_reason expected_desc expected_loc, StrT (Literal (Some sense, expected)))
   | DefT (r, StrT Truthy) when expected <> "" ->
-    DefT (lit_reason r, StrT (Literal (None, expected))), true
+    DefT (lit_reason r, StrT (Literal (None, expected)))
   | DefT (r, StrT AnyLiteral) ->
-    DefT (lit_reason r, StrT (Literal (None, expected))), true
+    DefT (lit_reason r, StrT (Literal (None, expected)))
   | DefT (r, MixedT _) ->
-    DefT (lit_reason r, StrT (Literal (None, expected))), true
-  | DefT (_, AnyT) as t -> t, false
-  | _ -> DefT (reason_of_t t, EmptyT), true
+    DefT (lit_reason r, StrT (Literal (None, expected)))
+  | DefT (_, AnyT) as t -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_string_literal expected = function
-  | DefT (r, StrT (Literal (_, actual))) when actual = expected -> DefT (r, EmptyT), true
-  | t -> t, false
+  | DefT (r, StrT (Literal (_, actual))) when actual = expected -> DefT (r, EmptyT)
+  | t -> t
 
 let number_literal expected_loc sense expected t =
   let _, expected_raw = expected in
@@ -189,52 +187,52 @@ let number_literal expected_loc sense expected t =
   let lit_reason = replace_reason_const expected_desc in
   match t with
   | DefT (_, NumT (Literal (_, (_, actual_raw)))) ->
-    if actual_raw = expected_raw then t, false
-    else DefT (mk_reason expected_desc expected_loc, NumT (Literal (Some sense, expected))), true
+    if actual_raw = expected_raw then t
+    else DefT (mk_reason expected_desc expected_loc, NumT (Literal (Some sense, expected)))
   | DefT (r, NumT Truthy) when snd expected <> "0" ->
-    DefT (lit_reason r, NumT (Literal (None, expected))), true
+    DefT (lit_reason r, NumT (Literal (None, expected)))
   | DefT (r, NumT AnyLiteral) ->
-    DefT (lit_reason r, NumT (Literal (None, expected))), true
+    DefT (lit_reason r, NumT (Literal (None, expected)))
   | DefT (r, MixedT _) ->
-    DefT (lit_reason r, NumT (Literal (None, expected))), true
-  | DefT (_, AnyT) as t -> t, false
-  | _ -> DefT (reason_of_t t, EmptyT), true
+    DefT (lit_reason r, NumT (Literal (None, expected)))
+  | DefT (_, AnyT) as t -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_number_literal expected = function
-  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, EmptyT), true
-  | t -> t, false
+  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, EmptyT)
+  | t -> t
 
 let true_ t =
   let lit_reason = replace_reason_const (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true)), false
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)), true
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true)), true
-  | DefT (_, AnyT) as t -> t, false
-  | t -> DefT (reason_of_t t, EmptyT), true
+  | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true))
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true))
+  | DefT (_, AnyT) as t -> t
+  | t -> DefT (reason_of_t t, EmptyT)
 
 let not_true t =
   let lit_reason = replace_reason_const (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT), true
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)), true
-  | t -> t, false
+  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT)
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
+  | t -> t
 
 let false_ t =
   let lit_reason = replace_reason_const (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false)), false
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)), true
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false)), true
-  | DefT (_, AnyT) as t -> t, false
-  | t -> DefT (reason_of_t t, EmptyT), true
+  | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false))
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false))
+  | DefT (_, AnyT) as t -> t
+  | t -> DefT (reason_of_t t, EmptyT)
 
 let not_false t =
   let lit_reason = replace_reason_const (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT), true
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)), true
-  | t -> t, false
+  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT)
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
+  | t -> t
 
 let boolean t =
   match t with

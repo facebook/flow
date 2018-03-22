@@ -2423,14 +2423,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a falsy && b ~> a
          a truthy && b ~> b
          a && b ~> a falsy | b *)
-      let truthy_left, _ = Type_filter.exists left in
+      let truthy_left = Type_filter.exists left in
       (match truthy_left with
       | DefT (_, EmptyT) ->
         (* falsy *)
         rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
       | _ ->
         (match Type_filter.not_exists left with
-        | DefT (_, EmptyT), _ -> (* truthy *)
+        | DefT (_, EmptyT) -> (* truthy *)
           rec_flow cx trace (right, UseT (unknown_use, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u));
@@ -2446,14 +2446,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a truthy || b ~> a
          a falsy || b ~> b
          a || b ~> a truthy | b *)
-      let falsy_left, _ = Type_filter.not_exists left in
+      let falsy_left = Type_filter.not_exists left in
       (match falsy_left with
       | DefT (_, EmptyT) ->
         (* truthy *)
         rec_flow cx trace (left, PredicateT (ExistsP None, u))
       | _ ->
         (match Type_filter.exists left with
-        | DefT (_, EmptyT), _ -> (* falsy *)
+        | DefT (_, EmptyT) -> (* falsy *)
           rec_flow cx trace (right, UseT (unknown_use, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (ExistsP None, u));
@@ -8384,11 +8384,11 @@ and update_sketchy_null cx opt_loc t =
       let exists_checks = Context.exists_checks cx in
       let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
       let exists_check = match Type_filter.maybe t with
-        | DefT (_, EmptyT), _ -> exists_check
+        | DefT (_, EmptyT) -> exists_check
         | _ -> {exists_check with null_loc = t_loc}
       in
       let exists_check =
-        match t |> Type_filter.not_exists |> fst |> Type_filter.not_maybe |> fst with
+        match t |> Type_filter.not_exists |> Type_filter.not_maybe with
         | DefT (_, BoolT _) -> {exists_check with bool_loc = t_loc}
         | DefT (_, StrT _) -> {exists_check with string_loc = t_loc}
         | DefT (_, NumT _) -> {exists_check with number_loc = t_loc}
@@ -8410,14 +8410,14 @@ and guard cx trace source pred result sink = match pred with
 | ExistsP loc ->
   update_sketchy_null cx loc source;
   begin match Type_filter.exists source with
-  | DefT (_, EmptyT), _ -> ()
+  | DefT (_, EmptyT) -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
 | NotP (ExistsP loc) ->
   update_sketchy_null cx loc source;
   begin match Type_filter.not_exists source with
-  | DefT (_, EmptyT), _ -> ()
+  | DefT (_, EmptyT) -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
@@ -8500,11 +8500,11 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonStrP (expected_loc, sense, lit) ->
-    let filtered_str, _ = Type_filter.string_literal expected_loc sense lit l in
+    let filtered_str = Type_filter.string_literal expected_loc sense lit l in
     rec_flow_t cx trace (filtered_str, t)
 
   | NotP SingletonStrP (_, _, lit) ->
-    let filtered_str, _ = Type_filter.not_string_literal lit l in
+    let filtered_str = Type_filter.not_string_literal lit l in
     rec_flow_t cx trace (filtered_str, t)
 
   (*********************)
@@ -8512,11 +8512,11 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonNumP (expected_loc, sense, lit) ->
-    let filtered_num, _ = Type_filter.number_literal expected_loc sense lit l in
+    let filtered_num = Type_filter.number_literal expected_loc sense lit l in
     rec_flow_t cx trace (filtered_num, t)
 
   | NotP SingletonNumP (_, _, lit) ->
-    let filtered_num, _ = Type_filter.not_number_literal lit l in
+    let filtered_num = Type_filter.not_number_literal lit l in
     rec_flow_t cx trace (filtered_num, t)
 
   (***********************)
@@ -8564,11 +8564,11 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | VoidP ->
-    let filtered, _ = Type_filter.undefined l in
+    let filtered = Type_filter.undefined l in
     rec_flow_t cx trace (filtered, t)
 
   | NotP VoidP ->
-    let filtered, _ = Type_filter.not_undefined l in
+    let filtered = Type_filter.not_undefined l in
     rec_flow_t cx trace (filtered, t)
 
   (********)
@@ -8576,11 +8576,11 @@ and predicate cx trace t l p = match p with
   (********)
 
   | NullP ->
-    let filtered, _ = Type_filter.null l in
+    let filtered = Type_filter.null l in
     rec_flow_t cx trace (filtered, t)
 
   | NotP NullP ->
-    let filtered, _ = Type_filter.not_null l in
+    let filtered = Type_filter.not_null l in
     rec_flow_t cx trace (filtered, t)
 
   (*********)
@@ -8588,11 +8588,11 @@ and predicate cx trace t l p = match p with
   (*********)
 
   | MaybeP ->
-    let filtered, _ = Type_filter.maybe l in
+    let filtered = Type_filter.maybe l in
     rec_flow_t cx trace (filtered, t)
 
   | NotP MaybeP ->
-    let filtered, _ = Type_filter.not_maybe l in
+    let filtered = Type_filter.not_maybe l in
     rec_flow_t cx trace (filtered, t)
 
   (********)
@@ -8600,11 +8600,11 @@ and predicate cx trace t l p = match p with
   (********)
 
   | SingletonBoolP true ->
-    let filtered, _ = Type_filter.true_ l in
+    let filtered = Type_filter.true_ l in
     rec_flow_t cx trace (filtered, t)
 
   | NotP (SingletonBoolP true) ->
-    let filtered, _ = Type_filter.not_true l in
+    let filtered = Type_filter.not_true l in
     rec_flow_t cx trace (filtered, t)
 
   (*********)
@@ -8612,11 +8612,11 @@ and predicate cx trace t l p = match p with
   (*********)
 
   | SingletonBoolP false ->
-    let filtered, _ = Type_filter.false_ l in
+    let filtered = Type_filter.false_ l in
     rec_flow_t cx trace (filtered, t)
 
   | NotP (SingletonBoolP false) ->
-    let filtered, _ = Type_filter.not_false l in
+    let filtered = Type_filter.not_false l in
     rec_flow_t cx trace (filtered, t)
 
   (************************)
@@ -8625,12 +8625,12 @@ and predicate cx trace t l p = match p with
 
   | ExistsP loc ->
     update_sketchy_null cx loc l;
-    let filtered, _ = Type_filter.exists l in
+    let filtered = Type_filter.exists l in
     rec_flow_t cx trace (filtered, t)
 
   | NotP (ExistsP loc) ->
     update_sketchy_null cx loc l;
-    let filtered, _ = Type_filter.not_exists l in
+    let filtered = Type_filter.not_exists l in
     rec_flow_t cx trace (filtered, t)
 
   | PropExistsP (reason, key, loc) ->
