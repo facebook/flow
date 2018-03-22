@@ -59,18 +59,53 @@ public:
   }
 };
 
-NAN_METHOD(parse) {
+void Parse(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if (info.Length() < 1) {
+    Nan::ThrowTypeError("Wrong number of arguments");
+    return;
+  }
+
+  if (!info[0]->IsString()) {
+    Nan::ThrowTypeError("First argument must be a string");
+    return;
+  }
+
   Nan::HandleScope scope;
   V8Translator converter;
   String::Utf8Value arg(info[0]);
   string content = string(*arg);
-  Local<Value> result = converter.parse(content.c_str());
+
+  options_t options;
+  if (info.Length() > 1) {
+    if (!info[1]->IsObject()) {
+      Nan::ThrowTypeError("Second argument must be an object");
+      return;
+    } else {
+      Local<Object> opts = Nan::To<Object>(info[1]).ToLocalChecked();
+      Nan::MaybeLocal<Array> maybe_props = Nan::GetPropertyNames(opts);
+      if (!maybe_props.IsEmpty()) {
+        Local<Array> props = maybe_props.ToLocalChecked();
+        for (uint32_t i = 0; i < props->Length(); i++) {
+           Local<Value> key = props->Get(i);
+           Local<Value> value = opts->Get(key);
+           String::Utf8Value name(key);
+           options.insert(std::pair<std::string, int>(
+             string(*name),
+             value->BooleanValue()
+           ));
+        }
+      }
+    }
+  }
+
+  Local<Value> result = converter.parse(content.c_str(), options);
   info.GetReturnValue().Set(result);
 }
 
-NAN_MODULE_INIT(Init) {
+void Init(v8::Local<v8::Object> exports) {
   flowparser::init();
-  NAN_EXPORT(target, parse);
+  exports->Set(Nan::New("parse").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(Parse)->GetFunction());
 }
 
 NODE_MODULE(flow_parser, Init)

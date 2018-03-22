@@ -34,9 +34,24 @@ module Translate = Estree_translator.Translate (AbstractTranslator) (struct
   let include_locs = true
 end)
 
-(* TODO: parse_options *)
-let parse content =
-  let (ast, errors) = Parser_flow.program ~fail:false content in
+let convert_options opts =
+  let open Parser_env in
+  if opts = [] then None else
+  Some (List.fold_left (fun acc (k, v) ->
+    match k with
+    | "esproposal_class_instance_fields" -> { acc with esproposal_class_instance_fields = v }
+    | "esproposal_class_static_fields" -> { acc with esproposal_class_static_fields = v }
+    | "esproposal_decorators" -> { acc with esproposal_decorators = v }
+    | "esproposal_export_star_as" -> { acc with esproposal_export_star_as = v }
+    | "esproposal_optional_chaining" -> { acc with esproposal_optional_chaining = v }
+    | "types" -> { acc with types = v }
+    | "use_strict" -> { acc with use_strict = v }
+    | _ -> acc (* ignore unknown stuff for future-compatibility *)
+  ) Parser_env.default_parse_options opts)
+
+let parse content options =
+  let parse_options = convert_options options in
+  let (ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
   match Translate.program ast with
   | JObject params ->
     JObject (("errors", Translate.errors errors)::params)

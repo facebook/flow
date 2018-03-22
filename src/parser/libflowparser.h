@@ -7,12 +7,15 @@
 
 #define CAML_NAME_SPACE
 
+#include <map>
 #include <caml/alloc.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/callback.h>
 
 namespace flowparser {
+
+typedef std::map<std::string, int> options_t;
 
 static value list_head(value props) {
   return Field(props, 0);
@@ -32,6 +35,15 @@ static char* get_prop_key(value prop) {
 
 static value get_prop_value(value prop) {
   return Field(prop, 1);
+}
+
+value cons(value hd, value tl) {
+  CAMLparam2(hd, tl);
+  CAMLlocal1(ret);
+  ret = caml_alloc(2, 0);
+  Store_field(ret, 0, hd);
+  Store_field(ret, 1, tl);
+  CAMLreturn(ret);
 }
 
 template <class T>
@@ -80,9 +92,9 @@ public:
     }
   }
 
-  T parse(const char *content) {
+  T parse(const char *content, options_t opts) {
     CAMLparam0();
-    CAMLlocal2(content_val, result_val);
+    CAMLlocal4(content_val, option_val, options_val, result_val);
 
     static value * func = NULL;
     if (func == NULL) {
@@ -90,7 +102,16 @@ public:
     }
 
     content_val = caml_copy_string(content);
-    result_val = caml_callback(*func, content_val);
+
+    options_val = Val_int(0); // empty list
+    for (auto& x : opts) {
+      option_val = caml_alloc_tuple(2);
+      Store_field(option_val, 0, caml_copy_string(x.first.c_str()));
+      Store_field(option_val, 1, Val_bool(x.second));
+      options_val = cons(option_val, options_val);
+    }
+
+    result_val = caml_callback2(*func, content_val, options_val);
 
     CAMLreturnT(T, convert_object(Field(result_val, 0)));
   }
