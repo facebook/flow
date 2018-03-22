@@ -62,14 +62,8 @@ let coverage ~options ~workers ~env ~profiling ~force file content =
   in
   let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
   result
-  >>| (fun (cx, _info) ->
-    let types = Query_types.covered_types cx in
-    if should_check then
-      types
-    else
-      types |> List.map (fun (loc, _) -> (loc, false))
-  ) |> Lwt.return
-
+  >>| (fun (cx, _) -> Query_types.covered_types cx ~should_check)
+  |> Lwt.return
 
 let suggest ~options ~workers ~env ~profiling file region content =
   let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in

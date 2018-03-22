@@ -110,6 +110,10 @@ module Make(C: Config) : sig
   val from_types:
     cx:Context.t -> ('a * Type.t) list -> ('a * (Ty.t, error) result) list
 
+  val fold_hashtbl:
+    cx:Context.t -> f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) -> init:'a ->
+    (Loc.t, Type.t) Hashtbl.t -> 'a
+
 end = struct
 
   (****************)
@@ -1247,26 +1251,26 @@ end = struct
       else mapM (use_t ~env) uses >>| uniq_inter
 
 
-(* Before we start normalizing the input type we populate our environment with
-   aliases that are in scope due to typed imports. These are already inside the
-   'imported_ts' portion of the context. This step includes the normalization
-   of all imported types and the creation of a map to hold bindings of imported
-   names to location of definition. This map will be used later to determine
-   whether a located name (symbol) appearing is part of the file's imports or a
-   remote (hidden or non-imported) name.
-*)
-let add_imports ~cx state =
-  let open State in
-  let imported_ts = Context.imported_ts cx in
-  let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
-    match run st (type__ ~env:Env.empty t) with
-    | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
-    | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
-      (st, SMap.add x loc m)
-    | (_, st) ->
-      (st, m)
-  )) imported_ts (state, SMap.empty) in
-  { state with imported_names }
+  (* Before we start normalizing the input type we populate our environment with
+     aliases that are in scope due to typed imports. These are already inside the
+     'imported_ts' portion of the context. This step includes the normalization
+     of all imported types and the creation of a map to hold bindings of imported
+     names to location of definition. This map will be used later to determine
+     whether a located name (symbol) appearing is part of the file's imports or a
+     remote (hidden or non-imported) name.
+  *)
+  let add_imports ~cx state =
+    let open State in
+    let imported_ts = Context.imported_ts cx in
+    let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
+      match run st (type__ ~env:Env.empty t) with
+      | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
+      | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
+        (st, SMap.add x loc m)
+      | (_, st) ->
+        (st, m)
+    )) imported_ts (state, SMap.empty) in
+    { state with imported_names }
 
 
   (* Exposed API *)
@@ -1281,8 +1285,18 @@ let add_imports ~cx state =
     in rts
 
   let from_type ~cx t =
-  let state = State.empty ~cx in
-  let state = add_imports ~cx state in
-  fst (run state (type__ ~env:Env.empty t))
+    let state = State.empty ~cx in
+    let state = add_imports ~cx state in
+    fst (run state (type__ ~env:Env.empty t))
+
+  let fold_hashtbl ~cx ~f ~init htbl =
+    let state = State.empty ~cx in
+    let state = add_imports ~cx state in
+    let _, acc = Hashtbl.fold (fun loc t (st, acc) ->
+      let result, st' = run st (type__ ~env:Env.empty t) in
+      let acc' = f acc (loc, result) in
+      (st', acc')
+    ) htbl (state, init)
+    in acc
 
 end

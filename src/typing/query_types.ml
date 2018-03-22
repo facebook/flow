@@ -80,14 +80,19 @@ module CoverageTypeNormalizer = Ty_normalizer.Make(struct
   let expand_annots = false
 end)
 
-let covered_types cx =
+let covered_types cx ~should_check =
+  let f =
+    if should_check then
+      fun acc (loc, result) ->
+        match result with
+        | Ok t -> (loc, is_covered t)::acc
+        | _ -> (loc, false)::acc
+    else
+      fun acc (loc, _) -> (loc, false)::acc
+  in
   Context.type_table cx
-  |> Type_table.coverage_to_list
-  |> CoverageTypeNormalizer.from_types ~cx
-  |> List.map (function
-    | (l, Ok t) -> (l, is_covered t)
-    | (l, Error _) -> (l, false)
-  )
+  |> Type_table.coverage_hashtbl
+  |> CoverageTypeNormalizer.fold_hashtbl ~cx ~f ~init:[]
   |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
 
 

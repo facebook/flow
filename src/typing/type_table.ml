@@ -55,3 +55,6 @@ let coverage_to_list t =
   let r = ref [] in
   Hashtbl.iter (fun l t -> r := (l, t) :: !r) t.coverage;
   !r
+
+let coverage_hashtbl t =
+  t.coverage
