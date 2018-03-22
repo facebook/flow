@@ -10,7 +10,7 @@ Here is suggested ALE configuration to place in your .vimrc file:
 ```
 " Asynchronous Lint Engine (ALE)
 " Limit linters used for JavaScript.
-let g:ale_fixers = {}
+let g:ale_linters = {}
 let g:ale_linters = {
 \  'javascript': ['flow'] " can add more
 \}
