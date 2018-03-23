@@ -377,6 +377,7 @@ module Raw (Key: Key) (Value:Value.Type): sig
   val move   : Key.md5 -> Key.md5 -> unit
 
   module LocalChanges : sig
+    val has_local_changes : unit -> bool
     val push_stack : unit -> unit
     val pop_stack : unit -> unit
     val revert : Key.md5 -> unit
@@ -465,6 +466,8 @@ end = struct
     }
 
     let stack: t option ref = ref None
+
+    let has_local_changes () = Option.is_some (!stack)
 
     let rec mem stack_opt key =
       match stack_opt with
@@ -741,6 +744,7 @@ module type NoCache = sig
   val revive_batch     : KeySet.t -> unit
 
   module LocalChanges : sig
+    val has_local_changes : unit -> bool
     val push_stack : unit -> unit
     val pop_stack : unit -> unit
     val revert_batch : KeySet.t -> unit
@@ -753,6 +757,7 @@ end
 module type WithCache = sig
   include NoCache
   val write_through : key -> t -> unit
+  val get_no_cache : key -> t option
 end
 
 (*****************************************************************************)
@@ -1082,6 +1087,8 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     Direct.add x y;
     Cache.add x y
 
+  let get_no_cache = Direct.get
+
   let write_through x y =
     (* Note that we do not need to do any cache invalidation here because
      * Direct.add is a no-op if the key already exists. *)
@@ -1162,5 +1169,8 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     let commit_all () =
       Direct.LocalChanges.commit_all ();
       Cache.clear ()
+
+    let has_local_changes () =
+      Direct.LocalChanges.has_local_changes ()
   end
 end

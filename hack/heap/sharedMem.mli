@@ -199,6 +199,7 @@ module type NoCache = sig
    * the shared memory until the local changes are popped off.
    **)
   module LocalChanges : sig
+    val has_local_changes : unit -> bool
     (** Push a new local change environment **)
     val push_stack : unit -> unit
     (** Pop off the last local change environment **)
@@ -219,6 +220,7 @@ end
 module type WithCache = sig
   include NoCache
   val write_through : key -> t -> unit
+  val get_no_cache : key -> t option
 end
 
 module type UserKeyType = sig
