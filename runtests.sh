@@ -247,8 +247,8 @@ runtest() {
         # from there. the . in "$dir/." copies the entire directory, including
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
-        cp "$dir/../assert.sh" "$OUT_PARENT_DIR"
-        cp "$dir/../fs.sh" "$OUT_PARENT_DIR"
+        cp "$dir/../assert.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
+        cp "$dir/../fs.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
         mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
 
         export FLOW_TEMP_DIR="$OUT_PARENT_DIR"
