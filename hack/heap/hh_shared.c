@@ -1444,12 +1444,16 @@ value hh_check_heap_overflow() {
  * The collector should only be executed by single process at the time
  */
 /*****************************************************************************/
-CAMLprim value hh_collect(value aggressive_val) {
+CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   // NOTE: explicitly do NOT call CAMLparam or any of the other functions/macros
   // defined in caml/memory.h .
   // This function takes a boolean and returns unit.
   // Those are both immediates in the OCaml runtime.
   int aggressive  = Bool_val(aggressive_val);
+  int allow_in_worker = Bool_val(allow_in_worker_val);
+  if (!allow_in_worker) {
+    assert_master();
+  }
   char* tmp_heap = NULL;
   char* dest = NULL;
   size_t mem_size = 0;

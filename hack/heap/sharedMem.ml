@@ -155,7 +155,7 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external hh_collect: bool -> unit = "hh_collect"
+external hh_collect: bool -> bool -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
@@ -244,16 +244,14 @@ let hash_stats () =
     slots = hash_slots ();
   }
 
-let collect ?wrapper (effort : [ `gentle | `aggressive ]) =
+let collect ?wrapper ?allow_in_worker (effort : [ `gentle | `aggressive ]) =
+  let allow_in_worker = Option.value allow_in_worker ~default:false in
   let wrapper = Option.value wrapper ~default:(fun f -> f ()) in
   let old_size = heap_size () in
   Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
-  (* The wrapper is used to run the function in a worker instead of master.
-   * Fun fact: the unit returned from hh_collect is apparently different from
-   * the one inlined below. The one from hh_collect fails marshaling with
-   * "Invalid_argument: output_value: abstract value (outside heap)" *)
-  wrapper (fun () -> hh_collect (effort = `aggressive));
+  (* The wrapper is used to run the function in a worker instead of master. *)
+  wrapper (fun () -> hh_collect (effort = `aggressive) allow_in_worker);
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
   if old_size <> new_size then begin

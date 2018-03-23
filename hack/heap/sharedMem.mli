@@ -88,6 +88,7 @@ val with_worker_exit: (unit -> 'a) -> 'a
 
 val collect :
   ?wrapper:((unit -> unit) -> unit) ->
+  ?allow_in_worker:bool ->
   [ `aggressive | `gentle ] ->
   unit
 (*****************************************************************************)

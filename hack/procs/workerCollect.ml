@@ -18,4 +18,4 @@ let go workers effort =
      ~merge:(fun () () -> ())
      ~next:(MultiWorker.next workers [()])
  in
- SharedMem.collect ~wrapper effort
+ SharedMem.collect ~wrapper ~allow_in_worker:true effort
