@@ -190,6 +190,8 @@ end = struct
      * or closed. So a closed Lwt_unix.file_descr won't resurrect.
      *)
     let close () =
+      (* Lwt.join will run these threads in parallel and only finish when EVERY thread has finished
+       * or failed *)
       Lwt.join [
         close_if_open in_fd;
         close_if_open out_fd;

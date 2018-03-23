@@ -64,10 +64,11 @@ begin library "hh-procs"
   ]
 
   requires += [
-    "hh-stubs"
+    "flow-common-lwt"
     "hh-heap"
-    "tp-core"
+    "hh-stubs"
     "hh-utils"
+    "tp-core"
   ]
 end
 
