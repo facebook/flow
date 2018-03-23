@@ -161,7 +161,7 @@ let init ~options lib_files =
 
   Flow_js.mk_builtins master_cx;
 
-  let result = load_lib_files ~master_cx ~options lib_files in
+  let%lwt result = load_lib_files ~master_cx ~options lib_files in
 
   Flow.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
@@ -174,4 +174,4 @@ let init ~options lib_files =
   (* store master signature context to heap *)
   Context_cache.add_sig ~audit:Expensive.ok master_cx;
 
-  result
+  Lwt.return result

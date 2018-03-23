@@ -417,6 +417,7 @@ let print_summary =
 let with_profiling_lwt ~should_print_summary f =
   let profiling = ref empty in
   start_timer ~timer:profiling_timer_name profiling;
+  (* TODO (glevi) - Lwt's finally ruins stack traces. Try to find a workaround *)
   let%lwt ret = (f profiling) [%lwt.finally
     stop_timer ~timer:profiling_timer_name profiling;
     if should_print_summary then print_summary !profiling;

@@ -81,6 +81,8 @@ let schedule_non_recurring interval =
   } in
   ignore (setitimer ITIMER_REAL interval_timer)
 
+external reraise : exn -> 'a = "%reraise"
+
 let rec ding_fries_are_done _ =
   let exns = try
     Option.iter !current_timer ~f:(fun timer -> timer.callback ());
@@ -107,7 +109,7 @@ and schedule ?(exns=[]) () =
   (* If we executed more than one callback this time and more than one callback threw an
    * exception, then we just arbitrarily choose one to throw. Oh well :/ *)
   (match exns with
-  | exn::_ -> raise exn
+  | exn::_ -> reraise exn
   | _ -> ())
 
 (* Will invoke callback () after interval seconds *)
