@@ -171,9 +171,10 @@ let process_message genv env request =
       { env with connections = Persistent_connection.remove_client env.connections client_id }
 
 let rec serve ~dfind ~genv ~env =
+  ServerPeriodical.call_before_sleeping ();
+
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
-  ServerPeriodical.call_before_sleeping ();
   let%lwt message = get_next_message () in
 
   let%lwt env = recheck_loop ~dfind genv env in
