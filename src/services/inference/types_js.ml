@@ -79,7 +79,7 @@ let with_timer_lwt =
       (fun () -> Profiling_js.with_timer_lwt ~timer ~f profiling)
       (fun () -> print_timer ?options timer profiling; Lwt.return_unit)
 
-let collate_parse_results { Parsing_service_js.parse_ok; parse_skips; parse_fails } =
+let collate_parse_results ~options { Parsing_service_js.parse_ok; parse_skips; parse_fails } =
   let local_errors = List.fold_left (fun errors (file, _, fail) ->
     let errset = match fail with
     | Parsing_service_js.Parse_error err ->
@@ -92,6 +92,20 @@ let collate_parse_results { Parsing_service_js.parse_ok; parse_skips; parse_fail
     update_errset errors file errset
   ) FilenameMap.empty parse_fails in
 
+  let local_errors =
+    (* In practice, the only `tolerable_errors` are related to well formed exports. If this flag
+     * were not temporary in nature, it would be worth adding some complexity to avoid conflating
+     * them. *)
+    if options.Options.opt_enforce_well_formed_exports then
+      FilenameMap.fold (fun file file_sig errors ->
+        let {File_sig.tolerable_errors; _} = file_sig in
+        let errset = Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file tolerable_errors in
+        update_errset errors file errset
+      ) parse_ok local_errors
+    else
+      local_errors
+  in
+
   let unparsed = List.fold_left (fun unparsed (file, info, _) ->
     (file, info) :: unparsed
   ) parse_skips parse_fails in
@@ -101,14 +115,14 @@ let collate_parse_results { Parsing_service_js.parse_ok; parse_skips; parse_fail
 let parse ~options ~profiling ~workers parse_next =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
     let%lwt results = Parsing_service_js.parse_with_defaults options workers parse_next in
-    Lwt.return (collate_parse_results results)
+    Lwt.return (collate_parse_results ~options results)
   )
 
 let reparse ~options ~profiling ~workers modified =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
     let%lwt new_or_changed, results =
       Parsing_service_js.reparse_with_defaults ~with_progress:true options workers modified in
-    let parse_ok, unparsed, local_errors = collate_parse_results results in
+    let parse_ok, unparsed, local_errors = collate_parse_results ~options results in
     Lwt.return (new_or_changed, parse_ok, unparsed, local_errors)
   )
 
@@ -532,6 +546,15 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       ) in
 
       let errors = Context.errors cx in
+      let errors =
+        if options.Options.opt_enforce_well_formed_exports then
+          Inference_utils.set_of_file_sig_tolerable_errors
+            ~source_file:filename
+            file_sig.File_sig.tolerable_errors
+          |> Errors.ErrorSet.union errors
+        else
+          errors
+      in
 
       (* Suppressions for errors in this file can come from dependencies *)
       let suppressions =

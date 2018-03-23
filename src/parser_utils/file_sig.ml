@@ -5,11 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Result = Core_result
 open Flow_ast_visitor
 
 type t = {
   module_sig: module_sig;
-  declare_modules: (Loc.t * module_sig) SMap.t
+  declare_modules: (Loc.t * module_sig) SMap.t;
+  tolerable_errors: tolerable_error list;
 }
 
 and module_sig = {
@@ -84,6 +86,9 @@ and type_export =
 
 and ident = Loc.t * string
 
+and tolerable_error =
+  | BadExportPosition of Loc.t
+
 type error =
   | IndeterminateModuleType of Loc.t
 
@@ -97,6 +102,7 @@ let empty_module_sig = {
 let empty_file_sig = {
   module_sig = empty_module_sig;
   declare_modules = SMap.empty;
+  tolerable_errors = [];
 }
 
 let combine_nel _ a b = Some (Nel.concat (a, [b]))
@@ -250,6 +256,11 @@ class requires_calculator ~ast = object(this)
 
   method private add_cjs_export name loc local mod_exp_loc =
     this#update_module_sig (add_cjs_export name loc local mod_exp_loc)
+
+  method private add_tolerable_error (err: tolerable_error) =
+    this#update_acc (Result.map ~f:(fun fsig ->
+        { fsig with tolerable_errors=err::fsig.tolerable_errors }
+    ))
 
   method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
@@ -439,6 +450,10 @@ class requires_calculator ~ast = object(this)
     super#declare_export_declaration stmt_loc decl
 
   method! assignment (expr: Loc.t Ast.Expression.Assignment.t) =
+    this#handle_assignment ~is_toplevel:false expr;
+    super#assignment expr
+
+  method handle_assignment ~(is_toplevel: bool) (expr: Loc.t Ast.Expression.Assignment.t) =
     (* TODO: Check for shadowing *)
     let open Ast.Expression in
     let open Ast.Expression.Assignment in
@@ -451,27 +466,9 @@ class requires_calculator ~ast = object(this)
         _object = module_loc, Identifier (_, "module");
         property = Member.PropertyIdentifier (_, "exports"); _
       })) ->
-      (* expressions not allowed in declare module body *)
-      assert (curr_declare_module = None);
-      if not (Scope_api.is_local_use scope_info module_loc)
-      then this#set_cjs_exports (CJSExportProps SMap.empty) mod_exp_loc;
-      begin match right with
-      | _, Identifier id -> this#set_cjs_exports (CJSExportIdent id) mod_exp_loc
-      | _, Object { Object.properties } ->
-        List.iter (function
-          | Object.Property (_, Object.Property.Init { key; value; _ }) ->
-            begin match key with
-            | Object.Property.Identifier (loc, name) ->
-              begin match value with
-              | _, Identifier id -> this#add_cjs_export name loc (Some id) mod_exp_loc
-              | _ -> this#add_cjs_export name loc None mod_exp_loc
-              end
-            | _ -> ()
-            end
-          | _ -> ()
-        ) properties
-      | _ -> this#set_cjs_exports CJSExportOther mod_exp_loc
-      end
+      this#handle_cjs_default_export mod_exp_loc module_loc right;
+      if not is_toplevel then
+        this#add_tolerable_error (BadExportPosition mod_exp_loc)
     (* exports.foo = ... *)
     | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
         _object = mod_exp_loc as module_loc, Identifier (_, "exports");
@@ -488,11 +485,15 @@ class requires_calculator ~ast = object(this)
       (* expressions not allowed in declare module body *)
       assert (curr_declare_module = None);
       if not (Scope_api.is_local_use scope_info module_loc)
-      then begin match right with
-      | _, Identifier id ->
-        this#add_cjs_export name loc (Some id) mod_exp_loc
-      | _ ->
-        this#add_cjs_export name loc None mod_exp_loc
+      then begin
+        begin match right with
+        | _, Identifier id ->
+          this#add_cjs_export name loc (Some id) mod_exp_loc
+        | _ ->
+          this#add_cjs_export name loc None mod_exp_loc
+        end;
+        if not is_toplevel then
+          this#add_tolerable_error (BadExportPosition mod_exp_loc)
       end
     | _ -> ()
     end;
@@ -501,8 +502,34 @@ class requires_calculator ~ast = object(this)
     begin match operator with
     | Assign -> this#handle_require left right
     | _ -> ()
-    end;
-    super#assignment expr
+    end
+
+  method handle_cjs_default_export
+      (mod_exp_loc: Loc.t)
+      (module_loc: Loc.t)
+      (right: Loc.t Ast.Expression.t) =
+    let open Ast.Expression in
+    (* expressions not allowed in declare module body *)
+    assert (curr_declare_module = None);
+    if not (Scope_api.is_local_use scope_info module_loc)
+    then this#set_cjs_exports (CJSExportProps SMap.empty) mod_exp_loc;
+    begin match right with
+    | _, Identifier id -> this#set_cjs_exports (CJSExportIdent id) mod_exp_loc
+    | _, Object { Object.properties } ->
+      List.iter (function
+        | Object.Property (_, Object.Property.Init { key; value; _ }) ->
+          begin match key with
+          | Object.Property.Identifier (loc, name) ->
+            begin match value with
+            | _, Identifier id -> this#add_cjs_export name loc (Some id) mod_exp_loc
+            | _ -> this#add_cjs_export name loc None mod_exp_loc
+            end
+          | _ -> ()
+          end
+        | _ -> ()
+      ) properties
+    | _ -> this#set_cjs_exports CJSExportOther mod_exp_loc
+    end
 
   method! variable_declarator ~kind (decl: Loc.t Ast.Statement.VariableDeclaration.Declarator.t) =
     begin match decl with
@@ -617,6 +644,32 @@ class requires_calculator ~ast = object(this)
         (export, name) :: acc
       ) [] specs in
       this#add_exports stmt_loc kind bindings []
+
+  method! toplevel_statement_list (stmts: Loc.t Ast.Statement.t list) =
+    let open Ast in
+    let id = Flow_ast_mapper.id in
+    let map_expression (expr: Loc.t Expression.t) =
+      let open Expression in
+      match expr with
+      | _, Assignment assg ->
+          this#handle_assignment ~is_toplevel:true assg;
+          ignore (super#assignment assg);
+          expr
+      | _ -> this#expression expr
+    in
+    let map_expression_statement (stmt: Loc.t Statement.Expression.t) =
+      let open Statement.Expression in
+      let {expression; _} = stmt in
+      id map_expression expression stmt (fun expr -> { stmt with expression=expr })
+    in
+    let map_statement (stmt: Loc.t Statement.t) =
+      let open Statement in
+      match stmt with
+      | loc, Expression expr ->
+        id map_expression_statement expr stmt (fun expr -> loc, Expression expr)
+      | _ -> this#statement stmt
+    in
+    ListUtils.ident_map map_statement stmts
 end
 
 let program ~ast =

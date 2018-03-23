@@ -11,3 +11,4 @@ val error_of_parse_error : source_file: File_key.t -> Loc.t * Parse_error.t -> E
 val set_of_parse_error: source_file: File_key.t -> Loc.t * Parse_error.t -> Errors.ErrorSet.t
 val error_of_file_sig_error : source_file: File_key.t -> File_sig.error -> Errors.error
 val set_of_file_sig_error: source_file: File_key.t -> File_sig.error -> Errors.ErrorSet.t
+val set_of_file_sig_tolerable_errors: source_file: File_key.t -> File_sig.tolerable_error list -> Errors.ErrorSet.t

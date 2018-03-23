@@ -2603,6 +2603,8 @@ let dump_flow_error =
         spf "EExperimentalExportStarAs (%s)" (string_of_loc loc)
     | EIndeterminateModuleType loc ->
         spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
+    | EBadExportPosition loc ->
+        spf "EBadExportPosition (%s)" (string_of_loc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_loc loc)
     | EInvalidObjectKit { reason; reason_op; use_op; _ } ->

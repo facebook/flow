@@ -208,6 +208,22 @@ let tests = "require" >::: [
     | _ -> assert_failure "Unexpected requires"
   end;
 
+  "cjs_require_in_export" >:: begin fun ctxt ->
+    (* An initial version of the change to ban non-toplevel exports failed to descend into the RHS
+     * of export statements *)
+    let source = "module.exports.foo = require('foo');" in
+    let {module_sig = {requires; _}; _} = visit source in
+    match requires with
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        bindings = None;
+      }] ->
+      assert_substring_equal ~ctxt "'foo'" source source_loc;
+      assert_substring_equal ~ctxt "require('foo')" source require_loc;
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
   "dynamic_import" >:: begin fun ctxt ->
     let source = "import('foo')" in
     let {module_sig = {requires; _}; _} = visit source in

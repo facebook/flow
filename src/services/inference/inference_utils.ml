@@ -34,3 +34,14 @@ let error_of_file_sig_error ~source_file err =
 
 let set_of_file_sig_error ~source_file error =
   Errors.ErrorSet.singleton (error_of_file_sig_error ~source_file error)
+
+let error_of_file_sig_tolerable_error ~source_file err =
+  let flow_err = match err with
+  | File_sig.BadExportPosition loc -> Flow_error.EBadExportPosition loc
+  in
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+
+let set_of_file_sig_tolerable_errors ~source_file errors =
+  errors
+  |> List.map (error_of_file_sig_tolerable_error ~source_file)
+  |> Errors.ErrorSet.of_list

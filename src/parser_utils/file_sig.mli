@@ -16,7 +16,8 @@
  * coalesced into a single module (builtins). *)
 type t = {
   module_sig: module_sig;
-  declare_modules: (Loc.t * module_sig) SMap.t
+  declare_modules: (Loc.t * module_sig) SMap.t;
+  tolerable_errors: tolerable_error list;
 }
 
 (* We can extract the observable interface of a module by extracting information
@@ -166,6 +167,9 @@ and type_export =
   }
 
 and ident = Loc.t * string
+
+and tolerable_error =
+  | BadExportPosition of Loc.t
 
 type error =
   | IndeterminateModuleType of Loc.t

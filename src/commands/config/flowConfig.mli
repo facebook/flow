@@ -38,6 +38,7 @@ val all: config -> bool
 val emoji: config -> bool
 val enable_const_params: config -> bool
 val enforce_strict_call_arity: config -> bool
+val enforce_well_formed_exports: config -> bool
 val esproposal_class_instance_fields: config -> Options.esproposal_feature_mode
 val esproposal_class_static_fields: config -> Options.esproposal_feature_mode
 val esproposal_decorators: config -> Options.esproposal_feature_mode

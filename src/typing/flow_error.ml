@@ -113,6 +113,7 @@ type error_message =
   | EUnsafeGetSet of Loc.t
   | EExperimentalExportStarAs of Loc.t
   | EIndeterminateModuleType of Loc.t
+  | EBadExportPosition of Loc.t
   | EUnreachable of Loc.t
   | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason; use_op: use_op }
   | EInvalidTypeof of Loc.t * string
@@ -337,6 +338,7 @@ let util_use_op_of_msg nope util = function
 | EUnsafeGetSet (_)
 | EExperimentalExportStarAs (_)
 | EIndeterminateModuleType (_)
+| EBadExportPosition (_)
 | EUnreachable (_)
 | EInvalidTypeof (_, _)
 | EBinaryInLHS (_)
@@ -1679,6 +1681,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text "Unable to determine module type (CommonJS vs ES) if both an export ";
       text "statement and "; code "module.exports"; text " are used in the ";
       text "same module!";
+    ]
+
+  | EBadExportPosition loc ->
+    mk_error ~trace_infos ~kind:InferWarning loc [
+      text "Exports can only appear at the top level"
     ]
 
   | EUnreachable loc ->

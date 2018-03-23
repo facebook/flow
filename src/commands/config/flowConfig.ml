@@ -36,6 +36,7 @@ module Opts = struct
     emoji: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
+    enforce_well_formed_exports: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
@@ -139,6 +140,7 @@ module Opts = struct
     emoji = false;
     enable_const_params = false;
     enforce_strict_call_arity = true;
+    enforce_well_formed_exports = false;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -852,6 +854,15 @@ let parse_options config lines =
       );
     }
 
+    |> define_opt "experimental.well_formed_exports" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        Ok {opts with enforce_well_formed_exports = v;}
+      );
+    }
+
     |> define_opt "no_flowlib" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -989,6 +1000,7 @@ let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji
 let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
+let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports
 let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators

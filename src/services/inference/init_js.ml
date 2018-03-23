@@ -101,6 +101,15 @@ let load_lib_files ~master_cx ~options files =
           in
 
           let errors = Context.errors cx in
+          let errors =
+            if options.Options.opt_enforce_well_formed_exports then
+              Inference_utils.set_of_file_sig_tolerable_errors
+                ~source_file:lib_file
+                file_sig.File_sig.tolerable_errors
+              |> Errors.ErrorSet.union errors
+            else
+              errors
+          in
           let suppressions = Context.error_suppressions cx in
           let severity_cover = Context.severity_cover cx in
 
