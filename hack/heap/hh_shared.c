@@ -107,6 +107,7 @@
 #endif
 
 #include <lz4.h>
+#include <time.h>
 
 #ifndef NO_SQLITE3
 #include <sqlite3.h>
