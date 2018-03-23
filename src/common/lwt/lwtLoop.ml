@@ -47,7 +47,7 @@ end = struct
       (* If the condition is hit, cancel the loop thread. If the loop thread finishes, cancel the
        * condition wait *)
       Lwt.async (fun () -> Lwt.pick [
-        (try%lwt thread with _ -> Lwt.return_unit); (* Ignore exceptions here *)
+        (try%lwt thread with Lwt.Canceled -> Lwt.return_unit);
         Lwt_condition.wait condition;
       ])
     end;
