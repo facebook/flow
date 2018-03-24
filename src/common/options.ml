@@ -19,18 +19,22 @@ type lazy_mode =
 | LAZY_MODE_IDE
 
 type jsx_mode =
+  (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
+  | Jsx_react
+
   (**
    * Specifies a function that should be invoked instead of React.createElement
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
-  | JSXPragma of (string * Loc.t Ast.Expression.t)
+  | Jsx_pragma of (string * Loc.t Ast.Expression.t)
+
   (**
    * Alternate mode for interpreting JSX syntax. The element name is treated
    * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
    * Children are part of props instead of a separate argument.
    *)
-  | CSX
+  | Jsx_csx
 
 type file_watcher =
 | NoFileWatcher

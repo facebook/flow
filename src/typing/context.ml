@@ -21,7 +21,7 @@ type metadata = {
   munge_underscores: bool;
   verbose: Verbose.t option;
   weak: bool;
-  jsx: Options.jsx_mode option;
+  jsx: Options.jsx_mode;
   strict: bool;
 
   (* global *)
@@ -132,7 +132,7 @@ let metadata_of_options options = {
   munge_underscores = Options.should_munge_underscores options;
   verbose = Options.verbose options;
   weak = Options.weak_by_default options;
-  jsx = None;
+  jsx = Options.Jsx_react;
   strict = false;
 
   (* global *)

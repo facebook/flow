@@ -212,7 +212,7 @@ let extract_docblock =
           if info.jsx <> None then
             (csx_loc, MultipleJSXAttributes)::errors, info
           else
-            errors, { info with jsx = Some Options.CSX }
+            errors, { info with jsx = Some Csx_pragma }
         in
         parse_attributes acc xs
     | [jsx_loc, "@jsx"] -> (jsx_loc, InvalidJSXAttribute None)::errors, info
@@ -229,8 +229,7 @@ let extract_docblock =
               let (jsx_expr, _) = Parser_flow.jsx_pragma_expression
                 (padding ^ expr)
                 expr_loc.Loc.source in
-              let jsx_pragma = Options.JSXPragma (expr, jsx_expr) in
-              errors, { info with jsx = Some jsx_pragma }
+              errors, { info with jsx = Some (Jsx_pragma (expr, jsx_expr)) }
             with
             | Parse_error.Error [] ->
                 (expr_loc, InvalidJSXAttribute None)::errors, info
