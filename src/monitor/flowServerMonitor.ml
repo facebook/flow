@@ -63,8 +63,7 @@ module LogFlusher = LwtLoop.Make (struct
 
   let main () =
     let%lwt () = Lwt_unix.sleep 5.0 in
-    EventLogger.flush ();
-    Lwt.return_unit
+    EventLoggerLwt.flush ()
 
   let catch () exn =
     Logger.fatal ~exn "LogFlusher somehow hit an exception";

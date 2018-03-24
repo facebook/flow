@@ -183,7 +183,9 @@ let rec serve ~dfind ~genv ~env =
     ~default:(Lwt.return env)
     ~f:(process_message genv env) in
 
-  EventLogger.flush ();
+  (* Flush the logs asynchronously *)
+  Lwt.async EventLoggerLwt.flush;
+
   serve ~dfind ~genv ~env
 
 (* This code is only executed when the options --check is NOT present *)
