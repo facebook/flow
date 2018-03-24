@@ -774,6 +774,9 @@ begin library "flow-stubs"
   sort = true
   files = begin fb-glob "src/stubs"
   end
+  requires = [
+    "lwt"
+  ]
 end
 
 begin library "flow-typing"
