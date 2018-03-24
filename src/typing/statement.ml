@@ -3863,58 +3863,44 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
   let jsx_mode = Context.jsx cx in
 
   match (name, facebook_fbt, jsx_mode) with
-  | (Identifier (_, { Identifier.name }), Some facebook_fbt, _)
-      when name = "fbt" ->
+  | Identifier (_, { Identifier.name = "fbt" }), Some facebook_fbt, _ ->
     let fbt_reason = mk_reason RFbt loc_element in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
-  (**
-   * It's a bummer to duplicate this case, but CSX does not want the
-   * "when name = String.capitalize name" restriction.
-   *)
-  | (Identifier (loc, { Identifier.name }), _, Some Options.CSX) ->
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc
-    then AnyT.at loc_element
-    else begin
-      let reason = mk_reason (RJSXElement (Some name)) loc_element in
-      let c = identifier cx name loc in
-      (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
-      let o = jsx_mk_props cx reason c name attributes children in
-      (* Sucks to also pass children to jsx_desugar here, they're ignored *)
-      jsx_desugar cx name c o attributes children locs
-    end
+  | Identifier (loc, { Identifier.name }), _, None ->
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
+    let reason = mk_reason (RReactElement (Some name)) loc_element in
+    let c =
+      if name = String.capitalize_ascii name then
+        identifier cx name loc
+      else
+        DefT (mk_reason (RIdentifier name) loc, SingletonStrT name)
+    in
+    let o = jsx_mk_props cx reason c name attributes children in
+    jsx_desugar cx name c o attributes children locs
 
-  | Identifier (loc, { Identifier.name }), _, _
-      when name = String.capitalize_ascii name ->
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc
-    then AnyT.at loc_element
-    else begin
-      let el =
-        if jsx_mode = None
-        then RReactElement (Some name) else RJSXElement (Some name) in
-      let reason = mk_reason el loc_element in
-      let c = identifier cx name loc in
-      let o = jsx_mk_props cx reason c name attributes children in
-      jsx_desugar cx name c o attributes children locs
-    end
+  | Identifier (loc, { Identifier.name }), _, Some Options.JSXPragma _ ->
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
+    let reason = mk_reason (RJSXElement (Some name)) loc_element in
+    let c =
+      if name = String.capitalize_ascii name then
+        identifier cx name loc
+      else
+        DefT (mk_reason (RIdentifier name) loc, StrT (Literal (None, name)))
+    in
+    let o = jsx_mk_props cx reason c name attributes children in
+    jsx_desugar cx name c o attributes children locs
 
-  | (Identifier (loc, { Identifier.name }), _, _) ->
-    if jsx_mode = None then
-      let c =
-        let reason = mk_reason (RIdentifier name) loc in
-        DefT (reason, SingletonStrT name)
-      in
-      let reason = mk_reason (RReactElement (Some name)) loc_element in
-      let o = jsx_mk_props cx reason c name attributes children in
-      jsx_desugar cx name c o attributes children locs
-    else
-      let c =
-        let reason = mk_reason (RIdentifier name) loc in
-        DefT (reason, StrT (Literal (None, name)))
-      in
-      let reason = mk_reason (RCustom (spf "`%s`" name)) loc in
-      let o = jsx_mk_props cx reason c name attributes children in
-      jsx_desugar cx name c o attributes children locs
+  | Identifier (loc, { Identifier.name }), _, Some Options.CSX ->
+    (**
+     * It's a bummer to duplicate this case, but CSX does not want the
+     * "if name = String.capitalize name" restriction.
+     *)
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
+    let reason = mk_reason (RJSXElement (Some name)) loc_element in
+    let c = identifier cx name loc in
+    let o = jsx_mk_props cx reason c name attributes children in
+    jsx_desugar cx name c o attributes children locs
 
   | MemberExpression member, _, None ->
     let name = jsx_title_member_to_string member in
