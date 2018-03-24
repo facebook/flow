@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val set_engine: unit -> unit
+val run_lwt: (unit -> 'a Lwt.t) -> 'a

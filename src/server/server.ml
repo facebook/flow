@@ -217,8 +217,7 @@ let init_dfind options =
 let create_program_init ~shared_mem_config ~focus_targets options =
   let handle = SharedMem_js.init shared_mem_config in
   let genv = ServerEnvBuild.make_genv options handle in
-  (* Only set up lwt after the workers are created *)
-  LwtInit.set_engine ();
+
   let program_init = fun () ->
     let%lwt profiling, env = init ~focus_targets genv in
     FlowEventLogger.init_done ~profiling;
@@ -233,7 +232,7 @@ let run ~monitor_channels ~shared_mem_config options =
 
   let dfind = init_dfind options in
 
-  let initial_lwt_thread =
+  let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
     let listening_thread = listen_for_messages () in
 
@@ -250,7 +249,7 @@ let run ~monitor_channels ~shared_mem_config options =
       serve ~dfind ~genv ~env
     ]
   in
-  Lwt_main.run initial_lwt_thread
+  LwtInit.run_lwt initial_lwt_thread
 
 let run_from_daemonize ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config options
@@ -269,7 +268,7 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
   PidLog.disable ();
   MonitorRPC.disable ();
 
-  let initial_lwt_thread =
+  let initial_lwt_thread () =
     let _, program_init =
       create_program_init ~shared_mem_config ~focus_targets options in
     let%lwt profiling, env = program_init () in
@@ -281,7 +280,7 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
     in
     Lwt.return (profiling, errors, warnings, suppressed_errors)
   in
-  Lwt_main.run initial_lwt_thread
+  LwtInit.run_lwt initial_lwt_thread
 
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in

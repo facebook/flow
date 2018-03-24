@@ -108,4 +108,8 @@ let set_engine () =
    * nowhere *)
   if Sys.win32
   then Lwt_engine.set (new windows_select) (* See comment on windows_select *)
-  else Lwt_engine.set (new unix_select); (* See comment on unix_select *)
+  else Lwt_engine.set (new unix_select) (* See comment on unix_select *)
+
+let run_lwt f =
+  set_engine ();
+  Lwt_main.run (f ())

@@ -114,53 +114,53 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
 
   (************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************)
 
-  LwtInit.set_engine ();
+  let initial_lwt_thread () =
+    Lwt.async (LogFlusher.run ~cancel_condition:ExitSignal.signal);
 
-  Lwt.async (LogFlusher.run ~cancel_condition:ExitSignal.signal);
+    (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
+     * called *)
+    Lwt.async_exception_hook := (fun exn ->
+      let bt = Printexc.get_backtrace () in
+      let msg = Utils.spf "Uncaught async exception: %s%s"
+        (Printexc.to_string exn)
+        (if bt = "" then bt else "\n"^bt)
+      in
+      Logger.fatal ~exn "Uncaught async exception. Exiting";
+      FlowExitStatus.(exit ~msg Unknown_error)
+    );
 
-  (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
-   * called *)
-  Lwt.async_exception_hook := (fun exn ->
-    let bt = Printexc.get_backtrace () in
-    let msg = Utils.spf "Uncaught async exception: %s%s"
-      (Printexc.to_string exn)
-      (if bt = "" then bt else "\n"^bt)
+    Logger.init_logger
+      ?log_fd (Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level);
+    Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
+
+    (* If there is a waiting fd, start up a thread that will message it *)
+    let handle_waiting_start_command = match waiting_fd with
+    | None -> Lwt.return_unit
+    | Some fd ->
+      let fd = Lwt_unix.of_unix_file_descr ~blocking:true fd in
+      handle_waiting_start_command fd
     in
-    Logger.fatal ~exn "Uncaught async exception. Exiting";
-    FlowExitStatus.(exit ~msg Unknown_error)
-  );
 
-  Logger.init_logger
-    ?log_fd (Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level);
-  Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
+    (* Don't start the server until we've set up the threads to handle the waiting channel *)
+    Lwt.async (fun () ->
+      let%lwt () = handle_waiting_start_command in
+      FlowServerMonitorServer.start monitor_options
+    );
 
-  (* If there is a waiting fd, start up a thread that will message it *)
-  let handle_waiting_start_command = match waiting_fd with
-  | None -> Lwt.return_unit
-  | Some fd ->
-    let fd = Lwt_unix.of_unix_file_descr ~blocking:true fd in
-    handle_waiting_start_command fd
+    (* We can start up the socket acceptor even before the server starts *)
+    Lwt.async (fun () ->
+      SocketAcceptor.run
+        (Lwt_unix.of_unix_file_descr ~blocking:true monitor_socket_fd)
+        monitor_options.FlowServerMonitorOptions.autostop
+    );
+    Lwt.async (fun () ->
+      SocketAcceptor.run_legacy (Lwt_unix.of_unix_file_descr ~blocking:true legacy_socket_fd)
+    );
+
+    (* Wait forever! Mwhahahahahaha *)
+    Lwt.wait () |> fst
   in
-
-  (* Don't start the server until we've set up the threads to handle the waiting channel *)
-  Lwt.async (fun () ->
-    let%lwt () = handle_waiting_start_command in
-    FlowServerMonitorServer.start monitor_options
-  );
-
-  (* We can start up the socket acceptor even before the server starts *)
-  Lwt.async (fun () ->
-    SocketAcceptor.run
-      (Lwt_unix.of_unix_file_descr ~blocking:true monitor_socket_fd)
-      monitor_options.FlowServerMonitorOptions.autostop
-  );
-  Lwt.async (fun () ->
-    SocketAcceptor.run_legacy (Lwt_unix.of_unix_file_descr ~blocking:true legacy_socket_fd)
-  );
-
-  (* Wait forever! Mwhahahahahaha *)
-  Lwt.wait () |> fst
-  |> Lwt_main.run
+  LwtInit.run_lwt initial_lwt_thread
 
 let daemon_entry_point =
   FlowServerMonitorDaemon.register_entry_point (internal_start ~is_daemon:true)
