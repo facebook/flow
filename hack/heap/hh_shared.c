@@ -438,8 +438,7 @@ static char* heap_init = NULL;
 /* Where the heap will end (top) */
 static char* heap_max = NULL;
 
-/* Size of the heap since the last garbage collect*/
-static size_t* latest_heap_size = NULL;
+static size_t* wasted_heap_size = NULL;
 
 static size_t used_heap_size(void) {
   return *heap - heap_init;
@@ -449,9 +448,11 @@ void raise_assertion_failure(char * msg) {
   caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
 }
 
-static size_t get_latest_heap_size(void) {
-  assert(latest_heap_size != NULL);
-  return *latest_heap_size;
+/* Part of the heap not reachable from hashtable entries. Can be reclaimed with
+ * hh_collect. */
+static size_t get_wasted_heap_size(void) {
+  assert(wasted_heap_size != NULL);
+  return *wasted_heap_size;
 }
 
 /* Expose so we can display diagnostics */
@@ -804,7 +805,7 @@ static void define_globals(char * shared_mem_init) {
   workers_should_exit = (size_t*)(mem + 6*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
-  latest_heap_size = (size_t*)(mem + 7*CACHE_LINE_SIZE);
+  wasted_heap_size = (size_t*)(mem + 7*CACHE_LINE_SIZE);
 
   mem += page_size;
   // Just checking that the page is large enough.
@@ -867,6 +868,7 @@ static void init_shared_globals(size_t config_log_level) {
   *counter = early_counter + 1;
   *log_level = config_log_level;
   *workers_should_exit = 0;
+  *wasted_heap_size = 0;
 
   // Initialize top heap pointers
   *heap = heap_init;
@@ -1421,8 +1423,7 @@ static void temp_memory_unmap(char * tmp_heap) {
 /*****************************************************************************/
 void hh_call_after_init() {
   CAMLparam0();
-  *latest_heap_size = used_heap_size();
-  if (2 * get_latest_heap_size() >= heap_size) {
+  if (2 * used_heap_size() >= heap_size) {
     caml_failwith("Heap init size is too close to max heap size; "
       "GC will never get triggered!");
   }
@@ -1461,15 +1462,9 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
 
   float space_overhead = aggressive ? 1.2 : 2.0;
   size_t used = used_heap_size();
-  if (used < (size_t)(space_overhead * get_latest_heap_size())) {
-    // We have not grown past twice the size since we last gc'd
+  size_t reachable = used - get_wasted_heap_size();
 
-    /* We maintain the invariant that the latest_heap_size
-      is at most the current heap size, to make sure the GC
-      always collects */
-    if (used < get_latest_heap_size()) {
-      *latest_heap_size = used;
-    }
+  if (used < (size_t)(space_overhead * reachable)) {
     return Val_unit;
   }
 
@@ -1503,7 +1498,8 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   *heap = heap_init + mem_size;
 
   temp_memory_unmap(tmp_heap);
-  *latest_heap_size = used_heap_size();
+  // we removed all garbage - entire heap size should be used
+  *wasted_heap_size = 0;
   return Val_unit;
 }
 
@@ -1523,6 +1519,8 @@ static void raise_heap_full() {
 /*****************************************************************************/
 
 static char* hh_alloc(hh_header_t header) {
+  // the size of this allocation needs to be kept in sync with wasted_heap_size
+  // modification in hh_remove
   size_t slot_size  = ALIGNED(header.size + sizeof(hh_header_t));
   char* chunk       = __sync_fetch_and_add(heap, (char*)slot_size);
   if (chunk + slot_size > heap_max) {
@@ -1869,6 +1867,9 @@ void hh_remove(value key) {
 
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
+  // see hh_alloc for the source of this size
+  size_t slot_size = ALIGNED(Get_buf_size(hashtbl[slot].addr));
+  __sync_fetch_and_add(wasted_heap_size, slot_size);
   hashtbl[slot].addr = NULL;
 }
 
