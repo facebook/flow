@@ -18,4 +18,7 @@ let go workers effort =
      ~merge:(fun () () -> ())
      ~next:(MultiWorker.next workers [()])
  in
- SharedMem.collect ~wrapper ~allow_in_worker:true effort
+ (* Check this in master to avoid worker overhead when no collection will
+  * happen *)
+ if SharedMem.should_collect effort then
+  SharedMem.collect ~wrapper ~allow_in_worker:true effort

@@ -1446,6 +1446,18 @@ value hh_check_heap_overflow() {
  * The collector should only be executed by single process at the time
  */
 /*****************************************************************************/
+
+static int should_collect(int aggressive) {
+  float space_overhead = aggressive ? 1.2 : 2.0;
+  size_t used = used_heap_size();
+  size_t reachable = used - get_wasted_heap_size();
+  return used >= (size_t)(space_overhead * reachable);
+}
+
+CAMLprim value hh_should_collect(value aggressive_val) {
+  return Val_bool(should_collect(Bool_val(aggressive_val)));
+}
+
 CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   // NOTE: explicitly do NOT call CAMLparam or any of the other functions/macros
   // defined in caml/memory.h .
@@ -1460,11 +1472,7 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   char* dest = NULL;
   size_t mem_size = 0;
 
-  float space_overhead = aggressive ? 1.2 : 2.0;
-  size_t used = used_heap_size();
-  size_t reachable = used - get_wasted_heap_size();
-
-  if (used < (size_t)(space_overhead * reachable)) {
+  if (!should_collect(aggressive)) {
     return Val_unit;
   }
 

@@ -155,6 +155,8 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
+external hh_should_collect: bool -> bool = "hh_should_collect"
+
 external hh_collect: bool -> bool -> unit = "hh_collect"
 
 (*****************************************************************************)
@@ -243,6 +245,9 @@ let hash_stats () =
     used_slots;
     slots = hash_slots ();
   }
+
+let should_collect (effort : [ `gentle | `aggressive ]) =
+  hh_should_collect (effort = `aggressive)
 
 let collect ?wrapper ?allow_in_worker (effort : [ `gentle | `aggressive ]) =
   let allow_in_worker = Option.value allow_in_worker ~default:false in
