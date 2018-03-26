@@ -8,18 +8,32 @@
 open Reason
 open Type
 
-let recurse_into_union filter_fn (r, ts) =
+let recurse_into_union filter_fn ((r, ts): reason * Type.t list) =
   let new_ts = List.fold_left (fun new_ts t ->
-    let filtered_type = filter_fn t in
-    match filtered_type with
+    match filter_fn t with
     | DefT (_, EmptyT) -> new_ts
-    | _ -> filtered_type::new_ts
+    | filtered_type -> filtered_type::new_ts
   ) [] ts in
   let new_ts = List.rev new_ts in
   match new_ts with
   | [] -> DefT (r, EmptyT)
   | [t] -> t
   | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+
+let recurse_into_intersection =
+  let rec helper filter_fn r acc = function
+  | [] -> List.rev acc
+  | t::ts ->
+    begin match filter_fn t with
+    | DefT (_, EmptyT) -> []
+    | filtered_type -> helper filter_fn r (filtered_type::acc) ts
+    end
+  in
+  fun filter_fn ((r, ts): reason * Type.t list) ->
+    match helper filter_fn r [] ts with
+    | [] -> DefT (r, EmptyT)
+    | [t] -> t
+    | t0::t1::ts -> DefT (r, IntersectionT (InterRep.make t0 t1 ts))
 
 let rec exists = function
   (* falsy things get removed *)
@@ -42,10 +56,14 @@ let rec exists = function
   | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
   | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
 
+  (* an intersection passes through iff all of its members pass through *)
+  | DefT (r, IntersectionT rep) ->
+    recurse_into_intersection exists (r, InterRep.members rep)
+
   (* truthy things pass through *)
   | t -> t
 
-let not_exists t = match t with
+let rec not_exists t = match t with
   (* falsy things pass through *)
   | DefT (_, (
       NullT
@@ -83,6 +101,10 @@ let not_exists t = match t with
   | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
   | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, "")))
   | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
+
+  (* an intersection passes through iff all of its members pass through *)
+  | DefT (r, IntersectionT rep) ->
+    recurse_into_intersection not_exists (r, InterRep.members rep)
 
   (* things that don't track truthiness pass through *)
   | t -> t

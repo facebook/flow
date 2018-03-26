@@ -424,5 +424,22 @@ References:
                                                            ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- logical.js:523:5
 
-Found 28 errors
+Cannot cast `x && x.y` to number because string [1] is incompatible with number [2].
+
+   logical.js:523:5
+   523|   ((x && x.y): number); // error, x.y is a string (no error about x)
+            ^^^^^^^^
+
+References:
+   logical.js:522:27
+   522| function logical21(x: {y: string} & {}): void {
+                                  ^^^^^^ [1]
+   logical.js:523:16
+   523|   ((x && x.y): number); // error, x.y is a string (no error about x)
+                       ^^^^^^ [2]
+
+
+
+Found 29 errors
