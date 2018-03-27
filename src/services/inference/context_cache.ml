@@ -13,6 +13,7 @@ module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
   type t = Context.sig_t
   let prefix = Prefix.make()
   let description = "SigContext"
+  let use_sqlite_fallback () = false
 end)
 
 let master_sig: Context.sig_t option option ref = ref None
@@ -43,12 +44,14 @@ module SigHashHeap = SharedMem_js.NoCache (File_key) (struct
   type t = Xx.hash
   let prefix = Prefix.make()
   let description = "SigHash"
+  let use_sqlite_fallback () = false
 end)
 
 module LeaderHeap = SharedMem_js.WithCache (File_key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Leader"
+  let use_sqlite_fallback () = false
 end)
 
 let find_leader file =

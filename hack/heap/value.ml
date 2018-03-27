@@ -22,4 +22,5 @@ module type Type = sig
   type t
   val prefix: Prefix.t
   val description: string
+  val use_sqlite_fallback : unit -> bool
 end

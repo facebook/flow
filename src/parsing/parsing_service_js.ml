@@ -58,18 +58,21 @@ module ASTHeap = SharedMem_js.WithCache (File_key) (struct
     type t = Loc.t Ast.program
     let prefix = Prefix.make()
     let description = "AST"
+    let use_sqlite_fallback () = false
 end)
 
 module DocblockHeap = SharedMem_js.WithCache (File_key) (struct
     type t = Docblock.t
     let prefix = Prefix.make()
     let description = "Docblock"
+    let use_sqlite_fallback () = false
 end)
 
 module FileSigHeap = SharedMem_js.WithCache (File_key) (struct
     type t = File_sig.t
     let prefix = Prefix.make()
     let description = "Requires"
+    let use_sqlite_fallback () = false
 end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)

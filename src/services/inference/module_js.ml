@@ -123,6 +123,7 @@ module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Name"
+  let use_sqlite_fallback () = false
 end)
 
 let get_file = Expensive.wrap NameHeap.get
@@ -133,6 +134,7 @@ module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
   type t = resolved_requires
   let prefix = Prefix.make()
   let description = "ResolvedRequires"
+  let use_sqlite_fallback () = false
 end)
 
 let get_resolved_requires = Expensive.wrap ResolvedRequiresHeap.get
@@ -145,6 +147,7 @@ module InfoHeap = SharedMem_js.WithCache (File_key) (struct
   type t = info
   let prefix = Prefix.make()
   let description = "Info"
+  let use_sqlite_fallback () = false
 end)
 
 let get_info = Expensive.wrap InfoHeap.get
@@ -157,6 +160,7 @@ module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
     type t = Package_json.t
     let prefix = Prefix.make()
     let description = "Package"
+    let use_sqlite_fallback () = false
   end)
 
 (* shared heap for package.json directories by package name *)
@@ -164,6 +168,7 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     type t = string
     let prefix = Prefix.make()
     let description = "ReversePackage"
+    let use_sqlite_fallback () = false
   end)
 
 let add_package filename ast =
