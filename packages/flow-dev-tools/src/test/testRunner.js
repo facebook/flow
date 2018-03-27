@@ -208,6 +208,24 @@ function startWatchAndRun(suites, args) {
 }
 
 async function runOnce(suites: {[suiteName: string]: Suite}, args) {
+  let maxErroredTests = 0;
+  if (args.maxErroredTests != null) {
+    maxErroredTests = args.maxErroredTests;
+  }
+  if (args.maxErroredTestsPct != null) {
+    const numTests = Object.keys(suites).length;
+    maxErroredTests = Math.floor(numTests * args.maxErroredTestsPct / 100);
+  }
+  if (maxErroredTests > 0) {
+    process.stderr.write(
+      format(
+        "A maximum of %d suite%s allowed to error\n",
+        maxErroredTests,
+        maxErroredTests === 1 ? " is" : "s are",
+      ),
+    );
+  }
+
   const builder = new Builder(args.errorCheckCommand);
   const runQueue = new RunQueue(
     args.bin,
@@ -221,11 +239,17 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   builder.cleanup();
 
   const results = runQueue.results;
+  // 1 - At least one test failed
+  // 2 - No tests failed but too many tests errored
+  // 0 - No tests failed and there were an acceptable number of errored tests
   let exitCode = 0;
   for (const suiteName of Object.keys(results).sort()) {
     const suiteResult = results[suiteName];
     if (suiteResult.type === 'exceptional') {
-      exitCode = 2;
+      maxErroredTests--;
+      if (maxErroredTests < 0 && exitCode === 0) {
+        exitCode = 2;
+      }
       await write(
         process.stdout,
         colors.bgRed(colors.white.bold("ERRORED"))+
