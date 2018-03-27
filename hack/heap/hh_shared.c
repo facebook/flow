@@ -109,6 +109,9 @@
 #include <lz4.h>
 #include <time.h>
 
+#define ARRAY_SIZE(array) \
+    (sizeof(array) / sizeof((array)[0]))
+
 #ifndef NO_SQLITE3
 #include <sqlite3.h>
 #define assert_sql(x, y) (assert_sql_with_line((x), (y), __LINE__))
@@ -1950,18 +1953,42 @@ static void assert_sql_with_line(
   caml_raise_with_arg(*exn, Val_long(result));
 }
 
+
+const char *create_tables_sql[] = {
+  "CREATE TABLE IF NOT EXISTS HEADER(" \
+  "    MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
+  "    BUILDINFO TEXT NOT NULL" \
+  ");",
+  "CREATE TABLE IF NOT EXISTS NAME_INFO(" \
+  "    HASH INTEGER PRIMARY KEY NOT NULL," \
+  "    NAME TEXT NOT NULL," \
+  "    NKIND INTEGER NOT NULL," \
+  "    FILESPEC TEXT NOT NULL" \
+  ");",
+  "CREATE TABLE IF NOT EXISTS DEPTABLE(" \
+  "    KEY_VERTEX INT PRIMARY KEY NOT NULL," \
+  "    VALUE_VERTEX BLOB NOT NULL" \
+  ");"
+};
+
+static void make_all_tables(sqlite3 *db) {
+    assert(db);
+    for (int i = 0; i < ARRAY_SIZE(create_tables_sql); ++i) {
+        assert_sql(sqlite3_exec(db, create_tables_sql[i], NULL, 0, NULL),
+                SQLITE_OK);
+    }
+    return;
+}
+
 // Expects the database to be open
 static void create_sqlite_header(sqlite3 *db, const char* const buildInfo) {
   // Create Header
-  const char *sql = "CREATE TABLE HEADER(" \
-               "MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
-               "BUILDINFO TEXT NOT NULL);";
-
-  assert_sql(sqlite3_exec(db, sql, NULL, 0, NULL), SQLITE_OK);
+  make_all_tables(db);
 
   // Insert magic constant and build info
   sqlite3_stmt *insert_stmt = NULL;
-  sql = "INSERT INTO HEADER (MAGIC_CONSTANT, BUILDINFO) VALUES (?,?)";
+  const char *sql = \
+    "INSERT INTO HEADER (MAGIC_CONSTANT, BUILDINFO) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db, sql, -1, &insert_stmt, NULL), SQLITE_OK);
   assert_sql(sqlite3_bind_int64(insert_stmt, 1, MAGIC_CONSTANT), SQLITE_OK);
   assert_sql(sqlite3_bind_text(insert_stmt, 2,
@@ -2016,7 +2043,7 @@ static long hh_save_file_info_helper_sqlite(
     sqlite3 *db_out = NULL;
     assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
     static const char sql[] = \
-      "CREATE TABLE DUMMY(DUMMY_KEY INT PRIMARY KEY NOT NULL)";
+      "CREATE TABLE IF NOT EXISTS DUMMY(DUMMY_KEY INT PRIMARY KEY NOT NULL)";
     assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
     return 0;
 }
@@ -2040,7 +2067,7 @@ static long hh_save_dep_table_helper_sqlite(
   create_sqlite_header(db_out, build_info);
 
   // Create Dep able
-  const char *sql = "CREATE TABLE DEPTABLE(" \
+  const char *sql = "CREATE TABLE IF NOT EXISTS DEPTABLE(" \
                "KEY_VERTEX INT PRIMARY KEY NOT NULL," \
                "VALUE_VERTEX BLOB NOT NULL);";
 
@@ -2282,7 +2309,7 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
   create_sqlite_header(db_out, BuildInfo_kRevision);
 
   // Create Dep able
-  const char *sql = "CREATE TABLE HASHTABLE(" \
+  const char *sql = "CREATE TABLE IF NOT EXISTS HASHTABLE(" \
                "KEY_VERTEX INT PRIMARY KEY NOT NULL," \
                "VALUE_VERTEX BLOB NOT NULL);";
 
@@ -2349,7 +2376,7 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
   create_sqlite_header(db_out, BuildInfo_kRevision);
 
   const char *sql =
-    "CREATE TABLE HASHTABLE(" \
+    "CREATE TABLE IF NOT EXISTS HASHTABLE(" \
     "  KEY_VERTEX INT PRIMARY KEY NOT NULL," \
     "  VALUE_VERTEX BLOB NOT NULL" \
     ");";
