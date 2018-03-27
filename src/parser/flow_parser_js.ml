@@ -7,7 +7,7 @@
 
 module JsTranslator : sig
   val translation_errors: (Loc.t * Parse_error.t) list ref
-  include Estree_translator.Translator
+  include Translator_intf.S
 end = struct
   type t = Js.Unsafe.any
 
@@ -38,6 +38,13 @@ end = struct
     in
     Js.Unsafe.inject regexp
 end
+
+module Translate = Estree_translator.Translate (JsTranslator) (struct
+  let include_comments = true
+  let include_locs = true
+end)
+
+module Token_translator = Token_translator.Translate (JsTranslator)
 
 let parse_options jsopts = Parser_env.(
   let opts = default_parse_options in
@@ -75,6 +82,9 @@ let parse_options jsopts = Parser_env.(
   opts
 )
 
+let translate_tokens tokens =
+  JsTranslator.array (List.rev_map Token_translator.token tokens)
+
 let parse content options =
   let options =
     if options = Js.undefined
@@ -83,13 +93,24 @@ let parse content options =
   in
   let content = Js.to_string content in
   let parse_options = Some (parse_options options) in
-  let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
+
+  let include_tokens =
+    let tokens = Js.Unsafe.get options "tokens" in
+    Js.Optdef.test tokens && Js.to_bool tokens
+  in
+  let rev_tokens = ref [] in
+  let token_sink =
+    if include_tokens then
+      Some (fun token_data ->
+        rev_tokens := token_data::!rev_tokens
+      )
+    else None
+  in
+
+  let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
   JsTranslator.translation_errors := [];
-  let module Translate = Estree_translator.Translate (JsTranslator) (struct
-    let include_comments = true
-    let include_locs = true
-  end) in
   let ret = Translate.program ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));
+  if include_tokens then Js.Unsafe.set ret "tokens" (translate_tokens !rev_tokens);
   ret

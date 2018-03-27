@@ -16,7 +16,7 @@ type json =
   | JNull
 
 module AbstractTranslator : (
-  Estree_translator.Translator with type t = json
+  Translator_intf.S with type t = json
 ) = struct
   type t = json
   let string x = JString x
@@ -34,27 +34,57 @@ module Translate = Estree_translator.Translate (AbstractTranslator) (struct
   let include_locs = true
 end)
 
+module Token_translator = Token_translator.Translate (AbstractTranslator)
+
+let translate_tokens tokens =
+  AbstractTranslator.array (List.rev_map Token_translator.token tokens)
+
 let convert_options opts =
   let open Parser_env in
-  if opts = [] then None else
-  Some (List.fold_left (fun acc (k, v) ->
+  List.fold_left (fun (opts, tokens) (k, v) ->
     match k with
-    | "esproposal_class_instance_fields" -> { acc with esproposal_class_instance_fields = v }
-    | "esproposal_class_static_fields" -> { acc with esproposal_class_static_fields = v }
-    | "esproposal_decorators" -> { acc with esproposal_decorators = v }
-    | "esproposal_export_star_as" -> { acc with esproposal_export_star_as = v }
-    | "esproposal_optional_chaining" -> { acc with esproposal_optional_chaining = v }
-    | "types" -> { acc with types = v }
-    | "use_strict" -> { acc with use_strict = v }
-    | _ -> acc (* ignore unknown stuff for future-compatibility *)
-  ) Parser_env.default_parse_options opts)
+    | "esproposal_class_instance_fields" ->
+        { opts with esproposal_class_instance_fields = v }, tokens
+    | "esproposal_class_static_fields" ->
+        { opts with esproposal_class_static_fields = v }, tokens
+    | "esproposal_decorators" ->
+        { opts with esproposal_decorators = v }, tokens
+    | "esproposal_export_star_as" ->
+        { opts with esproposal_export_star_as = v }, tokens
+    | "esproposal_optional_chaining" ->
+        { opts with esproposal_optional_chaining = v }, tokens
+    | "types" ->
+        { opts with types = v }, tokens
+    | "use_strict" ->
+        { opts with use_strict = v }, tokens
+    | "tokens" ->
+        opts, v
+    | _ ->
+        opts, tokens (* ignore unknown stuff for future-compatibility *)
+  ) (Parser_env.default_parse_options, false) opts
 
 let parse content options =
-  let parse_options = convert_options options in
-  let (ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
+  let parse_options, include_tokens = convert_options options in
+
+  let rev_tokens = ref [] in
+  let token_sink =
+    if include_tokens then Some (fun token_data -> rev_tokens := token_data::!rev_tokens)
+    else None
+  in
+
+  let (ast, errors) = Parser_flow.program
+    ~fail:false ~parse_options:(Some parse_options) ~token_sink
+    content
+  in
+
   match Translate.program ast with
   | JObject params ->
-    JObject (("errors", Translate.errors errors)::params)
+    let params = ("errors", Translate.errors errors)::params in
+    let params =
+      if include_tokens then ("tokens", translate_tokens !rev_tokens)::params
+      else params
+    in
+    JObject params
   | _ -> assert false
 
 (* TODO: register/handle Parse_error.Error *)

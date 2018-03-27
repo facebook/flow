@@ -51,44 +51,7 @@ module Translate = Estree_translator.Translate (Json_of_estree) (struct
   let include_locs = true
 end)
 
-let token_to_json token_result =
-  let open Loc in
-  let open Hh_json in
-  let open Parser_env in
-
-  let {
-    token_loc=loc;
-    token;
-    token_context;
-  } = token_result in
-
-  JSON_Object [
-    ("type", JSON_String (Token.token_to_string token));
-    ("context", JSON_String Parser_env.Lex_mode.(
-      match token_context with
-      | NORMAL -> "normal"
-      | TYPE -> "type"
-      | JSX_TAG -> "jsxTag"
-      | JSX_CHILD -> "jsxChild"
-      | TEMPLATE -> "template"
-      | REGEXP -> "regexp"
-    ));
-    ("loc", JSON_Object [
-      ("start", JSON_Object [
-        ("line", int_ loc.start.line);
-        ("column", int_ loc.start.column);
-      ]);
-      ("end", JSON_Object [
-        ("line", int_ loc._end.line);
-        ("column", int_ loc._end.column);
-      ]);
-    ]);
-    ("range", JSON_Array [
-      int_ loc.start.offset;
-      int_ loc._end.offset;
-    ]);
-    ("value", JSON_String (Token.value_of_token token));
-  ]
+module Token_translator = Token_translator.Translate (Json_of_estree)
 
 let main include_tokens pretty file_type_opt use_strict from path filename () =
   FlowEventLogger.set_from from;
@@ -115,7 +78,7 @@ let main include_tokens pretty file_type_opt use_strict from path filename () =
   let tokens = ref [] in
   let token_sink =
     if not include_tokens then None else (Some(fun token_data ->
-    tokens := (token_to_json token_data)::!tokens
+    tokens := (Token_translator.token token_data)::!tokens
   )) in
 
   let open Hh_json in

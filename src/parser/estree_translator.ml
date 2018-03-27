@@ -6,23 +6,12 @@
  *)
 
 
-module type Translator = sig
-  type t
-  val string: string -> t
-  val bool: bool -> t
-  val obj: (string * t) list -> t
-  val array: t list -> t
-  val number: float -> t
-  val null: t
-  val regexp: Loc.t -> string -> string -> t
-end
-
 module type Config = sig
   val include_locs: bool
   val include_comments: bool
 end
 
-module Translate (Impl : Translator) (Config : Config) : (sig
+module Translate (Impl : Translator_intf.S) (Config : Config) : (sig
   type t
   val program:
     Loc.t * Loc.t Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->

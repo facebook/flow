@@ -6,7 +6,7 @@
  *)
 
 module Hh_json_translator : (
-  Estree_translator.Translator with type t = Hh_json.json
+  Translator_intf.S with type t = Hh_json.json
 ) = struct
   type t = Hh_json.json
 
