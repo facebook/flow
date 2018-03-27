@@ -17,6 +17,8 @@ export type Args = {
   failedOnly: boolean,
   watch: boolean,
   buckCpTestsDir: ?string,
+  maxErroredTests: ?number,
+  maxErroredTestsPct: ?number,
 };
 
 export default class TestCommand extends Base<Args> {
@@ -24,6 +26,14 @@ export default class TestCommand extends Base<Args> {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
     if (argv.rerun != null && argv["rerun-failed"] != null) {
       process.stderr.write("You cannot set both --rerun and --rerun-failed\n");
+      this.showUsage(this.BAD_ARGS);
+    }
+    if (argv['max-errored-tests'] != null &&
+        argv['max-errored-tests-pct'] != null) {
+      process.stderr.write(
+        "You cannot set both --max-errored-tests and --max-errored-tests-pct." +
+          " Use one or the other.\n",
+      );
       this.showUsage(this.BAD_ARGS);
     }
     return {
@@ -36,6 +46,8 @@ export default class TestCommand extends Base<Args> {
       failedOnly: !!argv["rerun-failed"],
       watch: Boolean(argv.watch),
       buckCpTestsDir: argv['buck-copy-tests-dir'],
+      maxErroredTests: argv['max-errored-tests'],
+      maxErroredTestsPct: argv['max-errored-tests-pct'],
     };
   }
 
@@ -97,7 +109,19 @@ SUITE
           defaultTestsDirName,
           defaultTestsDirName,
         ),
-      }
+      },
+      {
+        type: "string",
+        name: "max-errored-tests",
+        argName: "N",
+        description: "If more than N tests error, test run will return a non-zero exit code",
+      },
+      {
+        type: "string",
+        name: "max-errored-tests-pct",
+        argName: "P",
+        description: "If more than P% tests error, test run will return a non-zero exit code",
+      },
     ];
   }
 }
