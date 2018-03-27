@@ -1835,6 +1835,8 @@ module Cli_output = struct
     | None
       -> "(builtins)"
 
+  exception Oh_no_file_contents_have_changed
+
   (* =========================
    * Error Message Code Frames
    * =========================
@@ -2008,74 +2010,92 @@ module Cli_output = struct
         (* Read the lines from this location. *)
         let lines = read_lines_in_file loc filename stdin_file in
         match lines with
-        | None -> (tags, opened, code_frames)
+        | None ->
+          (* Failed to read the file, so skip this code frame *)
+          (tags, opened, code_frames)
         | Some lines ->
-          (* Create the code frame styles. *)
-          let (_, tags, opened, code_frame) = List.fold_left (fun (n, tags, opened, acc) line ->
-            (* Loop which will paint the different parts of a line of code in
-             * our code frame. Eats tags on the current line. *)
-            let rec loop acc col tags opened line =
-              (* Get the current style for the line. *)
-              let style = Option.value_map (get_tty_color_from_stack opened colors)
-                ~f:(fun color -> Tty.Normal color) ~default:(Tty.Dim Tty.Default) in
-              match tags with
-              (* If we have no more tags then use our current style with
-               * the line. *)
-              | [] ->
-                (tags, opened, (style, line) :: acc)
-              (* If we have a tag on this line then eat it and add the new
-               * opened tag to `opened`. Note that our condition depends on tag
-               * being well formed by layout_references! *)
-              | (pos, tag_id, tag_kind) :: tags when pos.line = n ->
-                let opened = match tag_kind with
-                | Open _ -> tag_id :: opened
-                | Close -> List.filter (fun id -> tag_id <> id) opened
-                in
-                let split = pos.column - col in
-                let left = String.sub line 0 split in
-                let right = String.sub line split (String.length line - split) in
-                let acc = (style, left) :: acc in
-                loop acc pos.column tags opened right
-              (* If we do not have a tag on this line then use our current style
-               * with this line of code. *)
-              | tags ->
-                (tags, opened, (style, line) :: acc)
-            in
-            (* Start that loop! *)
-            let (tags, opened, code_line) = loop [] 0 tags opened line in
-            let code_line = List.rev code_line in
-            (* Create the gutter text. *)
-            let gutter =
-              match IMap.get n line_references with
-              | None ->
-                [default_style (String.make gutter_width ' ')]
-              | Some (width, references) when width < gutter_width ->
-                default_style (String.make (gutter_width - width) ' ') :: references
-              | Some (_, references) ->
-                references
-            in
-            (* Create the next line. *)
-            let next_line =
-              (* Get the line number string with appropriate padding. *)
-              let line_number =
-                let n = string_of_int n in
-                let padding = String.make (max_line_number_length - (String.length n)) ' ' in
-                let n = (Tty.Dim Tty.Default, n) in
-                [default_style padding; n; dim_style vertical_line]
+          try
+            (* Create the code frame styles. *)
+            let (_, tags, opened, code_frame) = List.fold_left (fun (n, tags, opened, acc) line ->
+              (* Loop which will paint the different parts of a line of code in
+               * our code frame. Eats tags on the current line. *)
+              let rec loop acc col tags opened line =
+                (* Get the current style for the line. *)
+                let style = Option.value_map (get_tty_color_from_stack opened colors)
+                  ~f:(fun color -> Tty.Normal color) ~default:(Tty.Dim Tty.Default) in
+                match tags with
+                (* If we have no more tags then use our current style with
+                 * the line. *)
+                | [] ->
+                  (tags, opened, (style, line) :: acc)
+                (* If we have a tag on this line then eat it and add the new
+                 * opened tag to `opened`. Note that our condition depends on tag
+                 * being well formed by layout_references! *)
+                | (pos, tag_id, tag_kind) :: tags when pos.line = n ->
+                  let opened = match tag_kind with
+                  | Open _ -> tag_id :: opened
+                  | Close -> List.filter (fun id -> tag_id <> id) opened
+                  in
+                  let split = pos.column - col in
+                  let left, right =
+                    (* TODO: Get a SHA for each file when we parse it, and include the SHA in the
+                     * loc. Then, we can know for sure whether a file has changed or not when we
+                     * go to pretty print an error.
+                     *
+                     * Here we only know for sure that a file has changed when a particular line
+                     * is too short, which means we can sometimes print bad code frames.
+                     *)
+                    try
+                      String.sub line 0 split, String.sub line split (String.length line - split)
+                    with Invalid_argument _ ->
+                      raise Oh_no_file_contents_have_changed
+                  in
+                  let acc = (style, left) :: acc in
+                  loop acc pos.column tags opened right
+                (* If we do not have a tag on this line then use our current style
+                 * with this line of code. *)
+                | tags ->
+                  (tags, opened, (style, line) :: acc)
               in
-              gutter @
-              line_number @
-              (* If the line is empty then strip the whitespace which would be
-               * trailing whitespace anyways. *)
-              (if line = "" then [] else [default_style " "]) @
-              code_line @
-              [default_style "\n"]
-            in
-            (* Increment our line count and add the next line to
-             * our accumulator. *)
-            (n + 1, tags, opened, next_line :: acc)
-          ) (loc.start.line, tags, opened, []) (Nel.to_list lines) in
-          (tags, opened, List.concat (List.rev code_frame) :: code_frames)
+              (* Start that loop! *)
+              let (tags, opened, code_line) = loop [] 0 tags opened line in
+              let code_line = List.rev code_line in
+              (* Create the gutter text. *)
+              let gutter =
+                match IMap.get n line_references with
+                | None ->
+                  [default_style (String.make gutter_width ' ')]
+                | Some (width, references) when width < gutter_width ->
+                  default_style (String.make (gutter_width - width) ' ') :: references
+                | Some (_, references) ->
+                  references
+              in
+              (* Create the next line. *)
+              let next_line =
+                (* Get the line number string with appropriate padding. *)
+                let line_number =
+                  let n = string_of_int n in
+                  let padding = String.make (max_line_number_length - (String.length n)) ' ' in
+                  let n = (Tty.Dim Tty.Default, n) in
+                  [default_style padding; n; dim_style vertical_line]
+                in
+                gutter @
+                line_number @
+                (* If the line is empty then strip the whitespace which would be
+                 * trailing whitespace anyways. *)
+                (if line = "" then [] else [default_style " "]) @
+                code_line @
+                [default_style "\n"]
+              in
+              (* Increment our line count and add the next line to
+               * our accumulator. *)
+              (n + 1, tags, opened, next_line :: acc)
+            ) (loc.start.line, tags, opened, []) (Nel.to_list lines) in
+            (tags, opened, List.concat (List.rev code_frame) :: code_frames)
+          with
+          | Oh_no_file_contents_have_changed ->
+            (* Realized the file has changed, so skip this code frame *)
+            (tags, opened, code_frames)
       ) (tags, [], []) locs in
       match code_frames with
       | [] -> []
@@ -2202,8 +2222,14 @@ module Cli_output = struct
               else
                 ""
             in
+            (* TODO - if dash_length is less than 0 that means the line in question probably
+             * changed. As mentioned in another comment in this file, we should have better
+             * detection and behavior when we notice that the file we're reading for context has
+             * changed. But at the very least we shouldn't crash, which is what will happen if
+             * we call String.make with a negative length *)
+            let dash_length = loc._end.column - String.length underline_prefix - 1 in
             underline_prefix ^
-            String.make (loc._end.column - String.length underline_prefix - 1) '-' ^
+            String.make (max dash_length 0) '-' ^
             "^"
         ) in
         (* If we have a reference id then add it just after the underline. *)
