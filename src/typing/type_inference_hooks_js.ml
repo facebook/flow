@@ -25,6 +25,8 @@ let obj_prop_decl_nop _ _ _ = ()
 
 let require_pattern_nop _ = ()
 
+let obj_to_obj_nop _ _ _ = ()
+
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
   (**
@@ -110,7 +112,14 @@ type hook_state_t = {
         unit);
 
   require_pattern_hook:
-    Loc.t -> unit
+    Loc.t -> unit;
+
+  (* Called when ObjT 1 ~> ObjT 2 *)
+  obj_to_obj_hook:
+      (Context.t ->
+        Type.t (* ObjT 1 *) ->
+        Type.use_t (* ObjT 2 *) ->
+        unit);
 }
 
 let nop_hook_state = {
@@ -124,6 +133,7 @@ let nop_hook_state = {
   class_member_decl_hook = class_member_decl_nop;
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
+  obj_to_obj_hook = obj_to_obj_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -158,6 +168,9 @@ let set_obj_prop_decl_hook hook =
 let set_require_pattern_hook hook =
   hook_state := { !hook_state with require_pattern_hook = hook }
 
+let set_obj_to_obj_hook hook =
+  hook_state := { !hook_state with obj_to_obj_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -190,3 +203,6 @@ let dispatch_obj_prop_decl_hook cx name loc =
 
 let dispatch_require_pattern_hook loc =
   !hook_state.require_pattern_hook loc
+
+let dispatch_obj_to_obj_hook cx t1 t2 =
+  !hook_state.obj_to_obj_hook cx t1 t2

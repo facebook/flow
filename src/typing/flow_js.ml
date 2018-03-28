@@ -4102,7 +4102,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (lreason, ObjT ({ props_tmap = lflds; _ } as l_obj)),
       UseT (use_op, DefT (ureason, ObjT ({ props_tmap = uflds; _ } as u_obj))) ->
-
+      Type_inference_hooks_js.dispatch_obj_to_obj_hook cx l u;
       if lflds = uflds then ()
       else flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
 
