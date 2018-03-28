@@ -1,3 +1,12 @@
+### 0.69.0
+
+Notable bug fixes:
+* Fixed a couple bugs in pretty printing errors which could cause `flow status` to throw an exception
+
+Misc:
+* Lots of internal refactoring/changes this release, so not too much to report!
+* A bunch of libdef improvements. Thanks everyone for the PRs!
+
 ### 0.68.0
 
 Likely to cause new Flow errors:
