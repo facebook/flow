@@ -151,7 +151,14 @@ let detect_test_prop_misses cx =
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
-  let metadata = { metadata with jsx = Docblock.jsx docblock_info } in
+  let metadata =
+    let jsx = match Docblock.jsx docblock_info with
+    | Some (Docblock.Jsx_pragma (expr, jsx_expr)) -> Options.Jsx_pragma (expr, jsx_expr)
+    | Some Docblock.Csx_pragma -> Options.Jsx_csx
+    | None -> Options.Jsx_react
+    in
+    { metadata with jsx }
+  in
 
   let metadata = match Docblock.flow docblock_info with
   | None -> metadata
