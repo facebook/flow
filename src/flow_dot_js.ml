@@ -127,7 +127,7 @@ let stub_metadata ~root ~checked = { Context.
   munge_underscores = false;
   verbose = None;
   weak = false;
-  jsx = None;
+  jsx = Options.Jsx_react;
   strict = false;
 
   (* global *)

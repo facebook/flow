@@ -24,7 +24,7 @@ type metadata = {
   munge_underscores: bool;
   verbose: Verbose.t option;
   weak: bool;
-  jsx: Options.jsx_mode option;
+  jsx: Options.jsx_mode;
   strict: bool;
   (* global *)
   enable_const_params: bool;
@@ -104,7 +104,7 @@ val type_graph: t -> Graph_explorer.graph
 val type_table: t -> Type_table.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
-val jsx: t -> Options.jsx_mode option
+val jsx: t -> Options.jsx_mode
 val exists_checks: t -> ExistsCheck.t LocMap.t
 val exists_excuses: t -> ExistsCheck.t LocMap.t
 val use_def: t -> Scope_api.info * Ssa_api.values

@@ -3867,7 +3867,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
     let fbt_reason = mk_reason RFbt loc_element in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
-  | Identifier (loc, { Identifier.name }), _, None ->
+  | Identifier (loc, { Identifier.name }), _, Options.Jsx_react ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
     let reason = mk_reason (RReactElement (Some name)) loc_element in
     let c =
@@ -3879,7 +3879,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
     let o = jsx_mk_props cx reason c name attributes children in
     jsx_desugar cx name c o attributes children locs
 
-  | Identifier (loc, { Identifier.name }), _, Some Options.JSXPragma _ ->
+  | Identifier (loc, { Identifier.name }), _, Options.Jsx_pragma _ ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
     let reason = mk_reason (RJSXElement (Some name)) loc_element in
     let c =
@@ -3891,7 +3891,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
     let o = jsx_mk_props cx reason c name attributes children in
     jsx_desugar cx name c o attributes children locs
 
-  | Identifier (loc, { Identifier.name }), _, Some Options.CSX ->
+  | Identifier (loc, { Identifier.name }), _, Options.Jsx_csx ->
     (**
      * It's a bummer to duplicate this case, but CSX does not want the
      * "if name = String.capitalize name" restriction.
@@ -3902,7 +3902,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
     let o = jsx_mk_props cx reason c name attributes children in
     jsx_desugar cx name c o attributes children locs
 
-  | MemberExpression member, _, None ->
+  | MemberExpression member, _, Options.Jsx_react ->
     let name = jsx_title_member_to_string member in
     let el = RReactElement (Some name) in
     let reason = mk_reason el loc_element in
@@ -3917,7 +3917,7 @@ and jsx_title cx openingElement children locs = Ast.JSX.(
 )
 
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
-  let is_react = Context.jsx cx = None in
+  let is_react = Context.jsx cx = Options.Jsx_react in
   let reason_props = replace_reason_const
     (if is_react then RReactProps else RJSXElementProps name)
     reason in
@@ -4026,7 +4026,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
 and jsx_desugar cx name component_t props attributes children locs =
   let loc_element, loc_opening, loc_children = locs in
   match Context.jsx cx with
-  | None ->
+  | Options.Jsx_react ->
       let reason = mk_reason (RReactElement (Some name)) loc_element in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
       let children = List.map (function
@@ -4055,7 +4055,7 @@ and jsx_desugar cx name component_t props attributes children locs =
           None
         ))
       )
-  | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
+  | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
       let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
 
       (* A JSX element with no attributes should pass in null as the second
@@ -4088,7 +4088,7 @@ and jsx_desugar cx name component_t props attributes children locs =
           let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
           func_call cx reason ~use_op ~call_strict_arity:false f argts
       )
-  | Some Options.CSX ->
+  | Options.Jsx_csx ->
       let reason = mk_reason (RJSXFunctionCall name) loc_element in
       let use_op = Op (JSXCreateElement {
         op = reason;
