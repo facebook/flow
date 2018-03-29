@@ -914,13 +914,17 @@ module ResolvableTypeJob = struct
        examples of such bugs yet. Leaving further investigation of this point as
        future work. *)
 
-    | DefT (_, ObjT { props_tmap; _ }) ->
+    | DefT (_, ObjT { props_tmap; dict_t; _ }) ->
       let props_tmap = Context.find_props cx props_tmap in
       let ts = SMap.fold (fun x p ts ->
         (* avoid resolving types of shadow properties *)
         if is_internal_name x then ts
         else Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap [] in
+      let ts = match dict_t with
+      | None -> ts
+      | Some { key; value; _ } -> key::value::ts
+      in
       collect_of_types ?log_unresolved cx reason acc ts
     | DefT (_, FunT (_, _, { params; return_t; _ })) ->
       let ts = List.fold_left (fun acc (_, t) -> t::acc) [return_t] params in

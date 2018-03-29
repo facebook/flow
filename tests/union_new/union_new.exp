@@ -425,6 +425,23 @@ References:
                    ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test35.js:8:2
+
+Cannot cast `ret` to empty because string [1] is incompatible with empty [2].
+
+   test35.js:8:2
+   8| (ret: empty); // err, string ~> empty (matched case 2)
+       ^^^
+
+References:
+   test35.js:4:31
+   4| declare function f(x: mixed): string;
+                                    ^^^^^^ [1]
+   test35.js:8:7
+   8| (ret: empty); // err, string ~> empty (matched case 2)
+            ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test5.js:14:5
 
 Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
@@ -499,7 +516,7 @@ References:
 
 
 
-Found 27 errors
+Found 28 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
