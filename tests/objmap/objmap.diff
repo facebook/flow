@@ -1,0 +1,37 @@
+--- objmap.exp	2018-03-29 09:37:46.000000000 +0200
++++ objmap.out	2018-03-29 09:37:50.000000000 +0200
+@@ -314,6 +314,28 @@
+                  ^^^^^^ [2]
+ 
+ 
++Error ----------------------------------------------------------------------------------------- objmap_functions.js:17:2
++
++Cannot cast `ExpectedFuncs` to `FuncsAsPromises` because:
++ - function [1] is incompatible with `Promise` [2] in property `funcA`.
++ - function [3] is incompatible with `Promise` [2] in property `funcB`.
++
++   objmap_functions.js:17:2
++   17| (ExpectedFuncs: FuncsAsPromises); // ok
++        ^^^^^^^^^^^^^
++
++References:
++   objmap_functions.js:13:10
++   13|   funcA: (a: string) => Promise.resolve(1),
++                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
++   objmap_functions.js:8:46
++    8| type WrapInPromise = <V>((arg: any) => V) => Promise<V>;
++                                                    ^^^^^^^^^^ [2]
++   objmap_functions.js:14:10
++   14|   funcB: (a: number) => Promise.resolve('a'),
++                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
++
++
+ Error ------------------------------------------------------------------------------------------------- optional.js:13:2
+ 
+ Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
+@@ -349,4 +371,4 @@
+ 
+ 
+ 
+-Found 23 errors
++Found 25 errors
