@@ -255,3 +255,14 @@ let log_when_error (context: string Lazy.t) (result: ('a, string) result) : ('a,
         Hh_logger.error "Error (%s): %s" context msg
   end;
   result
+
+(* Prints and then returns a value. Makes it easy to log an expression without pulling it out into a
+ * separate variable. e.g:
+ * `match some_complex_expression with ...`
+ * could become:
+ * `match some_complex_expression |> id_print "some info" printer with ...`
+ *)
+
+let id_print context f x =
+  Hh_logger.info "%s: %s" context (f x);
+  x
