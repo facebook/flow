@@ -284,13 +284,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "concat",
-               "type": "(...strings: string[]) => string",
+               "type": "(...strings: Array<string>) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
                    {
                      "name": "...strings",
-                     "type": "string[]"
+                     "type": "Array<string>"
                    }
                  ]
                },
@@ -418,7 +418,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "localeCompare",
-               "type": "(that: string, locales?: (string | string[]), options?: Object) => number",
+               "type": "(that: string, locales?: (string | Array<string>), options?: Object) => number",
                "func_details": {
                  "return_type": "number",
                  "params": [
@@ -428,7 +428,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "locales?",
-                     "type": "string | string[]"
+                     "type": "string | Array<string>"
                    },
                    {
                      "name": "options?",
@@ -444,9 +444,9 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "match",
-               "type": "(regexp: (string | RegExp)) => ?string[]",
+               "type": "(regexp: (string | RegExp)) => ?Array<string>",
                "func_details": {
-                 "return_type": "?string[]",
+                 "return_type": "?Array<string>",
                  "params": [
                    {
                      "name": "regexp",
@@ -542,7 +542,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "replace",
-               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: any[]) => string))) => string",
+               "type": "(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
@@ -552,7 +552,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "replaceValue",
-                     "type": "string | ((substring: string, ...args: any[]) => string)"
+                     "type": "string | ((substring: string, ...args: Array<any>) => string)"
                    }
                  ]
                },
@@ -604,9 +604,9 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "split",
-               "type": "(separator?: (string | RegExp), limit?: number) => string[]",
+               "type": "(separator?: (string | RegExp), limit?: number) => Array<string>",
                "func_details": {
-                 "return_type": "string[]",
+                 "return_type": "Array<string>",
                  "params": [
                    {
                      "name": "separator?",
@@ -859,13 +859,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
+               "type": "(locales?: (string | Array<string>), options?: Number$LocaleOptions) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
                    {
                      "name": "locales?",
-                     "type": "string | string[]"
+                     "type": "string | Array<string>"
                    },
                    {
                      "name": "options?",
@@ -1240,7 +1240,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "bind",
-               "type": "(thisArg: any, ...argArray: any[]) => any",
+               "type": "(thisArg: any, ...argArray: Array<any>) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1250,7 +1250,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "any[]"
+                     "type": "Array<any>"
                    }
                  ]
                },
@@ -1262,7 +1262,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "call",
-               "type": "(thisArg: any, ...argArray: any[]) => any",
+               "type": "(thisArg: any, ...argArray: Array<any>) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1272,7 +1272,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "any[]"
+                     "type": "Array<any>"
                    }
                  ]
                },
@@ -1453,7 +1453,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "bind",
-               "type": "(thisArg: any, ...argArray: any[]) => any",
+               "type": "(thisArg: any, ...argArray: Array<any>) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1463,7 +1463,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "any[]"
+                     "type": "Array<any>"
                    }
                  ]
                },
@@ -1475,7 +1475,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "call",
-               "type": "(thisArg: any, ...argArray: any[]) => any",
+               "type": "(thisArg: any, ...argArray: Array<any>) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -1485,7 +1485,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...argArray",
-                     "type": "any[]"
+                     "type": "Array<any>"
                    }
                  ]
                },
@@ -1720,13 +1720,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleString",
-               "type": "(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
+               "type": "(locales?: (string | Array<string>), options?: Number$LocaleOptions) => string",
                "func_details": {
                  "return_type": "string",
                  "params": [
                    {
                      "name": "locales?",
-                     "type": "string | string[]"
+                     "type": "string | Array<string>"
                    },
                    {
                      "name": "options?",
@@ -2329,7 +2329,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "objectAssign",
-               "type": "(target: any, ...sources: any[]) => any",
+               "type": "(target: any, ...sources: Array<any>) => any",
                "func_details": {
                  "return_type": "any",
                  "params": [
@@ -2339,7 +2339,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...sources",
-                     "type": "any[]"
+                     "type": "Array<any>"
                    }
                  ]
                },
@@ -2351,13 +2351,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "mixin",
-               "type": "(...objects: Object[]) => class Object",
+               "type": "(...objects: Array<Object>) => class Object",
                "func_details": {
                  "return_type": "class Object",
                  "params": [
                    {
                      "name": "...objects",
-                     "type": "Object[]"
+                     "type": "Array<Object>"
                    }
                  ]
                },
@@ -2369,7 +2369,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "mergeInto",
-               "type": "(target: Object, ...objects: Object[]) => void",
+               "type": "(target: Object, ...objects: Array<Object>) => void",
                "func_details": {
                  "return_type": "void",
                  "params": [
@@ -2379,7 +2379,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...objects",
-                     "type": "Object[]"
+                     "type": "Array<Object>"
                    }
                  ]
                },
@@ -2391,7 +2391,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "mergeDeepInto",
-               "type": "(target: Object, ...objects: Object[]) => void",
+               "type": "(target: Object, ...objects: Array<Object>) => void",
                "func_details": {
                  "return_type": "void",
                  "params": [
@@ -2401,7 +2401,7 @@ export default suite(({addFile, flowCmd}) => [
                    },
                    {
                      "name": "...objects",
-                     "type": "Object[]"
+                     "type": "Array<Object>"
                    }
                  ]
                },
@@ -2413,13 +2413,13 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "merge",
-               "type": "(...objects: Object[]) => Object",
+               "type": "(...objects: Array<Object>) => Object",
                "func_details": {
                  "return_type": "Object",
                  "params": [
                    {
                      "name": "...objects",
-                     "type": "Object[]"
+                     "type": "Array<Object>"
                    }
                  ]
                },

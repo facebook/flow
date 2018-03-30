@@ -159,8 +159,11 @@ str.js = {
     },
     {
       "name":"concat",
-      "type":"(...strings: string[]) => string",
-      "func_details":{"return_type":"string","params":[{"name":"...strings","type":"string[]"}]},
+      "type":"(...strings: Array<string>) => string",
+      "func_details":{
+        "return_type":"string",
+        "params":[{"name":"...strings","type":"Array<string>"}]
+      },
       "path":"[LIB] core.js",
       "line":307,
       "endline":307,
@@ -241,12 +244,12 @@ str.js = {
     },
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: (string | string[]), options?: Object) => number",
+      "type":"(that: string, locales?: (string | Array<string>), options?: Object) => number",
       "func_details":{
         "return_type":"number",
         "params":[
           {"name":"that","type":"string"},
-          {"name":"locales?","type":"string | string[]"},
+          {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Object"}
         ]
       },
@@ -258,9 +261,9 @@ str.js = {
     },
     {
       "name":"match",
-      "type":"(regexp: (string | RegExp)) => ?string[]",
+      "type":"(regexp: (string | RegExp)) => ?Array<string>",
       "func_details":{
-        "return_type":"?string[]",
+        "return_type":"?Array<string>",
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
@@ -317,14 +320,14 @@ str.js = {
     },
     {
       "name":"replace",
-      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: any[]) => string))) => string",
+      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string",
       "func_details":{
         "return_type":"string",
         "params":[
           {"name":"searchValue","type":"string | RegExp"},
           {
             "name":"replaceValue",
-            "type":"string | ((substring: string, ...args: any[]) => string)"
+            "type":"string | ((substring: string, ...args: Array<any>) => string)"
           }
         ]
       },
@@ -359,9 +362,9 @@ str.js = {
     },
     {
       "name":"split",
-      "type":"(separator?: (string | RegExp), limit?: number) => string[]",
+      "type":"(separator?: (string | RegExp), limit?: number) => Array<string>",
       "func_details":{
-        "return_type":"string[]",
+        "return_type":"Array<string>",
         "params":[
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
@@ -528,11 +531,11 @@ num.js = {
     },
     {
       "name":"toLocaleString",
-      "type":"(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
+      "type":"(locales?: (string | Array<string>), options?: Number$LocaleOptions) => string",
       "func_details":{
         "return_type":"string",
         "params":[
-          {"name":"locales?","type":"string | string[]"},
+          {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Number$LocaleOptions"}
         ]
       },
@@ -763,10 +766,10 @@ function_builtins.js = {
     },
     {
       "name":"bind",
-      "type":"(thisArg: any, ...argArray: any[]) => any",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
       },
       "path":"[LIB] core.js",
       "line":108,
@@ -776,10 +779,10 @@ function_builtins.js = {
     },
     {
       "name":"call",
-      "type":"(thisArg: any, ...argArray: any[]) => any",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
       },
       "path":"[LIB] core.js",
       "line":109,
@@ -906,10 +909,10 @@ fun.js = {
     },
     {
       "name":"bind",
-      "type":"(thisArg: any, ...argArray: any[]) => any",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
       },
       "path":"[LIB] core.js",
       "line":108,
@@ -919,10 +922,10 @@ fun.js = {
     },
     {
       "name":"call",
-      "type":"(thisArg: any, ...argArray: any[]) => any",
+      "type":"(thisArg: any, ...argArray: Array<any>) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"any[]"}]
+        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
       },
       "path":"[LIB] core.js",
       "line":109,
@@ -1080,11 +1083,11 @@ typeparams.js = {
     },
     {
       "name":"toLocaleString",
-      "type":"(locales?: (string | string[]), options?: Number$LocaleOptions) => string",
+      "type":"(locales?: (string | Array<string>), options?: Number$LocaleOptions) => string",
       "func_details":{
         "return_type":"string",
         "params":[
-          {"name":"locales?","type":"string | string[]"},
+          {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Number$LocaleOptions"}
         ]
       },
@@ -1466,10 +1469,10 @@ customfun.js = {
     },
     {
       "name":"objectAssign",
-      "type":"(target: any, ...sources: any[]) => any",
+      "type":"(target: any, ...sources: Array<any>) => any",
       "func_details":{
         "return_type":"any",
-        "params":[{"name":"target","type":"any"},{"name":"...sources","type":"any[]"}]
+        "params":[{"name":"target","type":"any"},{"name":"...sources","type":"Array<any>"}]
       },
       "path":"customfun.js",
       "line":9,
@@ -1479,10 +1482,10 @@ customfun.js = {
     },
     {
       "name":"mixin",
-      "type":"(...objects: Object[]) => class Object",
+      "type":"(...objects: Array<Object>) => class Object",
       "func_details":{
         "return_type":"class Object",
-        "params":[{"name":"...objects","type":"Object[]"}]
+        "params":[{"name":"...objects","type":"Array<Object>"}]
       },
       "path":"customfun.js",
       "line":7,
@@ -1492,10 +1495,13 @@ customfun.js = {
     },
     {
       "name":"mergeInto",
-      "type":"(target: Object, ...objects: Object[]) => void",
+      "type":"(target: Object, ...objects: Array<Object>) => void",
       "func_details":{
         "return_type":"void",
-        "params":[{"name":"target","type":"Object"},{"name":"...objects","type":"Object[]"}]
+        "params":[
+          {"name":"target","type":"Object"},
+          {"name":"...objects","type":"Array<Object>"}
+        ]
       },
       "path":"customfun.js",
       "line":6,
@@ -1505,10 +1511,13 @@ customfun.js = {
     },
     {
       "name":"mergeDeepInto",
-      "type":"(target: Object, ...objects: Object[]) => void",
+      "type":"(target: Object, ...objects: Array<Object>) => void",
       "func_details":{
         "return_type":"void",
-        "params":[{"name":"target","type":"Object"},{"name":"...objects","type":"Object[]"}]
+        "params":[
+          {"name":"target","type":"Object"},
+          {"name":"...objects","type":"Array<Object>"}
+        ]
       },
       "path":"customfun.js",
       "line":5,
@@ -1518,8 +1527,11 @@ customfun.js = {
     },
     {
       "name":"merge",
-      "type":"(...objects: Object[]) => Object",
-      "func_details":{"return_type":"Object","params":[{"name":"...objects","type":"Object[]"}]},
+      "type":"(...objects: Array<Object>) => Object",
+      "func_details":{
+        "return_type":"Object",
+        "params":[{"name":"...objects","type":"Array<Object>"}]
+      },
       "path":"customfun.js",
       "line":4,
       "endline":4,
@@ -1642,8 +1654,11 @@ if.js = {
     },
     {
       "name":"concat",
-      "type":"(...strings: string[]) => string",
-      "func_details":{"return_type":"string","params":[{"name":"...strings","type":"string[]"}]},
+      "type":"(...strings: Array<string>) => string",
+      "func_details":{
+        "return_type":"string",
+        "params":[{"name":"...strings","type":"Array<string>"}]
+      },
       "path":"[LIB] core.js",
       "line":307,
       "endline":307,
@@ -1724,12 +1739,12 @@ if.js = {
     },
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: (string | string[]), options?: Object) => number",
+      "type":"(that: string, locales?: (string | Array<string>), options?: Object) => number",
       "func_details":{
         "return_type":"number",
         "params":[
           {"name":"that","type":"string"},
-          {"name":"locales?","type":"string | string[]"},
+          {"name":"locales?","type":"string | Array<string>"},
           {"name":"options?","type":"Object"}
         ]
       },
@@ -1741,9 +1756,9 @@ if.js = {
     },
     {
       "name":"match",
-      "type":"(regexp: (string | RegExp)) => ?string[]",
+      "type":"(regexp: (string | RegExp)) => ?Array<string>",
       "func_details":{
-        "return_type":"?string[]",
+        "return_type":"?Array<string>",
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
@@ -1800,14 +1815,14 @@ if.js = {
     },
     {
       "name":"replace",
-      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: any[]) => string))) => string",
+      "type":"(searchValue: (string | RegExp), replaceValue: (string | ((substring: string, ...args: Array<any>) => string))) => string",
       "func_details":{
         "return_type":"string",
         "params":[
           {"name":"searchValue","type":"string | RegExp"},
           {
             "name":"replaceValue",
-            "type":"string | ((substring: string, ...args: any[]) => string)"
+            "type":"string | ((substring: string, ...args: Array<any>) => string)"
           }
         ]
       },
@@ -1842,9 +1857,9 @@ if.js = {
     },
     {
       "name":"split",
-      "type":"(separator?: (string | RegExp), limit?: number) => string[]",
+      "type":"(separator?: (string | RegExp), limit?: number) => Array<string>",
       "func_details":{
-        "return_type":"string[]",
+        "return_type":"Array<string>",
         "params":[
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}

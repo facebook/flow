@@ -39,6 +39,12 @@ printf "array.js:6:15 = "
 assert_ok "$FLOW" type-at-pos array.js 6 15 --strip-root --pretty
 printf "array.js:10:15 = "
 assert_ok "$FLOW" type-at-pos array.js 10 15 --strip-root --pretty
+printf "array.js:15:4 = "
+assert_ok "$FLOW" type-at-pos array.js 15 4 --strip-root --pretty
+printf "array.js:19:4 = "
+assert_ok "$FLOW" type-at-pos array.js 19 4 --strip-root --pretty
+printf "array.js:23:4 = "
+assert_ok "$FLOW" type-at-pos array.js 23 4 --strip-root --pretty
 
 # class_poly.js
 printf "class_poly.js:5:8 = "

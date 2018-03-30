@@ -82,7 +82,7 @@ let type_ ?(size=5000) t =
         ~sep:(fuse [pretty_space; Atom "=>"])
         func
     | Obj obj -> type_object ~depth obj
-    | Arr t -> fuse [type_ ~depth t; Atom "[]"]
+    | Arr t -> fuse [Atom "Array<"; type_ ~depth t; Atom ">"]
     | Generic (sym, _, ts) -> type_generic ~depth sym ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
