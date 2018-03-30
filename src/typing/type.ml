@@ -536,7 +536,7 @@ module rec TypeTerm : sig
     | ExportNamedT of
         reason
         * bool (* skip_duplicates *)
-        * t SMap.t (* exports_tmap *)
+        * (Loc.t option * t) SMap.t (* exports_tmap *)
         * t_out
     | ExportTypeT of
         reason
@@ -1329,7 +1329,7 @@ end = struct
   let extract_named_exports pmap =
     SMap.fold (fun x p tmap ->
       match Property.read_t p with
-      | Some t -> SMap.add x t tmap
+      | Some t -> SMap.add x (Property.read_loc p, t) tmap
       | None -> tmap
     ) pmap SMap.empty
 
@@ -1349,7 +1349,7 @@ end = struct
 end
 
 and Exports : sig
-  type t = TypeTerm.t SMap.t
+  type t = (Loc.t option * TypeTerm.t) SMap.t
 
   type id
   module Map : MyMap.S with type key = id
@@ -1358,7 +1358,7 @@ and Exports : sig
   val mk_id: unit -> id
   val string_of_id: id -> string
 end = struct
-  type t = TypeTerm.t SMap.t
+  type t = (Loc.t option * TypeTerm.t) SMap.t
 
   type id = int
   module Map : MyMap.S with type key = id = MyMap.Make(struct

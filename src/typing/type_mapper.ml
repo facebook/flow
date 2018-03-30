@@ -419,7 +419,11 @@ class ['a] t = object(self)
 
   method exports cx map_cx id =
     let exps = Context.find_exports cx id in
-    let exps' = SMap.ident_map (self#type_ cx map_cx) exps in
+    let map_loc_type_pair ((loc, t) as orig) =
+      let t' = self#type_ cx map_cx t in
+      if t == t' then orig else (loc, t')
+    in
+    let exps' = SMap.ident_map map_loc_type_pair exps in
     if exps == exps' then id
     else Context.make_export_map cx exps'
 
@@ -766,7 +770,11 @@ class ['a] t = object(self)
         if t1' == t1 && t2' == t2 then t
         else CopyTypeExportsT (r, t1', t2')
     | ExportNamedT (r, skip, tmap, t') ->
-        let tmap' = SMap.ident_map (self#type_ cx map_cx) tmap in
+        let map_loc_type_pair ((loc, t) as orig) =
+          let t' = self#type_ cx map_cx t in
+          if t == t' then orig else (loc, t')
+        in
+        let tmap' = SMap.ident_map map_loc_type_pair tmap in
         let t'' = self#type_ cx map_cx t' in
         if tmap' == tmap && t'' == t' then t
         else ExportNamedT (r, skip, tmap', t'')

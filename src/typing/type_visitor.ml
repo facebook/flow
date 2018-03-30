@@ -445,7 +445,8 @@ class ['a] t = object(self)
     acc
 
   | ExportNamedT (_, _, ts, tout) ->
-    let acc = self#smap (self#type_ cx pole_TODO) acc ts in
+    let visit_pair acc (_loc, t) = self#type_ cx pole_TODO acc t in
+    let acc = self#smap visit_pair acc ts in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
@@ -645,8 +646,9 @@ class ['a] t = object(self)
       acc
 
   method exports cx pole acc id =
+    let visit_pair acc (_loc, t) = self#type_ cx pole acc t in
     Context.find_exports cx id
-    |> self#smap (self#type_ cx pole) acc
+    |> self#smap visit_pair acc
 
   method eval_id cx pole acc id =
     match IMap.get id (Context.evaluated cx) with

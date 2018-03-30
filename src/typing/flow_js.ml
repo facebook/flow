@@ -1774,10 +1774,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* util that grows a module by adding named exports from a given map *)
     | (ModuleT(_, exports, _), ExportNamedT(_, skip_dupes, tmap, t_out)) ->
-      tmap |> SMap.iter (fun name t ->
+      tmap |> SMap.iter (fun name (loc, t) ->
         if skip_dupes && Context.has_export cx exports.exports_tmap name
         then ()
-        else Context.set_export cx exports.exports_tmap name t
+        else Context.set_export cx exports.exports_tmap name (loc, t)
       );
       rec_flow_t cx trace (l, t_out)
 
@@ -1799,6 +1799,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ModuleT(_, source_exports, _),
       CopyTypeExportsT(reason, target_module_t, t_out) ->
       let source_exports = Context.find_exports cx source_exports.exports_tmap in
+      (* Remove locations. TODO at some point we may want to include them here. *)
+      let source_exports = SMap.map snd source_exports in
       let target_module_t =
         SMap.fold (fun export_name export_t target_module_t ->
           Tvar.mk_where cx reason (fun t -> rec_flow cx trace (
@@ -1828,7 +1830,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (target_module_t, ExportNamedT(
           reason,
           skip_dupes,
-          SMap.singleton export_name l,
+          (* TODO we may want to add location information here *)
+          SMap.singleton export_name (None, l),
           t_out
         ))
       else
@@ -1950,8 +1953,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
-          (* TODO this Field should probably have a location *)
-          let props = SMap.map (fun t -> Field (None, t, Neutral)) exports_tmap in
+          let props = SMap.map (fun (loc, t) -> Field (loc, t, Neutral)) exports_tmap in
           Obj_type.mk_with_proto cx reason
             ~sealed:true ~frozen:true ~props proto
       ) in
@@ -1961,8 +1963,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ModuleT(_, exports, imported_is_strict), ImportModuleNsT(reason, t, is_strict)) ->
       check_nonstrict_import cx trace is_strict imported_is_strict reason;
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      (* TODO this Field should probably have a location *)
-      let props = SMap.map (fun t -> Field (None, t, Neutral)) exports_tmap in
+      let props = SMap.map (fun (loc, t) -> Field (loc, t, Neutral)) exports_tmap in
       let props = match exports.cjs_export with
       | Some t ->
         (* TODO this Field should probably have a location *)
@@ -1993,7 +1994,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | None ->
             let exports_tmap = Context.find_exports cx exports.exports_tmap in
             match SMap.get "default" exports_tmap with
-              | Some t -> t
+              | Some (_, t) -> t
               | None ->
                 (**
                  * A common error while using `import` syntax is to forget or
@@ -2042,6 +2043,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          *)
         let exports_tmap = (
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
+          (* Drop locations; they are not needed here *)
+          let exports_tmap = SMap.map snd exports_tmap in
           match exports.cjs_export with
           | Some t -> SMap.add "default" t exports_tmap
           | None -> exports_tmap
@@ -11695,8 +11698,6 @@ end = struct
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | SuccessModule (ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}, _)) ->
         let named_exports = Context.find_exports cx exports_tmap in
-        (* Stub out the identifier locations. It would be nice to get actual locations in here at some point *)
-        let named_exports = SMap.map (fun t -> None, t) named_exports in
         let cjs_export =
           match cjs_export with
           | Some t -> Some (resolve_type cx t)
@@ -11910,7 +11911,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export=_; }, _) ->
     Context.find_exports cx exports_tmap
-      |> SMap.iter (fun _ -> recurse ~infer:true);
+      |> SMap.iter (fun _ (_, t) -> recurse ~infer:true t);
     begin match cjs_export with
     | Some t -> recurse ~infer:true t
     | None -> ()

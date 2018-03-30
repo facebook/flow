@@ -1611,7 +1611,8 @@ and statement cx = Ast.Statement.(
       in
       let type_exports = SMap.fold (fun x entry acc ->
         match entry with
-        | Type {_type; _} -> SMap.add x _type acc
+        (* TODO we may want to provide a location here *)
+        | Type {_type; _} -> SMap.add x (None, _type) acc
         | Value _ | Class _ -> acc
       ) module_scope.entries SMap.empty in
       set_module_t cx reason (fun t ->
@@ -1964,7 +1965,8 @@ and export_statement cx loc
     set_module_t cx reason (fun t ->
       Flow.flow cx (
         module_t_of_cx cx,
-        ExportNamedT(reason, false, SMap.singleton local_name local_tvar, t)
+        (* TODO we may need a more precise loc here *)
+        ExportNamedT(reason, false, SMap.singleton local_name (Some loc, local_tvar), t)
       )
     )
   ) in
@@ -2032,7 +2034,8 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            ExportNamedT(reason, false, SMap.singleton remote_name local_tvar, t)
+            (* TODO we may need a more precise loc here *)
+            ExportNamedT(reason, false, SMap.singleton remote_name (Some loc, local_tvar), t)
           )
         )
       ) in
@@ -2082,7 +2085,8 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            ExportNamedT(reason, false, SMap.singleton name remote_namespace_t, t)
+            (* TODO we may need a more precise loc here *)
+            ExportNamedT(reason, false, SMap.singleton name (Some loc, remote_namespace_t), t)
           )
         )
       | None ->

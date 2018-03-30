@@ -293,7 +293,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     | None -> JSON_Null
     in
     [
-      "namedExports", json_of_tmap json_cx tmap;
+      "namedExports", json_of_loc_tmap json_cx tmap;
       "cjsExport", cjs_export;
       "hasEveryNamedExport", JSON_Bool has_every_named_export;
       "isStrict", JSON_Bool is_strict;
@@ -708,7 +708,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
   | ExportNamedT (_, skip_dupes, tmap, t_out) -> [
       "skip_duplicates", JSON_Bool skip_dupes;
-      "tmap", json_of_tmap json_cx tmap;
+      "tmap", json_of_loc_tmap json_cx tmap;
       "t_out", _json_of_t json_cx t_out;
     ]
   | ExportTypeT (_, skip_dupes, name, t, t_out) -> [
@@ -1190,6 +1190,14 @@ and json_of_tmap_impl json_cx bindings = Hh_json.(
   JSON_Array (List.rev lst)
 )
 
+and json_of_loc_tmap json_cx = check_depth json_of_loc_tmap_impl json_cx
+and json_of_loc_tmap_impl json_cx bindings = Hh_json.(
+  let lst = SMap.fold (fun name (loc, t) acc ->
+    json_of_type_binding_with_loc json_cx (name, (loc, t)) :: acc
+  ) bindings [] in
+  JSON_Array (List.rev lst)
+)
+
 and json_of_pmap json_cx = check_depth json_of_pmap_impl json_cx
 and json_of_pmap_impl json_cx bindings = Hh_json.(
   let lst = SMap.fold (fun name p acc ->
@@ -1241,6 +1249,19 @@ and json_of_prop_impl json_cx p = Hh_json.(
 and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, t) = Hh_json.(
   JSON_Object ["name", JSON_String name; "type", _json_of_t json_cx t]
+)
+
+and json_of_type_binding_with_loc json_cx = check_depth json_of_type_binding_with_loc_impl json_cx
+and json_of_type_binding_with_loc_impl json_cx (name, (loc, t)) = Hh_json.(
+  let loc_json = match loc with
+    | None -> Hh_json.JSON_Null
+    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root loc
+  in
+  JSON_Object [
+    "name", JSON_String name;
+    "type", _json_of_t json_cx t;
+    "loc", loc_json
+  ]
 )
 
 and json_of_pred json_cx = check_depth json_of_pred_impl json_cx

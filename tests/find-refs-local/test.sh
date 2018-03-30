@@ -112,3 +112,6 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root jsx.js 5 7
 
 printf "declare var: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root declare.js 3 13
+
+printf 'object created via `import *`: '
+assert_ok "$FLOW" find-refs --json --pretty --strip-root importStar.js 5 10

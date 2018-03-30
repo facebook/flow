@@ -1027,3 +1027,21 @@ declare var: {
     }
   ]
 }
+object created via `import *`: {
+  "kind":"symbol-found",
+  "name":"ExternalClass",
+  "locs":[
+    {
+      "source":"importStar.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":10,"offset":63},
+      "end":{"line":5,"column":22,"offset":76}
+    },
+    {
+      "source":"importStar.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":10,"offset":87},
+      "end":{"line":6,"column":22,"offset":100}
+    }
+  ]
+}

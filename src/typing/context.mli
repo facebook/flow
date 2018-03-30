@@ -173,7 +173,7 @@ val has_prop: t -> Type.Properties.id -> string -> bool
 val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
 val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit
 val has_export: t -> Type.Exports.id -> string -> bool
-val set_export: t -> Type.Exports.id -> string -> Type.t -> unit
+val set_export: t -> Type.Exports.id -> string -> (Loc.t option * Type.t) -> unit
 
 (* constructors *)
 val make_property_map: t -> Type.Properties.t -> Type.Properties.id
