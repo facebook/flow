@@ -11499,6 +11499,9 @@ module Members : sig
     (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
   ) generic_t
 
+  (* For debugging purposes *)
+  val string_of_extracted_type: (Type.t, Type.t) generic_t -> string
+
   val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
@@ -11519,6 +11522,13 @@ end = struct
     (* Success *) (Loc.t option * Type.t) SMap.t,
     (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
   ) generic_t
+
+  let string_of_extracted_type = function
+    | Success t -> Printf.sprintf "Success (%s)" (Type.string_of_ctor t)
+    | SuccessModule t -> Printf.sprintf "SuccessModule (%s)" (Type.string_of_ctor t)
+    | FailureNullishType -> "FailureNullishType"
+    | FailureAnyType -> "FailureAnyType"
+    | FailureUnhandledType t -> Printf.sprintf "FailureUnhandledType (%s)" (Type.string_of_ctor t)
 
   let to_command_result = function
     | Success map

@@ -99,6 +99,9 @@ module Members : sig
     (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
   ) generic_t
 
+  (* For debugging purposes *)
+  val string_of_extracted_type: (Type.t, Type.t) generic_t -> string
+
   val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
