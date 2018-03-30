@@ -105,6 +105,64 @@ let empty_file_sig = {
   tolerable_errors = [];
 }
 
+let to_string t =
+  let string_of_option f = function
+  | None -> "None"
+  | Some x -> Printf.sprintf "Some (%s)" (f x)
+  in
+  let items_to_collection_string indent open_ close items =
+    let indent_str = String.make (indent * 2) ' ' in
+    let items_str =
+      items
+      |> List.map (Printf.sprintf "%s%s;\n" (indent_str ^ "  "))
+      |> String.concat ""
+    in
+    Printf.sprintf "%s\n%s%s%s" open_ items_str indent_str close
+  in
+  let items_to_list_string indent items =
+    items_to_collection_string indent "[" "]" items
+  in
+  let items_to_record_string indent items =
+    let items = items |> List.map (fun (label, value) ->
+      Printf.sprintf "%s: %s" label value
+    ) in
+    items_to_collection_string indent "{" "}" items
+  in
+  let string_of_module_sig module_sig =
+    let string_of_require_list require_list =
+      let string_of_require_bindings = function
+      | BindIdent (_, name) -> "BindIdent: " ^ name
+      | BindNamed _ -> "BindNamed"
+      in
+      let string_of_require = function
+      | Require {source=(_, name); bindings; _} ->
+        Printf.sprintf "Require (%s, %s)"
+          name
+          (string_of_option string_of_require_bindings bindings)
+      | ImportDynamic _ -> "ImportDynamic"
+      | Import0 _ -> "Import0"
+      | Import _ -> "Import"
+      in
+      items_to_list_string 2 (List.map string_of_require require_list)
+    in
+    let string_of_module_kind _ = "TODO" in
+    let string_of_type_export_map _ = "TODO" in
+    let string_of_export_star_map _ = "TODO" in
+    items_to_record_string 1 [
+      "requires", string_of_require_list module_sig.requires;
+      "module_kind", string_of_module_kind module_sig.module_kind;
+      "type_exports_named", string_of_type_export_map module_sig.type_exports_named;
+      "type_exports_star", string_of_export_star_map module_sig.type_exports_star;
+    ]
+  in
+  let string_of_declare_modules _ = "TODO" in
+  let string_of_tolerable_errors _ = "TODO" in
+  items_to_record_string 0 [
+    "module_sig", string_of_module_sig t.module_sig;
+    "declare_modules", string_of_declare_modules t.declare_modules;
+    "tolerable_errors", string_of_tolerable_errors t.tolerable_errors;
+  ]
+
 let combine_nel _ a b = Some (Nel.concat (a, [b]))
 
 let require_loc_map msig =
