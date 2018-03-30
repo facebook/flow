@@ -15,13 +15,16 @@ module E = Ast_builder.Expressions
 module J = Ast_builder.JSXs
 module L = Layout_builder
 
+let space_regex = Str.regexp_string " "
+
 let assert_output ~ctxt ?msg ?(pretty=false) expected_str layout =
   let print =
     if pretty then Pretty_printer.print ~source_maps:None
     else Compact_printer.print ~source_maps:None
   in
   let out = String.trim (print layout |> Source.contents) in
-  assert_equal ~ctxt ?msg ~printer:(fun x -> x) expected_str out
+  let printer x = Str.global_replace space_regex "\xE2\x90\xA3" x (* open box *) in
+  assert_equal ~ctxt ?msg ~printer expected_str out
 
 let assert_expression
     ~ctxt ?msg ?pretty ?(expr_ctxt=Js_layout_generator.normal_context)
@@ -185,6 +188,13 @@ let tests = "js_layout_generator" >::: [
       ] in
       assert_expression ~ctxt ~msg:"string literal keys should be quoted"
         "{\"foo\":\"bar\"}" ast
+    end;
+
+  "object_property_key_is_computed" >::
+    begin fun ctxt ->
+      assert_expression_string ~ctxt ~pretty:true (
+        "{\n  [\n    " ^ String.make 80 'b' ^ "\n  ]: 123,\n}"
+      );
     end;
 
   "do_while_semicolon" >::

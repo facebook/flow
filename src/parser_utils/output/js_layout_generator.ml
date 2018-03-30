@@ -40,7 +40,12 @@ let context_after_token ctxt = { ctxt with left = Normal_left }
 let not_supported loc message = failwith (message ^ " at " ^ Loc.to_string loc)
 let with_semicolon node = fuse [node; Atom ";"]
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
-let wrap_in_parens item = list ~wrap:(Atom "(", Atom ")") [item]
+let wrap_in_parens item =
+  fuse [
+    Atom "(";
+    Sequence ({ seq with break=Break_if_needed }, [item]);
+    Atom ")";
+  ]
 let wrap_in_parens_on_break item = list
   ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty))
   [item]
@@ -949,7 +954,11 @@ and pattern_object_property_key = Ast.Pattern.Object.(function
   | Property.Literal lit -> literal lit
   | Property.Identifier ident -> identifier ident
   | Property.Computed expr ->
-    list ~wrap:(Atom "[", Atom "]") [expression expr]
+    fuse [
+      Atom "[";
+      Sequence ({ seq with break=Break_if_needed }, [expression expr]);
+      Atom "]";
+    ]
   )
 
 and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
@@ -1389,7 +1398,11 @@ and object_property_key key =
   | O.Property.Literal lit -> literal lit
   | O.Property.Identifier ident -> identifier ident
   | O.Property.Computed expr ->
-    list ~wrap:(Atom "[", Atom "]") [expression expr]
+    fuse [
+      Atom "[";
+      Sequence ({ seq with break=Break_if_needed }, [expression expr]);
+      Atom "]";
+    ]
   | O.Property.PrivateName _ ->
      failwith "Internal Error: Found object prop with private name"
 

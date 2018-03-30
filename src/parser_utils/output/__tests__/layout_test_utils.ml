@@ -50,10 +50,8 @@ module Layout_builder = struct
     IfBreak (Empty, IfPretty (Atom " ", Empty))
 
   let wrap_in_parens x =
-    sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-      fused [
-        atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")";
-      ];
+    fused [
+      atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")";
     ]
 
   type printer_pos = Word of string | Phrase of string

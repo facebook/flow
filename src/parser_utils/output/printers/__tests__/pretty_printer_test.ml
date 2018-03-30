@@ -138,4 +138,39 @@ let tests = "pretty_printer" >::: [
          the Concat and last Atom. *)
       assert_pretty_print ~ctxt (a40 ^ a40 ^ "\n" ^ a40) layout;
     end;
+
+  "break_if_needed_sequence_inside_concat" >::
+    begin fun ctxt ->
+      let a80 = String.make 80 'A' in
+
+      (* fits in 80 cols *)
+      let layout =
+        Concat [
+          Atom "(";
+          Sequence ({ break = Break_if_needed; inline = (false, false); indent = 2 }, [Atom "a"]);
+          Atom ")";
+        ]
+      in
+      assert_pretty_print ~ctxt "(a)" layout;
+
+      (* doesn't fit in 80 cols, so indents *)
+      let layout =
+        Concat [
+          Atom "(";
+          Sequence ({ break = Break_if_needed; inline = (false, false); indent = 2 }, [Atom a80]);
+          Atom ")";
+        ]
+      in
+      assert_pretty_print ~ctxt ("(\n  "^a80^"\n)") layout;
+
+      (* doesn't fit in 80 cols, but doesn't indent *)
+      let layout =
+        Concat [
+          Atom "(";
+          Sequence ({ break = Break_if_needed; inline = (true, true); indent = 2 }, [Atom a80]);
+          Atom ")";
+        ]
+      in
+      assert_pretty_print ~ctxt ("("^a80^")") layout;
+    end;
 ]
