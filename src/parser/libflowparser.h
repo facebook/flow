@@ -96,10 +96,7 @@ public:
     CAMLparam0();
     CAMLlocal4(content_val, option_val, options_val, result_val);
 
-    static value * func = NULL;
-    if (func == NULL) {
-      func = caml_named_value("flow_parse");
-    }
+    static value * func = caml_named_value("flow_parse");
 
     content_val = caml_copy_string(content);
 
