@@ -2199,13 +2199,18 @@ module Cli_output = struct
         let gutter_space = String.make (gutter_width + 2) ' ' in
         (* Add the overline for our loc. *)
         let lines =
-          if loc.start.line = loc._end.line then
-            lines
+          if loc.start.line = loc._end.line
+          then lines
           else
-            let first_line = Nel.hd line_list in
+            let first_line_len = String.length (Nel.hd line_list) in
+            (* In some cases, we create a location that starts at or after the
+               end of a line. This probably shouldn't happen, but if it does, we
+               can still create an overline with a carat pointing to that column
+               position. *)
+            let first_line_len = max first_line_len (loc.start.column + 1) in
             gutter_space ^
             String.make loc.start.column ' ' ^ "v" ^
-            String.make ((String.length first_line) - loc.start.column - 1) '-' ^ "\n" ^
+            String.make (first_line_len - loc.start.column - 1) '-' ^ "\n" ^
             lines
         in
         (* Add the underline for our loc. *)
