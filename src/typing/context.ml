@@ -347,8 +347,6 @@ let set_export_maps cx export_maps =
   cx.sig_cx.export_maps <- export_maps
 let set_type_graph cx type_graph =
   cx.sig_cx.type_graph <- type_graph
-let set_tvar cx id node =
-  cx.sig_cx.graph <- IMap.add id node cx.sig_cx.graph
 let set_exists_checks cx exists_checks =
   cx.sig_cx.exists_checks <- exists_checks
 let set_exists_excuses cx exists_excuses =
@@ -482,7 +480,7 @@ and find_root cx id =
   match IMap.get id (graph cx) with
   | Some (Goto next_id) ->
       let root_id, root = find_root cx next_id in
-      if root_id != next_id then replace_node cx id (Goto root_id) else ();
+      if root_id != next_id then add_tvar cx id (Goto root_id) else ();
       root_id, root
 
   | Some (Root root) ->
@@ -493,9 +491,6 @@ and find_root cx id =
         (File_key.to_string @@ file cx)
       in
       Utils_js.assert_false msg
-
-(* Replace the node associated with a type variable in the graph. *)
-and replace_node cx id node = set_tvar cx id node
 
 let find_resolved cx = function
   | Type.OpenT (_, id)

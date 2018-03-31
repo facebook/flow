@@ -9236,23 +9236,23 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
       add_upper_edges cx trace (id2, bounds2) (id1, bounds1);
       add_lower_edges cx trace ~opt:true (id2, bounds2) (id1, bounds1);
     );
-    Context.replace_node cx id1 (Goto id2);
+    Context.add_tvar cx id1 (Goto id2);
 
   | Unresolved bounds1, Resolved t2 ->
     let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
-    Context.replace_node cx id1 (Goto id2);
+    Context.add_tvar cx id1 (Goto id2);
 
   | Resolved t1, Unresolved bounds2 ->
     let t1_use = UseT (unify_flip use_op, t1) in
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~use_op ~opt:true t1 (id2, bounds2);
-    Context.replace_node cx id2 (Goto id1);
+    Context.add_tvar cx id2 (Goto id1);
 
   | Resolved t1, Resolved t2 ->
     (* replace node first, in case rec_unify recurses back to these tvars *)
-    Context.replace_node cx id1 (Goto id2);
+    Context.add_tvar cx id1 (Goto id2);
     rec_unify cx trace ~use_op t1 t2;
 
 (* Unify two type variables. This involves finding their roots, and making one
@@ -9265,7 +9265,7 @@ and merge_ids cx trace ~use_op id1 id2 =
   else if root2.rank < root1.rank
   then goto cx trace ~use_op:(unify_flip use_op) (id2, root2) (id1, root1)
   else (
-    Context.replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
+    Context.add_tvar cx id2 (Root { root2 with rank = root1.rank+1; });
     goto cx trace ~use_op (id1, root1) (id2, root2);
   )
 
@@ -9275,7 +9275,7 @@ and resolve_id cx trace ~use_op id t =
   let id, root = Context.find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
-    Context.replace_node cx id (Root { root with constraints = Resolved t });
+    Context.add_tvar cx id (Root { root with constraints = Resolved t });
     edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
     edges_and_flows_from_t cx trace ~use_op ~opt:true t (id, bounds);
 

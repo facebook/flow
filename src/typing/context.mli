@@ -142,7 +142,6 @@ val set_graph: t -> Constraint.node IMap.t -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
-val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
 val set_use_def: t -> Scope_api.info * Ssa_api.values -> unit
@@ -185,6 +184,5 @@ val find_constraints:
   Constraint.ident ->
   Constraint.ident * Constraint.constraints
 val find_graph: t -> Constraint.ident -> Constraint.constraints
-val replace_node: t -> Constraint.ident -> Constraint.node -> unit
 val find_root: t -> Constraint.ident -> Constraint.ident * Constraint.root
 val find_resolved: t -> Type.t -> Type.t option
