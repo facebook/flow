@@ -60,6 +60,7 @@ let info_raw t = File_pos.offset t.pos_start, File_pos.offset t.pos_end
 let length t = File_pos.offset t.pos_end - File_pos.offset t.pos_start
 
 let start_cnum t = File_pos.offset t.pos_start
+let end_cnum t = File_pos.offset t.pos_end
 let line t = File_pos.line t.pos_start
 let end_line t = File_pos.line t.pos_end
 
@@ -197,5 +198,10 @@ module Map = MyMap.Make (struct
   (* The definition below needs to refer to the t in the outer scope, but MyMap
    * expects a module with a type of name t, so we define t in a second step *)
   type t = path
+  let compare = compare
+end)
+
+module AbsolutePosMap = MyMap.Make (struct
+  type t = absolute
   let compare = compare
 end)

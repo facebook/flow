@@ -30,6 +30,8 @@ val filename : 'a pos -> 'a
 
 val start_cnum : 'a pos -> int
 
+val end_cnum : 'a pos -> int
+
 val line : 'a pos -> int
 
 val end_line : 'a pos -> int
@@ -96,6 +98,7 @@ val make_from_file_pos :
 val set_file : 'a -> 'a pos -> 'a pos
 
 module Map : MyMap.S with type key = t
+module AbsolutePosMap : MyMap.S with type key = absolute
 
 
 val print_verbose_absolute : absolute -> string
