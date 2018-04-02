@@ -808,6 +808,14 @@ module ConnectionStatus = struct
 end
 
 
+(* Module for dynamic view, method="workspace/toggleTypeCoverage" *)
+module ToggleTypeCoverage = struct
+  type params = toggleTypeCoverageParams
+  and toggleTypeCoverageParams = {
+    toggle: bool;
+  }
+end
+
 (* ErrorResponse *)
 module Error = struct
   (* Defined by JSON-RPC. *)

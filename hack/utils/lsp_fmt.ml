@@ -708,6 +708,14 @@ let print_typeCoverage (r: TypeCoverage.result) : json =
     "uncoveredRanges", JSON_Array (List.map r.uncoveredRanges ~f:print_uncov)
   ]
 
+(************************************************************************)
+(** workspace/toggleTypeCoverage request                                      **)
+(************************************************************************)
+let parse_toggleTypeCoverage (params: json option)
+  : ToggleTypeCoverage.params =
+  { ToggleTypeCoverage.
+    toggle = Jget.bool_d params "toggle" ~default:false
+  }
 
 (************************************************************************)
 (** textDocument/formatting request                                    **)
