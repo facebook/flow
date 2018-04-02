@@ -7,19 +7,11 @@
 
 open Core_result
 
-let mk_loc file line col =
-  {
-    Loc.
-    source = Some file;
-    start = { Loc.line; column = col; offset = 0; };
-    _end = { Loc.line; column = col + 1; offset = 0; };
-  }
-
 let type_at_pos ~options ~workers ~env ~profiling file content line col =
   let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
   map_error ~f:(fun str -> str, None) result
   >>| (fun (cx, _info) ->
-    let loc = mk_loc file line col in
+    let loc = Loc.make file line col in
     let json_data, loc, ty =
       let mk_data result_str loc ty_json = Hh_json.JSON_Object [
         "result", Hh_json.JSON_String result_str;
