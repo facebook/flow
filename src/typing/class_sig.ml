@@ -243,7 +243,7 @@ let subst_sig cx map s =
   }
 
 let generate_tests cx f x =
-  Flow.generate_tests cx x.instance.reason x.tparams (fun map -> f {
+  Flow.generate_tests cx x.tparams (fun map -> f {
     id = x.id;
     structural = x.structural;
     tparams = x.tparams;

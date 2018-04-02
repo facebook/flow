@@ -130,8 +130,8 @@ let subst cx map x =
   {x with tparams; tparams_map; fparams; return_t}
 
 let generate_tests cx f x =
-  let {reason; tparams; tparams_map; fparams; return_t; _} = x in
-  Flow.generate_tests cx reason tparams (fun map -> f {
+  let {tparams; tparams_map; fparams; return_t; _} = x in
+  Flow.generate_tests cx tparams (fun map -> f {
     x with
     tparams_map = SMap.map (Flow.subst cx map) tparams_map;
     fparams = Func_params.subst cx map fparams;

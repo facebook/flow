@@ -709,7 +709,7 @@ and statement cx = Ast.Statement.(
       let open Flow in
       let () = match underlying_t, super_t with
       | Some l, Some u ->
-        generate_tests cx r typeparams (fun map_ ->
+        generate_tests cx typeparams (fun map_ ->
           flow_t cx (subst cx map_ l, subst cx map_ u)
         )
       | _ -> ()

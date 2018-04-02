@@ -3739,7 +3739,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
     | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
-        generate_tests cx (reason_of_t l) ids (fun map_ ->
+        generate_tests cx ids (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t))
         )
 
@@ -6724,14 +6724,24 @@ and union_of_ts reason ts =
   *)
 and generate_tests =
   (* make bot type for given param *)
-  let mk_bot reason _ { name; _ } =
+  let mk_bot _ { name; reason; _ } =
     let desc = RPolyTest (name, RIncompatibleInstantiation name) in
     DefT (replace_reason_const desc reason, EmptyT)
   in
   (* make bound type for given param and argument map *)
-  let mk_bound cx prev_args { bound; name; _ } =
-    mod_reason_of_t (replace_reason (fun d -> RPolyTest (name, d)))
-      (subst cx prev_args bound)
+  let mk_bound cx prev_args { bound; name; reason = param_reason; _ } =
+    (* For the top bound, we match the reason locations that appear in the
+     * respective bot bound:
+     * - 'loc' is the location of the type parameter (may be repositioned later)
+     * - 'def_loc' is the location of the type parameter, and
+     * - 'annot_loc_opt' is the location of the bound (if present).
+     *)
+    mod_reason_of_t (fun bound_reason ->
+      let param_loc = Reason.loc_of_reason param_reason in
+      let annot_loc = annot_loc_of_reason bound_reason in
+      let desc = desc_of_reason ~unwrap:false bound_reason in
+      repos_reason param_loc ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc)
+    ) (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
   let mk_argmap mk_arg =
@@ -6740,18 +6750,18 @@ and generate_tests =
     ) SMap.empty
   in
   (* for each p, a map with p bot and others bound + map with all bound *)
-  let linear cx r = function
+  let linear cx = function
   | [] -> [SMap.empty]
   | params ->
     let all = mk_argmap (mk_bound cx) params in
     let each = List.map (fun ({ name; _ } as p) ->
-      SMap.add name (mk_bot r SMap.empty p) all
+      SMap.add name (mk_bot SMap.empty p) all
     ) params in
     List.rev (all :: each)
   in
   (* a map for every combo of bot/bound params *)
-  let powerset cx r params arg_map =
-    let none = mk_argmap (mk_bot r) params in
+  let powerset cx params arg_map =
+    let none = mk_argmap mk_bot params in
     List.fold_left (fun maps ({ name; _ } as p) ->
       let bots = List.map (SMap.add name (SMap.find_unsafe name none)) maps in
       let bounds = List.map (fun m -> SMap.add name (mk_bound cx m p) m) maps in
@@ -6759,12 +6769,12 @@ and generate_tests =
     ) [arg_map] params
   in
   (* main - run f over a collection of arg maps generated for params *)
-  fun cx reason params f ->
+  fun cx params f ->
     if params = [] then f SMap.empty else
     let is_free = function { bound = DefT (_, MixedT _); _ } -> true | _ -> false in
     let free_params, dep_params = List.partition is_free params in
-    let free_sets = linear cx reason free_params in
-    let powersets = List.map (powerset cx reason dep_params) free_sets in
+    let free_sets = linear cx free_params in
+    let powersets = List.map (powerset cx dep_params) free_sets in
     List.iter (TestID.run f) (List.flatten powersets)
 
 (*********************)
