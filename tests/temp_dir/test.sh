@@ -3,7 +3,10 @@
 FLOW=$1
 assert_ok "$FLOW" stop 2> /dev/null > /dev/null
 
-unset FLOW_TEMP_DIR # this is set by runtests.sh
+# These are set by runtests.sh
+unset FLOW_TEMP_DIR
+unset FLOW_LOG_FILE
+unset FLOW_MONITOR_LOG_FILE
 
 echo "--temp-dir:"
 DIR=$(mktemp -d /tmp/flow.XXXXXX)

@@ -347,8 +347,10 @@ let log_file_flags =
     |> collect collector
     |> flag "--log-file" string
         ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+        ~env:"FLOW_LOG_FILE"
     |> flag "--monitor-log-file" string
         ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
+        ~env:"FLOW_MONITOR_LOG_FILE"
   )
 
 let assert_version flowconfig =
