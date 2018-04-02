@@ -222,13 +222,15 @@ module type Handler = sig
   val create_socket_connection:
     autostop:bool -> (Lwt_unix.file_descr * Lwt_unix.sockaddr) ->
     unit Lwt.t
+
+  val name: string
 end
 
 module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
   type acc = bool * Lwt_unix.file_descr
 
   let main (autostop, socket_fd) =
-    Logger.debug "Waiting for a new socket connection";
+    Logger.debug "Waiting for a new %s" Handler.name;
     let%lwt conn = Lwt_unix.accept socket_fd in
     let%lwt () = Handler.create_socket_connection ~autostop conn in
     Lwt.return (autostop, socket_fd)
@@ -239,6 +241,8 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
 end)
 
 module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
+  let name = "socket connection"
+
   let create_socket_connection ~autostop (client_fd, _) =
     let close_without_autostop = close client_fd in
     let close () =
@@ -275,6 +279,7 @@ let run monitor_socket_fd ~autostop =
 
 
 module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
+  let name = "legacy socket connection"
   let create_socket_connection ~autostop:_ (client_fd, _) =
     let close = close client_fd in
     try%lwt
