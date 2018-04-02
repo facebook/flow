@@ -699,7 +699,7 @@ end = struct
         let current_source = Context.file cx in
         (* Locally defined name *)
         if Some current_source = def_source then
-          Ty.Local
+          Ty.Local def_loc
         else (
           (* Otherwise it is one of:
              - Imported, or
@@ -710,9 +710,9 @@ end = struct
           | _ -> Ty.Remote def_loc
         )
       | Some (JsonFile _)
-      | Some (ResourceFile _) -> Ty.Local
+      | Some (ResourceFile _) -> Ty.Local def_loc
       | Some Builtins -> Ty.Builtin
-      | None -> Ty.Local
+      | None -> Ty.Local def_loc
     in
     return (Ty.Symbol (provenance, name))
 

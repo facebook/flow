@@ -99,7 +99,7 @@ and dump_tvar = function
 
 and dump_symbol (Symbol (provenance, name)) =
   match provenance with
-  | Local -> name
+  | Local _ -> name
   | Imported loc -> spf "%s /* imported from file %s */" name (Reason.string_of_loc loc)
   | Remote loc -> spf "%s /* defined in file %s */" name (Reason.string_of_loc loc)
   | Library loc -> spf "%s /* defined in library %s */" name (Reason.string_of_loc loc)

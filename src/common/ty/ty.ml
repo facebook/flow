@@ -6,7 +6,7 @@
  *)
 
 type provenance =
-  | Local               (* Defined locally *)
+  | Local of Loc.t      (* Defined locally *)
   | Imported of Loc.t   (* Defined remotely, imported to file *)
   | Remote of Loc.t     (* Defined remotely, NOT imported to file *)
   | Library of Loc.t    (* Defined in library *)
@@ -148,16 +148,25 @@ let generic_builtin_t name targs =
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }
 
-
-let provenance_to_string = function
-  | Local -> "Local"
+let string_of_provenance_ctor = function
+  | Local _ -> "Local"
   | Imported _ -> "Imported"
-  | Remote loc -> Utils_js.spf "Remote %s" (Reason.string_of_loc loc)
-  | Library loc -> Utils_js.spf "Library %s" (Reason.string_of_loc loc)
+  | Remote _ -> "Remote"
+  | Library _ -> "Library"
   | Builtin -> "Builtin"
 
+let string_of_provenance prov =
+  match prov with
+  | Local loc | Imported loc | Remote loc | Library loc ->
+    Utils_js.spf "%s %s" (string_of_provenance_ctor prov)
+      (Reason.string_of_loc loc)
+  | Builtin -> "Builtin"
+
+let string_of_symbol (Symbol (prov, name)) =
+  Utils_js.spf "%s (%s)" name (string_of_provenance prov)
+
 let loc_of_provenance = function
-  | Local -> Loc.none
+  | Local loc -> loc
   | Imported loc -> loc
   | Remote loc -> loc
   | Library loc -> loc
