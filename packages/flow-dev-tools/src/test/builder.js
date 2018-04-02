@@ -576,14 +576,17 @@ export class TestBuilder {
 
   async forceRecheck(files: Array<string>): Promise<void> {
     if (this.server && (await isRunning(this.server.pid))) {
+      const files_str = files.map(s => `"${s}"`).join(' ');
+      await this.log('Running force-recheck for files: %s', files_str);
       const [err, stdout, stderr] = await execManual(
         format(
           '%s force-recheck --no-auto-start --temp-dir %s %s',
           this.bin,
           this.tmpDir,
-          files.map(s => `"${s}"`).join(' '),
+          files_str,
         ),
       );
+      await this.log('force-recheck finished');
 
       // No server running (6) is ok - the file change might have killed the
       // server and we raced it here
