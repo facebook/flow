@@ -1,11 +1,7 @@
 // @flow
 
-// class_t (t=Ty.This)
 class A {
-  static foo() {
-    this.bar()  // HERE
-  }
-  static bar() {}
+  m() { this; }
 }
 
 // class_t (t=Ty.Any)

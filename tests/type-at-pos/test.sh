@@ -46,44 +46,107 @@ assert_ok "$FLOW" type-at-pos array.js 19 4 --strip-root --pretty
 printf "array.js:23:4 = "
 assert_ok "$FLOW" type-at-pos array.js 23 4 --strip-root --pretty
 
-# class_poly.js
-printf "class_poly.js:5:8 = "
-assert_ok "$FLOW" type-at-pos class_poly.js 5 8 --strip-root --pretty
-printf "class_poly.js:10:32 = "
-assert_ok "$FLOW" type-at-pos class_poly.js 10 32 --strip-root --pretty
-printf "class_poly.js:13:7 = "
-assert_ok "$FLOW" type-at-pos class_poly.js 13 7 --strip-root --pretty
-printf "class_poly.js:22:7 = "
-assert_ok "$FLOW" type-at-pos class_poly.js 22 7 --strip-root --pretty
+# class-0.js
+printf "class-0.js:3:7 = "
+assert_ok "$FLOW" type-at-pos class-0.js 3 7 --strip-root --pretty
+printf "class-0.js:4:3 = "
+assert_ok "$FLOW" type-at-pos class-0.js 4 3 --strip-root --pretty
+printf "class-0.js:4:10 = "
+assert_ok "$FLOW" type-at-pos class-0.js 4 10 --strip-root --pretty
+printf "class-0.js:9:5 = "
+assert_ok "$FLOW" type-at-pos class-0.js 9 5 --strip-root --pretty
+printf "class-0.js:12:5 = "
+assert_ok "$FLOW" type-at-pos class-0.js 12 5 --strip-root --pretty
+printf "class-0.js:15:5 = "
+assert_ok "$FLOW" type-at-pos class-0.js 15 5 --strip-root --pretty
+printf "class-0.js:21:5 = "
+assert_ok "$FLOW" type-at-pos class-0.js 21 5 --strip-root --pretty
+printf "class-0.js:24:5 = "
+assert_ok "$FLOW" type-at-pos class-0.js 24 5 --strip-root --pretty
 
-# class_statics.js
-printf "class_statics.js:4:10 = "
-assert_ok "$FLOW" type-at-pos class_statics.js 4 10 --strip-root --pretty
-printf "class_statics.js:5:10 = "
-assert_ok "$FLOW" type-at-pos class_statics.js 5 10 --strip-root --pretty
-printf "class_statics.js:6:6 = "
-assert_ok "$FLOW" type-at-pos class_statics.js 6 6 --strip-root --pretty
-printf "class_statics.js:10:7 = "
-assert_ok "$FLOW" type-at-pos class_statics.js 10 7 --strip-root --pretty
-printf "class_statics.js:13:7 = "
-assert_ok "$FLOW" type-at-pos class_statics.js 13 7 --strip-root --pretty
-# TODO might want to print "statics of class A" instead
-# printf "class_statics.js:14:7 = "
-# assert_ok "$FLOW" type-at-pos class_statics.js 14 7 --strip-root --pretty
+#class-1.js
+# TODO this is not the ideal type
+printf "class-1.js:4:3 = "
+assert_ok "$FLOW" type-at-pos class-1.js 4 3 --strip-root --pretty
+printf "class-1.js:8:3 = "
+assert_ok "$FLOW" type-at-pos class-1.js 8 3 --strip-root --pretty
 
-# class_t.js
-printf "class_t.js:6:6 = "
-assert_ok "$FLOW" type-at-pos class_t.js 6 6 --strip-root --pretty
-printf "class_t.js:13:5 = "
-assert_ok "$FLOW" type-at-pos class_t.js 13 5 --strip-root --pretty
-printf "class_t.js:16:5 = "
-assert_ok "$FLOW" type-at-pos class_t.js 16 5 --strip-root --pretty
-printf "class_t.js:19:5 = "
-assert_ok "$FLOW" type-at-pos class_t.js 19 5 --strip-root --pretty
-printf "class_t.js:25:5 = "
-assert_ok "$FLOW" type-at-pos class_t.js 25 5 --strip-root --pretty
-printf "class_t.js:28:5 = "
-assert_ok "$FLOW" type-at-pos class_t.js 28 5 --strip-root --pretty
+#class-2.js
+printf "class-2.js:4:3 = "
+assert_ok "$FLOW" type-at-pos class-2.js 4 3 --strip-root --pretty
+# TODO 'this' should not escape
+printf "class-2.js:9:9 = "
+assert_ok "$FLOW" type-at-pos class-2.js 9 9 --strip-root --pretty
+printf "class-2.js:10:9 = "
+assert_ok "$FLOW" type-at-pos class-2.js 10 9 --strip-root --pretty
+printf "class-2.js:12:7 = "
+assert_ok "$FLOW" type-at-pos class-2.js 12 7 --strip-root --pretty
+printf "class-2.js:13:7 = "
+assert_ok "$FLOW" type-at-pos class-2.js 13 7 --strip-root --pretty
+
+#class-3.js
+printf "class-3.js:4:3 = "
+assert_ok "$FLOW" type-at-pos class-3.js 4 3 --strip-root --pretty
+# TODO 'this' should not escape
+printf "class-3.js:9:9 = "
+assert_ok "$FLOW" type-at-pos class-3.js 9 9 --strip-root --pretty
+printf "class-3.js:10:9 = "
+assert_ok "$FLOW" type-at-pos class-3.js 10 9 --strip-root --pretty
+
+# class-poly-0.js
+printf "class-poly-0.js:5:7 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 5 7 --strip-root --pretty
+printf "class-poly-0.js:5:9 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 5 9 --strip-root --pretty
+printf "class-poly-0.js:10:26 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 10 26 --strip-root --pretty
+# TODO constructor
+# printf "class-poly-0.js:11:10 = "
+# assert_ok "$FLOW" type-at-pos class-poly-0.js 11 10 --strip-root --pretty
+printf "class-poly-0.js:12:7 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 12 7 --strip-root --pretty
+printf "class-poly-0.js:16:7 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 16 7 --strip-root --pretty
+printf "class-poly-0.js:16:10 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 16 10 --strip-root --pretty
+printf "class-poly-0.js:17:7 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 17 7 --strip-root --pretty
+
+#class-poly-1.js
+# TODO 'T' should not escape
+printf "class-poly-1.js:9:5 = "
+assert_ok "$FLOW" type-at-pos class-poly-1.js 9 5 --strip-root --pretty
+printf "class-poly-1.js:9:11 = "
+assert_ok "$FLOW" type-at-pos class-poly-1.js 9 11 --strip-root --pretty
+
+# class-statics.js
+printf "class-statics.js:4:10 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 4 10 --strip-root --pretty
+printf "class-statics.js:8:10 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 8 10 --strip-root --pretty
+printf "class-statics.js:9:7 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 9 7 --strip-root --pretty
+printf "class-statics.js:11:8 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 11 8 --strip-root --pretty
+printf "class-statics.js:16:5 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 16 5 --strip-root --pretty
+printf "class-statics.js:17:5 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 17 5 --strip-root --pretty
+
+# class-statics-poly.js
+printf "class-statics-poly.js:4:10 = "
+assert_ok "$FLOW" type-at-pos class-statics-poly.js 4 10 --strip-root --pretty
+printf "class-statics-poly.js:8:10 = "
+assert_ok "$FLOW" type-at-pos class-statics-poly.js 8 10 --strip-root --pretty
+# TODO the type 'Class<A>' is not parseable when 'A' is polymorphic
+printf "class-statics-poly.js:9:7 = "
+assert_ok "$FLOW" type-at-pos class-statics-poly.js 9 7 --strip-root --pretty
+printf "class-statics-poly.js:11:8 = "
+assert_ok "$FLOW" type-at-pos class-statics-poly.js 11 8 --strip-root --pretty
+printf "class-statics-poly.js:16:5 = "
+assert_ok "$FLOW" type-at-pos class-statics-poly.js 16 5 --strip-root --pretty
+printf "class-statics-poly.js:17:5 = "
+assert_ok "$FLOW" type-at-pos class-statics-poly.js 17 5 --strip-root --pretty
 
 # destructuring.js
 printf "destructuring.js:3:6 = "
