@@ -87,7 +87,6 @@ assert_ok "$FLOW" type-at-pos class-2.js 13 7 --strip-root --pretty
 #class-3.js
 printf "class-3.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-3.js 4 3 --strip-root --pretty
-# TODO 'this' should not escape
 printf "class-3.js:9:9 = "
 assert_ok "$FLOW" type-at-pos class-3.js 9 9 --strip-root --pretty
 printf "class-3.js:10:9 = "

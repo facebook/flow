@@ -449,7 +449,7 @@ class-3.js:4:3 = {
   "end":3
 }
 class-3.js:9:9 = {
-  "type":"() => this",
+  "type":"() => A",
   "reasons":[],
   "loc":{
     "source":"class-3.js",
@@ -464,7 +464,7 @@ class-3.js:9:9 = {
   "end":9
 }
 class-3.js:10:9 = {
-  "type":"() => this",
+  "type":"() => B",
   "reasons":[],
   "loc":{
     "source":"class-3.js",

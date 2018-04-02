@@ -99,7 +99,6 @@ let type_ ?(size=5000) t =
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
     | Exists -> Atom "*"
-    | This -> Atom "this"
     | TypeAlias ta -> type_alias ta
     | TypeOf (Symbol (_, n)) -> fuse [Atom "typeof"; space; identifier n]
     | Mu (i, t) ->

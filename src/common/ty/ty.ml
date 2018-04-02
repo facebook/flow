@@ -35,7 +35,6 @@ type t =
   | TypeAlias of type_alias
   | TypeOf of symbol
   | Class of symbol * bool (* structural *) * type_param list option
-  | This
   | Exists
   | Mu of int * t
 

@@ -129,7 +129,6 @@ and dump_t ?(depth = 10) t =
   | Fun f -> dump_fun_t ~depth f
   | Obj o -> dump_obj ~depth o
   | Arr t -> spf "Array<%s>" (dump_t ~depth t)
-  | This -> "this"
   | Tup ts ->
     spf "Tup (%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
   | Union (t1,t2,ts) ->
@@ -186,7 +185,6 @@ let string_of_ctor = function
   | TypeAlias _ -> "TypeAlias"
   | TypeOf _ -> "Typeof"
   | Class _ -> "Class"
-  | This -> "This"
   | Exists -> "Exists"
   | Mu _ -> "Mu"
 
@@ -245,7 +243,6 @@ let rec json_of_t t = Hh_json.(
       "structural", JSON_Bool structural;
       "typeParams", json_of_type_params tparams;
     ]
-  | This
   | Exists -> []
   | Mu (i, t) -> [
       "mu_var", int_ i;

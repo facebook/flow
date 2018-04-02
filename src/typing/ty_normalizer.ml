@@ -461,12 +461,7 @@ end = struct
 
   let rec type__ ~env t = type_with_reason ~env t
 
-  (* Sometimes useful information is encoded within the top-level reason. For
-     example when we normalize the "this" type (RThisType), or a generic
-     parameter (RPolyTest) that has been later instantiated to the type of its
-     bound.
-
-     Before we proceed with expanding the type structure we have one last chance
+  (* Before we proceed with expanding the type structure we have one last chance
      to recover this more useful type and return early from normalizing.
 
      Perhaps more information can be recovered at this point.
@@ -483,9 +478,6 @@ end = struct
   *)
   and type_with_reason ~env t =
     match desc_of_reason ~unwrap:false (Type.reason_of_t t) with
-    (* `this` type: Has to be captured here, otherwise will be repositioned. *)
-    | RThisType -> return Ty.This
-
     (* Bounded type variables are replaced by their bounds during checking. In
        reporting these types we are interested in the original type variable.
     *)
@@ -867,8 +859,8 @@ end = struct
       class_t_aux t1 >>= fun t1 ->
       mapM class_t_aux ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
-    | Ty.This ->
-      return Ty.This
+    | Ty.TVar (Ty.TParam "this") as t ->
+      return t
     | ty ->
       let msg = spf "normalized class arg: %s" (Ty_debug.dump_t ty) in
       terr ~kind:BadClassT ~msg (Some t)
