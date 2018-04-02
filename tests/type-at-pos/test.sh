@@ -194,13 +194,11 @@ printf "function-poly-2.js:4:12 = "
 assert_ok "$FLOW" type-at-pos function-poly-2.js 4 12 --strip-root --pretty
 printf "function-poly-2.js:5:5 = "
 assert_ok "$FLOW" type-at-pos function-poly-2.js 5 5 --strip-root --pretty
-# TODO shadowing Ts
 printf "function-poly-2.js:6:5 = "
 assert_ok "$FLOW" type-at-pos function-poly-2.js 6 5 --strip-root --pretty
 printf "function-poly-2.js:7:12 = "
 assert_ok "$FLOW" type-at-pos function-poly-2.js 7 12 --strip-root --pretty
 printf "function-poly-2.js:9:13 = "
-# TODO shadowing Ts
 assert_ok "$FLOW" type-at-pos function-poly-2.js 9 13 --strip-root --pretty
 printf "function-poly-2.js:11:12 = "
 assert_ok "$FLOW" type-at-pos function-poly-2.js 11 12 --strip-root --pretty

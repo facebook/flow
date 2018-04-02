@@ -1004,7 +1004,7 @@ function-poly-2.js:3:10 = {
   "end":14
 }
 function-poly-2.js:4:12 = {
-  "type":"<T>(x: T, z: T) => T",
+  "type":"<T>(x: T, z: (T | T)) => T",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
@@ -1034,7 +1034,7 @@ function-poly-2.js:5:5 = {
   "end":5
 }
 function-poly-2.js:6:5 = {
-  "type":"<T>(x: T, z: T) => T",
+  "type":"<T>(x: T, z: (T | T)) => T",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",
@@ -1064,7 +1064,7 @@ function-poly-2.js:7:12 = {
   "end":12
 }
 function-poly-2.js:9:13 = {
-  "type":"<T>(x: T, z: T) => T",
+  "type":"<T>(x: T, z: (T | T)) => T",
   "reasons":[],
   "loc":{
     "source":"function-poly-2.js",

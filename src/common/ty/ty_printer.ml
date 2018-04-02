@@ -67,6 +67,7 @@ let type_ ?(size=5000) t =
   and type_impl ~depth (t: Ty.t) =
     match t with
     | TVar v -> type_var v
+    | Bound (Symbol (_, s)) -> Atom s
     | Any -> Atom "any"
     | AnyObj -> Atom "Object"
     | AnyFun -> Atom "Function"
@@ -106,9 +107,7 @@ let type_ ?(size=5000) t =
       env_map := IMap.add i t !env_map;
       Atom (varname i)
 
-  and type_var = function
-    | RVar i -> Atom (varname i)
-    | TParam s -> Atom s
+  and type_var (RVar i) = Atom (varname i)
 
   and type_generic ~depth (Symbol (_, id)) typeParameters =
     fuse [

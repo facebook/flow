@@ -46,16 +46,16 @@ and dump_polarity = function
   | Neutral -> ""
 
 and dump_type_param ~depth { tp_name; tp_bound; tp_polarity; _ } =
-  spf "%s%s%s" (dump_polarity tp_polarity) tp_name
+  spf "TParam(%s, %s, %s)" (dump_polarity tp_polarity) tp_name
     (dump_bound ~depth tp_bound)
 
 and dump_type_params ~depth = function
   | Some [] -> ""
-  | Some ps -> spf "<%s>" (dump_list (dump_type_param ~depth) ps)
+  | Some ps -> spf "TypeParams(%s)" (dump_list (dump_type_param ~depth) ps)
   | _ -> ""
 
 and dump_fun_t ~depth { fun_params; fun_rest_param; fun_return; fun_type_params } =
-  spf "Fun(%s(%s%s) => %s)"
+  spf "Fun(%s, %s, %s, out: %s)"
     (dump_type_params ~depth fun_type_params)
     (dump_list (dump_param ~depth) fun_params)
     (dump_rest_params ~depth  fun_rest_param)
@@ -93,9 +93,7 @@ and dump_generics ~depth = function
   | Some ts -> "<" ^ dump_list (dump_t ~depth) ts ^ ">"
   | _ -> ""
 
-and dump_tvar = function
-  | RVar i -> spf "T_%d" i
-  | TParam s -> s
+and dump_tvar (RVar i) = spf "T_%d" i
 
 and dump_symbol (Symbol (provenance, name)) =
   match provenance with
@@ -110,6 +108,7 @@ and dump_t ?(depth = 10) t =
   let depth = depth - 1 in
   match t with
   | TVar v -> dump_tvar v
+  | Bound s -> spf "Bound(%s)" (dump_symbol s)
   | Generic (s, st, ts) ->
     spf "Generic(%s, struct= %b, params=%s)"
       (dump_symbol s) st (dump_generics ~depth ts)
@@ -161,7 +160,7 @@ let string_of_polarity = function
 
 let string_of_ctor = function
   | TVar (RVar _) -> "RecVar"
-  | TVar (TParam _) -> "TParam"
+  | Bound _ -> "Bound"
   | Generic _ -> "Generic"
   | Any -> "Any"
   | AnyObj -> "AnyObj"
@@ -194,6 +193,9 @@ let rec json_of_t t = Hh_json.(
   ] @
   match t with
   | TVar v -> json_of_tvar v
+  | Bound s -> [
+      "bound", json_of_symbol s
+    ]
   | Generic (s, str, targs_opt) -> (
     match targs_opt with
       | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
@@ -251,10 +253,7 @@ let rec json_of_t t = Hh_json.(
   )
 )
 
-and json_of_tvar = Hh_json.(function
-  | RVar i -> ["id", int_ i]
-  | TParam s -> ["id", JSON_String s]
-)
+and json_of_tvar (RVar i) = Hh_json.(["id", int_ i])
 
 and json_of_symbol (Symbol (_loc, name)) = Hh_json.JSON_String name
 

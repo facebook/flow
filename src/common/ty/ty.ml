@@ -18,6 +18,7 @@ type symbol = Symbol of (provenance * identifier) [@@unboxed]
 
 type t =
   | TVar of tvar
+  | Bound of symbol
   | Generic of symbol * bool (* structural *) * t list option
   | Any | AnyObj | AnyFun
   | Top | Bot
@@ -38,9 +39,7 @@ type t =
   | Exists
   | Mu of int * t
 
-and tvar =
-  | RVar of int             (* Recursive variable *)
-  | TParam of identifier    (* Type parameter *)
+and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 
 and fun_t = {
   fun_params: (identifier option * t * fun_param) list;

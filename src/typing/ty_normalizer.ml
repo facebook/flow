@@ -477,12 +477,13 @@ end = struct
        if (typeof a !== "boolean") a;
   *)
   and type_with_reason ~env t =
-    match desc_of_reason ~unwrap:false (Type.reason_of_t t) with
+    let reason = Type.reason_of_t t in
+    match desc_of_reason ~unwrap:false reason with
     (* Bounded type variables are replaced by their bounds during checking. In
        reporting these types we are interested in the original type variable.
     *)
     | RPolyTest (name, _) ->
-      return Ty.(TVar (TParam name))
+      symbol reason name >>| fun symbol -> Ty.Bound symbol
 
     | _ -> type_after_reason ~env t
 
@@ -491,7 +492,7 @@ end = struct
     let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
-    | BoundT tp -> return Ty.(TVar (TParam tp.name))
+    | BoundT tparam -> bound_t tparam
     | AnnotT ((r, id), _) -> annot_t ~env r id
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
@@ -708,6 +709,11 @@ end = struct
     in
     return (Ty.Symbol (provenance, name))
 
+  and bound_t =
+    let open Type in
+    fun { reason; name; _ } ->
+      symbol reason name >>| fun symbol -> Ty.Bound symbol
+
   and annot_t ~env r id =
     if C.expand_annots then
       type_variable ~env id
@@ -859,7 +865,7 @@ end = struct
       class_t_aux t1 >>= fun t1 ->
       mapM class_t_aux ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
-    | Ty.TVar (Ty.TParam "this") as t ->
+    | Ty.Bound (Ty.Symbol (_, "this")) as t ->
       return t
     | ty ->
       let msg = spf "normalized class arg: %s" (Ty_debug.dump_t ty) in
@@ -1088,8 +1094,9 @@ end = struct
     | ReactCreateElement
     | ReactCloneElement
     | ReactElementFactory _ -> return Ty.(
-        let tparams = [mk_tparam "T"] in
-        let t = TVar (TParam "T") in
+        let param_t = mk_tparam "T" in
+        let tparams = [param_t] in
+        let t = Bound (Symbol (Builtin, "T")) in
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
@@ -1168,7 +1175,7 @@ end = struct
     | ReposUpperT _ ->
       terr ~kind:BadInternalT (Some t)
 
-  and bound_t ~env = function
+  and param_bound ~env = function
     | T.DefT (_, T.MixedT _) -> return None
     | bound -> type__ ~env bound >>= fun b -> return (Some b)
 
@@ -1178,7 +1185,7 @@ end = struct
 
   and type_param ~env { T.name; bound; polarity; default; _ } =
     let tp_polarity = type_polarity polarity in
-    bound_t ~env bound >>= fun tp_bound ->
+    param_bound ~env bound >>= fun tp_bound ->
     default_t ~env default >>= fun tp_default ->
     return { Ty.tp_name = name; tp_bound; tp_polarity; tp_default }
 
