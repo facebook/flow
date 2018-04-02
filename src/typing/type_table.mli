@@ -24,3 +24,4 @@ val copy: t -> t
 val find_type_info: pred:(Loc.t -> bool) -> t -> (Loc.t * id_info) option
 val coverage_to_list: t -> (Loc.t * Type.t) list
 val coverage_hashtbl: t -> (Loc.t, Type.t) Hashtbl.t
+val function_decl_loc : (Loc.t * 'a) option -> Loc.t -> Loc.t

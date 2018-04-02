@@ -58,3 +58,21 @@ let coverage_to_list t =
 
 let coverage_hashtbl t =
   t.coverage
+
+(**
+ * Use the loc for the function name in the types table. When the function
+ * has no name (i.e. for `export default function() ...`), generate a loc
+ * that will span the `function` keyword as a next-best-thing location.
+ *)
+let function_decl_loc id loc =
+  match id with
+  | Some (loc, _) -> loc
+  | None ->
+    Loc.({ loc with
+      _end = {
+        line = loc.start.line;
+        (* len('function') is 8 *)
+        column = loc.start.column + 8;
+        offset = loc.start.offset + 8;
+      };
+    })

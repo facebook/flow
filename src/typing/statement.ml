@@ -1477,26 +1477,7 @@ and statement cx = Ast.Statement.(
          -> Loc.btwn loc end_loc
       in
       let fn_type = mk_function None cx sig_loc func in
-      (**
-       * Use the loc for the function name in the types table. When the function
-       * has no name (i.e. for `export default function() ...`), generate a loc
-       * that will span the `function` keyword as a next-best-thing location.
-       *)
-      let type_table_loc =
-        match id with
-        | Some (loc, _) -> loc
-        | None -> Loc.({
-            source = loc.source;
-            start = loc.start;
-            _end = {
-              line = loc.start.line;
-
-              (* len('function') is 8 *)
-              column = loc.start.column + 8;
-              offset = loc.start.offset + 8;
-            };
-          })
-      in
+      let type_table_loc = Type_table.function_decl_loc id loc in
       Type_table.set (Context.type_table cx) type_table_loc fn_type;
       (match id with
       | Some(id_loc, name) ->
