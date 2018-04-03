@@ -5,18 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val init_logger: ?log_fd:Unix.file_descr -> Lwt_log_core.level -> unit
+val init_logger: Unix.file_descr option -> unit
 
 type 'a logger_fn =
   ?exn : exn ->
-  ?section : Lwt_log_core.section ->
-  ?location : (string * int * int) ->
-  ?logger:Lwt_log_core.logger ->
   ('a, unit, string, unit) format4 ->
   'a
 
+(* Async APIs *)
 val fatal: 'a logger_fn
 val error: 'a logger_fn
 val warn: 'a logger_fn
 val info: 'a logger_fn
 val debug: 'a logger_fn
+
+(* Sync APIs *)
+val fatal_s: 'a logger_fn
+val error_s: 'a logger_fn
+val warn_s: 'a logger_fn
+val info_s: 'a logger_fn
+val debug_s: 'a logger_fn

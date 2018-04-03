@@ -21,9 +21,6 @@
 
 type 'a logger_fn =
   ?exn : exn ->
-  ?section : Lwt_log_core.section ->
-  ?location : (string * int * int) ->
-  ?logger:Lwt_log_core.logger ->
   ('a, unit, string, unit) format4 ->
   'a
 
@@ -58,12 +55,23 @@ end)
 
 let initialized = ref false
 
+(* We're using lwt's logger instead of Hh_logger, so let's map Hh_logger levels to lwt levels *)
+let lwt_level_of_hh_logger_level = function
+| Hh_logger.Level.Off -> Lwt_log_core.Fatal
+| Hh_logger.Level.Fatal -> Lwt_log_core.Fatal
+| Hh_logger.Level.Error -> Lwt_log_core.Error
+| Hh_logger.Level.Warn -> Lwt_log_core.Warning
+| Hh_logger.Level.Info -> Lwt_log_core.Info
+| Hh_logger.Level.Debug -> Lwt_log_core.Debug
+
 (* Creates a default logger and sets the minimum logger level. The logger will log every message
  * that passes the minimum level to stderr. If log_fd is provided, each message will be logged
  * to it as well *)
-let init_logger ?log_fd min_level =
+let init_logger log_fd =
   if !initialized then failwith "Cannot initialized FlowServerMonitorLogger more than once";
   initialized := true;
+
+  let min_level =  Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level in
 
   let template = "$(date).$(milliseconds) [$(level)] $(message)" in
 
@@ -94,8 +102,18 @@ let init_logger ?log_fd min_level =
   (* Set the min level *)
   Lwt_log_core.add_rule "*" min_level
 
-let fatal = Lwt_log_core.ign_fatal_f
-let error = Lwt_log_core.ign_error_f
-let warn = Lwt_log_core.ign_warning_f
-let info = Lwt_log_core.ign_info_f
-let debug = Lwt_log_core.ign_debug_f
+(* Async logging APIs. These are the APIs you should generally use. Since they're async, they
+ * won't make the monitor unresponsive while they're logging *)
+let fatal ?exn fmt = Lwt_log_core.ign_fatal_f ?exn fmt
+let error ?exn fmt = Lwt_log_core.ign_error_f ?exn fmt
+let warn ?exn fmt = Lwt_log_core.ign_warning_f ?exn fmt
+let info ?exn fmt = Lwt_log_core.ign_info_f ?exn fmt
+let debug ?exn fmt = Lwt_log_core.ign_debug_f ?exn fmt
+
+(* Synchronous versions just delegate to Hh_logger. These are mainly used for debugging, when you
+ * want a logging call to write to the log RIGHT NOW. *)
+let fatal_s = Hh_logger.fatal
+let error_s = Hh_logger.error
+let warn_s = Hh_logger.warn
+let info_s = Hh_logger.info
+let debug_s = Hh_logger.debug

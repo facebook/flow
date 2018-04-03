@@ -443,6 +443,7 @@ begin library "flow-monitor-logger"
   end
   requires = [
     "flow-common-lwt"
+    "hh-utils-core"
     "lwt"
     "lwt.log"
     "lwt.unix"

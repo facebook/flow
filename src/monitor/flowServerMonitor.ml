@@ -9,15 +9,6 @@ let spf = Printf.sprintf
 
 module Logger = FlowServerMonitorLogger
 
-(* We're using lwt's logger instead of Hh_logger, so let's map Hh_logger levels to lwt levels *)
-let lwt_level_of_hh_logger_level = function
-| Hh_logger.Level.Off -> Lwt_log_core.Fatal
-| Hh_logger.Level.Fatal -> Lwt_log_core.Fatal
-| Hh_logger.Level.Error -> Lwt_log_core.Error
-| Hh_logger.Level.Warn -> Lwt_log_core.Warning
-| Hh_logger.Level.Info -> Lwt_log_core.Info
-| Hh_logger.Level.Debug -> Lwt_log_core.Debug
-
 (* We want to send a "Starting" message immediately and a "Ready" message when the Flow server is
  * ready for the first time. This function sends the "Starting" message immediately and sets up a
  * callback for when the server is ready *)
@@ -128,8 +119,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
       FlowExitStatus.(exit ~msg Unknown_error)
     );
 
-    Logger.init_logger
-      ?log_fd (Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level);
+    Logger.init_logger log_fd;
     Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
 
     (* If there is a waiting fd, start up a thread that will message it *)
