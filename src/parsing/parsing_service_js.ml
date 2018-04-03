@@ -534,7 +534,7 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~noflow
     let ok_count = FilenameMap.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
     let fail_count = List.length results.parse_fails in
-    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed) in %f"
+    Hh_logger.info "parsed %d files (%d ok, %d skipped, %d failed) in %f"
       (ok_count + skip_count + fail_count)
       ok_count skip_count fail_count
       (t2 -. t)
