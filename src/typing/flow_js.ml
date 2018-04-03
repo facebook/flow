@@ -11411,6 +11411,17 @@ and object_kit =
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
       let resolve_tool = Super (interface_slice cx r fields_tmap, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
+    (* Statics of a class. TODO: This logic is unfortunately duplicated from the
+     * top-level pattern matching against class lower bounds to object-like
+     * uses. This duplication should be removed. *)
+    | DefT (r, ClassT i) ->
+      let desc = RStatics (desc_of_reason (reason_of_t i)) in
+      let loc = loc_of_reason r in
+      let r = mk_reason desc loc in
+      let static = Tvar.mk cx r in
+      rec_flow cx trace (i, GetStaticsT (r, static));
+      rec_flow cx trace (static, ReposLowerT (r, false,
+        ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout)))
     (* Resolve each member of a union. *)
     | DefT (_, UnionT rep) ->
       let t, todo = UnionRep.members_nel rep in
