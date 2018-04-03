@@ -10341,8 +10341,14 @@ and mk_typeof_annotation cx ?trace reason ?(use_desc=false) t =
     ) in
     AnnotT (source, use_desc)
   | _ ->
-    let loc = loc_of_reason reason in
-    reposition cx ?trace loc t
+    (* Annot will take care of repositioning the source type, using reason_of_t
+       of the source type. We don't need to do a full/deep repositioning here,
+       since we'll do it then, so just make sure reason_of_t is right. *)
+    let t = mod_reason_of_t (
+      let loc = loc_of_reason reason in
+      repos_reason loc ~annot_loc:loc
+    ) t in
+    AnnotT (t, use_desc)
 
 and get_builtin_type cx ?trace reason ?(use_desc=false) x =
   let t = get_builtin cx ?trace x reason in
