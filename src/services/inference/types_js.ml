@@ -97,9 +97,8 @@ let collate_parse_results ~options { Parsing_service_js.parse_ok; parse_skips; p
      * were not temporary in nature, it would be worth adding some complexity to avoid conflating
      * them. *)
     if options.Options.opt_enforce_well_formed_exports then
-      FilenameMap.fold (fun file file_sig errors ->
-        let {File_sig.tolerable_errors; _} = file_sig in
-        let errset = Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file tolerable_errors in
+      FilenameMap.fold (fun file file_sig_errors errors ->
+        let errset = Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file file_sig_errors in
         update_errset errors file errset
       ) parse_ok local_errors
     else

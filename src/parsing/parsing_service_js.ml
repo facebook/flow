@@ -36,7 +36,7 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: File_sig.t FilenameMap.t;
+  parse_ok: (File_sig.tolerable_error list) FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
@@ -449,7 +449,7 @@ let reducer
             then parse_results
             else begin
               ParsingHeaps.add file ast info file_sig;
-              let parse_ok = FilenameMap.add file file_sig parse_results.parse_ok in
+              let parse_ok = FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
         | Parse_fail converted ->
