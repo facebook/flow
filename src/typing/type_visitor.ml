@@ -44,7 +44,14 @@ class ['a] t = object(self)
   | EvalT (t, defer_use_t, id) ->
     let acc = self#type_ cx Positive acc t in
     let acc = self#defer_use_type cx acc defer_use_t in
-    let acc = self#eval_id cx pole_TODO acc id in
+    let acc =
+      let pole = match defer_use_t, t with
+      | DestructuringT _, _ -> pole
+      | TypeDestructorT _, OpenT _ -> Neutral
+      | TypeDestructorT _, _ -> Positive
+      in
+      self#eval_id cx pole acc id
+    in
     acc
 
   | BoundT typeparam -> self#type_param cx pole acc typeparam
@@ -642,7 +649,7 @@ class ['a] t = object(self)
     Context.find_props cx id
     |> self#smap (self#prop cx pole) acc
 
-  method private prop cx pole acc = function
+  method prop cx pole acc = function
     | Field (_, t, p) -> self#type_ cx (P.mult (pole, p)) acc t
     | Method (_, t) -> self#type_ cx pole acc t
     | Get (_, t) -> self#type_ cx pole acc t

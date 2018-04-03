@@ -1779,7 +1779,14 @@ let rec dump_t_ (depth, tvars) cx t =
   | TypeDestructorTriggerT (_, _, _, s, x) -> p ~extra:(spf "%s on upper, %s"
     (string_of_destructor s) (kid x)) t
   | InternalT (IdxWrapper (_, inner_obj)) -> p ~extra:(kid inner_obj) t
-  | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
+  | OpenPredT (_, arg, p_pos, p_neg) -> p t
+      ~extra:(spf "%s, {%s}, {%s}" (kid arg)
+      (String.concat "; " (List.map (fun (k,p) ->
+        spf "%s: %s" (Key.string_of_key k) (string_of_predicate p)
+      ) (Key_map.elements p_pos)))
+      (String.concat "; " (List.map (fun (k,p) ->
+        spf "%s: %s" (Key.string_of_key k) (string_of_predicate p)
+      ) (Key_map.elements p_neg))))
   | ReposT (_, arg)
   | InternalT (ReposUpperT (_, arg)) -> p ~extra:(kid arg) t
 
@@ -2357,6 +2364,7 @@ let dump_flow_error =
   | Flow_error.DebugThrow -> "DebugThrow"
   | MergeTimeout _ -> "MergeTimeout"
   | MergeJobException _ -> "MergeJobException"
+  | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
   in
   let dump_upper_kind = function
   | IncompatibleGetPropT _ -> "IncompatibleGetPropT"

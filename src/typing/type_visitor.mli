@@ -12,6 +12,7 @@ class ['a] t: object
   method use_type_ : Context.t -> 'a -> Type.use_t -> 'a
   method tvar : Context.t -> Type.polarity -> 'a -> Reason.reason -> Constraint.ident -> 'a
   method props : Context.t -> Type.polarity -> 'a -> Type.Properties.id -> 'a
+  method prop : Context.t -> Type.polarity -> 'a -> Type.property -> 'a
   method exports : Context.t -> Type.polarity -> 'a -> Type.Exports.id -> 'a
   method eval_id : Context.t -> Type.polarity -> 'a -> int -> 'a
   method fun_type : Context.t -> Type.polarity -> 'a -> Type.funtype -> 'a

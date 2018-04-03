@@ -191,6 +191,7 @@ and internal_error =
   | DebugThrow
   | MergeTimeout of float
   | MergeJobException of exn
+  | UnexpectedTypeapp of string
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -1527,6 +1528,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
         spf "merge job timed out after %0.2f seconds" s
     | MergeJobException exc ->
         "uncaught exception: "^(Utils_js.fmt_exc exc)
+    | UnexpectedTypeapp s ->
+        "unexpected typeapp: "^s
     in
     mk_error ~trace_infos ~kind:InternalError loc
       [text (spf "Internal error: %s" msg)]

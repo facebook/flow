@@ -467,17 +467,19 @@ let rec assume_ground cx ?(depth=1) ids t =
         pid
         (!ids |> ISet.elements |> List.map string_of_int |> String.concat ", ")
 
-and assume_ground_id cx ~depth ids id =
-  if not (ISet.mem id !ids) then (
-    ids := !ids |> ISet.add id;
-    let constraints = Context.find_graph cx id in
+and assume_ground_id cx ~depth ids_ref id =
+  let root_id, constraints = Context.find_constraints cx id in
+  let ids = !ids_ref in
+  let ids' = ISet.add root_id ids in
+  if ids' != ids then (
+    ids_ref := ids';
     match constraints with
     | Unresolved { upper; uppertvars; _ } ->
       upper |> UseTypeMap.iter (fun t _ ->
-        assume_ground cx ~depth ids t
+        assume_ground cx ~depth ids_ref t
       );
       uppertvars |> IMap.iter (fun id _ ->
-        assume_ground_id cx ~depth ids id
+        assume_ground_id cx ~depth ids_ref id
       )
     | Resolved _ ->
       ()
@@ -6353,18 +6355,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
 
   (* if inflowing type is literal (thus guaranteed to be
      unaliased), propertywise subtyping is sound *)
-  let ldesc = desc_of_reason lreason in
-  let lit = match ldesc with
-  | RObjectLit
-  | RSpreadOf _
-  | RObjectPatternRestProp
-  | RFunction _
-  | RStatics (RFunction _)
-  | RReactProps
-  | RReactElement _
-  | RJSXElementProps _ -> true
-  | _ -> lflags.frozen
-  in
+  let lit = is_literal_object_reason lreason || lflags.frozen in
 
   (* If both are dictionaries, ensure the keys and values are compatible
      with each other. *)
@@ -11793,229 +11784,207 @@ end = struct
 
 end
 
-(* Given a type, report missing annotation errors if
+class assert_ground_visitor skip = object (self)
+  inherit [ISet.t] Type_visitor.t as super
 
-   - the given type is a tvar whose id isn't explicitly specified in the given
-   skip set, or isn't explicitly marked as derivable, or if
+  (* Track prop maps which correspond to object literals. We don't ask for
+     annotations for object literals which reach exports. Instead, we walk the
+     properties covariantly. *)
+  val mutable objlits: int Properties.Map.t = Properties.Map.empty
 
-   - the infer flag is true, and such tvars are reachable from the given tvar
+  (* Track prop maps which correspond to instance fields and methods, indicating
+     any fields which are initialized. We don't ask for annotations for (a)
+     munged property names, which are private and thus not inputs, and (b)
+     initialized field names. *)
+  val mutable insts: (int * SSet.t) Properties.Map.t = Properties.Map.empty
 
-   Type variables that are in the skip set are marked in assume_ground as
-   depending on `require`d modules. Thus, e.g., when the superclass of an
-   exported class is `require`d, we should not insist on an annotation for the
-   superclass.
-*)
-(* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
-  begin match Context.verbose cx with
-  | Some { Verbose.depth = verbose_depth; indent; } ->
-    let pid = Context.pid_prefix cx in
-    let indent = String.make ((depth - 1) * indent) ' ' in
-    prerr_endlinef "\n%s%sassert_ground (infer=%b): %s"
-      indent pid infer (Debug_js.dump_t cx ~depth:verbose_depth t)
-  | None -> ()
-  end;
-  let recurse ?infer = assert_ground ?infer ~depth:(depth + 1) cx skip ids in
-  match t with
-  | BoundT _ ->
-    ()
+  val depth = ref 0
 
-  (* Type variables that are not forced to be annotated include those that
-     are dependent on requires, or whose reasons indicate that they are
-     derivable. The latter category includes annotations and builtins. *)
-  | OpenT (reason_open, id)
-    when (ISet.mem id skip || is_derivable_reason reason_open) ->
-    ()
+  (* Tvars with reasons that match should not be missing annotation errors. *)
+  method private skip_reason r =
+    match desc_of_reason r with
+    (* No possible annotation for `this` type. *)
+    | RThis -> true
+    | _ -> false
 
-  (* when the infer flag is set, traverse the types reachable from this tvar,
-     rather than stopping here and reporting a missing annotation. Note that
-     when this function is called recursively on those types, infer will be
-     false. *)
-  | OpenT (_, id) when infer ->
-    assert_ground_id cx ~depth:(depth + 1) skip ids id
+  method private derivable_reason r =
+    match desc_of_reason r with
+    | RExistential -> true
+    | RShadowProperty _ -> true
+    | _ -> is_derivable_reason r
 
-  | OpenT (reason_open, _) ->
-    unify_opt cx ~unify_any:true t Locationless.AnyT.t;
-    add_output cx (FlowError.EMissingAnnotation reason_open)
+  method! tvar cx pole seen r id =
+    let root_id, constraints = Context.find_constraints cx id in
+    if id != root_id
+    then self#tvar cx pole seen r root_id
+    else
+      let seen' = ISet.add id seen in
+      if seen' == seen then seen
+      else if ISet.mem id skip then seen'
+      else if self#skip_reason r then seen'
+      else if
+        not (self#derivable_reason r) &&
+        Polarity.compat (pole, Negative)
+      then (
+        unify_opt cx ~unify_any:true (OpenT (r, id)) Locationless.AnyT.t;
+        add_output cx (FlowError.EMissingAnnotation r);
+        seen'
+      )
+      else
+        let pole = if self#derivable_reason r then Positive else pole in
+        List.fold_left (self#type_ cx pole) seen' (types_of constraints)
 
-  | DefT (_, NumT _)
-  | DefT (_, StrT _)
-  | DefT (_, BoolT _)
-  | DefT (_, EmptyT)
-  | DefT (_, MixedT _)
-  | DefT (_, NullT)
-  | DefT (_, VoidT)
-  | DefT (_, AnyT)
-  | DefT (_, CharSetT _)
-    -> ()
-
-  | DefT (reason, FunT (static, prototype, ft)) ->
-    let { this_t; params; return_t; rest_param; _ } = ft in
-    unify_opt cx ~unify_any:true static Locationless.AnyT.t;
-    unify_opt cx ~unify_any:true prototype Locationless.AnyT.t;
-    unify_opt cx ~unify_any:true this_t Locationless.AnyT.t;
-    let infer = is_derivable_reason reason in
-    List.iter (fun (_, t) -> recurse ~infer t) params;
-    Option.iter ~f:(fun (_, _, t) -> recurse ~infer t) rest_param;
-    recurse ~infer:true return_t
-
-  | DefT (_, PolyT (_, t, _))
-  | ThisClassT (_, t) ->
-    recurse t
-
-  | DefT (_, ObjT { props_tmap = id; proto_t; _ }) ->
-    unify_opt cx ~unify_any:true proto_t Locationless.AnyT.t;
-    Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
-
-  | InternalT (IdxWrapper (_, obj)) -> recurse ~infer obj
-
-  | DefT (r, ArrT arrtype) ->
-    let elemt, tuple_types = match arrtype with
-    | ArrayAT (elemt, None) -> elemt, []
-    | ArrayAT (elemt, Some tuple_types)
-    | TupleAT (elemt, tuple_types) -> elemt, tuple_types
-    | ROArrayAT (elemt) -> elemt, []
-    | EmptyAT -> DefT (r, EmptyT), [] in
-    recurse ~infer:true elemt;
-    List.iter (recurse ~infer:true) tuple_types
-
-  | DefT (_, ClassT t)
-  | DefT (_, TypeT t) ->
-    recurse t
-
-  | DefT (_, InstanceT (static, super, _, instance)) ->
-    let process_element ~static name t =
-      let munged = is_munged_prop_name cx name in
-      let init_fields =
-        if static then instance.initialized_static_field_names
-        else instance.initialized_field_names
-      in
-      let initialized = SSet.mem name init_fields in
-      let infer = munged || initialized in
-      let t =
-        if munged
-        then mod_reason_of_t (fun r -> derivable_reason r) t
-        else t
-      in
-      recurse ~infer t
+  method! type_ cx pole seen t =
+    Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent} ->
+      let pid = Context.pid_prefix cx in
+      let indent = String.make (!depth * indent) ' ' in
+      prerr_endlinef "\n%s%sassert_ground (%s): %s" indent pid
+        (Polarity.string pole)
+        (Debug_js.dump_t cx ~depth:verbose_depth t)
+    ) (Context.verbose cx);
+    incr depth;
+    let seen =
+      match t with
+      | BoundT _ -> seen
+      | AnnotT _ -> seen
+      | MergedT _ ->
+        (* The base class implementation will walk uses here, but there's no
+           reasonable way to complain about missing annotations for MergedT,
+           which was added to avoid missing annotations. *)
+        seen
+      | EvalT (_, TypeDestructorT _, _) ->
+        (* Type destructors are annotations, so we should never complain about
+           missing annotations due them. The default visitor _should_ never
+           visit a tvar in an input position, but do to some wacky stuff in
+           eval, it's possible today. *)
+        seen
+      | KeysT _ ->
+        (* Same idea as type destructors. *)
+        seen
+      | DefT (_, TypeAppT (_, c, ts)) ->
+        self#typeapp ts cx pole seen c
+      | DefT (r, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
+        self#arrlit cx pole seen t ts
+      | DefT (r, ObjT o) when is_literal_object_reason r ->
+        let refcnt =
+          try Properties.Map.find_unsafe o.props_tmap objlits
+          with Not_found -> 0
+        in
+        objlits <- Properties.Map.add o.props_tmap (refcnt+1) objlits;
+        let seen = super#type_ cx pole seen t in
+        objlits <- (
+          if refcnt = 0
+          then Properties.Map.remove o.props_tmap objlits
+          else Properties.Map.add o.props_tmap refcnt objlits
+        );
+        seen
+      | DefT (_, InstanceT (static, _, _, i)) ->
+        let static_fields_id = match static with
+        | DefT (_, ObjT o) -> Some o.props_tmap
+        | _ -> None
+        in
+        let fields_refcnt =
+          try fst (Properties.Map.find_unsafe i.fields_tmap insts)
+          with Not_found -> 0
+        in
+        let methods_refcnt =
+          try fst (Properties.Map.find_unsafe i.methods_tmap insts)
+          with Not_found -> 0
+        in
+        let static_refcnt = Option.value_map static_fields_id ~default:0 ~f:(fun id ->
+          try fst (Properties.Map.find_unsafe id insts)
+          with Not_found -> 0
+        ) in
+        insts <- Properties.Map.add i.fields_tmap (fields_refcnt+1, i.initialized_field_names) insts;
+        insts <- Properties.Map.add i.methods_tmap (methods_refcnt+1, SSet.empty) insts;
+        Option.iter static_fields_id (fun id ->
+          insts <- Properties.Map.add id (static_refcnt+1, i.initialized_static_field_names) insts
+        );
+        let seen = super#type_ cx pole seen t in
+        insts <- (
+          if fields_refcnt = 0
+          then Properties.Map.remove i.fields_tmap insts
+          else Properties.Map.add i.fields_tmap (fields_refcnt, i.initialized_field_names) insts
+        );
+        insts <- (
+          if methods_refcnt = 0
+          then Properties.Map.remove i.methods_tmap insts
+          else Properties.Map.add i.methods_tmap (fields_refcnt, SSet.empty) insts
+        );
+        Option.iter static_fields_id (fun id ->
+          insts <- (
+            if static_refcnt = 0
+            then Properties.Map.remove id insts
+            else Properties.Map.add id (static_refcnt, i.initialized_static_field_names) insts
+          )
+        );
+        seen
+      | DefT (r, FunT (static, prototype, ft)) ->
+        let any = Locationless.AnyT.t in
+        unify_opt cx ~unify_any:true static any;
+        unify_opt cx ~unify_any:true prototype any;
+        unify_opt cx ~unify_any:true ft.this_t any;
+        super#type_ cx pole seen
+          (DefT (r, FunT (any, any, {ft with this_t = any})))
+      | _ -> super#type_ cx pole seen t
     in
-    (match static with
-    | DefT (_, ObjT o) ->
-      Context.iter_props cx o.props_tmap
-        (fun x -> Property.iter_t (process_element ~static:true x))
-    | _ -> ());
-    Context.iter_props cx instance.fields_tmap
-      (fun x -> Property.iter_t (process_element ~static:false x));
-    Context.iter_props cx instance.methods_tmap
-      (fun x -> Property.iter_t (process_element ~static:false x));
-    recurse super
+    decr depth;
+    seen
 
-  | DefT (_, OptionalT t) ->
-    recurse t
+  method! props cx pole seen id =
+    if Properties.Map.mem id objlits
+    then self#objlit_props cx pole seen id
+    else match Properties.Map.get id insts with
+    | Some (_, init) -> self#inst_props cx pole seen id init
+    | _ -> super#props cx pole seen id
 
-  | DefT (_, TypeAppT (_, c, ts)) ->
-    recurse ~infer:true c;
-    List.iter recurse ts
+  method private arrlit cx pole seen t ts =
+    let seen = self#type_ cx pole seen t in
+    let seen = Option.fold ts ~init:seen ~f:(List.fold_left (self#type_ cx pole)) in
+    seen
 
-  | ThisTypeAppT (_, c, this, ts_opt) ->
-    recurse ~infer:true c;
-    recurse ~infer:true this;
-    Option.iter ~f:(List.iter recurse) ts_opt
+  method private objlit_props cx pole seen id =
+    let props = Context.find_props cx id in
+    SMap.fold (fun _ p acc ->
+      Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc
+    ) props seen
 
-  | ExactT (_, t)
-  | DefT (_, MaybeT t) ->
-    recurse t
+  method private inst_props cx pole seen id init =
+    let props = Context.find_props cx id in
+    SMap.fold (fun x p acc ->
+      if is_munged_prop_name cx x
+      then acc
+      else if SSet.mem x init
+      then Property.read_t p |> Option.fold ~f:(self#type_ cx pole) ~init:acc
+      else self#prop cx pole acc p
+    ) props seen
 
-  | DefT (_, IntersectionT rep) ->
-    List.iter recurse (InterRep.members rep)
-
-  | DefT (_, UnionT rep) ->
-    List.iter (recurse ~infer:true) (UnionRep.members rep)
-
-  | AnyWithLowerBoundT t
-  | AnyWithUpperBoundT t ->
-    recurse t
-
-  | DefT (_, AnyObjT)
-  | DefT (_, AnyFunT) ->
-    ()
-
-  | ShapeT t ->
-    recurse t
-
-  | MatchingPropT (_, _, t) ->
-    recurse t
-
-  | KeysT (_, t) ->
-    recurse t
-
-  | DefT (_, SingletonStrT _)
-  | DefT (_, SingletonNumT _)
-  | DefT (_, SingletonBoolT _) ->
-    ()
-
-  | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export=_; }, _) ->
-    Context.find_exports cx exports_tmap
-      |> SMap.iter (fun _ (_, t) -> recurse ~infer:true t);
-    begin match cjs_export with
-    | Some t -> recurse ~infer:true t
-    | None -> ()
-    end
-
-  | OpaqueT (_, {underlying_t = t; super_t = st; _}) ->
-      Option.iter ~f:recurse t; Option.iter ~f:recurse st
-
-  | AnnotT _ ->
-    (* don't ask for an annotation if one is already provided :) *)
-    (** TODO: one of the uses of derivable_reason was to mark type variables
-        that represented annotations so that they could be ignored. Since we
-        can now ignore annotations directly, consider renaming or getting rid
-        of derivable entirely. **)
-    ()
-
-  | ExistsT _ ->
-    ()
-
-  | ReposT (_, t)
-  | InternalT (ReposUpperT (_, t)) ->
-    recurse ~infer:true t
-
-  | NullProtoT _
-  | ObjProtoT _
-  | FunProtoT _
-  | FunProtoApplyT _
-  | FunProtoBindT _
-  | FunProtoCallT _
-  | EvalT _
-  | InternalT (ExtendsT _)
-  | InternalT (ChoiceKitT _)
-  | TypeDestructorTriggerT _
-  | CustomFunT _
-  | OpenPredT _
-  | MergedT _
-  ->
-    () (* TODO *)
-
-and assert_ground_id cx ?(depth=1) skip ids id =
-  if not (ISet.mem id !ids)
-  then (
-    ids := !ids |> ISet.add id;
-    match Context.find_graph cx id with
-    | Unresolved { lower; _ } ->
-        TypeMap.keys lower |> List.iter (assert_ground cx ~depth skip ids);
-
-        (* note: previously we were also recursing into lowertvars as follows:
-
-        IMap.keys lowertvars |> List.iter (assert_ground_id cx skip ids);
-
-         ...but this simply retraverses concrete lower bounds already
-         collected in `lower`, without checking the ids of the lowertvars
-         themselves. Correct behavior may require that those be checked via
-         assert_ground, but for now we just avoid the redundant traversals.
-        *)
-    | Resolved t ->
-        assert_ground cx ~depth skip ids t
-  )
+  method private typeapp =
+    let rec loop cx pole seen = function
+      | _, [] -> seen
+      | [], _ -> seen
+      | tparam::tparams, targ::targs ->
+        let pole = Polarity.mult (pole, tparam.polarity) in
+        let seen = self#type_ cx pole seen targ in
+        loop cx pole seen (tparams, targs)
+    in
+    fun targs cx pole seen -> function
+    | OpenT (r, id) ->
+      let seen = self#tvar cx Positive seen r id in
+      (match Context.find_graph cx id with
+      | Resolved t -> self#typeapp targs cx pole seen t
+      | Unresolved { lower; _ } ->
+        TypeMap.fold (fun t _ acc ->
+          self#typeapp targs cx pole acc t
+        ) lower seen)
+    | AnnotT (t, _) -> self#typeapp targs cx pole seen t
+    | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen (tparams, targs)
+    | DefT (_, AnyT) -> seen
+    | c ->
+      add_output cx FlowError.(EInternal
+        (loc_of_t c, UnexpectedTypeapp (string_of_ctor c)));
+      seen
+end
 
 let enforce_strict cx id =
   (* First, compute a set of ids to be skipped by calling `assume_ground`. After
@@ -12029,7 +11998,12 @@ let enforce_strict cx id =
   (* With the computed skip_ids, call `assert_ground` to force annotations while
      walking the graph starting from id. Typically, id corresponds to
      exports. *)
-  assert_ground_id cx !skip_ids (ref ISet.empty) id
+  let seen =
+    let visitor = new assert_ground_visitor !skip_ids in
+    let r = locationless_reason (RCustom "") in
+    visitor#tvar cx Positive ISet.empty r id
+  in
+  ignore (seen: ISet.t)
 
 (* Would rather this live elsewhere, but here because module DAG. *)
 let mk_default cx reason ~expr = Default.fold

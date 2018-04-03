@@ -677,6 +677,25 @@ let is_calltype_reason r =
   | RFunctionCallType -> true
   | _ -> false
 
+let is_literal_object_reason r =
+  match desc_of_reason r with
+  | RObjectLit
+  | RFrozen RObjectLit
+  | RSpreadOf _
+  | RObjectPatternRestProp
+  | RFunction _
+  | RStatics (RFunction _)
+  | RReactProps
+  | RReactElement _
+  | RJSXElementProps _ -> true
+  | _ -> false
+
+let is_literal_array_reason r =
+  match desc_of_reason r with
+  | RArrayLit
+  | REmptyArrayLit -> true
+  | _ -> false
+
 let is_derivable_reason r =
   r.derivable
 

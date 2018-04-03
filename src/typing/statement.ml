@@ -4828,7 +4828,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m args_ =
   | ("freeze", [Expression ((arg_loc, Object _) as e)]) ->
     let arg_t = expression cx e in
 
-    let reason_arg = mk_reason (RFrozen RObject) arg_loc in
+    let reason_arg = mk_reason (RFrozen RObjectLit) arg_loc in
     let arg_t = Tvar.mk_where cx reason_arg (fun tvar ->
       Flow.flow cx (arg_t, ObjFreezeT (reason_arg, tvar));
     ) in

@@ -199,6 +199,9 @@ val is_nullish_reason: reason -> bool
 val is_scalar_reason: reason -> bool
 val is_array_reason: reason -> bool
 
+val is_literal_object_reason: reason -> bool
+val is_literal_array_reason: reason -> bool
+
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
 

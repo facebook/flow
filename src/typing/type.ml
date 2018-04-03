@@ -1272,6 +1272,7 @@ and Properties : sig
 
   type id = private int
   module Map : MyMap.S with type key = id
+  module Set : Set.S with type elt = id
   type map = t Map.t
 
   val add_field: string -> Polarity.t -> Loc.t option -> TypeTerm.t -> t -> t
@@ -1296,10 +1297,14 @@ end = struct
 
   type id = int
   module Map : MyMap.S with type key = id = MyMap.Make(struct
-    type key = id
-    type t = key
+    type t = id
     let compare = Pervasives.compare
   end)
+  module Set : Set.S with type elt = id = Set.Make(struct
+    type t = id
+    let compare = Pervasives.compare
+  end)
+
   type map = t Map.t
 
   let add_field x polarity loc t =
