@@ -31,7 +31,8 @@ let with_outfd ~on_disabled ~f = with_channel snd ~on_disabled ~f
 
 (* The main server process will initialize this with the channels to the monitor process *)
 let init ~channels:(ic,oc) =
-  let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel ic) in
+  let infd =
+    Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_in_channel ic) in
   let outfd = Daemon.descr_of_out_channel oc in
   state := Initialized {infd; outfd}
 

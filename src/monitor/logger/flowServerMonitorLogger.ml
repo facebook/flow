@@ -75,7 +75,7 @@ let init_logger log_fd =
 
   let template = "$(date).$(milliseconds) [$(level)] $(message)" in
 
-  let log_fd = Option.map log_fd ~f:Lwt_unix.of_unix_file_descr in
+  let log_fd = Option.map log_fd ~f:(Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true) in
 
   let fds = Lwt_unix.stderr :: (Option.value_map log_fd ~default:[] ~f:(fun fd -> [fd])) in
   Lwt.async (fun () -> WriteLoop.run fds);

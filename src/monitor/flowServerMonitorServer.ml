@@ -165,11 +165,11 @@ end = struct
     let in_fd =
       ic
       |> Daemon.descr_of_in_channel
-      |> Lwt_unix.of_unix_file_descr ~blocking:true in
+      |> Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true in
     let out_fd =
       oc
       |> Daemon.descr_of_out_channel
-      |> Lwt_unix.of_unix_file_descr ~blocking:true in
+      |> Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true in
 
     let close_if_open fd =
       try Lwt_unix.close fd

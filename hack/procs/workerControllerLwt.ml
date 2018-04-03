@@ -40,8 +40,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
 
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
-  let infd_lwt = Lwt_unix.of_unix_file_descr ~blocking:true infd in
-  let outfd_lwt = Lwt_unix.of_unix_file_descr ~blocking:true outfd in
+  let infd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true infd in
+  let outfd_lwt = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true outfd in
 
   let request = wrap_request w f x in
 

@@ -17,8 +17,8 @@ struct
   let return = Lwt.return
   let (>>=) = Lwt.(>>=)
 
-  let descr_of_in_channel ic = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel ic)
-  let descr_of_out_channel oc = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel oc)
+  let descr_of_in_channel ic = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_in_channel ic)
+  let descr_of_out_channel oc = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true (Daemon.descr_of_out_channel oc)
 
   let to_fd_with_preamble ?timeout ?flags fd v =
     if timeout <> None
