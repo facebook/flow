@@ -1755,6 +1755,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | GetProps _
     | GetConfig _
     | GetRef _
+    | CreateElement0 _
     | CreateElement _
       -> "is not a React component"
     | SimplifyPropType (tool, _) ->

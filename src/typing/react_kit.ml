@@ -338,8 +338,7 @@ let run cx trace ~use_op reason_op l u
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in
 
-  let create_element clone config children_args tout =
-    let component = l in
+  let create_element clone component config children_args tout =
     (* If our config is void or null then we want to replace it with an
      * empty object. *)
     let config =
@@ -1117,8 +1116,9 @@ let run cx trace ~use_op reason_op l u
   in
 
   match u with
-  | CreateElement (clone, config, children, tout) ->
-    create_element clone config children tout
+  | CreateElement0 _ -> failwith "handled elsewhere"
+  | CreateElement (clone, component, config, children, tout) ->
+    create_element clone component config children tout
   | GetProps tout -> props_to_tout tout
   | GetConfig tout -> get_config tout
   | GetRef tout -> get_instance tout

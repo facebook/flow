@@ -730,8 +730,19 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, _, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
+  | ReactKitT (_, _, React.CreateElement0 (shape, config, (children, children_spread), t_out)) -> [
       "shape", JSON_Bool shape;
+      "config", _json_of_t json_cx config;
+      "children", JSON_Array (List.map (_json_of_t json_cx) children);
+      "childrenSpread", (match children_spread with
+        | Some children_spread -> _json_of_t json_cx children_spread
+        | None -> JSON_Null);
+      "returnType", _json_of_t json_cx t_out;
+    ]
+
+  | ReactKitT (_, _, React.CreateElement (shape, component, config, (children, children_spread), t_out)) -> [
+      "shape", JSON_Bool shape;
+      "component", _json_of_t json_cx component;
       "config", _json_of_t json_cx config;
       "children", JSON_Array (List.map (_json_of_t json_cx) children);
       "childrenSpread", (match children_spread with
@@ -1885,7 +1896,8 @@ and dump_use_t_ (depth, tvars) cx t =
       fun t k -> spf "%s, %s" (tool t) (knot k)
     ) in
     function
-    | CreateElement (_, config, (children, children_spread), tout) -> p
+    | CreateElement0 (_, config, (children, children_spread), tout)
+    | CreateElement (_, _, config, (children, children_spread), tout) -> p
         ~extra:(spf "CreateElement (%s; %s%s) => %s"
           (kid config)
           (String.concat "; " (List.map kid children))

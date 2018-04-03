@@ -458,11 +458,18 @@ class ['a] t = object(self)
   | ReactKitT (_, _, tool) -> (match tool with
     | React.GetProps t | React.GetConfig t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
-    | React.CreateElement (_, t1, (ts, t2), t3) ->
-      let acc = self#type_ cx pole_TODO acc t1 in
-      let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
-      let acc = self#opt (self#type_ cx pole_TODO) acc t2 in
-      let acc = self#type_ cx pole_TODO acc t3 in
+    | React.CreateElement0 (_, config, (children, children_spread), tout) ->
+      let acc = self#type_ cx pole_TODO acc config in
+      let acc = List.fold_left (self#type_ cx pole_TODO) acc children in
+      let acc = self#opt (self#type_ cx pole_TODO) acc children_spread in
+      let acc = self#type_ cx pole_TODO acc tout in
+      acc
+    | React.CreateElement (_, component, config, (children, children_spread), tout) ->
+      let acc = self#type_ cx pole_TODO acc component in
+      let acc = self#type_ cx pole_TODO acc config in
+      let acc = List.fold_left (self#type_ cx pole_TODO) acc children in
+      let acc = self#opt (self#type_ cx pole_TODO) acc children_spread in
+      let acc = self#type_ cx pole_TODO acc tout in
       acc
     | React.SimplifyPropType (tool, t) ->
       let open React in

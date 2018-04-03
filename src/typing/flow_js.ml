@@ -2498,6 +2498,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (_, AnyWithUpperBoundT t) ->
       rec_flow_t cx trace (l, t)
 
+
+    | _, ReactKitT (use_op, reason_op, React.CreateElement0 (clone, config, children, tout)) ->
+      let tool = React.CreateElement (clone, l, config, children, tout) in
+      rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
+
     (*********************)
     (* type applications *)
     (*********************)
@@ -10600,11 +10605,11 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
           cx r ~sealed:true ~exact:true ~frozen:true (ObjProtoT r)
       in
       rec_flow cx trace (component, ReactKitT (use_op, reason_op,
-        React.CreateElement (false, config, ([], None), tout)))
+        React.CreateElement0 (false, config, ([], None), tout)))
     (* React.createElement(component, config, ...children) *)
     | component::config::children ->
       rec_flow cx trace (component, ReactKitT (use_op, reason_op,
-        React.CreateElement (false, config, (children, spread_arg), tout)))
+        React.CreateElement0 (false, config, (children, spread_arg), tout)))
     (* React.createElement() *)
     | _ ->
       (* If we don't have the arguments we need, add an arity error. *)
@@ -10635,7 +10640,7 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
       (* Create a React element using the config and children. *)
       rec_flow cx trace (component,
         ReactKitT (use_op, reason_op,
-          React.CreateElement (true, config, (children, spread_arg), tout)))
+          React.CreateElement0 (true, config, (children, spread_arg), tout)))
     (* React.cloneElement() *)
     | _ ->
       (* If we don't have the arguments we need, add an arity error. *)
@@ -10651,12 +10656,12 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
       in
       rec_flow cx trace (component,
         ReactKitT (use_op, reason_op,
-          React.CreateElement (false, config, ([], None), tout)))
+          React.CreateElement0 (false, config, ([], None), tout)))
     (* React.createFactory(component)(config, ...children) *)
     | config::children ->
       rec_flow cx trace (component,
         ReactKitT (use_op, reason_op,
-          React.CreateElement (false, config, (children, spread_arg), tout))))
+          React.CreateElement0 (false, config, (children, spread_arg), tout))))
 
   | ObjectAssign
   | ObjectGetPrototypeOf
