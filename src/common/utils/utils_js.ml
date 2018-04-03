@@ -266,3 +266,7 @@ let log_when_error (context: string Lazy.t) (result: ('a, string) result) : ('a,
 let id_print context f x =
   Hh_logger.info "%s: %s" context (f x);
   x
+
+let debug_string_of_result string_of_val = function
+  | Ok x -> Printf.sprintf "Ok (%s)" (string_of_val x)
+  | Error err -> Printf.sprintf "Error (%s)" err
