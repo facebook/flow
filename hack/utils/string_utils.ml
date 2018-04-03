@@ -185,6 +185,15 @@ let split_into_lines str =
     []
     ((last_start, String.length str - last_start)::lines)
 
+(* Splits a string into lines, indents each non-empty line, and concats with newlines *)
+let indent indent_size str =
+  let padding = String.make indent_size ' ' in
+  str
+  |> split_into_lines
+  |> List.map (fun str -> if str = "" then "" else (padding ^ str))
+  |> String.concat "\n"
+
+
 (* Splits a string into a list of strings using only "\n" as a delimiter.
  * If the string ends with a delimiter, an empty string representing the
  * contents after the final delimiter is NOT included (unlike Str.split_delim).

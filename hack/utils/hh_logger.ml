@@ -24,15 +24,20 @@ let set_log filename fd =
   dupe_log := Some (filename, fd)
 let get_log_name () = Option.map !dupe_log ~f:fst
 
-let print_raw s =
+let print_raw ?exn s =
   let time = timestamp_string () in
+  let exn_str = Option.value_map exn ~default:"" ~f:(fun exn ->
+    let bt = String_utils.indent 8 @@ String.trim @@ Printexc.get_backtrace () in
+    let bt = if bt = "" then "" else ("\n    Backtrace:\n" ^ bt) in
+    Printf.sprintf "\n    Exception: %s%s" (Printexc.to_string exn) bt
+  ) in
   begin match !dupe_log with
   | None -> ()
-  | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%!" time s end;
-  Printf.eprintf "%s %s%!" time s
+  | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str end;
+  Printf.eprintf "%s %s%s\n%!" time s exn_str
 
-(* wraps print_raw in order to take a format string & add a newline *)
-let print fmt = Printf.ksprintf print_raw (fmt^^"\n")
+(* wraps print_raw in order to take a format string *)
+let print ?exn fmt = Printf.ksprintf (print_raw ?exn) fmt
 
 let print_duration name t =
   print_raw (name ^ ": ");
@@ -56,7 +61,7 @@ module Level : sig
   val min_level : unit -> t
   val set_min_level : t -> unit
   val passes_min_level: t -> bool
-  val log : t -> ('a, unit, string, string, string, unit) format6 -> 'a
+  val log : t -> ?exn:exn -> ('a, unit, string, string, string, unit) format6 -> 'a
   val log_duration : t -> string -> float -> float
 end = struct
   type t =
@@ -82,9 +87,9 @@ end = struct
   let passes_min_level level =
     int_of_level level >= int_of_level !min_level_ref
 
-  let log level fmt =
+  let log level ?exn fmt =
     if passes_min_level level
-    then print fmt
+    then print ?exn fmt
     else Printf.ifprintf () fmt
 
   let log_duration level fmt t =
@@ -98,8 +103,8 @@ end
 let log ?(lvl=Level.Info) fmt = Level.log lvl fmt
 let log_duration fmt t = Level.log_duration Level.Info fmt t
 
-let fatal fmt = Level.log Level.Fatal fmt
-let error fmt = Level.log Level.Error fmt
-let warn fmt = Level.log Level.Warn fmt
-let info fmt = Level.log Level.Info fmt
-let debug fmt = Level.log Level.Debug fmt
+let fatal ?exn fmt = Level.log Level.Fatal ?exn fmt
+let error ?exn fmt = Level.log Level.Error ?exn fmt
+let warn ?exn fmt = Level.log Level.Warn ?exn fmt
+let info ?exn fmt = Level.log Level.Info ?exn fmt
+let debug ?exn fmt = Level.log Level.Debug ?exn fmt

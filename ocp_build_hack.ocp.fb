@@ -140,6 +140,7 @@ begin library "hh-utils-core"
   ]
   requires += [
     "hh-utils-collections"
+    "hh-utils-string"
     "hh-utils-json"
     "tp-core"
   ]
