@@ -147,7 +147,7 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AnnotT (tvar, _) -> gen_type (resolve_tvar tvar env) env
+  | AnnotT (source_t, _) -> gen_type (resolve_type source_t env) env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env

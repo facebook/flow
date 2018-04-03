@@ -23,8 +23,7 @@ let union_flatten =
   let rec union_flatten cx seen ts =
     List.flatten @@ List.map (flatten cx seen) ts
   and flatten cx seen t = match t with
-    | OpenT (_, id)
-    | AnnotT ((_, id), _) ->
+    | OpenT (_, id) ->
       if ISet.mem id !seen then []
       else begin
         seen := ISet.add id !seen;
@@ -32,6 +31,7 @@ let union_flatten =
         | Constraint.Resolved t' -> flatten cx seen t'
         | _ -> [t]
       end
+    | AnnotT (t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t
     | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
     | DefT (r, MaybeT t) -> (DefT (r, NullT))::(DefT (r, VoidT))::(flatten cx seen t)
@@ -109,9 +109,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else KeysT (r, t'')
-      | AnnotT ((r, id), use_desc) ->
-          let id' = self#tvar cx map_cx r id in
-          if id' == id then t else AnnotT ((r, id'), use_desc)
+      | AnnotT (t', use_desc) ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else AnnotT (t'', use_desc)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in

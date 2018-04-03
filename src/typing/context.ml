@@ -492,11 +492,11 @@ and find_root cx id =
       in
       Utils_js.assert_false msg
 
-let find_resolved cx = function
-  | Type.OpenT (_, id)
-  | Type.AnnotT ((_, id), _) ->
+let rec find_resolved cx = function
+  | Type.OpenT (_, id) ->
     begin match find_graph cx id with
       | Constraint.Resolved t -> Some t
       | Constraint.Unresolved _ -> None
     end
+  | Type.AnnotT (t, _) -> find_resolved cx t
   | t -> Some t

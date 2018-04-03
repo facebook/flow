@@ -493,7 +493,8 @@ end = struct
     match t with
     | OpenT (_, id) -> type_variable ~env id
     | BoundT tparam -> bound_t tparam
-    | AnnotT ((r, id), _) -> annot_t ~env r id
+    | AnnotT (OpenT (r, id), _) -> annot_t ~env r id
+    | AnnotT (t, _) -> type_after_reason ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
     | CustomFunT (_, f) -> custom_fun ~env f

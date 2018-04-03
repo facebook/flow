@@ -865,10 +865,14 @@ module ResolvableTypeJob = struct
         else IMap.add id (OpenUnresolved (log_unresolved, r, id)) acc
       end
 
-    | AnnotT (tvar, _) ->
-      let _, id = tvar in
-      if IMap.mem id acc then acc
-      else IMap.add id (Binding tvar) acc
+    | AnnotT (t, _) ->
+      begin match t with
+      | OpenT ((_, id) as tvar) ->
+        if IMap.mem id acc then acc
+        else IMap.add id (Binding tvar) acc
+      | _ ->
+        collect_of_type ?log_unresolved cx reason acc t
+      end
 
     | ThisTypeAppT (_, poly_t, _, targs_opt) ->
       let targs = match targs_opt with | None -> [] | Some targs -> targs in
@@ -1404,10 +1408,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       eval_destructor cx ~trace use_op' reason l d tout
 
-    | TypeDestructorTriggerT (use_op', reason, _, d, tout), UseT (use_op, AnnotT (tvar, use_desc)) ->
+    | TypeDestructorTriggerT (use_op', reason, _, d, tout), UseT (use_op, AnnotT (annot_t, use_desc)) ->
       let tout' = Tvar.mk_where cx reason (fun tout' ->
-        let repos = Some (fst tvar, use_desc) in
-        rec_flow cx trace (OpenT tvar, UseT (use_op, TypeDestructorTriggerT (use_op', reason, repos, d, tout')))
+        let repos = Some (reason_of_t annot_t, use_desc) in
+        rec_flow cx trace (annot_t, UseT (use_op, TypeDestructorTriggerT (use_op', reason, repos, d, tout')))
       ) in
       rec_flow cx trace (tout', ReposUseT (reason, false, use_op, tout))
 
@@ -1503,8 +1507,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u);
 
-    | AnnotT (tvar, use_desc), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      let source_t = OpenT tvar in
+    | AnnotT (source_t, use_desc), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       (* TODO: directly derive loc and desc from the reason of tvar *)
       let loc = loc_of_t source_t in
       let desc = if use_desc then Some (desc_of_t source_t) else None in
@@ -1603,16 +1606,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (tvar, use_desc)) ->
-      let reason, _ = tvar in
-      rec_flow cx trace (OpenT tvar, ReposUseT (reason, use_desc, use_op, l))
+    | _, UseT (use_op, AnnotT (source_t, use_desc)) ->
+      let reason = reason_of_t source_t in
+      rec_flow cx trace (source_t, ReposUseT (reason, use_desc, use_op, l))
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
-    | AnnotT (tvar, use_desc), u ->
-      let source_t = OpenT tvar in
-      let t = reposition_reason ~trace cx (reason_of_t source_t) ~use_desc source_t in
+    | AnnotT (source_t, use_desc), u ->
+      let reason = reason_of_t source_t in
+      let t = reposition_reason ~trace cx reason ~use_desc source_t in
       rec_flow cx trace (t, u)
 
     (****************************************************************)
@@ -7032,12 +7035,12 @@ and mk_type_destructor cx ~trace use_op reason t d id =
       rec_flow_t cx trace (x, t);
     )
   | _, Some t -> true, t
-  | AnnotT (annot_tvar, use_desc), None ->
+  | AnnotT (annot_t, use_desc), None ->
     true, Tvar.mk_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add id tvar evaluated);
-      let repos = Some (fst annot_tvar, use_desc) in
+      let repos = Some (reason_of_t annot_t, use_desc) in
       let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
-      rec_flow_t cx trace (OpenT annot_tvar, x);
+      rec_flow_t cx trace (annot_t, x);
     )
   | _, None ->
     true, Tvar.mk_where cx reason (fun tvar ->
@@ -10216,7 +10219,7 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
       (* this part is similar to making a runtime value *)
       flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT t))
     ) in
-    AnnotT (open_tvar source, use_desc)
+    AnnotT (source, use_desc)
   else
     Tvar.mk_derivable_where cx instance_reason (fun t ->
       flow_opt_t cx ?trace (c, class_type t)
@@ -10336,7 +10339,7 @@ and mk_typeof_annotation cx ?trace reason ?(use_desc=false) t =
     let source = Tvar.mk_where cx reason (fun t' ->
       flow_opt cx ?trace (t, BecomeT (reason, t'))
     ) in
-    AnnotT (open_tvar source, use_desc)
+    AnnotT (source, use_desc)
   | _ ->
     let loc = loc_of_reason reason in
     reposition cx ?trace loc t
@@ -11593,8 +11596,8 @@ end = struct
           []
         in
         extract_type cx (DefT (reason, IntersectionT rep))
-    | AnnotT (tvar, _) ->
-      let source_t = resolve_tvar cx tvar in
+    | AnnotT (source_t, _) ->
+      let source_t = resolve_type cx source_t in
       extract_type cx source_t
     | DefT (_, InstanceT _ ) as t ->
         Success t
