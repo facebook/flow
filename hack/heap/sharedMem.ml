@@ -219,6 +219,14 @@ external hh_init_done: unit -> unit = "hh_call_after_init"
 
 external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
 
+external get_file_info_on_disk : unit -> bool = "get_file_info_on_disk"
+
+external get_file_info_on_disk_path : unit -> string =
+  "get_file_info_on_disk_path"
+
+external set_file_info_on_disk_path : string -> unit =
+  "set_file_info_on_disk_path"
+
 let init_done () =
   hh_init_done ();
   if hh_log_level() > 0 then Measure.print_stats ();

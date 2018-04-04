@@ -263,3 +263,7 @@ module LocalCache :
   functor (Value : Value.Type) ->
   CacheType with type key = UserKeyType.t
     and type value = Value.t
+
+val get_file_info_on_disk : unit -> bool
+val get_file_info_on_disk_path : unit -> string
+val set_file_info_on_disk_path : string -> unit

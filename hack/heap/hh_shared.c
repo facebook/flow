@@ -109,6 +109,9 @@
 #include <lz4.h>
 #include <time.h>
 
+#define UNUSED(x) \
+    ((void)(x))
+
 #define ARRAY_SIZE(array) \
     (sizeof(array) / sizeof((array)[0]))
 
@@ -427,6 +430,9 @@ static pid_t my_pid = 0;
 
 static char *db_filename = NULL;
 static char *hashtable_db_filename = NULL;
+
+#define FILE_INFO_ON_DISK_PATH "FILE_INFO_ON_DISK_PATH"
+
 
 #ifndef NO_SQLITE3
 // global SQLite DB pointer
@@ -1953,6 +1959,40 @@ static void assert_sql_with_line(
   caml_raise_with_arg(*exn, Val_long(result));
 }
 
+CAMLprim value get_file_info_on_disk(
+    value ml_unit
+) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    const char *var = getenv(FILE_INFO_ON_DISK_PATH);
+    assert(var);
+    _Bool nonempty = strlen(var) > 0;
+    value ml_bool = Val_bool(nonempty);
+    CAMLreturn(ml_bool);
+}
+
+CAMLprim value set_file_info_on_disk_path(
+    value ml_str
+) {
+    CAMLparam1(ml_str);
+    assert_master();
+    const char *str = String_val(ml_str);
+    // concatenate strings with = between them. *sigh*
+    char *envvar = malloc(strlen(FILE_INFO_ON_DISK_PATH) + 1 + strlen(str) + 1);
+    assert(0 == sprintf(envvar, "%s=%s", FILE_INFO_ON_DISK_PATH, str));
+    assert(0 == putenv(envvar));
+    free(envvar);
+    CAMLreturn(Val_unit);
+}
+
+CAMLprim value get_file_info_on_disk_path(
+    value ml_unit
+) {
+    CAMLparam1(ml_unit);
+    const char *str = getenv(FILE_INFO_ON_DISK_PATH);
+    assert(str);
+    CAMLreturn(caml_copy_string(str));
+}
 
 const char *create_tables_sql[] = {
   "CREATE TABLE IF NOT EXISTS HEADER(" \
@@ -2570,5 +2610,25 @@ CAMLprim value hh_load_table_sqlite(value in_filename) {
 CAMLprim value hh_get_sqlite(value ocaml_key) {
   CAMLparam0();
   CAMLreturn(Val_none);
+}
+
+CAMLprim value set_file_info_on_disk(value ml_str) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value get_file_info_on_disk(value ml_str) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value get_file_info_on_disk_path(value ml_str) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value set_file_info_on_disk_path(value ml_str) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
 }
 #endif
