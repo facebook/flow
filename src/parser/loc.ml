@@ -92,6 +92,8 @@ let compare loc1 loc2 =
     else k
   else k
 
+let equal loc1 loc2 = compare loc1 loc2 = 0
+
 (**
  * This is mostly useful for debugging purposes.
  * Please don't dead-code delete this!

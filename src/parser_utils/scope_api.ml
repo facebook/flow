@@ -30,7 +30,7 @@ module Def = struct
     in fun t1 t2 -> iter t1.locs t2.locs
 
   let is x t =
-    List.mem x t.locs
+    List.exists (Loc.equal x) t.locs
 end
 module DefMap = MyMap.Make(Def)
 
