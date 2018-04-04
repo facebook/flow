@@ -434,7 +434,19 @@ let tests = "require" >::: [
   "cjs_clobber_rebound" >:: begin fun ctxt ->
     let source = "var module = {}; module.exports = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (Some CJSExportOther))
+    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (None))
+  end;
+
+  "cjs_exports_named_rebound" >:: begin fun ctxt ->
+    let source = "var module = {}; module.exports.bar = 0" in
+    let {module_sig = {module_kind; _}; _} = visit source in
+    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (None))
+  end;
+
+  "cjs_exports_named_rebound2" >:: begin fun ctxt ->
+    let source = "var exports = {}; exports.bar = 0" in
+    let {module_sig = {module_kind; _}; _} = visit source in
+    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports" >:: begin fun ctxt ->

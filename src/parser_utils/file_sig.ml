@@ -512,7 +512,6 @@ class requires_calculator ~ast = object(this)
     super#assignment expr
 
   method handle_assignment ~(is_toplevel: bool) (expr: Loc.t Ast.Expression.Assignment.t) =
-    (* TODO: Check for shadowing *)
     let open Ast.Expression in
     let open Ast.Expression.Assignment in
     let { operator; left; right } = expr in
@@ -524,9 +523,11 @@ class requires_calculator ~ast = object(this)
         _object = module_loc, Identifier (_, "module");
         property = Member.PropertyIdentifier (_, "exports"); _
       })) ->
-      this#handle_cjs_default_export mod_exp_loc module_loc right;
-      if not is_toplevel then
-        this#add_tolerable_error (BadExportPosition mod_exp_loc)
+      if not (Scope_api.is_local_use scope_info module_loc) then begin
+        this#handle_cjs_default_export mod_exp_loc module_loc right;
+        if not is_toplevel then
+          this#add_tolerable_error (BadExportPosition mod_exp_loc)
+      end
     (* exports.foo = ... *)
     | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
         _object = mod_exp_loc as module_loc, Identifier (_, "exports");
