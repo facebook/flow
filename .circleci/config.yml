@@ -66,6 +66,10 @@ jobs:
               opam remote add upstream https://opam.ocaml.org | cat
             opam update | cat
       - run: *opam_deps
+      - run:
+        name: Install extra deps from opam
+        command: |
+          opam install js_of_ocaml.3.1.0 | cat
       - save_cache: *save_opam_cache
       - run:
           name: Build flow
@@ -74,24 +78,39 @@ jobs:
           name: Build libflowparser
           command: opam config exec -- make -C src/parser dist/libflowparser.zip
       - run:
+          name: Build flow.js
+          command: opam config exec -- make js
+      - run:
+          name: Build flow_parser.js
+          command: opam config exec -- make -C src/parser js
+      - run:
           name: Create artifacts
           command: |
             mkdir -p bin/linux && cp bin/flow bin/linux/flow
             opam config exec -- make dist/flow.zip
             cp dist/flow.zip dist/flow-linux64.zip
             cp src/parser/dist/libflowparser.zip dist/libflowparser-linux64.zip
+            cp src/parser/flow_parser.js dist/flow_parser.js
       - persist_to_workspace:
           root: .
           paths:
             - bin/linux/flow
+            - bin/flow.js
             - dist/flow-linux64.zip
             - dist/libflowparser-linux64.zip
+            - dist/flow_parser.js
       - store_artifacts:
           path: dist/flow-linux64.zip
           destination: flow-linux64.zip
       - store_artifacts:
           path: dist/libflowparser-linux64.zip
           destination: libflowparser-linux64.zip
+      - store_artifacts:
+          path: bin/flow.js
+          destination: flow.js
+      - store_artifacts:
+          path: dist/flow_parser.js
+          destination: flow_parser.js
 
   build_macos:
     macos:
