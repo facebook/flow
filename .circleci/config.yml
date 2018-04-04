@@ -200,7 +200,7 @@ jobs:
           command: (cd packages/flow-dev-tools && yarn install | cat) # Force no tty mode
       - run:
           name: Run tool tests
-          command: ./tool test --bin bin/linux/flow | cat
+          command: ./tool test -p 4 --bin bin/linux/flow | cat # Limit parallelism
 
   tool_test_macos:
     macos:
