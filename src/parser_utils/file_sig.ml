@@ -509,7 +509,7 @@ class requires_calculator ~ast = object(this)
 
   method! assignment (expr: Loc.t Ast.Expression.Assignment.t) =
     this#handle_assignment ~is_toplevel:false expr;
-    super#assignment expr
+    expr
 
   method handle_assignment ~(is_toplevel: bool) (expr: Loc.t Ast.Expression.Assignment.t) =
     let open Ast.Expression in
@@ -522,12 +522,11 @@ class requires_calculator ~ast = object(this)
     | Assign, (mod_exp_loc, Ast.Pattern.Expression (_, Member { Member.
         _object = module_loc, Identifier (_, "module");
         property = Member.PropertyIdentifier (_, "exports"); _
-      })) ->
-      if not (Scope_api.is_local_use scope_info module_loc) then begin
-        this#handle_cjs_default_export mod_exp_loc module_loc right;
-        if not is_toplevel then
-          this#add_tolerable_error (BadExportPosition mod_exp_loc)
-      end
+      })) when not (Scope_api.is_local_use scope_info module_loc) ->
+      this#handle_cjs_default_export mod_exp_loc module_loc right;
+      ignore (this#expression right);
+      if not is_toplevel then
+        this#add_tolerable_error (BadExportPosition mod_exp_loc)
     (* exports.foo = ... *)
     | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
         _object = mod_exp_loc as module_loc, Identifier (_, "exports");
@@ -540,21 +539,20 @@ class requires_calculator ~ast = object(this)
           property = Member.PropertyIdentifier (_, "exports"); _
         };
         property = Member.PropertyIdentifier (loc, name); _
-      })) ->
+      })) when not (Scope_api.is_local_use scope_info module_loc) ->
       (* expressions not allowed in declare module body *)
       assert (curr_declare_module = None);
-      if not (Scope_api.is_local_use scope_info module_loc)
-      then begin
-        begin match right with
-        | _, Identifier id ->
-          this#add_cjs_export name loc (Some id) mod_exp_loc
-        | _ ->
-          this#add_cjs_export name loc None mod_exp_loc
-        end;
-        if not is_toplevel then
-          this#add_tolerable_error (BadExportPosition mod_exp_loc)
-      end
-    | _ -> ()
+      begin match right with
+      | _, Identifier id ->
+        this#add_cjs_export name loc (Some id) mod_exp_loc
+      | _ ->
+        this#add_cjs_export name loc None mod_exp_loc
+      end;
+      ignore (this#expression right);
+      if not is_toplevel then
+        this#add_tolerable_error (BadExportPosition mod_exp_loc)
+    | _ ->
+      ignore (super#assignment expr)
     end;
 
     (* Handle imports *)
@@ -712,7 +710,6 @@ class requires_calculator ~ast = object(this)
       match expr with
       | _, Assignment assg ->
           this#handle_assignment ~is_toplevel:true assg;
-          ignore (super#assignment assg);
           expr
       | _ -> this#expression expr
     in
