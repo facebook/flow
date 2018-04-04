@@ -331,6 +331,19 @@ end = struct
     (* This means it's not well-typed, and could be anything *)
     | AnyType
 
+  (* Disable the unused value warning -- we want to keep this around for debugging *)
+  [@@@warning "-32"]
+  let debug_string_of_def_loc = function
+    | Found locs ->
+      spf
+        "Found (%s)"
+        (locs |> Nel.to_list |> List.map Loc.to_string |> String.concat ", ")
+    | NoDefFound -> "NoDefFound"
+    | UnsupportedType -> "UnsupportedType"
+    | AnyType -> "AnyType"
+  (* Re-enable the unused value warning *)
+  [@@@warning "+32"]
+
   let extract_instancet cx ty : (Type.t, string) result =
     let open Type in
     let resolved = Flow_js.resolve_type cx ty in
