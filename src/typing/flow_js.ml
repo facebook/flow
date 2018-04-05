@@ -3748,6 +3748,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        polymorphic type at all! For example, we can let a non-generic method be
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
+
+    (** some shortcuts **)
+    | DefT (_, PolyT (_, _, id1)), UseT (_, DefT (_, PolyT (_, _, id2)))
+      when id1 = id2 -> ()
+
+    | DefT (_, PolyT (params1, t1, _)), UseT (use_op, DefT (_, PolyT (params2, t2, _)))
+      when List.length params1 = List.length params2 ->
+      (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
+          by these *)
+      let args1 = instantiate_poly_param_upper_bounds cx params1 in
+      let args2 = instantiate_poly_param_upper_bounds cx params2 in
+      List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
+      let inst1 =
+        let r = reason_of_t t1 in
+        instantiate_poly_with_targs cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r (params1, t1) args1 in
+      let inst2 =
+        let r = reason_of_t t2 in
+        instantiate_poly_with_targs cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r (params2, t2) args2 in
+      rec_flow_t cx trace (inst1, inst2)
+
+    (** general case **)
     | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
         generate_tests cx ids (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t))
