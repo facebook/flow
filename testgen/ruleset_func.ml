@@ -30,8 +30,8 @@ class ruleset_func = object(self)
       let open T.Function.Param in
       let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
-        (fun param -> (snd param).typeAnnotation |> snd)
-        params @ [f.returnType |> snd] in
+        (fun param -> (snd param).annot |> snd)
+        params @ [f.return |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -60,13 +60,13 @@ class ruleset_func = object(self)
     let mk_func_type (ptype : Loc.t T.t') (rtype : Loc.t T.t') : Loc.t T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
+                                      annot = (Loc.none, ptype);
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
       T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
-                              returnType = ret_type;
-                              typeParameters = None}) in
+                              return = ret_type;
+                              tparams = None}) in
 
     (* parameter type *)
     let param_type =
@@ -91,8 +91,8 @@ class ruleset_func = object(self)
                 match param_type with
                 (* If the parameter is a function, we create new function calls *)
                 | T.Function {params = _;
-                              returnType = _, rt;
-                              typeParameters = _;} ->
+                              return = _, rt;
+                              tparams = _;} ->
                   let open E.Call in
                   List.fold_right (fun elt acc ->
                       match elt with
@@ -176,9 +176,9 @@ class ruleset_func = object(self)
       let open T.Function in
       match func_type with
       | T.Function {params = (_, { Params.params = plist; rest = _ });
-                    returnType = _;
-                    typeParameters = _} ->
-        T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
+                    return = _;
+                    tparams = _} ->
+        T.Function.Param.((plist |> List.hd |> snd).annot)
       | _ -> failwith "This has to a function type" in
 
     (* parameter *)
@@ -196,8 +196,8 @@ class ruleset_func = object(self)
 
     let ret_type = T.Function.(match func_type with
         | T.Function {params = _;
-                      returnType = (_, rt);
-                      typeParameters =_} -> rt
+                      return = (_, rt);
+                      tparams =_} -> rt
         | _ -> failwith "This has to be a function type") in
     let new_env =
       self#add_binding

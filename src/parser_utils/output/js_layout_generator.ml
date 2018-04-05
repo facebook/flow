@@ -573,8 +573,8 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) ((loc, stmt): Loc.t
     | S.DeclareFunction func -> declare_function func
     | S.DeclareInterface interface -> declare_interface interface
     | S.DeclareVariable var -> declare_variable var
-    | S.DeclareModuleExports typeAnnotation ->
-      declare_module_exports typeAnnotation
+    | S.DeclareModuleExports annot ->
+      declare_module_exports annot
     | S.DeclareModule m -> declare_module m
     | S.DeclareTypeAlias typeAlias -> type_alias ~declare:true typeAlias
     | S.DeclareOpaqueType opaqueType -> opaque_type ~declare:true opaqueType
@@ -877,10 +877,10 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
     | E.TemplateLiteral template -> template_literal template
     | E.JSXElement el -> jsx_element el
     | E.JSXFragment fr -> jsx_fragment fr
-    | E.TypeCast { E.TypeCast.expression=expr; typeAnnotation } ->
+    | E.TypeCast { E.TypeCast.expression=expr; annot } ->
       wrap_in_parens (fuse [
         expression expr;
-        type_annotation typeAnnotation;
+        type_annotation annot;
       ])
     | E.Import expr -> fuse [
         Atom "import";
@@ -966,7 +966,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
   SourceLocation (
     loc,
     match pat with
-    | P.Object { P.Object.properties; typeAnnotation } ->
+    | P.Object { P.Object.properties; annot } ->
       fuse [
         list
           ~wrap:(Atom "{", Atom "}")
@@ -995,9 +995,9 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
             )
             properties
           );
-        option type_annotation typeAnnotation;
+        option type_annotation annot;
       ]
-    | P.Array { P.Array.elements; typeAnnotation } ->
+    | P.Array { P.Array.elements; annot } ->
       fuse [
         list
           ~wrap:(Atom "[", Atom "]")
@@ -1012,7 +1012,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
               SourceLocation (loc, fuse [Atom "..."; pattern argument])
             )
             elements);
-        option type_annotation typeAnnotation;
+        option type_annotation annot;
       ]
     | P.Assignment { P.Assignment.left; right } ->
       fuse [
@@ -1025,11 +1025,11 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
             ~ctxt right
         end;
       ]
-    | P.Identifier { P.Identifier.name; typeAnnotation; optional } ->
+    | P.Identifier { P.Identifier.name; annot; optional } ->
       fuse [
         identifier name;
         if optional then Atom "?" else Empty;
-        option type_annotation typeAnnotation;
+        option type_annotation annot;
       ]
     | P.Expression expr -> expression ~ctxt expr
   )
@@ -1109,17 +1109,17 @@ and function_base
   ?(arrow=false)
   ?(id=Empty)
   { Ast.Function.
-    params; body; async; predicate; returnType; typeParameters;
+    params; body; async; predicate; return; tparams;
     expression=_; generator=_; id=_ (* Handled via `function_` *)
   } =
   fuse [
     if async then fuse [Atom "async"; space; id] else id;
-    option type_parameter typeParameters;
-    begin match arrow, params, returnType, predicate, typeParameters with
+    option type_parameter tparams;
+    begin match arrow, params, return, predicate, tparams with
     | true, (_, { Ast.Function.Params.params = [(
       _,
       Ast.Pattern.Identifier {
-        Ast.Pattern.Identifier.optional=false; typeAnnotation=None; _;
+        Ast.Pattern.Identifier.optional=false; annot=None; _;
       }
     )]; rest = None}), None, None, None -> List.hd (function_params ~ctxt params)
     | _, _, _, _, _ ->
@@ -1128,7 +1128,7 @@ and function_base
         ~sep:(Atom ",")
         (function_params ~ctxt:normal_context params)
     end;
-    begin match returnType, predicate with
+    begin match return, predicate with
     | None, None -> Empty
     | None, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
     | Some ret, Some pred -> fuse [
@@ -1142,7 +1142,7 @@ and function_base
         (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
            unexpected multiply-and-assign operator. Thus, we format this with a
            space e.g. `():* =>{}`. *)
-        begin match returnType with
+        begin match return with
         | Some (_, (_, Ast.Type.Exists)) -> space
         | _ -> pretty_space
         end;
@@ -1231,12 +1231,12 @@ and class_method (
     end
   )
 
-and class_property_helper loc key value static typeAnnotation variance =
+and class_property_helper loc key value static annot variance =
   SourceLocation (loc, with_semicolon (fuse [
     if static then fuse [Atom "static"; space] else Empty;
     option variance_ variance;
     key;
-    option type_annotation typeAnnotation;
+    option type_annotation annot;
     begin match value with
       | Some v -> fuse [
         pretty_space; Atom "="; pretty_space;
@@ -1247,14 +1247,14 @@ and class_property_helper loc key value static typeAnnotation variance =
   ]))
 
 and class_property (loc, { Ast.Class.Property.
-  key; value; static; typeAnnotation; variance
+  key; value; static; annot; variance
 }) =
-  class_property_helper loc (object_property_key key) value static typeAnnotation variance
+  class_property_helper loc (object_property_key key) value static annot variance
 
 and class_private_field (loc, { Ast.Class.PrivateField.
-  key = (ident_loc, ident); value; static; typeAnnotation; variance
+  key = (ident_loc, ident); value; static; annot; variance
 }) =
-  class_property_helper loc (identifier (ident_loc, "#" ^ (snd ident))) value static typeAnnotation
+  class_property_helper loc (identifier (ident_loc, "#" ^ (snd ident))) value static annot
     variance
 
 and class_body (loc, { Ast.Class.Body.body }) =
@@ -1276,7 +1276,7 @@ and class_body (loc, { Ast.Class.Body.body }) =
   else Atom "{}"
 
 and class_base { Ast.Class.
-  id; body; superClass; typeParameters; superTypeParameters;
+  id; body; tparams; super; super_targs;
   implements; classDecorators
 } =
   fuse [
@@ -1285,17 +1285,17 @@ and class_base { Ast.Class.
     begin match id with
     | Some ident -> fuse [
         space; identifier ident;
-        option type_parameter typeParameters;
+        option type_parameter tparams;
       ]
     | None -> Empty
     end;
     begin
       let class_extends = [
-        begin match superClass with
+        begin match super with
         | Some super -> Some (fuse [
             Atom "extends"; space;
             expression super;
-            option type_parameter_instantiation superTypeParameters;
+            option type_parameter_instantiation super_targs;
           ])
         | None -> None
         end;
@@ -1306,10 +1306,10 @@ and class_base { Ast.Class.
             fuse_list
               ~sep:(Atom ",")
               (List.map
-                (fun (loc, { Ast.Class.Implements.id; typeParameters }) ->
+                (fun (loc, { Ast.Class.Implements.id; targs }) ->
                   SourceLocation (loc, fuse [
                     identifier id;
-                    option type_parameter_instantiation typeParameters;
+                    option type_parameter_instantiation targs;
                   ])
                 )
                 implements
@@ -1832,7 +1832,7 @@ and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
     end;
   ]
 
-and type_parameter (loc, { Ast.Type.ParameterDeclaration.params }) =
+and type_parameter (loc, params) =
   SourceLocation (
     loc,
     list
@@ -1841,33 +1841,31 @@ and type_parameter (loc, { Ast.Type.ParameterDeclaration.params }) =
       (List.map type_param params)
   )
 
-and type_parameter_instantiation (loc, { Ast.Type.ParameterInstantiation.
-  params
-}) =
+and type_parameter_instantiation (loc, args) =
   SourceLocation (
     loc,
     list
       ~wrap:(Atom "<", Atom ">")
       ~sep:(Atom ",")
-      (List.map type_ params)
+      (List.map type_ args)
   )
 
-and type_alias ~declare { Ast.Statement.TypeAlias.id; typeParameters; right } =
+and type_alias ~declare { Ast.Statement.TypeAlias.id; tparams; right } =
   with_semicolon (fuse [
     if declare then fuse [Atom "declare"; space;] else Empty;
     Atom "type"; space;
     identifier id;
-    option type_parameter typeParameters;
+    option type_parameter tparams;
     pretty_space; Atom "="; pretty_space;
     type_ right;
   ])
 
-and opaque_type ~declare { Ast.Statement.OpaqueType.id; typeParameters; impltype; supertype} =
+and opaque_type ~declare { Ast.Statement.OpaqueType.id; tparams; impltype; supertype} =
   with_semicolon (fuse ([
     if declare then fuse [Atom "declare"; space;] else Empty;
     Atom "opaque type"; space;
     identifier id;
-    option type_parameter typeParameters]
+    option type_parameter tparams]
     @ (match supertype with
     | Some t -> [Atom ":"; pretty_space; type_ t]
     | None -> [])
@@ -1904,7 +1902,7 @@ and type_union_or_intersection ~sep ts =
     )
 
 and type_function_param (loc, { Ast.Type.Function.Param.
-  name; typeAnnotation; optional
+  name; annot; optional
 }) =
   SourceLocation (loc, fuse [
     begin match name with
@@ -1916,13 +1914,13 @@ and type_function_param (loc, { Ast.Type.Function.Param.
       ]
     | None -> Empty
     end;
-    type_ typeAnnotation;
+    type_ annot;
   ])
 
 and type_function ~sep { Ast.Type.Function.
   params = (_, { Ast.Type.Function.Params.params; rest = restParams});
-  returnType;
-  typeParameters;
+  return;
+  tparams;
 } =
   let params = List.map type_function_param params in
   let params = match restParams with
@@ -1932,14 +1930,14 @@ and type_function ~sep { Ast.Type.Function.
   | None -> params
   in
   fuse [
-    option type_parameter typeParameters;
+    option type_parameter tparams;
     list
       ~wrap:(Atom "(", Atom ")")
       ~sep:(Atom ",")
       params;
     sep;
     pretty_space;
-    type_ returnType;
+    type_ return;
   ]
 
 and type_object_property = Ast.Type.Object.(function
@@ -2013,7 +2011,7 @@ and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties } =
     ~sep
     (List.map type_object_property properties)
 
-and type_generic { Ast.Type.Generic.id; typeParameters } =
+and type_generic { Ast.Type.Generic.id; targs } =
   let rec generic_identifier = Ast.Type.Generic.Identifier.(function
   | Unqualified id -> identifier id
   | Qualified (loc, { qualification; id }) ->
@@ -2025,7 +2023,7 @@ and type_generic { Ast.Type.Generic.id; typeParameters } =
   ) in
   fuse [
     generic_identifier id;
-    option type_parameter_instantiation typeParameters;
+    option type_parameter_instantiation targs;
   ]
 
 and type_with_parens t =
@@ -2078,12 +2076,12 @@ and type_ ((loc, t): Loc.t Ast.Type.t) =
   )
 
 and interface_declaration_base ~def { Ast.Statement.Interface.
-  id; typeParameters; body=(loc, obj); extends
+  id; tparams; body=(loc, obj); extends
 } =
   fuse [
     def;
     identifier id;
-    option type_parameter typeParameters;
+    option type_parameter tparams;
     begin match extends with
     | [] -> Empty
     | _ -> fuse [
@@ -2110,7 +2108,7 @@ and declare_interface interface =
   ]) interface
 
 and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
-  id; typeParameters; body=(loc, obj); extends; mixins=_; implements=_;
+  id; tparams; body=(loc, obj); extends; mixins=_; implements=_;
 } =
   (* TODO: What are mixins? *)
   (* TODO: Print implements *)
@@ -2119,7 +2117,7 @@ and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
     s_type;
     Atom "class"; space;
     identifier id;
-    option type_parameter typeParameters;
+    option type_parameter tparams;
     begin match extends with
     | None -> Empty
     | Some (loc, generic) -> fuse [
@@ -2132,7 +2130,7 @@ and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
   ]
 
 and declare_function ?(s_type=Empty) { Ast.Statement.DeclareFunction.
-  id; typeAnnotation=(loc, t); predicate
+  id; annot=(loc, t); predicate
 } =
   with_semicolon (fuse [
     Atom "declare"; space;
@@ -2151,21 +2149,21 @@ and declare_function ?(s_type=Empty) { Ast.Statement.DeclareFunction.
   ])
 
 and declare_variable ?(s_type=Empty) { Ast.Statement.DeclareVariable.
-  id; typeAnnotation
+  id; annot
 } =
   with_semicolon (fuse [
     Atom "declare"; space;
     s_type;
     Atom "var"; space;
     identifier id;
-    option type_annotation typeAnnotation;
+    option type_annotation annot;
   ])
 
-and declare_module_exports typeAnnotation =
+and declare_module_exports annot =
   with_semicolon (fuse [
     Atom "declare"; space;
     Atom "module.exports";
-    type_annotation typeAnnotation;
+    type_annotation annot;
   ])
 
 and declare_module { Ast.Statement.DeclareModule.id; body; kind=_ } =

@@ -101,14 +101,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   and anon_function_without_parens_with env param =
     match Peek.token env with
     | T_ARROW when not (no_anon_function_type env)->
-      let start_loc, typeParameters, params =
+      let start_loc, tparams, params =
         let param = anonymous_function_param env param in
         fst param, None, (fst param, { Ast.Type.Function.Params.
           params = [param];
           rest = None;
         })
       in
-      function_with_params env start_loc typeParameters params
+      function_with_params env start_loc tparams params
     | _ -> param
 
   and prefix env =
@@ -216,10 +216,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         Type.Tuple tl
       ) env
 
-  and anonymous_function_param _env typeAnnotation =
-    fst typeAnnotation, Type.Function.Param.({
+  and anonymous_function_param _env annot =
+    fst annot, Type.Function.Param.({
       name = None;
-      typeAnnotation;
+      annot;
       optional = false;
     })
 
@@ -230,10 +230,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     with_loc ~start_loc:(fst name) (fun env ->
       let optional = Expect.maybe env T_PLING in
       Expect.token env T_COLON;
-      let typeAnnotation = _type env in
+      let annot = _type env in
       { Type.Function.Param.
         name = Some name;
-        typeAnnotation;
+        annot;
         optional;
       }
     ) env
@@ -245,8 +245,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           let id = Parse.identifier env in
           function_param_with_id env id
       | _ ->
-          let typeAnnotation = _type env in
-          anonymous_function_param env typeAnnotation
+          let annot = _type env in
+          anonymous_function_param env annot
 
     in let rec param_list env acc =
       match Peek.token env with
@@ -361,33 +361,33 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and _function env =
     let start_loc = Peek.loc env in
-    let typeParameters = type_parameter_declaration ~allow_default:false env in
+    let tparams = type_parameter_declaration ~allow_default:false env in
     let params = function_param_list env in
-    function_with_params env start_loc typeParameters params
+    function_with_params env start_loc tparams params
 
-  and function_with_params env start_loc typeParameters (params: Loc.t Ast.Type.Function.Params.t) =
+  and function_with_params env start_loc tparams (params: Loc.t Ast.Type.Function.Params.t) =
     with_loc ~start_loc (fun env ->
       Expect.token env T_ARROW;
-      let returnType = _type env in
-      Type.(Function { Function.params; returnType; typeParameters })
+      let return = _type env in
+      Type.(Function { Function.params; return; tparams })
     ) env
 
   and _object =
-    let methodish env start_loc type_params =
+    let methodish env start_loc tparams =
       with_loc ~start_loc (fun env ->
         let params = function_param_list env in
         Expect.token env T_COLON;
-        let returnType = _type env in
+        let return = _type env in
         { Type.Function.
           params;
-          returnType;
-          typeParameters = type_params;
+          return;
+          tparams;
         }
       ) env
 
     in let method_property env start_loc static key =
-      let type_params = type_parameter_declaration ~allow_default:false env in
-      let value = methodish env start_loc type_params in
+      let tparams = type_parameter_declaration ~allow_default:false env in
+      let value = methodish env start_loc tparams in
       let value = fst value, Type.Function (snd value) in
       Type.Object.(Property (fst value, Property.({
         key;
@@ -400,8 +400,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
     in let call_property env start_loc static =
       let prop = with_loc ~start_loc (fun env ->
-        let type_params = type_parameter_declaration ~allow_default:false env in
-        let value = methodish env (Peek.loc env) type_params in
+        let tparams = type_parameter_declaration ~allow_default:false env in
+        let value = methodish env (Peek.loc env) tparams in
         { Type.Object.CallProperty.value; static }
       ) env in
       Type.Object.CallProperty prop
@@ -656,12 +656,12 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             Expect.token env T_LESS_THAN;
             let params = params env ~allow_default ~require_default:false [] in
             Expect.token env T_GREATER_THAN;
-            { Type.ParameterDeclaration.params }
+            params
           ) env)
         end else None
 
   and type_parameter_instantiation =
-    let rec params env acc =
+    let rec args env acc =
       match Peek.token env with
       | T_EOF
       | T_GREATER_THAN -> List.rev acc
@@ -669,15 +669,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let acc = (_type env)::acc in
         if Peek.token env <> T_GREATER_THAN
         then Expect.token env T_COMMA;
-        params env acc
+        args env acc
 
     in fun env ->
         if Peek.token env = T_LESS_THAN then
           Some (with_loc (fun env ->
             Expect.token env T_LESS_THAN;
-            let params = params env [] in
+            let args = args env [] in
             Expect.token env T_GREATER_THAN;
-            { Type.ParameterInstantiation.params }
+            args
           ) env)
         else None
 
@@ -703,8 +703,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       with_loc ~start_loc:(fst id) (fun env ->
         let id = fst id, Type.Generic.Identifier.Unqualified id in
         let _id_loc, id = identifier env id in
-        let typeParameters = type_parameter_instantiation env in
-        { Type.Generic.id; typeParameters }
+        let targs = type_parameter_instantiation env in
+        { Type.Generic.id; targs }
       ) env
 
   and generic_type_with_identifier env id =

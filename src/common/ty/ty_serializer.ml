@@ -22,7 +22,7 @@ let builtin x =
   return (Loc.none, T.Generic {
     T.Generic.
     id = T.Generic.Identifier.Unqualified (identifier x);
-    typeParameters = None;
+    targs = None;
   })
 
 let tvar (RVar _) = Error "Unsupported recursive variables."
@@ -68,12 +68,12 @@ let rec type_ t =
     Error (Utils_js.spf "Unsupported type constructor `%s`."
       (Ty_debug.string_of_ctor t))
 
-and generic (Symbol (_, id)) typeParameters =
-  opt type_arguments typeParameters >>| fun typeParameters ->
+and generic (Symbol (_, id)) targs =
+  opt type_arguments targs >>| fun targs ->
   (Loc.none, T.Generic {
     T.Generic.
     id = T.Generic.Identifier.Unqualified (identifier id);
-    typeParameters
+    targs
   })
 
 and union t (t0, t1, rest) =
@@ -95,13 +95,13 @@ and intersection (t0, t1, rest) =
   (Loc.none, T.Intersection (t0, t1, rest))
 
 and function_ f =
-  type_ f.fun_return >>= fun returnType ->
+  type_ f.fun_return >>= fun return ->
   fun_params f.fun_params f.fun_rest_param >>= fun params ->
-  opt type_params f.fun_type_params >>| fun typeParameters -> {
+  opt type_params f.fun_type_params >>| fun tparams -> {
     T.Function.
     params;
-    returnType;
-    typeParameters;
+    return;
+    tparams;
   }
 
 and fun_params params rest_param =
@@ -114,11 +114,11 @@ and fun_params params rest_param =
   })
 
 and fun_param (name, t, {prm_optional}) =
-  type_ t >>| fun typeAnnotation ->
+  type_ t >>| fun annot ->
   (Loc.none, {
     T.Function.Param.
     name = Option.map ~f:identifier name;
-    typeAnnotation;
+    annot;
     optional = prm_optional;
   })
 
@@ -199,12 +199,8 @@ and obj_call_prop f =
   static = false;
 }
 
-and type_params tps =
-  mapM type_param tps >>= fun params -> return
-  (Loc.none, {
-    T.ParameterDeclaration.
-    params
-  })
+and type_params ts =
+  mapM type_param ts >>| fun ts -> (Loc.none, ts)
 
 and type_param tp =
   opt annotation tp.tp_bound >>= fun bound ->
@@ -218,10 +214,7 @@ and type_param tp =
   })
 
 and type_arguments ts =
-  mapM type_ ts >>| fun params ->
-  (Loc.none, T.ParameterInstantiation.{
-    params
-  })
+  mapM type_ ts >>| fun ts -> (Loc.none, ts)
 
 and str_lit lit = {
   Ast.StringLiteral.
@@ -249,12 +242,12 @@ and setter t = function_ {
   fun_type_params = None;
 }
 
-and class_ param =
-  generic param None >>| fun param ->
+and class_ t =
+  generic t None >>| fun t ->
   (Loc.none, T.Generic {
     T.Generic.
     id = T.Generic.Identifier.Unqualified (identifier "Class");
-    typeParameters = Some (Loc.none, T.ParameterInstantiation.{params = [param]})
+    targs = Some (Loc.none, [t])
   })
 
 and annotation t = type_ t >>| fun t -> (Loc.none, t)

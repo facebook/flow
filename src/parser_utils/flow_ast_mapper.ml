@@ -236,14 +236,15 @@ class mapper = object(this)
   method class_ (cls: Loc.t Ast.Class.t) =
     let open Ast.Class in
     let {
-      id; body; superClass;
-      typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
+      id; body; tparams = _;
+      super; super_targs = _;
+      implements = _; classDecorators = _;
     } = cls in
     let id' = map_opt this#class_identifier id in
     let body' = this#class_body body in
-    let superClass' = map_opt this#expression superClass in
-    if id == id' && body == body' && superClass' == superClass then cls
-    else { cls with id = id'; body = body'; superClass = superClass' }
+    let super' = map_opt this#expression super in
+    if id == id' && body == body' && super' == super then cls
+    else { cls with id = id'; body = body'; super = super' }
 
   method class_identifier (ident: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
@@ -273,21 +274,21 @@ class mapper = object(this)
 
   method class_property (prop: Loc.t Ast.Class.Property.t') =
     let open Ast.Class.Property in
-    let { key; value; typeAnnotation; static = _; variance = _; } = prop in
+    let { key; value; annot; static = _; variance = _; } = prop in
     let key' = this#object_key key in
     let value' = map_opt this#expression value in
-    let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
-    if key == key' && value == value' && typeAnnotation' == typeAnnotation then prop
-    else { prop with key = key'; value = value'; typeAnnotation = typeAnnotation' }
+    let annot' = map_opt this#type_annotation annot in
+    if key == key' && value == value' && annot' == annot then prop
+    else { prop with key = key'; value = value'; annot = annot' }
 
   method class_private_field (prop: Loc.t Ast.Class.PrivateField.t') =
     let open Ast.Class.PrivateField in
-    let { key; value; typeAnnotation; static = _; variance = _; } = prop in
+    let { key; value; annot; static = _; variance = _; } = prop in
     let key' = this#private_name key in
     let value' = map_opt this#expression value in
-    let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
-    if key == key' && value == value' && typeAnnotation' == typeAnnotation then prop
-    else { prop with key = key'; value = value'; typeAnnotation = typeAnnotation' }
+    let annot' = map_opt this#type_annotation annot in
+    if key == key' && value == value' && annot' == annot then prop
+    else { prop with key = key'; value = value'; annot = annot' }
 
   (* TODO *)
   method comprehension (expr: Loc.t Ast.Expression.Comprehension.t) = expr
@@ -313,15 +314,15 @@ class mapper = object(this)
 
   method declare_class (decl: Loc.t Ast.Statement.DeclareClass.t) =
     let open Ast.Statement.DeclareClass in
-    let { id = ident; typeParameters; body; extends; mixins; implements } = decl in
+    let { id = ident; tparams; body; extends; mixins; implements } = decl in
     let id' = this#class_identifier ident in
-    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let tparams' = map_opt this#type_parameter_declaration tparams in
     let body' = map_loc this#object_type body in
     let extends' = map_opt (map_loc this#generic_type) extends in
     let mixins' = ListUtils.ident_map (map_loc this#generic_type) mixins in
-    if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
+    if id' == ident && tparams' == tparams && body' == body && extends' == extends
       && mixins' == mixins then decl
-    else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends';
+    else { id = id'; tparams = tparams'; body = body'; extends = extends';
            mixins = mixins'; implements }
 
   method declare_export_declaration _loc (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
@@ -338,12 +339,12 @@ class mapper = object(this)
 
   method declare_function (decl: Loc.t Ast.Statement.DeclareFunction.t) =
     let open Ast.Statement.DeclareFunction in
-    let { id = ident; typeAnnotation; predicate } = decl in
+    let { id = ident; annot; predicate } = decl in
     let id' = this#function_identifier ident in
-    let typeAnnotation' = this#type_annotation typeAnnotation in
+    let annot' = this#type_annotation annot in
     (* TODO: walk predicate *)
-    if id' == ident && typeAnnotation' == typeAnnotation then decl
-    else { id = id'; typeAnnotation = typeAnnotation'; predicate }
+    if id' == ident && annot' == annot then decl
+    else { id = id'; annot = annot'; predicate }
 
   method declare_interface (decl: Loc.t Ast.Statement.Interface.t) =
     this#interface decl
@@ -364,11 +365,11 @@ class mapper = object(this)
 
   method declare_variable (decl: Loc.t Ast.Statement.DeclareVariable.t) =
     let open Ast.Statement.DeclareVariable in
-    let { id = ident; typeAnnotation } = decl in
+    let { id = ident; annot } = decl in
     let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
-    let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
-    if id' == ident && typeAnnotation' == typeAnnotation then decl
-    else { id = id'; typeAnnotation = typeAnnotation' }
+    let annot' = map_opt this#type_annotation annot in
+    if id' == ident && annot' == annot then decl
+    else { id = id'; annot = annot' }
 
   method do_while (stuff: Loc.t Ast.Statement.DoWhile.t) =
     let open Ast.Statement.DoWhile in
@@ -478,10 +479,10 @@ class mapper = object(this)
 
   method function_param_type (fpt: Loc.t Ast.Type.Function.Param.t) =
     let open Ast.Type.Function.Param in
-    let loc, { typeAnnotation; name; optional; } = fpt in
-    let typeAnnotation' = this#type_ typeAnnotation in
-    if typeAnnotation' == typeAnnotation then fpt
-    else loc, { typeAnnotation = typeAnnotation'; name; optional }
+    let loc, { annot; name; optional; } = fpt in
+    let annot' = this#type_ annot in
+    if annot' == annot then fpt
+    else loc, { annot = annot'; name; optional }
 
   method function_rest_param_type (frpt: Loc.t Ast.Type.Function.RestParam.t) =
     let open Ast.Type.Function.RestParam in
@@ -494,17 +495,17 @@ class mapper = object(this)
     let open Ast.Type.Function in
     let {
       params = (params_loc, { Params.params = ps; rest = rpo });
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     } = ft in
     let ps' = ListUtils.ident_map this#function_param_type ps in
     let rpo' = map_opt this#function_rest_param_type rpo in
-    let returnType' = this#type_ returnType in
-    if ps' == ps && rpo' == rpo && returnType' == returnType then ft
+    let return' = this#type_ return in
+    if ps' == ps && rpo' == rpo && return' == return then ft
     else {
       params = (params_loc, { Params.params = ps'; rest = rpo' });
-      returnType = returnType';
-      typeParameters
+      return = return';
+      tparams
     }
 
   method label_identifier (ident: Loc.t Ast.Identifier.t) =
@@ -541,18 +542,16 @@ class mapper = object(this)
     | _ -> git (* TODO *)
 
   method type_parameter_instantiation (pi: Loc.t Ast.Type.ParameterInstantiation.t) =
-    let open Ast.Type.ParameterInstantiation in
-    let loc, { params; } = pi in
-    let params' = ListUtils.ident_map this#type_ params in
-    if params' == params then pi
-    else loc, { params = params'; }
+    let loc, targs = pi in
+    let targs' = ListUtils.ident_map this#type_ targs in
+    if targs' == targs then pi
+    else loc, targs'
 
   method type_parameter_declaration (pd: Loc.t Ast.Type.ParameterDeclaration.t) =
-    let open Ast.Type.ParameterDeclaration in
-    let loc, { params; } = pd in
-    let params' = ListUtils.ident_map this#type_parameter_declaration_type_param params in
-    if params' == params then pd
-    else loc, { params = params'; }
+    let loc, type_params = pd in
+    let type_params' = ListUtils.ident_map this#type_parameter_declaration_type_param type_params in
+    if type_params' == type_params then pd
+    else loc, type_params'
 
   method type_parameter_declaration_type_param (type_param: Loc.t Ast.Type.ParameterDeclaration.TypeParam.t) =
     let open Ast.Type.ParameterDeclaration.TypeParam in
@@ -564,11 +563,11 @@ class mapper = object(this)
 
   method generic_type (gt: Loc.t Ast.Type.Generic.t) =
     let open Ast.Type.Generic in
-    let { id; typeParameters; } = gt in
+    let { id; targs; } = gt in
     let id' = this#generic_identifier_type id in
-    let typeParameters' = map_opt this#type_parameter_instantiation typeParameters in
-    if id' == id && typeParameters' == typeParameters then gt
-    else { id = id'; typeParameters = typeParameters' }
+    let targs' = map_opt this#type_parameter_instantiation targs in
+    if id' == id && targs' == targs then gt
+    else { id = id'; targs = targs' }
 
   method type_ (t: Loc.t Ast.Type.t) =
     let open Ast.Type in
@@ -616,7 +615,7 @@ class mapper = object(this)
     let open Ast.Function in
     let {
       id = ident; params; body; async; generator; expression;
-      predicate; returnType; typeParameters;
+      predicate; return; tparams;
     } = expr in
     let ident' = map_opt this#function_identifier ident in
     let params' =
@@ -626,7 +625,7 @@ class mapper = object(this)
       if params_list == params_list' && rest == rest' then params
       else (loc, { Params.params = params_list'; rest = rest' })
     in
-    let returnType' = map_opt this#type_annotation returnType in
+    let return' = map_opt this#type_annotation return in
     let body' = match body with
       | BodyBlock (loc, block) ->
         id this#function_body block body (fun block -> BodyBlock (loc, block))
@@ -634,12 +633,12 @@ class mapper = object(this)
         id this#expression expr body (fun expr -> BodyExpression expr)
     in
     (* TODO: walk predicate *)
-    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
-    if ident == ident' && params == params' && body == body' && returnType == returnType'
-      && typeParameters == typeParameters' then expr
+    let tparams' = map_opt this#type_parameter_declaration tparams in
+    if ident == ident' && params == params' && body == body' && return == return'
+      && tparams == tparams' then expr
     else {
-      id = ident'; params = params'; returnType = returnType'; body = body';
-      async; generator; expression; predicate; typeParameters = typeParameters';
+      id = ident'; params = params'; return = return'; body = body';
+      async; generator; expression; predicate; tparams = tparams';
     }
 
   method function_body (block: Loc.t Ast.Statement.Block.t) =
@@ -658,14 +657,14 @@ class mapper = object(this)
 
   method interface (interface: Loc.t Ast.Statement.Interface.t) =
     let open Ast.Statement.Interface in
-    let { id = ident; typeParameters; body; extends } = interface in
+    let { id = ident; tparams; body; extends } = interface in
     let id' = this#class_identifier ident in
-    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let tparams' = map_opt this#type_parameter_declaration tparams in
     let body' = map_loc this#object_type body in
     let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
-    if id' == ident && typeParameters' == typeParameters && body' == body && extends' == extends
+    if id' == ident && tparams' == tparams && body' == body && extends' == extends
     then interface
-    else { id = id'; typeParameters = typeParameters'; body = body'; extends = extends' }
+    else { id = id'; tparams = tparams'; body = body'; extends = extends' }
 
   method interface_declaration (decl: Loc.t Ast.Statement.Interface.t) =
     this#interface decl
@@ -976,20 +975,20 @@ class mapper = object(this)
 
   method opaque_type (otype: Loc.t Ast.Statement.OpaqueType.t) =
     let open Ast.Statement.OpaqueType in
-    let { id; typeParameters; impltype; supertype } = otype in
+    let { id; tparams; impltype; supertype } = otype in
     let id' = this#identifier id in
-    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let tparams' = map_opt this#type_parameter_declaration tparams in
     let impltype' = map_opt this#type_ impltype in
     let supertype' = map_opt this#type_ supertype  in
     if id == id' &&
        impltype == impltype' &&
-       typeParameters == typeParameters' &&
+       tparams == tparams' &&
        impltype == impltype' &&
        supertype == supertype'
     then otype
     else {
       id = id';
-      typeParameters = typeParameters';
+      tparams = tparams';
       impltype = impltype';
       supertype = supertype'
     }
@@ -1023,26 +1022,26 @@ class mapper = object(this)
     let open Ast.Pattern in
     let (loc, patt) = expr in
     let patt' = match patt with
-      | Object { Object.properties; typeAnnotation } ->
+      | Object { Object.properties; annot } ->
         let properties' = ListUtils.ident_map (this#pattern_object_p ?kind) properties in
-        let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
-        if properties' == properties && typeAnnotation' == typeAnnotation then patt
-        else Object { Object.properties = properties'; typeAnnotation = typeAnnotation' }
-      | Array { Array.elements; typeAnnotation } ->
+        let annot' = map_opt this#type_annotation annot in
+        if properties' == properties && annot' == annot then patt
+        else Object { Object.properties = properties'; annot = annot' }
+      | Array { Array.elements; annot } ->
         let elements' = ListUtils.ident_map (map_opt (this#pattern_array_e ?kind)) elements in
-        let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
-        if elements' == elements && typeAnnotation' == typeAnnotation then patt
-        else Array { Array.elements = elements'; typeAnnotation = typeAnnotation' }
+        let annot' = map_opt this#type_annotation annot in
+        if elements' == elements && annot' == annot then patt
+        else Array { Array.elements = elements'; annot = annot' }
       | Assignment { Assignment.left; right } ->
         let left' = this#pattern_assignment_pattern ?kind left in
         let right' = this#expression right in
         if left == left' && right == right' then patt
         else Assignment { Assignment.left = left'; right = right' }
-      | Identifier { Identifier.name; typeAnnotation; optional } ->
+      | Identifier { Identifier.name; annot; optional } ->
         let name' = this#pattern_identifier ?kind name in
-        let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
-        if name == name' && typeAnnotation == typeAnnotation' then patt
-        else Identifier { Identifier.name = name'; typeAnnotation = typeAnnotation'; optional }
+        let annot' = map_opt this#type_annotation annot in
+        if name == name' && annot == annot' then patt
+        else Identifier { Identifier.name = name'; annot = annot'; optional }
       | Expression e ->
         id this#pattern_expression e patt (fun e -> Expression e)
     in
@@ -1206,11 +1205,11 @@ class mapper = object(this)
 
   method type_cast (expr: Loc.t Ast.Expression.TypeCast.t) =
     let open Ast.Expression.TypeCast in
-    let { expression; typeAnnotation; } = expr in
+    let { expression; annot; } = expr in
     let expression' = this#expression expression in
-    let typeAnnotation' = this#type_annotation typeAnnotation in
-    if expression' == expression && typeAnnotation' == typeAnnotation then expr
-    else { expression = expression'; typeAnnotation = typeAnnotation' }
+    let annot' = this#type_annotation annot in
+    if expression' == expression && annot' == annot then expr
+    else { expression = expression'; annot = annot' }
 
   method unary_expression (expr: Loc.t Ast.Expression.Unary.t) =
     let open Ast.Expression in
@@ -1256,12 +1255,12 @@ class mapper = object(this)
 
   method type_alias (stuff: Loc.t Ast.Statement.TypeAlias.t) =
     let open Ast.Statement.TypeAlias in
-    let { id; typeParameters; right } = stuff in
+    let { id; tparams; right } = stuff in
     let id' = this#identifier id in
-    let typeParameters' = map_opt this#type_parameter_declaration typeParameters in
+    let tparams' = map_opt this#type_parameter_declaration tparams in
     let right' = this#type_ right in
-    if id == id' && right == right' && typeParameters == typeParameters' then stuff
-    else { id = id'; typeParameters = typeParameters'; right = right' }
+    if id == id' && right == right' && tparams == tparams' then stuff
+    else { id = id'; tparams = tparams'; right = right' }
 
   (* TODO *)
   method yield (expr: Loc.t Ast.Expression.Yield.t) = expr

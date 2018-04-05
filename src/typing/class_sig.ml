@@ -209,11 +209,11 @@ let add_setter ~static name loc fsig = map_sig ~static (fun s -> {
 let mk_method cx ~expr x loc func =
   Func_sig.mk cx x.tparams_map ~expr loc func
 
-let mk_field cx loc ~polarity x reason typeAnnotation init =
+let mk_field cx loc ~polarity x reason annot init =
   loc, polarity, match init with
-  | None -> Annot (Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation)
+  | None -> Annot (Anno.mk_type_annotation cx x.tparams_map reason annot)
   | Some expr -> Infer (
-    Func_sig.field_initializer cx x.tparams_map reason expr typeAnnotation)
+    Func_sig.field_initializer cx x.tparams_map reason expr annot)
 
 let mem_constructor {constructor; _} = constructor <> []
 
@@ -456,11 +456,11 @@ let mk_super cx tparams_map c targs = Type.(
   (* A super class must be parameterized by This, so that it can be
      specialized to this class and its subclasses when properties are looked
      up on their instances. *)
-  let params = Anno.extract_type_param_instantiations targs in
+  let targs = Anno.extract_type_param_instantiations targs in
   let this = SMap.find_unsafe "this" tparams_map in
-  match params with
+  match targs with
   | None ->
-      (* No type params, but `c` could still be a polymorphic class that must
+      (* No type args, but `c` could still be a polymorphic class that must
          be implicitly instantiated. We need to do this before we try to
          this-specialize `c`. *)
       let reason = reason_of_t c in
@@ -468,21 +468,21 @@ let mk_super cx tparams_map c targs = Type.(
         Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
       ) in
       this_typeapp c this None
-  | Some params ->
-      let tparams = List.map (Anno.convert cx tparams_map) params in
-      this_typeapp c this (Some tparams)
+  | Some targs ->
+      let targs = List.map (Anno.convert cx tparams_map) targs in
+      this_typeapp c this (Some targs)
 )
 
-let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; typeParameters}) =
+let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let lookup_mode = Env.LookupMode.ForType in
   let i = Anno.convert_qualification ~lookup_mode cx "extends" id in
-  let params = Anno.extract_type_param_instantiations typeParameters in
-  let loc = match typeParameters with
+  let loc = match targs with
   | Some (targs, _) -> Loc.btwn loc targs
   | None -> loc
   in
   let r = mk_reason (RType (Anno.qualified_name id)) loc in
-  let t = Anno.mk_nominal_type cx r tparams_map (i, params) in
+  let targs = Anno.extract_type_param_instantiations targs in
+  let t = Anno.mk_nominal_type cx r tparams_map (i, targs) in
   Flow.reposition cx loc ~annot_loc:loc t
 
 let mk_extends cx tparams_map ~expr = function
@@ -541,9 +541,9 @@ let warn_or_ignore_class_properties cx ~static loc =
 let mk cx _loc reason self ~expr =
   fun { Ast.Class.
     body = (_, { Ast.Class.Body.body = elements });
-    superClass;
-    typeParameters;
-    superTypeParameters;
+    tparams;
+    super;
+    super_targs;
     implements;
     classDecorators;
     _;
@@ -552,7 +552,7 @@ let mk cx _loc reason self ~expr =
   warn_or_ignore_decorators cx classDecorators;
 
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx typeParameters
+    Anno.mk_type_param_declarations cx tparams
   in
 
   let tparams, tparams_map =
@@ -562,19 +562,19 @@ let mk cx _loc reason self ~expr =
   let class_sig =
     let id = Context.make_nominal cx in
     let extends =
-      mk_extends cx tparams_map ~expr (superClass, superTypeParameters)
+      mk_extends cx tparams_map ~expr (super, super_targs)
     in
     let implements = List.map (fun (_, i) ->
-      let { Ast.Class.Implements.id = (loc, name); typeParameters } = i in
-      let super_loc = match typeParameters with
+      let { Ast.Class.Implements.id = (loc, name); targs } = i in
+      let super_loc = match targs with
       | Some (ts, _) -> Loc.btwn loc ts
       | None -> loc in
       let reason = mk_reason (RType name) super_loc in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
       let id_info = name, c, Type_table.Other in
       Type_table.set_info (Context.type_table cx) loc id_info;
-      let params = Anno.extract_type_param_instantiations typeParameters in
-      let t = Anno.mk_nominal_type cx reason tparams_map (c, params) in
+      let targs = Anno.extract_type_param_instantiations targs in
+      let t = Anno.mk_nominal_type cx reason tparams_map (c, targs) in
       Flow.reposition cx super_loc ~annot_loc:super_loc t
     ) implements in
     let super = Class { extends; mixins = []; implements } in
@@ -583,7 +583,7 @@ let mk cx _loc reason self ~expr =
 
   (* In case there is no constructor, pick up a default one. *)
   let class_sig =
-    if superClass <> None
+    if super <> None
     then
       (* Subclass default constructors are technically of the form (...args) =>
          { super(...args) }, but we can approximate that using flow's existing
@@ -648,7 +648,7 @@ let mk cx _loc reason self ~expr =
     (* fields *)
     | Body.PrivateField(loc, {
         PrivateField.key = (_, (id_loc, name));
-        typeAnnotation;
+        annot;
         value;
         static;
         variance;
@@ -661,12 +661,12 @@ let mk cx _loc reason self ~expr =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field = mk_field cx (Some id_loc) ~polarity c reason typeAnnotation value in
+        let field = mk_field cx (Some id_loc) ~polarity c reason annot value in
         add_private_field ~static name field c
 
     | Body.Property (loc, {
       Property.key = Ast.Expression.Object.Property.Identifier (id_loc, name);
-        typeAnnotation;
+        annot;
         value;
         static;
         variance;
@@ -679,7 +679,7 @@ let mk cx _loc reason self ~expr =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field = mk_field cx (Some id_loc) ~polarity c reason typeAnnotation value in
+        let field = mk_field cx (Some id_loc) ~polarity c reason annot value in
         add_field cx ~static name field c
 
     (* literal LHS *)
@@ -710,10 +710,10 @@ let mk cx _loc reason self ~expr =
   ) class_sig elements
 
 let extract_mixins _cx =
-  List.map (fun (loc, {Ast.Type.Generic.id; typeParameters}) ->
+  List.map (fun (loc, {Ast.Type.Generic.id; targs}) ->
     let name = Anno.qualified_name id in
     let r = mk_reason (RType name) loc in
-    r, id, typeParameters
+    r, id, targs
   )
 
 let is_object_builtin_libdef (loc, name) =
@@ -792,7 +792,7 @@ let add_interface_properties cx properties s =
 
 let of_interface cx reason { Ast.Statement.Interface.
   id = (id_loc, id_name);
-  typeParameters;
+  tparams;
   body = (_, { Ast.Type.Object.properties; _ });
   extends;
   _;
@@ -802,7 +802,7 @@ let of_interface cx reason { Ast.Statement.Interface.
   Type_table.set_info (Context.type_table cx) id_loc id_info;
 
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx typeParameters in
+    Anno.mk_type_param_declarations cx tparams in
 
   let iface_sig =
     let id = Context.make_nominal cx in
@@ -830,7 +830,7 @@ let of_interface cx reason { Ast.Statement.Interface.
 
 let of_declare_class cx reason { Ast.Statement.DeclareClass.
   id = ident;
-  typeParameters;
+  tparams;
   body = (_, { Ast.Type.Object.properties; _ });
   extends;
   mixins;
@@ -839,7 +839,7 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
   let self = Tvar.mk cx reason in
 
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx typeParameters in
+    Anno.mk_type_param_declarations cx tparams in
 
   let tparams, tparams_map = add_this self cx reason tparams tparams_map in
 
@@ -847,10 +847,10 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
     let id = Context.make_nominal cx in
     let extends =
       match extends with
-      | Some (_, {Ast.Type.Generic.id; typeParameters}) ->
+      | Some (_, {Ast.Type.Generic.id; targs}) ->
         let lookup_mode = Env.LookupMode.ForValue in
         let i = Anno.convert_qualification ~lookup_mode cx "mixins" id in
-        Some (mk_super cx tparams_map i typeParameters)
+        Some (mk_super cx tparams_map i targs)
       | None ->
         None
     in
@@ -860,11 +860,11 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
       |> List.map (mk_mixins cx tparams_map)
     in
     let implements = List.map (fun (_, i) ->
-      let { Ast.Class.Implements.id = (loc, name); typeParameters } = i in
+      let { Ast.Class.Implements.id = (loc, name); targs } = i in
       let reason = mk_reason (RCustom "implements") loc in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
-      let params = Anno.extract_type_param_instantiations typeParameters in
-      Anno.mk_nominal_type cx reason tparams_map (c, params)
+      let targs = Anno.extract_type_param_instantiations targs in
+      Anno.mk_nominal_type cx reason tparams_map (c, targs)
     ) implements in
     let super =
       let extends = match extends with

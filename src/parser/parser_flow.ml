@@ -297,14 +297,14 @@ module rec Parse : PARSER = struct
         then error env Error.UnexpectedTypeAnnotation;
         Expect.token env T_PLING
       end;
-      let typeAnnotation =
+      let annot =
         if Peek.token env = T_COLON
         then Some (Type.annotation env)
         else None in
       Ast.Pattern.Identifier.({
         name;
         optional;
-        typeAnnotation;
+        annot;
       })
 
     in fun env ?(no_optional=false) restricted_error ->

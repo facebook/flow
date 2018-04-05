@@ -69,7 +69,7 @@ let rec string_of_pattern (pattern : Loc.t P.t') =
     let open P.Identifier in
     (snd id.name) ^
     (if id.optional then "?" else "") ^ " " ^
-    (match id.typeAnnotation with
+    (match id.annot with
      | Some (_, (_, t)) -> " : " ^ (string_of_type t)
      | None -> "")
   | P.Expression (_, e) -> string_of_expr e
@@ -136,7 +136,7 @@ and string_of_expr (expr : Loc.t E.t') =
     let open E.TypeCast in
     (string_of_expr (snd cast.expression)) ^
     " : " ^
-    (string_of_type (snd (snd cast.typeAnnotation)))
+    (string_of_type (snd (snd cast.annot)))
   | E.Array array ->
     let open E.Array in
     "[" ^
@@ -170,7 +170,7 @@ and string_of_stmt (stmt : Loc.t S.t') =
     let body_str = match func.body with
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
       | BodyExpression (_, e) -> string_of_expr e in
-    let ret_type_str = match func.returnType with
+    let ret_type_str = match func.return with
       | Some (_, (_, t)) -> ": " ^ string_of_type t
       | None -> "" in
     "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
@@ -250,14 +250,14 @@ and string_of_type (t : Loc.t T.t') =
       let name_str = match param.name with
         | Some (_, id) -> id ^ opt_str ^ " : "
         | None -> "" in
-      name_str ^ (string_of_type (snd param.typeAnnotation)) in
+      name_str ^ (string_of_type (snd param.annot)) in
     let params_str =
       let (_, { T.Function.Params.params; rest = _ }) = func.params in
       params
       |> List.map snd
       |> List.map string_of_param
       |> String.concat ", " in
-    let ret_type_str = (string_of_type (snd func.returnType)) in
+    let ret_type_str = (string_of_type (snd func.return)) in
     "(" ^ params_str ^ ") => " ^ ret_type_str
   | _ -> failwith "[string_of_type] unsupported type"
 

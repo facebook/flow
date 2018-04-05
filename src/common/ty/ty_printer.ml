@@ -176,7 +176,7 @@ let type_ ?(size=5000) t =
       type_ ~depth fun_return;
     ]
 
-  and type_function_param ~depth (name, typeAnnotation, { prm_optional }) =
+  and type_function_param ~depth (name, annot, { prm_optional }) =
     fuse [
       begin match name with
       | Some id -> fuse [
@@ -187,7 +187,7 @@ let type_ ?(size=5000) t =
         ]
       | None -> Empty
       end;
-      type_ ~depth typeAnnotation;
+      type_ ~depth annot;
     ]
 
   and type_object_property ~depth =

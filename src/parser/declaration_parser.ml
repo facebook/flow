@@ -222,7 +222,7 @@ module Declaration
     let async = async env in
     Expect.token env T_FUNCTION;
     let generator = generator env in
-    let (typeParameters, id) = (
+    let (tparams, id) = (
       match in_export env, Peek.token env with
       | true, T_LPAREN -> (None, None)
       | true, T_LESS_THAN ->
@@ -246,7 +246,7 @@ module Declaration
       in
       function_params ~await ~yield env
     in
-    let (returnType, predicate) = Type.annotation_and_predicate_opt env in
+    let (return, predicate) = Type.annotation_and_predicate_opt env in
     let _, body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
@@ -262,8 +262,8 @@ module Declaration
       async;
       predicate;
       expression;
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     }))
 
   let variable_declaration_list =

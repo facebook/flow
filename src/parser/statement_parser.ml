@@ -527,14 +527,14 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let typeParameters = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration_with_defaults env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
     Eat.semicolon env;
     Eat.pop_lex_mode env;
     Statement.TypeAlias.({
       id;
-      typeParameters;
+      tparams;
       right;
     })
 
@@ -559,7 +559,7 @@ module Statement
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Type.type_identifier env in
-    let typeParameters = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration_with_defaults env in
     let supertype = match Peek.token env with
     | T_COLON ->
         Expect.token env T_COLON;
@@ -574,7 +574,7 @@ module Statement
     Eat.pop_lex_mode env;
     Statement.OpaqueType.({
       id;
-      typeParameters;
+      tparams;
       impltype;
       supertype;
     })
@@ -607,7 +607,7 @@ module Statement
       then error env Error.UnexpectedTypeInterface;
       Expect.token env T_INTERFACE;
       let id = Type.type_identifier env in
-      let typeParameters = Type.type_parameter_declaration_with_defaults env in
+      let tparams = Type.type_parameter_declaration_with_defaults env in
       let extends = if Peek.token env = T_EXTENDS
       then begin
         Expect.token env T_EXTENDS;
@@ -616,7 +616,7 @@ module Statement
       let body = Type._object ~allow_static:false env in
       Statement.Interface.({
         id;
-        typeParameters;
+        tparams;
         body;
         extends;
       })
@@ -651,7 +651,7 @@ module Statement
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
-      let typeParameters = Type.type_parameter_declaration_with_defaults env in
+      let tparams = Type.type_parameter_declaration_with_defaults env in
       let extends = if Expect.maybe env T_EXTENDS then Some (Type.generic env) else None in
       let mixins = match Peek.token env with
       | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; mixins env []
@@ -664,7 +664,7 @@ module Statement
       let body = Type._object ~allow_static:true env in
       Statement.DeclareClass.({
         id;
-        typeParameters;
+        tparams;
         body;
         extends;
         mixins;
@@ -681,23 +681,23 @@ module Statement
     Expect.token env T_FUNCTION;
     let id = Parse.identifier env in
     let start_sig_loc = Peek.loc env in
-    let typeParameters = Type.type_parameter_declaration env in
+    let tparams = Type.type_parameter_declaration env in
     let params = Type.function_param_list env in
     Expect.token env T_COLON;
-    let returnType = Type._type env in
-    let end_loc = fst returnType in
+    let return = Type._type env in
+    let end_loc = fst return in
     let loc = Loc.btwn start_sig_loc end_loc in
-    let typeAnnotation = loc, Ast.Type.(Function {Function.
+    let annot = loc, Ast.Type.(Function {Function.
       params;
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     }) in
-    let typeAnnotation = fst typeAnnotation, typeAnnotation in
+    let annot = fst annot, annot in
     let predicate = Type.predicate_opt env in
     Eat.semicolon env;
     Statement.DeclareFunction.({
       id;
-      typeAnnotation;
+      annot;
       predicate;
     })
 
@@ -715,10 +715,10 @@ module Statement
 
   and declare_var env =
     Expect.token env T_VAR;
-    let _loc, { Pattern.Identifier.name; typeAnnotation; _; } =
+    let _loc, { Pattern.Identifier.name; annot; _; } =
       Parse.identifier_with_type env ~no_optional:true Error.StrictVarName in
     Eat.semicolon env;
-    Statement.DeclareVariable.({ id=name; typeAnnotation; })
+    Statement.DeclareVariable.({ id=name; annot; })
 
   and declare_var_statement env = with_loc (fun env ->
     Expect.token env T_DECLARE;

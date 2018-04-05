@@ -59,7 +59,7 @@ module Pattern
     fun env (loc, { Ast.Expression.Object.properties = props }) ->
       loc, Pattern.(Object { Object.
         properties = properties env [] props;
-        typeAnnotation = None;
+        annot = None;
       })
 
   and array_from_expr =
@@ -114,7 +114,7 @@ module Pattern
     fun env (loc, { Ast.Expression.Array.elements = elems }) ->
       loc, Pattern.Array { Pattern.Array.
         elements = elements env [] elems;
-        typeAnnotation = None;
+        annot = None;
       }
 
   and from_expr env (loc, expr) =
@@ -142,7 +142,7 @@ module Pattern
         end;
         loc, Pattern.Identifier { Pattern.Identifier.
           name;
-          typeAnnotation = None;
+          annot = None;
           optional = false;
         }
     | Assignment { Assignment.operator = Assignment.Assign; left; right } ->
@@ -187,7 +187,7 @@ module Pattern
               end;
               let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
                 name;
-                typeAnnotation = None;
+                annot = None;
                 optional = false;
               }) in
               Some (pattern, true)
@@ -254,11 +254,11 @@ module Pattern
       Expect.token env T_LCURLY;
       let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
       Expect.token env T_RCURLY;
-      let typeAnnotation =
+      let annot =
         if Peek.token env = T_COLON then Some (Type.annotation env)
         else None
       in
-      Pattern.Object { Pattern.Object.properties; typeAnnotation; }
+      Pattern.Object { Pattern.Object.properties; annot; }
     )
 
   (* Parse array destructuring pattern *)
@@ -307,11 +307,11 @@ module Pattern
       Expect.token env T_LBRACKET;
       let elements = elements env [] in
       Expect.token env T_RBRACKET;
-      let typeAnnotation =
+      let annot =
         if Peek.token env = T_COLON then Some (Type.annotation env)
         else None
       in
-      Pattern.Array { Pattern.Array.elements; typeAnnotation; }
+      Pattern.Array { Pattern.Array.elements; annot; }
     )
 
   and pattern env restricted_error =

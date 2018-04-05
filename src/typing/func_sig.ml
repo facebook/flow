@@ -33,7 +33,7 @@ type t = {
 let return_loc =
   let module F = Ast.Function in
   let open F in function
-  | {returnType = Some (_, (loc, _)); _}
+  | {return = Some (_, (loc, _)); _}
   | {F.body = BodyExpression (loc, _); _} -> loc
   | {F.body = BodyBlock (loc, _); _} -> Loc.char_before loc
 
@@ -48,16 +48,16 @@ let function_kind {Ast.Function.async; generator; predicate; _ } =
   | _, _, _ -> Utils_js.assert_false "(async || generator) && pred")
 
 let mk cx tparams_map ~expr loc func =
-  let {Ast.Function.typeParameters; returnType; body; predicate; _} = func in
+  let {Ast.Function.tparams; return; body; predicate; _} = func in
   let reason = func_reason func loc in
   let kind = function_kind func in
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx ~tparams_map typeParameters
+    Anno.mk_type_param_declarations cx ~tparams_map tparams
   in
   let fparams = Func_params.mk cx tparams_map ~expr func in
   let ret_reason = mk_reason RReturn (return_loc func) in
   let return_t =
-    Anno.mk_type_annotation cx tparams_map ret_reason returnType
+    Anno.mk_type_annotation cx tparams_map ret_reason return
   in
   let return_t = Ast.Type.Predicate.(match predicate with
     | None ->
@@ -81,15 +81,15 @@ let empty_body =
   Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body})
 
 let convert cx tparams_map loc func =
-  let {Ast.Type.Function.typeParameters; returnType; _} = func in
+  let {Ast.Type.Function.tparams; return; _} = func in
   let reason = mk_reason RFunctionType loc in
   let kind = Ordinary in
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx ~tparams_map typeParameters
+    Anno.mk_type_param_declarations cx ~tparams_map tparams
   in
   let fparams = Func_params.convert cx tparams_map func in
   let body = empty_body in
-  let return_t = Anno.convert cx tparams_map returnType in
+  let return_t = Anno.convert cx tparams_map return in
 
   {reason; kind; tparams; tparams_map; fparams; body; return_t}
 

@@ -77,7 +77,7 @@ class ruleset_union = object(self)
       | T.Function ft ->
         let ft_param = T.Function.(ft.params) |> snd in
         let params = T.Function.Params.(ft_param.params) |> List.hd |> snd in
-        T.Function.Param.(params.typeAnnotation)
+        T.Function.Param.(params.annot)
       | _ -> failwith "This has to a function type" in
 
     (* parameter *)
@@ -94,8 +94,8 @@ class ruleset_union = object(self)
 
     let ret_type = T.Function.(match func_type with
         | T.Function {params = _;
-                      returnType = (_, rt);
-                      typeParameters =_} -> rt
+                      return = (_, rt);
+                      tparams =_} -> rt
         | _ -> failwith "This has to be a function type") in
     let new_env =
       self#add_binding

@@ -254,7 +254,7 @@ class scope_builder = object(this)
       let open Ast.Function in
       let {
         id; params; body; async = _; generator = _; expression = _;
-        predicate = _; returnType = _; typeParameters = _;
+        predicate = _; return = _; tparams = _;
       } = expr in
 
       run_opt this#function_identifier id;
@@ -276,7 +276,7 @@ class scope_builder = object(this)
       let open Ast.Function in
       let {
         id; params; body; async = _; generator = _; expression = _;
-        predicate = _; returnType = _; typeParameters = _;
+        predicate = _; return = _; tparams = _;
       } = expr in
 
       let bindings = match id with

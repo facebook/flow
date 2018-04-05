@@ -184,8 +184,9 @@ class lexical_hoister = object(this)
   method! class_ (cls: Loc.t Ast.Class.t) =
     let open Ast.Class in
     let {
-      id; body = _; superClass = _;
-      typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
+      id; body = _; tparams = _;
+      super = _; super_targs = _; implements = _;
+      classDecorators = _;
     } = cls in
     begin match id with
     | Some name ->

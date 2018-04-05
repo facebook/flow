@@ -34,7 +34,7 @@ let error_type cx loc msg =
 let is_suppress_type cx type_name =
   SSet.mem type_name (Context.suppress_types cx)
 
-let check_type_param_arity cx loc params n f =
+let check_type_arg_arity cx loc params n f =
   match params with
   | None ->
     if n = 0 then
@@ -47,14 +47,14 @@ let check_type_param_arity cx loc params n f =
     else
       error_type cx loc (FlowError.ETypeParamArity (loc, n))
 
-let mk_custom_fun cx loc typeParameters kind =
-  check_type_param_arity cx loc typeParameters 0 (fun () ->
+let mk_custom_fun cx loc targs kind =
+  check_type_arg_arity cx loc targs 0 (fun () ->
     let reason = mk_reason RFunctionType loc in
     CustomFunT (reason, kind)
   )
 
-let mk_react_prop_type cx loc typeParameters kind =
-  mk_custom_fun cx loc typeParameters
+let mk_react_prop_type cx loc targs kind =
+  mk_custom_fun cx loc targs
     (ReactPropType (React.PropType.Complex kind))
 
 let add_unclear_type_error_if_not_lib_file cx loc = Loc.(
@@ -113,7 +113,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   begin match x with
   | (_, Generic {
       Generic.id = qualification;
-      typeParameters = None
+      targs = None
     }) ->
       let valtype = convert_qualification ~lookup_mode:ForTypeof cx
         "typeof-annotation" qualification in
@@ -168,7 +168,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 (* TODO *)
 | loc, Generic { Generic.id = (Generic.Identifier.Qualified (qid_loc,
-       { Generic.Identifier.qualification; id; }) as qid); typeParameters } ->
+       { Generic.Identifier.qualification; id; }) as qid); targs } ->
 
   let m = convert_qualification cx "type-annotation" qualification in
   let id_loc, name = id in
@@ -180,19 +180,19 @@ let rec convert cx tparams_map = Ast.Type.(function
     let use_op = Op (GetProperty (mk_reason (RType (qualified_name qid)) qid_loc)) in
     Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
   ) in
-  let typeParameters = extract_type_param_instantiations typeParameters in
-  mk_nominal_type cx reason tparams_map (t, typeParameters)
+  let targs = extract_type_param_instantiations targs in
+  mk_nominal_type cx reason tparams_map (t, targs)
 
 (* type applications: name < params > *)
 | loc, Generic {
     Generic.id = Generic.Identifier.Unqualified (id);
-    typeParameters
+    targs
   } ->
   let name_loc, name = id in
-  let typeParameters = extract_type_param_instantiations typeParameters in
+  let targs = extract_type_param_instantiations targs in
 
   let convert_type_params () = Option.value_map
-    typeParameters
+    targs
     ~default: []
     ~f:(List.map (convert cx tparams_map)) in
 
@@ -203,7 +203,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* Array<T> *)
   | "Array" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let elemt = convert_type_params () |> List.hd in
       DefT (mk_reason RArrayType loc, ArrT (ArrayAT (elemt, None)))
     )
@@ -228,35 +228,35 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
   | "$ReadOnlyArray" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let elemt = convert_type_params () |> List.hd in
       DefT (annot_reason (mk_reason RROArrayType loc), ArrT (ROArrayAT (elemt)))
     )
 
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       AnyWithLowerBoundT t
     )
 
   (* $Subtype<T> acts as any over subtypes of T *)
   | "$Subtype" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       AnyWithUpperBoundT t
     )
 
   (* $Type<T> acts as the type of T *)
   | "$Type" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       DefT (mk_reason (RCustom "type") loc, TypeT t)
     )
 
   (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
   | "$PropertyType" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       match convert_type_params () with
       | [t; DefT (_, SingletonStrT key)] ->
         let reason = mk_reason (RType "$PropertyType") loc in
@@ -269,7 +269,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $ElementType<T, string> acts as the type of the string elements in object
      type T *)
   | "$ElementType" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       let ts = convert_type_params () in
       let t = List.nth ts 0 in
       let e = List.nth ts 1 in
@@ -280,7 +280,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $NonMaybeType<T> acts as the type T without null and void *)
   | "$NonMaybeType" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RType "$NonMaybeType") loc in
       EvalT (t, TypeDestructorT
@@ -289,14 +289,14 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Shape<T> matches the shape of T *)
   | "$Shape" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       ShapeT t
     )
 
   (* $Diff<T, S> *)
   | "$Diff" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
@@ -307,7 +307,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $ReadOnly<T> *)
   | "$ReadOnly" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RType "$ReadOnly") loc in
       EvalT (
@@ -324,14 +324,14 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $Keys<T> is the set of keys of T *)
   (** TODO: remove $Enum **)
   | "$Keys" | "$Enum" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       KeysT (mk_reason RKeySet loc, t)
     )
 
   (* $Values<T> is a union of all the own enumerable value types of T *)
   | "$Values" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RType "$Values") loc in
       EvalT (t, TypeDestructorT
@@ -339,14 +339,14 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$Exact" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = List.hd (convert_type_params ()) in
       let desc = RExactType (desc_of_t t) in
       ExactT (mk_reason desc loc, t)
     )
 
   | "$Rest" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
@@ -358,8 +358,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $Exports<'M'> is the type of the exports of module 'M' *)
   (** TODO: use `import typeof` instead when that lands **)
   | "$Exports" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
-      match typeParameters with
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      match targs with
       | Some ((_, StringLiteral { Ast.StringLiteral.value; _ })::_) ->
           let desc = RCustom (spf "module `%s`" value) in
           let reason = mk_reason desc loc in
@@ -382,7 +382,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       error_type cx loc (FlowError.ETypeParamMinArity (loc, 1)))
 
   | "$TupleMap" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
@@ -391,7 +391,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$ObjMap" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
@@ -400,7 +400,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$ObjMapi" ->
-    check_type_param_arity cx loc typeParameters 2 (fun () ->
+    check_type_arg_arity cx loc targs 2 (fun () ->
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
@@ -409,8 +409,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$CharSet" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
-      match typeParameters with
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      match targs with
     | Some [(_, StringLiteral { Ast.StringLiteral.value; _ })] ->
         let chars = String_utils.CharSet.of_string value in
         let char_str = String_utils.CharSet.to_string chars in (* sorts them *)
@@ -426,7 +426,7 @@ let rec convert cx tparams_map = Ast.Type.(function
          type reflects the interface of `this` exposed in the current
          environment. Currently, we only support this types in a class
          environment: a this type in class C is bounded by C. *)
-      check_type_param_arity cx loc typeParameters 0 (fun () ->
+      check_type_arg_arity cx loc targs 0 (fun () ->
         Flow.reposition cx loc (SMap.find_unsafe "this" tparams_map)
       )
     else (
@@ -436,7 +436,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* Class<T> is the type of the class whose instances are of type T *)
   | "Class" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RStatics (desc_of_t t)) loc in
       DefT (reason, ClassT t)
@@ -444,79 +444,79 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   | "Function" | "function" ->
     add_unclear_type_error_if_not_lib_file cx loc;
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
+    check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
       DefT (reason, AnyFunT)
     )
 
   | "Object" ->
     add_unclear_type_error_if_not_lib_file cx loc;
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
+    check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RObjectType loc in
       DefT (reason, AnyObjT)
     )
 
   | "Function$Prototype$Apply" ->
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
+    check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
       FunProtoApplyT reason
     )
 
   | "Function$Prototype$Bind" ->
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
+    check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
       FunProtoBindT reason
     )
 
   | "Function$Prototype$Call" ->
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
+    check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
       FunProtoCallT reason
     )
 
   | "Object$Assign" ->
-      mk_custom_fun cx loc typeParameters ObjectAssign
+      mk_custom_fun cx loc targs ObjectAssign
   | "Object$GetPrototypeOf" ->
-      mk_custom_fun cx loc typeParameters ObjectGetPrototypeOf
+      mk_custom_fun cx loc targs ObjectGetPrototypeOf
   | "Object$SetPrototypeOf" ->
-      mk_custom_fun cx loc typeParameters ObjectSetPrototypeOf
+      mk_custom_fun cx loc targs ObjectSetPrototypeOf
 
   | "$Compose" ->
-      mk_custom_fun cx loc typeParameters (Compose false)
+      mk_custom_fun cx loc targs (Compose false)
   | "$ComposeReverse" ->
-      mk_custom_fun cx loc typeParameters (Compose true)
+      mk_custom_fun cx loc targs (Compose true)
 
   | "React$PropType$Primitive" ->
-      check_type_param_arity cx loc typeParameters 1 (fun () ->
+      check_type_arg_arity cx loc targs 1 (fun () ->
         let t = convert_type_params () |> List.hd in
         let prop_type = (ReactPropType (React.PropType.Primitive (false, t))) in
         mk_custom_fun cx loc None prop_type
       )
   | "React$PropType$ArrayOf" ->
-      mk_react_prop_type cx loc typeParameters React.PropType.ArrayOf
+      mk_react_prop_type cx loc targs React.PropType.ArrayOf
   | "React$PropType$InstanceOf" ->
-      mk_react_prop_type cx loc typeParameters React.PropType.InstanceOf
+      mk_react_prop_type cx loc targs React.PropType.InstanceOf
   | "React$PropType$ObjectOf" ->
-      mk_react_prop_type cx loc typeParameters React.PropType.ObjectOf
+      mk_react_prop_type cx loc targs React.PropType.ObjectOf
   | "React$PropType$OneOf" ->
-      mk_react_prop_type cx loc typeParameters React.PropType.OneOf
+      mk_react_prop_type cx loc targs React.PropType.OneOf
   | "React$PropType$OneOfType" ->
-      mk_react_prop_type cx loc typeParameters React.PropType.OneOfType
+      mk_react_prop_type cx loc targs React.PropType.OneOfType
   | "React$PropType$Shape" ->
-      mk_react_prop_type cx loc typeParameters React.PropType.Shape
+      mk_react_prop_type cx loc targs React.PropType.Shape
   | "React$CreateClass" ->
-      mk_custom_fun cx loc typeParameters ReactCreateClass
+      mk_custom_fun cx loc targs ReactCreateClass
   | "React$CreateElement" ->
-      mk_custom_fun cx loc typeParameters ReactCreateElement
+      mk_custom_fun cx loc targs ReactCreateElement
   | "React$CloneElement" ->
-      mk_custom_fun cx loc typeParameters ReactCloneElement
+      mk_custom_fun cx loc targs ReactCloneElement
   | "React$ElementFactory" ->
-      check_type_param_arity cx loc typeParameters 1 (fun () ->
+      check_type_arg_arity cx loc targs 1 (fun () ->
         let t = convert_type_params () |> List.hd in
         mk_custom_fun cx loc None (ReactElementFactory t)
       )
   | "React$ElementProps" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RType "React$ElementProps") loc in
       EvalT (t, TypeDestructorT
@@ -524,7 +524,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           ReactElementPropsType), mk_id ())
     )
   | "React$ElementConfig" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RType "React$ElementConfig") loc in
       EvalT (t, TypeDestructorT
@@ -532,7 +532,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           ReactElementConfigType), mk_id ())
     )
   | "React$ElementRef" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RType "React$ElementRef") loc in
       EvalT (t, TypeDestructorT
@@ -540,22 +540,22 @@ let rec convert cx tparams_map = Ast.Type.(function
           ReactElementRefType), mk_id ())
     )
   | "$Facebookism$Merge" ->
-      mk_custom_fun cx loc typeParameters Merge
+      mk_custom_fun cx loc targs Merge
   | "$Facebookism$MergeDeepInto" ->
-      mk_custom_fun cx loc typeParameters MergeDeepInto
+      mk_custom_fun cx loc targs MergeDeepInto
   | "$Facebookism$MergeInto" ->
-      mk_custom_fun cx loc typeParameters MergeInto
+      mk_custom_fun cx loc targs MergeInto
   | "$Facebookism$Mixin" ->
-      mk_custom_fun cx loc typeParameters Mixin
+      mk_custom_fun cx loc targs Mixin
   | "$Facebookism$Idx" ->
-      mk_custom_fun cx loc typeParameters Idx
+      mk_custom_fun cx loc targs Idx
 
   | "$Flow$DebugPrint" ->
-      mk_custom_fun cx loc typeParameters DebugPrint
+      mk_custom_fun cx loc targs DebugPrint
   | "$Flow$DebugThrow" ->
-      mk_custom_fun cx loc typeParameters DebugThrow
+      mk_custom_fun cx loc targs DebugThrow
   | "$Flow$DebugSleep" ->
-      mk_custom_fun cx loc typeParameters DebugSleep
+      mk_custom_fun cx loc targs DebugSleep
 
   (* You can specify in the .flowconfig the names of types that should be
    * treated like any<actualType>. So if you have
@@ -580,7 +580,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
+    check_type_arg_arity cx loc targs 0 (fun () ->
       let t = Flow.reposition cx loc (SMap.find_unsafe name tparams_map) in
       let id_info = name, t, Type_table.Other in
       Type_table.set_info (Context.type_table cx) name_loc id_info;
@@ -592,7 +592,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     let static_reason = mk_reason (RCustom "abstract predicate static") loc in
     let out_reason = mk_reason (RCustom "open predicate") loc in
 
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
       match convert_type_params () with
       | [DefT (_, SingletonNumT (f, _))] ->
         let n = Pervasives.int_of_float f in
@@ -615,7 +615,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$Refine" ->
-    check_type_param_arity cx loc typeParameters 3 (fun () ->
+    check_type_arg_arity cx loc targs 3 (fun () ->
       match convert_type_params () with
       | [base_t; fun_pred_t; DefT (_, SingletonNumT (f, _))] ->
           let idx = Pervasives.int_of_float f in
@@ -632,21 +632,21 @@ let rec convert cx tparams_map = Ast.Type.(function
     let c = type_identifier cx name loc in
     let id_info = name, c, Type_table.Other in
     Type_table.set_info (Context.type_table cx) name_loc id_info;
-    mk_nominal_type cx reason tparams_map (c, typeParameters)
+    mk_nominal_type cx reason tparams_map (c, targs)
 
   end
 
 | loc, Function { Function.
     params = (_, { Function.Params.params; rest });
-    returnType;
-    typeParameters;
+    return;
+    tparams;
   } ->
   let tparams, tparams_map =
-    mk_type_param_declarations cx ~tparams_map typeParameters in
+    mk_type_param_declarations cx ~tparams_map tparams in
 
   let rev_params = List.fold_left (fun acc (_, param) ->
-    let { Function.Param.name; typeAnnotation; optional } = param in
-    let t = convert cx tparams_map typeAnnotation in
+    let { Function.Param.name; annot; optional } = param in
+    let t = convert cx tparams_map annot in
     let t = if optional then Type.optional t else t in
     Option.iter ~f:(fun (loc, name) ->
       let id_info = name, t, Type_table.Other in
@@ -659,8 +659,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let rest_param = match rest with
   | Some (_, { Function.RestParam.argument = (_, param) }) ->
-    let { Function.Param.name; typeAnnotation; _ } = param in
-    let rest = convert cx tparams_map typeAnnotation in
+    let { Function.Param.name; annot; _ } = param in
+    let rest = convert cx tparams_map annot in
     (* TODO - Use AssertRestParamT here. The big problem is that, at this
      * point, there might be some unsubstituted type parameters in the rest
      * type. Unlike expressions, which know all type parameters have been
@@ -673,7 +673,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     Some (Option.map ~f:ident_name name, loc_of_t rest, rest)
   | None -> None in
 
-  let return_t = convert cx tparams_map returnType in
+  let return_t = convert cx tparams_map return in
   let ft =
     DefT (reason, FunT (
       dummy_static reason,
@@ -926,8 +926,8 @@ and mk_type cx tparams_map reason = function
 and mk_type_annotation cx tparams_map reason = function
 | None ->
   mk_type cx tparams_map reason None
-| Some (_, typeAnnotation) ->
-  mk_type cx tparams_map reason (Some typeAnnotation)
+| Some (_, annot) ->
+  mk_type cx tparams_map reason (Some annot)
 
 and mk_singleton_string loc key =
   let reason = mk_reason (RStringLit key) loc in
@@ -964,7 +964,7 @@ and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
-and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
+and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map) = function
   | _, { TypeParam.name = (loc, name); bound; variance; default; } ->
@@ -991,7 +991,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
      SMap.add name (Flow.subst cx bounds_map bound) bounds_map)
   in
   let tparams, tparams_map, _ =
-    extract_type_param_declarations typeParameters
+    extract_type_param_declarations tparams
     |> List.fold_left add_type_param ([], tparams_map, SMap.empty)
   in
   List.rev tparams, tparams_map
@@ -1004,15 +1004,13 @@ and type_identifier cx name loc =
   else Env.var_ref ~lookup_mode:ForType cx name loc
 
 and extract_type_param_declarations =
-  let open Ast.Type in
-  let f (_, typeParameters) = typeParameters.ParameterDeclaration.params in
+  let f (_, params) = params in
   Option.value_map ~f ~default:[]
 
 and extract_type_param_instantiations =
-  let open Ast.Type in
   function
   | None -> None
-  | Some (_, typeParameters) -> Some typeParameters.ParameterInstantiation.params
+  | Some (_, args) -> Some args
 
 and polarity = Ast.Variance.(function
   | Some (_, Plus) -> Positive

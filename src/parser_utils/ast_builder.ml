@@ -24,14 +24,14 @@ module Patterns = struct
   let identifier str =
     Loc.none, Identifier { Identifier.
       name = Loc.none, str;
-      typeAnnotation = None;
+      annot = None;
       optional = false;
     }
 
   let array str =
     Loc.none, Array { Array.
       elements = [Some (Array.Element (identifier str))];
-      typeAnnotation = None;
+      annot = None;
     }
 
   let assignment str expr =
@@ -48,7 +48,7 @@ module Patterns = struct
         pattern = identifier str;
         shorthand = true;
       })];
-      typeAnnotation = None;
+      annot = None;
     }
 end
 
@@ -75,8 +75,8 @@ module Functions = struct
       generator = generator;
       predicate = None;
       expression;
-      returnType = None;
-      typeParameters = None;
+      return = None;
+      tparams = None;
     }
 end
 
@@ -87,9 +87,9 @@ module Classes = struct
   let make ?super ?id elements =
     { id;
       body = Loc.none, { Body.body = elements };
-      superClass = super;
-      typeParameters = None;
-      superTypeParameters = None;
+      tparams = None;
+      super;
+      super_targs = None;
       implements = [];
       classDecorators = [];
     }

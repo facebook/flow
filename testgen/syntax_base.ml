@@ -156,7 +156,7 @@ let mk_func_def
 
   let param = let open P.Identifier in
     (Loc.none, P.Identifier {name = (Loc.none, pname);
-                             typeAnnotation = Some (Loc.none, (Loc.none, ptype));
+                             annot = Some (Loc.none, (Loc.none, ptype));
                              optional = false}) in
 
   let func = let open Ast.Function in
@@ -167,8 +167,8 @@ let mk_func_def
      generator = false;
      predicate = None;
      expression = false;
-     returnType = Some (Loc.none, (Loc.none, rtype));
-     typeParameters = None} in
+     return = Some (Loc.none, (Loc.none, rtype));
+     tparams = None} in
   Stmt (S.FunctionDeclaration func)
 
 let mk_func_call (fid : Loc.t E.t') (param : Loc.t E.t') : t =
@@ -222,7 +222,7 @@ let mk_vardecl ?etype (vname : string) (expr : Loc.t E.t') : t =
   let id = let open P.Identifier in
     (Loc.none, P.Identifier
        { name = (Loc.none, vname);
-         typeAnnotation = t;
+         annot = t;
          optional = false}) in
 
   (* get the expression and its dependencies *)

@@ -708,7 +708,7 @@ module Expression
     | false, true -> true, false (* #prod-GeneratorExpression *)
     | false, false -> false, false (* #prod-FunctionExpression *)
     in
-    let id, typeParameters =
+    let id, tparams =
       if Peek.token env = T_LPAREN
       then None, None
       else begin
@@ -724,7 +724,7 @@ module Expression
     let env = env |> with_allow_super No_super in
 
     let params = Declaration.function_params ~await ~yield env in
-    let returnType, predicate = Type.annotation_and_predicate_opt env in
+    let return, predicate = Type.annotation_and_predicate_opt env in
     let end_loc, body, strict =
       Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
@@ -741,8 +741,8 @@ module Expression
       async;
       predicate;
       expression;
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     }))
 
   and number env kind raw =
@@ -887,11 +887,11 @@ module Expression
     let ret = (match Peek.token env with
     | T_COMMA -> sequence env [expression]
     | T_COLON ->
-        let typeAnnotation = Type.annotation env in
-        Expression.(Loc.btwn (fst expression) (fst typeAnnotation),
+        let annot = Type.annotation env in
+        Expression.(Loc.btwn (fst expression) (fst annot),
           TypeCast TypeCast.({
             expression;
-            typeAnnotation;
+            annot;
           }))
     | _ -> expression) in
     Expect.token env T_RPAREN;
@@ -990,16 +990,16 @@ module Expression
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
       let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
-      let typeParameters = Type.type_parameter_declaration env in
-      let params, returnType, predicate =
+      let tparams = Type.type_parameter_declaration env in
+      let params, return, predicate =
         (* Disallow all fancy features for identifier => body *)
-        if Peek.is_identifier env && typeParameters = None
+        if Peek.is_identifier env && tparams = None
         then
           let loc, name =
             Parse.identifier ~restricted_error:Error.StrictParamName env in
           let param = loc, Pattern.Identifier {
             Pattern.Identifier.name = loc, name;
-                               typeAnnotation=None;
+                               annot=None;
                                optional=false;
           } in
           (loc, { Ast.Function.Params.params = [param]; rest = None }), None, None
@@ -1013,10 +1013,10 @@ module Expression
            * type for an arrow function. So we disallow anonymous function
            * types in arrow function return types unless the function type is
            * enclosed in parens *)
-          let returnType, predicate = env
+          let return, predicate = env
             |> with_no_anon_function_type true
             |> Type.annotation_and_predicate_opt in
-          params, returnType, predicate in
+          params, return, predicate in
 
       (* It's hard to tell if an invalid expression was intended to be an
        * arrow function before we see the =>. If there are no params, that
@@ -1056,8 +1056,8 @@ module Expression
         generator = false; (* arrow functions cannot be generators *)
         predicate;
         expression;
-        returnType;
-        typeParameters;
+        return;
+        tparams;
       }))
 
   and sequence env acc =

@@ -200,11 +200,11 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
 
 
 let type_of_pattern = Ast.Pattern.(function
-  | _, Array { Array.typeAnnotation; _; } -> typeAnnotation
+  | _, Array { Array.annot; _; } -> annot
 
-  | _, Object { Object.typeAnnotation; _; } -> typeAnnotation
+  | _, Object { Object.annot; _; } -> annot
 
-  | _, Identifier { Identifier.typeAnnotation; _; } -> typeAnnotation
+  | _, Identifier { Identifier.annot; _; } -> annot
 
   | _, _ -> None
 )

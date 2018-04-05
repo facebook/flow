@@ -64,7 +64,7 @@ and Type : sig
       type 'M t = 'M * 'M t'
       and 'M t' = {
         name: 'M Identifier.t option;
-        typeAnnotation: 'M Type.t;
+        annot: 'M Type.t;
         optional: bool;
       }
     end
@@ -82,9 +82,9 @@ and Type : sig
       }
     end
     type 'M t = {
+      tparams: 'M Type.ParameterDeclaration.t option;
       params: 'M Params.t;
-      returnType: 'M Type.t;
-      typeParameters: 'M Type.ParameterDeclaration.t option;
+      return: 'M Type.t;
     }
   end
 
@@ -101,7 +101,7 @@ and Type : sig
     end
     type 'M t = {
       id: 'M Identifier.t;
-      typeParameters: 'M Type.ParameterInstantiation.t option;
+      targs: 'M Type.ParameterInstantiation.t option;
     }
   end
 
@@ -183,7 +183,7 @@ and Type : sig
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the
-   * identifier a would have a property typeAnnotation which contains a
+   * identifier a would have a property annot which contains a
    * Type.annotation with a location from column 6-14 *)
   and 'M annotation = 'M * 'M t
 
@@ -198,15 +198,11 @@ and Type : sig
       }
     end
     type 'M t = 'M * 'M t'
-    and 'M t' = {
-      params: 'M TypeParam.t list;
-    }
+    and 'M t' = 'M TypeParam.t list
   end
   module ParameterInstantiation : sig
     type 'M t = 'M * 'M t'
-    and 'M t' = {
-      params: 'M Type.t list;
-    }
+    and 'M t' = 'M Type.t list
   end
 
   module Predicate : sig
@@ -256,14 +252,14 @@ and Statement : sig
   module TypeAlias : sig
     type 'M t = {
       id: 'M Identifier.t;
-      typeParameters: 'M Type.ParameterDeclaration.t option;
+      tparams: 'M Type.ParameterDeclaration.t option;
       right: 'M Type.t;
     }
   end
   module OpaqueType: sig
     type 'M t = {
       id: 'M Identifier.t;
-      typeParameters: 'M Type.ParameterDeclaration.t option;
+      tparams: 'M Type.ParameterDeclaration.t option;
       impltype: 'M Type.t option;
       supertype: 'M Type.t option;
     }
@@ -370,7 +366,7 @@ and Statement : sig
   module Interface : sig
     type 'M t = {
       id: 'M Identifier.t;
-      typeParameters: 'M Type.ParameterDeclaration.t option;
+      tparams: 'M Type.ParameterDeclaration.t option;
       body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) list;
     }
@@ -378,7 +374,7 @@ and Statement : sig
   module DeclareClass : sig
     type 'M t = {
       id: 'M Identifier.t;
-      typeParameters: 'M Type.ParameterDeclaration.t option;
+      tparams: 'M Type.ParameterDeclaration.t option;
       body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) option;
       mixins: ('M * 'M Type.Generic.t) list;
@@ -388,13 +384,13 @@ and Statement : sig
   module DeclareVariable : sig
     type 'M t = {
       id: 'M Identifier.t;
-      typeAnnotation: 'M Type.annotation option;
+      annot: 'M Type.annotation option;
     }
   end
   module DeclareFunction : sig
     type 'M t = {
       id: 'M Identifier.t;
-      typeAnnotation: 'M Type.annotation;
+      annot: 'M Type.annotation;
       predicate: 'M Type.Predicate.t option;
     }
   end
@@ -771,7 +767,7 @@ and Expression : sig
   module TypeCast : sig
     type 'M t = {
       expression: 'M Expression.t;
-      typeAnnotation: 'M Type.annotation;
+      annot: 'M Type.annotation;
     }
   end
   module MetaProperty : sig
@@ -951,7 +947,7 @@ and Pattern : sig
       | RestProperty of 'M RestProperty.t
     type 'M t = {
       properties: 'M property list;
-      typeAnnotation: 'M Type.annotation option;
+      annot: 'M Type.annotation option;
     }
   end
   module Array : sig
@@ -966,7 +962,7 @@ and Pattern : sig
       | RestElement of 'M RestElement.t
     type 'M t = {
       elements: 'M element option list;
-      typeAnnotation: 'M Type.annotation option;
+      annot: 'M Type.annotation option;
     }
   end
   module Assignment : sig
@@ -978,7 +974,7 @@ and Pattern : sig
   module Identifier : sig
     type 'M t = {
       name: 'M Identifier.t;
-      typeAnnotation: 'M Type.annotation option;
+      annot: 'M Type.annotation option;
       optional: bool;
     }
   end
@@ -1019,7 +1015,7 @@ and Class : sig
     and 'M t' = {
       key: 'M Expression.Object.Property.key;
       value: 'M Expression.t option;
-      typeAnnotation: 'M Type.annotation option;
+      annot: 'M Type.annotation option;
       static: bool;
       variance: 'M Variance.t option;
     }
@@ -1029,7 +1025,7 @@ and Class : sig
     and 'M t' = {
       key: 'M PrivateName.t;
       value: 'M Expression.t option;
-      typeAnnotation: 'M Type.annotation option;
+      annot: 'M Type.annotation option;
       static: bool;
       variance: 'M Variance.t option;
     }
@@ -1038,7 +1034,7 @@ and Class : sig
     type 'M t = 'M * 'M t'
     and 'M t' = {
       id: 'M Identifier.t;
-      typeParameters: 'M Type.ParameterInstantiation.t option;
+      targs: 'M Type.ParameterInstantiation.t option;
     }
   end
   module Body : sig
@@ -1054,9 +1050,9 @@ and Class : sig
   type 'M t = {
     id: 'M Identifier.t option;
     body: 'M Class.Body.t;
-    superClass: 'M Expression.t option;
-    typeParameters: 'M Type.ParameterDeclaration.t option;
-    superTypeParameters: 'M Type.ParameterInstantiation.t option;
+    tparams: 'M Type.ParameterDeclaration.t option;
+    super: 'M Expression.t option;
+    super_targs: 'M Type.ParameterInstantiation.t option;
     implements: 'M Class.Implements.t list;
     classDecorators: 'M Expression.t list;
   }
@@ -1087,8 +1083,8 @@ and Function : sig
     generator: bool;
     predicate: 'M Type.Predicate.t option;
     expression: bool;
-    returnType: 'M Type.annotation option;
-    typeParameters: 'M Type.ParameterDeclaration.t option;
+    return: 'M Type.annotation option;
+    tparams: 'M Type.ParameterDeclaration.t option;
   }
 end = Function
 

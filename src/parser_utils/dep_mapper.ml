@@ -201,11 +201,11 @@ class mapper = object(this)
     (match expr with
     | _, Ast.Pattern.Identifier id ->
         let open Ast.Pattern.Identifier in
-        let { name = (loc, _); typeAnnotation = ta; _ } = id in
+        let { name = (loc, _); annot; _ } = id in
         (try
            let d = LocMap.find loc use_def_map in
            let key = DepKey.Id d in
-           match ta with
+           match annot with
              | None ->
                (* Currently, we pretend we don't know anything about caller/callee *)
                let dep = { typeDep = Incomplete;
@@ -213,8 +213,8 @@ class mapper = object(this)
                dep_map <-
                  DepMap.add ~combine:(merge_dep key) (* update_dep *)
                  key dep dep_map
-             | Some some_ta ->
-               let dep = { typeDep = Annotation (some_ta, []);
+             | Some some_annot ->
+               let dep = { typeDep = Annotation (some_annot, []);
                            valDep = Incomplete } in
                dep_map <-
                  DepMap.add ~combine:(merge_dep key) (* update_dep *)
@@ -228,11 +228,11 @@ class mapper = object(this)
     (match expr with
     | _, Ast.Pattern.Identifier id ->
       let open Ast.Pattern.Identifier in
-      let { name = (loc, _); typeAnnotation = ta; _ } = id in
+      let { name = (loc, _); annot; _ } = id in
       (try
          let d = LocMap.find loc use_def_map in
          let key = DepKey.Id d in
-         match ta with
+         match annot with
            | None ->
              let dep = { typeDep = NoInfo;
                          valDep = NoInfo } in
@@ -240,8 +240,8 @@ class mapper = object(this)
              dep_map <-
                DepMap.add ~combine:(merge_dep key) (* update_dep *)
                key dep dep_map
-           | Some some_ta -> (* annotation *)
-             let dep = { typeDep = Annotation (some_ta, []);
+           | Some some_annot -> (* annotation *)
+             let dep = { typeDep = Annotation (some_annot, []);
                          valDep = NoInfo } in
              dep_map <-
                DepMap.add ~combine:(merge_dep key) (* update_dep *)
@@ -302,7 +302,7 @@ class mapper = object(this)
       | _, Ast.Pattern.Identifier id ->
         let open Ast.Pattern.Identifier in
         let open Dep in
-        let { name = (loc, _); typeAnnotation = _; _ } = id in
+        let { name = (loc, _); annot = _; _ } = id in
         (try
            let d = LocMap.find loc use_def_map in
            let key = DepKey.Id d in
@@ -327,7 +327,7 @@ class mapper = object(this)
         (* Dealing with real destructing depends on actual heap analysis *)
         (* For now, we can just map each of these properties to Destructure *)
         let open Ast.Pattern.Object in
-        let { properties; typeAnnotation=_} = o in
+        let { properties; annot = _} = o in
         let process_prop = fun p ->
           (match p with
             | Property (loc,{Property.key=key; pattern; Property.shorthand=shorthand}) ->
@@ -349,7 +349,7 @@ class mapper = object(this)
         List.iter process_prop properties
       | _, Ast.Pattern.Array a ->
         let open Ast.Pattern.Array in
-        let { elements; typeAnnotation=_} = a in
+        let { elements; annot = _} = a in
         let process_elem = fun e ->
           (match e with
             | Element (loc, _) -> this#map_id_to_incomplete loc
@@ -456,15 +456,15 @@ class mapper = object(this)
     | loc, TypeCast x ->
       let open Ast.Expression.TypeCast in
       let open Dep in
-      let { expression=e; typeAnnotation=ta } = x in
+      let { expression=e; annot } = x in
       let e' = this#expression e in
       let loc_e',_ = e' in
-      let dep = { typeDep = Annotation (ta, []);
+      let dep = { typeDep = Annotation (annot, []);
                   valDep = Depends [DepKey.Temp loc_e'] } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
       ;
       if e' == e then expr
-      else loc, TypeCast { expression = e'; typeAnnotation= ta }
+      else loc, TypeCast { expression = e'; annot }
 
     (* TODO Member: in the best case, we can retrieve the right HeapLocs *)
 
@@ -514,7 +514,7 @@ class mapper = object(this)
        * optional. 2. The += syntax can occur here. 3. We ignore the type
        * annotation here. *)
       let open Ast.Pattern.Identifier in
-      let { name = (loc, _); typeAnnotation = _; _} = id in
+      let { name = (loc, _); annot = _; _} = id in
       (try
          let d = LocMap.find loc use_def_map in
          let key = DepKey.Id d in
@@ -543,7 +543,7 @@ class mapper = object(this)
       (* This is identical to the corresponding case in
        * assign_to_variable_declarator_pattern.  TODO - refactor.  *)
       let open Ast.Pattern.Array in
-      let { elements; typeAnnotation=_} = a in
+      let { elements; annot = _} = a in
       let process_elem = fun e ->
         (match e with
           | Element (loc, _) -> this#map_id_to_incomplete loc

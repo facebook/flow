@@ -69,14 +69,13 @@ let rec variable_decl cx entry = Ast.Statement.(
       let pattern_name = internal_pattern_name loc in
       let desc = RCustom (spf "%s _" str_of_kind) in
       let r = mk_reason desc loc in
-      let typeAnnotation = type_of_pattern p in
-      let t = typeAnnotation |>
-        (* TODO: delay resolution of type annotation like above? *)
-        Anno.mk_type_annotation cx SMap.empty r in
+      let annot = type_of_pattern p in
+      (* TODO: delay resolution of type annotation like above? *)
+      let t = Anno.mk_type_annotation cx SMap.empty r annot in
       bind cx pattern_name t loc;
       let expr _ _ = EmptyT.at loc in (* don't eval computed property keys *)
       destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
-        let t = match typeAnnotation with
+        let t = match annot with
         | None -> t
         | Some _ ->
           let r = mk_reason (RIdentifier name) loc in
@@ -230,14 +229,14 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, DeclareFunction { DeclareFunction.
       id = (id_loc, name) as id;
-      typeAnnotation;
+      annot;
       predicate}) ->
       (match declare_function_to_function_declaration
-        cx id typeAnnotation predicate with
+        cx id annot predicate with
       | None ->
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
           let t =
-            Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation) in
+            Anno.mk_type_annotation cx SMap.empty r (Some annot) in
           Type_table.set (Context.type_table cx) id_loc t;
           let id_info = name, t, Type_table.Other in
           Type_table.set_info (Context.type_table cx) id_loc id_info;
@@ -463,7 +462,7 @@ and statement cx = Ast.Statement.(
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
     Ast.Pattern.(match param with
       | loc, Identifier {
-          Identifier.name = (_, name); typeAnnotation = None; _;
+          Identifier.name = (_, name); annot = None; _;
         } ->
           let r = mk_reason (RCustom "catch") loc in
           let t = Tvar.mk cx r in
@@ -665,11 +664,11 @@ and statement cx = Ast.Statement.(
       (* TODO or disallow? *)
       ()
 
-  | (loc, DeclareTypeAlias {TypeAlias.id=(name_loc, name); typeParameters; right;})
-  | (loc, TypeAlias {TypeAlias.id=(name_loc, name); typeParameters; right;}) ->
+  | (loc, DeclareTypeAlias {TypeAlias.id=(name_loc, name); tparams; right;})
+  | (loc, TypeAlias {TypeAlias.id=(name_loc, name); tparams; right;}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
-        Anno.mk_type_param_declarations cx typeParameters in
+        Anno.mk_type_param_declarations cx tparams in
       let t = Anno.convert cx typeparams_map right in
       let t =
         let mod_reason = replace_reason ~keep_def_loc:true (fun desc -> RTypeAlias (name, desc)) in
@@ -688,11 +687,11 @@ and statement cx = Ast.Statement.(
       Env.init_type cx name type_ name_loc
 
   | (loc, DeclareOpaqueType
-    {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype})
-  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype}) ->
+    {OpaqueType.id=(name_loc, name); tparams; impltype; supertype})
+  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); tparams; impltype; supertype}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
-        Anno.mk_type_param_declarations cx typeParameters in
+        Anno.mk_type_param_declarations cx tparams in
       let underlying_t = Option.map ~f:(Anno.convert cx typeparams_map) impltype in
       let opaque_arg_polarities = List.fold_left (fun acc tparam ->
         SMap.add tparam.name tparam.polarity acc) SMap.empty typeparams in
@@ -1470,8 +1469,8 @@ and statement cx = Ast.Statement.(
       ()
 
   | (loc, FunctionDeclaration func) ->
-      let {Ast.Function.id; params; returnType; _} = func in
-      let sig_loc = match params, returnType with
+      let {Ast.Function.id; params; return; _} = func in
+      let sig_loc = match params, return with
       | _, Some (end_loc, _)
       | (end_loc, _), None
          -> Loc.btwn loc end_loc
@@ -1492,21 +1491,21 @@ and statement cx = Ast.Statement.(
 
   | (loc, DeclareVariable { DeclareVariable.
       id = (id_loc, name);
-      typeAnnotation;
+      annot;
     }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
-      let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
+      let t = Anno.mk_type_annotation cx SMap.empty r annot in
       let id_info = name, t, Type_table.Other in
       Type_table.set_info (Context.type_table cx) id_loc id_info;
       Env.unify_declared_type cx name t;
 
   | (loc, DeclareFunction { DeclareFunction.
       id;
-      typeAnnotation;
+      annot;
       predicate;
     }) ->
       (match declare_function_to_function_declaration
-        cx id typeAnnotation predicate with
+        cx id annot predicate with
       | Some func_decl ->
           statement cx (loc, func_decl)
       | _ ->
@@ -2352,18 +2351,18 @@ and variable cx kind
   );
   match id with
     | (loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-          name = (id_loc, name); typeAnnotation; optional
+          name = (id_loc, name); annot; optional
         }) ->
         (* simple lvalue *)
         (* make annotation, unify with declared type created in variable_decl *)
         let t =
           let desc = RIdentifier name in
           let anno_reason = mk_reason desc loc in
-          Anno.mk_type_annotation cx SMap.empty anno_reason typeAnnotation in
+          Anno.mk_type_annotation cx SMap.empty anno_reason annot in
         let id_info = name, t, Type_table.Other in
         Type_table.set_info (Context.type_table cx) id_loc id_info;
         Env.unify_declared_type cx name t;
-        let has_anno = not (typeAnnotation = None) in
+        let has_anno = not (annot = None) in
         Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
         (match init with
           | Some ((rhs_loc, _) as expr) ->
@@ -2397,8 +2396,8 @@ and variable cx kind
     | loc, _ ->
         (* compound lvalue *)
         let pattern_name = internal_pattern_name loc in
-        let typeAnnotation = type_of_pattern id in
-        let has_anno = not (typeAnnotation = None) in
+        let annot = type_of_pattern id in
+        let has_anno = not (annot = None) in
         let (t, init_reason) = match init with
           | Some expr -> (expression cx expr, mk_expression_reason expr)
           | None -> (
@@ -2505,11 +2504,9 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Logical l ->
       logical cx loc l
 
-  | TypeCast {
-        TypeCast.expression = e;
-        typeAnnotation } ->
+  | TypeCast { TypeCast.expression = e; annot } ->
       let r = mk_reason (RCustom "typecast") loc in
-      let t = Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation)
+      let t = Anno.mk_type_annotation cx SMap.empty r (Some annot)
       in Type_table.set (Context.type_table cx) loc t;
       let infer_t = expression cx e in
       let use_op = Op (Cast {
@@ -3017,8 +3014,8 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
         expressions
 
   | Function func ->
-      let {Ast.Function.id; params; returnType; predicate; _} = func in
-      let sig_loc = match params, returnType with
+      let {Ast.Function.id; params; return; predicate; _} = func in
+      let sig_loc = match params, return with
       | _, Some (end_loc, _)
       | (end_loc, _), None
          -> Loc.btwn loc end_loc
@@ -4953,7 +4950,7 @@ and mk_arrow cx loc func =
 
 (* Transform predicate declare functions to functions whose body is the
    predicate declared for the funcion *)
-and declare_function_to_function_declaration cx id typeAnnotation predicate =
+and declare_function_to_function_declaration cx id annot predicate =
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
       Flow.add_output cx Flow_error.(
@@ -4962,25 +4959,25 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
       None
 
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
-      match typeAnnotation with
+      match annot with
       | (_, (_, Ast.Type.Function
         { Ast.Type.Function.params = (params_loc, { Ast.Type.Function.Params.params; rest });
-          Ast.Type.Function.returnType;
-          Ast.Type.Function.typeParameters;
+          Ast.Type.Function.return;
+          Ast.Type.Function.tparams;
         })) ->
           let param_type_to_param = Ast.Type.Function.(
-            fun (l, { Param.name; Param.typeAnnotation; _ }) ->
+            fun (l, { Param.name; Param.annot; _ }) ->
               let name = match name with
               | Some name -> name
               | None ->
-                  let name_loc = fst typeAnnotation in
+                  let name_loc = fst annot in
                   Flow.add_output cx Flow_error.(EUnsupportedSyntax
                     (loc, PredicateDeclarationAnonymousParameters));
                   (name_loc, "_")
               in
               let name' = ({ Ast.Pattern.Identifier.
                 name;
-                typeAnnotation = Some (fst typeAnnotation, typeAnnotation);
+                annot = Some (fst annot, annot);
                 optional = false;
               }) in
               (l, Ast.Pattern.Identifier name')
@@ -4998,7 +4995,7 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
                 Ast.Statement.Return.argument = Some e
               })
             ]}) in
-          let returnType = Some (loc, returnType) in
+          let return = Some (loc, return) in
           Some (Ast.Statement.FunctionDeclaration { Ast.Function.
             id = Some id;
             params = (params_loc, { Ast.Function.Params.params; rest });
@@ -5007,8 +5004,8 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
             generator = false;
             predicate = Some (loc, Ast.Type.Predicate.Inferred);
             expression = false;
-            returnType = returnType;
-            typeParameters;
+            return;
+            tparams;
           })
 
       | _ ->
