@@ -359,10 +359,13 @@ end = struct
     extracted_type
     |> Flow_js.Members.extract_members cx
     |> Flow_js.Members.to_command_result
-    >>= fun map -> match SMap.get name map with
-      | None -> Ok None
-      | Some (None, _) -> Error "Expected a location associated with the definition"
-      | Some (Some loc, _) -> Ok (Some loc)
+    >>| fun map -> match SMap.get name map with
+      | None -> None
+      (* Currently some types (e.g. spreads) do not contain locations for their properties. For now
+       * we'll just treat them as if the properties do not exist, but once this is fixed this case
+       * should be promoted to an error *)
+      | Some (None, _) -> None
+      | Some (Some loc, _) -> Some loc
 
   let rec extract_def_loc cx ty name : (def_loc, string) result =
     let resolved = Flow_js.resolve_type cx ty in
