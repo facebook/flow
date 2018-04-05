@@ -43,7 +43,7 @@ clean:
 # `make download` hasn't been run.
 $(addsuffix .dl,$(RELEASE_ZIPS)):
 	@mkdir -p "$(@D)"
-	curl --max-time 300 \
+	[ -e "$(subst .dl,,$@)" ] || curl --max-time 300 \
 		-L "$(patsubst dist/release/%.zip.dl,$(HOST)/%-v$(FLOW_VERSION).zip,$@)" \
 		-o "$(subst .dl,,$@)" || rm "$(subst .dl,,$@)"
 
@@ -53,7 +53,8 @@ $(addsuffix .dl,$(RELEASE_ZIPS)):
 dist/local/libflowparser-$(PLATFORM).zip:
 	@mkdir -p "$(@D)"
 	$(MAKE) -C ../../src/parser dist/libflowparser.zip
-	cp -u ../../src/parser/dist/libflowparser.zip "$@"
+	[ ! -e "$@" -o "../../src/parser/dist/libflowparser.zip" -nt "$@" ] && \
+		cp ../../src/parser/dist/libflowparser.zip "$@"
 
 # The following two "pattern" rules (because of the %) choose between using
 # the downloaded release builds or building from source, depending on whether
@@ -64,10 +65,10 @@ dist/local/libflowparser-$(PLATFORM).zip:
 # kicks off the local build.
 dist/libflowparser-%.zip: dist/release/libflowparser-%.zip
 	@mkdir -p "$(@D)"
-	cp -u "$<" "$@"
+	cp "$<" "$@"
 dist/libflowparser-%.zip: dist/local/libflowparser-%.zip
 	@mkdir -p "$(@D)"
-	cp -u "$<" "$@"
+	cp "$<" "$@"
 
 $(LIBS): lib/%/libflowparser.a: dist/libflowparser-%.zip
 	DIR="$(basename $<)"; \
