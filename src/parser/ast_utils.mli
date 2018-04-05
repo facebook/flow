@@ -19,3 +19,7 @@ val bindings_of_variable_declarations:
 val partition_directives:
   Loc.t Ast.Statement.t list ->
   Loc.t Ast.Statement.t list * Loc.t Ast.Statement.t list
+
+val negate_number_literal:
+  float * string ->
+  float * string

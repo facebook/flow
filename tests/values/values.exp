@@ -653,5 +653,19 @@ References:
                 ^^^^^^^ [5]
 
 
+Error -------------------------------------------------------------------------------------------- object_types.js:107:2
 
-Found 39 errors
+Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with enum [2].
+
+   object_types.js:107:2
+   107| (1: NumbersEnum); // error, NumbersEnum = -1 | 2
+         ^ [1]
+
+References:
+   object_types.js:107:5
+   107| (1: NumbersEnum); // error, NumbersEnum = -1 | 2
+            ^^^^^^^^^^^ [2]
+
+
+
+Found 40 errors

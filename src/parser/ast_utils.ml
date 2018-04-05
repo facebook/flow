@@ -54,3 +54,11 @@ let partition_directives statements =
     | rest -> List.rev directives, rest
   in
   helper [] statements
+
+let negate_number_literal (value, raw) =
+  let raw_len = String.length raw in
+  let raw = if raw_len > 0 && raw.[0] = '-'
+    then String.sub raw 1 (raw_len - 1)
+    else "-" ^ raw
+  in
+  ~-. value, raw

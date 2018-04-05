@@ -3389,11 +3389,21 @@ and unary cx loc = Ast.Expression.Unary.(function
       NumT.at loc
 
   | { operator = Minus; argument; _ } ->
-      let arg = expression cx argument in
-      let reason = mk_reason (desc_of_t arg) loc in
-      Tvar.mk_derivable_where cx reason (fun t ->
-        Flow.flow cx (arg, UnaryMinusT (reason, t));
-      )
+      begin match expression cx argument with
+      | DefT (reason, NumT (Literal (sense, (value, raw)))) ->
+        (* special case for negative number literals, to avoid creating an unnecessary tvar. not
+           having a tvar allows other special cases that match concrete lower bounds to proceed
+           (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
+           make a negative number not look like a literal.) *)
+        let reason = repos_reason loc ~annot_loc:loc reason in
+        let (value, raw) = Ast_utils.negate_number_literal (value, raw) in
+        DefT (reason, NumT (Literal (sense, (value, raw))))
+      | arg ->
+        let reason = mk_reason (desc_of_t arg) loc in
+        Tvar.mk_derivable_where cx reason (fun t ->
+          Flow.flow cx (arg, UnaryMinusT (reason, t));
+        )
+      end
 
   | { operator = BitNot; argument; _ } ->
       let t = NumT.at loc in

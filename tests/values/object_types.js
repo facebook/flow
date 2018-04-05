@@ -95,3 +95,13 @@ type FrozenSuiteEnum = $Values<typeof FrozenSuite>
 ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
 ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
 (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
+
+
+const Numbers = Object.freeze({
+  foo: -1,
+  bar: 2,
+});
+type NumbersEnum = $Values<typeof Numbers>
+(-1: NumbersEnum); // ok
+(2: NumbersEnum); // ok
+(1: NumbersEnum); // error, NumbersEnum = -1 | 2

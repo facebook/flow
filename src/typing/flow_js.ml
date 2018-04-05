@@ -5682,12 +5682,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, NumT lit), UnaryMinusT (reason_op, t_out) ->
       let num = match lit with
       | Literal (_, (value, raw)) ->
-        let raw_len = String.length raw in
-        let raw = if raw_len > 0 && raw.[0] = '-'
-          then String.sub raw 1 (raw_len - 1)
-          else "-" ^ raw
-        in
-        DefT (replace_reason_const RNumber reason_op, NumT (Literal (None, (~-. value, raw))))
+        let (value, raw) = Ast_utils.negate_number_literal (value, raw) in
+        DefT (replace_reason_const RNumber reason_op, NumT (Literal (None, (value, raw))))
       | AnyLiteral
       | Truthy ->
         l
