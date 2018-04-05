@@ -58,10 +58,14 @@ libflowparser.native.o:
 
 dist/libflowparser/lib/libflowparser.a: libflowparser.native.o
 	@mkdir -p "$(@D)"
-	if [ "$(OCAML_PATH)/libasmrun_pic.a" -nt "$@" -o  "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o" -nt "$@" ]; then \
+	if [ ! -e "$@" -o "$(OCAML_PATH)/libasmrun_pic.a" -nt "$@" -o  "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o" -nt "$@" ]; then \
+		echo "Rebuilding $@"; \
 		cp "$(OCAML_PATH)/libasmrun_pic.a" "$@"; \
 		ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"; \
+	else \
+		echo "Not rebuilding $@, already up to date"; \
 	fi
+	test -e "$@" || exit 1
 
 $(OCAML_HEADERS): dist/libflowparser/include/%: $(OCAML_PATH)/%
 	@mkdir -p "$(@D)"
