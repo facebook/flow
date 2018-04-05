@@ -1975,13 +1975,16 @@ CAMLprim value set_file_info_on_disk_path(
     value ml_str
 ) {
     CAMLparam1(ml_str);
-    assert_master();
     const char *str = String_val(ml_str);
-    // concatenate strings with = between them. *sigh*
-    char *envvar = malloc(strlen(FILE_INFO_ON_DISK_PATH) + 1 + strlen(str) + 1);
-    assert(0 == sprintf(envvar, "%s=%s", FILE_INFO_ON_DISK_PATH, str));
-    assert(0 == putenv(envvar));
-    free(envvar);
+    size_t keylen = strlen(FILE_INFO_ON_DISK_PATH);
+    size_t valuelen = strlen(str);
+    assert(keylen + 1 + valuelen + 1 < 1024);
+    char buffer[1024] = { 0 };
+    char *dest = buffer;
+    strcat(dest, FILE_INFO_ON_DISK_PATH);
+    strcat(dest, "=");
+    strcat(dest, str);
+    putenv(dest);
     CAMLreturn(Val_unit);
 }
 
@@ -2613,22 +2616,26 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
 }
 
 CAMLprim value set_file_info_on_disk(value ml_str) {
-  CAMLparam0();
+  CAMLparam1(ml_str);
+  UNUSED(ml_str);
   CAMLreturn(Val_long(0));
 }
 
 CAMLprim value get_file_info_on_disk(value ml_str) {
-  CAMLparam0();
+  CAMLparam1(ml_str);
+  UNUSED(ml_str);
   CAMLreturn(Val_long(0));
 }
 
 CAMLprim value get_file_info_on_disk_path(value ml_str) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
+  CAMLparam1(ml_str);
+  UNUSED(ml_str);
+  CAMLreturn(caml_copy_string(""));
 }
 
 CAMLprim value set_file_info_on_disk_path(value ml_str) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
+  CAMLparam1(ml_str);
+  UNUSED(ml_str);
+  CAMLreturn(Val_unit);
 }
 #endif
