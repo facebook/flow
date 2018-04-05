@@ -2213,7 +2213,7 @@ and prop_map_of_object cx props =
   List.fold_left (object_prop cx) SMap.empty props
 
 and object_ cx reason ?(allow_sealed=true) props =
-  Ast.Expression.Object.(
+  let open Ast.Expression.Object in
 
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
@@ -2226,9 +2226,9 @@ and object_ cx reason ?(allow_sealed=true) props =
 
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
-  let mk_spread from_obj to_obj =
+  let mk_spread from_obj to_obj ~assert_exact =
     Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, ObjAssign));
+      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, ObjAssign { assert_exact }));
     )
   in
 
@@ -2254,7 +2254,7 @@ and object_ cx reason ?(allow_sealed=true) props =
     | Some result ->
       let result =
         if not (SMap.is_empty map)
-        then mk_spread (mk_object ~proto map) result
+        then mk_spread (mk_object ~proto map) result ~assert_exact:false
         else result
       in
       if not sealed then result else
@@ -2265,11 +2265,27 @@ and object_ cx reason ?(allow_sealed=true) props =
 
   let sealed, map, proto, result = List.fold_left (
     fun (sealed, map, proto, result) -> function
+    (* Enforce that the only way to make unsealed object literals is ...{} (spreading empty object
+       literals). Otherwise, spreading always returns sealed object literals.
+
+       Also enforce that a spread of an inexact object can only appear as the first element of an
+       object literal, because otherwise we cannot determine the type of the object literal without
+       significantly losing precision about elements preceding that spread.
+
+       Finally, the exactness of an object literal type is determined solely by its sealedness.
+
+       TODO: This treatment of spreads is oblivious to issues that arise when spreading expressions
+       of union type.
+    *)
     | SpreadProperty (_, { SpreadProperty.argument }) ->
         let spread = expression cx argument in
+        let not_empty_object_literal_argument = match spread with
+          | DefT (_, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
+          | _ -> true in
         let obj = eval_object (map, result) in
-        let result = mk_spread spread obj in
-        false, SMap.empty, proto, Some result
+        let result = mk_spread spread obj
+          ~assert_exact:(not (SMap.is_empty map && result = None)) in
+        sealed && not_empty_object_literal_argument, SMap.empty, proto, Some result
     | Property (_, Property.Init {
         key = Property.Computed k;
         value = v;
@@ -2313,7 +2329,6 @@ and object_ cx reason ?(allow_sealed=true) props =
     | None -> sealed && not (SMap.is_empty map)
   in
   eval_object ?proto ~sealed (map, result)
-)
 
 and variable cx kind
   ?if_uninitialized (_, vdecl) = Ast.Statement.(
@@ -3795,7 +3810,7 @@ and clone_object cx reason this that =
     let t = Flow.tvar_with_constraint cx u in
     Flow.flow cx (
       this,
-      ObjAssignToT (reason, that, t, ObjAssign)
+      ObjAssignToT (reason, that, t, default_obj_assign_kind)
     )
   )
 
@@ -3918,7 +3933,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let mk_spread from_obj to_obj =
     Tvar.mk_where cx reason_props (fun t ->
       Flow.flow cx (to_obj,
-        ObjAssignToT (reason_props, from_obj, t, ObjAssign));
+        ObjAssignToT (reason_props, from_obj, t, default_obj_assign_kind));
     )
   in
   (* When there's no result, return a new object with specified sealing. When

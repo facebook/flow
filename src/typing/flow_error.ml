@@ -153,6 +153,7 @@ type error_message =
     }
   | EInvalidPrototype of reason
   | EExperimentalOptionalChaining of Loc.t
+  | EInexactSpread of reason * reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -365,6 +366,7 @@ let util_use_op_of_msg nope util = function
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
 | EInvalidPrototype (_)
 | EExperimentalOptionalChaining (_)
+| EInexactSpread _
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -1935,4 +1937,13 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text "may change. You may opt in to using it anyway by putting ";
       code "esproposal.optional_chaining=enable"; text " into the ";
       code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+    ]
+
+  | EInexactSpread (reason, reason_op) ->
+    mk_error (loc_of_reason reason) [
+      text "Cannot determine the type of "; ref reason_op; text " because ";
+      text "it contains a spread of inexact "; ref reason; text ". ";
+      text "Being inexact, "; ref reason;
+      text " might be missing the types of some properties that are being copied. ";
+      text "Perhaps you could make it exact?"
     ]

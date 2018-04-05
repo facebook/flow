@@ -772,8 +772,8 @@ module rec TypeTerm : sig
   (* Object.assign(target, source1, ...source2) first resolves target then the
      sources. *)
   and obj_assign_kind =
-  (* Obj.assign(target, source) *)
-  | ObjAssign
+  (* Obj.assign(target, source) with flag indicating whether source must be exact *)
+  | ObjAssign of { assert_exact: bool }
   (* Obj.assign(target, ...source) *)
   | ObjSpreadAssign
 
@@ -3186,6 +3186,9 @@ let dummy_this =
 let global_this reason =
   let reason = replace_reason_const (RCustom "global object") reason in
   ObjProtoT reason
+
+let default_obj_assign_kind =
+  ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype

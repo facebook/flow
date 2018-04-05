@@ -2356,7 +2356,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | DefT (_, MaybeT t), ObjAssignFromT (_, _, _, ObjAssign) ->
+    | DefT (_, MaybeT t), ObjAssignFromT (_, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
        * today. In particular, spreading `null` and `void` become {}. The wrong
        * part is that spreads should distribute through unions, so `{...?T}`
@@ -2386,7 +2386,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire optional type. *)
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
 
-    | DefT (_, OptionalT t), ObjAssignFromT (_, _, _, ObjAssign) ->
+    | DefT (_, OptionalT t), ObjAssignFromT (_, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
        * today. In particular, spreading `null` and `void` become {}. The wrong
        * part is that spreads should distribute through unions, so `{...?T}`
@@ -3345,7 +3345,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
     | DefT (_, ObjT { flags; _ }), UseT (use_op, ExactT (r, t)) ->
-      if flags.exact && sealed_in_op r flags.sealed
+      if flags.exact && (Obj_type.sealed_in_op r flags.sealed)
       then rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
       else begin
         let reasons = FlowError.ordered_reasons (reason_of_t l, r) in
@@ -3441,7 +3441,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let lookup_default = match l with
         | DefT (_, ObjT { flags; _ })
             when flags.exact ->
-          if sealed_in_op reason_op flags.sealed then
+          if Obj_type.sealed_in_op reason_op flags.sealed then
             let r = replace_reason_const (RMissingProperty name) reason_op in
             Some (DefT (r, VoidT), lookup_default)
           else
@@ -4277,7 +4277,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
-        rec_flow cx trace (l, ObjAssignFromT (reason, o, Locationless.AnyT.t, ObjAssign))
+        rec_flow cx trace (l, ObjAssignFromT (reason, o, Locationless.AnyT.t, default_obj_assign_kind))
 
     | DefT (_, AnyT), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why reason_op, u)
@@ -4772,8 +4772,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
-    | proto, ObjAssignToT (reason, from, t, kind) ->
-      rec_flow cx trace (from, ObjAssignFromT (reason, proto, t, kind))
+    | to_obj, ObjAssignToT (reason, from_obj, t, kind) ->
+      rec_flow cx trace (from_obj, ObjAssignFromT (reason, to_obj, t, kind))
 
     (** When some object-like type O1 flows to
         ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
@@ -4787,8 +4787,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,ObjAssign);
         when O2 is resolved, we make the switch. **)
 
-    | DefT (lreason, ObjT { props_tmap = mapr; _ }),
-      ObjAssignFromT (reason_op, proto, t, ObjAssign) ->
+    | DefT (lreason, ObjT { props_tmap = mapr; flags; dict_t; _ }),
+      ObjAssignFromT (reason_op, to_obj, t, ObjAssign error_flags) ->
       let props_to_skip = ["$call"] in
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
@@ -4804,7 +4804,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some t ->
             let propref = Named (reason_prop, x) in
             let t = filter_optional cx ~trace reason_prop t in
-            rec_flow cx trace (proto, SetPropT (
+            rec_flow cx trace (to_obj, SetPropT (
               unknown_use, reason_prop, propref, Normal, t, None
             ))
           | None ->
@@ -4813,10 +4813,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ))
         )
       );
-      rec_flow_t cx trace (proto, t)
+      if dict_t <> None then rec_flow_t cx trace (DefT (reason_op, AnyObjT), t)
+      else begin
+        if error_flags.assert_exact && not flags.exact
+        then add_output cx ~trace (FlowError.EInexactSpread (lreason, reason_op));
+        rec_flow_t cx trace (to_obj, t)
+      end
 
     | DefT (lreason, InstanceT (_, _, _, { fields_tmap; methods_tmap; _ })),
-      ObjAssignFromT (reason_op, proto, t, ObjAssign) ->
+      ObjAssignFromT (reason_op, to_obj, t, ObjAssign _) ->
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
@@ -4826,7 +4831,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           match Property.read_t p with
           | Some t ->
             let propref = Named (reason_op, x) in
-            rec_flow cx trace (proto, SetPropT (
+            rec_flow cx trace (to_obj, SetPropT (
               unknown_use, reason_op, propref, Normal, t, None
             ))
           | None ->
@@ -4835,24 +4840,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ))
         )
       );
-      rec_flow_t cx trace (proto, t)
+      rec_flow_t cx trace (to_obj, t)
 
     (* AnyObjT has every prop, each one typed as `any`, so spreading it into an
        existing object destroys all of the keys, turning the result into an
-       AnyObjT as well. TODO: wait for `proto` to be resolved, and then call
+       AnyObjT as well. TODO: wait for `to_obj` to be resolved, and then call
        `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
-    | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, ObjAssign) ->
+    | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, ObjAssign _) ->
       rec_flow_t cx trace (DefT (reason, AnyObjT), t)
 
-    | ObjProtoT _, ObjAssignFromT (_, proto, t, ObjAssign) ->
-      rec_flow_t cx trace (proto, t)
+    | ObjProtoT _, ObjAssignFromT (_, to_obj, t, ObjAssign _) ->
+      rec_flow_t cx trace (to_obj, t)
 
     (* Object.assign semantics *)
-    | DefT (_, (NullT | VoidT)), ObjAssignFromT (_, proto, tout, ObjAssign) ->
-      rec_flow_t cx trace (proto, tout)
+    | DefT (_, (NullT | VoidT)), ObjAssignFromT (_, to_obj, tout, ObjAssign _) ->
+      rec_flow_t cx trace (to_obj, tout)
 
     (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
-    | DefT (reason, MixedT _), ObjAssignFromT (_, _, _, ObjAssign) ->
+    | DefT (reason, MixedT _), ObjAssignFromT (_, _, _, ObjAssign _) ->
       let dict = {
         dict_name = None;
         key = StrT.make reason;
@@ -4871,16 +4876,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ArrayAT (elemt, None)
       | ROArrayAT (elemt) ->
         (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, ObjAssign))
+        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, default_obj_assign_kind))
       | TupleAT (_, ts)
       | ArrayAT (_, Some ts) ->
         (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
         List.iter (fun from ->
-          rec_flow cx trace (from, ObjAssignFromT (r, o, t, ObjAssign))
+          rec_flow cx trace (from, ObjAssignFromT (r, o, t, default_obj_assign_kind))
         ) ts
       | EmptyAT ->
         (* Object.assign(o, ...EmptyAT) -> Object.assign(o, empty) *)
-        rec_flow cx trace (DefT (arr_r, EmptyT), ObjAssignFromT (r, o, t, ObjAssign))
+        rec_flow cx trace (DefT (arr_r, EmptyT), ObjAssignFromT (r, o, t, default_obj_assign_kind))
       end
 
     (*************************)
@@ -4898,7 +4903,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Remove shadow properties from rest result *)
       let props = SMap.filter (fun x _ -> not (is_internal_name x)) props in
       let proto = ObjProtoT reason in
-      let sealed = sealed_in_op reason flags.sealed in
+      let sealed = Obj_type.sealed_in_op reason flags.sealed in
       (* A rest result can not be exact if the source object is unsealed,
          because we may not have seen all the writes yet. *)
       let exact = sealed && flags.exact in
@@ -4923,7 +4928,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = Tvar.mk_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignFromT (reason_op, obj_super, tvar, ObjAssign)
+          ObjAssignFromT (reason_op, obj_super, tvar, default_obj_assign_kind)
         )
       ) in
 
@@ -4958,6 +4963,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), ObjSealT (reason, tout) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
 
+    | DefT (_, AnyObjT), ObjSealT (reason, tout) ->
+      rec_flow_t cx trace (DefT (reason, AnyObjT), tout)
+
     (*************************)
     (* objects can be frozen *)
     (*************************)
@@ -4988,7 +4996,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> ());
         perform_lookup_action cx trace propref p reason_obj reason_op action
       | None ->
-        let strict = match sealed_in_op reason_op o.flags.sealed, strict with
+        let strict = match Obj_type.sealed_in_op reason_op o.flags.sealed, strict with
         | false, ShadowRead (strict, ids) ->
           ShadowRead (strict, Nel.cons o.props_tmap ids)
         | false, ShadowWrite ids ->
@@ -5303,7 +5311,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | DefT (_, FunT (_, t, _)), SetPropT (_, reason_op, Named (_, "prototype"), _, tin, _) ->
-      rec_flow cx trace (tin, ObjAssignFromT (reason_op, t, Locationless.AnyT.t, ObjAssign))
+      rec_flow cx trace (tin, ObjAssignFromT (reason_op, t, Locationless.AnyT.t, default_obj_assign_kind))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -6446,7 +6454,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           ((reason_prop, lreason), lreason, Some s, Some use_op))
       | _ ->
         (* otherwise, look up the property in the prototype *)
-        let strict = match sealed_in_op ureason lflags.sealed, ldict with
+        let strict = match Obj_type.sealed_in_op ureason lflags.sealed, ldict with
         | false, None -> ShadowRead (Some lreason, Nel.one lflds)
         | true, None -> Strict lreason
         | _ -> NonstrictReturning (None, None)
@@ -6803,10 +6811,6 @@ and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
   )
 
 and inherited_method x = x <> "constructor" && x <> "$call"
-
-and sealed_in_op reason_op = function
-  | Sealed -> true
-  | UnsealedInFile source -> source <> (Loc.source (loc_of_reason reason_op))
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
@@ -7455,7 +7459,7 @@ and spread_objects cx reason those =
 and chain_objects cx ?trace reason this those =
   let result = List.fold_left (fun result that ->
     let that, kind = match that with
-    | Arg t -> t, ObjAssign
+    | Arg t -> t, default_obj_assign_kind
     | SpreadArg t ->
         (* If someone does Object.assign({}, ...Array<obj>) we can treat it like
            Object.assign({}, obj). *)
@@ -8266,7 +8270,7 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
     match propref with
     | Named _ ->
       let strict =
-        if sealed_in_op reason_op o.flags.sealed
+        if Obj_type.sealed_in_op reason_op o.flags.sealed
         then Strict reason_obj
         else ShadowRead (None, Nel.one o.props_tmap)
       in
@@ -8298,7 +8302,7 @@ and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t =
   | None ->
     match propref with
     | Named (reason_prop, prop) ->
-      let sealed = sealed_in_op reason_op o.flags.sealed in
+      let sealed = Obj_type.sealed_in_op reason_op o.flags.sealed in
       if sealed && o.flags.exact
       then
         add_output cx ~trace (FlowError.EPropNotFound
@@ -8699,7 +8703,7 @@ and prop_exists_test_generic
           (lreason, reason), Some key, Property.polarity p, Read, unknown_use
         ))
       )
-    | None when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
+    | None when flags.exact && Obj_type.sealed_in_op (reason_of_t result) flags.sealed ->
       (* prop is absent from exact object type *)
       if sense
       then ()
@@ -10571,7 +10575,7 @@ and react_kit cx trace ~use_op reason_op l u =
     ~mk_instance
     ~string_key
     ~mk_type_destructor
-    ~sealed_in_op
+    ~sealed_in_op:Obj_type.sealed_in_op
     ~union_of_ts
     ~filter_maybe
     cx trace ~use_op reason_op l u
@@ -10872,8 +10876,8 @@ and object_kit =
         sealed = Sealed;
         exact =
           flags1.exact && flags2.exact &&
-          sealed_in_op reason flags1.sealed &&
-          sealed_in_op reason flags2.sealed;
+          Obj_type.sealed_in_op reason flags1.sealed &&
+          Obj_type.sealed_in_op reason flags2.sealed;
       } in
       reason, props, dict, flags
     in
@@ -11099,7 +11103,7 @@ and object_kit =
       let flags = {
         frozen = false;
         sealed = Sealed;
-        exact = flags1.exact && sealed_in_op reason flags1.sealed;
+        exact = flags1.exact && Obj_type.sealed_in_op reason flags1.sealed;
       } in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT r1 in
@@ -11230,8 +11234,8 @@ and object_kit =
             sealed = Sealed;
             exact =
               config_flags.exact && defaults_flags.exact &&
-              sealed_in_op reason config_flags.sealed &&
-              sealed_in_op reason defaults_flags.sealed;
+              Obj_type.sealed_in_op reason config_flags.sealed &&
+              Obj_type.sealed_in_op reason defaults_flags.sealed;
           } in
           props, dict, flags
         (* Otherwise turn our slice props map into an object props. *)
@@ -11251,7 +11255,7 @@ and object_kit =
           let flags = {
             frozen = true;
             sealed = Sealed;
-            exact = config_flags.exact && sealed_in_op reason config_flags.sealed;
+            exact = config_flags.exact && Obj_type.sealed_in_op reason config_flags.sealed;
           } in
           props, dict, flags
       in
