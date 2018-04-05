@@ -2,6 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot determine the type of object literal [1] because it contains a spread of inexact object type [2]. Being inexact,
 object type [2] might be missing the types of some properties that are being copied. Perhaps you could make it exact?
+(`inexact-spread`)
 
    exact.js:15:50
    15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK

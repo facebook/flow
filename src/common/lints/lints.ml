@@ -18,6 +18,7 @@ type lint_kind =
   | NonstrictImport
   | UnclearType
   | UnsafeGettersSetters
+  | InexactSpread
 
 let string_of_sketchy_null_kind = function
   | SketchyBool -> "sketchy-null-bool"
@@ -32,6 +33,7 @@ let string_of_kind = function
   | NonstrictImport -> "nonstrict-import"
   | UnclearType -> "unclear-type"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
+  | InexactSpread -> "inexact-spread"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -49,6 +51,7 @@ let kinds_of_string = function
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
+  | "inexact-spread" -> Some [InexactSpread]
   | _ -> None
 
 module LintKind = struct
