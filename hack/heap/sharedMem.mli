@@ -267,3 +267,5 @@ module LocalCache :
 val get_file_info_on_disk : unit -> bool
 val get_file_info_on_disk_path : unit -> string
 val set_file_info_on_disk_path : string -> unit
+
+val open_file_info_db : unit -> unit

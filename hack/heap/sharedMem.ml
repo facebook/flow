@@ -227,6 +227,8 @@ external get_file_info_on_disk_path : unit -> string =
 external set_file_info_on_disk_path : string -> unit =
   "set_file_info_on_disk_path"
 
+external open_file_info_db : unit -> unit = "open_file_info_db"
+
 let init_done () =
   hh_init_done ();
   if hh_log_level() > 0 then Measure.print_stats ();

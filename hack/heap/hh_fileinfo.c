@@ -61,11 +61,11 @@ void hhfi_insert_row(
 }
 
 char *hhfi_get_filespec(
-        sqlite3 *db,
+        void *db,
         int64_t hash
 ) {
     UNUSED2(db, hash);
-    return;
+    return NULL;
 }
 
 #else
@@ -80,7 +80,7 @@ static char *copy_malloc(const char *s) {
 
 // insert a row into the name_info table
 void hhfi_insert_row(
-        sqlite3 *db,
+        void *db,
         int64_t hash,
         const char *name,
         int64_t kind,
@@ -107,7 +107,7 @@ static const char *hhfi_get_filespec_sql = \
     "SELECT FILESPEC FROM NAME_INFO WHERE (HASH = (?));";
 
 char *hhfi_get_filespec(
-        sqlite3 *db,
+        void *db,
         int64_t hash
 ) {
     assert(db);

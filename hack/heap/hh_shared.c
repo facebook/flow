@@ -115,6 +115,9 @@
 #define ARRAY_SIZE(array) \
     (sizeof(array) / sizeof((array)[0]))
 
+#define UNUSED(x) \
+    ((void)(x))
+
 #ifndef NO_SQLITE3
 #include <sqlite3.h>
 #define assert_sql(x, y) (assert_sql_with_line((x), (y), __LINE__))
@@ -1997,6 +2000,28 @@ CAMLprim value get_file_info_on_disk_path(
     CAMLreturn(caml_copy_string(str));
 }
 
+CAMLprim value open_file_info_db(
+    value ml_unit
+) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    const char *file_info_on_disk_path = getenv(FILE_INFO_ON_DISK_PATH);
+    assert(file_info_on_disk_path);
+    assert(strlen(file_info_on_disk_path) > 0);
+    if (g_db) {
+        CAMLreturn(Val_unit);
+    }
+    assert_sql(
+        sqlite3_open_v2(
+            file_info_on_disk_path,
+            &g_db,
+            SQLITE_OPEN_READONLY,
+            NULL
+        ),
+    SQLITE_OK);
+    CAMLreturn(Val_unit);
+}
+
 const char *create_tables_sql[] = {
   "CREATE TABLE IF NOT EXISTS HEADER(" \
   "    MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
@@ -2636,6 +2661,14 @@ CAMLprim value get_file_info_on_disk_path(value ml_str) {
 CAMLprim value set_file_info_on_disk_path(value ml_str) {
   CAMLparam1(ml_str);
   UNUSED(ml_str);
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value open_file_info_db(
+    value ml_unit
+) {
+  CAMLparam1(ml_unit);
+  UNUSED(ml_unit);
   CAMLreturn(Val_unit);
 }
 #endif
