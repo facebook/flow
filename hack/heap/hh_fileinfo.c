@@ -1,9 +1,12 @@
-#include <sqlite3.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "hh_fileinfo.h"
+
+#ifndef NO_SQLITE3
+#include <sqlite3.h>
+#endif
 
 // command used to create this table
 
