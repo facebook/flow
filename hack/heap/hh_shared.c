@@ -1978,16 +1978,9 @@ CAMLprim value set_file_info_on_disk_path(
     value ml_str
 ) {
     CAMLparam1(ml_str);
+    assert(Tag_val(ml_str) == String_tag);
     const char *str = String_val(ml_str);
-    size_t keylen = strlen(FILE_INFO_ON_DISK_PATH);
-    size_t valuelen = strlen(str);
-    assert(keylen + 1 + valuelen + 1 < 1024);
-    char buffer[1024] = { 0 };
-    char *dest = buffer;
-    strcat(dest, FILE_INFO_ON_DISK_PATH);
-    strcat(dest, "=");
-    strcat(dest, str);
-    putenv(dest);
+    setenv(FILE_INFO_ON_DISK_PATH, str, 1);
     CAMLreturn(Val_unit);
 }
 
