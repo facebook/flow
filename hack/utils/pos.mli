@@ -66,6 +66,9 @@ val multiline_json : absolute -> Hh_json.json
 
 val inside : 'a pos -> int -> int -> bool
 
+val exactly_matches_range :
+  'a pos -> start_line:int -> start_col:int -> end_line:int -> end_col:int -> bool
+
 val contains : 'a pos -> 'a pos -> bool
 
 val make : 'a -> b -> 'a pos

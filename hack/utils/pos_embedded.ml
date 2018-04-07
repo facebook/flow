@@ -98,6 +98,14 @@ let inside p line char_pos =
     else if line = last_line then char_pos <= last_col
     else line > first_line && line < last_line
 
+let exactly_matches_range p ~start_line ~start_col ~end_line ~end_col =
+  let p_start_line, p_start_col = File_pos.line_column p.pos_start in
+  let p_end_line, p_end_col = File_pos.line_column p.pos_end in
+  p_start_line = start_line &&
+  p_start_col = start_col - 1 &&
+  p_end_line = end_line &&
+  p_end_col = end_col - 1
+
 let contains pos_container pos =
   filename pos_container = filename pos &&
     pos.pos_start >= pos_container.pos_start &&
