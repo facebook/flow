@@ -21,6 +21,7 @@ type kind =
 type 'a t = {
   name:  string;
   type_: kind;
+  is_declaration: bool;
   (* Span of the symbol itself *)
   pos: 'a Pos.pos;
 }
