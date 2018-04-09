@@ -9,6 +9,82 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 export default suite(({
   addCode, addFile, addFiles, removeFile, ideStart, ideNotification, flowCmd
 }) => [
+  test('Opening and closing ignored file', [
+    ideStart()
+      .ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        10000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      ),
+
+    addFile('ignored.js')
+      .ideNoNewMessagesAfterSleep(500)
+      .noNewErrors()
+      .because('The IDE has not opened ignored.js yet'),
+
+    ideNotification('didOpen', 'ignored.js')
+      .ideNewMessagesWithTimeout(
+        50000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('The file is ignored'),
+
+    ideNotification('didClose', 'ignored.js')
+      .ideNewMessagesWithTimeout(
+        50000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('Closing the file does not trigger recheck, just sends errors'),
+
+    flowCmd(['status', '--strip-root'])
+      .stdout(
+        `
+          No errors!
+
+          The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+        `,
+      )
+      .because('Still no errors'),
+  ]).lazy('ide'),
+
   test('Opening and closing single file with no dependents or dependencies', [
     ideStart()
       .ideNotification('subscribeToDiagnostics')

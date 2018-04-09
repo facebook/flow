@@ -1,4 +1,5 @@
 [ignore]
+<PROJECT_ROOT>/ignored\.js
 
 [include]
 
