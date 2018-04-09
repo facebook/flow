@@ -13,11 +13,11 @@ declare module "declare_m_e_with_other_type_declares" {
 }
 
 /**
- * `declare var exports` is deprecated, so we have a grace period where both
- * syntaxes will work.
+ * `declare var exports` used to determine the type of exports of the module,
+ * but now behaves just like `declare var foo`, s/foo/exports.
  */
 
-declare module "DEPRECATED__declare_var_exports" {
+declare module "declare_var_exports" {
   declare var exports: number;
 }
 

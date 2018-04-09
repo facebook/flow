@@ -2,17 +2,16 @@
 
 if [[ "$TRAVIS_TAG" = "" ]]; then exit 0; fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/setup_opam.sh
+
 PLATFORM=$([ "$TRAVIS_OS_NAME" == "linux" ] && echo "linux64" || echo "$TRAVIS_OS_NAME")
 
-mkdir -p "$HOME/release"
-rm -rf "$HOME/release/flow"
-cp -R bin "$HOME/release/flow"
-pushd "$HOME/release" > /dev/null
-zip -r \
-  "$TRAVIS_BUILD_DIR/flow-$PLATFORM-$TRAVIS_TAG.zip" \
-  flow \
-  -x \*.tar.gz # exclude flowlib.tar.gz
-popd > /dev/null
+cp src/parser/dist/libflowparser.zip \
+  "$TRAVIS_BUILD_DIR/libflowparser-$PLATFORM-$TRAVIS_TAG.zip"
+
+make dist/flow.zip
+cp dist/flow.zip "$TRAVIS_BUILD_DIR/flow-$PLATFORM-$TRAVIS_TAG.zip"
 
 # We don't deploy the whole website on tags, but we do upload flow.js and the
 # libs. This sets up the directory we'll upload. See the deploy section of

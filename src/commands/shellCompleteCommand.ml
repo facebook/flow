@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandInfo
@@ -25,6 +22,7 @@ module Command(CommandList : COMMAND_LIST) = struct
         CommandUtils.exe_name;
     args = CommandSpec.ArgSpec.(
       empty
+      |> CommandUtils.from_flag
       |> flag "--current" (optional int)
           ~doc:"Current term in the argument list being completed."
       |> rest ~doc:"Command to complete"
@@ -58,7 +56,8 @@ module Command(CommandList : COMMAND_LIST) = struct
           )
       | _ -> "ARGUMENT"
 
-  let main current rest () =
+  let main from current rest () =
+    FlowEventLogger.set_from from;
     let current = match current with Some x -> x | None -> 0 in
     let rest = match rest with Some x -> x | None -> [] in
     if current <= 1 then (

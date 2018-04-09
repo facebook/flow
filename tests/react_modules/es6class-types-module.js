@@ -4,8 +4,7 @@ import type {Node} from 'react';
 
 type Props = {name: string};
 
-class Hello extends React.Component<{}, Props, void>{
-  props: Props;
+class Hello extends React.Component<Props> {
   static defaultProps: {};
 
   render(): Node {

@@ -12,7 +12,7 @@ CodeMirror.defineOption('flow', null, function(editor) {
   editor.performLint();
 });
 
-function printError(err, editor) {
+function appendMsg(container, msg, editor) {
   const clickHandler = (msg) => {
     editor.getDoc().setSelection(
       {line: msg.loc.start.line - 1, ch: msg.loc.start.column - 1},
@@ -21,55 +21,83 @@ function printError(err, editor) {
     editor.focus();
   };
 
-  return err.message.reduce((container, msg) => {
-    if (msg.loc && msg.context != null) {
-      const div = document.createElement('div');
-      const filename = msg.loc.source !== '-' ? `${msg.loc.source}:` : '';
-      const prefix = `${filename}${msg.loc.start.line}: `;
+  if (msg.loc && msg.context != null) {
+    const div = document.createElement('div');
+    const filename = msg.loc.source !== '-' ? `${msg.loc.source}:` : '';
+    const prefix = `${filename}${msg.loc.start.line}: `;
 
-      const before = msg.context.slice(0, msg.loc.start.column - 1);
-      const highlight = (msg.loc.start.line === msg.loc.end.line) ?
-        msg.context.slice(msg.loc.start.column - 1, msg.loc.end.column) :
-        msg.context.slice(msg.loc.start.column - 1);
-      const after = (msg.loc.start.line === msg.loc.end.line) ?
-        msg.context.slice(msg.loc.end.column) :
-        '';
-      div.appendChild(document.createTextNode(prefix + before));
-      const bold = document.createElement('strong');
-      bold.className = "msgHighlight";
-      bold.appendChild(document.createTextNode(highlight));
-      div.appendChild(bold);
-      div.appendChild(document.createTextNode(after));
-      container.appendChild(div);
+    const before = msg.context.slice(0, msg.loc.start.column - 1);
+    const highlight = (msg.loc.start.line === msg.loc.end.line) ?
+      msg.context.slice(msg.loc.start.column - 1, msg.loc.end.column) :
+      msg.context.slice(msg.loc.start.column - 1);
+    const after = (msg.loc.start.line === msg.loc.end.line) ?
+      msg.context.slice(msg.loc.end.column) :
+      '';
+    div.appendChild(document.createTextNode(prefix + before));
+    const bold = document.createElement('strong');
+    bold.className = "msgHighlight";
+    bold.appendChild(document.createTextNode(highlight));
+    div.appendChild(bold);
+    div.appendChild(document.createTextNode(after));
+    container.appendChild(div);
 
-      const offset = msg.loc.start.column + prefix.length - 1;
-      const arrow = `${(prefix + before).replace(/[^ ]/g, ' ')}^ `;
-      container.appendChild(document.createTextNode(arrow));
+    const offset = msg.loc.start.column + prefix.length - 1;
+    const arrow = `${(prefix + before).replace(/[^ ]/g, ' ')}^ `;
+    container.appendChild(document.createTextNode(arrow));
 
-      const span = document.createElement('span');
-      span.className = "msgType";
-      span.appendChild(document.createTextNode(msg.descr));
-      container.appendChild(span);
+    const span = document.createElement('span');
+    span.className = "msgType";
+    span.appendChild(document.createTextNode(msg.descr));
+    container.appendChild(span);
 
-      const handler = clickHandler.bind(null, msg);
-      bold.addEventListener('click', handler);
-      span.addEventListener('click', handler);
-    } else {
-      const descr = `. ${msg.descr}\n`;
-      container.appendChild(document.createTextNode(descr));
-    }
-    return container;
-  }, document.createElement('li'));
+    const handler = clickHandler.bind(null, msg);
+    bold.addEventListener('click', handler);
+    span.addEventListener('click', handler);
+  } else if (msg.type === "Comment") {
+    const descr = `. ${msg.descr}\n`;
+    container.appendChild(document.createTextNode(descr));
+  } else {
+    const descr = `${msg.descr}\n`;
+    container.appendChild(document.createTextNode(descr));
+  }
+};
+
+function printExtra(info, editor) {
+  const list = document.createElement('ul');
+  if (info.message) {
+    const li = document.createElement('li');
+    info.message.forEach(msg => appendMsg(li, msg, editor));
+    list.appendChild(li);
+  }
+  if (info.children) {
+    const li = document.createElement('li');
+    info.children.forEach(info => {
+      li.appendChild(printExtra(info, editor));
+    });
+    list.appendChild(li);
+  }
+  return list;
+}
+
+function printError(err, editor) {
+  const li = document.createElement('li');
+  err.message.forEach(msg => appendMsg(li, msg, editor));
+
+  if (err.extra) {
+    err.extra.forEach(info => {
+      li.appendChild(printExtra(info, editor));
+    });
+  }
+
+  return li;
 }
 
 function printErrors(errors, editor) {
-  if (errors.length == 0) {
-    return document.createTextNode('No errors!');
-  }
-  return errors.reduce((list, err) => {
+  const list = document.createElement('ul');
+  errors.forEach(err => {
     list.appendChild(printError(err, editor));
-    return list;
-  }, document.createElement('ul'));
+  });
+  return list;
 }
 
 function removeChildren(node) {
@@ -240,7 +268,7 @@ function createEditor(
 ) {
   const defaultFlow = initFlow(flowVersion);
 
-  require([
+  requirejs([
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
     'codemirror/mode/xml/xml',
@@ -326,6 +354,7 @@ function createEditor(
       value: getHashedValue(location.hash) || defaultValue,
       autofocus: true,
       lineNumbers: true,
+      showCursorWhenSelecting: true,
       mode: "jsx",
       flow: defaultFlow,
       lint: getAnnotations
@@ -347,19 +376,23 @@ function createEditor(
         '-', value, cursor.line + 1, cursor.ch
       ))
       .then(typeAtPos => {
-        typeAtPosNode.title = typeAtPos ? typeAtPos[1].c : '';
-        typeAtPosNode.innerHTML = typeAtPos ? typeAtPos[1].c : '';
+        typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
+        typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
       })
       .catch(() => {
         typeAtPosNode.title = '';
-        typeAtPosNode.innerHTML = '';
+        typeAtPosNode.textContent = '';
       });
     });
 
     editor.on('flowErrors', errors => {
       if (errorsNode) {
-        removeChildren(errorsNode);
-        errorsNode.appendChild(printErrors(errors, editor));
+        if (errors.length) {
+          removeChildren(errorsNode);
+          errorsNode.appendChild(printErrors(errors, editor));
+        } else {
+          errorsNode.innerText = 'No errors!';
+        }
       }
 
       if (jsonNode) {
@@ -375,7 +408,15 @@ function createEditor(
           flowProxy.supportsParse()
           .then(supportsParse => {
             if (supportsParse) {
-              flowProxy.parse(editor.getValue(), {}).then(ast => {
+              const options = {
+                esproposal_class_instance_fields: true,
+                esproposal_class_static_fields: true,
+                esproposal_decorators: true,
+                esproposal_export_star_as: true,
+                esproposal_optional_chaining: true,
+                types: true,
+              };
+              flowProxy.parse(editor.getValue(), options).then(ast => {
                 removeChildren(astNode);
                 astNode.appendChild(
                   document.createTextNode(JSON.stringify(ast, null, 2))

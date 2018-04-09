@@ -20,9 +20,10 @@ let unix_socket sock_name =
         else
           Unix.(PF_UNIX, Unix.ADDR_UNIX sock_name) in
       let sock = Unix.socket domain Unix.SOCK_STREAM 0 in
-      let _ = Unix.setsockopt sock Unix.SO_REUSEADDR true in
-      let _ = Unix.bind sock addr in
-      let _ = Unix.listen sock 10 in
+      let () = Unix.set_close_on_exec sock in
+      let () = Unix.setsockopt sock Unix.SO_REUSEADDR true in
+      let () = Unix.bind sock addr in
+      let () = Unix.listen sock 10 in
       let () =
         match Unix.getsockname sock with
         | Unix.ADDR_UNIX _ -> ()

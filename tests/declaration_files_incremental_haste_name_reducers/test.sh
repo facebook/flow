@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+. ../assert.sh
 FLOW=$1
 
 IMPL_FILES="
@@ -20,39 +21,39 @@ use_files() {
 }
 
 printf "======Start off with the .js files but without the .flow file======\n"
-"$FLOW" status --no-auto-start --strip-root .
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 use_files "$DECL_FILES"
-"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
-"$FLOW" status --no-auto-start --strip-root .
+assert_ok "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 ignore_files "$DECL_FILES"
-"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
-"$FLOW" status --no-auto-start --strip-root .
+assert_ok "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 
 printf "\n\n======Start off with the .js files and the .flow file======\n"
-"$FLOW" stop .
+assert_ok "$FLOW" stop .
 use_files "$DECL_FILES"
-"$FLOW" start . --all --wait
+assert_ok "$FLOW" start . --all --wait
 
-"$FLOW" status --no-auto-start --strip-root .
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 ignore_files "$DECL_FILES"
-"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
-"$FLOW" status --no-auto-start --strip-root .
+assert_ok "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 use_files "$DECL_FILES"
-"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
-"$FLOW" status --no-auto-start --strip-root .
+assert_ok "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 
 printf "\n\n======Start off without the .js files and with the .flow file======\n"
-"$FLOW" stop .
+assert_ok "$FLOW" stop .
 ignore_files "$IMPL_FILES"
-"$FLOW" start . --all --wait
+assert_ok "$FLOW" start . --all --wait
 
-"$FLOW" status --no-auto-start --strip-root .
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 use_files "$IMPL_FILES"
-"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
-"$FLOW" status --no-auto-start --strip-root .
+assert_ok "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 ignore_files "$IMPL_FILES"
-"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
-"$FLOW" status --no-auto-start --strip-root .
+assert_ok "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
+assert_errors "$FLOW" status --no-auto-start --strip-root .
 
 # reset
 use_files "$IMPL_FILES"

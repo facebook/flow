@@ -1,3 +1,4 @@
 #!/bin/bash
+. ../assert.sh
 FLOW=$1
-"$FLOW" check . --all --lints "all=error"
+assert_errors "$FLOW" check . --all --lints "all=error"

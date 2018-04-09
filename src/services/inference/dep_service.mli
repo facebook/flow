@@ -1,28 +1,24 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 
 val dependent_files:
-  Worker.t list option -> (* workers *)
+  MultiWorkerLwt.worker list option -> (* workers *)
   unchanged:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
   changed_modules:Modulename.Set.t ->
-  FilenameSet.t * FilenameSet.t
-
-val file_dependencies: (filename -> FilenameSet.t) Expensive.t
+  (* (transitive_dependents, direct_dependents) of changed_modules *)
+  (FilenameSet.t * FilenameSet.t) Lwt.t
 
 val calc_dependency_graph:
-  Worker.t list option -> (* workers *)
-  filename list -> (* files *)
-  FilenameSet.t FilenameMap.t
+  MultiWorkerLwt.worker list option -> (* workers *)
+  FilenameSet.t -> (* files *)
+  FilenameSet.t FilenameMap.t Lwt.t
 
 val calc_all_dependencies:
   FilenameSet.t FilenameMap.t -> (* dependency graph *)

@@ -1,5 +1,6 @@
 <**/*.ml*>: ocaml, warn_A, warn(-3-4-6-29-35-44-48-50-52)
 <*.ml*>: warn(-27)
+<hhi/hhi.ml>: ppx(ppx/ppx_gen_hhi hhi)
 <client/*.ml*>: warn(-27)
 <deps/*.ml*>: warn(-27)
 <dfind/*.ml*>: warn(-27)
@@ -7,6 +8,7 @@
 <heap/*.ml*>: warn(-27-34)
 <naming/*.ml*>: warn(-27-45)
 <parsing/*.ml*>: warn(-27)
+<ppx>: -traverse
 <procs/*.ml*>: warn(-27)
 <server/serverInit.ml>: warn(-41-45)
 <third-party/avl/*.ml*>: warn(-27)

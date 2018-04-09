@@ -1,0 +1,34 @@
+Error ----------------------------------------------------------------------------------------------------- basic.js:6:2
+
+Cannot cast `null` to empty because null [1] is incompatible with empty [2].
+
+   basic.js:6:2
+   6| (null: empty); // Error: null ~> empty
+       ^^^^ [1]
+
+References:
+   basic.js:6:8
+   6| (null: empty); // Error: null ~> empty
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ text_break.js:6:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property
+`a.b.c.d.e.f.g.h`.
+
+   text_break.js:6:2
+   6| ({a: {b: {c: {d: {e: {f: {g: {h: 42}}}}}}}}: {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   text_break.js:6:34
+   6| ({a: {b: {c: {d: {e: {f: {g: {h: 42}}}}}}}}: {
+                                       ^^ [1]
+   text_break.js:7:34
+   7|   a: {b: {c: {d: {e: {f: {g: {h: empty}}}}}}},
+                                       ^^^^^ [2]
+
+
+
+Found 2 errors

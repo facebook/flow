@@ -9,8 +9,24 @@
       "message":"Unexpected token type"
     },
     {
+      "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":36}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":40}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
       "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
       "message":"Unexpected token ("
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
+      "message":"Missing comma between export specifiers"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
@@ -18,7 +34,15 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":43}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":43}},
       "message":"Unexpected token :"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":48}},
+      "message":"Missing comma between export specifiers"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
@@ -119,7 +143,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
             "range":[40,41],
-            "name":"(",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -127,7 +151,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
             "range":[40,41],
-            "name":"(",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -140,7 +164,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
             "range":[41,42],
-            "name":")",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -148,7 +172,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
             "range":[41,42],
-            "name":")",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -161,7 +185,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":43}},
             "range":[42,43],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -169,7 +193,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":43}},
             "range":[42,43],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

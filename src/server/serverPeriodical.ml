@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
@@ -35,10 +32,10 @@ end = struct
   let one_week = 604800.0
 
   let callback_list = ref []
-  let last_call = ref (Unix.time())
+  let last_call = ref (Unix.gettimeofday())
 
   let check () =
-    let current = Unix.time() in
+    let current = Unix.gettimeofday() in
     let delta = current -. !last_call in
     last_call := current;
     List.iter begin fun (seconds_left, period, job) ->
@@ -70,27 +67,23 @@ let call_before_sleeping = Periodical.check
 (* We want to keep track of when the server was last used. Every few hours, we'll
  * check this variable. If the server hasn't been used for a few days, we exit.
  *)
-let last_client_connect: float ref = ref (Unix.time())
+let last_client_connect: float ref = ref (Unix.gettimeofday())
 
 let stamp_connection() =
-  last_client_connect := Unix.time();
+  last_client_connect := Unix.gettimeofday();
   ()
 
 let exit_if_unused() =
-  let delta: float = Unix.time() -. !last_client_connect in
+  let delta: float = Unix.gettimeofday() -. !last_client_connect in
   if delta > Periodical.one_week
-  then begin
-    Printf.fprintf stderr "Exiting server. Last used >7 days ago\n";
-    flush stderr;
-    exit(5)
-  end
+  then FlowExitStatus.(exit ~msg:"Exiting server. Last used >7 days ago" Unused_server)
 
 (*****************************************************************************)
 (* The registered jobs *)
 (*****************************************************************************)
-let init options =
+let init () =
   let jobs = [
-    Periodical.always   , (fun () -> SharedMem_js.collect options `aggressive);
+    Periodical.always   , (fun () -> SharedMem_js.collect `aggressive);
     Periodical.one_day  , exit_if_unused;
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs

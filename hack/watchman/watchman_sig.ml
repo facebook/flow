@@ -12,6 +12,7 @@ module Types = struct
 
   exception Timeout
   exception Watchman_error of string
+  exception Subscription_canceled_by_watchman
 
 
   type subscribe_mode =
@@ -23,13 +24,13 @@ module Types = struct
      * know which files were changed. This is useful for the monitor to
      * aggressively kill the server. *)
     | Drop_changes
+    | Scm_aware
 
   type init_settings = {
     (** None for query mode, otherwise specify subscriptions mode. *)
     subscribe_mode: subscribe_mode option;
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
-    sync_directory: string;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     root: Path.t;
@@ -53,6 +54,7 @@ module Types = struct
      *)
     | State_enter of string * Hh_json.json option
     | State_leave of string * Hh_json.json option
+    | Changed_merge_base of string * SSet.t
     | Files_changed of SSet.t
 
   type changes =
@@ -98,7 +100,7 @@ module type S = sig
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :
-      env -> Hh_json.json -> env * pushed_changes
+      env -> Hh_json.json option -> env * pushed_changes
   end
 
   module Mocking : sig

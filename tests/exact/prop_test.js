@@ -9,7 +9,7 @@
 type Person = { first: string, last: string };
 
 function prop_test_exact(p: $Exact<Person>): string {
-  if (p.xxx) {     // ok to test for prop existence on exact types
+  if (p.xxx) {     // Error - xxx doesn't exist in the exact type
     return p.xxx;  // ok currently, but should be reachability error
   }
   return p.first;

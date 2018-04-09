@@ -18,11 +18,17 @@ module type S = sig
   val compare: 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
   val keys: 'a t -> key list
+  val ordered_keys: 'a t -> key list
   val values: 'a t -> 'a list
   val elements: 'a t -> (key * 'a) list
   val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t
   val choose: 'a t -> (key * 'a) option
+  val max_binding: 'a t -> (key * 'a) option
   val from_keys: key list -> f:(key -> 'a) -> 'a t
   val ident_map: ('a -> 'a) -> 'a t -> 'a t
   val ident_map_key: ?combine: ('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
+  val make_pp:
+    (Format.formatter -> key -> unit) ->
+    (Format.formatter -> 'a -> unit) ->
+    Format.formatter -> 'a t -> unit
 end

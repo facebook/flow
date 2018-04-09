@@ -17,6 +17,7 @@ module Reordered_argument_map (S : MyMap.S) = struct
   let find_unsafe m k = find_unsafe k m
   let iter m ~f = iter f m
   let map m ~f = map f m
+  let mapi m ~f = mapi f m
   let mem m v = mem v m
   let remove m v = remove v m
   let exists m ~f = exists f m

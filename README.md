@@ -110,7 +110,8 @@ Then, restart your shell and install these additional libraries:
 
 ```
 opam update
-opam install -y ocamlfind sedlex
+opam pin add flowtype . -n
+opam install --deps-only flowtype
 ```
 
 Once you have these dependencies, building Flow just requires running
@@ -153,7 +154,7 @@ The general idea is that we build in Cygwin, targeting mingw. This gives us a bi
 1. Open the cygwin64 terminal
 2. Download opam with `curl -fsSL -o opam64.tar.xz https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.1/opam64.tar.xz`
 3. `tar -xf opam64.tar.xz`
-4. `cd opam64.tar.xz`
+4. `cd opam64`
 5. Install opam `./install.sh`
 6. Initialize opam to point to a mingw fork: `opam init -a default "https://github.com/fdopen/opam-repository-mingw.git" --comp "4.03.0+mingw64c" --switch "4.03.0+mingw64c"`
 7. Make sure opam stuff is in your path: ```eval `opam config env` ```
@@ -190,4 +191,4 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is BSD-licensed. We also provide an additional patent grant.
+Flow is MIT-licensed ([LICENSE](http://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).

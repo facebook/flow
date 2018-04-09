@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 comp = [ "-thread" ]
@@ -53,13 +50,51 @@ end
 
 begin library "hh-procs"
   sort = true
-  files = begin fb-glob "hack/procs"
-  end
+  files = [
+    "hack/procs/bucket.mli"
+    "hack/procs/bucket.ml"
+    "hack/procs/multiThreadedCall.mli"
+    "hack/procs/multiThreadedCall.ml"
+    "hack/procs/multiWorker.mli"
+    "hack/procs/multiWorker.ml"
+    "hack/procs/workerController.mli"
+    "hack/procs/workerController.ml"
+    "hack/procs/worker.mli"
+    "hack/procs/worker.ml"
+  ]
+
   requires += [
-    "hh-stubs"
+    "flow-common-lwt"
     "hh-heap"
-    "tp-core"
+    "hh-stubs"
     "hh-utils"
+    "tp-core"
+  ]
+end
+
+begin library "hh-procs-lwt"
+  sort = true
+  files = [
+    "hack/procs/multiWorkerLwt.mli"
+    "hack/procs/multiWorkerLwt.ml"
+    "hack/procs/workerControllerLwt.mli"
+    "hack/procs/workerControllerLwt.ml"
+  ]
+  requires += [
+    "hh-heap"
+    "hh-procs"
+    "hh-stubs"
+    "hh-utils"
+    "tp-core"
+    "lwt"
+    "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp = [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep = [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -93,7 +128,8 @@ begin library "hh-utils-core"
   sort = true
   files = [
     "build_id.ml"
-    "core.ml"
+    "build_mode/prod/build_mode.ml"
+    "hh_core.ml"
     "exit_status.ml"
     "get_build_id.c"
     "get_build_id.gen.c"
@@ -104,6 +140,7 @@ begin library "hh-utils-core"
   ]
   requires += [
     "hh-utils-collections"
+    "hh-utils-string"
     "hh-utils-json"
     "tp-core"
   ]
@@ -115,10 +152,10 @@ begin library "hh-utils"
   files = [
     "buffered_line_reader.ml"
     "http_lite.ml"
-    "config_file.ml"
     "file_pos.ml"
     "findUtils.ml"
     "local_id.ml"
+    "marshal_tools.mli"
     "marshal_tools.ml"
     "php_escaping.ml"
     "random_id.ml"
@@ -134,6 +171,19 @@ begin library "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
+  ]
+end
+
+begin library "hh-marshal-tools-lwt"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "marshal_tools_lwt.mli"
+    "marshal_tools_lwt.ml"
+  ]
+  requires += [
+    "hh-utils"
+    "lwt"
   ]
 end
 
@@ -189,12 +239,13 @@ begin library "hh-utils-string"
 end
 
 begin library "hh-utils-sys"
-  dirname = "hack/utils"
+  dirname = "hack/utils/sys"
   sort = true
   files = [
     "daemon.ml"
     "files.c"
     "fork.ml"
+    "getrusage.c"
     "handle.ml"
     "handle_stubs.c"
     "lock.ml"
@@ -203,11 +254,13 @@ begin library "hh-utils-sys"
     "pidLog.ml"
     "printSignal.ml"
     "priorities.c"
+    "processor_info.c"
     "realpath.c"
     "sys_utils.ml"
     "sysinfo.c"
     "tail.ml"
     "timeout.ml"
+    "timer.ml"
     "tmp.ml"
     "tty.ml"
   ]
@@ -218,6 +271,7 @@ begin library "hh-utils-sys"
     "hh-utils-string"
     "tp-core"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin library "hh-utils-collections"
@@ -232,8 +286,73 @@ begin library "hh-utils-json"
   files = [
     "hh_json.mli"
     "hh_json.ml"
+    "hh_json_helpers.ml"
   ]
-  requires += [ "tp-core" ]
+  requires += [
+    "tp-core"
+    "hh-utils-collections"
+  ]
+end
+
+begin library "hh-utils-filecontent"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "file_content.mli"
+    "file_content.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "tp-core"
+  ]
+end
+
+begin library "hh-utils-fileurl"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "file_url.mli"
+    "file_url.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "hh-utils-string"
+  ]
+end
+
+begin library "hh-utils-jsonrpc"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "jsonrpc.mli"
+    "jsonrpc.ml"
+  ]
+  requires += [
+  "hh-utils"
+  "hh-utils-core"
+  "tp-core"
+  "hh-utils-collections"
+  "hh-utils-json"
+  "hh-utils-sys"
+  ]
+end
+
+begin library "hh-utils-lsp"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "lsp.ml"
+    "lsp_fmt.ml"
+    "lsp_helpers.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "hh-utils-fileurl"
+    "hh-utils-jsonrpc"
+    "tp-core"
+    "hh-utils-collections"
+    "hh-utils-json"
+  ]
 end
 
 begin library "hh-injector-default"
@@ -252,6 +371,10 @@ end
 begin library "hh-dfind"
   sort = true
   files = begin fb-glob "hack/dfind"
+    excludes = [
+      "dfindLibLwt.mli"
+      "dfindLibLwt.ml"
+    ]
   end
   requires += [
     "hh-fsnotify"
@@ -260,6 +383,22 @@ begin library "hh-dfind"
     "tp-core"
     "hh-utils"
     "hh-utils-collections"
+  ]
+end
+
+begin library "hh-dfind-lwt"
+  sort = true
+  dirname = "hack/dfind"
+  files = [
+    "dfindLibLwt.mli"
+    "dfindLibLwt.ml"
+  ]
+  requires += [
+    "hh-dfind"
+    "hh-marshal-tools-lwt"
+    "hh-utils"
+    "lwt"
+    "lwt.unix"
   ]
 end
 
@@ -335,9 +474,9 @@ end
 begin library "tp-core"
   sort = true
   files = begin fb-glob "hack/third-party/core"
-    excludes = [ "result.ml" ]
+    excludes = [ "core_result.ml" ]
   end
   files += [
-    "hack/third-party/core/result.ml" (comp += [ "-w" "-41" ])
+    "hack/third-party/core/core_result.ml" (comp += [ "-w" "-41" ])
   ]
 end

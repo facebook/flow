@@ -1,6 +1,0 @@
-// This was originally an Enum. See line 1 in .d.ts file.
-declare class Color {
-  static R : number;
-  static G : number;
-  static B : number;
-}

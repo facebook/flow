@@ -29,6 +29,17 @@ let none = {
   pos_end = File_pos.dummy ;
 }
 
+let pp fmt pos =
+  if pos = none then
+    Format.pp_print_string fmt "[Pos.none]"
+  else begin
+    Format.pp_print_string fmt "[";
+    File_pos.pp fmt pos.pos_start;
+    Format.pp_print_string fmt "-";
+    File_pos.pp fmt pos.pos_end;
+    Format.pp_print_string fmt "]";
+  end
+
 let filename p = p.pos_file
 
 (* This returns a closed interval that's incorrect for multi-line spans. *)
@@ -49,6 +60,7 @@ let info_raw t = File_pos.offset t.pos_start, File_pos.offset t.pos_end
 let length t = File_pos.offset t.pos_end - File_pos.offset t.pos_start
 
 let start_cnum t = File_pos.offset t.pos_start
+let end_cnum t = File_pos.offset t.pos_end
 let line t = File_pos.line t.pos_start
 let end_line t = File_pos.line t.pos_end
 
@@ -85,6 +97,14 @@ let inside p line char_pos =
     if line = first_line then char_pos > first_col
     else if line = last_line then char_pos <= last_col
     else line > first_line && line < last_line
+
+let exactly_matches_range p ~start_line ~start_col ~end_line ~end_col =
+  let p_start_line, p_start_col = File_pos.line_column p.pos_start in
+  let p_end_line, p_end_col = File_pos.line_column p.pos_end in
+  p_start_line = start_line &&
+  p_start_col = start_col - 1 &&
+  p_end_line = end_line &&
+  p_end_col = end_col - 1
 
 let contains pos_container pos =
   filename pos_container = filename pos &&
@@ -174,10 +194,22 @@ let make_from_file_pos ~pos_file ~pos_start ~pos_end =
 let set_file pos_file pos =
   { pos with pos_file }
 
+let print_verbose_absolute p =
+  let a, b, c = File_pos.line_beg_offset p.pos_start in
+  let d, e, f = File_pos.line_beg_offset p.pos_end in
+  Printf.sprintf "Pos('%s', <%d,%d,%d>, <%d,%d,%d>)" p.pos_file a b c d e f
+
+let print_verbose_relative p = print_verbose_absolute (to_absolute p)
+
 module Map = MyMap.Make (struct
   type path = t
   (* The definition below needs to refer to the t in the outer scope, but MyMap
    * expects a module with a type of name t, so we define t in a second step *)
   type t = path
+  let compare = compare
+end)
+
+module AbsolutePosMap = MyMap.Make (struct
+  type t = absolute
   let compare = compare
 end)

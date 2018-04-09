@@ -37,42 +37,48 @@ let make text =
   in
   Array.of_list newline_list
 
-let offset_to_position ?(cyclic_index=false) lbmap offset =
-  let len = Array.length lbmap in
+let offset_to_file_pos_triple ?(cyclic_index=false) bolmap offset =
+  let len = Array.length bolmap in
   let offset =
     if cyclic_index (* Normalise and/or cycle around the length of the text. *)
     then
-      max 0 (if offset < 0 then Array.get lbmap (len - 1) + offset else offset)
+      max 0 (if offset < 0 then Array.get bolmap (len - 1) + offset else offset)
     else offset
   in
   let rec binary_search lower upper =
     if lower >= upper then lower - 1 else begin
       let i = (upper - lower) / 2 + lower in
-      let offset_at_i = Array.get lbmap i in
+      let offset_at_i = Array.get bolmap i in
       let l, u = if offset_at_i > offset then lower, i else (i + 1), upper in
       binary_search l u
     end
   in
   let index = binary_search 0 len in
-  let line_start = Array.get lbmap index in
-  (index + 1, offset - line_start + 1)
+  let line_start = Array.get bolmap index in
+  index + 1, line_start, offset
+
+let offset_to_position ?(cyclic_index=false) bolmap offset =
+  let index, line_start, offset =
+    offset_to_file_pos_triple ~cyclic_index bolmap offset
+  in
+  (index, offset - line_start + 1)
 
 let position_to_offset ?(cyclic_index = false) ?(existing = false)
-    lbmap (line, column) =
-  let len = Array.length lbmap in
+    bolmap (line, column) =
+  let len = Array.length bolmap in
   let file_line =
     if cyclic_index && line < 1
     then max 1 (len + line - 1)
     else line
   in
 
-  let line_start = Array.get lbmap (file_line - 1) in
+  let line_start = Array.get bolmap (file_line - 1) in
   let offset = line_start + column - 1 in
 
   if not existing
-  || offset >= 0 && offset <= Array.get lbmap (min (len-1) file_line)
+  || offset >= 0 && offset <= Array.get bolmap (min (len-1) file_line)
   then offset
   else raise Not_found
 
-let offset_to_line_start_offset ?(cyclic_index = false) lbmap offset =
-  offset - snd (offset_to_position ~cyclic_index lbmap offset) + 1
+let offset_to_line_start_offset ?(cyclic_index = false) bolmap offset =
+  offset - snd (offset_to_position ~cyclic_index bolmap offset) + 1

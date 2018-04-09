@@ -17,7 +17,7 @@ end
 
 type t = S.t
 
-val track_names : bool ref
+val pp : Format.formatter -> t -> unit
 
 val compare : t -> t -> int
 

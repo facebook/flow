@@ -54,7 +54,7 @@ provides a syntax for this:
 class Person { name: string }
 class Employee extends Person { department: string }
 
-var employee: { who: Employee } = { prop: new Employee };
+var employee: { who: Employee } = { who: new Employee };
 var person: { +who: Person } = employee; // OK
 // $ExpectError
 person.who = new Person; // Error!

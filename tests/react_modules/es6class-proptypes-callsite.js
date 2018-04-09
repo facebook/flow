@@ -3,7 +3,7 @@ import React from 'react';
 import Hello from './es6class-proptypes-module';
 import type {Node} from 'react';
 
-class HelloLocal extends React.Component<void, {name: string}, void> {
+class HelloLocal extends React.Component<{name: string}> {
   defaultProps = {};
   propTypes = {
     name: React.PropTypes.string.isRequired,
@@ -13,7 +13,7 @@ class HelloLocal extends React.Component<void, {name: string}, void> {
   }
 }
 
-class Callsite extends React.Component<void, {}, void> {
+class Callsite extends React.Component<{}> {
   render(): Node {
     return (
       <div>

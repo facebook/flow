@@ -9,3 +9,17 @@
  *)
 
 include Set.Make (StringKey)
+let to_string sset =
+  "{" ^ (String.concat "," (elements sset)) ^ "}"
+
+let pp fmt sset =
+  Format.fprintf fmt "@[<2>{";
+  ignore
+    (List.fold_left
+      (fun sep s ->
+        if sep then Format.fprintf fmt ";@ ";
+        Format.fprintf fmt "%S" s;
+        true)
+      false
+      (elements sset));
+  Format.fprintf fmt "@,}@]"

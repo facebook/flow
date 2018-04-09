@@ -1,8 +1,0 @@
-// Module declared on line 1 in .d.ts file
-declare module "M.N" {
-  declare var x: number;
-  declare class C {
-    y: typeof x;
-  }
-}
-

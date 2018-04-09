@@ -30,6 +30,7 @@
     - path: "/docs/types/classes/"
 
     - path: "/docs/types/aliases/"
+    - path: "/docs/types/opaque-types/"
     - path: "/docs/types/interfaces/"
 
     - path: "/docs/types/generics/"
@@ -57,6 +58,7 @@
     - path: "/docs/lang/width-subtyping/"
 
     - path: "/docs/lang/refinements/"
+    - path: "/docs/lang/lazy-modes/"
     # - path: "/docs/lang/sealing/"
 
 - id: cli
@@ -87,6 +89,7 @@
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
     - path: "/docs/config/libs/"
+    - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
     - path: "/docs/config/version/"
 
@@ -100,11 +103,16 @@
 #   pages:
 #     - path: "/docs/errors/"
 
-- id: frameworks
+- id: react
   pages:
-    - path: "/docs/frameworks/"
-    - path: "/docs/frameworks/react/"
-    - path: "/docs/frameworks/redux/"
+    - path: "/docs/react/"
+    - path: "/docs/react/components/"
+    - path: "/docs/react/events/"
+    - path: "/docs/react/refs/"
+    - path: "/docs/react/children/"
+    - path: "/docs/react/hoc/"
+    - path: "/docs/react/redux/"
+    - path: "/docs/react/types/"
 
 - id: tools
   pages:
@@ -122,3 +130,10 @@
     - path: "/docs/editors/emacs/"
     - path: "/docs/editors/vscode/"
     - path: "/docs/editors/webstorm/"
+
+- id: linting
+  pages:
+    - path: "/docs/linting/"
+    - path: "/docs/linting/flowlint-comments/"
+    - path: "/docs/linting/ide-integration/"
+    - path: "/docs/linting/rule-reference/"

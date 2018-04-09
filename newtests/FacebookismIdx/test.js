@@ -1,9 +1,9 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('idx(object)', [
@@ -11,115 +11,98 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     addCode('declare var obj1: {a: ?{b: {c: number}}};').noNewErrors(),
     addCode('obj1.a.b.c;\n').newErrors(
-       `
-         test.js:8
-           8: obj1.a.b.c;
-                     ^ property \`b\`. Property cannot be accessed on possibly null value
-           8: obj1.a.b.c;
-              ^^^^^^ null
-
-         test.js:8
-           8: obj1.a.b.c;
-                     ^ property \`b\`. Property cannot be accessed on possibly undefined value
-           8: obj1.a.b.c;
-              ^^^^^^ undefined
-       `,
-    ),
+                              `
+                                test.js:8
+                                  8: obj1.a.b.c;
+                                            ^ Cannot get \`obj1.a.b\` because property \`b\` is missing in null or undefined [1].
+                                  References:
+                                    6: declare var obj1: {a: ?{b: {c: number}}};
+                                                             ^^^^^^^^^^^^^^^^^ [1]
+                              `,
+                            ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj1, obj => obj["a"].b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj1, obj => obj.a.b.c): number);\n').newErrors(
-      `
-        test.js:17
-         17: (idx(obj1, obj => obj.a.b.c): number);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-         17: (idx(obj1, obj => obj.a.b.c): number);
-                                           ^^^^^^ number
-
-        test.js:17
-         17: (idx(obj1, obj => obj.a.b.c): number);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-         17: (idx(obj1, obj => obj.a.b.c): number);
-                                           ^^^^^^ number
-      `,
-    ),
+                                                         `
+                                                           test.js:17
+                                                            17: (idx(obj1, obj => obj.a.b.c): number);
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              17: (idx(obj1, obj => obj.a.b.c): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                              17: (idx(obj1, obj => obj.a.b.c): number);
+                                                                                                ^^^^^^ [2]
+                                                         `,
+                                                       ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?string);\n').newErrors(
-      `
-        test.js:20
-         20: (idx(obj1, obj => obj.a.b.c): ?string);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-         20: (idx(obj1, obj => obj.a.b.c): ?string);
-                                            ^^^^^^ string
-      `,
-    ),
-
+                                                          `
+                                                            test.js:20
+                                                             20: (idx(obj1, obj => obj.a.b.c): ?string);
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to nullable string because number [1] is incompatible with string [2].
+                                                              References:
+                                                                6: declare var obj1: {a: ?{b: {c: number}}};
+                                                                                                  ^^^^^^ [1]
+                                                               20: (idx(obj1, obj => obj.a.b.c): ?string);
+                                                                                                  ^^^^^^ [2]
+                                                          `,
+                                                        ),
     addCode('(idx(obj1, obj => obj["a"].b.c): number);\n').newErrors(
-       `
-         test.js:23
-          23: (idx(obj1, obj => obj["a"].b.c): number);
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-          23: (idx(obj1, obj => obj["a"].b.c): number);
-                                               ^^^^^^ number
-
-         test.js:23
-          23: (idx(obj1, obj => obj["a"].b.c): number);
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-          23: (idx(obj1, obj => obj["a"].b.c): number);
-                                               ^^^^^^ number
-       `,
-    ),
+                                                            `
+                                                              test.js:23
+                                                               23: (idx(obj1, obj => obj["a"].b.c): number);
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                                References:
+                                                                 23: (idx(obj1, obj => obj["a"].b.c): number);
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                                 23: (idx(obj1, obj => obj["a"].b.c): number);
+                                                                                                      ^^^^^^ [2]
+                                                            `,
+                                                          ),
     addCode('idx(obj1, obj => obj.notAProp);\n').newErrors(
-       `
-         test.js:26
-          26: idx(obj1, obj => obj.notAProp);
-                                   ^^^^^^^^ property \`notAProp\`. Property not found in
-          26: idx(obj1, obj => obj.notAProp);
-                               ^^^ object type
-       `,
-    ),
+                                                  `
+                                                    test.js:26
+                                                     26: idx(obj1, obj => obj.notAProp);
+                                                                              ^^^^^^^^ Cannot get \`obj.notAProp\` because property \`notAProp\` is missing in object type [1].
+                                                      References:
+                                                        6: declare var obj1: {a: ?{b: {c: number}}};
+                                                                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                  `,
+                                                ),
     addCode('idx(obj1, obj => obj.a = null);\n').newErrors(
-       `
-         test.js:29
-          29: idx(obj1, obj => obj.a = null);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
-       `,
-    ),
-
+                                                  `
+                                                    test.js:29
+                                                     29: idx(obj1, obj => obj.a = null);
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback must only access properties on the callback parameter.
+                                                  `,
+                                                ),
     addCode('declare var obj2: {a?: {b: {c: number}}};').noNewErrors(),
     addCode('(idx(obj2, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj2, obj => obj.a.b.c): number);\n').newErrors(
-      `
-      test.js:37
-      37: (idx(obj2, obj => obj.a.b.c): number);
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-      37: (idx(obj2, obj => obj.a.b.c): number);
-                                        ^^^^^^ number
-
-      test.js:37
-      37: (idx(obj2, obj => obj.a.b.c): number);
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-      37: (idx(obj2, obj => obj.a.b.c): number);
-                                        ^^^^^^ number
-      `,
-    ),
-
+                                                         `
+                                                           test.js:37
+                                                            37: (idx(obj2, obj => obj.a.b.c): number);
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              37: (idx(obj2, obj => obj.a.b.c): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                              37: (idx(obj2, obj => obj.a.b.c): number);
+                                                                                                ^^^^^^ [2]
+                                                         `,
+                                                       ),
     addCode('declare var obj3: {a: null | {b: {c: number}}};').noNewErrors(),
     addCode('(idx(obj3, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj3, obj => obj.a.b.c): number);\n').newErrors(
-      `
-      test.js:45
-      45: (idx(obj3, obj => obj.a.b.c): number);
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-      45: (idx(obj3, obj => obj.a.b.c): number);
-                                        ^^^^^^ number
-
-      test.js:45
-      45: (idx(obj3, obj => obj.a.b.c): number);
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-      45: (idx(obj3, obj => obj.a.b.c): number);
-                                        ^^^^^^ number
-      `,
-    ),
-
+                                                         `
+                                                           test.js:45
+                                                            45: (idx(obj3, obj => obj.a.b.c): number);
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              45: (idx(obj3, obj => obj.a.b.c): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                              45: (idx(obj3, obj => obj.a.b.c): number);
+                                                                                                ^^^^^^ [2]
+                                                         `,
+                                                       ),
     // Nested maybes/optionals should get unwrapped
     addCode('declare var obj4: {a?: ?(?{b: number})};').noNewErrors(),
     addCode('(idx(obj4, obj => obj.a.b): ?number)').noNewErrors(),
@@ -133,27 +116,33 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     addCode('(idx(new Foo1(), o => o.a.b): ?number);\n').noNewErrors(),
     addCode('(idx(new Foo1(), o => o.a.b): number);\n').newErrors(
-      `
-        test.js:18
-         18: (idx(new Foo1(), o => o.a.b): number);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-         18: (idx(new Foo1(), o => o.a.b): number);
-                                          ^^^^^^ number
+                                                         `
+                                                           test.js:18
+                                                            18: (idx(new Foo1(), o => o.a.b): number);
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                               6: class Foo1 { a: ?Foo1; b: ?number; }
+                                                                                            ^^^^^^^ [1]
+                                                              18: (idx(new Foo1(), o => o.a.b): number);
+                                                                                                ^^^^^^ [2]
 
-        test.js:18
-         18: (idx(new Foo1(), o => o.a.b): number);
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-         18: (idx(new Foo1(), o => o.a.b): number);
-                                          ^^^^^^ number
-      `,
-    ),
+                                                           test.js:18
+                                                            18: (idx(new Foo1(), o => o.a.b): number);
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                             References:
+                                                              18: (idx(new Foo1(), o => o.a.b): number);
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                              18: (idx(new Foo1(), o => o.a.b): number);
+                                                                                                ^^^^^^ [2]
+                                                         `,
+                                                       ),
     addCode('idx(new Foo1(), o => o.a = null);\n').newErrors(
-      `
-        test.js:21
-         21: idx(new Foo1(), o => o.a = null);
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
-      `,
-    ),
+                                                    `
+                                                      test.js:21
+                                                       21: idx(new Foo1(), o => o.a = null);
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback must only access properties on the callback parameter.
+                                                    `,
+                                                  ),
   ]),
 
   test('idx(array)', [
@@ -172,29 +161,27 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     addCode('(idx(42, n => n): ?number);\n').noNewErrors(),
     addCode('(idx(42, n => n): number);\n').newErrors(
-      `
-        test.js:9
-          9: (idx(42, n => n): number);
-              ^^^^^^^^^^^^^^^ null. This type is incompatible with
-          9: (idx(42, n => n): number);
-                               ^^^^^^ number
-
-        test.js:9
-          9: (idx(42, n => n): number);
-              ^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-          9: (idx(42, n => n): number);
-                               ^^^^^^ number
-      `,
-    ),
+                                             `
+                                               test.js:9
+                                                 9: (idx(42, n => n): number);
+                                                     ^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to number because null or undefined [1] is incompatible with number [2].
+                                                 References:
+                                                   9: (idx(42, n => n): number);
+                                                       ^^^^^^^^^^^^^^^ [1]
+                                                   9: (idx(42, n => n): number);
+                                                                        ^^^^^^ [2]
+                                             `,
+                                           ),
     addCode('idx(42, n => n.nope);\n').newErrors(
-      `
-        test.js:12
-         12: idx(42, n => n.nope);
-                            ^^^^ property \`nope\`. Property not found in
-         12: idx(42, n => n.nope);
-                          ^ Number
-      `,
-    ),
+                                        `
+                                          test.js:12
+                                           12: idx(42, n => n.nope);
+                                                              ^^^^ Cannot get \`n.nope\` because property \`nope\` is missing in \`Number\` [1].
+                                            References:
+                                             12: idx(42, n => n.nope);
+                                                     ^^ [1]
+                                        `,
+                                      ),
   ]),
 
   test('idx() weird edge cases', [
@@ -203,21 +190,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     // Using an annotation obscures the type wrapper mechanism that idx() uses
     // around the parameter it passes to the callback
     addCode('(idx({}, (obj: Object) => obj.a.b.c): ?number);\n').newErrors(
-       `
-         test.js:6
-           6: (idx({}, (obj: Object) => obj.a.b.c): ?number);
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callback functions may not be annotated and they may only access properties on the callback parameter!
-       `,
-    ),
+                                                                  `
+                                                                    test.js:6
+                                                                      6: (idx({}, (obj: Object) => obj.a.b.c): ?number);
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback argument must not be annotated.
+                                                                  `,
+                                                                ),
 
     // Can't do anything with the callback parameter other than get elements and
     // properties off of it
     addCode('idx({}, obj => obj());\n').newErrors(
-      `
-        test.js:9
-          9: idx({}, obj => obj());
-             ^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
-      `,
-    ),
+                                         `
+                                           test.js:9
+                                             9: idx({}, obj => obj());
+                                                ^^^^^^^^^^^^^^^^^^^^^ Cannot call \`idx(...)\` because the callback must only access properties on the callback parameter.
+                                         `,
+                                       ),
   ]),
 ]);

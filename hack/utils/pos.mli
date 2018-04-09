@@ -20,6 +20,8 @@ type b = Pos_source.t
 
 type t = Relative_path.t pos
 
+val pp : Format.formatter -> t -> unit
+
 type absolute = string pos
 
 val none : t
@@ -27,6 +29,8 @@ val none : t
 val filename : 'a pos -> 'a
 
 val start_cnum : 'a pos -> int
+
+val end_cnum : 'a pos -> int
 
 val line : 'a pos -> int
 
@@ -62,6 +66,9 @@ val multiline_json : absolute -> Hh_json.json
 
 val inside : 'a pos -> int -> int -> bool
 
+val exactly_matches_range :
+  'a pos -> start_line:int -> start_col:int -> end_line:int -> end_col:int -> bool
+
 val contains : 'a pos -> 'a pos -> bool
 
 val make : 'a -> b -> 'a pos
@@ -91,6 +98,11 @@ val make_from_file_pos :
   pos_file:Relative_path.t -> pos_start:File_pos.t ->
     pos_end:File_pos.t -> t
 
-val set_file : Relative_path.t -> t -> t
+val set_file : 'a -> 'a pos -> 'a pos
 
 module Map : MyMap.S with type key = t
+module AbsolutePosMap : MyMap.S with type key = absolute
+
+
+val print_verbose_absolute : absolute -> string
+val print_verbose_relative : t -> string

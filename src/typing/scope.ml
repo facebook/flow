@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -49,7 +46,7 @@ module Entry = struct
      * are implicit (like class declarations). For implicit lets, we should
      * track why this is a let binding for better error messages *)
     | Let of let_binding_kind
-    | Var
+    | Var of var_binding_kind
 
   and const_binding_kind =
     | ConstImportBinding
@@ -58,21 +55,30 @@ module Entry = struct
 
   and let_binding_kind =
     | LetVarBinding
+    | ConstlikeLetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
+    | ConstlikeParamBinding
+
+  and var_binding_kind =
+    | VarBinding
+    | ConstlikeVarBinding
 
   let string_of_value_kind = function
   | Const ConstImportBinding -> "import"
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
   | Let LetVarBinding -> "let"
+  | Let ConstlikeLetVarBinding -> "let"
   | Let ClassNameBinding -> "class"
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
   | Let ParamBinding -> "param"
-  | Var -> "var"
+  | Let ConstlikeParamBinding -> "param"
+  | Var VarBinding -> "var"
+  | Var ConstlikeVarBinding -> "var"
 
   type value_binding = {
     kind: value_kind;
@@ -102,8 +108,12 @@ module Entry = struct
   type t =
   | Value of value_binding
   | Type of type_binding
+  | Class of Type.class_binding
 
   (* constructors *)
+  let new_class class_binding_id class_private_fields class_private_static_fields =
+    Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
+
   let new_value kind state specific general value_declare_loc =
     Value {
       kind;
@@ -123,9 +133,9 @@ module Entry = struct
   let new_let ~loc ?(state=State.Undeclared) ?(kind=LetVarBinding) t =
     new_value (Let kind) state t t loc
 
-  let new_var ~loc ?(state=State.Undeclared) ?specific general =
+  let new_var ~loc ?(state=State.Undeclared) ?(kind=VarBinding) ?specific general =
     let specific = match specific with Some t -> t | None -> general in
-    new_value Var state specific general loc
+    new_value (Var kind) state specific general loc
 
   let new_type_ type_binding_kind state loc _type =
     Type {
@@ -145,22 +155,27 @@ module Entry = struct
   let entry_loc = function
   | Value v -> v.value_declare_loc
   | Type t -> t.type_loc
+  | Class _ -> Loc.none
 
   let assign_loc = function
   | Value v -> v.value_assign_loc
   | Type t -> t.type_loc
+  | Class _ -> Loc.none
 
   let declared_type = function
   | Value v -> v.general
   | Type t -> t._type
+  | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let actual_type = function
   | Value v -> v.specific
   | Type t -> t._type
+  | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let string_of_kind = function
   | Value v -> string_of_value_kind v.kind
   | Type _ -> "type"
+  | Class c -> spf "Class %i" c.Type.class_binding_id
 
   let kind_of_value (value: value_binding) = value.kind
   let general_of_value (value: value_binding) = value.general
@@ -182,13 +197,21 @@ module Entry = struct
       else Value { v with specific = v.general }
     | Value { kind = Const _; _ } ->
       entry
+    | Value { kind = Var ConstlikeVarBinding; _ } ->
+      entry
+    | Value { kind = Let ConstlikeLetVarBinding; _ } ->
+      entry
+    | Value { kind = Let ConstlikeParamBinding; _ } ->
+      entry
     | Value v ->
       if Reason.is_internal_name name
       then entry
       else Value { v with specific = v.general }
+    | Class _ -> entry
 
   let reset loc name entry =
     match entry with
+    | Class _
     | Type _ ->
       entry
     | Value v ->
@@ -198,6 +221,7 @@ module Entry = struct
 
   let is_lex = function
     | Type _ -> false
+    | Class _ -> true
     | Value v ->
       match v.kind with
       | Const _ -> true
@@ -213,6 +237,7 @@ type var_scope_kind =
   | Module          (* module scope *)
   | Global          (* global scope *)
   | Predicate       (* predicate function *)
+  | Ctor            (* constructor *)
 
 let string_of_var_scope_kind = function
 | Ordinary -> "Ordinary"
@@ -222,6 +247,7 @@ let string_of_var_scope_kind = function
 | Module -> "Module"
 | Global -> "Global"
 | Predicate -> "Predicate"
+| Ctor -> "Constructor"
 
 (* var and lexical scopes differ in hoisting behavior
    and auxiliary properties *)
@@ -248,7 +274,7 @@ type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
-  mutable refis: refi_binding Key_map.t
+  mutable refis: refi_binding Key_map.t;
 }
 
 (* ctor helper *)
@@ -256,7 +282,7 @@ let fresh_impl kind = {
   id = mk_id ();
   kind;
   entries = SMap.empty;
-  refis = Key_map.empty
+  refis = Key_map.empty;
 }
 
 (* return a fresh scope of the most common kind (var) *)
@@ -325,32 +351,36 @@ let havoc_refi key scope =
     Key_map.filter (fun k _ -> Key.compare key k != 0)
 
 (* helper: filter all refis whose expressions involve the given name *)
-let filter_refis_using_propname propname refis =
+let filter_refis_using_propname ~private_ propname refis =
   refis |> Key_map.filter (fun key _ ->
-    not (Key.uses_propname propname key)
+    not (Key.uses_propname ~private_ propname key)
   )
 
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
  *)
-let havoc_refis ?name scope =
+let havoc_refis ?name ~private_ scope =
   scope.refis <- match name with
   | Some name ->
-    scope.refis |> (filter_refis_using_propname name)
+    scope.refis |> (filter_refis_using_propname ~private_ name)
   | None ->
     Key_map.empty
+
+let havoc_all_refis ?name scope =
+  havoc_refis ?name ~private_:false scope;
+  havoc_refis ?name ~private_:true scope
 
 (* havoc a scope:
    - clear all refinements
    - reset specific types of entries to their general types
  *)
 let havoc scope =
-  havoc_refis scope;
+  havoc_all_refis scope;
   update_entries Entry.havoc scope
 
 let reset loc scope =
-  havoc_refis scope;
+  havoc_all_refis scope;
   update_entries (Entry.reset loc) scope
 
 let is_lex scope =

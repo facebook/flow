@@ -1,3 +1,5 @@
 #!/bin/bash
+. ../assert.sh
 FLOW=$1
-"$FLOW" check . --all --lints "sketchy-null=off"
+
+assert_ok "$FLOW" check . --all --lints "sketchy-null=off"

@@ -21,10 +21,77 @@
    *    its fate to the next client.
 *)
 
-open Core
+open Hh_core
 open ServerProcess
-open ServerProcessTools
 open ServerMonitorUtils
+
+
+module Sent_fds_collector = struct
+
+  (**
+   This module exists to fix an issue with libancillary (passing a file descriptor
+   to another process with sendmsg over Unix Domain Sockets) and certain operating
+   systems. It allows us to delay closing of a File Descriptor inside the Monitor
+   until it is safe to do so.
+
+   Normally:
+     Monitor sends client FD to Server process, and immediately closes the FD.
+     This is fine even if the Server is busy and hasn't "recv_fd" the FD yet
+     because this doesn't really "close" the file. The kernel still considers
+     it to be open by the receiving process. If the server closes the FD
+     then reads on the client will get an EOF. If the client closes the FD
+     then reads on the server will get an EOF.
+
+   Mac OS X:
+     EOF isn't showing up correctly on file descriptors passed between
+     processes.
+     When the Monitor closes the FD after sending it to the Server (and
+     before the Server receives it), the kernel thinks it is the last open
+     descriptor on the file and actually closes it. After the server
+     receieves the FD, it gets an EOF when reading from it (which it shouldn't
+     because the client is still there; aside: oddly enough, writing to it
+     succeeds instead of getting EPIPE). The server then closes that FD after
+     reading the EOF. Normally (as noted above) the client would read an
+     EOF after this. But (this is the bug) this EOF never shows up and the
+     client blocks forever on "select" instead.
+
+   To get around this problem, we want to close the FD in the monitor only
+   after the server has received it. Unfortunately, we don't actually
+   have a way to reliably detect that it has been received. So we just delay
+   closing by 2 seconds.
+
+   Note: It's not safe to detect the receiving by reading the
+   Hello message from the server (since it could/would be consumed
+   here instead of by the Client) nor by "select" (by a race condition
+   with the client, the select might miss the Hello, and could prevent
+   an EOF from being read by the server).
+   *)
+
+  module Fd_scheduler = Scheduler.Make(struct
+    type t = (** Unix.time *) float
+  end)
+
+  let cleanup_fd fd =
+    if Sys_utils.is_apple_os () then
+      (** Close it 2 seconds later. *)
+      let trigger = Unix.gettimeofday () +. 2.0 in
+      Fd_scheduler.wait_for_fun
+        ~once:true
+        ~priority:1
+        (fun time -> time >= trigger)
+        (fun x ->
+          let () = Printf.eprintf "Closing client fd\n" in
+          let () = Unix.close fd in x)
+    else
+      Unix.close fd
+
+  let collect_garbage () =
+    if Sys_utils.is_apple_os () then
+      ignore (Fd_scheduler.wait_and_run_ready (Unix.gettimeofday ()))
+    else
+      ()
+end;;
+
 
 exception Malformed_build_id
 exception Send_fd_failure of int
@@ -46,7 +113,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      *
      * String is the server name it wants to connect to. *)
     purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) Queue.t;
+    (** Whether to ignore hh version mismatches *)
+    ignore_hh_version : bool;
   }
+
+  type t = env * ServerMonitorUtils.monitor_config * Unix.file_descr
 
   let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
 
@@ -57,26 +128,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * buffering to happen here, so the server process doesn't get what was
      * meant for it. *)
     Marshal_tools.to_fd_with_preamble fd msg
-
-  let kill_server process =
-    try Unix.kill process.pid Sys.sigusr2 with
-    | _ ->
-      Hh_logger.log
-        "Failed to send sigusr2 signal to server process. Trying \
-         violently";
-      try Unix.kill process.pid Sys.sigkill with e ->
-        Hh_logger.exc ~prefix: "Failed to violently kill server process: " e
-
-  let rec wait_for_server_exit process start_t =
-    let exit_status = Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
-    match exit_status with
-    | 0, _ ->
-      Unix.sleep 1;
-      wait_for_server_exit process start_t
-    | _ ->
-      ignore (
-        Hh_logger.log_duration (Printf.sprintf
-          "%s has exited. Time since sigterm: " process.name) start_t)
+    |> ignore
 
   let setup_handler_for_signals handler signals =
     List.iter signals begin fun signal ->
@@ -87,7 +139,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     try
       setup_handler_for_signals begin fun _ ->
         Hh_logger.log "Got an exit signal. Killing server and exiting.";
-        kill_server process;
+        SC.kill_server process;
         Exit_status.exit Exit_status.Interrupted
       end [Sys.sigint; Sys.sigquit; Sys.sigterm; Sys.sighup];
     with
@@ -101,26 +153,40 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   (** Kill command from client is handled by server server, so the monitor
    * needs to check liveness of the server process to know whether
    * to stop itself. *)
-  let update_status_ (server: ServerProcess.server_process) monitor_config =
-    match server with
-    | Alive process ->
-      let pid, proc_stat =
-        Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
-      (match pid, proc_stat with
-        | 0, _ ->
-          server
-        | _, _ ->
-          let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
-          let was_oom = match proc_stat with
-          | Unix.WEXITED code when code = oom_code -> true
-          | _ -> check_dmesg_for_oom process in
-          SC.on_server_exit monitor_config;
-          ServerProcessTools.check_exit_status proc_stat process monitor_config;
-          Died_unexpectedly (proc_stat, was_oom))
-    | _ -> server
+  let update_status_ (env: env) monitor_config =
+    let env = match env.server with
+      | Alive process ->
+        let pid, proc_stat = SC.wait_pid process in
+        (match pid, proc_stat with
+          | 0, _ ->
+            (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
+            env
+          | _, _ ->
+            (* "pid<>0" means the pid has died or received a stop signal *)
+            let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
+            let was_oom = match proc_stat with
+            | Unix.WEXITED code when code = oom_code -> true
+            | _ -> Sys_utils.check_dmesg_for_oom process.pid "hh_server" in
+            SC.on_server_exit monitor_config;
+            ServerProcessTools.check_exit_status proc_stat process monitor_config;
+            { env with server = Died_unexpectedly (proc_stat, was_oom) })
+      | _ -> env
+    in
+    let exit_status, server_state = match env.server with
+      | Alive _ ->
+        None, Informant_sig.Server_alive
+      | Died_unexpectedly ((Unix.WEXITED c), _) ->
+        Some c, Informant_sig.Server_dead
+      | Not_yet_started ->
+        None, Informant_sig.Server_not_yet_started
+      | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
+      | Informant_killed ->
+        None, Informant_sig.Server_dead in
+    env, exit_status, server_state
 
-  let start_server ~informant_managed options exit_status =
+  let start_server ?target_mini_state ~informant_managed options exit_status =
     let server_process = SC.start_server
+      ?target_mini_state
       ~prior_exit_status:exit_status
       ~informant_managed options in
     setup_autokill_server_on_exit server_process;
@@ -141,13 +207,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   let kill_server_with_check = function
       | Alive server ->
-        kill_server server
+        SC.kill_server server
       | _ -> ()
 
   let wait_for_server_exit_with_check server kill_signal_time =
     match server with
       | Alive server ->
-        wait_for_server_exit server kill_signal_time
+        SC.wait_for_server_exit server kill_signal_time
       | _ -> ()
 
   let kill_server_and_wait_for_exit env =
@@ -155,29 +221,18 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let kill_signal_time = Unix.gettimeofday () in
     wait_for_server_exit_with_check env.server kill_signal_time
 
-  let restart_server env exit_status =
+  let restart_server ?target_mini_state env exit_status =
     kill_server_and_wait_for_exit env;
     let informant_managed = Informant.is_managing env.informant in
-    let new_server = start_server ~informant_managed env.server_start_options
-      exit_status in
+    let new_server = start_server ?target_mini_state
+      ~informant_managed env.server_start_options exit_status in
     { env with
       server = new_server;
       retries = env.retries + 1;
     }
 
   let update_status env monitor_config =
-     let server = update_status_ env.server monitor_config in
-     let env = { env with server = server } in
-     let exit_status, server_state = match server with
-       | Alive _ ->
-         None, Informant_sig.Server_alive
-       | Died_unexpectedly ((Unix.WEXITED c), _) ->
-         Some c, Informant_sig.Server_dead
-       | Not_yet_started ->
-         None, Informant_sig.Server_not_yet_started
-       | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
-       | Informant_killed ->
-         None, Informant_sig.Server_dead in
+     let env, exit_status, server_state = update_status_ env monitor_config in
      let informant_report = Informant.report env.informant server_state in
      let is_watchman_fresh_instance = match exit_status with
        | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
@@ -206,27 +261,28 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          (env.retries + 1);
        restart_server env exit_status
      end
-     else if informant_report = Informant_sig.Restart_server then begin
+     else match informant_report with
+     | Informant_sig.Restart_server target_mini_state ->
        Hh_logger.log "Informant directed server restart. Restarting server.";
        HackEventLogger.informant_induced_restart ();
-       restart_server env exit_status
-     end
-     else if is_config_changed then begin
-       Hh_logger.log "hh_server died from hh config change. Restarting";
-       restart_server env exit_status
-     end else if is_file_heap_stale then begin
-       Hh_logger.log
-        "Several large rebases caused FileHeap to be stale. Restarting";
-       restart_server env exit_status
-    end else if is_sql_assertion_failure
-    && (env.retries < max_sql_retries) then begin
-      Hh_logger.log
-        "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
-        (env.retries + 1);
-      restart_server env exit_status
-    end
-     else
-       { env with server = server }
+       restart_server ?target_mini_state env exit_status
+     | Informant_sig.Move_along ->
+       if is_config_changed then begin
+         Hh_logger.log "hh_server died from hh config change. Restarting";
+         restart_server env exit_status
+       end else if is_file_heap_stale then begin
+         Hh_logger.log
+          "Several large rebases caused FileHeap to be stale. Restarting";
+         restart_server env exit_status
+      end else if is_sql_assertion_failure
+      && (env.retries < max_sql_retries) then begin
+        Hh_logger.log
+          "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
+          (env.retries + 1);
+        restart_server env exit_status
+      end
+       else
+         env
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -256,8 +312,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (Hh_logger.log "Failed to handoff FD to server.";
        raise (Send_fd_failure status))
     else
-      (Unix.close client_fd;
-       ())
+      Sent_fds_collector.cleanup_fd client_fd
 
   (** Sends the client connection FD to the server process then closes the
    * FD. *)
@@ -286,20 +341,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     end
 
   (** Does not return. *)
-  and client_out_of_date_ client_fd _mismatch_info =
-    msg_to_channel client_fd Build_id_mismatch;
-    (* TODO: around July 2017, change this to
-     *   "Build_id_mismatch_ex mismatch_info"
-     * Why that date? Imagine if we make the change and someone has a hh_server
-     * currently running which sends the _ex form. Then they hg update to a
-     * bookmark associated with an older version of hh_client which doesn't yet
-     * recognize the _ex form! They'd get a segfault in their hh_client.
-     * Well, hh_client started recognizing the _ex form around April 2017, so
-     * by July, we needn't worry about bookmarks that old.
-     * Oh, and when we make the change here, we should add a TODO for two months
-     * in the future that monitorConnection.ml:verify_cstate can safely assert
-     * that the Build_id_mismatch form will never arise.
-    *)
+  and client_out_of_date_ client_fd mismatch_info =
+    msg_to_channel client_fd (Build_id_mismatch_ex mismatch_info);
     HackEventLogger.out_of_date ()
 
   (** Kills servers, sends build ID mismatch message to client, and exits.
@@ -370,7 +413,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   and ack_and_handoff_client env client_fd =
     try
       let client_version = read_version client_fd in
-      if client_version <> Build_id.build_revision
+      if (not env.ignore_hh_version) && client_version <> Build_id.build_revision
       then
         client_out_of_date env client_fd ServerMonitorUtils.current_build_info
       else (
@@ -409,19 +452,29 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _ ->
       env
 
-  let rec check_and_run_loop env monitor_config
+  let rec check_and_run_loop ?(consecutive_throws=0) env monitor_config
       (socket: Unix.file_descr) =
-    let env = try check_and_run_loop_ env monitor_config socket with
+    let env, consecutive_throws =
+      try check_and_run_loop_ env monitor_config socket, 0 with
       | Unix.Unix_error (Unix.ECHILD, _, _) ->
+        let stack = Printexc.get_backtrace () in
         ignore (Hh_logger.log
-          "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
+          "check_and_run_loop_ threw with Unix.ECHILD. Exiting. - %s" stack);
         Exit_status.exit Exit_status.No_server_running
+      | Exit_status.Exit_with _ as e -> raise e
       | e ->
-        Hh_logger.log "check_and_run_loop_ threw with exception: %s"
-          (Printexc.to_string e);
-        env
+        let stack = Printexc.get_backtrace () in
+        if consecutive_throws > 500 then begin
+          Hh_logger.log "Too many consecutive exceptions.";
+          Hh_logger.log "Probably an uncaught exception rethrown each retry. Exiting. %s" stack;
+          HackEventLogger.uncaught_exception e;
+          Exit_status.exit Exit_status.Uncaught_exception
+        end;
+        Hh_logger.log "check_and_run_loop_ threw with exception: %s - %s"
+          (Printexc.to_string e) stack;
+        env, consecutive_throws + 1
       in
-      check_and_run_loop env monitor_config socket
+      check_and_run_loop ~consecutive_throws env monitor_config socket
 
   and check_and_run_loop_ env monitor_config
       (socket: Unix.file_descr) =
@@ -431,6 +484,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
     let env = maybe_push_purgatory_clients env in
+    let () = Sent_fds_collector.collect_garbage () in
     let has_client = sleep_and_check socket in
     let env = update_status env monitor_config in
     if (not has_client) then
@@ -457,7 +511,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          "Accepting on socket failed. Ignoring client connection attempt.";
          env)
 
-  let start_monitoring ~waiting_client ~max_purgatory_clients
+  let check_and_run_loop_once (env, monitor_config, socket) =
+    let env = check_and_run_loop_ env monitor_config socket in
+    env, monitor_config, socket
+
+  let start_monitor ~waiting_client ~max_purgatory_clients
     server_start_options informant_init_env
     monitor_config =
     let socket = Socket.init_unix_socket monitor_config.socket_file in
@@ -495,6 +553,14 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server = server_process;
       server_start_options;
       retries = 0;
+      ignore_hh_version = Informant.should_ignore_hh_version informant_init_env;
     } in
+    env, monitor_config, socket
+
+  let start_monitoring ~waiting_client ~max_purgatory_clients
+    server_start_options informant_init_env
+    monitor_config =
+    let env, monitor_config, socket = start_monitor ~waiting_client ~max_purgatory_clients
+      server_start_options informant_init_env monitor_config in
     check_and_run_loop env monitor_config socket
 end

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 begin library "ROOTPROJECT"
@@ -27,9 +24,11 @@ begin library "flow-commands"
     "flow-common"
     "flow-common-errors"
     "flow-common-lints"
+    "flow-common-lwt"
+    "flow-common-profiling"
     "flow-common-utils"
-    "flow-dts"
     "flow-flowlib"
+    "flow-monitor"
     "flow-parser"
     "flow-parser-utils"
     "flow-shmem"
@@ -48,7 +47,19 @@ begin library "flow-commands"
     "tp-core"
     "hh-utils"
     "hh-utils-collections"
+    "hh-utils-filecontent"
+    "hh-utils-fileurl"
     "hh-utils-json"
+    "hh-utils-jsonrpc"
+    "hh-utils-lsp"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -102,6 +113,7 @@ begin library "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
+    "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
   ]
@@ -116,6 +128,101 @@ begin library "flow-common-lints"
     "flow-common-utils"
     "flow-parser"
     "hh-utils-collections"
+    "tp-core"
+  ]
+end
+
+begin library "flow-common-lwt"
+  sort = true
+  files = begin fb-glob "src/common/lwt"
+  end
+  requires = [
+    "lwt"
+    "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+end
+
+begin library "flow-common-tarjan"
+  sort = true
+  files = begin fb-glob "src/common/tarjan"
+  end
+  requires = [
+    "flow-common-utils"
+    "hh-utils-collections"
+  ]
+end
+
+begin library "ocaml-vlq"
+  sort = true
+  files = begin fb-glob "src/third-party/ocaml-vlq/src"
+  end
+  requires = [
+  ]
+end
+
+begin library "ocaml-sourcemaps"
+  sort = true
+  files = begin fb-glob "src/third-party/ocaml-sourcemaps/src"
+  end
+  requires = [
+    "ocaml-vlq"
+  ]
+end
+
+begin library "flow-parser-utils-output"
+  sort = true
+  files = begin fb-glob "src/parser_utils/output"
+  end
+  requires = [
+    "dtoa"
+    "flow-common-utils"
+    "flow-parser"
+    "flow-parser-utils"
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-json"
+    "ocaml-sourcemaps"
+    "ocaml-vlq"
+    "tp-core"
+    "wtf8"
+  ]
+end
+
+begin library "flow-common-ty"
+  sort = true
+  files = begin fb-glob "src/common/ty"
+  end
+  requires = [
+    "dtoa"
+    "flow-common"
+    "flow-common-monad"
+    "flow-common-utils"
+    "flow-parser"
+    "flow-parser-utils"
+    "flow-parser-utils-output"
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-json"
+    "ocaml-sourcemaps"
+    "ocaml-vlq"
+    "tp-core"
+    "wtf8"
+  ]
+end
+
+begin library "flow-common-monad"
+  sort = true
+  files = begin fb-glob "src/common/monad"
+  end
+  requires = [
+    "flow-common"
     "tp-core"
   ]
 end
@@ -140,6 +247,14 @@ begin library "flow-common-profiling"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -151,18 +266,29 @@ begin library "flow-common-utils"
     "flow-parser"
     "hh-utils"
     "hh-utils-collections"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
-begin library "flow-dts"
-  sort = true
-  files = begin fb-glob "src/dts"
+xx_libc_flags = [
+  "-I"; "src/third-party/lz4";
+]
+begin library "flow-common-xx"
+  files = begin fb-glob "src/common/xx"
+    excludes = [ "xx_stubs.c" ]
   end
+  files += [
+    "src/common/xx/xx_stubs.c" (ccopt = xx_libc_flags)
+  ]
   requires = [
-    "flow-common-utils"
-    "flow-parser"
-    "hh-utils"
-    "hh-utils-collections"
+    "lz4"
   ]
 end
 
@@ -174,6 +300,7 @@ begin library "flow-scripts-utils"
   requires = [
     "unix"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin program "flow-ppx-gen-flowlib"
@@ -185,6 +312,7 @@ begin program "flow-ppx-gen-flowlib"
   files = [
     "ppx_gen_flowlibs.ml"
   ]
+  comp += [ "-safe-string" ]
 end
 
 begin library "flow-flowlib"
@@ -202,8 +330,8 @@ begin library "flow-flowlib"
   comp_requires = [
     "flow-ppx-gen-flowlib:asm"
   ]
-  comp = [
-    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/"
+  comp += [
+    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/ prelude/"
   ]
 end
 
@@ -219,11 +347,20 @@ begin library "flow-parser"
   files += [
     "src/parser/lexer.ml" (comp += [
       "-w" "-31-39"
-      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex"
+      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex --as-ppx"
     ])
   ]
   requires = [
     "sedlex"
+    "wtf8"
+  ]
+end
+
+begin library "flow-parser-test-utils"
+  sort = true
+  dirname = "src/parser/test"
+  files = [
+    "file_utils.ml"
   ]
 end
 
@@ -232,6 +369,7 @@ begin library "flow-parser-utils"
   files = begin fb-glob "src/parser_utils"
   end
   requires = [
+    "dtoa"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
@@ -251,11 +389,137 @@ begin library "flow-parsing"
     "flow-parser"
     "flow-parser-utils"
     "flow-shmem"
-    "hh-procs"
+    "hh-procs-lwt"
     "hh-heap"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+end
+
+begin library "flow-monitor"
+  sort = true
+  files = begin fb-glob "src/monitor"
+    excludes = [
+      "serverStatus.mli"
+      "serverStatus.ml"
+      "serverToMonitor.mli"
+      "serverToMonitor.ml"
+    ]
+  end
+  requires = [
+    "flow-common"
+    "flow-common-lwt"
+    "flow-monitor-connections"
+    "flow-monitor-logger"
+    "flow-monitor-server-status"
+    "flow-monitor-utils"
+    "flow-server"
+    "flow-server-protocol"
+    "hh-utils-lsp"
+    "lwt"
+    "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+end
+
+begin library "flow-monitor-logger"
+  sort = true
+  files = begin fb-glob "src/monitor/logger"
+  end
+  requires = [
+    "flow-common-lwt"
+    "hh-utils-core"
+    "lwt"
+    "lwt.log"
+    "lwt.unix"
+    "lwt_ppx"
+    "tp-core"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+end
+
+begin library "flow-monitor-connections"
+  sort = true
+  files = begin fb-glob "src/monitor/connections"
+  end
+  requires = [
+    "flow-common-lwt"
+    "flow-monitor-logger"
+    "flow-monitor-utils"
+    "flow-server-protocol"
+    "hh-marshal-tools-lwt"
+    "lwt"
+    "lwt.unix"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+end
+
+begin library "flow-monitor-utils"
+  sort = true
+  files = begin fb-glob "src/monitor/utils"
+  end
+  requires = [
+    "lwt"
+  ]
+end
+
+begin library "flow-monitor-server-status"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "serverStatus.mli"
+    "serverStatus.ml"
+  ]
+  requires = [
+    "flow-common-utils"
+  ]
+end
+
+begin library "flow-monitor-rpc"
+  sort = true
+  dirname = "src/monitor"
+  files = [
+    "monitorRPC.mli"
+    "monitorRPC.ml"
+  ]
+  requires = [
+    "hh-marshal-tools-lwt"
+    "hh-utils-sys"
+    "flow-server-protocol"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -279,6 +543,7 @@ begin library "flow-shmem"
   requires = [
     "flow-server-files"
     "flow-common"
+    "flow-monitor-rpc"
     "hh-heap"
     "hh-utils-sys"
     "hh-utils-collections"
@@ -292,13 +557,17 @@ begin library "flow-server-protocol"
   requires = [
     "flow-common"
     "flow-common-errors"
+    "flow-common-profiling"
+    "flow-common-utils"
+    "flow-monitor-server-status"
     "flow-parser"
     "flow-server-utils"
-    "flow-services-autocomplete"
     "flow-typing"
     "hh-utils"
-    "hh-utils-sys"
     "hh-utils-collections"
+    "hh-utils-json"
+    "hh-utils-lsp"
+    "hh-utils-sys"
   ]
 end
 
@@ -306,9 +575,10 @@ begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
     excludes = [
+      "checkedSet.mli"
+      "checkedSet.ml"
       "file_input.ml"
       "serverEnv.ml"
-      "serverUtils.ml"
       "persistent_connection.ml"
       "server_files_js.ml"
       "server_files_js.mli"
@@ -318,6 +588,7 @@ begin library "flow-server"
   requires = [
     "flow-common"
     "flow-common-lints"
+    "flow-common-lwt"
     "flow-common-utils"
     "flow-shmem"
     "flow-stubs"
@@ -331,13 +602,20 @@ begin library "flow-server"
     "flow-services-port"
     "flow-typing"
     "hh-stubs"
-    "hh-dfind"
-    "hh-procs"
+    "hh-dfind-lwt"
+    "hh-procs-lwt"
     "hh-socket"
-    "tp-core"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "hh-utils-lsp"
+    "tp-core"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -346,15 +624,18 @@ begin library "flow-server-env"
   dirname = "src/server"
   files = [
     "serverEnv.ml"
+    "checkedSet.mli"
+    "checkedSet.ml"
   ]
   requires = [
     "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
+    "flow-parser"
     "flow-server-protocol"
-    "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
+    "tp-core"
   ]
 end
 
@@ -363,7 +644,6 @@ begin library "flow-server-utils"
   dirname = "src/server"
   files = [
     "file_input.ml"
-    "serverUtils.ml"
   ]
   requires = [
     "hh-utils-sys"
@@ -384,6 +664,7 @@ begin library "flow-persistent-connection"
     "flow-server-utils"
     "flow-services-autocomplete"
     "hh-utils"
+    "hh-utils-lsp"
   ]
 end
 
@@ -394,9 +675,10 @@ begin library "flow-services-autocomplete"
   requires = [
     "flow-common"
     "flow-common-utils"
-    "flow-stubs"
     "flow-parser"
     "flow-parsing"
+    "flow-server-protocol"
+    "flow-stubs"
     "flow-typing"
     "hh-utils"
     "hh-utils-collections"
@@ -415,24 +697,30 @@ begin library "flow-services-type-info"
     "flow-parsing"
     "flow-services-inference"
     "flow-typing"
+    "hh-procs-lwt"
     "hh-utils-json"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
 begin library "flow-services-inference"
   sort = true
   files = begin fb-glob "src/services/inference"
-    excludes = [ "module_js.ml" ]
   end
-  files += [
-    "src/services/inference/module_js.ml" (comp += [ "-w" "-3" ])
-  ]
   requires = [
     "flow-common"
     "flow-common-audit"
     "flow-common-errors"
     "flow-common-lints"
     "flow-common-utils"
+    "flow-common-xx"
     "flow-stubs"
     "flow-parser"
     "flow-parser-utils"
@@ -442,10 +730,19 @@ begin library "flow-services-inference"
     "flow-shmem"
     "flow-typing"
     "hh-heap"
-    "hh-procs"
+    "hh-procs-lwt"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
+    "lwt"
+    "lwt_ppx"
+  ]
+  comp += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
+  ]
+  dep += [
+      "-ppx" "%{lwt_ppx_FULL_SRC_DIR}%/ppx.exe --as-ppx"
   ]
 end
 
@@ -478,6 +775,9 @@ begin library "flow-stubs"
   sort = true
   files = begin fb-glob "src/stubs"
   end
+  requires = [
+    "lwt"
+  ]
 end
 
 begin library "flow-typing"
@@ -496,7 +796,11 @@ begin library "flow-typing"
     "flow-common"
     "flow-common-errors"
     "flow-common-lints"
+    "flow-common-monad"
+    "flow-common-tarjan"
+    "flow-common-ty"
     "flow-common-utils"
+    "flow-common-xx"
     "flow-parser"
     "flow-parser-utils"
     "tp-core"
@@ -523,6 +827,7 @@ begin program "flow-parser-hardcoded-test"
   requires = [
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-test-utils"
     "flow-parser-utils"
   ]
   tests = [ "hardcoded_tests" ]

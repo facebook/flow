@@ -6,3 +6,4 @@
 
 [options]
 suppress_comment=.*\\$FlowFixMe.*
+include_warnings=true

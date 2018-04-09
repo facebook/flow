@@ -335,9 +335,9 @@ class Item<T> {
   }
 }
 
-let item: Item<number> = new Item(42); // Works!
+let item1: Item<number> = new Item(42); // Works!
 // $ExpectError
-let item: Item = new Item(42); // Error!
+let item2: Item = new Item(42); // Error!
 ```
 
 ***Type Aliases***
@@ -348,9 +348,9 @@ type Item<T> = {
   prop: T,
 };
 
-let item: Item<number> = { prop: 42 }; // Works!
+let item1: Item<number> = { prop: 42 }; // Works!
 // $ExpectError
-let item: Item = { prop: 42 }; // Error!
+let item2: Item = { prop: 42 }; // Error!
 ```
 
 ***Interfaces***
@@ -380,7 +380,7 @@ type Item<T: number = 1> = {
   prop: T,
 };
 
-let foo: Item<> = { prop:1 };
+let foo: Item<> = { prop: 1 };
 let bar: Item<2> = { prop: 2 };
 ```
 

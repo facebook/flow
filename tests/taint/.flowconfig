@@ -1,5 +1,0 @@
-[libs]
-lib.js
-
-[options]
-no_flowlib=false

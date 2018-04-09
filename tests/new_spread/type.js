@@ -94,3 +94,13 @@ declare var o12: O12;
 type O13 = {...{p:T},p:U};
 declare var o13: O13;
 (o13: {p:U});
+
+// exact types spread in an inexact type is inexact when spread again
+type O14 = {...{...{|p:T|}}};
+declare var o14: O14;
+(o14: {p:T}); // error: `p` is optional
+(o14: {p?:T}); // ok
+(o14: {}); // ok
+({p:x}: O14); // ok
+({p:y}: O14); // error: U ~> T
+({}: O14); // ok

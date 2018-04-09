@@ -1,0 +1,318 @@
+Without --include-warnings
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+With --include-warnings
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:7:5
+   7| if (x) {} //Error
+          ^
+
+References:
+   test.js:4:9
+   4| var x: ?number = 0;
+              ^^^^^^ [1]
+   test.js:4:8
+   4| var x: ?number = 0;
+             ^^^^^^^ [2]
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:10:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   test.js:10:5
+   10| if (x) {} //Warning
+           ^
+
+References:
+   test.js:4:9
+    4| var x: ?number = 0;
+               ^^^^^^ [1]
+   test.js:4:8
+    4| var x: ?number = 0;
+              ^^^^^^^ [2]
+
+
+
+Found 1 error and 1 warning
+
+
+JSON without --include-warnings
+{
+  "jsonVersion":"1",
+  "errors":[
+    {
+      "kind":"lint",
+      "level":"error",
+      "suppressions":[],
+      "extra":[
+        {
+          "message":[
+            {
+              "context":null,
+              "descr":"References:",
+              "type":"Blame",
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[1]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":4,"column":9,"offset":58},
+                "end":{"line":4,"column":14,"offset":64}
+              },
+              "path":"test.js",
+              "line":4,
+              "endline":4,
+              "start":9,
+              "end":14
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":4,"column":8,"offset":57},
+                "end":{"line":4,"column":14,"offset":64}
+              },
+              "path":"test.js",
+              "line":4,
+              "endline":4,
+              "start":8,
+              "end":14
+            }
+          ]
+        }
+      ],
+      "message":[
+        {
+          "context":"if (x) {} //Error",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "type":"Blame",
+          "loc":{
+            "source":"test.js",
+            "type":"SourceFile",
+            "start":{"line":7,"column":5,"offset":115},
+            "end":{"line":7,"column":5,"offset":116}
+          },
+          "path":"test.js",
+          "line":7,
+          "endline":7,
+          "start":5,
+          "end":5
+        }
+      ]
+    }
+  ],
+  "passed":false
+}
+
+
+JSON with --include-warnings
+{
+  "jsonVersion":"1",
+  "errors":[
+    {
+      "kind":"lint",
+      "level":"error",
+      "suppressions":[],
+      "extra":[
+        {
+          "message":[
+            {
+              "context":null,
+              "descr":"References:",
+              "type":"Blame",
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[1]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":4,"column":9,"offset":58},
+                "end":{"line":4,"column":14,"offset":64}
+              },
+              "path":"test.js",
+              "line":4,
+              "endline":4,
+              "start":9,
+              "end":14
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":4,"column":8,"offset":57},
+                "end":{"line":4,"column":14,"offset":64}
+              },
+              "path":"test.js",
+              "line":4,
+              "endline":4,
+              "start":8,
+              "end":14
+            }
+          ]
+        }
+      ],
+      "message":[
+        {
+          "context":"if (x) {} //Error",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "type":"Blame",
+          "loc":{
+            "source":"test.js",
+            "type":"SourceFile",
+            "start":{"line":7,"column":5,"offset":115},
+            "end":{"line":7,"column":5,"offset":116}
+          },
+          "path":"test.js",
+          "line":7,
+          "endline":7,
+          "start":5,
+          "end":5
+        }
+      ]
+    },
+    {
+      "kind":"lint",
+      "level":"warning",
+      "suppressions":[],
+      "extra":[
+        {
+          "message":[
+            {
+              "context":null,
+              "descr":"References:",
+              "type":"Blame",
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[1]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":4,"column":9,"offset":58},
+                "end":{"line":4,"column":14,"offset":64}
+              },
+              "path":"test.js",
+              "line":4,
+              "endline":4,
+              "start":9,
+              "end":14
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":4,"column":8,"offset":57},
+                "end":{"line":4,"column":14,"offset":64}
+              },
+              "path":"test.js",
+              "line":4,
+              "endline":4,
+              "start":8,
+              "end":14
+            }
+          ]
+        }
+      ],
+      "message":[
+        {
+          "context":"if (x) {} //Warning",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
+          "type":"Blame",
+          "loc":{
+            "source":"test.js",
+            "type":"SourceFile",
+            "start":{"line":10,"column":5,"offset":173},
+            "end":{"line":10,"column":5,"offset":174}
+          },
+          "path":"test.js",
+          "line":10,
+          "endline":10,
+          "start":5,
+          "end":5
+        }
+      ]
+    }
+  ],
+  "passed":false
+}
+

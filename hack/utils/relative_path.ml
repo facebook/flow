@@ -8,7 +8,7 @@
  *
  *)
 
-open Core
+open Hh_core
 open Reordered_argument_collections
 open Utils
 open String_utils
@@ -17,13 +17,17 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  | Tmp
+
 
 let root = ref None
 let hhi = ref None
+let tmp = ref None
 
 let path_ref_of_prefix = function
   | Root -> root
   | Hhi -> hhi
+  | Tmp -> tmp
   | Dummy -> ref (Some "")
 
 let path_of_prefix x =
@@ -32,6 +36,7 @@ let path_of_prefix x =
 let string_of_prefix = function
   | Root -> "root"
   | Hhi -> "hhi"
+  | Tmp -> "tmp"
   | Dummy -> ""
 
 let set_path_prefix prefix v =
@@ -67,6 +72,12 @@ end
 
 let to_absolute (p, rest) = path_of_prefix p ^ rest
 
+let to_tmp (_, rest) = (Tmp, rest)
+
+let to_root (_, rest) = (Root, rest)
+
+let pp fmt rp = Format.pp_print_string fmt (S.to_string rp)
+
 module Set = Reordered_argument_set(Set.Make(S))
 module Map = Reordered_argument_map(MyMap.Make(S))
 
@@ -79,6 +90,16 @@ let create prefix s =
     assert_false_log_backtrace None;
   end;
   prefix, String.sub s prefix_len (String.length s - prefix_len)
+
+(* Strips the root and relativizes the file if possible, otherwise returns
+  original string *)
+let strip_root_if_possible s =
+  let prefix_s = path_of_prefix Root in
+  let prefix_len = String.length prefix_s in
+  if not (string_starts_with s prefix_s)
+  then s else
+  String.sub s prefix_len (String.length s - prefix_len)
+
 
 let from_root (s : string) : t = Root, s
 

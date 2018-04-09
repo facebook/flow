@@ -78,6 +78,7 @@
                       "rest":null,
                       "typeParameters":null
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
                     "variance":null,

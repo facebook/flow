@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type t =
@@ -16,8 +13,12 @@ type t =
   | UnexpectedString
   | UnexpectedIdentifier
   | UnexpectedReserved
+  | UnexpectedReservedType
+  | UnexpectedSuper
+  | UnexpectedSuperCall
   | UnexpectedEOS
   | UnexpectedVariance
+  | UnexpectedStatic
   | UnexpectedTypeAlias
   | UnexpectedOpaqueTypeAlias
   | UnexpectedTypeAnnotation
@@ -41,7 +42,7 @@ type t =
   | IllegalContinue
   | IllegalBreak
   | IllegalReturn
-  | IllegalYield
+  | IllegalUnicodeEscape
   | StrictModeWith
   | StrictCatchVariable
   | StrictVarName
@@ -63,14 +64,17 @@ type t =
   | NoUninitializedConst
   | NoUninitializedDestructuring
   | NewlineBeforeArrow
-  | StrictFunctionStatement
+  | FunctionAsStatement of { in_strict_mode: bool }
+  | AsyncFunctionAsStatement
+  | GeneratorFunctionAsStatement
   | AdjacentJSXElements
   | ParameterAfterRestParameter
+  | ElementAfterRestElement
+  | PropertyAfterRestProperty
   | DeclareAsync
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
-  | DeclareExportOpaqueType
   | DeclareExportInterface
   | UnexpectedExportStarAs
   | DuplicateExport of string
@@ -86,7 +90,27 @@ type t =
   | InvalidNonTypeImportInDeclareModule
   | ImportTypeShorthandOnlyInPureImport
   | ImportSpecifierMissingComma
+  | ExportSpecifierMissingComma
   | MalformedUnicode
+  | DuplicateConstructor
+  | DuplicatePrivateFields of string
+  | InvalidFieldName of string * bool * bool
+  | PrivateMethod
+  | PrivateDelete
+  | UnboundPrivate of string
+  | PrivateNotInClass
+  | SuperPrivate
+  | YieldInFormalParameters
+  | AwaitAsIdentifierReference
+  | YieldAsIdentifierReference
+  | AmbiguousLetBracket
+  | LiteralShorthandProperty
+  | ComputedShorthandProperty
+  | MethodInDestructuring
+  | TrailingCommaAfterRestElement
+  | OptionalChainingDisabled
+  | OptionalChainNew
+  | OptionalChainTemplate
 
 exception Error of (Loc.t * t) list
 
@@ -106,8 +130,12 @@ module PP =
       | UnexpectedString ->  "Unexpected string"
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
+      | UnexpectedReservedType -> "Unexpected reserved type"
+      | UnexpectedSuper -> "Unexpected `super` outside of a class method"
+      | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedVariance -> "Unexpected variance sigil"
+      | UnexpectedStatic -> "Unexpected static modifier"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
       | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
@@ -134,7 +162,7 @@ module PP =
       | IllegalContinue -> "Illegal continue statement"
       | IllegalBreak -> "Illegal break statement"
       | IllegalReturn -> "Illegal return statement"
-      | IllegalYield -> "Illegal yield expression"
+      | IllegalUnicodeEscape -> "Illegal Unicode escape"
       | StrictModeWith ->  "Strict mode code may not include a with statement"
       | StrictCatchVariable ->  "Catch variable may not be eval or arguments in strict mode"
       | StrictVarName ->  "Variable name may not be eval or arguments in strict mode"
@@ -156,12 +184,25 @@ module PP =
       | NoUninitializedConst -> "Const must be initialized"
       | NoUninitializedDestructuring -> "Destructuring assignment must be initialized"
       | NewlineBeforeArrow ->  "Illegal newline before arrow"
-      | StrictFunctionStatement -> "In strict mode code, functions can only be"^
-          " declared at top level or immediately within another function."
+      | FunctionAsStatement { in_strict_mode } ->
+          if in_strict_mode then
+            "In strict mode code, functions can only be declared at top level or "^
+            "immediately within another function."
+          else
+            "In non-strict mode code, functions can only be declared at top level, "^
+            "inside a block, or as the body of an if statement."
+      | AsyncFunctionAsStatement -> "Async functions can only be declared at top level or "^
+          "immediately within another function."
+      | GeneratorFunctionAsStatement -> "Generators can only be declared at top level or "^
+          "immediately within another function."
       | AdjacentJSXElements -> "Unexpected token <. Remember, adjacent JSX "^
           "elements must be wrapped in an enclosing parent tag"
       | ParameterAfterRestParameter ->
           "Rest parameter must be final parameter of an argument list"
+      | ElementAfterRestElement ->
+          "Rest element must be final element of an array pattern"
+      | PropertyAfterRestProperty ->
+          "Rest property must be final property of an object pattern"
       | DeclareAsync -> "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
       | DeclareExportLet -> "`declare export let` is not supported. Use \
           `declare export var` instead."
@@ -169,8 +210,6 @@ module PP =
           `declare export var` instead."
       | DeclareExportType -> "`declare export type` is not supported. Use \
           `export type` instead."
-      | DeclareExportOpaqueType -> "`declare export opaque type` is not supported. Use \
-          `export opaque type` instead."
       | DeclareExportInterface -> "`declare export interface` is not supported. Use \
           `export interface` instead."
       | UnexpectedExportStarAs -> "`export * as` is an early-stage proposal \
@@ -187,8 +226,8 @@ module PP =
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
       | WindowsFloatOfString -> "The Windows version of OCaml has a bug in how \
-          it parses hexidecimal numbers. It is fixed in OCaml 4.03.0. Until we \
-          can switch to 4.03.0, please avoid either hexidecimal notation or \
+          it parses hexadecimal numbers. It is fixed in OCaml 4.03.0. Until we \
+          can switch to 4.03.0, please avoid either hexadecimal notation or \
           Windows."
       | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` \
           statement!"
@@ -206,6 +245,40 @@ module PP =
         `import typeof` statements"
       | ImportSpecifierMissingComma ->
         "Missing comma between import specifiers"
+      | ExportSpecifierMissingComma ->
+        "Missing comma between export specifiers"
       | MalformedUnicode ->
         "Malformed unicode"
+      | DuplicateConstructor ->
+        "Classes may only have one constructor"
+      | DuplicatePrivateFields name ->
+        "Private fields may only be declared once. `#" ^ name ^ "` is declared more than once."
+      | InvalidFieldName (name, static, private_) ->
+        let static_modifier = if static then "static " else "" in
+        let name = if private_ then "#" ^ name else name in
+        "Classes may not have " ^ static_modifier ^ "fields named `" ^ name ^ "`."
+      | PrivateMethod ->
+        "Classes may not have private methods."
+      | PrivateDelete ->
+        "Private fields may not be deleted."
+      | UnboundPrivate name ->
+        "Private fields must be declared before they can be referenced. `#" ^ name
+        ^ "` has not been declared."
+      | PrivateNotInClass -> "Private fields can only be referenced from within a class."
+      | SuperPrivate -> "You may not access a private field through the `super` keyword."
+      | YieldInFormalParameters -> "Yield expression not allowed in formal parameter"
+      | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
+      | YieldAsIdentifierReference -> "`yield` is an invalid identifier in generators"
+      | AmbiguousLetBracket -> "`let [` is ambiguous in this position because it is "^
+          "either a `let` binding pattern, or a member expression."
+      | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
+      | ComputedShorthandProperty -> "Computed properties must have a value."
+      | MethodInDestructuring -> "Object pattern can't contain methods"
+      | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"
+      | OptionalChainingDisabled -> "The optional chaining plugin must be enabled in order to \
+        use the optional chaining operator (`?.`). Optional chaining is an active early-stage \
+        feature proposal which may change and is not enabled by default. To enable support in \
+        the parser, use the `esproposal_optional_chaining` option."
+      | OptionalChainNew -> "`new` may not be combined with an optional chain."
+      | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
   end

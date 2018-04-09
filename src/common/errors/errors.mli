@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type error_kind =
@@ -14,7 +11,8 @@ type error_kind =
   | InferWarning
   | InternalError
   | DuplicateProviderError
-  | LintError of LintSettings.lint_kind
+  | RecursionLimitError
+  | LintError of Lints.lint_kind
 
 val string_of_kind: error_kind -> string
 
@@ -30,24 +28,52 @@ type info_tree =
   | InfoLeaf of info list
   | InfoNode of info list * info_tree list
 
+module Friendly : sig
+  type 'a message = 'a message_feature list
+
+  and 'a message_feature =
+    | Inline of message_inline list
+    | Reference of message_inline list * 'a
+
+  and message_inline =
+    | Text of string
+    | Code of string
+
+  val message_of_string: string -> 'a message
+  val text: string -> 'a message_feature
+  val code: string -> 'a message_feature
+  val ref: ?loc:bool -> Reason.reason -> Loc.t message_feature
+  val intersperse: 'a -> 'a list -> 'a list
+  val conjunction_concat: ?conjunction:string -> 'a message list -> 'a message
+  val capitalize: 'a message -> 'a message
+end
+
 (* error structure *)
 
 type error
 
 val mk_error:
   ?kind:error_kind ->
-  ?op_info:info ->
   ?trace_infos:info list ->
-  ?extra:info_tree list ->
-  info list ->
+  ?root:(Loc.t * Loc.t Friendly.message) ->
+  ?frames:(Loc.t Friendly.message list) ->
+  Loc.t ->
+  Loc.t Friendly.message ->
+  error
+
+val mk_speculation_error:
+  ?kind:error_kind ->
+  ?trace_infos:info list ->
+  loc:Loc.t ->
+  root:(Loc.t * Loc.t Friendly.message) option ->
+  frames:(Loc.t Friendly.message list) ->
+  speculation_errors:((int * error) list) ->
   error
 
 val is_duplicate_provider_error: error -> bool
 
 val loc_of_error: error -> Loc.t
 val locs_of_error: error -> Loc.t list
-val infos_of_error: error -> info list
-val extra_of_error: error -> info_tree list
 val kind_of_error: error -> error_kind
 
 (* we store errors in sets, currently, because distinct
@@ -71,11 +97,14 @@ val deprecated_json_props_of_loc :
 module Cli_output : sig
   type error_flags = {
     color: Tty.color_mode;
+    include_warnings: bool;
+    max_warnings: int option;
     one_line: bool;
     show_all_errors: bool;
+    show_all_branches: bool;
+    unicode: bool;
+    message_width: int;
   }
-
-  val default_error_flags: error_flags
 
   val print_errors:
     out_channel:out_channel ->
@@ -84,15 +113,21 @@ module Cli_output : sig
     strip_root: Path.t option ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
+    lazy_msg: string option ->
     unit ->
     unit
 end
 
 module Json_output : sig
+  type json_version =
+  | JsonV1
+  | JsonV2
+
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    suppressed_errors: (error * Loc.LocSet.t) list ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    ?version:json_version ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
     unit ->
@@ -100,8 +135,9 @@ module Json_output : sig
 
   val full_status_json_of_errors :
     strip_root: Path.t option ->
-    suppressed_errors: (error * Loc.LocSet.t) list ->
-    ?profiling:Profiling_js.t option ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    ?version:json_version ->
+    ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
@@ -111,9 +147,10 @@ module Json_output : sig
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (error * Loc.LocSet.t) list ->
-    ?pretty:bool ->
-    ?profiling:Profiling_js.t option ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    pretty:bool ->
+    ?version:json_version ->
+    ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->

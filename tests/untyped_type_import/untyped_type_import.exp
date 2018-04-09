@@ -1,22 +1,71 @@
-Warning: imports.js:5
-  5: import type {FooType} from './untyped_exports.js'; //Error
-                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `FooType`?
+Error -------------------------------------------------------------------------------------------------- imports.js:5:14
 
-Warning: imports.js:6
-  6: import typeof {FooObj} from './untyped_exports.js'; //Error
-                    ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `FooObj`?
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports.js`? (`untyped-type-import`)
 
-Warning: imports.js:10
- 10: import typeof BarObj from './untyped_exports.js'; //Error
-                   ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
-
-Warning: imports.js:14
- 14: import type {BazType} from './untyped_exports.js'; //Error
-                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `BazType`?
-
-Warning: imports.js:15
- 15: import typeof {BazObj} from './untyped_exports.js'; //Error
-                    ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `BazObj`?
+   5| import type {FooType} from './untyped_exports.js'; //Error
+                   ^^^^^^^
 
 
-Found 5 errors
+Error -------------------------------------------------------------------------------------------------- imports.js:6:16
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports.js`? (`untyped-type-import`)
+
+   6| import typeof {FooObj} from './untyped_exports.js'; //Error
+                     ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:10:15
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports.js`? (`untyped-type-import`)
+
+   10| import typeof BarObj from './untyped_exports.js'; //Error
+                     ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:14:14
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports.js`? (`untyped-type-import`)
+
+   14| import type {BazType} from './untyped_exports.js'; //Error
+                    ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:15:16
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports.js`? (`untyped-type-import`)
+
+   15| import typeof {BazObj} from './untyped_exports.js'; //Error
+                      ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:24:29
+
+Cannot resolve module `./nonexistent.js`.
+
+   24| import type {BeepType} from './nonexistent.js';
+                                   ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:25:30
+
+Cannot resolve module `./nonexistent.js`.
+
+   25| import typeof {BeepObj} from './nonexistent.js';
+                                    ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:27:28
+
+Cannot resolve module `./nonexistent.js`.
+
+   27| import typeof BoopObj from './nonexistent.js';
+                                  ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 8 errors

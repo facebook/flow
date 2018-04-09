@@ -1,18 +1,16 @@
 (**
  * Copyright (c) 2014-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Reqs : sig
-  type impl = Context.t * string * string * Context.t
-  type dep_impl = Context.t * string * string * Context.t
-  type unchecked = string * Loc.t * Context.t
-  type res = string * Loc.t * string * Context.t
-  type decl = string * Loc.t * Modulename.t * Context.t
+  type impl = File_key.t * string * Loc.t Nel.t * File_key.t
+  type dep_impl = Context.sig_t * string * Loc.t Nel.t * File_key.t
+  type unchecked = string * Loc.t Nel.t * File_key.t
+  type res = Loc.t Nel.t * string * File_key.t
+  type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;
@@ -29,27 +27,26 @@ module Reqs : sig
 end
 
 val merge_component_strict:
+  metadata: Context.metadata ->
+  lint_severities: Severity.severity LintSettings.t ->
+  strict_mode: StrictModeSettings.t ->
+  file_sigs: File_sig.t Utils_js.FilenameMap.t ->
+  get_ast_unsafe: (File_key.t -> Loc.t Ast.program) ->
+  get_docblock_unsafe: (File_key.t -> Docblock.t) ->
+  ?do_gc: bool ->
+  (* component *)
+  File_key.t Nel.t ->
+  (* requires *)
   Reqs.t ->
-  (* component cxs *)
-  Context.t list ->
   (* dependency cxs *)
-  Context.t list ->
+  Context.sig_t list ->
   (* master cx *)
-  Context.t ->
-  unit
+  Context.sig_t ->
+  (* cxs in component order, hd is merged leader *)
+  Context.t Nel.t
 
-val restore: Context.t ->
-  Context.t list -> Context.t -> unit
-
-val clear_master_shared: Context.t -> Context.t -> unit
-
-val merge_lib_file:
-  Context.t ->
-  Context.t ->
-  Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t
-
-val merge_type: Reason.t -> Type.t list -> Type.t
+val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
-  val sig_context : Context.t list -> SigHash.t
+  val sig_context : Context.t -> string list -> Xx.hash
 end

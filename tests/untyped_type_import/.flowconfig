@@ -7,4 +7,4 @@
 [options]
 
 [lints]
-untyped-type-import=warn
+untyped-type-import=error

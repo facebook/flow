@@ -1,4 +1,5 @@
 sudo: false
+dist: trusty
 
 env:
   global:
@@ -52,21 +53,6 @@ before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
 
 deploy:
-# upload releases to github, from both Mac and Linux
-- provider: releases
-  api_key:
-    # flow-bot
-    secure: "l3R6GrPhrqUIXlAcknFA7rKllPmVsY/1cOGtctxFQ6++oC3xd+XawIMVAR78ZtUoirZ+/3KYdY6o3SoGMb6olgnSerR/CXktP4DXuUK6XlHGRxqSRCclWra3DnJutlaiafnurhIruRMIvXeTYiO2Q1MU/nyQVKZtOhJJHEBg0Mc="
-  repo: facebook/flow
-  skip_cleanup: true
-  file_glob: true
-  file: flow-*.zip
-  on:
-    tags: true
-    condition:
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.2
-
 # Deploy the parser to npm
 - provider: script
   repo: facebook/flow
@@ -107,18 +93,6 @@ deploy:
     - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.2
 
-# Deploy to opam
-- provider: script
-  repo: facebook/flow
-  script: bash -e resources/travis/deploy_opam.sh
-  skip_cleanup: true
-  on:
-    tags: true
-    condition:
-    - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.2
-
 # The use of secure prevents forks from spamming irc and email.
 # See https://github.com/travis-ci/travis-ci/issues/5063
 notifications:
@@ -131,3 +105,5 @@ notifications:
       # chat.freenode.net#flowtype
       secure: "OLvGXInHGV66u17k4JPZJTXZyrlqCeAVjVQ+oZuqV5JQo6lep/GtcU6uwmjJOgY/yQR7FPvBG92ru4ef/6CIkIwbCq3Zt/ftfei8rNFO0FlymdC7YXjB8hqN8zs6FIVyxzkjOyg8mX1tRulGwxOLB4yeua9t91RiCkjHtvXeixw="
     on_success: change
+
+  webhooks: https://code.facebook.com/travis/webhook/

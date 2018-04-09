@@ -1,0 +1,376 @@
+Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+
+   commonjs-pascal.js:4:2
+    4| (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]
+   commonjs-pascal.js:4:19
+    4| (React.Component: number); // Error
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:6:2
+
+Cannot cast object literal to `Node` because:
+ - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+   commonjs-pascal.js:6:2
+    6| ({}: React.Node); // Error
+        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:7:8
+
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+
+   commonjs-pascal.js:7:8
+     7| (null: React.Missing); // Error
+               ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:277:27
+   277|   declare module.exports: $Exports<'react'>;
+                                  ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+
+   commonjs.js:4:2
+    4| (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]
+   commonjs.js:4:19
+    4| (React.Component: number); // Error
+                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
+
+Cannot cast object literal to `Node` because:
+ - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+   commonjs.js:6:2
+    6| ({}: React.Node); // Error
+        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- commonjs.js:7:8
+
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+
+   commonjs.js:7:8
+   7| (null: React.Missing); // Error
+             ^^^^^^^^^^^^^
+
+References:
+   commonjs.js:1:15
+   1| const React = require('react');
+                    ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- es-default-pascal.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+
+   es-default-pascal.js:4:2
+    4| (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]
+   es-default-pascal.js:4:19
+    4| (React.Component: number); // Error
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- es-default-pascal.js:6:2
+
+Cannot cast object literal to `Node` because:
+ - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+   es-default-pascal.js:6:2
+    6| ({}: React.Node); // Error: Not in default export.
+        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------- es-default-pascal.js:7:8
+
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+
+   es-default-pascal.js:7:8
+     7| (null: React.Missing); // Error: Not in default export.
+               ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:277:27
+   277|   declare module.exports: $Exports<'react'>;
+                                  ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+
+   es-default.js:4:2
+    4| (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]
+   es-default.js:4:19
+    4| (React.Component: number); // Error
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- es-default.js:5:19
+
+Cannot get `React.Node` because property `Node` is missing in object type [1].
+
+   es-default.js:5:19
+     5| ('Hello, world!': React.Node); // Error: Not in default export.
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:258:26
+                                 v-
+   258|   declare export default {|
+   259|     +DOM: typeof DOM,
+   260|     +PropTypes: typeof PropTypes,
+   261|     +version: typeof version,
+   262|     +checkPropTypes: typeof checkPropTypes,
+   263|     +createClass: typeof createClass,
+   264|     +createElement: typeof createElement,
+   265|     +cloneElement: typeof cloneElement,
+   266|     +createFactory: typeof createFactory,
+   267|     +isValidElement: typeof isValidElement,
+   268|     +Component: typeof Component,
+   269|     +PureComponent: typeof PureComponent,
+   270|     +Children: typeof Children,
+   271|   |};
+          -^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ es-default.js:6:6
+
+Cannot get `React.Node` because property `Node` is missing in object type [1].
+
+   es-default.js:6:6
+     6| ({}: React.Node); // Error: Not in default export.
+             ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:258:26
+                                 v-
+   258|   declare export default {|
+   259|     +DOM: typeof DOM,
+   260|     +PropTypes: typeof PropTypes,
+   261|     +version: typeof version,
+   262|     +checkPropTypes: typeof checkPropTypes,
+   263|     +createClass: typeof createClass,
+   264|     +createElement: typeof createElement,
+   265|     +cloneElement: typeof cloneElement,
+   266|     +createFactory: typeof createFactory,
+   267|     +isValidElement: typeof isValidElement,
+   268|     +Component: typeof Component,
+   269|     +PureComponent: typeof PureComponent,
+   270|     +Children: typeof Children,
+   271|   |};
+          -^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ es-default.js:7:8
+
+Cannot get `React.Missing` because property `Missing` is missing in object type [1].
+
+   es-default.js:7:8
+     7| (null: React.Missing); // Error: Not in default export.
+               ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:258:26
+                                 v-
+   258|   declare export default {|
+   259|     +DOM: typeof DOM,
+   260|     +PropTypes: typeof PropTypes,
+   261|     +version: typeof version,
+   262|     +checkPropTypes: typeof checkPropTypes,
+   263|     +createClass: typeof createClass,
+   264|     +createElement: typeof createElement,
+   265|     +cloneElement: typeof cloneElement,
+   266|     +createFactory: typeof createFactory,
+   267|     +isValidElement: typeof isValidElement,
+   268|     +Component: typeof Component,
+   269|     +PureComponent: typeof PureComponent,
+   270|     +Children: typeof Children,
+   271|   |};
+          -^ [1]
+
+
+Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+
+   es-namespace-pascal.js:4:2
+    4| (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]
+   es-namespace-pascal.js:4:19
+    4| (React.Component: number); // Error
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:6:2
+
+Cannot cast object literal to `Node` because:
+ - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+   es-namespace-pascal.js:6:2
+    6| ({}: React.Node); // Error
+        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:7:8
+
+Cannot get `React.Missing` because property `Missing` is missing in module `React` [1].
+
+   es-namespace-pascal.js:7:8
+   7| (null: React.Missing); // Error
+             ^^^^^^^^^^^^^
+
+References:
+   es-namespace-pascal.js:1:1
+   1| import * as React from 'React';
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
+
+Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+
+   es-namespace.js:4:2
+    4| (React.Component: number); // Error
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:15
+   26| declare class React$Component<Props, State = void> {
+                     ^^^^^^^^^^^^^^^ [1]
+   es-namespace.js:4:19
+    4| (React.Component: number); // Error
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
+
+Cannot cast object literal to `Node` because:
+ - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+   es-namespace.js:6:2
+    6| ({}: React.Node); // Error
+        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- es-namespace.js:7:8
+
+Cannot get `React.Missing` because property `Missing` is missing in module `react` [1].
+
+   es-namespace.js:7:8
+   7| (null: React.Missing); // Error
+             ^^^^^^^^^^^^^
+
+References:
+   es-namespace.js:1:1
+   1| import * as React from 'react';
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 19 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

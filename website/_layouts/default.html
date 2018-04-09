@@ -29,7 +29,7 @@
     {% endif %}
     <script type="text/javascript" src="{% asset_path 'require_2_3_3.js' %}"></script>
     <script type="text/javascript">
-      require.config({
+      requirejs.config({
         baseUrl: '/assets',
         waitSeconds: 30,
         shim: {
@@ -78,12 +78,12 @@
         return tether;
       });
 
-      require([
+      requirejs([
         'bootstrap',
         {% if page.search or layout.search %}'{% asset_name "search" %}',{% endif %}
       ]);
       {% if page.editor or layout.editor %}
-      require(['{% asset_name "editor" %}'], function(Editor) {
+      requirejs(['{% asset_name "editor" %}'], function(Editor) {
         Editor.init();
       });
       {% endif %}

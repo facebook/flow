@@ -25,3 +25,5 @@ val get_name : t -> string
 val set_name : t -> string -> unit
 
 val make : string -> t
+
+val pp : Format.formatter -> t -> unit

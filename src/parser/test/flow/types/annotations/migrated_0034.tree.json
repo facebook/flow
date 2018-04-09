@@ -44,6 +44,7 @@
                       "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":20}},
                       "range":[14,20]
                     },
+                    "method":false,
                     "optional":true,
                     "static":false,
                     "variance":null,
@@ -66,6 +67,7 @@
                       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
                       "range":[28,34]
                     },
+                    "method":false,
                     "optional":true,
                     "static":false,
                     "variance":null,

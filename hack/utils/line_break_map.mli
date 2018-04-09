@@ -18,6 +18,8 @@ type t
 (* Creates a line break map from/for the given string. *)
 val make : string -> t
 
+val offset_to_file_pos_triple : ?cyclic_index:bool -> t -> int -> int * int * int
+
 (* Take a zero-based offset, produce a one-based (line, column) pair.
  *
  * When cyclic_index is set, negative offsets are taken from the end, i.e. -1

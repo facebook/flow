@@ -31,13 +31,13 @@
       "range":[0,26],
       "declaration":{
         "type":"OpaqueType",
-        "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":28}},
-        "range":[7,28],
+        "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":26}},
+        "range":[7,26],
         "id":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":21}},
           "range":[20,21],
-          "name":":",
+          "name":"",
           "typeAnnotation":null,
           "optional":false
         },

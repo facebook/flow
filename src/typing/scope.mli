@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module State :
@@ -19,17 +16,22 @@ module Entry :
     type value_kind =
       | Const of const_binding_kind
       | Let of let_binding_kind
-      | Var
+      | Var of var_binding_kind
     and const_binding_kind =
       | ConstImportBinding
       | ConstParamBinding
       | ConstVarBinding
     and let_binding_kind =
-        LetVarBinding
+      | LetVarBinding
+      | ConstlikeLetVarBinding
       | ClassNameBinding
       | CatchParamBinding
       | FunctionBinding
       | ParamBinding
+      | ConstlikeParamBinding
+    and var_binding_kind =
+      | VarBinding
+      | ConstlikeVarBinding
     val string_of_value_kind : value_kind -> string
     type value_binding = {
       kind : value_kind;
@@ -48,7 +50,8 @@ module Entry :
       type_loc : Loc.t;
       _type : Type.t;
     }
-    type t = Value of value_binding | Type of type_binding
+    type t = Value of value_binding | Type of type_binding | Class of Type.class_binding
+    val new_class : int -> Type.Properties.id -> Type.Properties.id -> t
     val new_value : value_kind -> State.t -> Type.t -> Type.t -> Loc.t -> t
     val new_const :
       loc:Loc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t
@@ -57,7 +60,7 @@ module Entry :
     val new_let :
       loc:Loc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> t
     val new_var :
-      loc:Loc.t -> ?state:State.t -> ?specific:Type.t -> Type.t -> t
+      loc:Loc.t -> ?state:State.t -> ?kind:var_binding_kind -> ?specific:Type.t -> Type.t -> t
     val new_type : loc:Loc.t -> ?state:State.t -> Type.t -> t
     val new_import_type : loc:Loc.t -> Type.t -> t
     val entry_loc : t -> Loc.t
@@ -80,6 +83,7 @@ type var_scope_kind =
   | Module
   | Global
   | Predicate
+  | Ctor
 val string_of_var_scope_kind : var_scope_kind -> string
 type kind = VarScope of var_scope_kind | LexScope
 val string_of_kind : kind -> string
@@ -109,8 +113,9 @@ val add_refi : Key_map.key -> refi_binding -> t -> unit
 val remove_refi : Key_map.key -> t -> unit
 val get_refi : Key_map.key -> t -> refi_binding option
 val havoc_refi : Key_map.key -> t -> unit
-val filter_refis_using_propname : string -> 'a Key_map.t -> 'a Key_map.t
-val havoc_refis : ?name:string -> t -> unit
+val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a Key_map.t
+val havoc_refis : ?name:string -> private_:bool -> t -> unit
+val havoc_all_refis : ?name:string -> t -> unit
 val havoc : t -> unit
 val reset : Loc.t -> t -> unit
 val is_lex : t -> bool

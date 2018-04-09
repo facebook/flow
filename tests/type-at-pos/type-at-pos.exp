@@ -1,485 +1,799 @@
-{
-  "type":"number",
-  "reasons":[
-    {
-      "desc":"number",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":1,"offset":66},
-        "end":{"line":5,"column":3,"offset":69}
-      },
-      "path":"test.js",
-      "line":5,
-      "endline":5,
-      "start":1,
-      "end":3
-    }
-  ],
+annot_t.js:9:21 = {
+  "type":"class KeyedSeq<K, +V>",
+  "reasons":[],
   "loc":{
-    "source":"test.js",
+    "source":"annot_t.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":1,"offset":66},
-    "end":{"line":5,"column":3,"offset":69}
+    "start":{"line":9,"column":20,"offset":153},
+    "end":{"line":9,"column":24,"offset":158}
   },
-  "path":"test.js",
-  "line":5,
-  "endline":5,
+  "path":"annot_t.js",
+  "line":9,
+  "endline":9,
+  "start":20,
+  "end":24
+}
+any.js:3:15 = {
+  "type":"any",
+  "reasons":[],
+  "loc":{
+    "source":"any.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":13,"offset":22},
+    "end":{"line":3,"column":15,"offset":25}
+  },
+  "path":"any.js",
+  "line":3,
+  "endline":3,
+  "start":13,
+  "end":15
+}
+any.js:4:2 = {
+  "type":"any",
+  "reasons":[],
+  "loc":{
+    "source":"any.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":1,"offset":32},
+    "end":{"line":4,"column":3,"offset":35}
+  },
+  "path":"any.js",
+  "line":4,
+  "endline":4,
   "start":1,
   "end":3
 }
-{
-  "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}",
-  "type":"number",
-  "reasons":[
-    {
-      "desc":"number",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":1,"offset":66},
-        "end":{"line":5,"column":3,"offset":69}
-      },
-      "path":"test.js",
-      "line":5,
-      "endline":5,
-      "start":1,
-      "end":3
-    }
-  ],
+any.js:4:6 = {
+  "type":"any",
+  "reasons":[],
   "loc":{
-    "source":"test.js",
+    "source":"any.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":1,"offset":66},
-    "end":{"line":5,"column":3,"offset":69}
+    "start":{"line":4,"column":5,"offset":36},
+    "end":{"line":4,"column":7,"offset":39}
   },
-  "path":"test.js",
+  "path":"any.js",
+  "line":4,
+  "endline":4,
+  "start":5,
+  "end":7
+}
+any.js:5:5 = {
+  "type":"any",
+  "reasons":[],
+  "loc":{
+    "source":"any.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":5,"offset":48},
+    "end":{"line":5,"column":7,"offset":51}
+  },
+  "path":"any.js",
   "line":5,
   "endline":5,
-  "start":1,
-  "end":3
+  "start":5,
+  "end":7
 }
-{
-  "type":"[number, string]",
-  "reasons":[
-    {
-      "desc":"Point",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":8,"column":9,"offset":110},
-        "end":{"line":8,"column":13,"offset":115}
-      },
-      "path":"test.js",
-      "line":8,
-      "endline":8,
-      "start":9,
-      "end":13
-    }
-  ],
+any.js:7:13 = {
+  "type":"Object",
+  "reasons":[],
   "loc":{
-    "source":"test.js",
+    "source":"any.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":7,"offset":108},
-    "end":{"line":8,"column":13,"offset":115}
+    "start":{"line":7,"column":13,"offset":70},
+    "end":{"line":7,"column":19,"offset":77}
   },
-  "path":"test.js",
+  "path":"any.js",
+  "line":7,
+  "endline":7,
+  "start":13,
+  "end":19
+}
+any.js:8:5 = {
+  "type":"Object",
+  "reasons":[],
+  "loc":{
+    "source":"any.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":1,"offset":87},
+    "end":{"line":8,"column":7,"offset":94}
+  },
+  "path":"any.js",
   "line":8,
   "endline":8,
-  "start":7,
-  "end":13
+  "start":1,
+  "end":7
 }
-{
-  "type":"'cool'",
-  "reasons":[
-    {
-      "desc":"MyStr",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":9,"offset":159},
-        "end":{"line":10,"column":13,"offset":164}
-      },
-      "path":"test.js",
-      "line":10,
-      "endline":10,
-      "start":9,
-      "end":13
-    }
-  ],
+any.js:8:10 = {
+  "type":"any",
+  "reasons":[],
   "loc":{
-    "source":"test.js",
+    "source":"any.js",
     "type":"SourceFile",
-    "start":{"line":10,"column":7,"offset":157},
-    "end":{"line":10,"column":13,"offset":164}
+    "start":{"line":8,"column":9,"offset":95},
+    "end":{"line":8,"column":11,"offset":98}
   },
-  "path":"test.js",
+  "path":"any.js",
+  "line":8,
+  "endline":8,
+  "start":9,
+  "end":11
+}
+any.js:9:10 = {
+  "type":"any",
+  "reasons":[],
+  "loc":{
+    "source":"any.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":9,"offset":111},
+    "end":{"line":9,"column":11,"offset":114}
+  },
+  "path":"any.js",
+  "line":9,
+  "endline":9,
+  "start":9,
+  "end":11
+}
+array.js:6:15 = {
+  "type":"NumType",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":14,"offset":133},
+    "end":{"line":6,"column":16,"offset":136}
+  },
+  "path":"array.js",
+  "line":6,
+  "endline":6,
+  "start":14,
+  "end":16
+}
+array.js:10:15 = {
+  "type":"ReadOnlyNumType",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":14,"offset":175},
+    "end":{"line":10,"column":16,"offset":178}
+  },
+  "path":"array.js",
   "line":10,
   "endline":10,
-  "start":7,
-  "end":13
+  "start":14,
+  "end":16
 }
-{
-  "type":"true",
-  "reasons":[
-    {
-      "desc":"MyBool",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":12,"column":9,"offset":203},
-        "end":{"line":12,"column":14,"offset":209}
-      },
-      "path":"test.js",
-      "line":12,
-      "endline":12,
-      "start":9,
-      "end":14
-    }
-  ],
+array.js:15:4 = {
+  "type":"Array<string>",
+  "reasons":[],
   "loc":{
-    "source":"test.js",
+    "source":"array.js",
     "type":"SourceFile",
-    "start":{"line":12,"column":7,"offset":201},
-    "end":{"line":12,"column":14,"offset":209}
+    "start":{"line":15,"column":3,"offset":249},
+    "end":{"line":15,"column":5,"offset":252}
   },
-  "path":"test.js",
+  "path":"array.js",
+  "line":15,
+  "endline":15,
+  "start":3,
+  "end":5
+}
+array.js:19:4 = {
+  "type":"Array<?string>",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":3,"offset":298},
+    "end":{"line":19,"column":5,"offset":301}
+  },
+  "path":"array.js",
+  "line":19,
+  "endline":19,
+  "start":3,
+  "end":5
+}
+array.js:23:4 = {
+  "type":"Array<(string | number)>",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":3,"offset":353},
+    "end":{"line":23,"column":5,"offset":356}
+  },
+  "path":"array.js",
+  "line":23,
+  "endline":23,
+  "start":3,
+  "end":5
+}
+class-0.js:3:7 = {
+  "type":"class A",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":7,"offset":17}
+  },
+  "path":"class-0.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":7
+}
+class-0.js:4:3 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":3,"offset":22},
+    "end":{"line":4,"column":3,"offset":23}
+  },
+  "path":"class-0.js",
+  "line":4,
+  "endline":4,
+  "start":3,
+  "end":3
+}
+class-0.js:4:10 = {
+  "type":"this",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":9,"offset":28},
+    "end":{"line":4,"column":12,"offset":32}
+  },
+  "path":"class-0.js",
+  "line":4,
+  "endline":4,
+  "start":9,
+  "end":12
+}
+class-0.js:9:5 = {
+  "type":"any",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":5,"offset":79},
+    "end":{"line":9,"column":5,"offset":80}
+  },
+  "path":"class-0.js",
+  "line":9,
+  "endline":9,
+  "start":5,
+  "end":5
+}
+class-0.js:12:5 = {
+  "type":"mixed",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":5,"offset":124},
+    "end":{"line":12,"column":5,"offset":125}
+  },
+  "path":"class-0.js",
+  "line":12,
+  "endline":12,
+  "start":5,
+  "end":5
+}
+class-0.js:15:5 = {
+  "type":"empty",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":5,"offset":168},
+    "end":{"line":15,"column":5,"offset":169}
+  },
+  "path":"class-0.js",
+  "line":15,
+  "endline":15,
+  "start":5,
+  "end":5
+}
+class-0.js:21:5 = {
+  "type":"class C1 & class C2",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":5,"offset":235},
+    "end":{"line":21,"column":5,"offset":236}
+  },
+  "path":"class-0.js",
+  "line":21,
+  "endline":21,
+  "start":5,
+  "end":5
+}
+class-0.js:24:5 = {
+  "type":"class C1 | class C2",
+  "reasons":[],
+  "loc":{
+    "source":"class-0.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":5,"offset":283},
+    "end":{"line":24,"column":5,"offset":284}
+  },
+  "path":"class-0.js",
+  "line":24,
+  "endline":24,
+  "start":5,
+  "end":5
+}
+class-1.js:4:3 = {
+  "type":"() => (number | void)",
+  "reasons":[],
+  "loc":{
+    "source":"class-1.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":3,"offset":22},
+    "end":{"line":4,"column":3,"offset":23}
+  },
+  "path":"class-1.js",
+  "line":4,
+  "endline":4,
+  "start":3,
+  "end":3
+}
+class-1.js:8:3 = {
+  "type":"() => number",
+  "reasons":[],
+  "loc":{
+    "source":"class-1.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":3,"offset":55},
+    "end":{"line":8,"column":3,"offset":56}
+  },
+  "path":"class-1.js",
+  "line":8,
+  "endline":8,
+  "start":3,
+  "end":3
+}
+class-2.js:4:3 = {
+  "type":"() => this",
+  "reasons":[],
+  "loc":{
+    "source":"class-2.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":3,"offset":22},
+    "end":{"line":4,"column":3,"offset":23}
+  },
+  "path":"class-2.js",
+  "line":4,
+  "endline":4,
+  "start":3,
+  "end":3
+}
+class-2.js:9:9 = {
+  "type":"() => this",
+  "reasons":[],
+  "loc":{
+    "source":"class-2.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":9,"offset":77},
+    "end":{"line":9,"column":9,"offset":78}
+  },
+  "path":"class-2.js",
+  "line":9,
+  "endline":9,
+  "start":9,
+  "end":9
+}
+class-2.js:10:9 = {
+  "type":"() => this",
+  "reasons":[],
+  "loc":{
+    "source":"class-2.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":9,"offset":88},
+    "end":{"line":10,"column":9,"offset":89}
+  },
+  "path":"class-2.js",
+  "line":10,
+  "endline":10,
+  "start":9,
+  "end":9
+}
+class-2.js:12:7 = {
+  "type":"A",
+  "reasons":[],
+  "loc":{
+    "source":"class-2.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":7,"offset":98},
+    "end":{"line":12,"column":7,"offset":99}
+  },
+  "path":"class-2.js",
   "line":12,
   "endline":12,
   "start":7,
-  "end":14
+  "end":7
 }
-{
-  "type":"42",
-  "reasons":[
-    {
-      "desc":"MyNum",
-      "loc":{
-        "source":"test.js",
-        "type":"SourceFile",
-        "start":{"line":14,"column":9,"offset":243},
-        "end":{"line":14,"column":13,"offset":248}
-      },
-      "path":"test.js",
-      "line":14,
-      "endline":14,
-      "start":9,
-      "end":13
-    }
-  ],
-  "loc":{
-    "source":"test.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":7,"offset":241},
-    "end":{"line":14,"column":13,"offset":248}
-  },
-  "path":"test.js",
-  "line":14,
-  "endline":14,
-  "start":7,
-  "end":13
-}
-{
-  "type":"C<number>",
-  "reasons":[
-    {
-      "desc":"type application of polymorphic type: class type: C",
-      "loc":{
-        "source":"generics.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":1,"offset":52},
-        "end":{"line":5,"column":2,"offset":54}
-      },
-      "path":"generics.js",
-      "line":5,
-      "endline":5,
-      "start":1,
-      "end":2
-    }
-  ],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":1,"offset":52},
-    "end":{"line":5,"column":2,"offset":54}
-  },
-  "path":"generics.js",
-  "line":5,
-  "endline":5,
-  "start":1,
-  "end":2
-}
-{
-  "type":"C<number>",
-  "reasons":[
-    {
-      "desc":"type application of function call",
-      "loc":{
-        "source":"generics.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":1,"offset":128},
-        "end":{"line":10,"column":2,"offset":130}
-      },
-      "path":"generics.js",
-      "line":10,
-      "endline":10,
-      "start":1,
-      "end":2
-    }
-  ],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":1,"offset":128},
-    "end":{"line":10,"column":2,"offset":130}
-  },
-  "path":"generics.js",
-  "line":10,
-  "endline":10,
-  "start":1,
-  "end":2
-}
-{
-  "type":"E<number>",
-  "reasons":[
-    {
-      "desc":"type application of polymorphic type: type `E`",
-      "loc":{
-        "source":"generics.js",
-        "type":"SourceFile",
-        "start":{"line":14,"column":1,"offset":178},
-        "end":{"line":14,"column":2,"offset":180}
-      },
-      "path":"generics.js",
-      "line":14,
-      "endline":14,
-      "start":1,
-      "end":2
-    }
-  ],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":1,"offset":178},
-    "end":{"line":14,"column":2,"offset":180}
-  },
-  "path":"generics.js",
-  "line":14,
-  "endline":14,
-  "start":1,
-  "end":2
-}
-{
-  "type":"F<number>",
-  "reasons":[
-    {
-      "desc":"type application of polymorphic type: type `F`",
-      "loc":{
-        "source":"generics.js",
-        "type":"SourceFile",
-        "start":{"line":18,"column":1,"offset":231},
-        "end":{"line":18,"column":2,"offset":233}
-      },
-      "path":"generics.js",
-      "line":18,
-      "endline":18,
-      "start":1,
-      "end":2
-    }
-  ],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":1,"offset":231},
-    "end":{"line":18,"column":2,"offset":233}
-  },
-  "path":"generics.js",
-  "line":18,
-  "endline":18,
-  "start":1,
-  "end":2
-}
-{
-  "type":"O<number>",
-  "reasons":[
-    {
-      "desc":"type application of polymorphic type: type `O`",
-      "loc":{
-        "source":"generics.js",
-        "type":"SourceFile",
-        "start":{"line":22,"column":1,"offset":288},
-        "end":{"line":22,"column":2,"offset":290}
-      },
-      "path":"generics.js",
-      "line":22,
-      "endline":22,
-      "start":1,
-      "end":2
-    }
-  ],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":22,"column":1,"offset":288},
-    "end":{"line":22,"column":2,"offset":290}
-  },
-  "path":"generics.js",
-  "line":22,
-  "endline":22,
-  "start":1,
-  "end":2
-}
-{
-  "type":"(unknown)",
-  "reasons":[
-    {
-      "desc":"type application of type `Mono`",
-      "loc":{
-        "source":"generics.js",
-        "type":"SourceFile",
-        "start":{"line":26,"column":1,"offset":383},
-        "end":{"line":26,"column":2,"offset":385}
-      },
-      "path":"generics.js",
-      "line":26,
-      "endline":26,
-      "start":1,
-      "end":2
-    }
-  ],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":26,"column":1,"offset":383},
-    "end":{"line":26,"column":2,"offset":385}
-  },
-  "path":"generics.js",
-  "line":26,
-  "endline":26,
-  "start":1,
-  "end":2
-}
-{
-  "type":"string | void",
+class-2.js:13:7 = {
+  "type":"A",
   "reasons":[],
   "loc":{
-    "source":"optional.js",
+    "source":"class-2.js",
     "type":"SourceFile",
-    "start":{"line":4,"column":10,"offset":46},
-    "end":{"line":4,"column":10,"offset":47}
+    "start":{"line":13,"column":7,"offset":121},
+    "end":{"line":13,"column":7,"offset":122}
   },
-  "path":"optional.js",
+  "path":"class-2.js",
+  "line":13,
+  "endline":13,
+  "start":7,
+  "end":7
+}
+class-3.js:4:3 = {
+  "type":"() => this",
+  "reasons":[],
+  "loc":{
+    "source":"class-3.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":3,"offset":30},
+    "end":{"line":4,"column":3,"offset":31}
+  },
+  "path":"class-3.js",
+  "line":4,
+  "endline":4,
+  "start":3,
+  "end":3
+}
+class-3.js:9:9 = {
+  "type":"() => A",
+  "reasons":[],
+  "loc":{
+    "source":"class-3.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":9,"offset":83},
+    "end":{"line":9,"column":9,"offset":84}
+  },
+  "path":"class-3.js",
+  "line":9,
+  "endline":9,
+  "start":9,
+  "end":9
+}
+class-3.js:10:9 = {
+  "type":"() => B",
+  "reasons":[],
+  "loc":{
+    "source":"class-3.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":9,"offset":94},
+    "end":{"line":10,"column":9,"offset":95}
+  },
+  "path":"class-3.js",
+  "line":10,
+  "endline":10,
+  "start":9,
+  "end":9
+}
+class-poly-0.js:5:7 = {
+  "type":"class A<X: Base>",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":7,"offset":32},
+    "end":{"line":5,"column":7,"offset":33}
+  },
+  "path":"class-poly-0.js",
+  "line":5,
+  "endline":5,
+  "start":7,
+  "end":7
+}
+class-poly-0.js:5:9 = {
+  "type":"X",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":9,"offset":34},
+    "end":{"line":5,"column":9,"offset":35}
+  },
+  "path":"class-poly-0.js",
+  "line":5,
+  "endline":5,
+  "start":9,
+  "end":9
+}
+class-poly-0.js:10:26 = {
+  "type":"class A<X: Base>",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":26,"offset":90},
+    "end":{"line":10,"column":26,"offset":91}
+  },
+  "path":"class-poly-0.js",
+  "line":10,
+  "endline":10,
+  "start":26,
+  "end":26
+}
+class-poly-0.js:12:7 = {
+  "type":"A<X>",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":5,"offset":119},
+    "end":{"line":12,"column":9,"offset":124}
+  },
+  "path":"class-poly-0.js",
+  "line":12,
+  "endline":12,
+  "start":5,
+  "end":9
+}
+class-poly-0.js:16:7 = {
+  "type":"this",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":5,"offset":153},
+    "end":{"line":16,"column":8,"offset":157}
+  },
+  "path":"class-poly-0.js",
+  "line":16,
+  "endline":16,
+  "start":5,
+  "end":8
+}
+class-poly-0.js:16:10 = {
+  "type":"X",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":10,"offset":158},
+    "end":{"line":16,"column":10,"offset":159}
+  },
+  "path":"class-poly-0.js",
+  "line":16,
+  "endline":16,
+  "start":10,
+  "end":10
+}
+class-poly-0.js:17:7 = {
+  "type":"A<X>",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":5,"offset":165},
+    "end":{"line":17,"column":9,"offset":170}
+  },
+  "path":"class-poly-0.js",
+  "line":17,
+  "endline":17,
+  "start":5,
+  "end":9
+}
+class-poly-1.js:9:5 = {
+  "type":"T",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-1.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":5,"offset":89},
+    "end":{"line":9,"column":5,"offset":90}
+  },
+  "path":"class-poly-1.js",
+  "line":9,
+  "endline":9,
+  "start":5,
+  "end":5
+}
+class-poly-1.js:9:11 = {
+  "type":"() => T",
+  "reasons":[],
+  "loc":{
+    "source":"class-poly-1.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":11,"offset":95},
+    "end":{"line":9,"column":11,"offset":96}
+  },
+  "path":"class-poly-1.js",
+  "line":9,
+  "endline":9,
+  "start":11,
+  "end":11
+}
+class-statics.js:4:10 = {
+  "type":"() => (this | void)",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":10,"offset":29},
+    "end":{"line":4,"column":10,"offset":30}
+  },
+  "path":"class-statics.js",
   "line":4,
   "endline":4,
   "start":10,
   "end":10
 }
-{
-  "type":"(x?: string) => string | void",
+class-statics.js:8:10 = {
+  "type":"() => this",
   "reasons":[],
   "loc":{
-    "source":"optional.js",
+    "source":"class-statics.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":1,"offset":52},
-    "end":{"line":7,"column":3,"offset":55}
+    "start":{"line":8,"column":10,"offset":68},
+    "end":{"line":8,"column":10,"offset":69}
   },
-  "path":"optional.js",
-  "line":7,
-  "endline":7,
-  "start":1,
-  "end":3
-}
-{
-  "type":"string | void",
-  "reasons":[
-    {
-      "desc":"optional string",
-      "loc":{
-        "source":"optional.js",
-        "type":"SourceFile",
-        "start":{"line":7,"column":1,"offset":52},
-        "end":{"line":7,"column":5,"offset":57}
-      },
-      "path":"optional.js",
-      "line":7,
-      "endline":7,
-      "start":1,
-      "end":5
-    }
-  ],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":1,"offset":52},
-    "end":{"line":7,"column":5,"offset":57}
-  },
-  "path":"optional.js",
-  "line":7,
-  "endline":7,
-  "start":1,
-  "end":5
-}
-{
-  "type":"{x?: string}",
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":10,"offset":105},
-    "end":{"line":10,"column":12,"offset":108}
-  },
-  "path":"optional.js",
-  "line":10,
-  "endline":10,
-  "start":10,
-  "end":12
-}
-{
-  "type":"string | void",
-  "reasons":[
-    {
-      "desc":"optional string",
-      "loc":{
-        "source":"optional.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":10,"offset":105},
-        "end":{"line":10,"column":14,"offset":110}
-      },
-      "path":"optional.js",
-      "line":10,
-      "endline":10,
-      "start":10,
-      "end":14
-    }
-  ],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":10,"offset":105},
-    "end":{"line":10,"column":14,"offset":110}
-  },
-  "path":"optional.js",
-  "line":10,
-  "endline":10,
-  "start":10,
-  "end":14
-}
-{
-  "type":"(unknown)",
-  "reasons":[],
-  "loc":{
-    "source":"optional.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":10,"offset":143},
-    "end":{"line":14,"column":10,"offset":144}
-  },
-  "path":"optional.js",
-  "line":14,
-  "endline":14,
+  "path":"class-statics.js",
+  "line":8,
+  "endline":8,
   "start":10,
   "end":10
 }
-{
+class-statics.js:9:7 = {
+  "type":"this",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":6,"offset":79},
+    "end":{"line":9,"column":9,"offset":83}
+  },
+  "path":"class-statics.js",
+  "line":9,
+  "endline":9,
+  "start":6,
+  "end":9
+}
+class-statics.js:11:8 = {
+  "type":"class A",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":122},
+    "end":{"line":11,"column":9,"offset":127}
+  },
+  "path":"class-statics.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":9
+}
+class-statics.js:16:5 = {
+  "type":"this",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":5,"offset":161},
+    "end":{"line":16,"column":9,"offset":166}
+  },
+  "path":"class-statics.js",
+  "line":16,
+  "endline":16,
+  "start":5,
+  "end":9
+}
+class-statics.js:17:5 = {
+  "type":"B",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":5,"offset":180},
+    "end":{"line":17,"column":5,"offset":181}
+  },
+  "path":"class-statics.js",
+  "line":17,
+  "endline":17,
+  "start":5,
+  "end":5
+}
+class-statics-poly.js:4:10 = {
+  "type":"() => (class B | void)",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics-poly.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":10,"offset":32},
+    "end":{"line":4,"column":10,"offset":33}
+  },
+  "path":"class-statics-poly.js",
+  "line":4,
+  "endline":4,
+  "start":10,
+  "end":10
+}
+class-statics-poly.js:8:10 = {
+  "type":"() => class B",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics-poly.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":10,"offset":77},
+    "end":{"line":8,"column":10,"offset":78}
+  },
+  "path":"class-statics-poly.js",
+  "line":8,
+  "endline":8,
+  "start":10,
+  "end":10
+}
+class-statics-poly.js:9:7 = {
+  "type":"this",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics-poly.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":6,"offset":101},
+    "end":{"line":9,"column":9,"offset":105}
+  },
+  "path":"class-statics-poly.js",
+  "line":9,
+  "endline":9,
+  "start":6,
+  "end":9
+}
+class-statics-poly.js:11:8 = {
+  "type":"class A",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics-poly.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":150},
+    "end":{"line":11,"column":9,"offset":155}
+  },
+  "path":"class-statics-poly.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":9
+}
+class-statics-poly.js:16:5 = {
+  "type":"class B",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics-poly.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":5,"offset":189},
+    "end":{"line":16,"column":9,"offset":194}
+  },
+  "path":"class-statics-poly.js",
+  "line":16,
+  "endline":16,
+  "start":5,
+  "end":9
+}
+class-statics-poly.js:17:5 = {
+  "type":"B<empty>",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics-poly.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":5,"offset":208},
+    "end":{"line":17,"column":5,"offset":209}
+  },
+  "path":"class-statics-poly.js",
+  "line":17,
+  "endline":17,
+  "start":5,
+  "end":5
+}
+destructuring.js:3:6 = {
   "type":"number",
   "reasons":[],
   "loc":{
@@ -494,8 +808,8 @@
   "start":6,
   "end":6
 }
-{
-  "type":"(unknown)",
+destructuring.js:17:13 = {
+  "type":"any",
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
@@ -509,245 +823,575 @@
   "start":13,
   "end":13
 }
-{
-  "type":"<Config>(name: ReactClass<Config>, config: Config, children: any) => React$Element<Config> & <Config>(fn: (config: Config, context: any) => React$Element<Config>, config: Config, children: any) => React$Element<Config>",
-  "reasons":[
-    {
-      "desc":"function type",
-      "loc":{
-        "source":"react.js",
-        "type":"SourceFile",
-        "start":{"line":2,"column":1,"offset":27},
-        "end":{"line":2,"column":19,"offset":46}
-      },
-      "path":"react.js",
-      "line":2,
-      "endline":2,
-      "start":1,
-      "end":19
-    }
-  ],
-  "loc":{
-    "source":"react.js",
-    "type":"SourceFile",
-    "start":{"line":2,"column":1,"offset":27},
-    "end":{"line":2,"column":19,"offset":46}
-  },
-  "path":"react.js",
-  "line":2,
-  "endline":2,
-  "start":1,
-  "end":19
-}
-{
-  "type":"(unknown)",
+facebookism.js:3:8 = {
+  "type":"$Facebookism$Idx",
   "reasons":[],
   "loc":{
-    "source":"trycatch.js",
+    "source":"facebookism.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":10,"offset":40},
-    "end":{"line":5,"column":10,"offset":41}
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":9,"offset":19}
   },
-  "path":"trycatch.js",
-  "line":5,
-  "endline":5,
-  "start":10,
-  "end":10
+  "path":"facebookism.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":9
 }
-function_expression.js:9:5 = {
-  "type":"{bar(): void}",
-  "reasons":[],
-  "loc":{
-    "source":"function_expressions.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":11,"offset":118},
-    "end":{"line":10,"column":1,"offset":138}
-  },
-  "path":"function_expressions.js",
-  "line":8,
-  "endline":10,
-  "start":11,
-  "end":1
-}
-function_expression.js:9:7 = {
+function.js:4:3 = {
   "type":"() => void",
   "reasons":[],
   "loc":{
-    "source":"function_expressions.js",
+    "source":"function.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":6,"offset":125},
-    "end":{"line":9,"column":16,"offset":136}
+    "start":{"line":4,"column":3,"offset":24},
+    "end":{"line":4,"column":5,"offset":27}
   },
-  "path":"function_expressions.js",
-  "line":9,
-  "endline":9,
-  "start":6,
-  "end":16
-}
-function_expression.js:13:5 = {
-  "type":"{bar: () => void}",
-  "reasons":[],
-  "loc":{
-    "source":"function_expressions.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":11,"offset":151},
-    "end":{"line":14,"column":1,"offset":182}
-  },
-  "path":"function_expressions.js",
-  "line":12,
-  "endline":14,
-  "start":11,
-  "end":1
-}
-function_expression.js:17:3 = {
-  "type":"{m<T>(x: T): T}",
-  "reasons":[],
-  "loc":{
-    "source":"function_expressions.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":11,"offset":195},
-    "end":{"line":18,"column":1,"offset":228}
-  },
-  "path":"function_expressions.js",
-  "line":16,
-  "endline":18,
-  "start":11,
-  "end":1
-}
-function_expression.js:21:3 = {
-  "type":"{m: <T>(x: T) => T}",
-  "reasons":[],
-  "loc":{
-    "source":"function_expressions.js",
-    "type":"SourceFile",
-    "start":{"line":20,"column":11,"offset":241},
-    "end":{"line":22,"column":1,"offset":284}
-  },
-  "path":"function_expressions.js",
-  "line":20,
-  "endline":22,
-  "start":11,
-  "end":1
-}
-predicates.js - null: {
-  "type":"null",
-  "reasons":[],
-  "loc":{
-    "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":10,"offset":33},
-    "end":{"line":4,"column":13,"offset":37}
-  },
-  "path":"predicates.js",
+  "path":"function.js",
   "line":4,
   "endline":4,
-  "start":10,
-  "end":13
+  "start":3,
+  "end":5
 }
-predicates.js - undefined: {
-  "type":"void",
-  "reasons":[
-    {
-      "desc":"undefined",
-      "loc":{
-        "source":"predicates.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":10,"offset":51},
-        "end":{"line":5,"column":18,"offset":60}
-      },
-      "path":"predicates.js",
-      "line":5,
-      "endline":5,
-      "start":10,
-      "end":18
-    }
-  ],
+function.js:8:3 = {
+  "type":"() => void",
+  "reasons":[],
   "loc":{
-    "source":"predicates.js",
+    "source":"function.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":10,"offset":51},
-    "end":{"line":5,"column":18,"offset":60}
+    "start":{"line":8,"column":3,"offset":57},
+    "end":{"line":8,"column":5,"offset":60}
   },
-  "path":"predicates.js",
+  "path":"function.js",
+  "line":8,
+  "endline":8,
+  "start":3,
+  "end":5
+}
+function.js:12:3 = {
+  "type":"<T>(x: T) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":3,"offset":101},
+    "end":{"line":12,"column":3,"offset":102}
+  },
+  "path":"function.js",
+  "line":12,
+  "endline":12,
+  "start":3,
+  "end":3
+}
+function.js:16:3 = {
+  "type":"<T>(x: T) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":3,"offset":147},
+    "end":{"line":16,"column":3,"offset":148}
+  },
+  "path":"function.js",
+  "line":16,
+  "endline":16,
+  "start":3,
+  "end":3
+}
+function-poly-0.js:3:10 = {
+  "type":"<T>(x: T) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":10,"offset":20}
+  },
+  "path":"function-poly-0.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":10
+}
+function-poly-0.js:3:30 = {
+  "type":"T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":30,"offset":39},
+    "end":{"line":3,"column":30,"offset":40}
+  },
+  "path":"function-poly-0.js",
+  "line":3,
+  "endline":3,
+  "start":30,
+  "end":30
+}
+function-poly-0.js:4:7 = {
+  "type":"T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-0.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":7,"offset":50},
+    "end":{"line":4,"column":7,"offset":51}
+  },
+  "path":"function-poly-0.js",
+  "line":4,
+  "endline":4,
+  "start":7,
+  "end":7
+}
+function-poly-1.js:3:10 = {
+  "type":"<T>(x: T) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-1.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":10,"offset":20}
+  },
+  "path":"function-poly-1.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":10
+}
+function-poly-1.js:3:3 = {
+  "type":"T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-1.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":33,"offset":42},
+    "end":{"line":3,"column":33,"offset":43}
+  },
+  "path":"function-poly-1.js",
+  "line":3,
+  "endline":3,
+  "start":33,
+  "end":33
+}
+function-poly-1.js:4:7 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-1.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":7,"offset":53},
+    "end":{"line":4,"column":7,"offset":54}
+  },
+  "path":"function-poly-1.js",
+  "line":4,
+  "endline":4,
+  "start":7,
+  "end":7
+}
+function-poly-2.js:3:10 = {
+  "type":"<T>(y: T) => void",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-2.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":14,"offset":24}
+  },
+  "path":"function-poly-2.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":14
+}
+function-poly-2.js:4:12 = {
+  "type":"<T>(x: T, z: (T | T)) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-2.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":12,"offset":47},
+    "end":{"line":4,"column":16,"offset":52}
+  },
+  "path":"function-poly-2.js",
+  "line":4,
+  "endline":4,
+  "start":12,
+  "end":16
+}
+function-poly-2.js:5:5 = {
+  "type":"T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-2.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":5,"offset":71},
+    "end":{"line":5,"column":5,"offset":72}
+  },
+  "path":"function-poly-2.js",
   "line":5,
   "endline":5,
-  "start":10,
-  "end":18
+  "start":5,
+  "end":5
 }
-predicates.js - Array: {
-  "type":"Array<T>",
-  "reasons":[
-    {
-      "desc":"polymorphic type: class type: Array",
-      "loc":{
-        "source":"predicates.js",
-        "type":"SourceFile",
-        "start":{"line":6,"column":5,"offset":69},
-        "end":{"line":6,"column":9,"offset":74}
-      },
-      "path":"predicates.js",
-      "line":6,
-      "endline":6,
-      "start":5,
-      "end":9
-    }
-  ],
+function-poly-2.js:6:5 = {
+  "type":"<T>(x: T, z: (T | T)) => T",
+  "reasons":[],
   "loc":{
-    "source":"predicates.js",
+    "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":5,"offset":69},
-    "end":{"line":6,"column":9,"offset":74}
+    "start":{"line":6,"column":5,"offset":78},
+    "end":{"line":6,"column":9,"offset":83}
   },
-  "path":"predicates.js",
+  "path":"function-poly-2.js",
   "line":6,
   "endline":6,
   "start":5,
   "end":9
 }
-predicates.js - isArray: {
-  "type":"(obj: any) => boolean",
-  "reasons":[
-    {
-      "desc":"function type",
-      "loc":{
-        "source":"predicates.js",
-        "type":"SourceFile",
-        "start":{"line":6,"column":5,"offset":69},
-        "end":{"line":6,"column":17,"offset":82}
-      },
-      "path":"predicates.js",
-      "line":6,
-      "endline":6,
-      "start":5,
-      "end":17
-    }
-  ],
-  "loc":{
-    "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":11,"offset":75},
-    "end":{"line":6,"column":17,"offset":82}
-  },
-  "path":"predicates.js",
-  "line":6,
-  "endline":6,
-  "start":11,
-  "end":17
-}
-templates.js:2:7 = {
-  "type":"string",
+function-poly-2.js:7:12 = {
+  "type":"T",
   "reasons":[],
   "loc":{
-    "source":"templates.js",
+    "source":"function-poly-2.js",
     "type":"SourceFile",
-    "start":{"line":2,"column":1,"offset":12},
-    "end":{"line":2,"column":9,"offset":21}
+    "start":{"line":7,"column":12,"offset":102},
+    "end":{"line":7,"column":12,"offset":103}
   },
-  "path":"templates.js",
-  "line":2,
-  "endline":2,
+  "path":"function-poly-2.js",
+  "line":7,
+  "endline":7,
+  "start":12,
+  "end":12
+}
+function-poly-2.js:9:13 = {
+  "type":"<T>(x: T, z: (T | T)) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-2.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":13,"offset":121},
+    "end":{"line":9,"column":17,"offset":126}
+  },
+  "path":"function-poly-2.js",
+  "line":9,
+  "endline":9,
+  "start":13,
+  "end":17
+}
+function-poly-2.js:11:12 = {
+  "type":"<T>(x: T) => T",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-2.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":12,"offset":146},
+    "end":{"line":11,"column":17,"offset":152}
+  },
+  "path":"function-poly-2.js",
+  "line":11,
+  "endline":11,
+  "start":12,
+  "end":17
+}
+function-poly-3.js:8:1 = {
+  "type":"T | number",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-3.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":1,"offset":73},
+    "end":{"line":8,"column":1,"offset":74}
+  },
+  "path":"function-poly-3.js",
+  "line":8,
+  "endline":8,
   "start":1,
+  "end":1
+}
+function-poly-4.js:3:11 = {
+  "type":"<T>(x: T) => {|f: T|}",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-4.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":12,"offset":22}
+  },
+  "path":"function-poly-4.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":12
+}
+function-poly-4.js:7:7 = {
+  "type":"<T>(x: T) => {|f: T|}",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-4.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":7,"offset":62},
+    "end":{"line":7,"column":9,"offset":65}
+  },
+  "path":"function-poly-4.js",
+  "line":7,
+  "endline":7,
+  "start":7,
   "end":9
+}
+function-poly-4.js:9:7 = {
+  "type":"{|m: <T>(x: T) => {|f: T|}|}",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-4.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":7,"offset":100},
+    "end":{"line":9,"column":9,"offset":103}
+  },
+  "path":"function-poly-4.js",
+  "line":9,
+  "endline":9,
+  "start":7,
+  "end":9
+}
+function-poly-5.js:3:10 = {
+  "type":"<T: (number | string)>(x: T) => number",
+  "reasons":[],
+  "loc":{
+    "source":"function-poly-5.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":10,"offset":19},
+    "end":{"line":3,"column":12,"offset":22}
+  },
+  "path":"function-poly-5.js",
+  "line":3,
+  "endline":3,
+  "start":10,
+  "end":12
+}
+generics.js:5:1 = {
+  "type":"C<number>",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":1,"offset":52},
+    "end":{"line":5,"column":2,"offset":54}
+  },
+  "path":"generics.js",
+  "line":5,
+  "endline":5,
+  "start":1,
+  "end":2
+}
+generics.js:10:1 = {
+  "type":"C<number>",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":1,"offset":128},
+    "end":{"line":10,"column":2,"offset":130}
+  },
+  "path":"generics.js",
+  "line":10,
+  "endline":10,
+  "start":1,
+  "end":2
+}
+generics.js:14:1 = {
+  "type":"E<number>",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":1,"offset":178},
+    "end":{"line":14,"column":2,"offset":180}
+  },
+  "path":"generics.js",
+  "line":14,
+  "endline":14,
+  "start":1,
+  "end":2
+}
+generics.js:18:1 = {
+  "type":"F<number>",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":1,"offset":231},
+    "end":{"line":18,"column":2,"offset":233}
+  },
+  "path":"generics.js",
+  "line":18,
+  "endline":18,
+  "start":1,
+  "end":2
+}
+generics.js:22:1 = {
+  "type":"O<number>",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":1,"offset":288},
+    "end":{"line":22,"column":2,"offset":290}
+  },
+  "path":"generics.js",
+  "line":22,
+  "endline":22,
+  "start":1,
+  "end":2
+}
+generics.js:26:1 = {
+  "type":"Mono<number>",
+  "reasons":[],
+  "loc":{
+    "source":"generics.js",
+    "type":"SourceFile",
+    "start":{"line":26,"column":1,"offset":383},
+    "end":{"line":26,"column":2,"offset":385}
+  },
+  "path":"generics.js",
+  "line":26,
+  "endline":26,
+  "start":1,
+  "end":2
+}
+implements.js:7:8 = {
+  "type":"interface IA<T>",
+  "reasons":[],
+  "loc":{
+    "source":"implements.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":23,"offset":51},
+    "end":{"line":4,"column":24,"offset":53}
+  },
+  "path":"implements.js",
+  "line":4,
+  "endline":4,
+  "start":23,
+  "end":24
+}
+import_lib.js:7:8 = {
+  "type":"Array<Listener<TFields>>",
+  "reasons":[],
+  "loc":{
+    "source":"import_lib.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":3,"offset":142},
+    "end":{"line":7,"column":12,"offset":152}
+  },
+  "path":"import_lib.js",
+  "line":7,
+  "endline":7,
+  "start":3,
+  "end":12
+}
+import_lib.js:7:25 = {
+  "type":"imported Listener<TFields>",
+  "reasons":[],
+  "loc":{
+    "source":"import_lib.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":21,"offset":160},
+    "end":{"line":7,"column":28,"offset":168}
+  },
+  "path":"import_lib.js",
+  "line":7,
+  "endline":7,
+  "start":21,
+  "end":28
+}
+interface.js:3:12 = {
+  "type":"interface IA",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":11,"offset":20},
+    "end":{"line":3,"column":12,"offset":22}
+  },
+  "path":"interface.js",
+  "line":3,
+  "endline":3,
+  "start":11,
+  "end":12
+}
+interface.js:9:15 = {
+  "type":"IA",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":13,"offset":148},
+    "end":{"line":9,"column":15,"offset":151}
+  },
+  "path":"interface.js",
+  "line":9,
+  "endline":9,
+  "start":13,
+  "end":15
+}
+interface.js:9:19 = {
+  "type":"interface IA",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":18,"offset":153},
+    "end":{"line":9,"column":19,"offset":155}
+  },
+  "path":"interface.js",
+  "line":9,
+  "endline":9,
+  "start":18,
+  "end":19
+}
+mixed.js:18:17 = {
+  "type":"A | B",
+  "reasons":[],
+  "loc":{
+    "source":"mixed.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":17,"offset":220},
+    "end":{"line":18,"column":18,"offset":222}
+  },
+  "path":"mixed.js",
+  "line":18,
+  "endline":18,
+  "start":17,
+  "end":18
+}
+module_export.js:3:24 = {
+  "type":"class klass<T>",
+  "reasons":[],
+  "loc":{
+    "source":"module_export.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":23,"offset":32},
+    "end":{"line":3,"column":27,"offset":37}
+  },
+  "path":"module_export.js",
+  "line":3,
+  "endline":3,
+  "start":23,
+  "end":27
+}
+module_export.js:5:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"module_export.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":24,"offset":69},
+    "end":{"line":5,"column":26,"offset":72}
+  },
+  "path":"module_export.js",
+  "line":5,
+  "endline":5,
+  "start":24,
+  "end":26
 }
 object_special_cases.js:6:32 = {
   "type":"string",
@@ -762,5 +1406,1295 @@ object_special_cases.js:6:32 = {
   "line":6,
   "endline":6,
   "start":30,
+  "end":34
+}
+object.js:3:15 = {
+  "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":13,"offset":22},
+    "end":{"line":3,"column":15,"offset":25}
+  },
+  "path":"object.js",
+  "line":3,
+  "endline":3,
+  "start":13,
+  "end":15
+}
+object.js:3:19 = {
+  "type":"void | {b: ?{c: (null | {d: number})}}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":19,"offset":28},
+    "end":{"line":3,"column":19,"offset":29}
+  },
+  "path":"object.js",
+  "line":3,
+  "endline":3,
+  "start":19,
+  "end":19
+}
+object.js:3:24 = {
+  "type":"?{c: (null | {d: number})}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":24,"offset":33},
+    "end":{"line":3,"column":24,"offset":34}
+  },
+  "path":"object.js",
+  "line":3,
+  "endline":3,
+  "start":24,
+  "end":24
+}
+object.js:3:29 = {
+  "type":"null | {d: number}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":29,"offset":38},
+    "end":{"line":3,"column":29,"offset":39}
+  },
+  "path":"object.js",
+  "line":3,
+  "endline":3,
+  "start":29,
+  "end":29
+}
+object.js:3:40 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":40,"offset":49},
+    "end":{"line":3,"column":40,"offset":50}
+  },
+  "path":"object.js",
+  "line":3,
+  "endline":3,
+  "start":40,
+  "end":40
+}
+object.js:6:5 = {
+  "type":"{a?: {b: ?{c: (null | {d: number})}}}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":3,"offset":75},
+    "end":{"line":6,"column":5,"offset":78}
+  },
+  "path":"object.js",
+  "line":6,
+  "endline":6,
+  "start":3,
+  "end":5
+}
+object.js:6:7 = {
+  "type":"{b: ?{c: (null | {d: number})}} | void",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":7,"offset":79},
+    "end":{"line":6,"column":7,"offset":80}
+  },
+  "path":"object.js",
+  "line":6,
+  "endline":6,
+  "start":7,
+  "end":7
+}
+object.js:7:10 = {
+  "type":"{b: ?{c: (null | {d: number})}}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":10,"offset":92},
+    "end":{"line":7,"column":10,"offset":93}
+  },
+  "path":"object.js",
+  "line":7,
+  "endline":7,
+  "start":10,
+  "end":10
+}
+object.js:7:12 = {
+  "type":"?{c: (null | {d: number})}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":12,"offset":94},
+    "end":{"line":7,"column":12,"offset":95}
+  },
+  "path":"object.js",
+  "line":7,
+  "endline":7,
+  "start":12,
+  "end":12
+}
+object.js:8:14 = {
+  "type":"{c: (null | {d: number})}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":14,"offset":111},
+    "end":{"line":8,"column":14,"offset":112}
+  },
+  "path":"object.js",
+  "line":8,
+  "endline":8,
+  "start":14,
+  "end":14
+}
+object.js:8:16 = {
+  "type":"{d: number} | null",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":16,"offset":113},
+    "end":{"line":8,"column":16,"offset":114}
+  },
+  "path":"object.js",
+  "line":8,
+  "endline":8,
+  "start":16,
+  "end":16
+}
+object.js:9:18 = {
+  "type":"{d: number}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":18,"offset":134},
+    "end":{"line":9,"column":18,"offset":135}
+  },
+  "path":"object.js",
+  "line":9,
+  "endline":9,
+  "start":18,
+  "end":18
+}
+object.js:9:34 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":34,"offset":150},
+    "end":{"line":9,"column":34,"offset":151}
+  },
+  "path":"object.js",
+  "line":9,
+  "endline":9,
+  "start":34,
+  "end":34
+}
+object.js:15:3 = {
+  "type":"(n: string) => string",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":3,"offset":219},
+    "end":{"line":15,"column":3,"offset":220}
+  },
+  "path":"object.js",
+  "line":15,
+  "endline":15,
+  "start":3,
+  "end":3
+}
+object.js:16:3 = {
+  "type":"(k: number) => number",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":3,"offset":249},
+    "end":{"line":16,"column":3,"offset":250}
+  },
+  "path":"object.js",
+  "line":16,
+  "endline":16,
+  "start":3,
+  "end":3
+}
+object.js:19:3 = {
+  "type":"{|m: (n: string) => string, n: (k: number) => number|}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":1,"offset":273},
+    "end":{"line":19,"column":5,"offset":278}
+  },
+  "path":"object.js",
+  "line":19,
+  "endline":19,
+  "start":1,
+  "end":5
+}
+object.js:19:7 = {
+  "type":"(n: string) => string",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":7,"offset":279},
+    "end":{"line":19,"column":7,"offset":280}
+  },
+  "path":"object.js",
+  "line":19,
+  "endline":19,
+  "start":7,
+  "end":7
+}
+object.js:20:7 = {
+  "type":"(n: string) => string",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":7,"offset":288},
+    "end":{"line":20,"column":7,"offset":289}
+  },
+  "path":"object.js",
+  "line":20,
+  "endline":20,
+  "start":7,
+  "end":7
+}
+object.js:21:7 = {
+  "type":"(k: number) => number",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":7,"offset":302},
+    "end":{"line":21,"column":7,"offset":303}
+  },
+  "path":"object.js",
+  "line":21,
+  "endline":21,
+  "start":7,
+  "end":7
+}
+object.js:22:7 = {
+  "type":"(k: number) => number",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":7,"offset":311},
+    "end":{"line":22,"column":7,"offset":312}
+  },
+  "path":"object.js",
+  "line":22,
+  "endline":22,
+  "start":7,
+  "end":7
+}
+object.js:35:1 = {
+  "type":"{b: 0b111, d: 11, f: \"ff\", g: 'g\"g', h: 'h\"h', i: \"i'i\", j: \"'\", x: 0x111}",
+  "reasons":[],
+  "loc":{
+    "source":"object.js",
+    "type":"SourceFile",
+    "start":{"line":35,"column":1,"offset":435},
+    "end":{"line":35,"column":6,"offset":441}
+  },
+  "path":"object.js",
+  "line":35,
+  "endline":35,
+  "start":1,
+  "end":6
+}
+optional.js:4:10 = {
+  "type":"void | string",
+  "reasons":[],
+  "loc":{
+    "source":"optional.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":10,"offset":46},
+    "end":{"line":4,"column":10,"offset":47}
+  },
+  "path":"optional.js",
+  "line":4,
+  "endline":4,
+  "start":10,
+  "end":10
+}
+optional.js:7:2 = {
+  "type":"(x?: string) => (void | string)",
+  "reasons":[],
+  "loc":{
+    "source":"optional.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":1,"offset":52},
+    "end":{"line":7,"column":3,"offset":55}
+  },
+  "path":"optional.js",
+  "line":7,
+  "endline":7,
+  "start":1,
+  "end":3
+}
+optional.js:10:11 = {
+  "type":"{x?: string}",
+  "reasons":[],
+  "loc":{
+    "source":"optional.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":10,"offset":105},
+    "end":{"line":10,"column":12,"offset":108}
+  },
+  "path":"optional.js",
+  "line":10,
+  "endline":10,
+  "start":10,
+  "end":12
+}
+optional.js:10:14 = {
+  "type":"void | string",
+  "reasons":[],
+  "loc":{
+    "source":"optional.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":14,"offset":109},
+    "end":{"line":10,"column":14,"offset":110}
+  },
+  "path":"optional.js",
+  "line":10,
+  "endline":10,
+  "start":14,
+  "end":14
+}
+optional.js:14:10 = {
+  "type":"void",
+  "reasons":[],
+  "loc":{
+    "source":"optional.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":10,"offset":143},
+    "end":{"line":14,"column":10,"offset":144}
+  },
+  "path":"optional.js",
+  "line":14,
+  "endline":14,
+  "start":10,
+  "end":10
+}
+predicates.js - undefined: {
+  "type":"void",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":10,"offset":51},
+    "end":{"line":5,"column":18,"offset":60}
+  },
+  "path":"predicates.js",
+  "line":5,
+  "endline":5,
+  "start":10,
+  "end":18
+}
+predicates.js - Array: {
+  "type":"class Array<T>",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":5,"offset":69},
+    "end":{"line":6,"column":9,"offset":74}
+  },
+  "path":"predicates.js",
+  "line":6,
+  "endline":6,
+  "start":5,
+  "end":9
+}
+predicates.js - isArray: {
+  "type":"(obj: any) => boolean",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":11,"offset":75},
+    "end":{"line":6,"column":17,"offset":82}
+  },
+  "path":"predicates.js",
+  "line":6,
+  "endline":6,
+  "start":11,
+  "end":17
+}
+predicates.js - y (refined obj): {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":5,"offset":95},
+    "end":{"line":8,"column":5,"offset":96}
+  },
+  "path":"predicates.js",
+  "line":8,
+  "endline":8,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO) obj: {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":5,"offset":119},
+    "end":{"line":9,"column":5,"offset":120}
+  },
+  "path":"predicates.js",
+  "line":9,
+  "endline":9,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO) prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":7,"offset":121},
+    "end":{"line":9,"column":9,"offset":124}
+  },
+  "path":"predicates.js",
+  "line":9,
+  "endline":9,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO == '') obj: {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":5,"offset":133},
+    "end":{"line":10,"column":5,"offset":134}
+  },
+  "path":"predicates.js",
+  "line":10,
+  "endline":10,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO == '') prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":7,"offset":135},
+    "end":{"line":10,"column":9,"offset":138}
+  },
+  "path":"predicates.js",
+  "line":10,
+  "endline":10,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO === '') obj: {
+  "type":"{|FOO: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":5,"offset":153},
+    "end":{"line":11,"column":5,"offset":154}
+  },
+  "path":"predicates.js",
+  "line":11,
+  "endline":11,
+  "start":5,
+  "end":5
+}
+predicates.js - if (y.FOO === '') prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":7,"offset":155},
+    "end":{"line":11,"column":9,"offset":158}
+  },
+  "path":"predicates.js",
+  "line":11,
+  "endline":11,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO == null) prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":7,"offset":176},
+    "end":{"line":12,"column":9,"offset":179}
+  },
+  "path":"predicates.js",
+  "line":12,
+  "endline":12,
+  "start":7,
+  "end":9
+}
+predicates.js - if (y.FOO == undefined) prop: {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":7,"offset":198},
+    "end":{"line":13,"column":9,"offset":201}
+  },
+  "path":"predicates.js",
+  "line":13,
+  "endline":13,
+  "start":7,
+  "end":9
+}
+predicates.js - if (Array.isArray(y.FOO)): {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"predicates.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":21,"offset":239},
+    "end":{"line":14,"column":23,"offset":242}
+  },
+  "path":"predicates.js",
+  "line":14,
+  "endline":14,
+  "start":21,
+  "end":23
+}
+react_component.js:3:9 = {
+  "type":"{|Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, ChildrenArray: type ChildrenArray<+T> = Array<ChildrenArray<T>> | T, Component: class React$Component<Props, State = void>, ComponentType: type ComponentType<P> = React$ComponentType<P>, DOM: any, Element: type Element<+C> = React$Element<C>, ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, ElementProps: type ElementProps<C> = React$ElementProps<C>, ElementRef: type ElementRef<C> = React$ElementRef<C>, ElementType: type ElementType = React$ElementType, Fragment: ({children: React$Node}) => React$Node, Key: type Key = React$Key, Node: type Node = React$Node, Portal: type Portal = React$Portal, PropTypes: ReactPropTypes, PureComponent: class React$PureComponent<Props, State = void>, Ref: type Ref<C> = React$Ref<C>, StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, cloneElement: React$CloneElement, createClass: React$CreateClass, createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, createElement: React$CreateElement, createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +PropTypes: {any: React$PropType$Primitive<any>, array: React$PropType$Primitive<Array<any>>, arrayOf: React$PropType$ArrayOf, bool: React$PropType$Primitive<boolean>, element: React$PropType$Primitive<any>, func: React$PropType$Primitive<Function>, instanceOf: React$PropType$ArrayOf, node: React$PropType$Primitive<any>, number: React$PropType$Primitive<number>, object: React$PropType$Primitive<Object>, objectOf: React$PropType$dbjectOf, oneOf: React$PropType$OneOf, oneOfType: React$PropType$OneOfType, shape: React$PropType$Shape, string: React$PropType$Primitive<string>}, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +isValidElement: (element: any) => boolean, +version: string|}, isValidElement: (element: any) => boolean, version: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":11,"offset":21}
+  },
+  "path":"react_component.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":11
+}
+react_component.js:13:33 = {
+  "type":"class React$Component<Props, State = void>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":29,"offset":146},
+    "end":{"line":13,"column":37,"offset":155}
+  },
+  "path":"react_component.js",
+  "line":13,
+  "endline":13,
+  "start":29,
+  "end":37
+}
+react_component.js:18:17 = {
+  "type":"{|enabled: boolean|}",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":14,"offset":233},
+    "end":{"line":18,"column":18,"offset":238}
+  },
+  "path":"react_component.js",
+  "line":18,
+  "endline":18,
+  "start":14,
+  "end":18
+}
+react.js:2:7 = {
+  "type":"React$CreateElement",
+  "reasons":[],
+  "loc":{
+    "source":"react.js",
+    "type":"SourceFile",
+    "start":{"line":2,"column":7,"offset":33},
+    "end":{"line":2,"column":19,"offset":46}
+  },
+  "path":"react.js",
+  "line":2,
+  "endline":2,
+  "start":7,
+  "end":19
+}
+recursive.js:3:25 = {
+  "type":"type V$1 = {|m: () => V$1|};\n{|m: () => V$1|}",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":24,"offset":33},
+    "end":{"line":3,"column":27,"offset":37}
+  },
+  "path":"recursive.js",
+  "line":3,
+  "endline":3,
+  "start":24,
+  "end":27
+}
+recursive.js:6:11 = {
+  "type":"type V$2 = {|data: number, next: V$2|} | null;\n(n: number) => ({|data: number, next: V$2|} | null)",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":10,"offset":61},
+    "end":{"line":6,"column":14,"offset":66}
+  },
+  "path":"recursive.js",
+  "line":6,
+  "endline":6,
+  "start":10,
+  "end":14
+}
+recursive.js:13:12 = {
+  "type":"type V$3 = {|data: number, next: V$3|} | null;\ntype V$5 = {|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$5|} | null | string;\n(n: number) => ({|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$5|} | null | string)",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":10,"offset":188},
+    "end":{"line":13,"column":14,"offset":193}
+  },
+  "path":"recursive.js",
+  "line":13,
+  "endline":13,
+  "start":10,
+  "end":14
+}
+recursive.js:23:12 = {
+  "type":"type V$3 = {|data: number, next: V$3|} | null;\ntype V$7 = {|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$7|} | null | string;\ntype V$9 = {|a_next: ({|data: number, next: V$3|} | null), b_next: ({|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$7|} | null | string), data: number, next: V$9|} | null | string;\n(n: number) => ({|a_next: ({|data: number, next: V$3|} | null), b_next: ({|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$7|} | null | string), data: number, next: V$9|} | null | string)",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":10,"offset":348},
+    "end":{"line":23,"column":14,"offset":353}
+  },
+  "path":"recursive.js",
+  "line":23,
+  "endline":23,
+  "start":10,
+  "end":14
+}
+recursive.js:38:2 = {
+  "type":"type V$2 = (x: V$2) => V$3;\ntype V$3 = (x: V$2) => V$3;\n(x: (x: V$2) => V$3) => (x: V$2) => V$3",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":38,"column":1,"offset":562},
+    "end":{"line":38,"column":3,"offset":565}
+  },
+  "path":"recursive.js",
+  "line":38,
+  "endline":38,
+  "start":1,
+  "end":3
+}
+recursive.js:41:17 = {
+  "type":"type V$1 = (x: V$1) => V$2;\ntype V$2 = (x: V$1) => V$2;\ntype Foo = {n: (x: (x: V$1) => V$2) => (x: V$1) => V$2}",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":41,"column":17,"offset":622},
+    "end":{"line":41,"column":19,"offset":625}
+  },
+  "path":"recursive.js",
+  "line":41,
+  "endline":41,
+  "start":17,
+  "end":19
+}
+recursive.js:58:1 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":58,"column":1,"offset":906},
+    "end":{"line":58,"column":1,"offset":907}
+  },
+  "path":"recursive.js",
+  "line":58,
+  "endline":58,
+  "start":1,
+  "end":1
+}
+refinement.js:7:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"refinement.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":24,"offset":74},
+    "end":{"line":7,"column":26,"offset":77}
+  },
+  "path":"refinement.js",
+  "line":7,
+  "endline":7,
+  "start":24,
+  "end":26
+}
+refinement.js:8:25 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"refinement.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":24,"offset":104},
+    "end":{"line":8,"column":26,"offset":107}
+  },
+  "path":"refinement.js",
+  "line":8,
+  "endline":8,
+  "start":24,
+  "end":26
+}
+test.js:5:1 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"test.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":1,"offset":66},
+    "end":{"line":5,"column":3,"offset":69}
+  },
+  "path":"test.js",
+  "line":5,
+  "endline":5,
+  "start":1,
+  "end":3
+}
+test.js:8:7 = {
+  "type":"Point",
+  "reasons":[],
+  "loc":{
+    "source":"test.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":7,"offset":108},
+    "end":{"line":8,"column":7,"offset":109}
+  },
+  "path":"test.js",
+  "line":8,
+  "endline":8,
+  "start":7,
+  "end":7
+}
+test.js:10:7 = {
+  "type":"MyStr",
+  "reasons":[],
+  "loc":{
+    "source":"test.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":7,"offset":157},
+    "end":{"line":10,"column":7,"offset":158}
+  },
+  "path":"test.js",
+  "line":10,
+  "endline":10,
+  "start":7,
+  "end":7
+}
+test.js:12:7 = {
+  "type":"MyBool",
+  "reasons":[],
+  "loc":{
+    "source":"test.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":7,"offset":201},
+    "end":{"line":12,"column":7,"offset":202}
+  },
+  "path":"test.js",
+  "line":12,
+  "endline":12,
+  "start":7,
+  "end":7
+}
+test.js:14:7 = {
+  "type":"MyNum",
+  "reasons":[],
+  "loc":{
+    "source":"test.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":7,"offset":241},
+    "end":{"line":14,"column":7,"offset":242}
+  },
+  "path":"test.js",
+  "line":14,
+  "endline":14,
+  "start":7,
+  "end":7
+}
+unions.js:9:3 = {
+  "type":"(() => number) | (() => string)",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":1,"offset":102},
+    "end":{"line":9,"column":3,"offset":105}
+  },
+  "path":"unions.js",
+  "line":9,
+  "endline":9,
+  "start":1,
+  "end":3
+}
+unions.js:15:2 = {
+  "type":"((x: number) => void) | ((x: string) => void)",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":1,"offset":182},
+    "end":{"line":15,"column":3,"offset":185}
+  },
+  "path":"unions.js",
+  "line":15,
+  "endline":15,
+  "start":1,
+  "end":3
+}
+unions.js:24:3 = {
+  "type":"{+f: string} | {+f: number}",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":1,"offset":313},
+    "end":{"line":24,"column":3,"offset":316}
+  },
+  "path":"unions.js",
+  "line":24,
+  "endline":24,
+  "start":1,
+  "end":3
+}
+unions.js:43:3 = {
+  "type":"(() => string) | (() => number)",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":43,"column":3,"offset":545},
+    "end":{"line":43,"column":7,"offset":550}
+  },
+  "path":"unions.js",
+  "line":43,
+  "endline":43,
+  "start":3,
+  "end":7
+}
+unions.js:44:3 = {
+  "type":"((x: string) => void) | ((x: number) => void)",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":44,"column":3,"offset":553},
+    "end":{"line":44,"column":7,"offset":558}
+  },
+  "path":"unions.js",
+  "line":44,
+  "endline":44,
+  "start":3,
+  "end":7
+}
+unions.js:49:1 = {
+  "type":"mixed",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":49,"column":1,"offset":667},
+    "end":{"line":49,"column":3,"offset":670}
+  },
+  "path":"unions.js",
+  "line":49,
+  "endline":49,
+  "start":1,
+  "end":3
+}
+unions.js:52:1 = {
+  "type":"{g: mixed}",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":52,"column":1,"offset":723},
+    "end":{"line":52,"column":5,"offset":728}
+  },
+  "path":"unions.js",
+  "line":52,
+  "endline":52,
+  "start":1,
+  "end":5
+}
+unions.js:57:5 = {
+  "type":"{|f: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":57,"column":5,"offset":796},
+    "end":{"line":57,"column":5,"offset":797}
+  },
+  "path":"unions.js",
+  "line":57,
+  "endline":57,
+  "start":5,
+  "end":5
+}
+opaque.js:3:20 = {
+  "type":"type Foo = number",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":20,"offset":29},
+    "end":{"line":3,"column":22,"offset":32}
+  },
+  "path":"opaque.js",
+  "line":3,
+  "endline":3,
+  "start":20,
+  "end":22
+}
+opaque.js:4:14 = {
+  "type":"Foo",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":13,"offset":55},
+    "end":{"line":4,"column":15,"offset":58}
+  },
+  "path":"opaque.js",
+  "line":4,
+  "endline":4,
+  "start":13,
+  "end":15
+}
+opaque.js:4:19 = {
+  "type":"type Foo = number",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":18,"offset":60},
+    "end":{"line":4,"column":20,"offset":63}
+  },
+  "path":"opaque.js",
+  "line":4,
+  "endline":4,
+  "start":18,
+  "end":20
+}
+opaque.js:6:22 = {
+  "type":"type Bar = number",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":21,"offset":86},
+    "end":{"line":6,"column":23,"offset":89}
+  },
+  "path":"opaque.js",
+  "line":6,
+  "endline":6,
+  "start":21,
+  "end":23
+}
+opaque.js:7:13 = {
+  "type":"Bar",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":13,"offset":111},
+    "end":{"line":7,"column":15,"offset":114}
+  },
+  "path":"opaque.js",
+  "line":7,
+  "endline":7,
+  "start":13,
+  "end":15
+}
+opaque.js:7:18 = {
+  "type":"type Bar = number",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":18,"offset":116},
+    "end":{"line":7,"column":20,"offset":119}
+  },
+  "path":"opaque.js",
+  "line":7,
+  "endline":7,
+  "start":18,
+  "end":20
+}
+opaque.js:9:22 = {
+  "type":"type Baz",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":21,"offset":142},
+    "end":{"line":9,"column":23,"offset":145}
+  },
+  "path":"opaque.js",
+  "line":9,
+  "endline":9,
+  "start":21,
+  "end":23
+}
+opaque.js:10:13 = {
+  "type":"Baz",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":13,"offset":159},
+    "end":{"line":10,"column":15,"offset":162}
+  },
+  "path":"opaque.js",
+  "line":10,
+  "endline":10,
+  "start":13,
+  "end":15
+}
+opaque.js:10:18 = {
+  "type":"type Baz",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":18,"offset":164},
+    "end":{"line":10,"column":20,"offset":167}
+  },
+  "path":"opaque.js",
+  "line":10,
+  "endline":10,
+  "start":18,
+  "end":20
+}
+opaque.js:12:14 = {
+  "type":"type Bak<A> = number | A",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":13,"offset":182},
+    "end":{"line":12,"column":15,"offset":185}
+  },
+  "path":"opaque.js",
+  "line":12,
+  "endline":12,
+  "start":13,
+  "end":15
+}
+opaque.js:13:14 = {
+  "type":"Bak<string>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":13,"offset":215},
+    "end":{"line":13,"column":15,"offset":218}
+  },
+  "path":"opaque.js",
+  "line":13,
+  "endline":13,
+  "start":13,
+  "end":15
+}
+opaque.js:13:19 = {
+  "type":"type Bak<A> = number | A",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":18,"offset":220},
+    "end":{"line":13,"column":20,"offset":223}
+  },
+  "path":"opaque.js",
+  "line":13,
+  "endline":13,
+  "start":18,
+  "end":20
+}
+opaque.js:15:22 = {
+  "type":"type Bam<A>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":21,"offset":254},
+    "end":{"line":15,"column":23,"offset":257}
+  },
+  "path":"opaque.js",
+  "line":15,
+  "endline":15,
+  "start":21,
+  "end":23
+}
+opaque.js:16:14 = {
+  "type":"Bam<string>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":13,"offset":273},
+    "end":{"line":16,"column":15,"offset":276}
+  },
+  "path":"opaque.js",
+  "line":16,
+  "endline":16,
+  "start":13,
+  "end":15
+}
+opaque.js:16:19 = {
+  "type":"type Bam<A>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":18,"offset":278},
+    "end":{"line":16,"column":20,"offset":281}
+  },
+  "path":"opaque.js",
+  "line":16,
+  "endline":16,
+  "start":18,
+  "end":20
+}
+opaque.js:19:14 = {
+  "type":"Opaque",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":13,"offset":377},
+    "end":{"line":19,"column":18,"offset":383}
+  },
+  "path":"opaque.js",
+  "line":19,
+  "endline":19,
+  "start":13,
+  "end":18
+}
+opaque.js:19:22 = {
+  "type":"imported Opaque",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":21,"offset":385},
+    "end":{"line":19,"column":26,"offset":391}
+  },
+  "path":"opaque.js",
+  "line":19,
+  "endline":19,
+  "start":21,
+  "end":26
+}
+opaque.js:20:16 = {
+  "type":"PolyTransparent<string>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":13,"offset":405},
+    "end":{"line":20,"column":27,"offset":420}
+  },
+  "path":"opaque.js",
+  "line":20,
+  "endline":20,
+  "start":13,
+  "end":27
+}
+opaque.js:20:34 = {
+  "type":"imported PolyTransparent<A>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":30,"offset":422},
+    "end":{"line":20,"column":44,"offset":437}
+  },
+  "path":"opaque.js",
+  "line":20,
+  "endline":20,
+  "start":30,
+  "end":44
+}
+opaque.js:21:19 = {
+  "type":"PolyOpaque<string>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":13,"offset":459},
+    "end":{"line":21,"column":22,"offset":469}
+  },
+  "path":"opaque.js",
+  "line":21,
+  "endline":21,
+  "start":13,
+  "end":22
+}
+opaque.js:21:28 = {
+  "type":"imported PolyOpaque<A>",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":25,"offset":471},
+    "end":{"line":21,"column":34,"offset":481}
+  },
+  "path":"opaque.js",
+  "line":21,
+  "endline":21,
+  "start":25,
   "end":34
 }

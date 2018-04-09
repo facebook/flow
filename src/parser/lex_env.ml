@@ -1,16 +1,13 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
 type t = {
-  lex_source            : Loc.filename option;
+  lex_source            : File_key.t option;
   lex_lb                : Sedlexing.lexbuf;
   lex_bol               : bol;
   lex_in_comment_syntax : bool;
@@ -26,7 +23,7 @@ and bol = {
 
 and lex_state = {
   lex_errors_acc: (Loc.t * Parse_error.t) list;
-  lex_comments_acc: Ast.Comment.t list;
+  lex_comments_acc: Loc.t Ast.Comment.t list;
 }
 
 let empty_lex_state = {
@@ -70,7 +67,7 @@ let debug_string_of_lexbuf _lb = ""
 let debug_string_of_lex_env (env: t) =
   let source = match (source env) with
     | None -> "None"
-    | Some x -> Printf.sprintf "Some %S" (Loc.string_of_filename x)
+    | Some x -> Printf.sprintf "Some %S" (File_key.to_string x)
   in
   Printf.sprintf
     "{\n  \

@@ -7,20 +7,24 @@ set +x
 if [[ "$TRAVIS_TAG" = "" ]]; then exit 0; fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=fbcode/flow/resources/travis/setup_opam.sh
 source "$DIR/setup_opam.sh"
+# shellcheck source=fbcode/flow/resources/travis/setup_node.sh
 source "$DIR/setup_node.sh"
 
-NPM_V=$(sed -n 's/.*"version":.*\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\).*/\1/p' src/parser/package.json)
+pushd packages/flow-parser > /dev/null
+
+NPM_V=$(sed -n 's/.*"version":.*\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\).*/\1/p' package.json)
 TAG_V=$(echo "${TRAVIS_TAG}" | sed -n 's/v\{0,\}\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\)/\1/p')
 if [[ "$TAG_V" == "$NPM_V" ]]; then
-  pushd src/parser > /dev/null
   echo "Publishing flow-parser@${TAG_V}";
   if [ -f ~/.npmrc ]; then mv ~/.npmrc ~/.npmrc.bak; fi
   echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-  make npm-publish
+  npm publish
   if [ -f ~/.npmrc.bak ]; then mv ~/.npmrc.bak ~/.npmrc; fi
   echo "Success"
-  popd > /dev/null
 else
   echo "Publishing flow-parser skipped (versions not in alignment)"
 fi
+
+popd > /dev/null

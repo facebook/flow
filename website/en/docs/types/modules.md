@@ -8,6 +8,7 @@ It is often useful to share types in between modules (files). In Flow, you can e
 **`exports.js`**
 
 ```js
+// @flow
 export default class Foo {};
 export type MyObject = { /* ... */ };
 export interface MyInterface { /* ... */ };
@@ -16,8 +17,11 @@ export interface MyInterface { /* ... */ };
 **`imports.js`**
 
 ```js
+// @flow
 import type Foo, {MyObject, MyInterface} from './exports';
 ```
+
+> ***Don't forget to mention `@flow` on top of file, otherwise flow won't report errors***.
 
 ### Importing and exporting values <a class="toc" id="toc-importing-and-exporting-values" href="#toc-importing-and-exporting-values"></a>
 
@@ -27,6 +31,7 @@ Flow also supports importing the type of values exported by other modules using
 **`exports.js`**
 
 ```js
+// @flow
 const myNumber = 42;
 export default myNumber;
 export class MyClass {
@@ -37,6 +42,7 @@ export class MyClass {
 **`imports.js`**
 
 ```js
+// @flow
 import typeof myNumber from './exports';
 import typeof {MyClass} from './exports';
 ```

@@ -1,0 +1,11 @@
+// @flow strict
+type LibFooType = {foo: string};
+type LibBarType = {bar: number};
+
+declare var LibFoo: LibFooType;
+declare var LibBar: LibBarType;
+
+export default {
+  LibFoo,
+  LibBar,
+};

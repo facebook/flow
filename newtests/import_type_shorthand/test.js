@@ -1,10 +1,10 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('Unaliased type import', [
@@ -15,13 +15,18 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": T);')
-      .newErrors(`
-        test.js:9
-          9: ("str": T);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": T);
-                     ^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": T);
+                ^^^^^ Cannot cast \`"str"\` to \`T\` because string [1] is incompatible with number [2].
+            References:
+              9: ("str": T);
+                  ^^^^^ [1]
+              9: ("str": T);
+                         ^ [2]
+        `,
+      ),
   ]),
 
   test('Aliased type import', [
@@ -32,13 +37,18 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": U);')
-      .newErrors(`
-        test.js:9
-          9: ("str": U);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": U);
-                     ^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": U);
+                ^^^^^ Cannot cast \`"str"\` to \`U\` because string [1] is incompatible with number [2].
+            References:
+              9: ("str": U);
+                  ^^^^^ [1]
+              9: ("str": U);
+                         ^ [2]
+        `,
+      ),
   ]),
 
   test('Unaliased typeof import', [
@@ -49,13 +59,18 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": C);')
-      .newErrors(`
-        test.js:9
-          9: ("str": C);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": C);
-               ^ class type: C
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": C);
+                ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with statics of \`C\` [2].
+            References:
+              9: ("str": C);
+                  ^^^^^ [1]
+              9: ("str": C);
+                         ^ [2]
+        `,
+      ),
   ]),
 
   test('Aliased type import', [
@@ -66,12 +81,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         .noNewErrors(),
 
     addCode('("str": CPrime);')
-      .newErrors(`
-        test.js:9
-          9: ("str": CPrime);
-              ^^^^^ string. This type is incompatible with
-          9: ("str": CPrime);
-                     ^^^^^^ class type: C
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: ("str": CPrime);
+                ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with statics of \`C\` [2].
+            References:
+              9: ("str": CPrime);
+                  ^^^^^ [1]
+              9: ("str": CPrime);
+                         ^^^^^^ [2]
+        `,
+      ),
   ]),
 ]);

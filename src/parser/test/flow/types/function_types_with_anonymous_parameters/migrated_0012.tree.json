@@ -58,8 +58,8 @@
               "range":[85,104],
               "typeAnnotation":{
                 "type":"UnionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":13},"end":{"line":2,"column":29}},
-                "range":[87,103],
+                "loc":{"source":null,"start":{"line":2,"column":13},"end":{"line":2,"column":30}},
+                "range":[87,104],
                 "types":[
                   {
                     "type":"StringTypeAnnotation",

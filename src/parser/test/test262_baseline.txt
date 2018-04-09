@@ -1,0 +1,957 @@
+annexB/language/comments/multi-line-html-close.js (strict mode)
+  Unexpected token > at (27, 4) to (27, 5)
+annexB/language/comments/multi-line-html-close.js (default)
+  Unexpected token > at (27, 4) to (27, 5)
+annexB/language/comments/single-line-html-close-asi.js (strict mode)
+  Unexpected token > at (28, 2) to (28, 3)
+annexB/language/comments/single-line-html-close-asi.js (default)
+  Unexpected token > at (28, 2) to (28, 3)
+annexB/language/comments/single-line-html-close.js (strict mode)
+  Unexpected token > at (26, 2) to (26, 3)
+annexB/language/comments/single-line-html-close.js (default)
+  Unexpected token > at (26, 2) to (26, 3)
+annexB/language/comments/single-line-html-open.js (strict mode)
+  Unexpected token ! at (23, 1) to (23, 2)
+annexB/language/comments/single-line-html-open.js (default)
+  Unexpected token ! at (23, 1) to (23, 2)
+annexB/language/expressions/object/__proto__-duplicate.js (strict mode)
+  Missing parse error
+annexB/language/expressions/object/__proto__-duplicate.js (default)
+  Missing parse error
+annexB/language/literals/numeric/non-octal-decimal-integer.js (default)
+  Unexpected token ILLEGAL at (34, 17) to (34, 20)
+annexB/language/statements/for-in/nonstrict-initializer.js (default)
+  Invalid left-hand side in for-in at (11, 7) to (11, 24)
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
+  Missing parse error
+language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-await-in-formals.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-await-in-formals.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-formals-lineterminator.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/early-errors-arrow-formals-lineterminator.js (default)
+  Missing parse error
+language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (strict mode)
+  Missing parse error
+language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (default)
+  Missing parse error
+language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (strict mode)
+  Missing parse error
+language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (default)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (default)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-body-duplicate-const.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-body-duplicate-const.js (default)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-body-duplicate-let.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-body-duplicate-let.js (default)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
+  Missing parse error
+language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/expressions/function/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/expressions/generators/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (default)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-async-lineterminator.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-async-lineterminator.js (default)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (default)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (default)
+  Missing parse error
+language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js (default)
+  Missing parse error
+language/expressions/object/method-definition/generator-param-redecl-const.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/generator-param-redecl-const.js (default)
+  Missing parse error
+language/expressions/object/method-definition/generator-param-redecl-let.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/generator-param-redecl-let.js (default)
+  Missing parse error
+language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/object/method-definition/name-param-redecl.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/name-param-redecl.js (default)
+  Missing parse error
+language/expressions/object/method-definition/setter-use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/setter-use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/object/method-definition/use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/tagged-template/invalid-escape-sequences.js (strict mode)
+  Unexpected token ILLEGAL at (21, 4) to (21, 5)
+language/expressions/tagged-template/invalid-escape-sequences.js (default)
+  Unexpected token ILLEGAL at (21, 4) to (21, 5)
+language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js (strict mode)
+  Missing parse error
+language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js (default)
+  Missing parse error
+language/global-code/export.js (strict mode)
+  Missing parse error
+language/global-code/export.js (default)
+  Missing parse error
+language/global-code/import.js (strict mode)
+  Missing parse error
+language/global-code/import.js (default)
+  Missing parse error
+language/global-code/new.target-arrow.js (strict mode)
+  Missing parse error
+language/global-code/new.target-arrow.js (default)
+  Missing parse error
+language/global-code/new.target.js (strict mode)
+  Unexpected token . at (19, 3) to (19, 4)
+language/global-code/new.target.js (default)
+  Unexpected token . at (19, 3) to (19, 4)
+language/import/dup-bound-names.js (strict mode)
+  Missing parse error
+language/import/dup-bound-names.js (default)
+  Missing parse error
+language/literals/numeric/non-octal-decimal-integer-strict.js (strict mode)
+  Missing parse error
+language/literals/regexp/early-err-dup-flag.js (strict mode)
+  Missing parse error
+language/literals/regexp/early-err-dup-flag.js (default)
+  Missing parse error
+language/literals/regexp/early-err-pattern.js (strict mode)
+  Missing parse error
+language/literals/regexp/early-err-pattern.js (default)
+  Missing parse error
+language/literals/regexp/invalid-braced-quantifier-exact.js (strict mode)
+  Missing parse error
+language/literals/regexp/invalid-braced-quantifier-exact.js (default)
+  Missing parse error
+language/literals/regexp/invalid-braced-quantifier-lower.js (strict mode)
+  Missing parse error
+language/literals/regexp/invalid-braced-quantifier-lower.js (default)
+  Missing parse error
+language/literals/regexp/invalid-braced-quantifier-range.js (strict mode)
+  Missing parse error
+language/literals/regexp/invalid-braced-quantifier-range.js (default)
+  Missing parse error
+language/literals/regexp/u-dec-esc.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-dec-esc.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-class-escape.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-class-escape.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-extended-pattern-char.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-extended-pattern-char.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-identity-escape.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-identity-escape.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-legacy-octal-escape.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-legacy-octal-escape.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-a.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-a.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-ab.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-ab.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-b.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-b.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-non-empty-class-ranges.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-oob-decimal-escape.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-oob-decimal-escape.js (default)
+  Missing parse error
+language/literals/regexp/u-invalid-quantifiable-assertion.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-invalid-quantifiable-assertion.js (default)
+  Missing parse error
+language/literals/regexp/u-unicode-esc-bounds.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-unicode-esc-bounds.js (default)
+  Missing parse error
+language/literals/regexp/u-unicode-esc-non-hex.js (strict mode)
+  Missing parse error
+language/literals/regexp/u-unicode-esc-non-hex.js (default)
+  Missing parse error
+language/literals/string/legacy-non-octal-escape-sequence-strict.js (strict mode)
+  Missing parse error
+language/module-code/early-export-global.js (strict mode)
+  Missing parse error
+language/module-code/early-export-global.js (default)
+  Missing parse error
+language/module-code/early-export-unresolvable.js (strict mode)
+  Missing parse error
+language/module-code/early-export-unresolvable.js (default)
+  Missing parse error
+language/module-code/early-import-arguments.js (strict mode)
+  Missing parse error
+language/module-code/early-import-arguments.js (default)
+  Missing parse error
+language/module-code/early-import-as-arguments.js (strict mode)
+  Missing parse error
+language/module-code/early-import-as-arguments.js (default)
+  Missing parse error
+language/module-code/early-import-as-eval.js (strict mode)
+  Missing parse error
+language/module-code/early-import-as-eval.js (default)
+  Missing parse error
+language/module-code/early-import-eval.js (strict mode)
+  Missing parse error
+language/module-code/early-import-eval.js (default)
+  Missing parse error
+language/module-code/early-lex-and-var.js (strict mode)
+  Missing parse error
+language/module-code/early-lex-and-var.js (default)
+  Missing parse error
+language/module-code/early-strict-mode.js (default)
+  Missing parse error
+language/module-code/instn-resolve-empty-export.js (strict mode)
+  Missing parse error
+language/module-code/instn-resolve-empty-export.js (default)
+  Missing parse error
+language/module-code/instn-resolve-empty-import.js (strict mode)
+  Missing parse error
+language/module-code/instn-resolve-empty-import.js (default)
+  Missing parse error
+language/module-code/instn-resolve-err-reference.js (strict mode)
+  Missing parse error
+language/module-code/instn-resolve-err-reference.js (default)
+  Missing parse error
+language/module-code/instn-resolve-err-syntax.js (strict mode)
+  Missing parse error
+language/module-code/instn-resolve-err-syntax.js (default)
+  Missing parse error
+language/module-code/instn-resolve-order-depth.js (strict mode)
+  Missing parse error
+language/module-code/instn-resolve-order-depth.js (default)
+  Missing parse error
+language/module-code/instn-resolve-order-src.js (strict mode)
+  Missing parse error
+language/module-code/instn-resolve-order-src.js (default)
+  Missing parse error
+language/module-code/parse-err-hoist-lex-fun.js (strict mode)
+  Missing parse error
+language/module-code/parse-err-hoist-lex-fun.js (default)
+  Missing parse error
+language/module-code/parse-err-hoist-lex-gen.js (strict mode)
+  Missing parse error
+language/module-code/parse-err-hoist-lex-gen.js (default)
+  Missing parse error
+language/module-code/parse-err-yield.js (default)
+  Missing parse error
+language/reserved-words/await-module.js (strict mode)
+  Missing parse error
+language/reserved-words/await-module.js (default)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (strict mode)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (default)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-await-in-formals-default.js (strict mode)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-await-in-formals-default.js (default)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-await-in-formals.js (strict mode)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-await-in-formals.js (default)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (strict mode)
+  Missing parse error
+language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
+  Missing parse error
+language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
+  Missing parse error
+language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (default)
+  Missing parse error
+language/statements/class/definition/early-errors-class-method-await-in-formals-default.js (strict mode)
+  Missing parse error
+language/statements/class/definition/early-errors-class-method-await-in-formals-default.js (default)
+  Missing parse error
+language/statements/class/definition/early-errors-class-method-await-in-formals.js (strict mode)
+  Missing parse error
+language/statements/class/definition/early-errors-class-method-await-in-formals.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-has-direct-super-missing-class-heritage.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-has-direct-super-missing-class-heritage.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-special-method-generator-propname-constructor.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-special-method-generator-propname-constructor.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-special-method-get-propname-constructor.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-special-method-get-propname-constructor.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-special-method-set-propname-constructor.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-special-method-set-propname-constructor.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-static-method-propname-prototype.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-body-static-method-propname-prototype.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js (default)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-definition-evaluation-scriptbody-duplicate-binding.js (strict mode)
+  Missing parse error
+language/statements/class/syntax/early-errors/class-definition-evaluation-scriptbody-duplicate-binding.js (default)
+  Missing parse error
+language/statements/const/redeclaration-error-from-within-strict-mode-function-const.js (default)
+  Missing parse error
+language/statements/for-in/head-const-bound-names-dup.js (strict mode)
+  Missing parse error
+language/statements/for-in/head-const-bound-names-dup.js (default)
+  Missing parse error
+language/statements/for-in/head-const-bound-names-in-stmt.js (strict mode)
+  Missing parse error
+language/statements/for-in/head-const-bound-names-in-stmt.js (default)
+  Missing parse error
+language/statements/for-in/head-let-bound-names-dup.js (strict mode)
+  Missing parse error
+language/statements/for-in/head-let-bound-names-dup.js (default)
+  Missing parse error
+language/statements/for-in/head-let-bound-names-in-stmt.js (strict mode)
+  Missing parse error
+language/statements/for-in/head-let-bound-names-in-stmt.js (default)
+  Missing parse error
+language/statements/for-in/head-lhs-let.js (default)
+  Unexpected token in at (27, 10) to (27, 12)
+language/statements/for-of/head-const-bound-names-dup.js (strict mode)
+  Missing parse error
+language/statements/for-of/head-const-bound-names-dup.js (default)
+  Missing parse error
+language/statements/for-of/head-const-bound-names-in-stmt.js (strict mode)
+  Missing parse error
+language/statements/for-of/head-const-bound-names-in-stmt.js (default)
+  Missing parse error
+language/statements/for-of/head-let-bound-names-dup.js (strict mode)
+  Missing parse error
+language/statements/for-of/head-let-bound-names-dup.js (default)
+  Missing parse error
+language/statements/for-of/head-let-bound-names-in-stmt.js (strict mode)
+  Missing parse error
+language/statements/for-of/head-let-bound-names-in-stmt.js (default)
+  Missing parse error
+language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
+  Missing parse error
+language/statements/for/head-let-bound-names-in-stmt.js (default)
+  Missing parse error
+language/statements/for/head-lhs-let.js (default)
+  Unexpected token = at (25, 4) to (25, 5)
+language/statements/function/use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/statements/function/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
+  Missing parse error
+language/statements/generators/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/statements/labeled/continue.js (strict mode)
+  Missing parse error
+language/statements/labeled/continue.js (default)
+  Missing parse error
+language/statements/labeled/value-await-module-escaped.js (strict mode)
+  Missing parse error
+language/statements/labeled/value-await-module-escaped.js (default)
+  Missing parse error
+language/statements/labeled/value-await-module.js (strict mode)
+  Missing parse error
+language/statements/labeled/value-await-module.js (default)
+  Missing parse error
+language/statements/let/redeclaration-error-from-within-strict-mode-function.js (default)
+  Missing parse error
+language/statements/let/syntax/attempt-to-redeclare-let-binding-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/let/syntax/attempt-to-redeclare-let-binding-with-function-declaration.js (default)
+  Missing parse error
+language/statements/let/syntax/attempt-to-redeclare-let-binding-with-var.js (strict mode)
+  Missing parse error
+language/statements/let/syntax/attempt-to-redeclare-let-binding-with-var.js (default)
+  Missing parse error
+language/statements/let/syntax/identifier-let-allowed-as-lefthandside-expression-non-strict.js (default)
+  Unexpected token in at (10, 9) to (10, 11)
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/async-generator-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/class-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/const-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/function-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/generator-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-var-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/let-declaration-attempt-to-redeclare-with-var-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-async-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-class-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-class-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-const-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-const-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-function-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-function-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-generator-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-generator-declaration.js (default)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js (strict mode)
+  Missing parse error
+language/statements/switch/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js (default)
+  Missing parse error
+language/statements/try/early-catch-duplicates.js (strict mode)
+  Missing parse error
+language/statements/try/early-catch-duplicates.js (default)
+  Missing parse error
+language/statements/try/early-catch-lex.js (strict mode)
+  Missing parse error
+language/statements/try/early-catch-lex.js (default)
+  Missing parse error
+language/statements/try/early-catch-var.js (strict mode)
+  Missing parse error
+language/statements/try/early-catch-var.js (default)
+  Missing parse error
+language/white-space/mongolian-vowel-separator.js (strict mode)
+  Missing parse error
+language/white-space/mongolian-vowel-separator.js (default)
+  Missing parse error
+
+=== Summary ===
+Passed: 54832 (99.14%)
+Failed: 473 (0.86%)
+
+Features:
+  arrow-function: 22/24 (91.67%)
+  async-functions: 157/217 (72.35%)
+  async-iteration: 6984/7052 (99.04%)
+  generators: 1339/1343 (99.70%)
+  let: 131/135 (97.04%)

@@ -19,10 +19,17 @@ import type {AnyType} from './typed_exports.js' //Not an error
 import typeof {AnyObj} from './typed_exports.js' //Not an error
 import typeof AnyObjDefault from './typed_exports.js' //Not an error
 
+/* Imports from Nonexistent File */
+//Only `required module not found` shown.
+import type {BeepType} from './nonexistent.js';
+import typeof {BeepObj} from './nonexistent.js';
+
+import typeof BoopObj from './nonexistent.js';
+
 /* Suppressed Imports */
 /* flowlint untyped-type-import:off */
 
-import type {BeepType} from './untyped_exports.js'; //Error; Suppressed
-import typeof {BeepObj} from './untyped_exports.js'; //Error; Suppressed
+import type {WhizType} from './untyped_exports.js'; //Error; Suppressed
+import typeof {WhizObj} from './untyped_exports.js'; //Error; Suppressed
 
-import typeof BoopObj from './untyped_exports.js'; //Error; Suppressed
+import typeof BangObj from './untyped_exports.js'; //Error; Suppressed

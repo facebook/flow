@@ -1,37 +1,74 @@
-Error: copyProperties.js:6
-  6:     (copyProperties()); // error, unknown global
-          ^^^^^^^^^^^^^^ identifier `copyProperties`. Could not resolve name
+Error -------------------------------------------------------------------------------------------- copyProperties.js:6:6
 
-Error: copyProperties.js:31
- 31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                         ^^^^^^^^^^^^ object literal. This type is incompatible with
- 31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                        ^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                    ^^^ string. This type is incompatible with
-     31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
-                                                   ^^^^^^ number
+Cannot resolve name `copyProperties`.
 
-Error: invariant.js:6
-  6:     invariant(x, 'truthy only'); // error, forgot to require invariant
-         ^^^^^^^^^ identifier `invariant`. Could not resolve name
+   6|     (copyProperties()); // error, unknown global
+           ^^^^^^^^^^^^^^
 
-Error: mergeInto.js:6
-  6:     (mergeInto()); // error, unknown global
-          ^^^^^^^^^ identifier `mergeInto`. Could not resolve name
 
-Error: test.js:6
-  6:     var x: string = this.x;
-                         ^^^^^^ number. This type is incompatible with
-  6:     var x: string = this.x;
-                ^^^^^^ string
+Error ------------------------------------------------------------------------------------------- copyProperties.js:31:6
 
-Error: test.js:7
-  7:     this.y = "";
-              ^ property `y`. Property not found in
-  7:     this.y = "";
-         ^^^^ Foo
+Cannot cast `copyProperties(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
+
+   copyProperties.js:31:6
+   31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   copyProperties.js:31:28
+   31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+                                  ^^^ [1]
+   copyProperties.js:31:43
+   31|     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
+                                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- invariant.js:6:5
+
+Cannot resolve name `invariant`.
+
+   6|     invariant(x, 'truthy only'); // error, forgot to require invariant
+          ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- mergeInto.js:6:6
+
+Cannot resolve name `mergeInto`.
+
+   6|     (mergeInto()); // error, unknown global
+           ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:21
+
+Cannot assign `this.x` to `x` because number [1] is incompatible with string [2].
+
+   test.js:6:21
+   6|     var x: string = this.x;
+                          ^^^^^^
+
+References:
+   Bar.js:1:16
+   1| var Bar = { x: 0 };
+                     ^ [1]
+   test.js:6:12
+   6|     var x: string = this.x;
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Cannot assign empty string to `this.y` because property `y` is missing in `Foo` [1].
+
+   test.js:7:5
+   7|     this.y = "";
+          ^^^^^^
+
+References:
+   test.js:4:7
+   4| class Foo extends mixin(Bar) {
+            ^^^ [1]
+
 
 
 Found 6 errors

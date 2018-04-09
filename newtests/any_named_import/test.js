@@ -1,10 +1,10 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('You can do any named import for an any module', [
@@ -39,9 +39,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (Any: number);
-                ^^^ exports of "any". This type is incompatible with
-            5: (Any: number);
-                     ^^^^^^ number
+                ^^^ Cannot cast \`Any\` to number because module \`any\` [1] is incompatible with number [2].
+            References:
+              3: import * as Any from "any";
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+              5: (Any: number);
+                       ^^^^^^ [2]
         `,
       )
       .because('Any should be { [key: string]: any }'),
@@ -62,9 +65,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: string);
-                ^^^ object type. This type is incompatible with
-            5: (obj: string);
-                     ^^^^^^ string
+                ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
+            References:
+              6:   declare module.exports: Object;
+                                           ^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:6
+              5: (obj: string);
+                       ^^^^^^ [2]
         `,
       )
       .because('obj should have the type Object'),
@@ -77,9 +83,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: string);
-                ^^^ object type. This type is incompatible with
-            5: (obj: string);
-                     ^^^^^^ string
+                ^^^ Cannot cast \`obj\` to string because object type [1] is incompatible with string [2].
+            References:
+              6:   declare module.exports: Object;
+                                           ^^^^^^ [1]. See lib: [LIB] flow-typed/lib.js:6
+              5: (obj: string);
+                       ^^^^^^ [2]
         `,
       )
       .because('obj should have the type Object'),
@@ -94,9 +103,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (obj: number);
-                ^^^ exports of "object". This type is incompatible with
-            5: (obj: number);
-                     ^^^^^^ number
+                ^^^ Cannot cast \`obj\` to number because module \`object\` [1] is incompatible with number [2].
+            References:
+              3: import * as obj from "object";
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+              5: (obj: number);
+                       ^^^^^^ [2]
         `,
       )
       .because('obj should be { [key: string]: any }'),
@@ -109,11 +121,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import {x, y} from "string";
-                       ^ Named import from module \`string\`. This module only has a default export. Did you mean \`import x from ...\`?
+                       ^ Cannot import \`x\` because there is no \`x\` export in \`string\`. Did you mean \`import x from "..."\`?
 
           test.js:3
             3: import {x, y} from "string";
-                          ^ Named import from module \`string\`. This module only has a default export. Did you mean \`import y from ...\`?
+                          ^ Cannot import \`y\` because there is no \`y\` export in \`string\`. Did you mean \`import y from "..."\`?
         `,
       ),
   ]),

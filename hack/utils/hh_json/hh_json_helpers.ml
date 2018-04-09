@@ -8,18 +8,23 @@
  *
  **)
 
-open Core
-
 (* Some JSON processing helpers *)
 
 let try_get_val key json =
   let obj = Hh_json.get_object_exn json in
-  List.Assoc.find obj key
+  Core_list.Assoc.find obj key
 
 let get_string_val key ?default json =
   let v = try_get_val key json in
   match v, default with
   | Some v, _ -> Hh_json.get_string_exn v
+  | None, Some def -> def
+  | None, None -> raise Not_found
+
+let get_bool_val key ?default json =
+  let v = try_get_val key json in
+  match v, default with
+  | Some v, _ -> Hh_json.get_bool_exn v
   | None, Some def -> def
   | None, None -> raise Not_found
 
@@ -32,7 +37,7 @@ let get_array_val key ?default json =
 
 let strlist args =
   Hh_json.JSON_Array begin
-    List.map args (fun arg -> Hh_json.JSON_String arg)
+    List.map (fun arg -> Hh_json.JSON_String arg) args
   end
 
 (* Prepend a string to a JSON array of strings. pred stands for predicate,

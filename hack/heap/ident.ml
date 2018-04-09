@@ -44,3 +44,5 @@ let make x =
   let res = hh_counter_next () in
   if !track_names then set_name res x;
   res
+
+let pp = Format.pp_print_int

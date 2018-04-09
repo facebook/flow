@@ -1,0 +1,70 @@
+FLOW STATUS:
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
+
+Cannot resolve name `exports`.
+
+   4|   exports.foo = 5;
+        ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
+
+Exports can only appear at the top level
+
+   4|   exports.foo = 5;
+        ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
+
+Exports can only appear at the top level
+
+   4|   module.exports = 42
+        ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
+
+Exports can only appear at the top level
+
+   4|   module.exports.foo = 42;
+        ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ bad-named-export.js:5:3
+
+Exports can only appear at the top level
+
+   5|   exports.bar = 42;
+        ^^^^^^^
+
+
+
+Found 5 errors
+FLOW CHECK-CONTENTS:
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
+
+Cannot resolve name `exports`.
+
+   4|   exports.foo = 5;
+        ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
+
+Exports can only appear at the top level
+
+   4|   module.exports.foo = 42;
+        ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ bad-named-export.js:5:3
+
+Exports can only appear at the top level
+
+   5|   exports.bar = 42;
+        ^^^^^^^
+
+
+
+Found 3 errors

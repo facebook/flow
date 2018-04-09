@@ -1,0 +1,16 @@
+[include]
+../../newtests/
+../../node_modules
+
+[ignore]
+.*/json5/test/parse-cases/.*
+
+.*/newtests/gen_flow_files_command/type_error.js
+.*/newtests/ide/lazy/errorsWithFlowPragma.js
+
+[options]
+suppress_comment=.*\\$FlowFixMe
+suppress_comment=.*\\$FlowIssue
+esproposal.class_instance_fields=enable
+esproposal.class_static_fields=enable
+emoji=true

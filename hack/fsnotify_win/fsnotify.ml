@@ -23,7 +23,7 @@
 
 *)
 
-open Core
+open Hh_core
 
 (* Abstract data type for notifier context. *)
 type fsenv

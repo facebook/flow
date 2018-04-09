@@ -34,7 +34,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":19}},
             "range":[20,25],
-            "name":"\"foo\"",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

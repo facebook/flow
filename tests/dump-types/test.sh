@@ -1,5 +1,8 @@
 #!/bin/bash
+. ../assert.sh
 FLOW=$1
 
-$FLOW dump-types --strip-root --json --pretty test.js
-$FLOW dump-types --strip-root --raw --pretty test.js
+assert_ok "$FLOW" dump-types --strip-root --json --pretty test.js
+
+echo "=== predicates.js ==="
+assert_ok "$FLOW" dump-types --strip-root --json --pretty predicates.js

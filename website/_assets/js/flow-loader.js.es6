@@ -1,13 +1,23 @@
-//
-// Copyright (c) 2013-present, Facebook, Inc.
-// All rights reserved.
-//
-// This source code is licensed under the BSD-style license found in the
-// LICENSE file in the "flow" directory of this source tree. An additional grant
-// of patent rights can be found in the PATENTS file in the same directory.
-//
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 const versionCache = {};
+
+const TRY_LIB_CONTENTS = `
+declare type $JSXIntrinsics = {
+  [string]: {
+    instance: any,
+    props: {
+      children?: React$Node,
+      [key: string]: any,
+    },
+  },
+};
+`.slice(1);
 
 function get(url) {
   return new Promise(function(resolve, reject) {
@@ -32,23 +42,32 @@ export function load(version) {
   if (version in versionCache) {
     return Promise.resolve(versionCache[version]);
   }
-  const libs = [
+  const majorVersion =
+    version === 'master'
+    ? Infinity
+    : parseInt(version.split('.')[1], 10);
+  const libs = majorVersion <= 54 ? [
     `/static/${version}/flowlib/core.js`,
     `/static/${version}/flowlib/bom.js`,
     `/static/${version}/flowlib/cssom.js`,
     `/static/${version}/flowlib/dom.js`,
     `/static/${version}/flowlib/node.js`,
     `/static/${version}/flowlib/react.js`,
+    `/static/${version}/flowlib/streams.js`,
+  ] : [
+    `/static/${version}/flowlib/core.js`,
+    `/static/${version}/flowlib/react.js`,
   ];
   const flowLoader = new Promise(function(resolve) {
-    require([`/static/${version}/flow.js`], resolve);
+    requirejs([`/static/${version}/flow.js`], resolve);
   });
   return Promise.all([flowLoader, ...libs.map(get)])
     .then(function([_flow, ...contents]) {
       contents.forEach(function(nameAndContent) {
         self.flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
-      self.flow.setLibs(libs);
+      self.flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
+      self.flow.setLibs([...libs, 'try-lib.js']);
       versionCache[version] = self.flow;
       return flow;
     })

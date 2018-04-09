@@ -1,5 +1,4 @@
 #!/bin/bash
+. ../assert.sh
 FLOW=$1
-"$FLOW" start . --all
-"$FLOW" status --strip-root --from vim
-"$FLOW" stop
+assert_errors "$FLOW" status --include-warnings --strip-root --from vim

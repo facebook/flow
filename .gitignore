@@ -2,6 +2,7 @@
 package-lock.json
 *TAGS
 _build
+/dist
 /_obuild
 /.ocp
 /lib/INDEX

@@ -49,3 +49,18 @@ let pop_unsafe t =
 let iter t ~f =
   List.iter f t.outgoing;
   List.iter f (List.rev t.incoming)
+
+let from_list x =
+  { incoming = [];
+    outgoing = x;
+    length = List.length x;
+  }
+
+let to_list x =
+  x.outgoing @ (List.rev x.incoming)
+
+let concat t =
+  { incoming = [];
+    outgoing = List.map to_list t |> List.concat;
+    length = List.map (fun u -> u.length) t |> List.fold_left (+) 0;
+  }

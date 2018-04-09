@@ -28,7 +28,7 @@ Or as constructed wrapper objects.
 new Boolean(false);
 new String("world");
 new Number(42);
-new Symbol("foo");
+Symbol("foo");
 ```
 
 Types for literal values are lowercase.

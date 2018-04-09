@@ -9,3 +9,5 @@
  *)
 
 include Set.Make (IntKey)
+let to_string iset =
+  "{" ^ (String.concat "," (List.map string_of_int (elements iset))) ^ "}"

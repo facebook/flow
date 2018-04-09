@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flowtype"
-version: "0.50.0"
+version: "0.69.0"
 maintainer: "gabe@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
@@ -15,12 +15,16 @@ authors: [
   "James Kyle"
 ]
 doc: "https://flow.org/en/docs/getting-started/"
-license: "BSD3"
+license: "MIT"
 depends: [
   "base-unix"
   "base-bytes"
+  "dtoa" { >= "0.3.1" }
   "ocamlbuild" {build}
-  "sedlex"
+  "sedlex" { >= "1.99.4" }
+  "lwt" { >= "3.3.0" }
+  "lwt_ppx" { >= "1.1.0" }
+  "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]
 build: [ [ "env" "FLOW_RELEASE=1" make ] ]
