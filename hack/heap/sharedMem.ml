@@ -752,6 +752,7 @@ module type NoCache = sig
   val find_unsafe      : key -> t
   val get_batch        : KeySet.t -> t option KeyMap.t
   val remove_batch     : KeySet.t -> unit
+  val string_of_key : key -> string
   val mem              : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
@@ -797,6 +798,9 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   type key = UserKeyType.t
   type t = Value.t
+
+  let string_of_key key =
+    key |> Key.make Value.prefix |> Key.md5 |> Key.string_of_md5;;
 
   let add x y = New.add (Key.make Value.prefix x) y
   let find_unsafe x = New.find_unsafe (Key.make Value.prefix x)
@@ -1107,7 +1111,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module Cache = LocalCache (UserKeyType) (Value)
 
-  let _string_of_key _key =
+  let string_of_key _key =
     failwith "WithCache does not support 'string_of_key'"
 
   let add x y =
