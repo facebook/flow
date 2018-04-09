@@ -35,9 +35,9 @@ let out_of_date _ = ()
 let exit _ _ = ()
 let report_from_monitor_server_exit_due_to_signal _ = ()
 let recheck
-    ~modified_count:_
-    ~deleted_count:_
-    ~dependent_file_count:_
+    ~modified:_
+    ~deleted:_
+    ~dependent_files:_
     ~profiling:_ = ()
 let murdered_by_oom_killer _ = ()
 let ephemeral_command_success ?json_data:_ ~client_context:_ ~profiling:_ = ()
