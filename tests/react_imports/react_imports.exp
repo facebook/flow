@@ -47,8 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:277:27
-   277|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:279:27
+   279|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:277:27
-   277|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:279:27
+   279|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -194,14 +194,16 @@ References:
    261|     +version: typeof version,
    262|     +checkPropTypes: typeof checkPropTypes,
    263|     +createClass: typeof createClass,
-   264|     +createElement: typeof createElement,
-   265|     +cloneElement: typeof cloneElement,
-   266|     +createFactory: typeof createFactory,
-   267|     +isValidElement: typeof isValidElement,
-   268|     +Component: typeof Component,
-   269|     +PureComponent: typeof PureComponent,
-   270|     +Children: typeof Children,
-   271|   |};
+   264|     +createContext: typeof createContext,
+   265|     +createElement: typeof createElement,
+   266|     +cloneElement: typeof cloneElement,
+   267|     +createFactory: typeof createFactory,
+   268|     +createRef: typeof createRef,
+   269|     +isValidElement: typeof isValidElement,
+   270|     +Component: typeof Component,
+   271|     +PureComponent: typeof PureComponent,
+   272|     +Children: typeof Children,
+   273|   |};
           -^ [1]
 
 
@@ -222,14 +224,16 @@ References:
    261|     +version: typeof version,
    262|     +checkPropTypes: typeof checkPropTypes,
    263|     +createClass: typeof createClass,
-   264|     +createElement: typeof createElement,
-   265|     +cloneElement: typeof cloneElement,
-   266|     +createFactory: typeof createFactory,
-   267|     +isValidElement: typeof isValidElement,
-   268|     +Component: typeof Component,
-   269|     +PureComponent: typeof PureComponent,
-   270|     +Children: typeof Children,
-   271|   |};
+   264|     +createContext: typeof createContext,
+   265|     +createElement: typeof createElement,
+   266|     +cloneElement: typeof cloneElement,
+   267|     +createFactory: typeof createFactory,
+   268|     +createRef: typeof createRef,
+   269|     +isValidElement: typeof isValidElement,
+   270|     +Component: typeof Component,
+   271|     +PureComponent: typeof PureComponent,
+   272|     +Children: typeof Children,
+   273|   |};
           -^ [1]
 
 
@@ -250,14 +254,16 @@ References:
    261|     +version: typeof version,
    262|     +checkPropTypes: typeof checkPropTypes,
    263|     +createClass: typeof createClass,
-   264|     +createElement: typeof createElement,
-   265|     +cloneElement: typeof cloneElement,
-   266|     +createFactory: typeof createFactory,
-   267|     +isValidElement: typeof isValidElement,
-   268|     +Component: typeof Component,
-   269|     +PureComponent: typeof PureComponent,
-   270|     +Children: typeof Children,
-   271|   |};
+   264|     +createContext: typeof createContext,
+   265|     +createElement: typeof createElement,
+   266|     +cloneElement: typeof cloneElement,
+   267|     +createFactory: typeof createFactory,
+   268|     +createRef: typeof createRef,
+   269|     +isValidElement: typeof isValidElement,
+   270|     +Component: typeof Component,
+   271|     +PureComponent: typeof PureComponent,
+   272|     +Children: typeof Children,
+   273|   |};
           -^ [1]
 
 
