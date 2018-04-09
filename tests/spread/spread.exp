@@ -1,3 +1,35 @@
+Error --------------------------------------------------------------------------------------------------- exact.js:15:50
+
+Cannot determine the type of object literal [1] because it contains a spread of inexact object type [2]. Being inexact,
+object type [2] might be missing the types of some properties that are being copied. Perhaps you could make it exact?
+
+   exact.js:15:50
+   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
+                                                        ^^^^^^^^^^^
+
+References:
+   exact.js:15:36
+   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   exact.js:13:20
+   13| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
+                          ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ null.js:6:4
+
+Cannot get `empty.x` because property `x` is missing in object literal [1].
+
+   null.js:6:4
+   6|   (empty.x);
+         ^^^^^^^
+
+References:
+   null.js:5:17
+   5|   const empty = {...bar};
+                      ^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- test10.js:3:2
 
 Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
@@ -184,5 +216,44 @@ References:
                         ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- unsealed.js:6:10
 
-Found 12 errors
+Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2].
+
+   unsealed.js:6:10
+   6|   return o; // error, unsealed implies inexact
+               ^
+
+References:
+   unsealed.js:4:11
+   4|   var o = {};
+                ^^ [1]
+   unsealed.js:3:25
+   3| function foo1(b: bool): {| x?: number |} {
+                              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:25:4
+
+Cannot cast `b2.x` to string because:
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
+
+   unsealed.js:25:4
+   25|   (b2.x: string); // expected error: number ~/~> string
+          ^^^^
+
+References:
+   unsealed.js:9:31
+    9| function foo2(b: bool): { x?: number } {
+                                     ^^^^^^ [1]
+   unsealed.js:25:10
+   25|   (b2.x: string); // expected error: number ~/~> string
+                ^^^^^^ [2]
+   unsealed.js:16:18
+   16|   const a = { x: 42 };
+                        ^^ [3]
+
+
+
+Found 17 errors

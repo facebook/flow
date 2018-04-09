@@ -1436,7 +1436,7 @@ and json_of_obj_assign_kind json_cx =
 
 and json_of_obj_assign_kind_impl _json_cx kind = Hh_json.JSON_String (
   match kind with
-  | ObjAssign -> "normal"
+  | ObjAssign _ -> "normal"
   | ObjSpreadAssign -> "spread"
 )
 
@@ -2752,3 +2752,7 @@ let dump_flow_error =
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->
         spf "EExperimentalOptionalChaining (%s)" (string_of_loc loc)
+    | EInexactSpread (reason, reason_op) ->
+      spf "EInexactSpread (%s, %s)"
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)
