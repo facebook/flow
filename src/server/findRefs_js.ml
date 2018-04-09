@@ -470,7 +470,7 @@ end = struct
       >>| (@) local_defs
     end
 
-  let find_external_refs genv all_deps def_locs name =
+  let find_refs_in_multiple_files genv all_deps def_locs name =
     let {options; workers} = genv in
     let dep_list: File_key.t list = FilenameSet.elements all_deps in
     let node_modules_containers = !Files.node_modules_containers in
@@ -487,7 +487,12 @@ end = struct
       ~neutral: []
       ~next: (MultiWorkerLwt.next workers dep_list)
     in
-    Lwt.return (List.concat result |> Result.all)
+    (* The types got a little too complicated here. Writing out the intermediate types makes it a
+     * bit clearer. *)
+    let result: (Loc.t list, string) Result.t list = List.concat result in
+    let result: (Loc.t list list, string) Result.t = Result.all result in
+    let result: (Loc.t list, string) Result.t = result >>| List.concat in
+    Lwt.return result
 
   let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
@@ -544,16 +549,15 @@ end = struct
             env := new_env;
             let fileinput = File_input.FileName path in
             File_input.content_of_file_input fileinput %>>= fun content ->
-            compute_ast_result file_key content %>>= fun ast_info ->
-            find_refs_in_file options ast_info file_key def_locs name %>>= fun refs ->
             let%lwt all_deps, _ = get_dependents options workers env file_key content in
             let dependent_file_count = FilenameSet.cardinal all_deps in
+            let relevant_files = FilenameSet.add file_key all_deps in
             Hh_logger.info
               "find-refs: searching %d dependent modules for references"
               dependent_file_count;
-            let%lwt external_refs = find_external_refs genv all_deps def_locs name in
-            external_refs %>>| fun external_refs ->
-            Lwt.return (Some (name, List.concat (refs::external_refs), Some dependent_file_count))
+            let%lwt refs = find_refs_in_multiple_files genv relevant_files def_locs name in
+            refs %>>| fun refs ->
+            Lwt.return (Some (name, refs, Some dependent_file_count))
           else
             Lwt.return (
               compute_ast_result file_key content >>= fun ast_info ->
