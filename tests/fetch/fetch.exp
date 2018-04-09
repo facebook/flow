@@ -325,14 +325,13 @@ References:
                                      ^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- request.js:24:15
+Error -------------------------------------------------------------------------------------------------- request.js:24:1
 
-Cannot call `h.text().then` with function bound to `onFulfill` because `Buffer` [1] is incompatible with string [2] in
-the first argument.
+Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument.
 
-   request.js:24:15
+   request.js:24:1
     24| h.text().then((t: Buffer) => t); // incorrect
-                      ^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    request.js:24:19
@@ -343,14 +342,13 @@ References:
                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- request.js:26:22
+Error -------------------------------------------------------------------------------------------------- request.js:26:1
 
-Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because `ArrayBuffer` [1] is incompatible with
-`Buffer` [2] in the first argument.
+Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first argument.
 
-   request.js:26:22
+   request.js:26:1
     26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
-                             ^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:995:28
@@ -502,22 +500,21 @@ References:
    <BUILTINS>/bom.js:924:62
    924| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                      ^^^^^^^^^^^ [5]
-   <BUILTINS>/core.js:642:25
-   642| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:650:25
+   650| type $ArrayBufferView = $TypedArray | DataView;
                                 ^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:642:39
-   642| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:650:39
+   650| type $ArrayBufferView = $TypedArray | DataView;
                                               ^^^^^^^^ [7]
 
 
-Error ------------------------------------------------------------------------------------------------ response.js:42:15
+Error ------------------------------------------------------------------------------------------------- response.js:42:1
 
-Cannot call `h.text().then` with function bound to `onFulfill` because `Buffer` [1] is incompatible with string [2] in
-the first argument.
+Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument.
 
-   response.js:42:15
+   response.js:42:1
     42| h.text().then((t: Buffer) => t); // incorrect
-                      ^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    response.js:42:19
@@ -528,14 +525,13 @@ References:
                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ response.js:44:22
+Error ------------------------------------------------------------------------------------------------- response.js:44:1
 
-Cannot call `h.arrayBuffer().then` with function bound to `onFulfill` because `ArrayBuffer` [1] is incompatible with
-`Buffer` [2] in the first argument.
+Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first argument.
 
-   response.js:44:22
+   response.js:44:1
     44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
-                             ^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/bom.js:969:28

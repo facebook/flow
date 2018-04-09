@@ -84,8 +84,8 @@ Cannot call `Promise.all` because property `@@iterator` is missing in undefined 
         ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:622:19
-   622|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:630:19
+   630|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
@@ -99,8 +99,8 @@ in `$Iterable` [2].
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:622:19
-   622|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:630:19
+   630|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
