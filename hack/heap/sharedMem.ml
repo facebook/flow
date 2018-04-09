@@ -343,7 +343,7 @@ module type Key = sig
   (* Md5 primitives *)
   val md5     : t -> md5
   val md5_old : old -> md5
-
+  val string_of_md5 : md5 -> string
 end
 
 module KeyFunctor (UserKeyType : sig
@@ -375,6 +375,7 @@ end) : Key with type userkey = UserKeyType.t = struct
   let md5 = Digest.string
   let md5_old = Digest.string
 
+  let string_of_md5 x = x
 end
 
 (*****************************************************************************)
@@ -399,7 +400,6 @@ module Raw (Key: Key) (Value:Value.Type): sig
     val commit_all : unit -> unit
   end
 end = struct
-
   (* Returns the number of bytes allocated in the heap, or a negative number
    * if no new memory was allocated *)
   external hh_add    : Key.md5 -> Value.t -> int * int = "hh_add"
@@ -901,6 +901,8 @@ module type CacheType = sig
   val get: key -> value option
   val remove: key -> unit
   val clear: unit -> unit
+
+  val string_of_key : key -> string
 end
 
 (*****************************************************************************)
@@ -911,6 +913,9 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
   CacheType with type key := Key.t and type value := Config.value = struct
 
   type value = Config.value
+
+  let string_of_key  _key =
+    failwith "FreqCache does not support 'string_of_key'"
 
 (* The cache itself *)
   let (cache: (Key.t, int ref * Config.value) Hashtbl.t)
@@ -982,6 +987,9 @@ end
 module OrderedCache (Key : sig type t end) (Config:ConfigType):
   CacheType with type key := Key.t and type value := Config.value = struct
 
+  let string_of_key _key =
+    failwith "OrderedCache does not support 'string_of_key'"
+
   let (cache: (Key.t, Config.value) Hashtbl.t) =
     Hashtbl.create Config.capacity
 
@@ -1045,6 +1053,9 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   (* Frequent values cache *)
   module L2 = FreqCache (UserKeyType) (ConfValue)
 
+  let string_of_key _key =
+    failwith "LocalCache does not support 'string_of_key'"
+
   let add x y =
     L1.add x y;
     L2.add x y
@@ -1095,6 +1106,9 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   module KeyMap = Direct.KeyMap
 
   module Cache = LocalCache (UserKeyType) (Value)
+
+  let _string_of_key _key =
+    failwith "WithCache does not support 'string_of_key'"
 
   let add x y =
     Direct.add x y;

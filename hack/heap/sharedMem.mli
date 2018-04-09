@@ -256,6 +256,8 @@ module type CacheType = sig
   val get: key -> value option
   val remove: key -> unit
   val clear: unit -> unit
+
+  val string_of_key : key -> string
 end
 
 module LocalCache :
