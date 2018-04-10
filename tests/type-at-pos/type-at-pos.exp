@@ -478,6 +478,36 @@ class-3.js:10:9 = {
   "start":9,
   "end":9
 }
+class-getters-setters.js:6:7 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"class-getters-setters.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":7,"offset":50},
+    "end":{"line":6,"column":7,"offset":51}
+  },
+  "path":"class-getters-setters.js",
+  "line":6,
+  "endline":6,
+  "start":7,
+  "end":7
+}
+class-getters-setters.js:9:7 = {
+  "type":"?string",
+  "reasons":[],
+  "loc":{
+    "source":"class-getters-setters.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":7,"offset":88},
+    "end":{"line":9,"column":7,"offset":89}
+  },
+  "path":"class-getters-setters.js",
+  "line":9,
+  "endline":9,
+  "start":7,
+  "end":7
+}
 class-poly-0.js:5:7 = {
   "type":"class A<X: Base>",
   "reasons":[],

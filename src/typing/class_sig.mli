@@ -53,7 +53,7 @@ val add_constructor: Loc.t option -> Func_sig.t -> t -> t
 val append_constructor: Loc.t option -> Func_sig.t -> t -> t
 
 (** Add field to signature. *)
-val add_field: Context.t -> static:bool -> string -> field -> t -> t
+val add_field: static:bool -> string -> field -> t -> t
 
 (** Add method to signature.
 

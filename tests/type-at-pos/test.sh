@@ -92,6 +92,12 @@ assert_ok "$FLOW" type-at-pos class-3.js 9 9 --strip-root --pretty
 printf "class-3.js:10:9 = "
 assert_ok "$FLOW" type-at-pos class-3.js 10 9 --strip-root --pretty
 
+# class-getters-setters.js
+printf "class-getters-setters.js:6:7 = "
+assert_ok "$FLOW" type-at-pos class-getters-setters.js 6 7 --strip-root --pretty
+printf "class-getters-setters.js:9:7 = "
+assert_ok "$FLOW" type-at-pos class-getters-setters.js 9 7 --strip-root --pretty
+
 # class-poly-0.js
 printf "class-poly-0.js:5:7 = "
 assert_ok "$FLOW" type-at-pos class-poly-0.js 5 7 --strip-root --pretty

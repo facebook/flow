@@ -149,25 +149,13 @@ let add_default_constructor reason s =
 let append_constructor loc fsig s =
   {s with constructor = (loc, Func_sig.to_ctor_sig fsig)::s.constructor}
 
-let add_field_ ~static name fld = map_sig ~static (fun s -> {
+let add_field ~static name fld = map_sig ~static (fun s -> {
   s with
   fields = SMap.add name fld s.fields;
   methods = if static then SMap.remove name s.methods else s.methods;
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
 })
-
-let add_field cx ~static name fld =
-  let loc_type_opt = match fld with
-  | Some loc, _, Annot t -> Some (loc, t)
-  | Some loc, _, Infer func_sig -> Some (loc, Func_sig.gettertype func_sig)
-  | _ -> None
-  in
-  Option.iter ~f:(fun (loc, t) ->
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info (Context.type_table cx) loc id_info
-  ) loc_type_opt;
-  add_field_ ~static name fld
 
 let add_method ~static name loc fsig = map_sig ~static (fun s -> {
   s with
@@ -294,6 +282,17 @@ let elements cx ?constructor s =
      the getter. Otherwise just use the getter type or the setter type *)
   let getters = SMap.map (fun (loc, t) -> loc, Func_sig.gettertype t) s.getters in
   let setters = SMap.map (fun (loc, t) -> loc, Func_sig.settertype t) s.setters in
+
+  (* Register getters and setters with the type table *)
+  let register_accessors = SMap.iter (fun name (loc, t) ->
+    Option.iter ~f:(fun loc ->
+      let id_info = name, t, Type_table.Other in
+      Type_table.set_info (Context.type_table cx) loc id_info;
+    ) loc
+  ) in
+  register_accessors getters;
+  register_accessors setters;
+
   let getters_and_setters = SMap.merge (fun _ getter setter ->
     match getter, setter with
     | Some (loc1, t1), Some (loc2, t2) -> Some (Type.GetSet (loc1, t1, loc2, t2))
@@ -303,6 +302,19 @@ let elements cx ?constructor s =
   ) getters setters in
 
   let fields = SMap.map to_field s.fields in
+
+  (* Register fields with the type table *)
+  SMap.iter (fun name fld ->
+    let loc_type_opt = match fld with
+    | Some loc, _, Annot t -> Some (loc, t)
+    | Some loc, _, Infer func_sig -> Some (loc, Func_sig.gettertype func_sig)
+    | _ -> None
+    in
+    Option.iter ~f:(fun (loc, t) ->
+      let id_info = name, t, Type_table.Other in
+      Type_table.set_info (Context.type_table cx) loc id_info;
+    ) loc_type_opt
+  ) s.fields;
 
   (* Treat getters and setters as fields *)
   let fields = SMap.union getters_and_setters fields in
@@ -599,7 +611,7 @@ let mk cx _loc reason self ~expr =
   let class_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field cx ~static:true "name" (None, Type.Neutral, Annot t) class_sig
+    add_field ~static:true "name" (None, Type.Neutral, Annot t) class_sig
   in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -680,7 +692,7 @@ let mk cx _loc reason self ~expr =
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
         let field = mk_field cx (Some id_loc) ~polarity c reason annot value in
-        add_field cx ~static name field c
+        add_field ~static name field c
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -737,8 +749,8 @@ let add_interface_properties cx properties s =
       let v = Anno.convert cx tparams_map value in
       let polarity = Anno.polarity variance in
       x
-        |> add_field cx ~static "$key" (None, polarity, Annot k)
-        |> add_field cx ~static "$value" (None, polarity, Annot v)
+        |> add_field ~static "$key" (None, polarity, Annot k)
+        |> add_field ~static "$value" (None, polarity, Annot v)
     | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
@@ -767,7 +779,7 @@ let add_interface_properties cx properties s =
           Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.optional t else t in
-          add_field cx ~static name (Some id_loc, polarity, Annot t) x
+          add_field ~static name (Some id_loc, polarity, Annot t) x
 
       (* unsafe getter property *)
       | _, Property.Identifier (id_loc, name),
@@ -820,7 +832,7 @@ let of_interface cx reason { Ast.Statement.Interface.
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field cx ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
+    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
   in
 
   let iface_sig = add_interface_properties cx properties iface_sig in
@@ -879,7 +891,7 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field cx ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
+    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
   in
 
   let iface_sig = add_interface_properties cx properties iface_sig in
