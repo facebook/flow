@@ -96,6 +96,7 @@ type t = {
   id : int;
   kind : kind;
   mutable entries : Entry.t SMap.t;
+  mutable tparam_entries : Loc.t SMap.t;
   mutable refis : refi_binding Key_map.t;
 }
 val fresh_impl : kind -> t
@@ -105,6 +106,7 @@ val clone : t -> t
 val iter_entries : (SMap.key -> Entry.t -> unit) -> t -> unit
 val update_entries : (SMap.key -> Entry.t -> Entry.t) -> t -> unit
 val add_entry : SMap.key -> Entry.t -> t -> unit
+val add_tparam_entry : SMap.key -> Loc.t -> t -> unit
 val remove_entry : SMap.key -> t -> unit
 val get_entry : SMap.key -> t -> Entry.t option
 val havoc_entry : SMap.key -> t -> unit

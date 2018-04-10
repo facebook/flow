@@ -533,6 +533,15 @@ let bind_implicit_const ?(state=State.Undeclared) kind cx name t loc =
 let bind_type ?(state=State.Declared) cx name t loc =
   bind_entry cx name (Entry.new_type t ~loc ~state) loc
 
+let bind_type_param cx static name t =
+  let reason = reason_of_t t in
+  let loc = loc_of_reason reason in
+  let state = Scope.State.Initialized in
+  let def_loc = Reason.def_loc_of_reason reason in
+  if static && name = "this" then () else
+    Scope.add_tparam_entry name def_loc (peek_scope ());
+  bind_type ~state cx name (DefT (reason, TypeT t)) loc
+
 let bind_import_type cx name t loc =
   bind_entry cx name (Entry.new_import_type t ~loc) loc
 
@@ -1396,3 +1405,60 @@ let in_refined_env cx loc preds orig_types f =
   update_env cx loc orig_env;
 
   result
+
+
+(* Type table updates
+ *
+ * These callbacks used to belong to type_table.ml. However, we now use Scope.t to
+ * track type parameters in scope (tparam_entries), so that they are cleaned-up
+ * along with the rest of the scope elements. We had to move these callbacks here
+ * to avoid circular dependencies.
+ *)
+
+(* Returns the type parameters that are currently in scope *)
+let get_tparams () =
+  List.fold_left (fun acc scope -> Scope.(
+    SMap.fold (fun name loc acc ->
+      (name, loc)::acc
+    ) scope.tparam_entries acc;
+  )) [] (peek_env ())
+
+(* Adds a binding `(loc, t)` to the type table and specifies as type parameters:
+ * - the parameters returned by `get_tparams ()`, and
+ * - parameters provided by the `tparams_map` optional parameter. This case will
+ *   be useful when type parameters are not introduced as part of an enclosing
+ *   scope, but the type parameters are still required for a particular addition
+ *   to the type table (see for example Class_sig.add_field).
+ *)
+let add_type_table cx ?tparams_map loc t =
+  let tparams = get_tparams () in
+  (* TODO this will be used to populate the type table *)
+  let _tparams = match tparams_map with
+    | Some tparams_map -> SMap.fold (fun name t acc ->
+        (name, def_loc_of_t t)::acc
+      ) tparams_map tparams
+    | None -> tparams
+  in
+  let type_table = Context.type_table cx in
+  Type_table.set type_table loc t
+
+(* This is similar to the above, but also allows to specify a local type parameter
+ * in scope, though a tparam parameter of type Type.typeparam (useful for example
+ * for Type_annotation.mk_type_param_declarations).
+ *)
+let add_type_table_info cx ?tparams_map ?tparam loc t =
+  let tparams = get_tparams () in
+  let tparams = match tparams_map with
+    | Some tparams_map -> SMap.fold (fun name t acc ->
+        (name, def_loc_of_t t)::acc
+      ) tparams_map tparams
+    | None -> tparams
+  in
+  (* TODO this will be used to populate the type table *)
+  let _tparams = Type.(match tparam with
+    | Some { name; reason; _ } ->
+      (name, Reason.def_loc_of_reason reason)::tparams
+    | None -> tparams
+  ) in
+  let type_table = Context.type_table cx in
+  Type_table.set_info type_table loc t

@@ -71,6 +71,7 @@ val toplevels:
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)
+  bool -> (* static *)
   decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
   stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
   expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->

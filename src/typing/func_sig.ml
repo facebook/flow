@@ -184,7 +184,7 @@ let settertype {fparams; _} =
   | [(_, param_t)] -> param_t
   | _ -> failwith "Setter property with unexpected type"
 
-let toplevels id cx this super ~decls ~stmts ~expr
+let toplevels id cx this super static ~decls ~stmts ~expr
   {reason=reason_fn; kind; tparams_map; fparams; body; return_t; _} =
 
   let loc, reason =
@@ -228,10 +228,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* bind type params *)
   SMap.iter (fun name t ->
-    let r = reason_of_t t in
-    let loc = loc_of_reason r in
-    Env.bind_type cx name (DefT (r, TypeT t)) loc
-      ~state:Scope.State.Initialized
+    Env.bind_type_param cx static name t
   ) tparams_map;
 
   (* Check the rest parameter annotation *)

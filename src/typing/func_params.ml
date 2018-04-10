@@ -39,9 +39,9 @@ let mk cx type_params_map ~expr func =
           then Type.optional t
           else t
         in
-        Type_table.set (Context.type_table cx) loc t;
+        Env.add_type_table cx ~tparams_map:type_params_map loc t;
         let id_info = name, t, Type_table.Other in
-        Type_table.set_info (Context.type_table cx) id_loc id_info;
+        Env.add_type_table_info cx ~tparams_map:type_params_map id_loc id_info;
         let binding = Some name, t, loc in
         let list = Simple (t, binding) :: params.list in
         { params with list }
@@ -65,7 +65,7 @@ let mk cx type_params_map ~expr func =
           let reason = mk_reason (RIdentifier name) loc in
           EvalT (t, DestructuringT (reason, Become), mk_id())
         in
-        Type_table.set (Context.type_table cx) loc t;
+        Env.add_type_table cx ~tparams_map:type_params_map loc t;
         rev_bindings := (Some name, t, loc) :: !rev_bindings;
         Option.iter default ~f:(fun default ->
           defaults := SMap.add name default !defaults
@@ -124,7 +124,7 @@ let convert cx type_params_map func = Ast.Type.Function.(
     let binding = name, t, loc in
     Option.iter ~f:(fun (loc, name) ->
       let id_info = name, t, Type_table.Other in
-      Type_table.set_info (Context.type_table cx) loc id_info
+      Env.add_type_table_info cx ~tparams_map:type_params_map loc id_info
     ) id;
     { params with list = Simple (t, binding) :: params.list }
   in

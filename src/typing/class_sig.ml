@@ -249,7 +249,7 @@ let to_field (loc, polarity, field) =
   in
   Type.Field (loc, t, polarity)
 
-let elements cx ?constructor s =
+let elements cx ~tparams_map ?constructor s =
   let methods =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
@@ -261,7 +261,7 @@ let elements cx ?constructor s =
       ms |> Nel.iter (fun (loc, t) ->
         Option.iter loc ~f:(fun loc ->
           let id_info = name, t, Type_table.Other in
-          Type_table.set_info (Context.type_table cx) loc id_info
+          Env.add_type_table_info cx ~tparams_map loc id_info
         )
       );
       match ms with
@@ -287,7 +287,7 @@ let elements cx ?constructor s =
   let register_accessors = SMap.iter (fun name (loc, t) ->
     Option.iter ~f:(fun loc ->
       let id_info = name, t, Type_table.Other in
-      Type_table.set_info (Context.type_table cx) loc id_info;
+      Env.add_type_table_info cx ~tparams_map loc id_info
     ) loc
   ) in
   register_accessors getters;
@@ -312,7 +312,7 @@ let elements cx ?constructor s =
     in
     Option.iter ~f:(fun (loc, t) ->
       let id_info = name, t, Type_table.Other in
-      Type_table.set_info (Context.type_table cx) loc id_info;
+      Env.add_type_table_info cx ~tparams_map loc id_info
     ) loc_type_opt
   ) s.fields;
 
@@ -336,8 +336,8 @@ let arg_polarities x =
     SMap.add tp.name tp.polarity acc
   ) SMap.empty x.tparams
 
-let statictype cx s =
-  let inited_fields, fields, methods = elements cx s in
+let statictype cx ~tparams_map s =
+  let inited_fields, fields, methods = elements cx ~tparams_map s in
   let props = SMap.union fields methods
     ~combine:(fun _ _ ->
       Utils_js.assert_false (Utils_js.spf
@@ -355,7 +355,7 @@ let statictype cx s =
   | DefT (_, ObjT o) -> inited_fields, o
   | _ -> failwith "statics must be an ObjT"
 
-let insttype cx ~initialized_static_field_names s =
+let insttype cx ~tparams_map ~initialized_static_field_names s =
   let constructor =
     let ts = List.rev_map (fun (loc, t) -> loc, Func_sig.methodtype cx t) s.constructor in
     match ts with
@@ -367,7 +367,7 @@ let insttype cx ~initialized_static_field_names s =
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some (loc0, t)
   in
-  let inited_fields, fields, methods = elements cx ?constructor s.instance in
+  let inited_fields, fields, methods = elements cx ~tparams_map ?constructor s.instance in
   { Type.
     class_id = s.id;
     type_args = SMap.map (fun t -> (Type.reason_of_t t, t)) s.tparams_map;
@@ -414,16 +414,18 @@ let remove_this x =
   }
 
 let thistype cx x =
+  let tparams_map_with_this = x.tparams_map in
   let x = remove_this x in
   let {
     implements;
     static = {reason = sreason; _};
     instance = {reason; super; _};
+    tparams_map;
     _;
   } = x in
   let open Type in
-  let initialized_static_field_names, static_objtype = statictype cx x.static in
-  let insttype = insttype cx ~initialized_static_field_names x in
+  let initialized_static_field_names, static_objtype = statictype cx ~tparams_map x.static in
+  let insttype = insttype cx ~tparams_map:tparams_map_with_this ~initialized_static_field_names x in
   let static = DefT (sreason, ObjT static_objtype) in
   DefT (reason, InstanceT (static, super, implements, insttype))
 
@@ -444,8 +446,9 @@ let check_super cx def_reason x =
   let x = remove_this x in
   let reason = x.instance.reason in
   let open Type in
-  let initialized_static_field_names, static_objtype = statictype cx x.static in
-  let insttype = insttype cx ~initialized_static_field_names x in
+  let tparams_map = x.tparams_map in
+  let initialized_static_field_names, static_objtype = statictype cx ~tparams_map x.static in
+  let insttype = insttype cx ~tparams_map ~initialized_static_field_names x in
   let use_op = Op (ClassExtendsCheck {
     def = def_reason;
     name = reason;
@@ -584,9 +587,9 @@ let mk cx _loc reason self ~expr =
       let reason = mk_reason (RType name) super_loc in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
       let id_info = name, c, Type_table.Other in
-      Type_table.set_info (Context.type_table cx) loc id_info;
       let targs = Anno.extract_type_param_instantiations targs in
       let t = Anno.mk_nominal_type cx reason tparams_map (c, targs) in
+      Env.add_type_table_info cx ~tparams_map loc id_info;
       Flow.reposition cx super_loc ~annot_loc:super_loc t
     ) implements in
     let super = Class { extends; mixins = []; implements } in
@@ -810,11 +813,12 @@ let of_interface cx reason { Ast.Statement.Interface.
   _;
 } =
   let self = Tvar.mk cx reason in
-  let id_info = id_name, self, Type_table.Other in
-  Type_table.set_info (Context.type_table cx) id_loc id_info;
 
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx tparams in
+
+  let id_info = id_name, self, Type_table.Other in
+  Env.add_type_table_info cx ~tparams_map id_loc id_info;
 
   let iface_sig =
     let id = Context.make_nominal cx in
@@ -912,21 +916,21 @@ let toplevels cx ~decls ~stmts ~expr x =
   Env.in_lex_scope cx (fun () ->
     let new_entry t = Scope.Entry.new_var ~loc:(Type.loc_of_t t) t in
 
-    let method_ this super f =
+    let method_ this super ~static f =
       let save_return = Abnormal.clear_saved Abnormal.Return in
       let save_throw = Abnormal.clear_saved Abnormal.Throw in
       f |> Func_sig.generate_tests cx (
-        Func_sig.toplevels None cx this super ~decls ~stmts ~expr
+        Func_sig.toplevels None cx this super static ~decls ~stmts ~expr
       );
       ignore (Abnormal.swap_saved Abnormal.Return save_return);
       ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
     in
 
-    let field config this super _name (_, _, value) =
+    let field config this super ~static _name (_, _, value) =
       match config, value with
       | Options.ESPROPOSAL_IGNORE, _ -> ()
       | _, Annot _ -> ()
-      | _, Infer fsig -> method_ this super fsig
+      | _, Infer fsig -> method_ this super ~static fsig
     in
 
     let this = SMap.find_unsafe "this" x.tparams_map in
@@ -940,10 +944,10 @@ let toplevels cx ~decls ~stmts ~expr x =
     x |> with_sig ~static:true (fun s ->
       (* process static methods and fields *)
       let this, super = new_entry static, new_entry s.super in
-      iter_methods (fun (_loc, f) -> method_ this super f) s;
+      iter_methods (fun (_loc, f) -> method_ this super true f) s;
       let config = Context.esproposal_class_static_fields cx in
-      SMap.iter (field config this super) s.fields;
-      SMap.iter (field config this super) s.private_fields
+      SMap.iter (field config this super ~static:true) s.fields;
+      SMap.iter (field config this super ~static:true) s.private_fields
     );
 
     x |> with_sig ~static:false (fun s ->
@@ -972,16 +976,16 @@ let toplevels cx ~decls ~stmts ~expr x =
             new_entry t
         in
         let this, super = new_entry this, new_entry s.super in
-        x.constructor |> List.iter (fun (_, fsig) -> method_ this super fsig)
+        x.constructor |> List.iter (fun (_, fsig) -> method_ this super false fsig)
       end;
 
       (* process instance methods and fields *)
       begin
         let this, super = new_entry this, new_entry s.super in
-        iter_methods (fun (_, msig) -> method_ this super msig) s;
+        iter_methods (fun (_, msig) -> method_ this super false msig) s;
         let config = Context.esproposal_class_instance_fields cx in
-        SMap.iter (field config this super) s.fields;
-        SMap.iter (field config this super) s.private_fields;
+        SMap.iter (field config this super ~static:false) s.fields;
+        SMap.iter (field config this super ~static:false) s.private_fields;
       end
   ))
 
