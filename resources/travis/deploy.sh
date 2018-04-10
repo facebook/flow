@@ -6,13 +6,8 @@ set +x
 PAGES_CHECKOUT="$HOME/flowtype.org"
 export BUNDLE_GEMFILE="${TRAVIS_BUILD_DIR}/website/Gemfile"
 
-case "$TRAVIS_OS_NAME" in
-  osx)
-    ;; # OS X already has a recent version of node
-  *)
-    source $HOME/.nvm/nvm.sh
-    nvm use 6 # should've been installed by before_install.sh
-esac
+source $HOME/.nvm/nvm.sh
+nvm use 6 # should've been installed by before_install.sh
 
 # Add Yarn to PATH
 export PATH="${TRAVIS_BUILD_DIR}/resources/travis/node_modules/.bin:$PATH"

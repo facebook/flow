@@ -70,15 +70,8 @@ unset PREFIX
 printf "travis_fold:end:opam_installer\n"
 
 printf "travis_fold:start:yarn_install\nInstalling yarn dependencies\n"
-  case "$TRAVIS_OS_NAME" in
-    osx)
-      # OS X has a modern version of node already
-      export PATH="$PATH:`yarn global bin`"
-      ;;
-    *)
-      source $HOME/.nvm/nvm.sh
-      nvm use 6
-  esac
+  source $HOME/.nvm/nvm.sh
+  nvm use 6
 
   printf "Using yarn version $(yarn --version)\n"
 
