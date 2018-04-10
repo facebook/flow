@@ -7,11 +7,11 @@
 import colors from 'colors/safe';
 
 import {format} from 'util';
-import {basename, dirname, resolve} from 'path';
+import {basename, dirname, resolve, join} from 'path';
 import {spawn} from 'child_process';
 
 import {getTestsDir} from '../constants';
-import {drain, rimraf, symlink} from '../utils/async';
+import {drain, readFile, rimraf, symlink} from '../utils/async';
 import Builder from './builder';
 import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
 import RunQueue from './RunQueue';
@@ -309,6 +309,30 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
               await write(process.stdout, '%s\n', message);
             }
           }
+        }
+        const didTestFail = testResult.stepResults.some(r => !r.passed);
+        if (didTestFail) {
+          const logFile = join(
+            builder.baseDirForSuite(suiteName),
+            'tmp',
+            String(testNum + 1),
+            'test.log',
+          );
+          const logCommand =
+            process.env['VISUAL'] || process.env['EDITOR'] || 'cat';
+          let logContents = '';
+          try {
+            logContents = await readFile(logFile);
+          } catch (e) {
+            logContents = e.message != null ? e.message : String(e);
+          }
+          await write(
+            process.stdout,
+            colors.grey.bold('%s %s') + '\n' + colors.grey('%s') + '\n',
+            logCommand,
+            logFile,
+            logContents,
+          );
         }
       }
     }

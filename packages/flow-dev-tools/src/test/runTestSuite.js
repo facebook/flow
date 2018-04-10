@@ -139,7 +139,8 @@ export default (async function(
         }
       }
 
-      for (const step of steps) {
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
         if (!(step instanceof TestStep)) {
           throw new Error(format('Expected a TestStep, instead got', step));
         }
@@ -161,6 +162,7 @@ export default (async function(
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
 
+        await testBuilder.log('\nSTEP %d', i + 1);
         await step.performActions(testBuilder, envWrite);
 
         let oldErrors = flowErrors;
