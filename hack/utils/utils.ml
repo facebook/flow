@@ -212,3 +212,6 @@ let infimum (arr : 'a array)
     end
   end in
   binary_search 0 ((Array.length arr) - 1)
+
+(** Callstack is simply a typed way to indicate that a string is a callstack *)
+type callstack = Callstack of string
