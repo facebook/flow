@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import simpleDiffAssertion from './simpleDiffAssertion';
 
@@ -11,13 +15,13 @@ export default function(
   return (reason: ?string, env) => {
     const actual = JSON.stringify(env.getExitCodes(), null, 2);
     const expected = JSON.stringify(expectedArr, null, 2);
-    const suggestion = { method: 'exitCodes', args: [actual] };
+    const suggestion = {method: 'exitCodes', args: [actual]};
     return simpleDiffAssertion(
       expected,
       actual,
       assertLoc,
       reason,
-      "exit codes",
+      'exit codes',
       suggestion,
     );
   };

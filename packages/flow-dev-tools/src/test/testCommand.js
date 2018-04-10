@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import {resolve} from 'path';
 import {format} from 'util';
@@ -12,7 +16,7 @@ export type Args = {
   bin: string,
   fbmakeJson: boolean,
   parallelism: number,
-  errorCheckCommand: "check" | "status",
+  errorCheckCommand: 'check' | 'status',
   rerun: ?string,
   failedOnly: boolean,
   watch: boolean,
@@ -24,15 +28,17 @@ export type Args = {
 export default class TestCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
-    if (argv.rerun != null && argv["rerun-failed"] != null) {
-      process.stderr.write("You cannot set both --rerun and --rerun-failed\n");
+    if (argv.rerun != null && argv['rerun-failed'] != null) {
+      process.stderr.write('You cannot set both --rerun and --rerun-failed\n');
       this.showUsage(this.BAD_ARGS);
     }
-    if (argv['max-errored-tests'] != null &&
-        argv['max-errored-tests-pct'] != null) {
+    if (
+      argv['max-errored-tests'] != null &&
+      argv['max-errored-tests-pct'] != null
+    ) {
       process.stderr.write(
-        "You cannot set both --max-errored-tests and --max-errored-tests-pct." +
-          " Use one or the other.\n",
+        'You cannot set both --max-errored-tests and --max-errored-tests-pct.' +
+          ' Use one or the other.\n',
       );
       this.showUsage(this.BAD_ARGS);
     }
@@ -42,8 +48,8 @@ export default class TestCommand extends Base<Args> {
       fbmakeJson: argv.fbmakeJson,
       parallelism: argv.parallelism,
       errorCheckCommand: argv.check,
-      rerun: argv.rerun || argv["rerun-failed"],
-      failedOnly: !!argv["rerun-failed"],
+      rerun: argv.rerun || argv['rerun-failed'],
+      failedOnly: !!argv['rerun-failed'],
       watch: Boolean(argv.watch),
       buckCpTestsDir: argv['buck-copy-tests-dir'],
       maxErroredTests: argv['max-errored-tests'],
@@ -56,7 +62,7 @@ export default class TestCommand extends Base<Args> {
   }
 
   static description(): string {
-    return "Runs tests";
+    return 'Runs tests';
   }
 
   static async usage(): Promise<string> {
@@ -78,49 +84,51 @@ SUITE
       commonFlags.parallelism,
       commonFlags.errorCheckCommand,
       {
-        type: "boolean",
-        name: "fbmakeJson",
-        description: "Output JSON for fbmake",
+        type: 'boolean',
+        name: 'fbmakeJson',
+        description: 'Output JSON for fbmake',
       },
       {
-        type: "string",
-        name: "rerun",
-        argName: "RUN",
-        description: "Rerun tests from a previous test run",
+        type: 'string',
+        name: 'rerun',
+        argName: 'RUN',
+        description: 'Rerun tests from a previous test run',
       },
       {
-        type: "string",
-        name: "rerun-failed",
-        argName: "RUN",
-        description: "Rerun failed tests from a previous test run",
+        type: 'string',
+        name: 'rerun-failed',
+        argName: 'RUN',
+        description: 'Rerun failed tests from a previous test run',
       },
       {
-        type: "boolean",
-        name: "watch",
-        description: "Automatically rerun tests when they change",
+        type: 'boolean',
+        name: 'watch',
+        description: 'Automatically rerun tests when they change',
       },
       {
-        type: "string",
-        name: "buck-copy-tests-dir",
-        argName: "PATH",
+        type: 'string',
+        name: 'buck-copy-tests-dir',
+        argName: 'PATH',
         description: format(
           "You probably don't want to use this option. " +
-          "It's basically `rm %s; cp $PATH %s`.",
+            "It's basically `rm %s; cp $PATH %s`.",
           defaultTestsDirName,
           defaultTestsDirName,
         ),
       },
       {
-        type: "string",
-        name: "max-errored-tests",
-        argName: "N",
-        description: "If more than N tests error, test run will return a non-zero exit code",
+        type: 'string',
+        name: 'max-errored-tests',
+        argName: 'N',
+        description:
+          'If more than N tests error, test run will return a non-zero exit code',
       },
       {
-        type: "string",
-        name: "max-errored-tests-pct",
-        argName: "P",
-        description: "If more than P% tests error, test run will return a non-zero exit code",
+        type: 'string',
+        name: 'max-errored-tests-pct',
+        argName: 'P',
+        description:
+          'If more than P% tests error, test run will return a non-zero exit code',
       },
     ];
   }

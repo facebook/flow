@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 export type MessageHandler = (...args: any) => mixed;
 export type RpcConnection = {
@@ -11,5 +15,5 @@ export type RpcConnection = {
 };
 
 export type IDEMessage =
-  | { method: string, params: $ReadOnlyArray<mixed> } // Notification
-  | { result: Array<mixed> }; // Autocomplete result
+  | {method: string, params: $ReadOnlyArray<mixed>} // Notification
+  | {result: Array<mixed>}; // Autocomplete result

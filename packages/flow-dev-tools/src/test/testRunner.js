@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import colors from 'colors/safe';
 
@@ -36,37 +40,35 @@ function startWatchAndRun(suites, args) {
   let changedThings = new Set();
   let queuedMessages = [];
 
-  process.stderr.write(
-    format("Watching %d suites\n", suites.size),
-  );
+  process.stderr.write(format('Watching %d suites\n', suites.size));
 
   let shortcuts: Map<string, [string, () => Promise<mixed>]> = new Map();
 
   const printShortcuts = () => {
-    process.stdout.write("\nShortcuts:\n");
+    process.stdout.write('\nShortcuts:\n');
     for (const [char, [descr, _]] of shortcuts.entries()) {
-      process.stdout.write(format("%s    %s\n", char, descr));
+      process.stdout.write(format('%s    %s\n', char, descr));
     }
-    process.stdout.write("> ");
-  }
+    process.stdout.write('> ');
+  };
 
-  const keydown = (chunk) => {
+  const keydown = chunk => {
     const char = chunk.toString()[0];
 
     const shortcut = shortcuts.get(char);
 
     if (shortcut) {
       const [name, fn] = shortcut;
-      process.stdout.write(format("%s\n\n", name));
+      process.stdout.write(format('%s\n\n', name));
       fn();
     } else {
-      process.stdout.write(format("Unknown shortcut: %s\n", char));
+      process.stdout.write(format('Unknown shortcut: %s\n', char));
       printShortcuts();
     }
-  }
+  };
 
   const startListeningForShortcuts = () => {
-    if (typeof process.stdin.setRawMode === "function") {
+    if (typeof process.stdin.setRawMode === 'function') {
       process.stdin.setRawMode(true);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
@@ -74,16 +76,16 @@ function startWatchAndRun(suites, args) {
 
       printShortcuts();
     }
-  }
+  };
 
   const stopListeningForShortcuts = () => {
-    if (typeof process.stdin.setRawMode === "function") {
+    if (typeof process.stdin.setRawMode === 'function') {
       process.stdin.setRawMode(false);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.removeListener('data', keydown);
     }
-  }
+  };
 
   const run = async () => {
     if (running === true) {
@@ -91,10 +93,10 @@ function startWatchAndRun(suites, args) {
     }
 
     if (changedThings.size > 0) {
-      process.stderr.write("\n!!!!!!!!!!!!!!!!\n");
+      process.stderr.write('\n!!!!!!!!!!!!!!!!\n');
       for (const changedThing of changedThings) {
         process.stderr.write(
-          format("Watcher noticed that %s changed\n", changedThing),
+          format('Watcher noticed that %s changed\n', changedThing),
         );
       }
     }
@@ -114,30 +116,32 @@ function startWatchAndRun(suites, args) {
       try {
         suitesToRun[suiteName] = loadSuite(suiteName);
       } catch (e) {
-        process.stderr.write(format(
-          colors.red.bold("Failed to load test suite `%s`\n%s\n"),
-          colors.blue(suiteName),
-          e.stack,
-        ));
+        process.stderr.write(
+          format(
+            colors.red.bold('Failed to load test suite `%s`\n%s\n'),
+            colors.blue(suiteName),
+            e.stack,
+          ),
+        );
       }
     }
 
     if (Object.keys(suitesToRun).length > 0) {
       const [exitCode, runID] = await runOnce(suitesToRun, args);
 
-      shortcuts.set(
-        't',
-        ["rerun the tests you just ran", () => rerun(runID, false)],
-      );
+      shortcuts.set('t', [
+        'rerun the tests you just ran',
+        () => rerun(runID, false),
+      ]);
       if (exitCode) {
-        shortcuts.set(
-          'f',
-          ["rerun only the tests that just failed", () => rerun(runID, true)],
-        );
-        shortcuts.set(
-          'r',
-          ["record the tests that just failed", () => record(runID)],
-        )
+        shortcuts.set('f', [
+          'rerun only the tests that just failed',
+          () => rerun(runID, true),
+        ]);
+        shortcuts.set('r', [
+          'record the tests that just failed',
+          () => record(runID),
+        ]);
       } else {
         shortcuts.delete('f');
         shortcuts.delete('r');
@@ -147,7 +151,7 @@ function startWatchAndRun(suites, args) {
     running = false;
     startListeningForShortcuts();
     run();
-  }
+  };
 
   async function rerun(runID, failedOnly) {
     suites = await findTestsByRun(runID, failedOnly);
@@ -161,12 +165,12 @@ function startWatchAndRun(suites, args) {
 
     const child = spawn(
       process.argv[0],
-      [process.argv[1], "record", "--rerun-failed", runID],
+      [process.argv[1], 'record', '--rerun-failed', runID],
       {stdio: 'inherit'},
     );
     const code = await new Promise((resolve, reject) => {
       child.on('close', resolve);
-    })
+    });
 
     if (code === 0) {
       shortcuts.delete('f');
@@ -183,27 +187,30 @@ function startWatchAndRun(suites, args) {
 
       // We may have a lot of FS events...wait for things to settle
       setTimeout(run, 500);
-    }
+    };
     watcher.on('change', callback);
     watcher.on('add', callback);
     watcher.on('delete', callback);
   };
 
-  shortcuts.set('q', ["quit", async () => process.exit(0)]);
-  shortcuts.set('a', ["run all the tests", async () => {
-    suites.forEach(suiteName => queuedSet.add(suiteName));
-    run();
-  }])
+  shortcuts.set('q', ['quit', async () => process.exit(0)]);
+  shortcuts.set('a', [
+    'run all the tests',
+    async () => {
+      suites.forEach(suiteName => queuedSet.add(suiteName));
+      run();
+    },
+  ]);
   startListeningForShortcuts();
 
   watch(
     sane(dirname(args.bin), {glob: [basename(args.bin)]}),
-    "the Flow binary",
+    'the Flow binary',
     Array.from(suites),
   );
   for (const suite of suites) {
     const suiteDir = resolve(getTestsDir(), suite);
-    watch(sane(suiteDir), format("the `%s` suite", suite), [suite]);
+    watch(sane(suiteDir), format('the `%s` suite', suite), [suite]);
   }
 }
 
@@ -219,9 +226,9 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   if (maxErroredTests > 0) {
     process.stderr.write(
       format(
-        "A maximum of %d suite%s allowed to error\n",
+        'A maximum of %d suite%s allowed to error\n',
         maxErroredTests,
-        maxErroredTests === 1 ? " is" : "s are",
+        maxErroredTests === 1 ? ' is' : 's are',
       ),
     );
   }
@@ -252,10 +259,12 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
       }
       await write(
         process.stdout,
-        colors.bgRed(colors.white.bold("ERRORED"))+
-          colors.grey(": suite ")+
-          colors.blue("%s") + "\n" +
-          colors.red("%s") + "\n",
+        colors.bgRed(colors.white.bold('ERRORED')) +
+          colors.grey(': suite ') +
+          colors.blue('%s') +
+          '\n' +
+          colors.red('%s') +
+          '\n',
         suiteName,
         suiteResult.message,
       );
@@ -263,36 +272,41 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
       const {testResults} = suiteResult;
       for (let testNum = 0; testNum < testResults.length; testNum++) {
         const testResult = testResults[testNum];
-        for (let stepNum = 0; stepNum < testResult.stepResults.length; stepNum++) {
+        for (
+          let stepNum = 0;
+          stepNum < testResult.stepResults.length;
+          stepNum++
+        ) {
           const result = testResult.stepResults[stepNum];
-          if(!result.passed) {
+          if (!result.passed) {
             exitCode = 1;
             await write(
               process.stdout,
-              colors.red.bold("FAILED")+
-                colors.grey(": suite ")+
-                colors.blue("%s")+
-                colors.grey(", test ")+
-                colors.blue("%s")+
-                colors.grey(" (%d of %d), step %d of %d") + "\n",
+              colors.red.bold('FAILED') +
+                colors.grey(': suite ') +
+                colors.blue('%s') +
+                colors.grey(', test ') +
+                colors.blue('%s') +
+                colors.grey(' (%d of %d), step %d of %d') +
+                '\n',
               suiteName,
-              testResult.name || "unnamed test",
-              testNum+1,
+              testResult.name || 'unnamed test',
+              testNum + 1,
               testResults.length,
-              stepNum+1,
+              stepNum + 1,
               testResult.stepResults.length,
             );
             const messages = [];
             if (result.exception !== undefined) {
-              messages.push(format("Uncaught exception: %s", result.exception));
+              messages.push(format('Uncaught exception: %s', result.exception));
             }
             for (const assertionResult of result.assertionResults) {
-              if (assertionResult.type === "fail") {
+              if (assertionResult.type === 'fail') {
                 messages.push(...assertionResult.messages);
               }
             }
             for (const message of messages) {
-              await write(process.stdout, "%s\n", message);
+              await write(process.stdout, '%s\n', message);
             }
           }
         }
@@ -302,40 +316,36 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
 
   const runID = builder.runID;
   const nextSteps: Array<[string, string]> = [
-    [
-      "Rerun the tests you just ran",
-      `./tool test --rerun ${runID}`,
-    ],
+    ['Rerun the tests you just ran', `./tool test --rerun ${runID}`],
   ];
 
   if (exitCode != 0) {
-    nextSteps.push(
-      [
-        "Rerun the tests that just failed",
-        `./tool test --rerun-failed ${runID}`,
-      ],
-    );
-    nextSteps.push(
-      [
-        "Record the tests that just failed",
-        `./tool record --rerun-failed ${runID}`,
-      ],
-    );
-  };
-
-  await write(process.stderr, "Possible next steps:");
-  for (const [descr, cmd] of nextSteps) {
-    await write(process.stderr, `
-  ${descr}
-    ${cmd}`);
+    nextSteps.push([
+      'Rerun the tests that just failed',
+      `./tool test --rerun-failed ${runID}`,
+    ]);
+    nextSteps.push([
+      'Record the tests that just failed',
+      `./tool record --rerun-failed ${runID}`,
+    ]);
   }
-  await write(process.stderr, "\n\n");
+
+  await write(process.stderr, 'Possible next steps:');
+  for (const [descr, cmd] of nextSteps) {
+    await write(
+      process.stderr,
+      `
+  ${descr}
+    ${cmd}`,
+    );
+  }
+  await write(process.stderr, '\n\n');
 
   return [exitCode, runID];
 }
 
-export default async function(args: Args): Promise<void> {
-  process.env.IN_FLOW_TEST = "1";
+export default (async function(args: Args): Promise<void> {
+  process.env.IN_FLOW_TEST = '1';
 
   await write(process.stderr, `Using flow binary: ${args.bin}\n`);
 
@@ -346,7 +356,6 @@ export default async function(args: Args): Promise<void> {
     await rimraf(dest);
     await symlink(src, dest);
   }
-
 
   let suites;
   if (args.rerun != null) {
@@ -366,8 +375,8 @@ export default async function(args: Args): Promise<void> {
       const [exitCode, _] = await runOnce(loadedSuites, args);
       process.exit(exitCode);
     } else {
-      process.stderr.write("No suites to run\n");
+      process.stderr.write('No suites to run\n');
       process.exit(1);
     }
   }
-}
+});

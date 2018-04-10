@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import simpleDiffAssertion from './simpleDiffAssertion';
 
@@ -10,7 +14,7 @@ export default function(
 ): ErrorAssertion {
   return (reason: ?string, env) => {
     const actual = env.getServerRunning();
-    const suggestion = { method: 'serverRunning', args: [actual] };
+    const suggestion = {method: 'serverRunning', args: [actual]};
     return simpleDiffAssertion(
       String(expected),
       String(actual),

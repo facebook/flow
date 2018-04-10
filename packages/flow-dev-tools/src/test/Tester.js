@@ -1,11 +1,15 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import {format} from 'util';
 
 import Suite from './Suite';
 import Test from './Test';
 
-import type {TestStep, TestStepFirstStage} from './TestStep'
+import type {TestStep, TestStepFirstStage} from './TestStep';
 
 export type StepList = Array<TestStep>;
 export type Steps = (tester: TestStepFirstStage) => StepList;

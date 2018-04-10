@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import simpleDiffAssertion from './simpleDiffAssertion';
 
@@ -9,18 +13,19 @@ export default function(
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
-    const actual = env.getStdout()
-      .split("\n")
-      .filter(line => line !== "") // Whitespace in a sorted stdout isn't useful
+    const actual = env
+      .getStdout()
+      .split('\n')
+      .filter(line => line !== '') // Whitespace in a sorted stdout isn't useful
       .sort()
-      .join("\n");
-    const suggestion = { method: 'sortedStdout', args: [actual] };
+      .join('\n');
+    const suggestion = {method: 'sortedStdout', args: [actual]};
     return simpleDiffAssertion(
       expected,
       actual,
       assertLoc,
       reason,
-      "sortedStdout",
+      'sortedStdout',
       suggestion,
     );
   };

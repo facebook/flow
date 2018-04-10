@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import simpleDiffAssertion from './simpleDiffAssertion';
 
@@ -19,13 +23,13 @@ export default function(
   return (reason: ?string, env) => {
     const actual = formatIfJSON(env.getIDEStderr());
     expected = formatIfJSON(expected);
-    const suggestion = { method: 'ideStderr', args: [formatIfJSON(actual)] };
+    const suggestion = {method: 'ideStderr', args: [formatIfJSON(actual)]};
     return simpleDiffAssertion(
       expected,
       actual,
       assertLoc,
       reason,
-      "ideStderr",
+      'ideStderr',
       suggestion,
     );
   };

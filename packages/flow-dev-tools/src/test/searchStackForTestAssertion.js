@@ -1,10 +1,13 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import {sync as resolve} from 'resolve';
 import {dirname} from 'path';
 
 import type {AssertionLocation} from './assertions/assertionTypes';
-
 
 /* We need to use source-map-support in order to extract the right locations
  * from a stack trace. Unfortunately, we need to use the exact same version
@@ -14,10 +17,9 @@ let wrapCallSite = null;
 function getWrapCallSite() {
   if (wrapCallSite == null) {
     const babelRegisterPath = resolve('babel-register');
-    const sourceMapSupportPath = resolve(
-      'source-map-support',
-      {basedir: dirname(babelRegisterPath)},
-    );
+    const sourceMapSupportPath = resolve('source-map-support', {
+      basedir: dirname(babelRegisterPath),
+    });
     // $FlowFixMe - This is necessary :(
     wrapCallSite = require(sourceMapSupportPath).wrapCallSite;
   }
@@ -29,7 +31,7 @@ export default function(): ?AssertionLocation {
 
   const wrapCallSite = getWrapCallSite();
   Error.prepareStackTrace = (_, stack) => stack.map(wrapCallSite);
-  const stack: Array<Object> = ((new Error()).stack: any);
+  const stack: Array<Object> = (new Error().stack: any);
   Error.prepareStackTrace = oldPrepareStackTrace;
 
   for (const callSite of stack) {

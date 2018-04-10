@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import type {FlowResult} from '../flowResult';
 import type {IDEMessage} from './ide';
@@ -28,7 +32,7 @@ export interface StepEnvReadable {
 
 export function newEnv(
   oldErrors: FlowResult,
-): { envWrite: StepEnvWriteable, envRead: StepEnvReadable } {
+): {envWrite: StepEnvWriteable, envRead: StepEnvReadable} {
   let stdout = [];
   let stderr = [];
   let exitCodes = [];
@@ -36,7 +40,7 @@ export function newEnv(
   let serverRunning = false;
   let shouldRunFlow = false;
   let ideMessages = [];
-  let ideStderr = "";
+  let ideStderr = '';
 
   const envWrite = {
     reportStdout(output) {
@@ -69,16 +73,16 @@ export function newEnv(
 
     triggerFlowCheck() {
       shouldRunFlow = true;
-    }
-  }
+    },
+  };
 
   const envRead: StepEnvReadable = {
     getStdout() {
-      return stdout.join("\n");
+      return stdout.join('\n');
     },
 
     getStderr() {
-      return stderr.join("\n");
+      return stderr.join('\n');
     },
 
     getExitCodes() {
@@ -108,7 +112,7 @@ export function newEnv(
     shouldRunFlow() {
       return shouldRunFlow;
     },
-  }
+  };
 
-  return { envWrite, envRead };
+  return {envWrite, envRead};
 }

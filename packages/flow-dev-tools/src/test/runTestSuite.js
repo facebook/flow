@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import colors from 'colors/safe';
 import {format} from 'util';
@@ -17,15 +21,17 @@ type TestResult = {
   stepResults: Array<StepResult>,
 };
 
-export type SuiteResult = {
-  type: 'exceptional',
-  message: string,
-} | {
-  type: 'normal',
-  testResults: Array<TestResult>,
-};
+export type SuiteResult =
+  | {
+      type: 'exceptional',
+      message: string,
+    }
+  | {
+      type: 'normal',
+      testResults: Array<TestResult>,
+    };
 
-export default async function(
+export default (async function(
   bin: string,
   builder: Builder,
   suiteName: string,
@@ -41,18 +47,18 @@ export default async function(
   let totalTests = 0;
 
   function printStatus(status: 'RUN' | 'PASS' | 'FAIL' | 'ERROR'): void {
-    let statusText = colors.grey.bold("[ ] RUN")+":  ";
+    let statusText = colors.grey.bold('[ ] RUN') + ':  ';
     if (status === 'PASS') {
-      statusText = colors.green.bold("[\u2713] PASS")+": "; // checkmark unicode
+      statusText = colors.green.bold('[\u2713] PASS') + ': '; // checkmark unicode
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold("[\u2717] FAIL")+": "; // x unicode
+      statusText = colors.red.bold('[\u2717] FAIL') + ': '; // x unicode
     } else if (status === 'ERROR') {
-      statusText = colors.bgRed(colors.white.bold("[!] ERROR"))+":";
+      statusText = colors.bgRed(colors.white.bold('[!] ERROR')) + ':';
     }
     reportStatus(
       statusText,
       format(
-        colors.grey("(%d/%d tests. %d steps passed. %d steps failed)"),
+        colors.grey('(%d/%d tests. %d steps passed. %d steps failed)'),
         testsRun,
         totalTests,
         stepsPassed,
@@ -79,10 +85,7 @@ export default async function(
   totalTests = tests.length;
 
   for (const test of tests) {
-    const steps = [].concat(
-      testSuite.getBeforeEach(emptyTestStep),
-      test.steps,
-    );
+    const steps = [].concat(testSuite.getBeforeEach(emptyTestStep), test.steps);
     const stepResults = [];
     try {
       /* flowErrors contains the current flow errors. If a step doesn't care
@@ -118,25 +121,27 @@ export default async function(
         for (let i = firstIdeStartStep; i <= lastIdeAssertionStep; i++) {
           const step = steps[i];
           if (!step.readsIdeMessages()) {
-            throw new Error(format(
-              "Testing flow ide is really tricky. To be safe, make sure that " +
-              "every step before the first ideStart and the last " +
-              "ideNewMessagesWithTimeout/ideNoNewMessagesAfterSleep calls " +
-              "either ideNewMessagesWithTimeout or " +
-              "ideNoNewMessagesAfterSleep.\n\n. " +
-              "Test '%s' step %d/%d should call either " +
-              "ideNewMessagesWithTimeout or ideNoNewMessagesAfterSleep.",
-              test.name,
-              i+1,
-              steps.length
-            ));
+            throw new Error(
+              format(
+                'Testing flow ide is really tricky. To be safe, make sure that ' +
+                  'every step before the first ideStart and the last ' +
+                  'ideNewMessagesWithTimeout/ideNoNewMessagesAfterSleep calls ' +
+                  'either ideNewMessagesWithTimeout or ' +
+                  'ideNoNewMessagesAfterSleep.\n\n. ' +
+                  "Test '%s' step %d/%d should call either " +
+                  'ideNewMessagesWithTimeout or ideNoNewMessagesAfterSleep.',
+                test.name,
+                i + 1,
+                steps.length,
+              ),
+            );
           }
         }
       }
 
       for (const step of steps) {
         if (!(step instanceof TestStep)) {
-          throw new Error(format("Expected a TestStep, instead got", step));
+          throw new Error(format('Expected a TestStep, instead got', step));
         }
         printStatus('RUN');
 
@@ -152,7 +157,7 @@ export default async function(
         }
         testBuilder.clearIDEMessages();
         testBuilder.clearIDEStderr();
-        let { envRead, envWrite } = newEnv(flowErrors || noErrors);
+        let {envRead, envWrite} = newEnv(flowErrors || noErrors);
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
 
@@ -190,10 +195,7 @@ export default async function(
       printStatus('ERROR');
       return {
         type: 'exceptional',
-        message: format(
-          'Exception while running test steps:\n%s',
-          e.stack,
-        ),
+        message: format('Exception while running test steps:\n%s', e.stack),
       };
     }
     testsRun++;
@@ -210,7 +212,7 @@ export default async function(
   }
 
   return {
-    type: "normal",
+    type: 'normal',
     testResults,
-  }
-}
+  };
+});

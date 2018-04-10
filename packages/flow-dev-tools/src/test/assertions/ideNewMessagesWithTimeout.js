@@ -1,4 +1,9 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
+
 import simpleDiffAssertion from './simpleDiffAssertion';
 
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
@@ -27,8 +32,8 @@ export default function(
       JSON.stringify(actual, null, 2),
       assertLoc,
       reason,
-      "new ide messages",
+      'new ide messages',
       suggestion,
     );
-  }
+  };
 }

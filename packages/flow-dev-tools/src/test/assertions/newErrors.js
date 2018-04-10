@@ -1,4 +1,8 @@
-/* @flow */
+/**
+ * @flow
+ * @format
+ * @lint-ignore-every LINEWRAP1
+ */
 
 import {difference, prettyPrint} from '../../flowResult';
 
@@ -14,7 +18,7 @@ export default function(
     const diff = difference(env.getNewErrors(), env.getOldErrors());
     const actual = prettyPrint(diff);
 
-    let suggestion = { method: 'noNewErrors', args: [] };
+    let suggestion = {method: 'noNewErrors', args: []};
     if (!diff.passed) {
       suggestion = {
         method: 'newErrors',
@@ -26,8 +30,8 @@ export default function(
       actual,
       assertLoc,
       reason,
-      "new errors",
+      'new errors',
       suggestion,
     );
-  }
+  };
 }
