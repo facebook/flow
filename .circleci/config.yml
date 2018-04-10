@@ -238,12 +238,26 @@ jobs:
             cp dist/libflowparser-linux64.zip packages/flow-parser-bin/dist/release/libflowparser-linux64.zip
             cp dist/libflowparser-osx.zip packages/flow-parser-bin/dist/release/libflowparser-osx.zip
             make dist/npm-flow-parser-bin.tgz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist/npm-flow-parser.tgz
+            - dist/npm-flow-parser-bin.tgz
       - store_artifacts:
           path: dist/npm-flow-parser.tgz
           destination: npm-flow-parser.tgz
       - store_artifacts:
           path: dist/npm-flow-parser-bin.tgz
           destination: npm-flow-parser-bin.tgz
+
+  npm_deploy:
+    <<: *docker_node
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - run:
+        name: Deploy to npm
+        command: .circleci/deploy_npm.sh
 
   github_linux:
     docker:
@@ -308,6 +322,14 @@ workflows:
           requires:
             - build_linux
             - build_macos
+      - npm_deploy:
+          requires:
+            - npm_pack
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
       - github_linux:
           requires:
             - runtests_linux
