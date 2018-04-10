@@ -47,14 +47,6 @@ before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
 
 deploy:
-# Deploy the parser to npm
-- provider: script
-  repo: facebook/flow
-  script: bash -e resources/travis/deploy_npm.sh
-  skip_cleanup: true
-  on:
-    tags: true
-
 # Deploy the website
 - provider: script
   repo: facebook/flow
