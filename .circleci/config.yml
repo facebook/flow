@@ -123,6 +123,10 @@ jobs:
       - restore_cache:
           keys:
             - brew-cache-{{ arch }}-v2
+      # https://github.com/Homebrew/homebrew-core/issues/26358
+      - run:
+          name: Fix homebrew python
+          command: brew upgrade python
       - run:
           name: Install opam
           command: command -v opam || brew install opam aspcud
