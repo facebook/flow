@@ -1947,3 +1947,14 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text " might be missing the types of some properties that are being copied. ";
       text "Perhaps you could make it exact?"
     ]
+
+let is_lint_error = function
+  | EUntypedTypeImport _
+  | EUntypedImport _
+  | ENonstrictImport _
+  | EUnclearType _
+  | EUnsafeGettersSetters _
+  | ESketchyNullLint _
+  | EInexactSpread _ ->
+    true
+  | _ -> false

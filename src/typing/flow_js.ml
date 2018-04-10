@@ -1078,11 +1078,15 @@ exception SpeculativeError of FlowError.error_message
 
 let add_output cx ?trace msg =
   if Speculation.speculating ()
-  then begin
-    if Context.is_verbose cx then
-      prerr_endlinef "\nspeculative_error: %s" (Debug_js.dump_flow_error cx msg);
-    raise (SpeculativeError msg)
-  end else begin
+  then
+    if (FlowError.is_lint_error msg)
+    then ignore @@ Speculation.(defer_action cx (Action.Error msg))
+    else begin
+      if Context.is_verbose cx then
+        prerr_endlinef "\nspeculative_error: %s" (Debug_js.dump_flow_error cx msg);
+      raise (SpeculativeError msg)
+    end
+  else begin
     if Context.is_verbose cx then
       prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error cx msg);
 
@@ -8192,6 +8196,8 @@ and fire_actions cx trace spec = List.iter (function
       rec_unify cx trace t1 t2
         ~use_op:(replace_speculation_root_use_op use_op' use_op)
     )
+  | _, Speculation.Action.Error msg ->
+    add_output cx ~trace msg
 )
 
 and mk_union_reason r us =
