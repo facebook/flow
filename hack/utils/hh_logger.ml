@@ -24,29 +24,29 @@ let set_log filename fd =
   dupe_log := Some (filename, fd)
 let get_log_name () = Option.map !dupe_log ~f:fst
 
-let print_raw ?exn s =
-  let time = timestamp_string () in
-  let exn_str = Option.value_map exn ~default:"" ~f:(fun exn ->
-    let bt = String_utils.indent 8 @@ String.trim @@ Printexc.get_backtrace () in
-    let bt = if bt = "" then "" else ("\n    Backtrace:\n" ^ bt) in
-    Printf.sprintf "\n    Exception: %s%s" (Printexc.to_string exn) bt
-  ) in
-  begin match !dupe_log with
-  | None -> ()
-  | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str end;
-  Printf.eprintf "%s %s%s\n%!" time s exn_str
-
-(* wraps print_raw in order to take a format string *)
-let print ?exn fmt = Printf.ksprintf (print_raw ?exn) fmt
+let print_with_newline =
+  let print_raw ?exn s =
+    let time = timestamp_string () in
+    let exn_str = Option.value_map exn ~default:"" ~f:(fun exn ->
+      let bt = String_utils.indent 8 @@ String.trim @@ Printexc.get_backtrace () in
+      let bt = if bt = "" then "" else ("\n    Backtrace:\n" ^ bt) in
+      Printf.sprintf "\n    Exception: %s%s" (Printexc.to_string exn) bt
+    ) in
+    begin match !dupe_log with
+    | None -> ()
+    | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str end;
+    Printf.eprintf "%s %s%s\n%!" time s exn_str
+  in
+  fun ?exn fmt -> Printf.ksprintf (print_raw ?exn) fmt
 
 let print_duration name t =
-  print_raw (name ^ ": ");
-  let t2 = Unix.gettimeofday() in
-  Printf.eprintf "%f\n%!" (t2 -. t);
+  let t2 = Unix.gettimeofday () in
+  print_with_newline "%s: %f" name (t2 -. t);
   t2
 
 let exc ?(prefix="") e =
-  print_raw (prefix ^ Printexc.to_string e ^ "\n");
+  (* TODO - delete this function and use call normal Hh_logger functions with ~exn *)
+  print_with_newline "%s%s" prefix (Printexc.to_string e);
   Printexc.print_backtrace stderr;
   ()
 
@@ -89,7 +89,7 @@ end = struct
 
   let log level ?exn fmt =
     if passes_min_level level
-    then print ?exn fmt
+    then print_with_newline ?exn fmt
     else Printf.ifprintf () fmt
 
   let log_duration level fmt t =
