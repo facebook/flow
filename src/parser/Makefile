@@ -83,11 +83,11 @@ dist/libflowparser.zip: \
 
 js:
 	cd $(TOP); \
-	$(OCB) -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
-	js_of_ocaml --opt 3 \
-		-o $(REL_DIR)/flow_parser.js \
-		_build/$(REL_DIR)/flow_parser_dot_js.byte; \
-	rm flow_parser_dot_js.byte
+	$(OCB) -no-links -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
+	[ -e "$(REL_DIR)/flow_parser.js" -a "$(REL_DIR)/flow_parser.js" -nt "_build/$(REL_DIR)/flow_parser_dot_js.byte" ] || \
+		js_of_ocaml --opt 3 \
+			-o $(REL_DIR)/flow_parser.js \
+			_build/$(REL_DIR)/flow_parser_dot_js.byte
 
 test-js: js
 	cd $(TOP)/packages/flow-parser; npm test
