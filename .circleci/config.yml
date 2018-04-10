@@ -72,7 +72,9 @@ jobs:
       - save_cache: *save_opam_cache
       - run:
           name: Build flow
-          command: opam config exec -- make
+          command: |
+            opam config exec -- make bin/flow dist/flow.zip
+            mkdir -p bin/linux && cp bin/flow bin/linux/flow
       - run:
           name: Build libflowparser
           command: opam config exec -- make -C src/parser dist/libflowparser.zip
@@ -85,8 +87,6 @@ jobs:
       - run:
           name: Create artifacts
           command: |
-            mkdir -p bin/linux && cp bin/flow bin/linux/flow
-            opam config exec -- make dist/flow.zip
             cp dist/flow.zip dist/flow-linux64.zip
             cp src/parser/dist/libflowparser.zip dist/libflowparser-linux64.zip
             cp src/parser/flow_parser.js dist/flow_parser.js
@@ -146,15 +146,15 @@ jobs:
       - save_cache: *save_opam_cache
       - run:
           name: Build flow
-          command: opam config exec -- make
+          command: |
+            opam config exec -- make bin/flow dist/flow.zip
+            mkdir -p bin/macos && cp bin/flow bin/macos/flow
       - run:
           name: Build libflowparser
           command: opam config exec -- make -C src/parser dist/libflowparser.zip
       - run:
           name: Create artifacts
           command: |
-            mkdir -p bin/macos && cp bin/flow bin/macos/flow
-            opam config exec -- make dist/flow.zip
             cp dist/flow.zip dist/flow-osx.zip
             cp src/parser/dist/libflowparser.zip dist/libflowparser-osx.zip
       - persist_to_workspace:
