@@ -53,7 +53,7 @@ $(addsuffix .dl,$(RELEASE_ZIPS)):
 dist/local/libflowparser-$(PLATFORM).zip:
 	@mkdir -p "$(@D)"
 	$(MAKE) -C ../../src/parser dist/libflowparser.zip
-	[ ! -e "$@" -o "../../src/parser/dist/libflowparser.zip" -nt "$@" ] && \
+	[ -e "$@" -a "$@" -nt "../../src/parser/dist/libflowparser.zip" ] || \
 		cp ../../src/parser/dist/libflowparser.zip "$@"
 
 # The following two "pattern" rules (because of the %) choose between using
