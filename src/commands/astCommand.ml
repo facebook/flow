@@ -32,7 +32,7 @@ let spec = {
         ~doc:"Parse in strict mode"
     |> CommandUtils.from_flag
     |> CommandUtils.path_flag
-    |> anon "file" (optional string) ~doc:"[FILE]"
+    |> anon "file" (optional string)
   )
 }
 

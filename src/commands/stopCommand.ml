@@ -27,7 +27,7 @@ let spec = {
     |> temp_dir_flag
     |> from_flag
     |> quiet_flag
-    |> anon "root" (optional string) ~doc:"Root directory"
+    |> anon "root" (optional string)
   )
 }
 

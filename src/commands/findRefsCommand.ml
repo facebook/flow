@@ -31,7 +31,6 @@ let spec = {
     |> path_flag
     |> flag "--global" no_arg ~doc:"Search for references in other files (beta)"
     |> anon "args" (required (list_of string))
-        ~doc:"[FILE] LINE COL"
   )
 }
 

@@ -23,8 +23,8 @@ module ArgSpec : sig
 
   val empty : ('a, 'a) t
   val flag : string -> 'a flag_t -> doc:string -> ?env:string -> ('b, 'a -> 'c) t -> ('b, 'c) t
-  val anon : string -> 'a flag_t -> doc:string -> ('b, 'a -> 'c) t -> ('b, 'c) t
-  val rest : doc:string -> ('a, string list option -> 'b) t -> ('a, 'b) t
+  val anon : string -> 'a flag_t -> ('b, 'a -> 'c) t -> ('b, 'c) t
+  val rest : ('a, string list option -> 'b) t -> ('a, 'b) t
   val dummy : 'a -> ('b, 'a -> 'c) t -> ('b, 'c) t
   val collect : ('main -> 'a -> 'new_main) -> ('b, 'main) t -> ('b, 'a -> 'new_main) t
 

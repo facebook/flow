@@ -25,7 +25,6 @@ let spec = {
     |> root_flag
     |> strip_root_flag
     |> anon "FILE..." (required string)
-        ~doc:"File contained in the cycle"
   )
 }
 

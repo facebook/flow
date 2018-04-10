@@ -43,7 +43,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> strip_root_flag
         |> from_flag
         |> dummy false (* match --version below *)
-        |> anon "root" (optional string) ~doc:"Root directory"
+        |> anon "root" (optional string)
       )
     }
   else
@@ -85,7 +85,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> from_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
-        |> anon "root" (optional string) ~doc:"Root directory"
+        |> anon "root" (optional string)
       )
     }
 

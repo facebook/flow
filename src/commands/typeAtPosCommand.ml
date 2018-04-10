@@ -31,7 +31,7 @@ let spec = {
     |> verbose_flags
     |> from_flag
     |> path_flag
-    |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
+    |> anon "args" (required (list_of string))
   )
 }
 

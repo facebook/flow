@@ -65,7 +65,7 @@ module CheckCommand = struct
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
-        |> anon "root" (optional string) ~doc:"Root directory"
+        |> anon "root" (optional string)
       );
     usage = Printf.sprintf
       "Usage: %s check [OPTION]... [ROOT]\n\n\
@@ -137,7 +137,7 @@ module FocusCheckCommand = struct
         |> from_flag
         |> root_flag
         |> input_file_flag "check"
-        |> anon "root" (list_of string) ~doc:"Root directory"
+        |> anon "root" (list_of string)
       );
     usage = Printf.sprintf
       "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\n\

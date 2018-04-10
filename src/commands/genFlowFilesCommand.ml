@@ -58,7 +58,6 @@ let spec = {
     |> untyped_flag
     |> from_flag
     |> anon "src" (required string)
-        ~doc:"The path to a file or directory to generate .js.flow files for"
     |> flag "--out-dir" string
         ~doc:"The path to write the generated .js.flow files into"
   )

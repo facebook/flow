@@ -32,7 +32,6 @@ let spec = {
       ~doc:("File containing list of files to recheck, one per line. If -, list of files is "^
         "read from the standard input.")
     |> anon "files" (list_of string)
-        ~doc:"Specify files to recheck"
   )
 }
 

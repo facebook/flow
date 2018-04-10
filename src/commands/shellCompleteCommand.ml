@@ -25,7 +25,7 @@ module Command(CommandList : COMMAND_LIST) = struct
       |> CommandUtils.from_flag
       |> flag "--current" (optional int)
           ~doc:"Current term in the argument list being completed."
-      |> rest ~doc:"Command to complete"
+      |> rest
     )
   }
 

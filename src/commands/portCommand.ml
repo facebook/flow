@@ -28,7 +28,6 @@ let spec = {
     |> root_flag
     |> from_flag
     |> anon "files" (required (list_of string))
-        ~doc:"File(s) to port"
   )
 }
 

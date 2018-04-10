@@ -28,7 +28,7 @@ let spec = {
     |> server_flags
     |> root_flag
     |> from_flag
-    |> anon "files" (required (list_of string)) ~doc:"Files"
+    |> anon "files" (required (list_of string))
   )
 }
 

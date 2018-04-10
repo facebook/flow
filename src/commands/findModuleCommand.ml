@@ -29,9 +29,7 @@ let spec = {
     |> strip_root_flag
     |> from_flag
     |> anon "module" (required string)
-        ~doc:"Module reference to resolve"
     |> anon "file" (required string)
-        ~doc:"File name containing module reference"
   )
 }
 

@@ -26,7 +26,7 @@ let spec = {
     empty
     |> CommandUtils.json_flags
     |> CommandUtils.from_flag
-    |> anon "root" (optional string) ~doc:"Root directory"
+    |> anon "root" (optional string)
   )
 }
 

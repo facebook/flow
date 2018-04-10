@@ -23,7 +23,7 @@ let spec = { CommandSpec.
       |> from_flag
       |> log_file_flags
       |> no_restart_flag
-      |> anon "root" (optional string) ~doc:"Root directory"
+      |> anon "root" (optional string)
     );
   usage = Printf.sprintf
     "Usage: %s server [OPTION]... [ROOT]\n\n\

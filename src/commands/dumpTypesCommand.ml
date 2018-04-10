@@ -30,7 +30,7 @@ let spec = {
     |> strip_root_flag
     |> from_flag
     |> path_flag
-    |> anon "file" (optional string) ~doc:"[FILE]"
+    |> anon "file" (optional string)
   )
 }
 

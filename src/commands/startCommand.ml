@@ -27,7 +27,7 @@ let spec = { CommandSpec.
       |> ignore_version_flag
       |> from_flag
       |> no_restart_flag
-      |> anon "root" (optional string) ~doc:"Root directory"
+      |> anon "root" (optional string)
     );
   usage = Printf.sprintf
     "Usage: %s start [OPTION]... [ROOT]\n\n\

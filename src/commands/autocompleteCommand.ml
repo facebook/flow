@@ -35,7 +35,7 @@ let spec = {
     |> root_flag
     |> strip_root_flag
     |> from_flag
-    |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
+    |> anon "args" (optional (list_of string))
   )
 }
 

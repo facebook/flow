@@ -34,7 +34,6 @@ let spec = {
     |> flag "--options" (optional string)
         ~doc:"Semicolon-delimited list of key=value pairs"
     |> anon "root" (optional string)
-        ~doc:"Root directory (default: current working directory)"
   )
 }
 

@@ -29,7 +29,6 @@ let spec = {
     |> strip_root_flag
     |> from_flag
     |> anon "modules" (required (list_of string))
-        ~doc:"Module name(s) to find"
   )
 }
 

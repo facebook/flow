@@ -38,7 +38,7 @@ let spec = {
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
-    |> anon "file" (optional string) ~doc:"[FILE]"
+    |> anon "file" (optional string)
   )
 }
 

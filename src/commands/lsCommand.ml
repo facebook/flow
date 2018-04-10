@@ -38,7 +38,6 @@ let spec = {
       ~doc:"Output what kind of file each file is and why Flow cares about it"
     |> input_file_flag "ls"
     |> anon "files or dirs" (list_of string)
-      ~doc:"Lists only these files or files in these directories"
   )
 }
 
