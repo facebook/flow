@@ -15,6 +15,7 @@ module Action = struct
   type t =
   | Flow of Type.t * Type.use_t
   | Unify of Type.use_op * Type.t * Type.t
+  | Error of Flow_error.error_message
 
   (* Extract tvars involved in an action. *)
   let tvars =
@@ -30,6 +31,7 @@ module Action = struct
     | Flow (t1, UseT (_, t2)) -> f t1 (f t2 IMap.empty)
     | Flow (t1, _) -> f t1 IMap.empty
     | Unify (_, t1, t2) -> f t1 (f t2 IMap.empty)
+    | Error _ -> failwith "tvars of error actions don't make sense"
 
   (* Decide when two actions are the same. We use reasonless compare for types
      involved in the actions. *)
@@ -181,21 +183,27 @@ end = struct
   *)
   let defer_if_relevant cx branch action =
     let { ignore; speculation_id; case } = branch in
-    let action_tvars = Action.tvars action in
-    let all_unresolved =
-      IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
-    let relevant_action_tvars =
-      IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
-    let defer = not (IMap.is_empty relevant_action_tvars) in
-    if defer then Case.(
+    let open Case in
+    match action with
+    | Action.Error _ ->
+      case.actions <- case.actions @ [true, action];
+      true
+    | _ ->
+      let action_tvars = Action.tvars action in
+      let all_unresolved =
+        IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
+      let relevant_action_tvars =
+        IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
+      let defer = not (IMap.is_empty relevant_action_tvars) in
+      if defer then Case.(
       let is_benign = IMap.exists (ignore_type ignore) action_tvars in
       if not is_benign
       then case.unresolved <-
         IMap.fold (fun id _ acc -> ISet.add id acc)
-          relevant_action_tvars case.unresolved;
+        relevant_action_tvars case.unresolved;
       case.actions <- case.actions @ [is_benign, action]
-    );
-    defer
+      );
+      defer
 
   let defer_action cx action =
     speculating() &&
