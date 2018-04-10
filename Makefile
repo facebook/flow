@@ -195,7 +195,7 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
-all: build-flow copy-flow-files
+all: bin/flow$(EXE)
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 all-homebrew:
@@ -306,9 +306,9 @@ _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 		scripts/ppx_gen_flowlibs.native
 	rm -f ppx_gen_flowlibs.native
 
-copy-flow-files: build-flow
-	mkdir -p bin
-	cp _build/src/flow.native bin/flow$(EXE)
+bin/flow$(EXE): build-flow
+	mkdir -p $(@D)
+	cp _build/src/flow.native $@
 
 copy-flow-files-ocp: build-flow-with-ocp
 	mkdir -p bin
@@ -323,10 +323,10 @@ do-test:
 do-test-tool:
 	FLOW_BIN=../../bin/flow$(EXE) ${MAKE} -C packages/flow-dev-tools test
 
-test-tool: build-flow copy-flow-files
+test-tool: bin/flow$(EXE)
 	${MAKE} do-test-tool
 
-test: build-flow copy-flow-files
+test: bin/flow$(EXE)
 	${MAKE} do-test
 
 test-ocp: build-flow-with-ocp copy-flow-files-ocp
