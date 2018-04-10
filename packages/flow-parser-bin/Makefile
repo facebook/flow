@@ -24,18 +24,21 @@ ifeq ($(UNAME_S), Darwin)
 	PLATFORM=osx
 endif
 
+.SUFFIXES:
+
 .PHONY: local
 local: include lib/$(PLATFORM)/libflowparser.a
 
 .PHONY: dist
 dist: include SHASUM256.txt
+	touch .premade
 
 .PHONY: download
 download: $(addsuffix .dl,$(RELEASE_ZIPS))
 
 .PHONY: clean
 clean:
-	rm -rf SHASUM256.txt include/ lib/ dist/ build/
+	rm -rf .premade SHASUM256.txt include/ lib/ dist/ build/
 
 # Phony targets for each platform's prebuilt zip file to trigger downloading
 # them from GitHub. Below, we rely on the fact that the zips themselves don't
@@ -70,7 +73,9 @@ dist/libflowparser-%.zip: dist/local/libflowparser-%.zip
 	@mkdir -p "$(@D)"
 	cp "$<" "$@"
 
-$(LIBS): lib/%/libflowparser.a: dist/libflowparser-%.zip
+# if `.premade` exists, don't try to build
+lib/%/libflowparser.a: .premade ;
+lib/%/libflowparser.a: dist/libflowparser-%.zip
 	DIR="$(basename $<)"; \
 	mkdir -p "$$DIR" "$(@D)"; \
 	unzip "$<" libflowparser/lib/libflowparser.a -d "$$DIR" && \
@@ -78,12 +83,16 @@ $(LIBS): lib/%/libflowparser.a: dist/libflowparser-%.zip
 	rm -rf "$$DIR"
 	touch "$@"
 
-include: dist/libflowparser-$(PLATFORM).zip
+# if `.premade` exists, don't try to build
+include%: .premade ;
+include%: dist/libflowparser-$(PLATFORM).zip
 	DIR="$(basename $<)"; \
-	mkdir -p "$$DIR" "$(@D)"; \
+	mkdir -p "$$DIR"; \
 	unzip "$<" "libflowparser/include/**" -d "$$DIR" && \
-	mv "$$DIR/libflowparser/include" "$@"; \
+	mv "$$DIR/libflowparser/include" include; \
 	rm -rf "$$DIR"
+
+include: include.made
 
 SHASUM256.txt: $(LIBS)
 	shasum -a 256 $^ > $@

@@ -17,11 +17,13 @@
     "verify": "shasum -c SHASUM256.txt"
   },
   "files": [
+    ".premade",
     "lib",
     "include",
     "src",
     "index.js",
     "binding.gyp",
+    "Makefile",
     "SHASUM256.txt"
   ],
   "os": ["darwin", "linux"],
