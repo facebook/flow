@@ -1432,15 +1432,14 @@ let get_tparams () =
  *)
 let add_type_table cx ?tparams_map loc t =
   let tparams = get_tparams () in
-  (* TODO this will be used to populate the type table *)
-  let _tparams = match tparams_map with
+  let tparams = match tparams_map with
     | Some tparams_map -> SMap.fold (fun name t acc ->
         (name, def_loc_of_t t)::acc
       ) tparams_map tparams
     | None -> tparams
   in
   let type_table = Context.type_table cx in
-  Type_table.set type_table loc t
+  Type_table.set tparams type_table loc t
 
 (* This is similar to the above, but also allows to specify a local type parameter
  * in scope, though a tparam parameter of type Type.typeparam (useful for example
@@ -1454,11 +1453,10 @@ let add_type_table_info cx ?tparams_map ?tparam loc t =
       ) tparams_map tparams
     | None -> tparams
   in
-  (* TODO this will be used to populate the type table *)
-  let _tparams = Type.(match tparam with
+  let tparams = Type.(match tparam with
     | Some { name; reason; _ } ->
       (name, Reason.def_loc_of_reason reason)::tparams
     | None -> tparams
   ) in
   let type_table = Context.type_table cx in
-  Type_table.set_info type_table loc t
+  Type_table.set_info tparams type_table loc t

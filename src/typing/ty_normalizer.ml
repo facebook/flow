@@ -61,6 +61,7 @@ end
 
 type error_kind =
   | BadMethodType
+  | BadBoundT
   | BadCallProp
   | BadClassT
   | BadPoly
@@ -77,6 +78,7 @@ type error = error_kind * string
 
 let error_kind_to_string = function
   | BadMethodType -> "Bad method type"
+  | BadBoundT -> "Unbound type parameter"
   | BadCallProp -> "Bad call property"
   | BadClassT -> "Bad class"
   | BadPoly -> "Bad polymorphic type"
@@ -98,21 +100,29 @@ let error_to_string (kind, msg) =
 
 module Make(C: Config) : sig
 
-  (* Takes a context and a single type argument, and returns a Ty.t or an error *)
+  (* Takes a context and a single type argument, and returns a Ty.t or an error.
+     This assumes the type parameter environment at that point is empty. *)
   val from_type: cx:Context.t -> Type.t -> (Ty.t, error) result
+
+  (* Takes a context and a type scheme and returns a Ty.t or an error. *)
+  val from_scheme: cx:Context.t -> Type_table.type_scheme -> (Ty.t, error) result
 
   (* Takes a context and a list of types as input and returns a list of a choice
      of a normalized type or an error. It differs from mapping `from_type` on
      each input as it folds over the input elements of the input propagating the
      state (that crucially includes the type cache) after each transformation to
-     the next element.
+     the next element. Again this assumes that there are no type parameters in
+     scope.
   *)
   val from_types:
     cx:Context.t -> ('a * Type.t) list -> ('a * (Ty.t, error) result) list
 
+  val from_schemes:
+    cx:Context.t -> ('a * Type_table.type_scheme) list -> ('a * (Ty.t, error) result) list
+
   val fold_hashtbl:
     cx:Context.t -> f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) -> init:'a ->
-    (Loc.t, Type.t) Hashtbl.t -> 'a
+    (Loc.t, Type_table.type_scheme) Hashtbl.t -> 'a
 
 end = struct
 
@@ -226,9 +236,26 @@ end = struct
   (* The environment is passed in a top-down manner during normalization. *)
 
   module Env = struct
-    (* Depth of the recursion: useful for debugging purposes *)
-    let empty = 0
-    let descend e = e + 1
+    type t = {
+      depth: int;                      (* For debugging purposes mostly *)
+      tparams: (string * Loc.t) list;  (* Type parameters in scope *)
+    }
+
+    let init tparams = { depth = 0; tparams; }
+
+    let descend e = { e with depth = e.depth + 1 }
+
+    let lookup_tparam ~default env t name loc =
+      if List.mem (name, loc) env.tparams then
+        return Ty.(Bound (Symbol (Local loc, name)))
+      else
+        default t
+
+    let add_typeparam env typeparam = Type.(
+      let loc = Reason.loc_of_reason typeparam.reason in
+      let name = typeparam.name in
+      { env with tparams = (name, loc) :: env.tparams }
+    )
   end
 
 
@@ -479,12 +506,18 @@ end = struct
   and type_with_reason ~env t =
     let reason = Type.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
-    (* Bounded type variables are replaced by their bounds during checking. In
-       reporting these types we are interested in the original type variable.
+    (* The 'RPolyTest' description is used for types that represent type
+       parameters. When normalizing, we want such types to be replaced by the
+       type parameter, whose name is part of the description, but only in the
+       case that the parameter is in scope. The reason we need to make this
+       distinction is that bound tests may exit the scope of the structure that
+       introduced them, in which case we do not perform the substitution. There
+       instead we unfold the underlying type.
     *)
     | RPolyTest (name, _) ->
-      symbol reason name >>| fun symbol -> Ty.Bound symbol
-
+      let loc = Reason.def_loc_of_reason reason in
+      let default t = type_after_reason ~env t in
+      Env.lookup_tparam ~default env t name loc
     | _ -> type_after_reason ~env t
 
   and type_after_reason ~env t =
@@ -492,7 +525,7 @@ end = struct
     let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
-    | BoundT tparam -> bound_t tparam
+    | BoundT tparam -> bound_t ~env t tparam
     | AnnotT (OpenT (r, id), _) -> annot_t ~env r id
     | AnnotT (t, _) -> type_after_reason ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
@@ -710,10 +743,12 @@ end = struct
     in
     return (Ty.Symbol (provenance, name))
 
-  and bound_t =
+  and bound_t ~env t tparam =
     let open Type in
-    fun { reason; name; _ } ->
-      symbol reason name >>| fun symbol -> Ty.Bound symbol
+    let { reason; name; _ } = tparam in
+    let loc = Reason.def_loc_of_reason reason in
+    let default t = terr ~kind:BadBoundT (Some t) in
+    Env.lookup_tparam ~default env t name loc
 
   and annot_t ~env r id =
     if C.expand_annots then
@@ -877,8 +912,12 @@ end = struct
   and this_class_t ~env t ps =
     class_t ~env t ps
 
-  and poly_ty ~env t ps =
-    mapM (type_param ~env) ps >>= fun ps ->
+  and poly_ty ~env t typeparams =
+    let env, results = List.fold_left (fun (env, rs) typeparam ->
+      let r = type_param ~env typeparam in
+      (Env.add_typeparam env typeparam, r::rs)
+    ) (env, []) typeparams in
+    List.rev results |> all >>= fun ps ->
     let ps = match ps with [] -> None | _ -> Some ps in
     match t with
     | T.DefT (_, T.ClassT t) -> class_t ~env t ps
@@ -1263,7 +1302,9 @@ end = struct
     let open State in
     let imported_ts = Context.imported_ts cx in
     let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
-      match run st (type__ ~env:Env.empty t) with
+      (* 'tparams' ought to be empty at this point *)
+      let env = Env.init [] in
+      match run st (type__ ~env t) with
       | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
       | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
         (st, SMap.add x loc m)
@@ -1272,28 +1313,42 @@ end = struct
     )) imported_ts (state, SMap.empty) in
     { state with imported_names }
 
+let run_type state tparams t =
+  let env = Env.init tparams in
+  run state (type__ ~env t)
 
   (* Exposed API *)
-  let from_types ~cx ts =
-    let state = State.empty ~cx in
-    let state = add_imports ~cx state in
-    let _, rts = ListUtils.fold_map (fun st (a, t) ->
-      match run st (type__ ~env:Env.empty t) with
+  let from_schemes ~cx schemes =
+    let state = add_imports ~cx (State.empty ~cx) in
+    snd (ListUtils.fold_map (fun st (a, s) ->
+      let Type_table.Scheme (tparams, t) = s in
+      match run_type st tparams t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
-    ) state ts
-    in rts
+    ) state schemes)
+
+  let from_types ~cx ts =
+    let state = add_imports ~cx (State.empty ~cx) in
+    snd (ListUtils.fold_map (fun st (a, t) ->
+      match run_type st [] t with
+      | Ok t, st -> (st, (a, Ok t))
+      | Error s, st -> (st, (a, Error s))
+    ) state ts)
+
+  let from_scheme ~cx scheme =
+    let state = add_imports ~cx (State.empty ~cx) in
+    let Type_table.Scheme (tparams, t) = scheme in
+    fst (run_type state tparams t)
 
   let from_type ~cx t =
-    let state = State.empty ~cx in
-    let state = add_imports ~cx state in
-    fst (run state (type__ ~env:Env.empty t))
+    let state = add_imports ~cx (State.empty ~cx) in
+    fst (run_type state [] t)
 
   let fold_hashtbl ~cx ~f ~init htbl =
-    let state = State.empty ~cx in
-    let state = add_imports ~cx state in
-    let _, acc = Hashtbl.fold (fun loc t (st, acc) ->
-      let result, st' = run st (type__ ~env:Env.empty t) in
+    let state = add_imports ~cx (State.empty ~cx) in
+    let _, acc = Hashtbl.fold (fun loc scheme (st, acc) ->
+      let Type_table.Scheme (tparams, t) = scheme in
+      let result, st' = run_type st tparams t in
       let acc' = f acc (loc, result) in
       (st', acc')
     ) htbl (state, init)

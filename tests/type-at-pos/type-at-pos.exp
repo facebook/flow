@@ -374,7 +374,7 @@ class-2.js:4:3 = {
   "end":3
 }
 class-2.js:9:9 = {
-  "type":"() => this",
+  "type":"() => A",
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -389,7 +389,7 @@ class-2.js:9:9 = {
   "end":9
 }
 class-2.js:10:9 = {
-  "type":"() => this",
+  "type":"() => A",
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -614,7 +614,7 @@ class-poly-0.js:17:7 = {
   "end":9
 }
 class-poly-1.js:9:5 = {
-  "type":"T",
+  "type":"mixed",
   "reasons":[],
   "loc":{
     "source":"class-poly-1.js",
@@ -629,7 +629,7 @@ class-poly-1.js:9:5 = {
   "end":5
 }
 class-poly-1.js:9:11 = {
-  "type":"() => T",
+  "type":"() => mixed",
   "reasons":[],
   "loc":{
     "source":"class-poly-1.js",
@@ -644,7 +644,7 @@ class-poly-1.js:9:11 = {
   "end":11
 }
 class-statics.js:4:10 = {
-  "type":"() => (this | void)",
+  "type":"() => (class B | void)",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -659,7 +659,7 @@ class-statics.js:4:10 = {
   "end":10
 }
 class-statics.js:8:10 = {
-  "type":"() => this",
+  "type":"() => class B",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -674,7 +674,7 @@ class-statics.js:8:10 = {
   "end":10
 }
 class-statics.js:9:7 = {
-  "type":"this",
+  "type":"class B",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -704,7 +704,7 @@ class-statics.js:11:8 = {
   "end":9
 }
 class-statics.js:16:5 = {
-  "type":"this",
+  "type":"class B",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -732,6 +732,21 @@ class-statics.js:17:5 = {
   "endline":17,
   "start":5,
   "end":5
+}
+class-statics.js:20:11 = {
+  "type":"(unknown)",
+  "reasons":[],
+  "loc":{
+    "source":"class-statics.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":11,"offset":216},
+    "end":{"line":20,"column":11,"offset":217}
+  },
+  "path":"class-statics.js",
+  "line":20,
+  "endline":20,
+  "start":11,
+  "end":11
 }
 class-statics-poly.js:4:10 = {
   "type":"() => (class B | void)",
@@ -764,7 +779,7 @@ class-statics-poly.js:8:10 = {
   "end":10
 }
 class-statics-poly.js:9:7 = {
-  "type":"this",
+  "type":"class B",
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -959,7 +974,7 @@ function-poly-0.js:3:30 = {
   "end":30
 }
 function-poly-0.js:4:7 = {
-  "type":"T",
+  "type":"mixed",
   "reasons":[],
   "loc":{
     "source":"function-poly-0.js",
@@ -1124,7 +1139,7 @@ function-poly-2.js:11:12 = {
   "end":17
 }
 function-poly-3.js:8:1 = {
-  "type":"T | number",
+  "type":"string | number",
   "reasons":[],
   "loc":{
     "source":"function-poly-3.js",

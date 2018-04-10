@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ## To avoid regression ensure that all of these do not return (unknown)
-## (unknown) = TODO
 
 . ../assert.sh
 FLOW=$1
@@ -74,7 +73,6 @@ assert_ok "$FLOW" type-at-pos class-1.js 8 3 --strip-root --pretty
 #class-2.js
 printf "class-2.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-2.js 4 3 --strip-root --pretty
-# TODO 'this' should not escape
 printf "class-2.js:9:9 = "
 assert_ok "$FLOW" type-at-pos class-2.js 9 9 --strip-root --pretty
 printf "class-2.js:10:9 = "
@@ -118,7 +116,6 @@ printf "class-poly-0.js:17:7 = "
 assert_ok "$FLOW" type-at-pos class-poly-0.js 17 7 --strip-root --pretty
 
 #class-poly-1.js
-# TODO 'T' should not escape
 printf "class-poly-1.js:9:5 = "
 assert_ok "$FLOW" type-at-pos class-poly-1.js 9 5 --strip-root --pretty
 printf "class-poly-1.js:9:11 = "
@@ -137,6 +134,9 @@ printf "class-statics.js:16:5 = "
 assert_ok "$FLOW" type-at-pos class-statics.js 16 5 --strip-root --pretty
 printf "class-statics.js:17:5 = "
 assert_ok "$FLOW" type-at-pos class-statics.js 17 5 --strip-root --pretty
+# TODO this fails
+printf "class-statics.js:20:11 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 20 11 --strip-root --pretty
 
 # class-statics-poly.js
 printf "class-statics-poly.js:4:10 = "
@@ -181,7 +181,6 @@ printf "function-poly-0.js:3:10 = "
 assert_ok "$FLOW" type-at-pos function-poly-0.js 3 10 --strip-root --pretty
 printf "function-poly-0.js:3:30 = "
 assert_ok "$FLOW" type-at-pos function-poly-0.js 3 30 --strip-root --pretty
-# TODO fix leaking of 'T'
 printf "function-poly-0.js:4:7 = "
 assert_ok "$FLOW" type-at-pos function-poly-0.js 4 7 --strip-root --pretty
 

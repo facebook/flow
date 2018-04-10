@@ -47,11 +47,14 @@ let query_type cx loc =
   let type_table = Context.type_table cx in
   match Type_table.find_type_info ~pred type_table with
   | None -> FailureNoMatch
-  | Some (loc, (_, t, _)) ->
-    (match QueryTypeNormalizer.from_type ~cx t with
+  | Some (loc, (_, scheme, _)) ->
+    (match QueryTypeNormalizer.from_scheme ~cx scheme with
     | Ok ty -> Success (loc, ty)
-    | Error msg ->
-      FailureUnparseable (loc, t, Ty_normalizer.error_to_string msg))
+    | Error err ->
+      let msg = Ty_normalizer.error_to_string err in
+      print_endline msg;
+      let Type_table.Scheme (_, t) = scheme in
+      FailureUnparseable (loc, t, msg))
 
 
 module DumpTypeNormalizer = Ty_normalizer.Make(struct
@@ -62,7 +65,7 @@ end)
 
 let dump_types ~printer cx =
   Type_table.coverage_to_list (Context.type_table cx)
-  |> DumpTypeNormalizer.from_types ~cx
+  |> DumpTypeNormalizer.from_schemes ~cx
   |> Core_list.filter_map ~f:(function
     | l, Ok t -> Some (l, printer t)
     | _ -> None
@@ -108,7 +111,7 @@ end)
 
 let fill_types cx =
   Type_table.coverage_to_list (Context.type_table cx)
-  |> FillTypeNormalizer.from_types ~cx
+  |> FillTypeNormalizer.from_schemes ~cx
   |> Core_list.filter_map ~f:(function
    | l, Ok s -> Some (l, s)
    | _ -> None

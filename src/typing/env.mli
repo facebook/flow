@@ -218,5 +218,5 @@ val add_type_table_info:
   ?tparams_map:Type.t SMap.t ->
   ?tparam:Type.typeparam ->
   Loc.t ->
-  Type_table.id_info ->
+  Type_table.type_entry ->
   unit
