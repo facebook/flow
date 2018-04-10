@@ -1,4 +1,5 @@
 type t =
+  | Interrupted
   | No_error
   | Windows_killed_by_task_manager
   | Type_error

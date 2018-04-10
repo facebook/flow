@@ -1,4 +1,6 @@
 type t =
+  (* Signaled *)
+  | Interrupted
   (* The generic 0 exit code *)
   | No_error
   (* Killed by Windows task manage *)
@@ -70,6 +72,7 @@ type t =
   * Out_of_time
   *)
 let error_code = function
+  | Interrupted -> -6
   | No_error -> 0
   | Windows_killed_by_task_manager -> 1
   | Type_error -> 2
@@ -102,6 +105,7 @@ let error_code = function
 
 (* Return an error type given an error code *)
 let error_type = function
+  | -6 -> Interrupted
   | 0 -> No_error
   | 1 -> Windows_killed_by_task_manager
   | 2 -> Type_error
@@ -139,6 +143,7 @@ let unpack_process_status = function
   | Unix.WSTOPPED n -> "stopped", n
 
 let to_string = function
+  | Interrupted -> "Interrupted"
   | No_error -> "Ok"
   | Input_error -> "Input_error"
   | Could_not_find_flowconfig -> "Could_not_find_flowconfig"
