@@ -370,6 +370,13 @@ dist/flow/flow$(EXE): build-flow
 dist/flow.zip: dist/flow/flow$(EXE)
 	cd dist && zip -r $(@F) flow/flow$(EXE)
 
+dist/npm-%.tgz: FORCE
+	@mkdir -p $(@D)
+	@mkdir -p npm-$(*F)-tmp
+	cd npm-$(*F)-tmp && npm pack ../packages/$(*F)/
+	mv npm-$(*F)-tmp/$(*F)-*.tgz dist/npm-$(*F).tgz
+	@rm -rf npm-$(*F)-tmp
+
 FORCE:
 
 .PHONY: all js build-flow build-flow-with-ocp build-flow-debug FORCE
