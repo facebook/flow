@@ -39,7 +39,7 @@ type worker
 
 (* List of file descriptors that became ready (and triggered interruption),
  * returns whether current job should be cancelled *)
-type interrupt_handler = MultiThreadedCall.interrupt_handler
+type 'a interrupt_config = 'a MultiThreadedCall.interrupt_config
 
 val next :
   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->
@@ -61,9 +61,8 @@ val call_with_interrupt :
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
   next:'a Bucket.next ->
-  interrupt_fds:Unix.file_descr list ->
-  interrupt_handler:interrupt_handler ->
-  'c * 'a list
+  interrupt:'d interrupt_config ->
+  'c * 'd * 'a list
 
 (* Creates a pool of workers. *)
 val make:

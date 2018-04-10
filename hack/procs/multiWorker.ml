@@ -13,7 +13,7 @@ open Hh_core
 (* Hide the worker type from our users *)
 type worker = WorkerController.worker
 
-type interrupt_handler = MultiThreadedCall.interrupt_handler
+type 'a interrupt_config = 'a MultiThreadedCall.interrupt_config
 
 let single_threaded_call job merge neutral next =
   let x = ref (next()) in
@@ -75,12 +75,12 @@ end)
 let call = Call.call
 
 (* If we ever want this in MultiWorkerLwt then move this into CallFunctor *)
-let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt_fds ~interrupt_handler =
+let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt =
   match workers with
-  | None -> single_threaded_call job merge neutral next, []
+  | None -> single_threaded_call job merge neutral next, interrupt.MultiThreadedCall.env, []
   | Some workers ->
-    MultiThreadedCall.call_with_interrupt
-      workers job merge neutral next interrupt_fds interrupt_handler
+    MultiThreadedCall.call_with_interrupt workers job merge neutral next
+      interrupt
 
 let next ?progress_fn ?max_size workers =
   Bucket.make

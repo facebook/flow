@@ -19,7 +19,18 @@
  * Still-in-progress workers are left to their own accord. *)
 exception Coalesced_failures of (WorkerController.worker_failure list)
 
-type interrupt_handler = Unix.file_descr list -> bool
+type interrupt_result = Cancel | Continue
+
+type 'env interrupt_handler =
+  'env -> Unix.file_descr list -> 'env * interrupt_result
+
+type 'env interrupt_config = {
+  fds : Unix.file_descr list;
+  env : 'env;
+  handler : 'env interrupt_handler;
+}
+
+val no_interrupt : 'a -> 'a interrupt_config
 
 (** Can raise Coalesced_failures exception. *)
 val call :
@@ -35,6 +46,5 @@ val call_with_interrupt :
   ('c -> 'a -> 'b) ->
   ('b -> 'c -> 'c) -> 'c ->
   'a Bucket.next ->
-  Unix.file_descr list ->
-  interrupt_handler ->
-  'c * 'a list
+  'd interrupt_config ->
+  'c * 'd * 'a list

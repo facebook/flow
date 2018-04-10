@@ -12,17 +12,33 @@ open Hh_core
 
 exception Coalesced_failures of (WorkerController.worker_failure list)
 
-type interrupt_handler = Unix.file_descr list -> bool
+type interrupt_result = Cancel | Continue
+
+type 'env interrupt_handler =
+  'env -> Unix.file_descr list -> 'env * interrupt_result
+
+type 'env interrupt_config = {
+  fds : Unix.file_descr list;
+  env : 'env;
+  handler : 'env interrupt_handler;
+}
+
+let no_interrupt env = {
+  fds = [];
+  handler = (fun _ _ -> assert false);
+  env;
+}
 
 let multi_threaded_call
-  (type a) (type b) (type c)
+  (type a) (type b) (type c) (type d)
   workers
   (job: c -> a -> b)
   (merge: b -> c -> c)
   (neutral: c)
   (next: a Bucket.next)
-  (interrupt_fds: Unix.file_descr list)
-  (interrupt_handler: interrupt_handler) =
+  (interrupt: d interrupt_config) =
+
+  let merge x acc = merge x (fst acc), snd acc in
 
   let rec add_pending acc = match next () with
     | Bucket.Done -> acc
@@ -34,8 +50,13 @@ let multi_threaded_call
 
   (* When a job is cancelled, return all the jobs that were not started OR were
    * cancelled in the middle (so you better hope they are idempotent).*)
-  let check_cancel handles ready_fds acc =
-    if ready_fds <> [] && interrupt_handler ready_fds then begin
+  let check_cancel handles ready_fds (acc, env) =
+    let env, result =
+      if ready_fds <> [] then interrupt.handler env ready_fds
+      else env, Continue
+    in
+    let acc = acc, env in
+    if result = Cancel then begin
       WorkerController.cancel handles;
       let unfinished = List.map handles ~f:WorkerController.get_job in
       let unfinished = add_pending unfinished in
@@ -67,7 +88,7 @@ let multi_threaded_call
             dispatch workers (handle :: handles) acc
   and collect workers handles acc =
     let { WorkerController.readys; waiters; ready_fds } =
-      WorkerController.select handles interrupt_fds in
+      WorkerController.select handles interrupt.fds in
     let workers = List.map ~f:WorkerController.get_worker readys @ workers in
     (* Collect the results. *)
     let acc, failures =
@@ -93,15 +114,15 @@ let multi_threaded_call
     | acc, None ->
       (* And continue.. *)
       dispatch workers waiters acc in
-  dispatch workers [] neutral
+  dispatch workers [] (neutral, interrupt.env)
 
 let call workers job merge neutral next =
-  let interrupt_fds = [] in
-  let interrupt_handler = fun _ -> assert false in
-  let res, unfinished = multi_threaded_call
-    workers job merge neutral next interrupt_fds interrupt_handler in
+  let (res, ()), unfinished =
+    multi_threaded_call workers job merge neutral next (no_interrupt ()) in
   assert (unfinished = []);
   res
 
-let call_with_interrupt workers job merge neutral next interrupt_fds interrupt_handler =
-  multi_threaded_call workers job merge neutral next interrupt_fds interrupt_handler
+let call_with_interrupt workers job merge neutral next interrupt =
+  let (res, interrupt_env), unfinished =
+    multi_threaded_call workers job merge neutral next interrupt in
+  res, interrupt_env, unfinished
