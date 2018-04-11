@@ -68,6 +68,23 @@ include MultiWorker.CallFunctor (struct
     Lwt.return (!acc)
 end)
 
+exception MultiWorkersBusy
+
+(* Currently, MultiWorker calls may not be interleaved, which can happen with
+ * Lwt. Keep track of whether we have a call in flight and raise an exception if
+ * we do when another comes in. *)
+let is_busy = ref false
+
+let call workers ~job ~merge ~neutral ~next =
+  if !is_busy then
+    raise MultiWorkersBusy
+  else begin
+    is_busy := true;
+    let%lwt result = call workers ~job ~merge ~neutral ~next in
+    is_busy := false;
+    Lwt.return result
+  end
+
 (* A separate abstract type from MultiWorker.worker forces users to always use MultiWorkerLwt *)
 type worker = WorkerController.worker
 
