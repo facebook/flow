@@ -19,6 +19,7 @@ type AssertionMethod =
   | 'stderr'
   | 'sortedStdout'
   | 'exitCodes'
+  | 'ideStartAndConnect'
   | 'verifyServerStatus'
   | 'verifyIDEStatus'
   | 'verifyAllIDEMessagesInStep'

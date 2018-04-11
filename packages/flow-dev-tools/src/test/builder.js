@@ -848,10 +848,18 @@ export class TestBuilder {
     });
   }
 
-  cleanup(): void {
+  async cleanup(): Promise<void> {
     this.cleanupIDEConnection();
     this.stopFlowServer();
     this.closeLog();
+    // We'll also do a belt-and-braces "flow stop" in case
+    // any flow servers were spawned by the test that we're
+    // not tracking and handling in stopFlowServer.
+    // This call comes last, so that places like process.on('exit')
+    // can invoke cleanup(), and at least do all the work they
+    // can, even though they don't hang around waiting for flow stop
+    // to finish.
+    await this.flowCmd(['stop']);
   }
 
   assertNoErrors(): void {
@@ -949,12 +957,14 @@ export default class Builder {
     process.stderr.write(format('Tests will be built in %s\n', this.dir));
 
     // If something weird happens, lets make sure to stop all the flow servers
-    // we started
+    // we started. Note that cleanup is an async method that does synchronous
+    // cleanup and then kicks off a final 'flow stop' and awaits until it's
+    // done. In our exit handler we won't live to see the end of that await.
     process.on('exit', this.cleanup);
   }
 
-  cleanup = () => {
-    Builder.builders.forEach(builder => builder.cleanup());
+  cleanup = async () => {
+    await Promise.all(Builder.builders.map(builder => builder.cleanup()));
   };
 
   baseDirForSuite(suiteName: string): string {

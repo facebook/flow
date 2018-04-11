@@ -274,18 +274,39 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.waitUntilServerStatus(timeoutMs, expected);
     });
+    ret._allowServerToDie = expected === 'stopped';
+    return ret;
+  };
+
+  lspInitializeParams: any = {
+    rootPath: '<PLACEHOLDER_PROJECT_DIR>',
+    rootUri: '<PLACEHOLDER_PROJECT_URL>',
+    capabilities: {
+      workspace: {},
+      textDocument: {
+        synchronization: {},
+        completion: {},
+        hover: {},
+        definition: {},
+      },
+      window: {progress: {}, actionRequired: {}},
+      telemetry: {connectionStatus: {}},
+    },
+    trace: 'verbose',
+  };
+
+  startFlowServer: () => TestStepFirstStage = () => {
+    const ret = this._cloneWithAction(async (builder, env) => {});
+    ret._needsFlowServer = true;
     return ret;
   };
 
   ideStart: (
-
-      | {|mode: 'legacy'|}
-      | {|mode: 'lsp', needsFlowServer: boolean, doInitialize: boolean|},
+    {|mode: 'legacy'|} | {|mode: 'lsp', needsFlowServer: boolean|},
   ) => TestStepFirstStage = arg => {
     const mode = arg.mode;
     const needsFlowServer = arg.mode === 'legacy' ? true : arg.needsFlowServer;
     const doFlowCheck = arg.mode === 'legacy' ? true : false;
-    const doInitialize = arg.mode === 'legacy' ? false : arg.doInitialize;
 
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.createIDEConnection(mode);
@@ -295,6 +316,42 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     });
     ret._startsIde = true;
     ret._needsFlowServer = needsFlowServer; // to start flow server before action is executed
+    return ret;
+  };
+
+  ideStartAndConnect: (?number) => TestStepSecondStage = timeoutMsOpt => {
+    const assertLoc = searchStackForTestAssertion();
+    const timeoutMs = timeoutMsOpt || 20000;
+
+    const expected = 'telemetry/connectionStatus{true}';
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.createIDEConnection('lsp');
+      const promise = builder.sendIDERequestAndWaitForResponse('initialize', [
+        this.lspInitializeParams,
+      ]); // discarding the promise; instead we wait in the next statement...
+      await builder.waitUntilIDEMessage(timeoutMs, expected);
+    })._cloneWithAssertion((reason, env) => {
+      const isConnected = env
+        .getIDEMessagesSinceStartOfStep()
+        .some(msg => Builder.doesMessageMatch(msg, expected));
+      const suggestion = {
+        method: 'ideStartAndConnect',
+        args: [timeoutMs * 2],
+      };
+      return simpleDiffAssertion(
+        'connected',
+        isConnected
+          ? 'connected'
+          : 'disconnected' +
+            JSON.stringify(env.getIDEMessagesSinceStartOfStep()),
+        assertLoc,
+        reason,
+        "'is connected to flow server?'",
+        suggestion,
+      );
+    });
+    ret._startsIde = true;
+    ret._needsFlowServer = true;
     return ret;
   };
 

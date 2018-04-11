@@ -243,7 +243,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   );
 
   await runQueue.go();
-  builder.cleanup();
+  await builder.cleanup();
 
   const results = runQueue.results;
   // 1 - At least one test failed

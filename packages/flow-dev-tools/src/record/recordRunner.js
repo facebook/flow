@@ -107,7 +107,7 @@ export default async function(args: Args): Promise<void> {
 
   await runQueue.go();
 
-  builder.cleanup();
+  await builder.cleanup();
 
   let totalTests = 0, totalSteps = 0, testNum = 0, stepNum = 0, suiteName = 0;
 
