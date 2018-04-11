@@ -267,6 +267,15 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'CallExpression':
       delete flow.optional;
       break;
+
+    case 'DeclareClass':
+      if (esprima.implements === undefined) {
+        esprima.implements = [];
+      }
+      if (esprima.mixins === undefined) {
+        esprima.mixins = [];
+      }
+      break;
   }
 
   switch (esprima.type) {
