@@ -13,6 +13,7 @@ export default suite(
     ideStartAndConnect,
     ideRequest,
     ideNotification,
+    ideResponse,
     lspExpect,
     waitUntilIDEStatus,
     waitUntilServerStatus,
@@ -106,16 +107,42 @@ export default suite(
         ),
     ]),
 
+    test('Termination in-flight, and internal restart', [
+      ideStartAndConnect(),
+      flowCmd(['stop'])
+        .waitUntilServerStatus(3000, 'stopped')
+        .waitUntilIDEMessage(3000, 'window/actionRequired')
+        .verifyAllIDEMessagesInStep(
+          [
+            'telemetry/event{End_of_file}',
+            'telemetry/connectionStatus{false}',
+            'window/showMessageRequest{stopped}',
+            'window/actionRequired{stopped}',
+          ],
+          [
+            'window/showMessageRequest{Connecting}',
+            'window/progress',
+            '$/cancelRequest',
+          ],
+        ),
+      ideResponse('mostRecent', {title: 'Restart'})
+        .waitUntilServerStatus(20000, 'running')
+        .waitUntilIDEMessage(10000, 'telemetry/connectionStatus')
+        .verifyAllIDEMessagesInStep(
+          [
+            'window/actionRequired{null}',
+            'window/logMessage{Starting}',
+            'telemetry/connectionStatus{true}',
+          ],
+          [
+            'window/showMessageRequest{Connecting}',
+            'window/progress',
+            '$/cancelRequest',
+          ],
+        ),
+    ]),
+
     /*
-    test(
-      'Upon termination in-flight, reports, and restarts it upon Restart click',
-      [
-        lspStart({needsFlowServer: true, doInitialize: true}),
-        flowCmd(['stop']).lspExpect('shut down message', '', 3000),
-        lspSend('restart click').lspExpect('dismiss message', '', 3000),
-        serverExpectStatus({running: true, timeoutMs: 3000}),
-      ],
-    ),
     test('Restarts a lost server in response to flowconfig change', [
       lspStart({needsFlowServer: true, doInitialize: true}),
       modifyFile({

@@ -373,10 +373,10 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  ideResponse: (number, ...params: Array<mixed>) => TestStepFirstStage = (
-    id,
-    ...params
-  ) => {
+  ideResponse: (
+    number | 'mostRecent',
+    ...params: Array<mixed>
+  ) => TestStepFirstStage = (id, ...params) => {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.sendIDEResponse(id, params);
     });
@@ -534,6 +534,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
   };
 
   waitForServerToDie: (timeout: number) => TestStepFirstStage = timeout => {
+    // TODO(ljw): remove this in favor of waitUntilServerStatus(timeout, 'stopped')
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.waitForServerToDie(timeout);
     });

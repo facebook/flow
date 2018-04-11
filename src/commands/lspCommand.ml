@@ -102,6 +102,7 @@ and disconnected_env = {
   d_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   d_autostart: bool;
   d_start_time: float;
+  d_dialog_stopped_ok: bool; (* if the user has already dismissed it, don't reshow *)
   d_dialog_stopped: ShowMessageRequest.t; (* "Flow server is stopped. [Restart]" *)
   d_actionRequired_stopped: ActionRequired.t; (* "Flow server is stopped." *)
   d_dialog_connecting: ShowMessageRequest.t; (* "Connecting to Flow server." *)
@@ -408,16 +409,24 @@ let show_disconnected
 
   let (d_dialog_stopped, d_ienv) = match env.d_dialog_stopped with
     | ShowMessageRequest.Some _ -> env.d_dialog_stopped, env.d_ienv
+    | ShowMessageRequest.None when not env.d_dialog_stopped_ok -> env.d_dialog_stopped, env.d_ienv
     | ShowMessageRequest.None -> begin
       let handle_error (_e, _stack) state = match state with
         | Disconnected e -> Disconnected { e with d_dialog_stopped = ShowMessageRequest.None; }
         | _ -> state in
       let handle_result result state = match state, result with
         | Disconnected e, Some { ShowMessageRequest.title = "Restart"; } ->
-          Disconnected { e with d_dialog_stopped = ShowMessageRequest.None; d_autostart = true; }
-          (* thus, on the next tick, try_connect will invoke start_flow_server *)
+          (* on the next tick, try_connect will invoke start_flow_server... *)
+          Disconnected { e with
+            d_dialog_stopped = ShowMessageRequest.None;
+            d_autostart = true;
+          }
         | Disconnected e, _ ->
-          Disconnected { e with d_dialog_stopped = ShowMessageRequest.None; }
+          (* on subsequent ticks, try_connect won't display errors and won't autostart... *)
+          Disconnected { e with
+            d_dialog_stopped = ShowMessageRequest.None;
+            d_dialog_stopped_ok = false;
+          }
         | _ ->
           state in
       let handle = (ShowMessageHandler handle_result, handle_error) in
@@ -814,6 +823,7 @@ begin
       d_ienv;
       d_autostart = true;
       d_start_time =  Unix.gettimeofday ();
+      d_dialog_stopped_ok = true;
       d_dialog_stopped = ShowMessageRequest.None;
       d_actionRequired_stopped = ActionRequired.None;
       d_dialog_connecting = ShowMessageRequest.None;
@@ -835,6 +845,36 @@ begin
 
   | Pre_init _, Client_message _ ->
     raise (Error.ServerNotInitialized "Server not initialized")
+
+  | _, Client_message ((ResponseMessage (id, result)) as c) ->
+    let ienv = match state with
+      | Connected env -> env.c_ienv
+      | Disconnected env -> env.d_ienv
+      | _ -> failwith "Didn't expect an LSP response yet" in
+    begin try
+      let (handle, handle_error) = IdMap.find id ienv.i_outstanding_local_handlers in
+      let i_outstanding_local_handlers = IdMap.remove id ienv.i_outstanding_local_handlers in
+      let i_outstanding_local_requests = IdMap.remove id ienv.i_outstanding_local_requests in
+      let ienv = { ienv with i_outstanding_local_handlers; i_outstanding_local_requests; } in
+      let state = match state with
+        | Connected env -> Connected { env with c_ienv = ienv; }
+        | Disconnected env -> Disconnected { env with d_ienv = ienv; }
+        | _ -> failwith "Didn't expect an LSP response to be found yet"
+      in
+      match result, handle with
+      | ShowMessageRequestResult result, ShowMessageHandler handle -> handle result state
+      | ErrorResult (e, msg), _ -> handle_error (e, msg) state
+      | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_to_string c))
+    with Not_found ->
+      match state with
+      | Connected cenv ->
+        let state = track_to_server state c in
+        let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
+        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
+        state
+      | _ ->
+        failwith (Printf.sprintf "Response %s has missing handler" (message_to_string c))
+    end
 
   | Disconnected _, Client_message c ->
     let state = track_to_server state c in
@@ -865,12 +905,6 @@ begin
     let warn_count = Errors.ErrorSet.cardinal warnings in
     let _text = Printf.sprintf "Received %d errors, %d warnings" err_count warn_count in
     (* TODO: report errors properly, either direct from the server, or here *)
-    state
-
-  | Connected cenv, Client_message ((ResponseMessage (id, _)) as c) ->
-    let state = track_to_server state c in
-    let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
-    if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
     state
 
   | Connected cenv, Client_message c ->
@@ -926,6 +960,7 @@ and main_handle_error
       d_ienv;
       d_autostart;
       d_start_time =  Unix.time ();
+      d_dialog_stopped_ok = true;
       d_dialog_stopped = ShowMessageRequest.None;
       d_actionRequired_stopped = ActionRequired.None;
       d_dialog_connecting = ShowMessageRequest.None;

@@ -55,6 +55,7 @@ export class TestBuilder {
       number,
       {|resolve: any => void, reject: Error => void|},
     >,
+    outstandingRequestsInfo: {nextId: number, mostRecent: ?number},
     stderr: Array<string>,
     messageEmitter: EventEmitter,
   } = null;
@@ -424,15 +425,19 @@ export class TestBuilder {
 
     const messageEmitter = new EventEmitter();
     const messages: Array<IDEMessage> = [];
-    let requestCount = 0;
+    const outstandingRequestsInfo = {
+      nextId: 1,
+      mostRecent: (null: ?number),
+    };
     const outstandingRequestsFromServer: Map<
       number,
       {|resolve: any => void, reject: Error => void|},
     > = new Map();
 
     connection.onRequest((method: string, ...rawParams: Array<mixed>) => {
-      requestCount++;
-      const id = requestCount;
+      const id = outstandingRequestsInfo.nextId;
+      outstandingRequestsInfo.mostRecent = id;
+      outstandingRequestsInfo.nextId++;
       // the way vscode-jsonrpc works is the last element of the array is always
       // the cancellation token, and the actual params are the ones before it.
       const cancellationToken = ((rawParams.pop(): any): CancellationToken);
@@ -518,6 +523,7 @@ export class TestBuilder {
       connection,
       messages,
       outstandingRequestsFromServer,
+      outstandingRequestsInfo,
       stderr,
       messageEmitter,
     };
@@ -617,10 +623,16 @@ export class TestBuilder {
     ide.connection.sendNotification(method, ...args);
   }
 
-  async sendIDEResponse(id: number, argsRaw: Array<mixed>): Promise<void> {
+  async sendIDEResponse(
+    id: number | 'mostRecent',
+    argsRaw: Array<mixed>,
+  ): Promise<void> {
     const ide = this.ide;
     if (ide == null) {
       throw new Error('No IDE process running!');
+    }
+    if (id === 'mostRecent') {
+      id = ide.outstandingRequestsInfo.mostRecent || 0;
     }
     const callbacks = ide.outstandingRequestsFromServer.get(id);
     if (callbacks == null) {
@@ -634,7 +646,7 @@ export class TestBuilder {
     } else {
       const args = this.sanitizeOutgoingIDEMessage(argsRaw);
       await this.log('IDE >>response "id":%d\n%s', id, JSON.stringify(args));
-      callbacks.resolve(args);
+      callbacks.resolve(...args);
     }
   }
 
@@ -669,15 +681,15 @@ export class TestBuilder {
       const onMessage = () => {
         const message = ide.messages.slice(-1)[0];
         if (Builder.doesMessageMatch(message, expected)) {
-          done();
+          done('Received');
         }
       };
       var timeout = null;
-      const done = () => {
+      const done = ok => {
         this.ide &&
           this.ide.messageEmitter.removeListener('message', onMessage);
         timeout && clearTimeout(timeout);
-        this.log('Received message %s in under %dms', expected, timeoutMs).then(
+        this.log('%s message %s in under %dms', ok, expected, timeoutMs).then(
           resolve,
         );
       };
@@ -689,9 +701,11 @@ export class TestBuilder {
 
       // And account for all further messages that arrive, until our stopping
       // condition:
-      this.log('Starting to wait %dms for messages', timeoutMs).then(() => {
+      this.log('Starting to wait %dms for %s', timeoutMs, expected).then(() => {
         const onTimeout = () => {
-          this.log('%dms timeout fired', timeoutMs).then(done);
+          this.log('%dms timeout fired', timeoutMs).then(() =>
+            done('Failed to receive'),
+          );
         };
         timeout = setTimeout(onTimeout, timeoutMs);
       });
@@ -723,16 +737,17 @@ export class TestBuilder {
       const onMessage = () => {
         expectedCount--;
         if (expectedCount === 0) {
-          done();
+          done('Received');
         }
       };
       var timeout = null;
-      const done = () => {
+      const done = ok => {
         this.ide &&
           this.ide.messageEmitter.removeListener('message', onMessage);
         timeout && clearTimeout(timeout);
         this.log(
-          'Received all %d messages in under %dms',
+          '%s all %d messages in under %dms',
+          ok,
           expectedCount,
           timeoutMs,
         ).then(resolve);
@@ -747,7 +762,9 @@ export class TestBuilder {
       // condition:
       this.log('Starting to wait %dms for messages', timeoutMs).then(() => {
         const onTimeout = () => {
-          this.log('%dms timeout fired', timeoutMs).then(done);
+          this.log('%dms timeout fired', timeoutMs).then(() =>
+            done('Failed to receive'),
+          );
         };
         timeout = setTimeout(onTimeout, timeoutMs);
       });
@@ -818,14 +835,15 @@ export class TestBuilder {
           (expected === 'running' && this.server != null) ||
           (expected === 'stopped' && this.server == null)
         ) {
-          done();
+          done('Received');
         }
       };
-      const done = () => {
+      const done = ok => {
         this.serverEmitter.removeListener('server', onServer);
         timeout && clearTimeout(timeout);
         this.log(
-          'Got server %s status in under %dms',
+          '%s server %s status in under %dms',
+          ok,
           expected,
           timeoutMs,
         ).then(resolve);
@@ -838,7 +856,9 @@ export class TestBuilder {
       this.log('Starting to wait %dms for server status', timeoutMs).then(
         () => {
           const onTimeout = () => {
-            this.log('%dms timeout fired', timeoutMs).then(done);
+            this.log('%dms timeout fired', timeoutMs).then(() =>
+              done('Failed to receive'),
+            );
           };
           timeout = setTimeout(onTimeout, timeoutMs);
         },
@@ -876,6 +896,7 @@ export class TestBuilder {
   }
 
   async waitForServerToDie(timeout: number): Promise<void> {
+    // TODO(ljw): remove this in favor of waitUntilServerStatus
     let remaining = timeout;
     while (remaining > 0 && this.server != null) {
       await sleep(Math.min(remaining, 100));
