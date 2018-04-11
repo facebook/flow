@@ -838,7 +838,8 @@ begin
 
   | Disconnected _, Client_message c ->
     let state = track_to_server state c in
-    let e = Error.RequestCancelled "Server not connected" in
+    let method_ = Lsp_fmt.message_to_string c in
+    let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     main_handle_error e stack state (Some event)
 

@@ -4,6 +4,7 @@
  * @lint-ignore-every LINEWRAP1
  */
 
+import Builder from './builder';
 import searchStackForTestAssertion from './searchStackForTestAssertion';
 import newErrors from './assertions/newErrors';
 import noNewErrors from './assertions/noNewErrors';
@@ -349,23 +350,40 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  // verifyAllIDEMessagesInStep(expects=['A','B{C,D}'], ignores=['D','E'])
+  // will look at all the actual messages that arrived in this step, and strip
+  // away the ones with ignored method names D, E. Of those remaining it will
+  // verify that the first had method name A, the second had method name B,
+  // and that the strings C and D were both found in the JSON representation
+  // of the second message (up to whitespace).
   verifyAllIDEMessagesInStep: (
     Array<string>,
     Array<string>,
-  ) => TestStepSecondStage = (requiredSequence, ignored) => {
+  ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
-      const methods = env
+      const actualMessages = env
         .getIDEMessagesSinceStartOfStep()
-        .filter(msg => !ignored.includes(msg.method))
-        .map(msg => msg.method);
+        .filter(
+          msg => !ignores.some(ignore => Builder.doesMessageMatch(msg, ignore)),
+        );
+      let actuals: Array<string> = [];
+      for (let i = 0; i < actualMessages.length; i++) {
+        const actual =
+          i < expects.length &&
+          Builder.doesMessageMatch(actualMessages[i], expects[i])
+            ? expects[i]
+            : actualMessages[i].method;
+        actuals.push(actual);
+      }
+
       const suggestion = {
         method: 'verifyAllIDEMessagesInStep',
-        args: ['<FIGURE IT OUT>'],
+        args: [actuals, ignores],
       };
       return simpleDiffAssertion(
-        requiredSequence.join(','),
-        methods.join(','),
+        expects.join(','),
+        actuals.join(','),
         assertLoc,
         reason,
         "'what required message arrived'",

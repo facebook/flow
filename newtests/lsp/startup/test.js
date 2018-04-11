@@ -29,6 +29,7 @@ export default suite(
     ideRequest,
     ideNotification,
     lspExpect,
+    waitUntilIDEStatus,
     waitUntilServerStatus,
     flowCmd,
     modifyFile,
@@ -38,7 +39,7 @@ export default suite(
       ideRequest('initialize', initializeParams)
         .waitUntilIDEMessage(20000, 'telemetry/connectionStatus')
         .verifyAllIDEMessagesInStep(
-          ['initialize', 'telemetry/connectionStatus'],
+          ['initialize', 'telemetry/connectionStatus{true}'],
           [],
         ),
       ideRequest('shutdown')
@@ -52,19 +53,32 @@ export default suite(
         .verifyIDEStatus('stopped')
         .verifyServerStatus('running'),
     ]),
-    /*
+
     test('Cold flow starts up with progress, and shuts down', [
-      lspStart({needsFlowServer: true, doInitialize: false}),
-      lspSend('initialize').lspExpectProgress({
-        keyword: 'initializing',
-        dismiss: true,
-        timeoutMs: 3000,
-      }),
-      lspExpect('initialize', 'response', 3000),
-      lspSend('shutdown').lspExpect('shutdown', 'response', 3000),
-      lspSend('exit').lspExpectStatus({running: false, timeoutMs: 3000}),
-      serverExpectStatus({running: false, timeoutMs: 0}),
+      ideStart({mode: 'lsp', needsFlowServer: false, doInitialize: false}),
+      ideRequest('initialize', initializeParams)
+        .waitUntilIDEMessage(30000, 'telemetry/connectionStatus')
+        .verifyAllIDEMessagesInStep(
+          [
+            'initialize',
+            'window/logMessage{Starting Flow server}',
+            'telemetry/event{Not yet implemented}', // server->client request
+            'window/progress{null}',
+            'telemetry/connectionStatus{true}',
+          ],
+          ['window/progress{Connecting}'],
+        ),
+      ideRequest('shutdown')
+        .waitUntilIDEMessage(3000, 'shutdown')
+        .verifyAllIDEMessagesInStep(
+          ['shutdown'],
+          ['telemetry/connectionStatus'],
+        ),
+      ideNotification('exit'),
+      waitUntilIDEStatus(3000, 'stopped').verifyIDEStatus('stopped'),
+      waitUntilServerStatus(3000, 'stopped').verifyServerStatus('stopped'),
     ]),
+    /*
     test(
       'Upon termination in-flight, reports, and reports on external restart',
       [

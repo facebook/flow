@@ -590,7 +590,7 @@ export class TestBuilder {
     ide.messageEmitter.emit('message');
   }
 
-  waitUntilIDEMessage(timeoutMs: number, method: string): Promise<void> {
+  waitUntilIDEMessage(timeoutMs: number, expected: string): Promise<void> {
     const ide = this.ide;
 
     return new Promise(resolve => {
@@ -598,7 +598,8 @@ export class TestBuilder {
         throw new Error('No ide process running!');
       }
       const onMessage = () => {
-        if (ide.messages.slice(-1)[0].method === method) {
+        const message = ide.messages.slice(-1)[0];
+        if (Builder.doesMessageMatch(message, expected)) {
           done();
         }
       };
@@ -607,7 +608,7 @@ export class TestBuilder {
         this.ide &&
           this.ide.messageEmitter.removeListener('message', onMessage);
         timeout && clearTimeout(timeout);
-        this.log('Received message %s in under %dms', method, timeoutMs).then(
+        this.log('Received message %s in under %dms', expected, timeoutMs).then(
           resolve,
         );
       };
@@ -843,6 +844,33 @@ export default class Builder {
 
   static getDirForRun(runID: string): string {
     return join(tmpdir(), 'flow/tests', runID);
+  }
+
+  // doesMethodMatch(actual, 'M') judges whether the method name of the actual
+  // message was M. And doesMethodMatch(actual, 'M{C1,C2,...}') judges also
+  // whether the strings C1, C2, ... were all found in the JSON representation
+  // of the actual message (up to whitespace).
+  static doesMessageMatch(actual: IDEMessage, expected: string): boolean {
+    const iOpenBrace = expected.indexOf('{');
+    const iCloseBrace = expected.lastIndexOf('}');
+    if (iOpenBrace == -1 || iCloseBrace == -1) {
+      return actual.method === expected;
+    } else {
+      if (actual.method !== expected.substring(0, iOpenBrace)) {
+        return false;
+      }
+      const expectedContents = expected
+        .substring(iOpenBrace + 1, iCloseBrace)
+        .replace(/\s/g, '')
+        .split(',');
+      const json = JSON.stringify(actual).replace(/\s/g, '');
+      for (const expectedContent of expectedContents) {
+        if (!json.includes(expectedContent)) {
+          return false;
+        }
+      }
+      return true;
+    }
   }
 
   constructor(errorCheckCommand: CheckCommand) {
