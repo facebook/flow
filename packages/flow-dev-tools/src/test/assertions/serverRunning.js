@@ -9,12 +9,12 @@ import simpleDiffAssertion from './simpleDiffAssertion';
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 
 export default function(
-  expected: boolean,
+  expected: 'stopped' | 'running',
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
     const actual = env.getServerRunning();
-    const suggestion = {method: 'serverRunning', args: [actual]};
+    const suggestion = {method: 'verifyServerStatus', args: [actual]};
     return simpleDiffAssertion(
       String(expected),
       String(actual),

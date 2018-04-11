@@ -15,15 +15,15 @@ export default function(
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
-    const actual = env.getIDEMessages();
+    const actual = env.getIDEMessagesSinceStartOfStep();
 
     let suggestion = {
-      method: 'ideNoNewMessagesAfterSleep',
+      method: 'waitAndVerifyNoIDEMessagesSinceStartOfStep',
       args: [Math.round(timeoutMs / 10)],
     };
     if (actual.length > 0) {
       suggestion = {
-        method: 'ideNewMessagesWithTimeout',
+        method: 'waitAndVerifyAllIDEMessagesContentSinceStartOfStep',
         args: [timeoutMs, actual],
       };
     }

@@ -21,7 +21,7 @@ export default function(
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
-    const actual = formatIfJSON(env.getIDEStderr());
+    const actual = formatIfJSON(env.getIDEStderrSinceStartOfStep());
     expected = formatIfJSON(expected);
     const suggestion = {method: 'ideStderr', args: [formatIfJSON(actual)]};
     return simpleDiffAssertion(

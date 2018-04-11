@@ -16,6 +16,7 @@ import noop from './assertions/noop';
 import ideNoNewMessagesAfterSleep from './assertions/ideNoNewMessagesAfterSleep';
 import ideNewMessagesWithTimeout from './assertions/ideNewMessagesWithTimeout';
 import ideStderr from './assertions/ideStderr';
+import simpleDiffAssertion from './assertions/simpleDiffAssertion';
 
 import {sleep} from '../utils/async';
 
@@ -23,6 +24,7 @@ import type {
   AssertionLocation,
   ErrorAssertion,
   ErrorAssertionResult,
+  Suggestion,
 } from './assertions/assertionTypes';
 import type {TestBuilder} from './builder';
 import type {FlowResult} from '../flowResult';
@@ -68,7 +70,7 @@ export class TestStep {
   _actions: Array<Action>;
   _assertions: Array<ErrorAssertion>;
   _reason: ?string;
-  _needsFlowServer: boolean;
+  _needsFlowServer: boolean; // makes runTestSuite start flow server before executing step's action
   _needsFlowCheck: boolean;
   _startsIde: boolean;
   _readsIdeMessages: boolean;
@@ -160,7 +162,7 @@ class TestStepFirstOrSecondStage extends TestStep {
     return this._cloneWithAssertion(exitCodes(expected, assertLoc));
   }
 
-  serverRunning(expected: boolean): TestStepSecondStage {
+  verifyServerStatus(expected: 'stopped' | 'running'): TestStepSecondStage {
     const assertLoc = searchStackForTestAssertion();
     return this._cloneWithAssertion(serverRunning(expected, assertLoc));
   }
@@ -235,13 +237,63 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       env.triggerFlowCheck();
     });
 
-  ideStart: () => TestStepFirstStage = () => {
+  waitUntilIDEStatus: (number, 'stopped' | 'running') => TestStepFirstStage = (
+    timeoutMs,
+    expected,
+  ) => {
     const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.createIDEConnection();
-      env.triggerFlowCheck();
+      await builder.waitUntilIDEStatus(timeoutMs, expected);
+    });
+    return ret;
+  };
+
+  verifyIDEStatus: (
+    'stopped' | 'running',
+  ) => TestStepSecondStage = expected => {
+    const assertLoc = searchStackForTestAssertion();
+    const ret = this._cloneWithAssertion((reason, env) => {
+      const actual = env.getIDERunning();
+      const suggestion = {method: 'verifyIDEStatus', args: [actual]};
+      return simpleDiffAssertion(
+        expected,
+        actual,
+        assertLoc,
+        reason,
+        "'is IDE running?'",
+        suggestion,
+      );
+    });
+    return ret;
+  };
+
+  waitUntilServerStatus: (
+    number,
+    'stopped' | 'running',
+  ) => TestStepFirstStage = (timeoutMs, expected) => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.waitUntilServerStatus(timeoutMs, expected);
+    });
+    return ret;
+  };
+
+  ideStart: (
+
+      | {|mode: 'legacy'|}
+      | {|mode: 'lsp', needsFlowServer: boolean, doInitialize: boolean|},
+  ) => TestStepFirstStage = arg => {
+    const mode = arg.mode;
+    const needsFlowServer = arg.mode === 'legacy' ? true : arg.needsFlowServer;
+    const doFlowCheck = arg.mode === 'legacy' ? true : false;
+    const doInitialize = arg.mode === 'legacy' ? false : arg.doInitialize;
+
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.createIDEConnection(mode);
+      if (doFlowCheck) {
+        env.triggerFlowCheck();
+      }
     });
     ret._startsIde = true;
-    ret._needsFlowServer = true;
+    ret._needsFlowServer = needsFlowServer; // to start flow server before action is executed
     return ret;
   };
 
@@ -266,18 +318,71 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
   ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage = (
     method,
     ...params
-  ) =>
-    this._cloneWithAction((builder, env) =>
-      builder.sendIDERequest(method, params),
-    );
+  ) => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      const promise = builder.sendIDERequestAndWaitForResponse(method, params);
+      // We don't do anything with that promise; user will wait for messages later.
+      // TODO(ljw): at end of step, verify that no promises are left outstanding
+    });
+    return ret;
+  };
 
-  // Sleep timeoutMs milliseconds and assert there were no ide messages
-  ideNoNewMessagesAfterSleep: number => TestStepSecondStage = timeoutMs => {
+  ideRequestAndWaitUntilResponse: (
+    string,
+    ...params: Array<mixed>
+  ) => TestStepFirstStage = (method, ...params) => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.sendIDERequestAndWaitForResponse(method, params);
+    });
+    return ret;
+  };
+
+  waitUntilIDEMessage: (number, string) => TestStepFirstStage = (
+    timeoutMs,
+    method,
+  ) => {
+    const ret = this._cloneWithAction(
+      async (builder, env) =>
+        await builder.waitUntilIDEMessage(timeoutMs, method),
+    );
+    ret._readsIdeMessages = true;
+    return ret;
+  };
+
+  verifyAllIDEMessagesInStep: (
+    Array<string>,
+    Array<string>,
+  ) => TestStepSecondStage = (requiredSequence, ignored) => {
+    const assertLoc = searchStackForTestAssertion();
+    const ret = this._cloneWithAssertion((reason, env) => {
+      const methods = env
+        .getIDEMessagesSinceStartOfStep()
+        .filter(msg => !ignored.includes(msg.method))
+        .map(msg => msg.method);
+      const suggestion = {
+        method: 'verifyAllIDEMessagesInStep',
+        args: ['<FIGURE IT OUT>'],
+      };
+      return simpleDiffAssertion(
+        requiredSequence.join(','),
+        methods.join(','),
+        assertLoc,
+        reason,
+        "'what required message arrived'",
+        suggestion,
+      );
+    });
+    return ret;
+  };
+
+  // waitAndVerifyNoIDEMessagesSinceStartOfStep: if any messages arrive since the start
+  // of this step until the timeout then it fails; otherwise it succeeds
+  waitAndVerifyNoIDEMessagesSinceStartOfStep: number => TestStepSecondStage = timeoutMs => {
     const assertLoc = searchStackForTestAssertion();
 
-    const ret = this._cloneWithAction((builder, env) =>
-      sleep(timeoutMs),
-    )._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await sleep(timeoutMs);
+    })._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
     ret._readsIdeMessages = true;
     return ret;
   };
@@ -287,16 +392,21 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       await sleep(timeoutMs);
     });
 
-  // Wait for the expected output, and timeout after timeousMs milliseconds
-  ideNewMessagesWithTimeout: (
+  // waitAndVerifyAllIDEMessagesContentSinceStartOfStep: will consider all messages that
+  // have arrived since the start of the step, and will consider further
+  // messages that arrive up to the expected message count until the timeout.
+  // (This set of messages to consider may therefore be larger than, same
+  // size, or smaller than the expected count). If the messages to consider
+  // are identical to the expected messages, then it succeeds.
+  waitAndVerifyAllIDEMessagesContentSinceStartOfStep: (
     number,
     $ReadOnlyArray<IDEMessage>,
   ) => TestStepSecondStage = (timeoutMs, expected) => {
     const assertLoc = searchStackForTestAssertion();
 
-    const ret = this._cloneWithAction((builder, env) =>
-      builder.ideNewMessagesWithTimeout(timeoutMs, expected),
-    )._cloneWithAssertion(
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.waitUntilIDEMessageCount(timeoutMs, expected.length);
+    })._cloneWithAssertion(
       ideNewMessagesWithTimeout(timeoutMs, expected, assertLoc),
     );
     ret._readsIdeMessages = true;

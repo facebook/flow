@@ -10,9 +10,9 @@ export default suite(({
   addCode, addFile, addFiles, removeFile, ideStart, ideNotification, flowCmd
 }) => [
   test('Opening and closing ignored file', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -30,12 +30,12 @@ export default suite(({
       ),
 
     addFile('ignored.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .noNewErrors()
       .because('The IDE has not opened ignored.js yet'),
 
     ideNotification('didOpen', 'ignored.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         50000,
         [
           {
@@ -54,7 +54,7 @@ export default suite(({
       .because('The file is ignored'),
 
     ideNotification('didClose', 'ignored.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         50000,
         [
           {
@@ -86,9 +86,9 @@ export default suite(({
   ]).lazy('ide'),
 
   test('Opening and closing single file with no dependents or dependencies', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -106,7 +106,7 @@ export default suite(({
       ),
 
     addCode('var x: string = 123')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -134,7 +134,7 @@ export default suite(({
       .because('The IDE has not opened test.js yet'),
 
     ideNotification('didOpen', 'test.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -380,7 +380,7 @@ export default suite(({
       .because('Opening the file triggers a recheck which sees the error'),
 
     ideNotification('didClose', 'test.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -547,9 +547,9 @@ export default suite(({
 
   // Somewhat similar to tests/quick-start-add-dependency
   test('New dependent', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -566,7 +566,7 @@ export default suite(({
         ],
       ),
     addFiles('focused.js', 'dependency.js', 'otherDependent.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -592,7 +592,7 @@ export default suite(({
       )
       .because('Nothing is open, so we just get the recheck start and end'),
     ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1115,10 +1115,10 @@ export default suite(({
 
   // Based on tests/quick-start
   test('@flow and @noflow pragmas', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'errors.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1154,7 +1154,7 @@ export default suite(({
         ],
       ),
     addFile('errorsWithFlowPragma.js', 'errors.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1412,7 +1412,7 @@ export default suite(({
       .because('File is open and has @flow so we should get the error'),
     addFile('errorsWithNoFlowPragma.js', 'errors.js')
       .flowCmd(['status', '--strip-root'])
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1464,9 +1464,9 @@ export default suite(({
 
   // Based on tests/quick-start-add-dependency-on-cycle
   test('Open file cyclic dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1483,7 +1483,7 @@ export default suite(({
         ],
       ),
     addFiles('cycleA.js', 'cycleB.js', 'focusedWithCyclicDependency.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1508,7 +1508,7 @@ export default suite(({
         ],
       ),
     ideNotification('didOpen', 'focusedWithCyclicDependency.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1781,9 +1781,9 @@ export default suite(({
 
   // Based on tests/quick-start-check-contents
   test('check-contents should pull in dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1867,10 +1867,10 @@ export default suite(({
 
   // Based on tests/quick-start-delete-dependency
   test('Delete dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -2025,10 +2025,10 @@ export default suite(({
   ]).lazy('ide'),
 
   test('Open a dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -2087,7 +2087,7 @@ export default suite(({
       )
       .because('Other dependent is a dependent of a dependency, so is not checked'),
     ideNotification('didOpen', 'dependency.js')
-      // Unfortunately ideNewMessagesWithTimeout doesn't work here since the
+      // Unfortunately ideMessagesSinceStartOfStep doesn't work here since the
       // order of the streamed errors isn't fixed :(
       .sleep(500),
     flowCmd(['status', '--strip-root'])
@@ -2147,10 +2147,10 @@ export default suite(({
   ]).lazy('ide'),
 
   test('Remove and restore an open file', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -2270,10 +2270,10 @@ export default suite(({
   ]).lazy('ide'),
 
   test('flow force-recheck --focus', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {

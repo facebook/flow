@@ -11,10 +11,11 @@ export interface StepEnvWriteable {
   reportStdout(output: string): void;
   reportStderr(output: string): void;
   reportExitCode(code: number): void;
-  setIDEMessages(messages: Array<IDEMessage>): void;
-  setIDEStderr(stderr: string): void;
+  setIDEMessagesSinceStartOfStep(messages: Array<IDEMessage>): void;
+  setIDEStderrSinceStartOfStep(stderr: string): void;
   setNewErrors(errors: FlowResult): void;
-  setServerRunning(running: boolean): void;
+  setServerRunning(running: 'stopped' | 'running'): void;
+  setIDERunning(running: 'stopped' | 'running'): void;
   triggerFlowCheck(): void;
 }
 
@@ -22,11 +23,12 @@ export interface StepEnvReadable {
   getStdout(): string;
   getStderr(): string;
   getExitCodes(): Array<number>;
-  getIDEMessages(): Array<IDEMessage>;
-  getIDEStderr(): string;
+  getIDEMessagesSinceStartOfStep(): Array<IDEMessage>;
+  getIDEStderrSinceStartOfStep(): string;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
-  getServerRunning(): boolean;
+  getServerRunning(): 'stopped' | 'running';
+  getIDERunning(): 'stopped' | 'running';
   shouldRunFlow(): boolean;
 }
 
@@ -37,10 +39,11 @@ export function newEnv(
   let stderr = [];
   let exitCodes = [];
   let newErrors = oldErrors;
-  let serverRunning = false;
+  let serverRunning = 'stopped';
+  let ideRunning = 'stopped';
   let shouldRunFlow = false;
-  let ideMessages = [];
-  let ideStderr = '';
+  let ideMessagesSinceStartOfStep = [];
+  let ideStderrSinceStartOfStep = '';
 
   const envWrite = {
     reportStdout(output) {
@@ -55,12 +58,12 @@ export function newEnv(
       exitCodes.push(code);
     },
 
-    setIDEMessages(messages) {
-      ideMessages = messages;
+    setIDEMessagesSinceStartOfStep(messages) {
+      ideMessagesSinceStartOfStep = messages;
     },
 
-    setIDEStderr(stderr) {
-      ideStderr = stderr;
+    setIDEStderrSinceStartOfStep(stderr) {
+      ideStderrSinceStartOfStep = stderr;
     },
 
     setNewErrors(errors) {
@@ -69,6 +72,10 @@ export function newEnv(
 
     setServerRunning(running) {
       serverRunning = running;
+    },
+
+    setIDERunning(running) {
+      ideRunning = running;
     },
 
     triggerFlowCheck() {
@@ -89,12 +96,12 @@ export function newEnv(
       return exitCodes.slice();
     },
 
-    getIDEMessages() {
-      return ideMessages;
+    getIDEMessagesSinceStartOfStep() {
+      return ideMessagesSinceStartOfStep;
     },
 
-    getIDEStderr() {
-      return ideStderr;
+    getIDEStderrSinceStartOfStep() {
+      return ideStderrSinceStartOfStep;
     },
 
     getOldErrors() {
@@ -107,6 +114,10 @@ export function newEnv(
 
     getServerRunning() {
       return serverRunning;
+    },
+
+    getIDERunning() {
+      return ideRunning;
     },
 
     shouldRunFlow() {

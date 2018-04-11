@@ -21,11 +21,11 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         ^^^^^^ [2]
         `,
       ),
-    ideStart()
-      .ideNoNewMessagesAfterSleep(500)
+    ideStart({mode: 'legacy'})
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because('We are connected, but not subscribed'),
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -150,9 +150,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('Recheck behavior', [
     addFile('existingError.js')
-      .ideStart()
+      .ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -285,7 +285,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `,
       ),
     addCode('var notAnError: number = 123;')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -415,7 +415,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       )
       .because('No errors should be streamed during the recheck'),
     addCode('var newError: string = 123;')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -769,24 +769,27 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
   ]),
 
   test('autocomplete', [
-    ideStart()
-      .ideRequest('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
-      .ideNewMessagesWithTimeout(
-        10000,
+    ideStart({mode:'legacy'})
+      .ideRequestAndWaitUntilResponse('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        0, // no need for timeout here since we already waited for the response
         [
           {
-            "result": [
-              {
-                "name": "x",
-                "type": "number",
-                "func_details": null,
-                "path": "test.js",
-                "line": 1,
-                "endline": 1,
-                "start": 6,
-                "end": 8
-              }
-            ]
+            "method": "autocomplete",
+            "result": {
+              "result": [
+                {
+                  "name": "x",
+                  "type": "number",
+                  "func_details": null,
+                  "path": "test.js",
+                  "line": 1,
+                  "endline": 1,
+                  "start": 6,
+                  "end": 8
+                }
+              ]
+            }
           }
         ],
       ),
@@ -796,12 +799,12 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
    * that appeared during a recheck */
   test('connect during recheck', [
     // For some reason this order of actions triggered the bug
-    ideStart()
+    ideStart({mode:'legacy'})
       .addCode('var x = 123')
-      .ideNoNewMessagesAfterSleep(100)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(100)
       .because('Starting the IDE does not fire any messages'),
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -823,13 +826,13 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didOpen before subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('didOpen', 'fileWithWarning.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because('We have not subscribed yet, so there is no response on open'),
 
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -954,9 +957,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didOpen after subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -975,7 +978,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('We do not report warnings in files that are not open'),
 
     ideNotification('didOpen', 'fileWithWarning.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1098,7 +1101,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('We should receive the warning when we open the file'),
 
       ideNotification('didOpen', 'fileWithWarning.js')
-        .ideNoNewMessagesAfterSleep(500)
+        .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
         .because(
           'When we open an already open file, we dont get the current errors',
         ),
@@ -1106,16 +1109,16 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didClose before subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('didOpen', 'fileWithWarning.js')
       .ideNotification('didClose', 'fileWithWarning.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because(
         'We have not subscribed yet, so there is no response on open or close',
       ),
 
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1136,9 +1139,9 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didClose after subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1157,7 +1160,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('Subscribing gives us the current errors'),
 
     ideNotification('didOpen', 'fileWithWarning.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1280,7 +1283,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('When we open a new file we get the current errors'),
 
     ideNotification('didClose', 'fileWithWarning.js')
-      .ideNewMessagesWithTimeout(
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
         10000,
         [
           {
@@ -1299,14 +1302,14 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('When we close a new file we get the current errors'),
 
     ideNotification('didClose', 'fileWithWarning.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because(
         'When we close an already closed file, we dont get the current errors',
       ),
   ]),
 
   test('Stop the flow ide command without killing the server', [
-    ideStart(),
+    ideStart({mode: 'legacy'}),
     addCode('var x = 123')
       .ideStop()
       .sleep(500),

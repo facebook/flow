@@ -19,7 +19,7 @@ export default function(
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env): ErrorAssertionResult => {
-    const actual = env.getIDEMessages();
+    const actual = env.getIDEMessagesSinceStartOfStep();
     if (actual.length > 0) {
       const locMessage =
         assertLoc == null
@@ -50,7 +50,7 @@ export default function(
         errorMessages,
       );
       const suggestion = {
-        method: 'ideNewMessagesWithTimeout',
+        method: 'waitAndVerifyAllIDEMessagesContentSinceStartOfStep',
         args: [timeoutMs * 10, actual],
       };
 

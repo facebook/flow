@@ -16,4 +16,4 @@ export type RpcConnection = {
 
 export type IDEMessage =
   | {method: string, params: $ReadOnlyArray<mixed>} // Notification
-  | {result: Array<mixed>}; // Autocomplete result
+  | {method: string, result: mixed}; // Response

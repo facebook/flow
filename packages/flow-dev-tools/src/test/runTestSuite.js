@@ -118,18 +118,16 @@ export default (async function(
       }
 
       if (firstIdeStartStep !== null && lastIdeAssertionStep !== null) {
-        for (let i = firstIdeStartStep; i <= lastIdeAssertionStep; i++) {
+        for (let i = firstIdeStartStep + 1; i <= lastIdeAssertionStep; i++) {
           const step = steps[i];
           if (!step.readsIdeMessages()) {
             throw new Error(
               format(
-                'Testing flow ide is really tricky. To be safe, make sure that ' +
-                  'every step before the first ideStart and the last ' +
-                  'ideNewMessagesWithTimeout/ideNoNewMessagesAfterSleep calls ' +
-                  'either ideNewMessagesWithTimeout or ' +
-                  'ideNoNewMessagesAfterSleep.\n\n. ' +
-                  "Test '%s' step %d/%d should call either " +
-                  'ideNewMessagesWithTimeout or ideNoNewMessagesAfterSleep.',
+                "Test '%s' step %d/%d must call either " +
+                  'waitAndVerifyAllIDEMessagesContentSinceStartOfStep or waitAndVerifyNoIDEMessagesSinceStartOfStep. ' +
+                  'We enforce this as a sanity-check, because testing flow IDE is tricky... ' +
+                  'Every step after the first ideStart step until the last ideExpect step ' +
+                  'must read IDE messages.\n\n',
                 test.name,
                 i + 1,
                 steps.length,
@@ -176,10 +174,16 @@ export default (async function(
           flowErrors = null;
         }
 
-        envWrite.setIDEMessages(testBuilder.getIDEMessages());
-        envWrite.setIDEStderr(testBuilder.getIDEStderr());
-
-        envWrite.setServerRunning(testBuilder.server != null);
+        envWrite.setIDEMessagesSinceStartOfStep(
+          testBuilder.getIDEMessagesSinceStartOfStep(),
+        );
+        envWrite.setIDEStderrSinceStartOfStep(
+          testBuilder.getIDEStderrSinceStartOfStep(),
+        );
+        envWrite.setServerRunning(
+          testBuilder.server == null ? 'stopped' : 'running',
+        );
+        envWrite.setIDERunning(testBuilder.ide == null ? 'stopped' : 'running');
 
         let result = step.checkAssertions(envRead);
         testBuilder.assertNoErrors();

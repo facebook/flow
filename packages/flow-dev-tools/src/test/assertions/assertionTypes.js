@@ -19,9 +19,11 @@ type AssertionMethod =
   | 'stderr'
   | 'sortedStdout'
   | 'exitCodes'
-  | 'serverRunning'
-  | 'ideNewMessagesWithTimeout'
-  | 'ideNoNewMessagesAfterSleep'
+  | 'verifyServerStatus'
+  | 'verifyIDEStatus'
+  | 'verifyAllIDEMessagesInStep'
+  | 'waitAndVerifyAllIDEMessagesContentSinceStartOfStep'
+  | 'waitAndVerifyNoIDEMessagesSinceStartOfStep'
   | 'ideStderr';
 
 export type Suggestion = {
