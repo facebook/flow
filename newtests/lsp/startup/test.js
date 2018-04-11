@@ -62,7 +62,8 @@ export default suite(
           [
             'initialize',
             'window/logMessage{Starting Flow server}',
-            'telemetry/event{Not yet implemented}', // server->client request
+            'window/showMessageRequest{"id":1,Connecting}',
+            '$/cancelRequest{"id":1}',
             'window/progress{null}',
             'telemetry/connectionStatus{true}',
           ],
@@ -74,9 +75,11 @@ export default suite(
           ['shutdown'],
           ['telemetry/connectionStatus'],
         ),
-      ideNotification('exit'),
-      waitUntilIDEStatus(3000, 'stopped').verifyIDEStatus('stopped'),
-      waitUntilServerStatus(3000, 'stopped').verifyServerStatus('stopped'),
+      ideNotification('exit')
+        .waitUntilIDEStatus(3000, 'stopped')
+        .waitUntilServerStatus(3000, 'stopped')
+        .verifyIDEStatus('stopped')
+        .verifyServerStatus('stopped'),
     ]),
     /*
     test(

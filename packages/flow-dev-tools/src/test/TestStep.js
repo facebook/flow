@@ -316,6 +316,16 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  ideResponse: (number, ...params: Array<mixed>) => TestStepFirstStage = (
+    id,
+    ...params
+  ) => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.sendIDEResponse(id, params);
+    });
+    return ret;
+  };
+
   ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage = (
     method,
     ...params

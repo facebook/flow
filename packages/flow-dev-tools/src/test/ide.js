@@ -15,5 +15,5 @@ export type RpcConnection = {
 };
 
 export type IDEMessage =
-  | {method: string, params: $ReadOnlyArray<mixed>} // Notification
+  | {method: string, params: $ReadOnlyArray<mixed>} // Notification/request
   | {method: string, result: mixed}; // Response

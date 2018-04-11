@@ -32,6 +32,11 @@ import {getTestsDir} from '../constants';
 
 import type {SuiteResult} from './runTestSuite';
 
+type CancellationToken = {
+  +isCancellationRequested: boolean,
+  onCancellationRequested(callback: () => any): void,
+};
+
 type CheckCommand = 'check' | 'status';
 
 export class TestBuilder {
@@ -46,6 +51,10 @@ export class TestBuilder {
     connection: RpcConnection,
     process: child_process$ChildProcess,
     messages: Array<IDEMessage>,
+    outstandingRequestsFromServer: Map<
+      number,
+      {|resolve: any => void, reject: Error => void|},
+    >,
     stderr: Array<string>,
     messageEmitter: EventEmitter,
   } = null;
@@ -410,13 +419,51 @@ export class TestBuilder {
       }
       this.cleanupIDEConnection();
     });
+
     ideProcess.on('close', () => this.cleanupIDEConnection());
 
     const messageEmitter = new EventEmitter();
-    const messages = [];
-    connection.onRequest((method: string, ...params: Array<mixed>) => {
-      throw new Error('Not yet implemented: requests from IDE');
+    const messages: Array<IDEMessage> = [];
+    let requestCount = 0;
+    const outstandingRequestsFromServer: Map<
+      number,
+      {|resolve: any => void, reject: Error => void|},
+    > = new Map();
+
+    connection.onRequest((method: string, ...rawParams: Array<mixed>) => {
+      requestCount++;
+      const id = requestCount;
+      // the way vscode-jsonrpc works is the last element of the array is always
+      // the cancellation token, and the actual params are the ones before it.
+      const cancellationToken = ((rawParams.pop(): any): CancellationToken);
+      // We'll add our own {id: ...} to the array of params, so it's present
+      // in our messages[] array, so that people can match on it.
+      const params = [{id}, ...this.sanitizeIncomingIDEMessage(rawParams)];
+      messages.push({method, params});
+      this.log('IDE <<request %s\n%s', method, JSON.stringify(params));
+      messageEmitter.emit('message');
+
+      cancellationToken.onCancellationRequested(() => {
+        // The underlying Jsonrpc cancellation-request-notification has been
+        // wrapped up by vscode-jsonrpc into a CancellationToken. We'll unwrap
+        // it, for our messages[] array, so that tests can match on it.
+        const synthesizedParams = [{id}];
+        messages.push({method: '$/cancelRequest', params: synthesizedParams});
+        this.log(
+          'IDE <<notification $/cancelRequest\n%s',
+          JSON.stringify(synthesizedParams),
+        );
+        messageEmitter.emit('message');
+      });
+
+      const promise = new Promise(
+        (resolve: any => void, reject: Error => void) => {
+          outstandingRequestsFromServer.set(id, {resolve, reject});
+        },
+      );
+      return promise;
     });
+
     connection.onNotification((method: string, ...rawParams: Array<mixed>) => {
       const params = this.sanitizeIncomingIDEMessage(rawParams);
       messages.push({method, params});
@@ -470,6 +517,7 @@ export class TestBuilder {
       process: ideProcess,
       connection,
       messages,
+      outstandingRequestsFromServer,
       stderr,
       messageEmitter,
     };
@@ -567,6 +615,27 @@ export class TestBuilder {
     const args = this.sanitizeOutgoingIDEMessage(argsRaw);
     await this.log('IDE >>notification %s\n%s', method, JSON.stringify(args));
     ide.connection.sendNotification(method, ...args);
+  }
+
+  async sendIDEResponse(id: number, argsRaw: Array<mixed>): Promise<void> {
+    const ide = this.ide;
+    if (ide == null) {
+      throw new Error('No IDE process running!');
+    }
+    const callbacks = ide.outstandingRequestsFromServer.get(id);
+    if (callbacks == null) {
+      throw new Error(`No request id ${id} has arrived`);
+    }
+    ide.outstandingRequestsFromServer.delete(id);
+    if (argsRaw.length == 1 && argsRaw[0] instanceof Error) {
+      const e = (argsRaw[0]: Error);
+      await this.log('IDE >>response "id":%d\n%s', id, JSON.stringify(e));
+      callbacks.reject(e);
+    } else {
+      const args = this.sanitizeOutgoingIDEMessage(argsRaw);
+      await this.log('IDE >>response "id":%d\n%s', id, JSON.stringify(args));
+      callbacks.resolve(args);
+    }
   }
 
   // This sends an IDE request and, when the response comes back, adds
