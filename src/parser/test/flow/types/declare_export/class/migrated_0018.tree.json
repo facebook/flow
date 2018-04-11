@@ -104,7 +104,9 @@
               ]
             }
           }
-        ]
+        ],
+        "implements":[],
+        "mixins":[]
       },
       "specifiers":[],
       "source":null

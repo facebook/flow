@@ -36,7 +36,9 @@
           "indexers":[],
           "callProperties":[]
         },
-        "extends":[]
+        "extends":[],
+        "implements":[],
+        "mixins":[]
       },
       "specifiers":[],
       "source":null

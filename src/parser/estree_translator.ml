@@ -642,6 +642,8 @@ end with type t = Impl.t) = struct
       "typeParameters", option type_parameter_declaration d.typeParameters;
       "body", object_type d.body;
       "extends", extends;
+      "implements", array_of_list class_implements d.implements;
+      "mixins", array_of_list interface_extends d.mixins;
     ]
   )
 

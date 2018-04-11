@@ -99,7 +99,9 @@
             ]
           }
         }
-      ]
+      ],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[]

@@ -45,7 +45,9 @@
           }
         ]
       },
-      "extends":[]
+      "extends":[],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[]
