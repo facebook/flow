@@ -532,11 +532,13 @@ let handle_persistent_unsafe genv env client profiling msg
 
   | Persistent_connection_prot.LspToServer (RequestMessage (id, DefinitionRequest params)) ->
     (* TODO: use the open editor file contents, not FileName *)
+    (* TODO: factor out flow<->lsp datatype conversions *)
+    (* and document that start.column is off-by-one compared to the rest! *)
     let env = ref env in
     let open TextDocumentPositionParams in
     let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
-    let line = params.position.line in
-    let char = params.position.character in
+    let line = params.position.line + 1 in
+    let char = params.position.character + 1 in
     let%lwt (result, json_data) =
       get_def ~options ~workers ~env ~profiling (File_input.FileName fn, line, char) in
     begin match result with
@@ -550,8 +552,8 @@ let handle_persistent_unsafe genv env client profiling msg
         let location = { Lsp.Location.
           uri;
           range = { Lsp.
-            start = { Lsp.line=loc.Loc.start.Loc.line; character=loc.Loc.start.Loc.column; };
-            end_ = { Lsp.line=loc.Loc._end.Loc.line; character=loc.Loc._end.Loc.column; };
+            start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
+            end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column-1; };
           }
         } in
         lsp_writer (ResponseMessage (id, DefinitionResult [location]));
