@@ -9,13 +9,8 @@ open ServerEnv
 open Utils_js
 
 let focus_and_check genv env filenames =
-  let options = genv.options in
-  let file_options = Options.file_options options in
-  let focused = Nel.fold_left
-    (fun acc fn ->
-      FilenameSet.add (Files.filename_from_string ~options:file_options fn) acc)
-    FilenameSet.empty
-    filenames in
+  let filenames = SSet.of_list (Nel.to_list filenames) in
+  let focused = Rechecker.process_updates genv env filenames in
   let checked_files = CheckedSet.add ~focused env.checked_files in
 
   let new_focused_files = focused
