@@ -168,7 +168,7 @@ let to_stdout (json: Hh_json.json) : unit =
 
 let get_current_version (root: Path.t) : string option =
   Server_files_js.config_file root
-    |> FlowConfig.get
+    |> FlowConfig.get ~allow_cache:false
     |> FlowConfig.required_version
 
 
@@ -936,8 +936,22 @@ and main_handle_error
     state
 
   | Server_fatal_connection_exception edata -> begin
+    (* report that we're disconnected to telemetry/connectionStatus *)
+    let state = begin match state with
+      | Connected env ->
+        let i_isConnected = Lsp_helpers.notify_connectionStatus env.c_ienv.i_initialize_params
+          to_stdout env.c_ienv.i_isConnected false in
+        let env = { env with c_ienv = { env.c_ienv with i_isConnected; }; } in
+        Connected env
+      | _ -> state
+    end in
+    (* send the error report *)
+    let code = match state with
+      | Connected cenv -> cenv.c_about_to_exit_code
+      | _ -> None in
+    let code = Option.value_map code ~f:FlowExitStatus.to_string ~default:"" in
     let stack = edata.stack ^ "---\n" ^ stack in
-    let report = Printf.sprintf "Server fatal exception: %s\n%s" edata.message stack in
+    let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code edata.message stack in
     Lsp_helpers.telemetry_error to_stdout report;
     let d_autostart, d_ienv = match state with
       | Connected { c_ienv; c_about_to_exit_code; _ }

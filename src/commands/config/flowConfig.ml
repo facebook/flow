@@ -968,17 +968,17 @@ let init ~ignores ~untyped ~includes ~libs ~options ~lints =
 
 let write config oc = Pp.config oc config
 
-(* We should restart every time the config changes, so it's cool to cache it *)
+(* We should restart every time the config changes, so it's generally cool to cache it *)
 let cache = ref None
 
-let get filename =
+let get ?(allow_cache=true) filename  =
   match !cache with
-  | None ->
+  | Some (cached_filename, config) when allow_cache ->
+      assert (filename = cached_filename);
+      config
+  | _ ->
       let config = read filename in
       cache := Some (filename, config);
-      config
-  | Some (cached_filename, config) ->
-      assert (filename = cached_filename);
       config
 
 let restore (filename, config) = cache := Some (filename, config)

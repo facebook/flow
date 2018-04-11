@@ -7,7 +7,7 @@
 
 type config
 
-val get: string -> config
+val get: ?allow_cache:bool -> string -> config
 val empty_config: config
 
 val init:

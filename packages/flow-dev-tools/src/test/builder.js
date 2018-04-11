@@ -50,7 +50,6 @@ export class TestBuilder {
     mode: 'legacy' | 'lsp',
     connection: RpcConnection,
     process: child_process$ChildProcess,
-    messages: Array<IDEMessage>,
     outstandingRequestsFromServer: Map<
       number,
       {|resolve: any => void, reject: Error => void|},
@@ -59,6 +58,7 @@ export class TestBuilder {
     stderr: Array<string>,
     messageEmitter: EventEmitter,
   } = null;
+  ideMessages: Array<IDEMessage>; // this should outlive the death of the ide+server in a step
   ideEmitter: EventEmitter;
   serverEmitter: EventEmitter;
   sourceDir: string;
@@ -88,6 +88,8 @@ export class TestBuilder {
     this.tmpDir = join(baseDir, 'tmp', String(testNum));
     this.flowConfigFilename = flowConfigFilename;
     this.lazyMode = lazyMode;
+    this.ide = null;
+    this.ideMessages = [];
   }
 
   getFileName(): string {
@@ -234,6 +236,18 @@ export class TestBuilder {
       files.map(file => this.removeFileImpl(file)),
     );
     await this.forceRecheck(filenames);
+  }
+
+  async modifyFile(
+    filename: string,
+    searchValue: string | RegExp,
+    replaceValue: string,
+  ): Promise<void> {
+    filename = join(this.dir, filename);
+    const buffer = await readFile(filename);
+    const contents = buffer.toString().replace(searchValue, replaceValue);
+    await writeFile(filename, contents);
+    await this.forceRecheck([filename]);
   }
 
   async flowCmd(
@@ -517,11 +531,11 @@ export class TestBuilder {
       ideProcess.on('exit', onExit);
     });
 
+    this.ideMessages = messages;
     this.ide = {
       mode,
       process: ideProcess,
       connection,
-      messages,
       outstandingRequestsFromServer,
       outstandingRequestsInfo,
       stderr,
@@ -538,6 +552,7 @@ export class TestBuilder {
       ide.process.kill();
       ide.connection.dispose();
       this.ideEmitter.emit('ide');
+      // but leave ideMessages so it can be examined even after IDE has gone
     }
   }
 
@@ -658,6 +673,7 @@ export class TestBuilder {
     argsRaw: Array<mixed>,
   ): Promise<void> {
     const ide = this.ide;
+    const ideMessages = this.ideMessages;
     if (ide == null) {
       throw new Error('No ide process running!');
     }
@@ -666,20 +682,21 @@ export class TestBuilder {
     await this.log('IDE >>request %s\n%s', method, JSON.stringify(args));
     const resultRaw = await ide.connection.sendRequest(method, ...args);
     const result = this.sanitizeIncomingIDEMessage(resultRaw);
-    ide.messages.push({method, result});
+    ideMessages.push({method, result});
     await this.log('IDE <<response %s\n%s', method, JSON.stringify(resultRaw));
     ide.messageEmitter.emit('message');
   }
 
   waitUntilIDEMessage(timeoutMs: number, expected: string): Promise<void> {
     const ide = this.ide;
+    const ideMessages = this.ideMessages;
 
     return new Promise(resolve => {
       if (ide == null) {
         throw new Error('No ide process running!');
       }
       const onMessage = () => {
-        const message = ide.messages.slice(-1)[0];
+        const message = ideMessages.slice(-1)[0];
         if (Builder.doesMessageMatch(message, expected)) {
           done('Received');
         }
@@ -697,7 +714,7 @@ export class TestBuilder {
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
       // let's account for them:
-      ide.messages.forEach(onMessage);
+      ideMessages.forEach(onMessage);
 
       // And account for all further messages that arrive, until our stopping
       // condition:
@@ -724,6 +741,7 @@ export class TestBuilder {
     expectedCount: number,
   ): Promise<void> {
     const ide = this.ide;
+    const ideMessages = this.ideMessages;
 
     return new Promise(resolve => {
       if (ide == null) {
@@ -756,7 +774,7 @@ export class TestBuilder {
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
       // let's account for them:
-      ide.messages.forEach(onMessage);
+      ideMessages.forEach(onMessage);
 
       // And account for all further messages that arrive, until our stopping
       // condition:
@@ -774,7 +792,7 @@ export class TestBuilder {
   }
 
   getIDEMessagesSinceStartOfStep(): Array<IDEMessage> {
-    return this.ide ? [...this.ide.messages] : [];
+    return this.ideMessages;
   }
 
   getIDEStderrSinceStartOfStep(): string {
@@ -782,7 +800,7 @@ export class TestBuilder {
   }
 
   clearIDEMessages(): void {
-    this.ide && this.ide.messages.splice(0, this.ide.messages.length);
+    this.ideMessages.splice(0, this.ideMessages.length);
   }
 
   clearIDEStderr(): void {

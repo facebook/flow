@@ -238,6 +238,21 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       env.triggerFlowCheck();
     });
 
+  modifyFile: (
+    string,
+    string | RegExp,
+    string,
+    ?{triggerFlowCheck: boolean},
+  ) => TestStepFirstStage = (filename, searchValue, replaceValue, options) => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.modifyFile(filename, searchValue, replaceValue);
+      if (options != null && Boolean(options.triggerFlowCheck)) {
+        env.triggerFlowCheck();
+      }
+    });
+    return ret;
+  };
+
   waitUntilIDEStatus: (number, 'stopped' | 'running') => TestStepFirstStage = (
     timeoutMs,
     expected,
@@ -539,6 +554,12 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       await builder.waitForServerToDie(timeout);
     });
     ret._needsFlowServer = true;
+    ret._allowServerToDie = true;
+    return ret;
+  };
+
+  dontMindServerDeath: () => TestStepFirstStage = () => {
+    const ret = this._cloneWithAction(async (builder, env) => {});
     ret._allowServerToDie = true;
     return ret;
   };

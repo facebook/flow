@@ -76,8 +76,8 @@ export default suite(
         .waitUntilIDEMessage(3000, 'window/actionRequired')
         .verifyAllIDEMessagesInStep(
           [
-            'telemetry/event{End_of_file}',
             'telemetry/connectionStatus{false}',
+            'telemetry/event{End_of_file}',
             'window/showMessageRequest{stopped}',
             'window/actionRequired{stopped}',
           ],
@@ -114,8 +114,8 @@ export default suite(
         .waitUntilIDEMessage(3000, 'window/actionRequired')
         .verifyAllIDEMessagesInStep(
           [
-            'telemetry/event{End_of_file}',
             'telemetry/connectionStatus{false}',
+            'telemetry/event{End_of_file}',
             'window/showMessageRequest{stopped}',
             'window/actionRequired{stopped}',
           ],
@@ -142,29 +142,39 @@ export default suite(
         ),
     ]),
 
-    /*
-    test('Restarts a lost server in response to flowconfig change', [
-      lspStart({needsFlowServer: true, doInitialize: true}),
-      modifyFile({
-        filename: '.flowconfig',
-        content: '...nonversion_change...',
-        watchman: true,
-      }),
-      lspExpect('lost server message', '', 3000),
-      lspExpect('started server message', '', 3000),
-      serverExpectStatus({running: true, timeoutMs: 0}),
+    test('Restarts a lost server in response to flowconfig benign change', [
+      ideStartAndConnect(),
+      modifyFile('.flowconfig', '#placeholder', '#replaced')
+        .waitUntilIDEMessage(3000, 'telemetry/connectionStatus{false}')
+        .dontMindServerDeath()
+        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{true}')
+        .verifyAllIDEMessagesInStep(
+          [
+            'telemetry/connectionStatus{false}',
+            'telemetry/event{Server fatal exception}',
+            'window/logMessage{Starting}',
+            'telemetry/connectionStatus{true}',
+          ],
+          ['window/showMessageRequest', 'window/progress', '$/cancelRequest'],
+        ),
     ]),
+
     test('Terminates in response to flowconfig version change', [
-      lspStart({needsFlowServer: true, doInitialize: true}),
-      modifyFile({
-        filename: '.flowconfig',
-        content: '...nonversion_change...',
-        watchman: true,
-      }),
-      lspExpect('termination message', '', 3000),
-      lspExpectStatus({running: false, timeoutMs: 3000}),
-      serverExpectStatus({running: false, timeoutMs: 0}),
+      ideStartAndConnect(),
+      modifyFile('.flowconfig', '>0.60.0', '>0.61.0')
+        .waitUntilServerStatus(3000, 'stopped')
+        .waitUntilIDEStatus(6000, 'stopped')
+        .verifyAllIDEMessagesInStep(
+          [
+            'telemetry/connectionStatus{false}',
+            'telemetry/event{Server fatal exception}',
+            'telemetry/event{Version in flowconfig}',
+          ],
+          [],
+        ),
     ]),
+
+    /*
     test('Editor open files outlive server', [
       lspStart({needsFlowServer: true, doInitialize: true}),
       lspSend('didOpen file'),
