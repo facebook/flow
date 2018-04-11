@@ -459,7 +459,8 @@ let handle_ephemeral genv env (request_id, command) =
    or it returns Error for some well-understood reason string,
    or it might raise/Lwt.fail, indicating a misunderstood coding bug. *)
 let handle_persistent_unsafe genv env client profiling msg
-  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string) result) Lwt.t =
+  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string * Utils.callstack) result) Lwt.t
+  =
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
   let lsp_writer: (lsp_message -> unit) = fun payload ->
@@ -559,12 +560,14 @@ let handle_persistent_unsafe genv env client profiling msg
         lsp_writer (ResponseMessage (id, DefinitionResult [location]));
         Lwt.return (Ok (!env, json_data))
       | Error reason ->
-        Lwt.return (Error (!env, reason))
+        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+        Lwt.return (Error (!env, reason, Utils.Callstack stack))
     end
 
   | Persistent_connection_prot.LspToServer unhandled ->
+    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_to_string unhandled) in
-    Lwt.return (Error (env, reason))
+    Lwt.return (Error (env, reason, Utils.Callstack stack))
 
 
 let report_lsp_error_if_necessary
@@ -614,12 +617,12 @@ let handle_persistent
     | Ok (env, json_data) ->
       FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
       Lwt.return env
-    | Error (env, reason) ->
+    | Error (env, reason, Utils.Callstack stack) ->
       let json_data = Some (Hh_json.JSON_Object [ "Error", Hh_json.JSON_String reason ]) in
       FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
       (* note that persistent_command_success is used even for Errors; *)
       (* we only use persistent_command_failure for exceptions, i.e. coding bugs *)
-      report_lsp_error_if_necessary client msg (Failure reason) "[no stack]";
+      report_lsp_error_if_necessary client msg (Failure reason) stack;
       Lwt.return env
   with exn ->
     let backtrace = String.trim (Printexc.get_backtrace ()) in
