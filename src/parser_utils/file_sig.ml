@@ -87,7 +87,10 @@ and type_export =
 and ident = Loc.t * string
 
 and tolerable_error =
+  (* e.g. `module.exports.foo = 4` when not at the top level *)
   | BadExportPosition of Loc.t
+  (* e.g. `foo(module)`, dangerous because `module` is aliased *)
+  | BadExportContext of string (* offending identifier *) * Loc.t
 
 type error =
   | IndeterminateModuleType of Loc.t
@@ -320,6 +323,74 @@ class requires_calculator ~ast = object(this)
         { fsig with tolerable_errors=err::fsig.tolerable_errors }
     ))
 
+  method! expression (expr: Loc.t Ast.Expression.t) =
+    let open Ast.Expression in
+    begin match expr with
+    (* Disallow expressions consisting of `module` or `exports`. These are dangerous because they
+     * can allow aliasing and mutation. *)
+    | _, Identifier (loc, (("module" | "exports") as name))
+        when not (Scope_api.is_local_use scope_info loc) ->
+      this#add_tolerable_error (BadExportContext (name, loc))
+    | _ -> ()
+    end;
+    super#expression expr
+
+  method! binary (expr: Loc.t Ast.Expression.Binary.t) =
+    let open Ast.Expression in
+    let open Ast.Expression.Binary in
+    let is_module_or_exports = function
+      | _, Identifier (_, ("module" | "exports")) -> true
+      | _ -> false
+    in
+    let is_legal_operator = function
+      | StrictEqual | StrictNotEqual -> true
+      | _ -> false
+    in
+    let identify_or_recurse subexpr =
+      if not (is_module_or_exports subexpr) then
+        ignore (this#expression subexpr)
+    in
+    let { operator; left; right } = expr in
+    (* Whitelist e.g. `require.main === module` by avoiding the recursive calls (where the errors
+     * are generated) if the AST matches specific patterns. *)
+    if is_legal_operator operator then begin
+      identify_or_recurse left;
+      identify_or_recurse right;
+      expr
+    end else
+      super#binary expr
+
+  method! member (expr: Loc.t Ast.Expression.Member.t) =
+    let open Ast.Expression in
+    let open Ast.Expression.Member in
+    let { _object; property; computed = _; optional = _ } = expr in
+    (* Strip the loc to simplify the patterns *)
+    let _, _object = _object in
+    (* This gets called when patterns like `module.id` appear on the LHS of an
+     * assignment, in addition to when they appear in ordinary expression
+     * locations. Therefore we have to prevent anything that would be dangerous
+     * if it appeared on the LHS side of an assignment. Ordinary export
+     * statements are handled by handle_assignment, which stops recursion so we
+     * don't arrive here in those cases. *)
+    begin match _object, property with
+      (* Allow `module.anythingButExports` *)
+      | Identifier (_, "module"), PropertyIdentifier (_, prop) when prop <> "exports" -> ()
+      (* Allow `module.exports.whatever` -- this is safe because handle_assignment has already
+       * looked for assignments to it before recursing down here. *)
+      | Member {
+          _object=(_, Identifier (_, "module"));
+          property = PropertyIdentifier (_, "exports");
+          _;
+        },
+        PropertyIdentifier _
+      (* Allow `exports.whatever`, for the same reason as above *)
+      | Identifier (_, "exports"), PropertyIdentifier _ ->
+        (* In these cases we don't know much about the property so we should recurse *)
+        ignore (this#member_property property)
+      | _ -> ignore (super#member expr)
+    end;
+    expr
+
   method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
     let { Call.callee; arguments; optional = _ } = expr in
@@ -551,6 +622,12 @@ class requires_calculator ~ast = object(this)
       ignore (this#expression right);
       if not is_toplevel then
         this#add_tolerable_error (BadExportPosition mod_exp_loc)
+    (* module = ... *)
+    | Assign, (_, Ast.Pattern.Identifier {
+        Ast.Pattern.Identifier.name=(loc, ("exports" | "module" as id)); _
+      }) when not (Scope_api.is_local_use scope_info loc) ->
+      ignore (this#expression right);
+      this#add_tolerable_error (BadExportContext (id, loc))
     | _ ->
       ignore (super#assignment expr)
     end;

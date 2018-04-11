@@ -169,7 +169,10 @@ and type_export =
 and ident = Loc.t * string
 
 and tolerable_error =
+  (* e.g. `module.exports.foo = 4` when not at the top level *)
   | BadExportPosition of Loc.t
+  (* e.g. `foo(module)`, dangerous because `module` is aliased *)
+  | BadExportContext of string (* offending identifier *) * Loc.t
 
 type error =
   | IndeterminateModuleType of Loc.t

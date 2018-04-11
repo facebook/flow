@@ -38,6 +38,7 @@ let set_of_file_sig_error ~source_file error =
 let error_of_file_sig_tolerable_error ~source_file err =
   let flow_err = match err with
   | File_sig.BadExportPosition loc -> Flow_error.EBadExportPosition loc
+  | File_sig.BadExportContext (name, loc) -> Flow_error.EBadExportContext (name, loc)
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 

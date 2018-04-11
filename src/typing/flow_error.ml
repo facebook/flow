@@ -114,6 +114,7 @@ type error_message =
   | EExperimentalExportStarAs of Loc.t
   | EIndeterminateModuleType of Loc.t
   | EBadExportPosition of Loc.t
+  | EBadExportContext of string * Loc.t
   | EUnreachable of Loc.t
   | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason; use_op: use_op }
   | EInvalidTypeof of Loc.t * string
@@ -341,6 +342,7 @@ let util_use_op_of_msg nope util = function
 | EExperimentalExportStarAs (_)
 | EIndeterminateModuleType (_)
 | EBadExportPosition (_)
+| EBadExportContext (_)
 | EUnreachable (_)
 | EInvalidTypeof (_, _)
 | EBinaryInLHS (_)
@@ -1691,6 +1693,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EBadExportPosition loc ->
     mk_error ~trace_infos ~kind:InferWarning loc [
       text "Exports can only appear at the top level"
+    ]
+
+  | EBadExportContext (name, loc) ->
+    mk_error ~trace_infos ~kind:InferWarning loc [
+      code name;
+      text " may only be used as part of a legal top level export statement";
     ]
 
   | EUnreachable loc ->
