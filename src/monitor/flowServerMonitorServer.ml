@@ -262,6 +262,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
       (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
 
+      | Interrupted
       | Build_id_mismatch (* Client build differs from server build - only monitor uses this *)
       | Lock_stolen (* Lock lost - only monitor should use this *)
       | Socket_error (* Failed to set up socket - only monitor should use this *)
@@ -291,6 +292,18 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Autostop (* is used by monitor to exit, not server *)
         -> true
     end
+
+  let should_monitor_exit_with_signaled_server signal =
+    (* While there are many scary things which can cause segfaults, in practice we've mostly seen
+     * them when the Flow server hits some infinite or very deep recursion (like List.map on a
+     * very large list). Often, this is triggered by some ephemeral command, which is rerun when
+     * the server starts back up, leading to a cycle of segfaulting servers.
+     *
+     * The easiest solution is for the monitor to exit as well when the server segfaults. This
+     * will cause the bad command to consume retries and eventually exit. This doesn't prevent
+     * future bad commands, but is better than the alternative.
+     *)
+    signal = Sys.sigsegv
 
   (* Basically a `waitpid [ WUNTRACED ] pid` (WUNTRACED means also return on stopped processes) *)
   let blocking_waitpid =
@@ -346,7 +359,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
         pid
         (PrintSignal.string_of_signal signal);
       FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
-      Lwt.return_unit
+      if should_monitor_exit_with_signaled_server signal
+      then exit ~msg:"Dying along with signaled server" FlowExitStatus.Interrupted
+      else Lwt.return_unit
     | Unix.WSTOPPED signal ->
       (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
         * could try to signal it to resume. Or we could wait for it to start up again. But killing
