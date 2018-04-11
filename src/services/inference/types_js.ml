@@ -772,7 +772,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   let%lwt new_or_changed, freshparsed, unparsed, new_local_errors =
      reparse ~options ~profiling ~workers modified in
   let freshparsed = freshparsed |> FilenameMap.keys |> FilenameSet.of_list in
-  let new_or_changed_count = FilenameSet.cardinal new_or_changed in
 
   (* clear errors for new, changed and deleted files *)
   let errors =
@@ -1105,21 +1104,21 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       checked_files = checked;
       errors;
     },
-    (new_or_changed_count, deleted_count, !dependent_file_count))
+    (new_or_changed, deleted, all_dependent_files))
   )
 
 let recheck ~options ~workers ~updates env ~force_focus =
   let should_print_summary = Options.should_profile options in
-  let%lwt profiling, (env, (modified_count, deleted_count, dependent_file_count)) =
+  let%lwt profiling, (env, (modified, deleted, dependent_files)) =
     Profiling_js.with_profiling_lwt ~should_print_summary (fun profiling ->
       recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focus
     )
   in
   FlowEventLogger.recheck
     (** TODO: update log to reflect current terminology **)
-    ~modified_count
-    ~deleted_count
-    ~dependent_file_count
+    ~modified
+    ~deleted
+    ~dependent_files
     ~profiling;
   Lwt.return (profiling, env)
 
