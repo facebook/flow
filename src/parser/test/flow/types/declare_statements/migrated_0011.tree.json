@@ -57,7 +57,9 @@
         "indexers":[],
         "callProperties":[]
       },
-      "extends":[]
+      "extends":[],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[]

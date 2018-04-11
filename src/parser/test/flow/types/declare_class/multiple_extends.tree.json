@@ -78,7 +78,9 @@
           },
           "typeParameters":null
         }
-      ]
+      ],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[]
