@@ -286,3 +286,30 @@ function add(id: number, name: string) {
   obj.size++;
 }
 ```
+
+### `Object` Type <a class="toc" id="toc-object-type" href="#toc-object-type"></a>
+
+Sometimes it is useful to write types that accept arbitrary objects, for
+those you should write `{}` like this:
+
+```js
+function method(obj: {}) {
+  // ...
+}
+```
+
+However, if you need to opt-out of the type checker, and don't want to go all
+the way to `any`, you can instead use `Object`. **`Object` is unsafe and
+should be avoided.**
+
+For example, the following code will not report any errors:
+
+```js
+function method(obj: Object) {
+  obj.foo = 42;               // Works.
+  let bar: boolean = obj.bar; // Works.
+  obj.baz.bat.bam.bop;        // Works.
+}
+
+method({ baz: 3.14, bar: "hello" });
+```
