@@ -1,3 +1,62 @@
+### 0.70.0
+
+Likely to cause new Flow errors:
+
+* Existing `Promise` libdefs for the cases where `null` or `void` is passed as callbacks to `then`
+  and `catch` caused us to miss type errors. These libdefs have now been made stricter.
+* Spreading an object of exact type used to result in an unsealed object type, which allowed adding
+  new properties not mentioned in the original type. Now, the result has an exact object type, which
+  bans adding new properties.
+* New missing annotation errors might be reported. These requirements were missed before because of
+  implementation bugs. We now use the polarity-sensitive type visitor to walk exported types, which
+  reports errors in the expected places. There are several exceptions, which can be exported without
+  annotations: e.g., object and array literals; initialized class properties (instance & static);
+  and `this` parameters.
+* Interactions of `typeof` with speculative typechecking would lead to missed errors, which will now
+  be reported as expected.
+* Various new restrictions now ban abuses of `module` and `exports`.
+
+API changes:
+
+* The output format with `--json-version 2` includes a breaking change, affecting the "context"
+  property in every location. Previously it was just the first line of the context, which made
+  printing multi-line errors tricky. Now it includes up to 5 lines of context.
+* New version of ocaml-sourcemaps. The API changed slightly, but most of the changes are adding
+  support for reading/composing sourcemaps, which we aren't using.
+
+New Features:
+
+* Updated React libdefs with the new `createContext` and `createRef` APIs introduced in [React
+ 16.3](https://reactjs.org/blog/2018/03/29/react-v-16-3.html).
+* Classes can now be spread (copying over their static properties).
+
+Notable bug fixes:
+
+* Lazy_mode_utils.focus_and_check wasn't filtering out files properly when processing updates.
+* The monitor would keep restarting segfaulting servers.
+* Lint errors would interfere with speculative typechecking (with union / intersection types)
+* Switch to using nonblocking file descriptors with Lwt to address Flow hangs
+* Fixed a crash in the no-color error printer caused by degenerate locations.
+* Improved refinement of truthy/falsy intersections.
+
+Misc:
+
+* Various improvements to `type-at-pos` and friends, including converting normalized types back to
+  AST nodes for printing.
+* Various improvements to `find-refs`.
+* Various CI improvements as part of the move to Circle.
+* Various debugging utils.
+* Array types are now printed as `Array<T>` instead of `T[]`.
+
+Parser:
+
+* Exposed `implements` and `mixins` fields of the `DeclareClass` AST node.
+* Added `tokens` option to JS API: `flow.parse(..., { tokens: true })` will now return the token
+  stream, like `flow ast --tokens` does.
+* Added options support to the parser's C interface. This change lets you pass a map of options to
+  the parser via the C++ API, and from JS via flow-parser-bin. You could already do this from the
+  js_of_ocaml parser, so now their APIs match.
+
 ### 0.69.0
 
 Notable bug fixes:
