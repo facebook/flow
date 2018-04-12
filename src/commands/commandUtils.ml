@@ -786,6 +786,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_profile = options_flags.profile;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;
+    opt_module_resolver = FlowConfig.module_resolver flowconfig;
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_temp_dir = temp_dir;

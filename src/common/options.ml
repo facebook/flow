@@ -63,6 +63,7 @@ type t = {
   opt_merge_timeout: float option;
   opt_module: module_system;
   opt_module_name_mappers: (Str.regexp * string) list;
+  opt_module_resolver: Path.t option;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_profile : bool;
@@ -107,6 +108,7 @@ let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
 let merge_timeout opts = opts.opt_merge_timeout
 let module_name_mappers opts = opts.opt_module_name_mappers
+let module_resolver opts = opts.opt_module_resolver
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let root opts = opts.opt_root

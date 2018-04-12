@@ -49,6 +49,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    module_resolver: Path.t option;
     module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
@@ -154,6 +155,7 @@ module Opts = struct
     ignore_non_literal_requires = false;
     include_warnings = false;
     merge_timeout = Some 100;
+    module_resolver = None;
     module_system = Options.Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
@@ -677,6 +679,15 @@ let parse_options config lines =
       );
     }
 
+    |> define_opt "module.resolver" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_filepath;
+      setter = (fun opts v -> Ok {
+        opts with module_resolver = Some v;
+      });
+    }
+
     |> define_opt "module.system" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -1019,6 +1030,7 @@ let max_workers c = c.options.Opts.max_workers
 let merge_timeout c = c.options.Opts.merge_timeout
 let module_file_exts c = c.options.Opts.module_file_exts
 let module_name_mappers c = c.options.Opts.module_name_mappers
+let module_resolver c = c.options.Opts.module_resolver
 let module_resource_exts c = c.options.Opts.module_resource_exts
 let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict

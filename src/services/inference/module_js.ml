@@ -304,6 +304,45 @@ let eponymous_module file =
 
 (*******************************)
 
+module External = struct
+  let external_channels = ref None
+
+  let get_external_channels resolver =
+    match !external_channels with
+      | Some channels -> channels
+      | None ->
+        let program = Path.to_string resolver in
+
+        let (child_r, parent_w) = Unix.pipe () in
+        let (parent_r, child_w) = Unix.pipe () in
+
+        let channels = (
+          (Unix.out_channel_of_descr parent_w),
+          (Unix.in_channel_of_descr parent_r)
+        ) in
+
+        ignore (Unix.create_process program [| program |] child_r child_w Unix.stderr);
+
+        external_channels := Some channels;
+        channels
+
+  let resolve_import opts f r =
+    match Options.module_resolver opts with
+      | None -> None
+      | Some resolver ->
+        let issuer = File_key.to_string f in
+        let payload = Printf.sprintf "[\"%s\", \"%s\"]\n" r issuer in
+
+        let (out_channel, in_channel) = (get_external_channels resolver) in
+
+        output_string out_channel payload;
+        Pervasives.flush out_channel;
+
+        Some (input_line in_channel)
+end
+
+(*******************************)
+
 module Node = struct
   let exported_module _ file _ =
     eponymous_module file
@@ -542,6 +581,7 @@ module Haste: MODULE_SYSTEM = struct
   let resolve_import ~options node_modules_containers f loc ?resolution_acc r =
     let file = File_key.to_string f in
     lazy_seq [
+      lazy (External.resolve_import options f r);
       lazy (Node.resolve_import ~options node_modules_containers f loc ?resolution_acc r);
       lazy (match expanded_name r with
         | Some r ->
