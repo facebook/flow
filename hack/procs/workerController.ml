@@ -220,9 +220,11 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
 
-  let with_exit_status_check slave_pid f =
-    match Unix.waitpid [Unix.WNOHANG] slave_pid with
-    | 0, _ | _, Unix.WEXITED 0 ->
+  (** Checks if the worker master has exited. *)
+  let with_exit_status_check ?(block_on_waitpid=false) slave_pid f =
+    let wait_flags = if block_on_waitpid then [] else [Unix.WNOHANG] in
+    match Unix.waitpid wait_flags slave_pid with
+    | 0, _ ->
         f ()
     | _, Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
         raise SharedMem.Out_of_shared_memory
@@ -235,13 +237,40 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
         raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
   in
   (* Prepare ourself to read answer from the slave. *)
-  let result () : b =
-    with_exit_status_check slave_pid begin fun () ->
+  let get_result_with_status_check ?(block_on_waitpid=false) () : b =
+    with_exit_status_check ~block_on_waitpid slave_pid begin fun () ->
       let res : b * Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
       close w h;
       Measure.merge (Measure.deserialize (snd res));
       fst res
     end in
+  let result () : b =
+    (**
+     * We run the "with_exit_status_check" twice (first time non-blockingly).
+     * This is because of a race condition.
+     *
+     * Immediately after the worker master forks the slave (see worker.ml), it does
+     * a blocking, non-interruptible waitpid on the slave. This means that if the slave
+     * fails, then the master will see the failure and also fail accordingly, which we
+     * will catch in here with "with_exit_status_check". This is designed around a sort-of
+     * invariant - if the worker slave fails, then the worker master will fail, so
+     * the WorkerController here will see the failure and not attempt to read the result
+     * with "Marshal_tools.from_fd_with_preamble"
+     *
+     * But there is a brief moment after the slave is forked and before the
+     * non-interruptible waitpid where the worker slave can actually fail quickly
+     * and this WorkerController has already checked the worker master's status. So the
+     * invariant above will be broken, the WorkerController will try to read the result
+     * with Marshal_tools, get an End_of_file, and crash.
+     *
+     * To get around this, we give the worker master time to "catch up" and reach the
+     * non-interruptible waitpid that we expect it to be at. Eventually, it will also
+     * fail accordingly, since its slave has failed.
+     *)
+    try get_result_with_status_check () with
+    | End_of_file ->
+      get_result_with_status_check ~block_on_waitpid:true ()
+  in
   let wait_for_cancel () : unit =
     with_exit_status_check slave_pid begin fun () ->
       (* Depending on whether we manage to kill the slave before it starts writing
