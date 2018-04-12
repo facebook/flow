@@ -7,7 +7,7 @@
 import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
 import {createWriteStream} from 'fs';
-import {tmpdir} from 'os';
+import {platform, tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
 import EventEmitter from 'events';
@@ -556,6 +556,14 @@ export class TestBuilder {
     }
   }
 
+  getDirUrl(): string {
+    if (platform() === 'win32') {
+      return 'file:///' + this.dir;
+    } else {
+      return 'file://' + this.dir;
+    }
+  }
+
   // sanitizeIncomingIDEMessage: removes a few known fields from server output
   // that are known to be specific to an instance of a test, and replaces
   // them with something fixed.
@@ -565,7 +573,7 @@ export class TestBuilder {
     // Legacy IDE sends back an array of objects where those objects have
     // a '.flowVersion' field
     // LSP sends back document URLs, to files within the test project
-    const url = 'file://' + this.dir;
+    const url = this.getDirUrl();
     function replace(obj: Object) {
       for (const k in obj) {
         if (!obj.hasOwnProperty(k)) {
@@ -599,6 +607,7 @@ export class TestBuilder {
     const params2: any = JSON.parse(JSON.stringify(params));
 
     const dir = this.dir;
+    const dirUrl = this.getDirUrl();
     function replace(obj: Object) {
       for (const k in obj) {
         if (!obj.hasOwnProperty(k)) {
@@ -614,7 +623,7 @@ export class TestBuilder {
             if (obj[k].startsWith('<PLACEHOLDER')) {
               obj[k] = obj[k]
                 .replace(/^<PLACEHOLDER_PROJECT_DIR>/, dir)
-                .replace(/^<PLACEHOLDER_PROJECT_URL>/, 'file://' + dir);
+                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
             }
             break;
         }
