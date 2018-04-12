@@ -2667,6 +2667,7 @@ module Json_output = struct
       ("loc", Reason.json_of_loc ~strip_root loc) ::
       deprecated_json_props_of_loc ~strip_root loc
 
+  (* Returns the first line of the context *)
   let json_of_loc_context ~stdin_file loc =
     let open Hh_json in
     let code_line = match loc with
@@ -2682,11 +2683,43 @@ module Json_output = struct
     | None -> JSON_Null
     | Some context -> JSON_String context
 
+  let json_of_loc_context_abridged ~stdin_file ~max_len loc =
+    let open Hh_json in
+    let code_lines = match loc with
+    | None -> None
+    | Some loc ->
+        let open Loc in
+        let filename = file_of_source loc.source in
+        (* Read the lines referenced in the loc *)
+        (match read_lines_in_file loc filename stdin_file with
+        | Some l ->
+          let lines = Nel.to_list l in
+          let num_lines = List.length lines in
+          let numbered_lines =
+            List.mapi (fun i line -> (string_of_int (i + loc.start.line), JSON_String line)) lines in
+          if num_lines <= max_len
+          (* There are few enough lines that we can use them all for context *)
+          then Some numbered_lines
+          else
+            (* There are too many lines for context. Let's take some lines from the start of the loc
+             * and some from the end of the loc *)
+            let start_len = (max_len + 1) / 2 in (* ceil *)
+            let end_len = max_len / 2 in (* floor *)
+            Some (
+              (Core_list.sub numbered_lines ~pos:0 ~len:start_len)
+              @ (Core_list.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len)
+            )
+        | None -> None)
+    in
+    match code_lines with
+    | None -> JSON_Null
+    | Some code_lines -> JSON_Object code_lines
+
   let json_of_loc_with_context ~strip_root ~stdin_file loc =
     let open Hh_json in
     let props =
       Reason.json_of_loc_props ~strip_root loc @
-        [("context", json_of_loc_context ~stdin_file (Some loc))]
+        [("context", json_of_loc_context_abridged ~stdin_file ~max_len:5 (Some loc))]
     in
     JSON_Object props
 
