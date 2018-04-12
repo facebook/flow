@@ -2028,7 +2028,7 @@ const char *create_tables_sql[] = {
   "CREATE TABLE IF NOT EXISTS DEPTABLE(" \
   "    KEY_VERTEX INT PRIMARY KEY NOT NULL," \
   "    VALUE_VERTEX BLOB NOT NULL" \
-  ");"
+  ");",
 };
 
 static void make_all_tables(sqlite3 *db) {
@@ -2102,9 +2102,7 @@ static long hh_save_file_info_helper_sqlite(
     assert_master();
     sqlite3 *db_out = NULL;
     assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
-    static const char sql[] = \
-      "CREATE TABLE IF NOT EXISTS DUMMY(DUMMY_KEY INT PRIMARY KEY NOT NULL)";
-    assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
+    make_all_tables(db_out);
     return 0;
 }
 
