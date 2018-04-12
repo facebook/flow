@@ -421,16 +421,16 @@ runtest() {
         fi
 
         if [ $return_status -ne $RUNTEST_SUCCESS ]; then
-            [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir"
-            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
-            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir"
-            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir"
+            [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir" || rm -f "$dir/$out_file"
+            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir" || rm -f "$dir/$log_file"
+            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir" || rm -f "$dir/$monitor_log_file"
+            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir" || rm -f "$dir/$err_file"
             return $return_status
         elif [ -s "$abs_diff_file" ]; then
             mv "$abs_out_file" "$dir"
-            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
-            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir"
-            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir"
+            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir" || rm -f "$dir/$log_file"
+            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir" || rm -f "$dir/$monitor_log_file"
+            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir" || rm -f "$dir/$err_file"
             mv "$abs_diff_file" "$dir"
             return $RUNTEST_FAILURE
         else
