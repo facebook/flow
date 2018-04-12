@@ -168,18 +168,15 @@ let fd_of_path path =
 let null_fd () = fd_of_path Sys_utils.null_path
 
 let setup_channels channel_mode =
-  match channel_mode with
-  | `pipe ->
-    let parent_in, child_out = Unix.pipe () in
-    let child_in, parent_out = Unix.pipe () in
-    (* Close descriptors on exec so they are not leaked. *)
-    Unix.set_close_on_exec parent_in;
-    Unix.set_close_on_exec parent_out;
-    (parent_in, child_out), (child_in, parent_out)
-  | `socket ->
-    let parent_fd, child_fd = Unix.socketpair Unix.PF_UNIX Unix.SOCK_STREAM 0 in
-    (** FD's on sockets are bi-directional. *)
-    (parent_fd, child_fd), (child_fd, parent_fd)
+  let mk = match channel_mode with
+    | `pipe -> fun () -> Unix.pipe ()
+    | `socket -> fun () -> Unix.socketpair Unix.PF_UNIX Unix.SOCK_STREAM 0
+  in
+  let parent_in, child_out = mk () in
+  let child_in, parent_out = mk () in
+  Unix.set_close_on_exec parent_in;
+  Unix.set_close_on_exec parent_out;
+  (parent_in, child_out), (child_in, parent_out)
 
 let make_pipe (descr_in, descr_out)  =
   let ic = Timeout.in_channel_of_descr descr_in in
@@ -246,14 +243,8 @@ let spawn
   let name = Option.value ~default:(Entry.name_of_entry entry) name in
   let pid = Unix.create_process exe [|exe; name|] stdin stdout stderr in
   Entry.clear_context ();
-  (match channel_mode with
-  | `pipe ->
-    Unix.close child_in;
-    Unix.close child_out;
-  | `socket ->
-    (** the in and out FD's are the same. Close only once. *)
-    Unix.close child_in);
-
+  Unix.close child_in;
+  Unix.close child_out;
   let close_if_open fd =
     try Unix.close fd
     with Unix.Unix_error (Unix.EBADF, _, _) -> ()
