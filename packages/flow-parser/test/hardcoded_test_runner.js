@@ -44,7 +44,7 @@ function new_env() {
 
     get_diffs: function() {
       var ret = [];
-      for (prop in diffs) {
+      for (var prop in diffs) {
         if (diffs.hasOwnProperty(prop)) {
           ret.push(diffs[prop]);
         }
@@ -54,7 +54,7 @@ function new_env() {
 
     get_ast_types_errors: function() {
       var ret = [];
-      for (prop in astTypesErrors) {
+      for (var prop in astTypesErrors) {
         if (astTypesErrors.hasOwnProperty(prop)) {
           ret.push(prop + ": " + astTypesErrors[prop]);
         }

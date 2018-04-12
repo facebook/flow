@@ -631,21 +631,27 @@ end with type t = Impl.t) = struct
     ]
   )
 
-  and declare_class (loc, d) = Statement.DeclareClass.(
+  and declare_class (loc, { Statement.DeclareClass.
+    id;
+    tparams;
+    body;
+    extends;
+    implements;
+    mixins;
+  }) =
     (* TODO: extends shouldn't return an array *)
-    let extends = match d.extends with
+    let extends = match extends with
     | Some extends -> array [interface_extends extends]
     | None -> array []
     in
     node "DeclareClass" loc [
-      "id", identifier d.id;
-      "typeParameters", option type_parameter_declaration d.tparams;
-      "body", object_type d.body;
+      "id", identifier id;
+      "typeParameters", option type_parameter_declaration tparams;
+      "body", object_type body;
       "extends", extends;
-      "implements", array_of_list class_implements d.implements;
-      "mixins", array_of_list interface_extends d.mixins;
+      "implements", array_of_list class_implements implements;
+      "mixins", array_of_list interface_extends mixins;
     ]
-  )
 
   and declare_interface (loc, { Statement.Interface.
     id;

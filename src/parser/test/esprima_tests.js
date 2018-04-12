@@ -2097,23 +2097,8 @@ module.exports = {
       'declare function foo(): void;',
       'declare function foo<T>(): void;',
       'declare function foo(x: number, y: string): void;',
-      'declare class A {}',
-      'declare class A { static [ indexer: number]: string }',
-      'declare class A { static () : number }',
     ],
     'Invalid Declare Statements': [
-      'declare class A { "static" foo(): number }',
-      {
-        content: 'declare class A { static : number }',
-        explanation: 'Fields named `static` are fine',
-        expected_differences: {
-          'root.errors': {
-            type: 'Flow found no error',
-            expected: 'Line 1: Use of future reserved word in strict mode',
-            actual: undefined,
-          },
-        }
-      },
       'declare function foo();',
     ],
     'Declare Module': [
