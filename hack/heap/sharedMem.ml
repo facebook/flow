@@ -28,6 +28,21 @@ type handle = private {
   h_heap_size: int;
 }
 
+(* note: types are in the same kind as classes *)
+let int_of_kind kind = match kind with
+  | `ConstantK -> 0
+  | `ClassK -> 1
+  | `FuncK -> 2
+let _int_of_kind = int_of_kind
+
+let kind_of_int x = match x with
+  | 0 -> `ConstantK
+  | 1 -> `ClassK
+  | 2 -> `FuncK
+  | _ when x < 0 -> failwith "kind_of_int: attempted to convert from negative int"
+  | _ -> assert (x > 0); failwith "kind_of_int: int too large, no corresponding kind"
+let _kind_of_int = kind_of_int
+
 exception Worker_should_exit
 exception Out_of_shared_memory
 exception Hash_table_full
