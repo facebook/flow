@@ -47,6 +47,16 @@ type send_job_failure =
 
 exception Worker_failed_to_send_job of send_job_failure
 
+let failure_to_string f =
+  let status_string = function
+    | Unix.WEXITED i -> Printf.sprintf "WEXITED %d" i
+    | Unix.WSIGNALED i -> Printf.sprintf "WSIGNALED %d" i
+    | Unix.WSTOPPED i -> Printf.sprintf "WSTOPPED %d" i
+  in
+  match f with
+  | Worker_oomed -> "Worker_oomed"
+  | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
+
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32
 
@@ -76,6 +86,11 @@ type worker = {
    * workers. For example, this can be useful to handle exceptions uniformly
    * across workers regardless what workload is called on them. *)
   call_wrapper: call_wrapper option;
+
+  (** On Unix, Worker Master sends status messages over this fd to this
+   * Controller. On Windows, it doesn't send anything, so don't try to read from
+   * it (it should be set to None). *)
+  controller_fd: Unix.file_descr option;
 
   (* Sanity check: is the worker still available ? *)
   mutable killed: bool;
@@ -132,6 +147,9 @@ and 'b worker_handle =
   | Cached of 'b
   | Failed of exn
 
+(** The Controller's slave has a Worker. The Worker is itself a single process
+ * on Windows. On Unix, the slave is itself a Worker Master process, and Worker
+ * Slave. *)
 and 'a slave = {
 
   worker: worker;      (* The associated worker *)
@@ -151,7 +169,7 @@ and 'a slave = {
 }
 
 type 'a entry_state = 'a * Gc.control * SharedMem.handle
-type 'a entry = ('a entry_state, request, void) Daemon.entry
+type 'a entry = ('a entry_state * (Unix.file_descr option), request, void) Daemon.entry
 
 let entry_counter = ref 0
 let register_entry_point ~restore =
@@ -175,35 +193,66 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one ?call_wrapper spawn id =
+let make_one ?call_wrapper controller_fd spawn id =
   if id >= max_workers then failwith "Too many workers";
 
   let prespawned = if not use_prespawned then None else Some (spawn ()) in
-  let worker = { call_wrapper; id; busy = false; killed = false; prespawned; spawn } in
+  let worker = {
+    call_wrapper;
+    controller_fd;
+    id;
+    busy = false;
+    killed = false;
+    prespawned;
+    spawn }
+  in
   workers := worker :: !workers;
   worker
 
 (** Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
 let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
-  let spawn name () =
+  let setup_controller_fd () =
+    if use_prespawned then
+      let parent_fd, child_fd = Unix.pipe () in
+      (** parent_fd is only used in this process. Don't leak it to children.
+       * This will auto-close parent_fd in children created with Daemon.spawn
+       * since Daemon.spawn uses exec. *)
+      let () = Unix.set_close_on_exec parent_fd in
+      Some parent_fd, Some child_fd
+    else
+      (** We don't use the side channel on Windows. *)
+      None, None
+  in
+  let spawn name child_fd () =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
+    (** Daemon.spawn runs exec after forking. We explicitly *do* want to "leak"
+     * child_fd to this one spawned process because it will be using that FD to
+     * send messages back up to us. Close_on_exec is probably already false, but
+     * we force it again to be false here just in case. *)
+    Option.iter child_fd ~f:Unix.clear_close_on_exec;
+    let state = (saved_state, gc_control, heap_handle) in
     let handle =
       Daemon.spawn
         ~name
         (Daemon.null_fd (), Unix.stdout, Unix.stderr)
         entry
-        (saved_state, gc_control, heap_handle) in
+        (state, child_fd) in
     Unix.set_close_on_exec heap_handle.SharedMem.h_fd;
+    (** This process no longer needs child_fd after its spawned the child.
+     * Messages are read using controller_fd. *)
+    Option.iter child_fd ~f:Unix.close;
     handle
   in
   let made_workers = ref [] in
   let pid = Unix.getpid () in
   for n = 1 to nbr_procs do
+    let controller_fd, child_fd = setup_controller_fd () in
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
-    made_workers := make_one ?call_wrapper (spawn name) n :: !made_workers
+    made_workers := make_one ?call_wrapper controller_fd (spawn name child_fd) n :: !made_workers
   done;
   !made_workers
+
 
 (**************************************************************************
  * Send a job to a worker
@@ -220,21 +269,51 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   let infd = Daemon.descr_of_in_channel inc in
   let outfd = Daemon.descr_of_out_channel outc in
 
+  let worker_failed pid_stat controller_fd =
+    (** If we have a controller fd, we read the true pid status
+     * over that channel instead of using the one returned from the
+     * Worker Master. *)
+    let pid_stat = match controller_fd with
+      | None ->
+        snd (pid_stat)
+      | Some fd ->
+        Timeout.with_timeout
+          ~timeout:3
+          ~on_timeout:(fun _ -> snd (pid_stat))
+          ~do_:(fun _ ->
+            try
+              let Slave_terminated status = Marshal_tools.from_fd_with_preamble fd in
+              status
+            with
+            | End_of_file ->
+              snd (pid_stat)
+          )
+    in
+    match pid_stat with
+    | Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
+      raise SharedMem.Out_of_shared_memory
+    |  Unix.WEXITED i ->
+      Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
+      raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
+    |  Unix.WSTOPPED i ->
+      raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
+    |  Unix.WSIGNALED i ->
+      raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
+  in
+
   (** Checks if the worker master has exited. *)
   let with_exit_status_check ?(block_on_waitpid=false) slave_pid f =
     let wait_flags = if block_on_waitpid then [] else [Unix.WNOHANG] in
-    match Unix.waitpid wait_flags slave_pid with
+    let pid_stat = Unix.waitpid wait_flags slave_pid in
+    match pid_stat with
     | 0, _ ->
         f ()
-    | _, Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
-        raise SharedMem.Out_of_shared_memory
-    | _, Unix.WEXITED i ->
-        Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
-        raise (Worker_failed (slave_pid, Worker_quit (Unix.WEXITED i)))
-    | _, Unix.WSTOPPED i ->
-        raise (Worker_failed (slave_pid, Worker_quit (Unix.WSTOPPED i)))
-    | _, Unix.WSIGNALED i ->
-        raise (Worker_failed (slave_pid, Worker_quit (Unix.WSIGNALED i)))
+    | _, Unix.WEXITED 0 ->
+         (** This will never actually happen. Worker Master only exits if this
+          * Controller process has exited. *)
+         failwith "Worker Master exited 0 unexpectedly"
+    | _ ->
+      worker_failed pid_stat w.controller_fd
   in
   (* Prepare ourself to read answer from the slave. *)
   let get_result_with_status_check ?(block_on_waitpid=false) () : b =
@@ -279,9 +358,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
        * ignore both of them anyway. *)
       let _ : 'c = Marshal_tools.from_fd_with_preamble infd in
       ()
-    end in
-
-  (* Mark the worker as busy. *)
+    end
+  in
   let slave = { result; slave_pid; infd; worker = w; wait_for_cancel } in
   let request = wrap_request w f x in
 

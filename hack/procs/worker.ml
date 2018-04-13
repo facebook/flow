@@ -21,10 +21,11 @@
 type request = Request of (serializer -> unit)
 and serializer = { send: 'a. 'a -> unit }
 
-(* If we cancel before sending results, master will be left blocking waiting
-* for results. We need to send something back *)
+type slave_job_status =
+  | Slave_terminated of Unix.process_status
+
 let on_slave_cancelled parent_outfd =
-  (* The cancelling master will ignore result of cancelled job anyway (see
+  (* The cancelling controller will ignore result of cancelled job anyway (see
    * wait_for_cancel function), so we can send back anything. *)
   Marshal_tools.to_fd_with_preamble parent_outfd "anything"
   |> ignore
@@ -121,11 +122,55 @@ let slave_main ic oc =
       Printexc.print_backtrace stdout;
       exit 2
 
-let win32_worker_main restore state (ic, oc) =
+let win32_worker_main restore (state, _controller_fd) (ic, oc) =
   restore state;
   slave_main ic oc
 
-let unix_worker_main restore state (ic, oc) =
+let maybe_send_status_to_controller fd status =
+  match fd with
+  | None ->
+    ()
+  | Some fd ->
+    let to_controller fd msg =
+      ignore (Marshal_tools.to_fd_with_preamble fd msg : int)
+    in
+    match status with
+    | Unix.WEXITED 0 ->
+      ()
+    | _ ->
+      Timeout.with_timeout
+        ~timeout:10
+        ~on_timeout:(fun _ ->
+          Hh_logger.log "Timed out sending status to controller"
+        )
+        ~do_:(fun _ ->
+          to_controller fd (Slave_terminated status)
+        )
+
+(**
+ * On Windows, the Worker is a process and runs the job directly. See above.
+ *
+ * On Unix, the Worker is split into a Worker Master and a Worker Slave
+ * process with the Master reaping the Slave's process with waitpid.
+ * The Slave runs the actual job and sends the results over the oc.
+ * If the Slave exits normally (exit code 0), the Master keeps living and
+ * waits for the next incoming job before forking a new slave.
+ *
+ * If the Slave exits with a non-zero code, the Master also exits with the
+ * same code. Thus, the owning process of this Worker can just waitpid
+ * directly on this process and see correct exit codes.
+ *
+ * Except `WSIGNALED i` and `WSTOPPED i` are all compressed to `exit 2`
+ * and `exit 3` respectively. Thus some resolution is lost. So if
+ * the underling Worker Slave is for example SIGKILL'd by the OOM killer,
+ * then the owning process won't be aware of it.
+ *
+ * To regain this lost resolution, controller_fd can be optionally set. The
+ * real exit statuses (includinng WSIGNALED and WSTOPPED) will be sent over
+ * this file descriptor to the Controller when the Worker Slave exits
+ * abnormally (non-zero exit code).
+ *)
+let unix_worker_main restore (state, controller_fd) (ic, oc) =
   restore state;
   let in_fd = Daemon.descr_of_in_channel ic in
   if !Utils.profile then Utils.log := prerr_endline;
@@ -141,7 +186,9 @@ let unix_worker_main restore state (ic, oc) =
       | 0 -> slave_main ic oc
       | pid ->
           (* Wait for the slave termination... *)
-          match snd (Sys_utils.waitpid_non_intr [] pid) with
+          let status = snd (Sys_utils.waitpid_non_intr [] pid) in
+          let () = maybe_send_status_to_controller controller_fd status in
+          match status with
           | Unix.WEXITED 0 -> ()
           | Unix.WEXITED 1 ->
               raise End_of_file

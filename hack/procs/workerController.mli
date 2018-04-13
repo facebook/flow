@@ -26,6 +26,8 @@ exception Worker_failed of (process_id * worker_failure)
  * We should never be doing that, and this is an assertion error. *)
 exception Worker_busy
 
+val failure_to_string : worker_failure -> string
+
 type send_job_failure =
   | Worker_already_exited of Unix.process_status
   | Other_send_job_failure of exn
