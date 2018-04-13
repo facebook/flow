@@ -145,6 +145,7 @@ and ('a, 'b) delayed = 'a * 'b worker_handle
 and 'b worker_handle =
   | Processing of 'b slave
   | Cached of 'b
+  | Canceled
   | Failed of exn
 
 (** The Controller's slave has a Worker. The Worker is itself a single process
@@ -153,6 +154,7 @@ and 'b worker_handle =
 and 'a slave = {
 
   worker: worker;      (* The associated worker *)
+
   slave_pid: int; (* The actual slave pid *)
 
   (* The file descriptor we might pass to select in order to
@@ -405,6 +407,7 @@ let get_result d =
   match snd !d with
   | Cached x -> x
   | Failed exn -> raise exn
+  | Canceled -> raise End_of_file
   | Processing s ->
     with_worker_exn d s begin fun () ->
       let res = s.result () in
@@ -443,7 +446,7 @@ let select ds additional_fds =
   List.fold_right
     ~f:(fun d acc ->
       match snd !d with
-      | Cached _ | Failed _ ->
+      | Cached _ | Canceled | Failed _ ->
           { acc with readys = d :: acc.readys }
       | Processing s when List.mem ready_fds s.infd ->
           { acc with readys = d :: acc.readys }
@@ -456,6 +459,7 @@ let get_worker h =
   match snd !h with
   | Processing {worker; _} -> worker
   | Cached _
+  | Canceled
   | Failed _ -> invalid_arg "Worker.get_worker"
 
 let get_job h = fst !h
@@ -478,7 +482,8 @@ let wait_for_cancel d =
   | Processing s ->
     with_worker_exn d s begin fun () ->
       s.wait_for_cancel ();
-      s.worker.busy <- false
+      s.worker.busy <- false;
+      d := fst !d, Canceled
     end
   | _ -> ()
 
