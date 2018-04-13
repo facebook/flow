@@ -144,6 +144,12 @@ module Statements = struct
   let labeled label body =
     Loc.none, Labeled { Labeled.label; body }
 
+  let variable_declarator_generic id init =
+    Loc.none, { VariableDeclaration.Declarator.
+      id;
+      init;
+    }
+
   let variable_declarator ?init str =
     Loc.none, { VariableDeclaration.Declarator.
       id = Patterns.identifier str;
