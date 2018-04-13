@@ -7,7 +7,7 @@
 import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
 import {createWriteStream} from 'fs';
-import {tmpdir} from 'os';
+import {platform, tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
 import EventEmitter from 'events';
@@ -455,6 +455,84 @@ export class TestBuilder {
       ide.process.kill();
       ide.connection.dispose();
     }
+  }
+
+  getDirUrl(): string {
+    if (platform() === 'win32') {
+      return 'file:///' + this.dir;
+    } else {
+      return 'file://' + this.dir;
+    }
+  }
+
+  // sanitizeIncomingIDEMessage: removes a few known fields from server output
+  // that are known to be specific to an instance of a test, and replaces
+  // them with something fixed.
+  sanitizeIncomingIDEMessage(params: any): any {
+    const params2 = JSON.parse(JSON.stringify(params));
+
+    // Legacy IDE sends back an array of objects where those objects have
+    // a '.flowVersion' field
+    // LSP sends back document URLs, to files within the test project
+    const url = this.getDirUrl();
+    function replace(obj: Object) {
+      for (const k in obj) {
+        if (!obj.hasOwnProperty(k)) {
+          continue;
+        }
+        if (obj[k] == null) {
+          continue;
+        }
+        switch (typeof obj[k]) {
+          case 'object':
+            replace(obj[k]);
+            break;
+          case 'string':
+            if (k == 'flowVersion') {
+              obj[k] = '<VERSION STUBBED FOR TEST>';
+            } else if (obj[k].startsWith(url)) {
+              obj[k] = '<PLACEHOLDER_PROJECT_URL>' + obj[k].substr(url.length);
+            }
+            break;
+        }
+      }
+    }
+
+    replace(params2);
+    return params2;
+  }
+
+  // sanitizeOutoingIDEMessage: replaces some placeholders with values
+  // that can only be computed by the builder instance
+  sanitizeOutgoingIDEMessage(params: Array<mixed>): Array<mixed> {
+    const params2: any = JSON.parse(JSON.stringify(params));
+
+    const dir = this.dir;
+    const dirUrl = this.getDirUrl();
+    function replace(obj: Object) {
+      for (const k in obj) {
+        if (!obj.hasOwnProperty(k)) {
+          continue;
+        }
+        switch (typeof obj[k]) {
+          case 'object':
+            if (obj[k] != null) {
+              replace(obj[k]);
+            }
+            break;
+          case 'string':
+            if (obj[k].startsWith('<PLACEHOLDER')) {
+              obj[k] = obj[k]
+                .replace(/^<PLACEHOLDER_PROJECT_DIR>/, dir)
+                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
+            }
+            break;
+        }
+      }
+    }
+
+    replace(params2);
+    return params2;
   }
 
   async sendIDENotification(
