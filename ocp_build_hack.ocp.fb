@@ -28,11 +28,7 @@ hh_shared_flags = [
 begin library "hh-heap"
   sort = true
   files = begin fb-glob "hack/heap"
-     excludes = [ "hh_shared.c" ]
   end
-  files += [
-    "hack/heap/hh_shared.c" (ccopt = hh_shared_flags)
-  ]
   requires += [
     "hh-stubs"
     "hh-utils-collections"
@@ -40,6 +36,8 @@ begin library "hh-heap"
     "tp-core"
     "lz4"
   ]
+
+  ccopt = hh_shared_flags
 
   if (os_type = "Unix" && system = "linux") then {
     cclib += [ "-lrt" ]
