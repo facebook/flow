@@ -23,6 +23,7 @@ depends: [
   "ocamlbuild" {build}
   "sedlex" { >= "1.99.4" }
   "lwt" { >= "3.3.0" }
+  "lwt_log" { = "1.0.0" }
   "lwt_ppx" { >= "1.1.0" }
   "wtf8"
 ]
