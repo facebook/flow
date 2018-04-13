@@ -781,6 +781,8 @@ let parse_initialize (params: json option) : Initialize.params =
       processId = Jget.int_opt json "processId";
       rootPath = Jget.string_opt json "rootPath";
       rootUri = Jget.string_opt json "rootUri";
+      initializationOptions = Jget.obj_opt json "initializationOptions"
+                              |> parse_initializationOptions;
       client_capabilities = Jget.obj_opt json "capabilities"
                             |> parse_capabilities;
       trace = Jget.string_opt json "trace" |> parse_trace;
@@ -789,6 +791,11 @@ let parse_initialize (params: json option) : Initialize.params =
     | Some "messages" -> Messages
     | Some "verbose" -> Verbose
     | _ -> Off
+  and parse_initializationOptions json =
+    {
+      use_textedit_autocomplete =
+        Option.value (Jget.bool_opt json "useTextEditAutocomplete") ~default:false;
+    }
   and parse_capabilities json =
     {
       workspace = Jget.obj_opt json "workspace" |> parse_workspace;

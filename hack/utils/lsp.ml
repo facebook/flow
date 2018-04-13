@@ -224,7 +224,7 @@ module Initialize = struct
     processId: int option;  (* pid of parent process *)
     rootPath: string option;  (* deprecated *)
     rootUri: documentUri option;  (* the root URI of the workspace *)
-    (* omitted: initiaization_options *)
+    initializationOptions: initializationOptions;
     client_capabilities: client_capabilities;  (* "capabilities" over wire *)
     trace: trace;  (* the initial trace setting, default="off" *)
   }
@@ -241,6 +241,17 @@ module Initialize = struct
     | Off
     | Messages
     | Verbose
+
+  (** Although all of the values in here are technically optional, we don't
+      represent any of them as options. When working with optional
+      configuration, it's very important to track where optional values get
+      their defaults from in order to avoid some costly confusion later.
+      Instead of having the defaults implicitly defined by `match` statements
+      scattered far and wide throughout the code, we can use the type system to
+      enforce that they're only set in one easily-greppable place. *)
+  and initializationOptions = {
+    use_textedit_autocomplete: bool;
+  }
 
   and client_capabilities = {
     workspace: workspaceClientCapabilities;
