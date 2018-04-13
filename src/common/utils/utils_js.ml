@@ -233,9 +233,22 @@ let (%>>=)
   | Error e -> Lwt.return (Error e)
   | Ok x -> f x
 
-let try_with_json f = try%lwt f () with exn -> Lwt.return (Error (Printexc.to_string exn, None))
+let to_exn_string backtrace exn =
+  let backtrace = String.trim backtrace in
+  Printf.sprintf "%s%s%s"
+    (Printexc.to_string exn)
+    (if backtrace = "" then "" else "\n")
+    backtrace
 
-let try_with f = try%lwt f () with exn -> Lwt.return (Error (Printexc.to_string exn))
+let try_with_json f =
+  try%lwt f () with exn ->
+    let backtrace = Printexc.get_backtrace () in
+    Lwt.return (Error (to_exn_string backtrace exn, None))
+
+let try_with f =
+  try%lwt f () with exn ->
+    let backtrace = Printexc.get_backtrace () in
+    Lwt.return (Error (to_exn_string backtrace exn))
 
 let split_result = function
 | Ok (success, extra) -> Ok success, extra
