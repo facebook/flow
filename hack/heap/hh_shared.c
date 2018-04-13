@@ -239,6 +239,15 @@ typedef struct {
   uint32_t uncompressed_size;
 } hh_header_t;
 
+typedef struct {
+  // Size of the BLOB in bytes.
+  size_t size;
+  // BLOB returned by sqlite3. Its memory is managed by sqlite3.
+  // It will be automatically freed on the next query of the same
+  // statement.
+  void * blob;
+} query_result_t;
+
 /* Size of where we allocate shared objects. */
 #define Get_buf_size(x) (((hh_header_t*)(x))[-1].size + sizeof(hh_header_t))
 #define Get_buf(x)      (x - sizeof(hh_header_t))
@@ -2278,6 +2287,61 @@ CAMLprim value hh_load_dep_table_sqlite(
   CAMLreturn(Val_long(secs));
 }
 
+// Returns the size of the result, and the BLOB of the result.
+// If no results, returns 0 and result_blob is set to NULL.
+// Note: Returned blob is maintained by sqlite's memory allocator. It's memory
+// will be automatically freed (by sqlite3_reset) on the next call to this
+// function. Use it before you lose it.
+query_result_t get_dep_sqlite_blob(
+  sqlite3 * const db,
+  const uint64_t key64
+) {
+  // Extract the 32-bit key from the 64 bits.
+  const uint32_t key = (uint32_t)key64;
+  assert((key & 0x7FFFFFFF) == key64);
+
+  if (get_dep_select_stmt == NULL) {
+    const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &get_dep_select_stmt, NULL),
+      SQLITE_OK);
+    assert(get_dep_select_stmt != NULL);
+  } else {
+    assert_sql(sqlite3_clear_bindings(get_dep_select_stmt), SQLITE_OK);
+    assert_sql(sqlite3_reset(get_dep_select_stmt), SQLITE_OK);
+  }
+
+  assert_sql(sqlite3_bind_int(get_dep_select_stmt, 1, key), SQLITE_OK);
+
+  int err_num = sqlite3_step(get_dep_select_stmt);
+  // err_num is SQLITE_ROW if there is a row to look at,
+  // SQLITE_DONE if no results
+  if (err_num == SQLITE_ROW) {
+    // Means we found it in the table
+    // Columns are 0 indexed
+    uint32_t * values =
+      (uint32_t *) sqlite3_column_blob(get_dep_select_stmt, 0);
+    size_t size = (size_t) sqlite3_column_bytes(get_dep_select_stmt, 0);
+    query_result_t result = { 0 };
+    result.size = size;
+    result.blob = values;
+    return result;
+  } else if (err_num == SQLITE_DONE) {
+    // No row found, return "None".
+    query_result_t null_result = { 0 };
+    return null_result;
+  } else {
+    // Remaining cases are SQLITE_BUSY, SQLITE_ERROR, or SQLITE_MISUSE.
+    // The first should never happen since we are reading here.
+    // Regardless, something went wrong in sqlite3_step, lets crash.
+    assert_sql(err_num, SQLITE_ROW);
+  }
+  // Unreachable.
+  assert(0);
+  // Return something to satisfy compiler.
+  query_result_t null_result = { 0 };
+  return null_result;
+}
+
 /* Given a key, returns the list of values bound to it from the sql db. */
 CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   CAMLparam1(ocaml_key);
@@ -2305,49 +2369,24 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
     assert(g_db != NULL);
   }
 
+  uint32_t *values = NULL;
   // The caller is required to pass a 32-bit node ID.
   const uint64_t key64 = Long_val(ocaml_key);
-  const uint32_t key = (uint32_t)key64;
-  assert((key & 0x7FFFFFFF) == key64);
-
-  uint32_t *values = NULL;
-  size_t size = 0;
-  size_t count = 0;
-
-  if (get_dep_select_stmt == NULL) {
-    const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
-    assert_sql(sqlite3_prepare_v2(g_db, sql, -1, &get_dep_select_stmt, NULL),
-      SQLITE_OK);
-    assert(get_dep_select_stmt != NULL);
+  query_result_t query_result = get_dep_sqlite_blob(g_db, key64);
+  // Make sure we don't have malformed output
+  assert(query_result.size % sizeof(uint32_t) == 0);
+  size_t count = query_result.size / sizeof(uint32_t);
+  values = (uint32_t *) query_result.blob;
+  if (count > 0) {
+    assert(values != NULL);
   }
 
-  assert_sql(sqlite3_bind_int(get_dep_select_stmt, 1, key), SQLITE_OK);
-
-  int err_num = sqlite3_step(get_dep_select_stmt);
-  // err_num is SQLITE_ROW if there is a row to look at,
-  // SQLITE_DONE if no results
-  if (err_num == SQLITE_ROW) {
-    // Means we found it in the table
-    // Columns are 0 indexed
-    values = (uint32_t *) sqlite3_column_blob(get_dep_select_stmt, 0);
-    size = (size_t) sqlite3_column_bytes(get_dep_select_stmt, 0);
-    // Make sure we don't have malformed output
-    assert(size % sizeof(uint32_t) == 0);
-    count = size / sizeof(uint32_t);
-
-    for (size_t i = 0; i < count; i++) {
-      cell = caml_alloc_tuple(2);
-      Field(cell, 0) = Val_long(values[i]);
-      Field(cell, 1) = result;
-      result = cell;
-    }
-  } else if (err_num != SQLITE_DONE) {
-    // Something went wrong in sqlite3_step, lets crash
-    assert_sql(err_num, SQLITE_ROW);
+  for (size_t i = 0; i < count; i++) {
+    cell = caml_alloc_tuple(2);
+    Field(cell, 0) = Val_long(values[i]);
+    Field(cell, 1) = result;
+    result = cell;
   }
-
-  assert_sql(sqlite3_clear_bindings(get_dep_select_stmt), SQLITE_OK);
-  assert_sql(sqlite3_reset(get_dep_select_stmt), SQLITE_OK);
   CAMLreturn(result);
 }
 
