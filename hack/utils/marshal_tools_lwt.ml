@@ -19,12 +19,14 @@ module Marshal_tools_lwt = Marshal_tools.MarshalToolsFunctor (struct
   let write ?timeout fd ~buffer ~offset ~size =
     if timeout <> None
     then raise (Invalid_argument "Use Lwt timeouts directly");
-    Lwt_unix.write fd buffer offset size
+    Lwt_unix.wait_write fd
+    >>= (fun () -> Lwt_unix.write fd buffer offset size)
 
   let read ?timeout fd ~buffer ~offset ~size =
     if timeout <> None
     then raise (Invalid_argument "Use lwt timeouts directly");
-    Lwt_unix.read fd buffer offset size
+    Lwt_unix.wait_read fd
+    >>= (fun () -> Lwt_unix.read fd buffer offset size)
 
   let log str = Lwt_log_core.ign_error str
 end)
