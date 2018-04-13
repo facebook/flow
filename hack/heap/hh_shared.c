@@ -2041,10 +2041,7 @@ static void make_all_tables(sqlite3 *db) {
 }
 
 // Expects the database to be open
-static void create_sqlite_header(sqlite3 *db, const char* const buildInfo) {
-  // Create Header
-  make_all_tables(db);
-
+static void write_sqlite_header(sqlite3 *db, const char* const buildInfo) {
   // Insert magic constant and build info
   sqlite3_stmt *insert_stmt = NULL;
   const char *sql = \
@@ -2106,30 +2103,26 @@ static long hh_save_file_info_helper_sqlite(
     return 0;
 }
 
-static long hh_save_dep_table_helper_sqlite(
-    const char* const out_filename,
-    const char* const build_info
+static sqlite3 * connect_and_create_dep_table_helper(
+    const char* const out_filename
 ) {
   // This can only happen in the master
   assert_master();
-
-  struct timeval tv = { 0 };
-  struct timeval tv2 = { 0 };
-  gettimeofday(&tv, NULL);
 
   sqlite3 *db_out = NULL;
   // sqlite3_open creates the db
   assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
 
-  // Create header for verification while we read from the db
-  create_sqlite_header(db_out, build_info);
+  make_all_tables(db_out);
+  return db_out;
+}
 
-  // Create Dep able
-  const char *sql = "CREATE TABLE IF NOT EXISTS DEPTABLE(" \
-               "KEY_VERTEX INT PRIMARY KEY NOT NULL," \
-               "VALUE_VERTEX BLOB NOT NULL);";
-
-  assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
+static void hh_update_dep_table_helper(
+    sqlite3* const db_out,
+    const char* const build_info
+) {
+  // Create header for verification
+  write_sqlite_header(db_out, build_info);
   // Hand-off the data to the OS for writing and continue,
   // don't wait for it to complete
   assert_sql(sqlite3_exec(db_out, "PRAGMA synchronous = OFF", NULL, 0, NULL),
@@ -2149,7 +2142,8 @@ static long hh_save_dep_table_helper_sqlite(
   uint32_t *values = NULL;
   size_t iter = 0;
   sqlite3_stmt *insert_stmt = NULL;
-  sql = "INSERT INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
+  const char * sql =
+    "INSERT INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
     SQLITE_OK);
   for (slot = 0; slot < dep_size; ++slot) {
@@ -2201,6 +2195,21 @@ static long hh_save_dep_table_helper_sqlite(
   assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
 
   assert_sql(sqlite3_close(db_out), SQLITE_OK);
+}
+
+static long hh_save_dep_table_helper_sqlite(
+    const char* const out_filename,
+    const char* const build_info
+) {
+  // This can only happen in the master
+  assert_master();
+
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
+  gettimeofday(&tv, NULL);
+
+  sqlite3 *db_out = connect_and_create_dep_table_helper(out_filename);
+  hh_update_dep_table_helper(db_out, build_info);
   tv2 = log_duration("Writing dependency file with sqlite", tv);
   int secs = tv2.tv_sec - tv.tv_sec;
   // Reporting only seconds, ignore milli seconds
@@ -2363,8 +2372,9 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
   // sqlite3_open creates the db
   assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
 
+  make_all_tables(db_out);
   // Create header for verification while we read from the db
-  create_sqlite_header(db_out, BuildInfo_kRevision);
+  write_sqlite_header(db_out, BuildInfo_kRevision);
 
   // Create Dep able
   const char *sql = "CREATE TABLE IF NOT EXISTS HASHTABLE(" \
@@ -2431,7 +2441,8 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
 
   sqlite3 *db_out = NULL;
   assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
-  create_sqlite_header(db_out, BuildInfo_kRevision);
+  make_all_tables(db_out);
+  write_sqlite_header(db_out, BuildInfo_kRevision);
 
   const char *sql =
     "CREATE TABLE IF NOT EXISTS HASHTABLE(" \
