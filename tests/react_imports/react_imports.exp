@@ -47,8 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:279:27
-   279|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:280:27
+   280|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:279:27
-   279|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:280:27
+   280|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -202,8 +202,9 @@ References:
    269|     +isValidElement: typeof isValidElement,
    270|     +Component: typeof Component,
    271|     +PureComponent: typeof PureComponent,
-   272|     +Children: typeof Children,
-   273|   |};
+   272|     +Fragment: typeof Fragment,
+   273|     +Children: typeof Children,
+   274|   |};
           -^ [1]
 
 
@@ -232,8 +233,9 @@ References:
    269|     +isValidElement: typeof isValidElement,
    270|     +Component: typeof Component,
    271|     +PureComponent: typeof PureComponent,
-   272|     +Children: typeof Children,
-   273|   |};
+   272|     +Fragment: typeof Fragment,
+   273|     +Children: typeof Children,
+   274|   |};
           -^ [1]
 
 
@@ -262,8 +264,9 @@ References:
    269|     +isValidElement: typeof isValidElement,
    270|     +Component: typeof Component,
    271|     +PureComponent: typeof PureComponent,
-   272|     +Children: typeof Children,
-   273|   |};
+   272|     +Fragment: typeof Fragment,
+   273|     +Children: typeof Children,
+   274|   |};
           -^ [1]
 
 
