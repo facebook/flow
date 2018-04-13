@@ -564,7 +564,7 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
 
 static int memfd = -1;
 
-static void raise_failed_anonymous_memfd_init() {
+static void raise_failed_anonymous_memfd_init(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("failed_anonymous_memfd_init");
   caml_raise_constant(*exn);
@@ -718,7 +718,7 @@ static char *memfd_map(size_t shared_mem_size) {
  ****************************************************************************/
 
 
-static void raise_out_of_shared_memory()
+static void raise_out_of_shared_memory(void)
 {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("out_of_shared_memory");
@@ -864,7 +864,7 @@ static void define_globals(char * shared_mem_init) {
 
 /* The total size of the shared memory.  Most of it is going to remain
  * virtual. */
-static size_t get_shared_mem_size() {
+static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
   return (global_size_b + dep_size_b + bindings_size_b + hashtbl_size_b +
           heap_size + 3 * page_size);
@@ -1045,31 +1045,31 @@ CAMLprim value hh_counter_next(void) {
  * process
  */
 /*****************************************************************************/
-void assert_master() {
+void assert_master(void) {
   assert(my_pid == *master_pid);
 }
 
-void assert_not_master() {
+void assert_not_master(void) {
   assert(my_pid != *master_pid);
 }
 
 /*****************************************************************************/
 
-CAMLprim value hh_stop_workers() {
+CAMLprim value hh_stop_workers(void) {
   CAMLparam0();
   assert_master();
   *workers_should_exit = 1;
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value hh_resume_workers() {
+CAMLprim value hh_resume_workers(void) {
   CAMLparam0();
   assert_master();
   *workers_should_exit = 0;
   CAMLreturn(Val_unit);
 }
 
-void check_should_exit() {
+void check_should_exit(void) {
   if(*workers_should_exit) {
     static value *exn = NULL;
     if (!exn) exn = caml_named_value("worker_should_exit");
@@ -1125,7 +1125,7 @@ void hh_shared_clear(void) {
 /* Dependencies */
 /*****************************************************************************/
 
-static void raise_dep_table_full() {
+static void raise_dep_table_full(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("dep_table_full");
   caml_raise_constant(*exn);
@@ -1386,7 +1386,7 @@ CAMLprim value hh_get_dep(value ocaml_key) {
 
 #ifdef _WIN32
 
-static char *temp_memory_map() {
+static char *temp_memory_map(void) {
   char *tmp_heap = NULL;
   tmp_heap = VirtualAlloc(NULL, heap_size, MEM_RESERVE, PAGE_READWRITE);
   if (!tmp_heap) {
@@ -1405,7 +1405,7 @@ static void temp_memory_unmap(char * tmp_heap) {
 
 #else
 
-static char *temp_memory_map() {
+static char *temp_memory_map(void) {
   char *tmp_heap = NULL;
   int flags       = MAP_PRIVATE | MAP_ANON | MAP_NORESERVE;
   int prot        = PROT_READ | PROT_WRITE;
@@ -1432,7 +1432,7 @@ static void temp_memory_unmap(char * tmp_heap) {
  * garbage collect.
  */
 /*****************************************************************************/
-void hh_call_after_init() {
+void hh_call_after_init(void) {
   CAMLparam0();
   if (2 * used_heap_size() >= heap_size) {
     caml_failwith("Heap init size is too close to max heap size; "
@@ -1441,7 +1441,7 @@ void hh_call_after_init() {
   CAMLreturn0;
 }
 
-value hh_check_heap_overflow() {
+value hh_check_heap_overflow(void) {
   if (*heap >= shared_mem + shared_mem_size) {
     return Val_bool(1);
   }
@@ -1522,7 +1522,7 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   return Val_unit;
 }
 
-static void raise_heap_full() {
+static void raise_heap_full(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("heap_full");
   caml_raise_constant(*exn);
@@ -1660,7 +1660,7 @@ static value write_at(unsigned int slot, value data) {
   CAMLreturn(result);
 }
 
-static void raise_hash_table_full() {
+static void raise_hash_table_full(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("hash_table_full");
   caml_raise_constant(*exn);
@@ -1915,7 +1915,7 @@ void hh_remove(value key) {
 /*****************************************************************************/
 
 // Safe to call outside of sql
-void hh_cleanup_sqlite() {
+void hh_cleanup_sqlite(void) {
   CAMLparam0();
   size_t page_size = getpagesize();
   memset(db_filename, 0, page_size);
@@ -1923,7 +1923,7 @@ void hh_cleanup_sqlite() {
 }
 
 // Safe to call outside of sql
-void hh_hashtable_cleanup_sqlite() {
+void hh_hashtable_cleanup_sqlite(void) {
   CAMLparam0();
   size_t page_size = getpagesize();
   memset(hashtable_db_filename, 0, page_size);
