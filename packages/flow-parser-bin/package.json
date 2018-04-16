@@ -4,7 +4,7 @@
   "description": "The Flow JavaScript parser, via bindings to the native OCaml implementation",
   "main": "index.js",
   "repository": "https://github.com/facebook/flow.git",
-  "author": "Marshall Roch <mroch@fb.com>",
+  "author": "Flow Team <flow@fb.com>",
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.3.0",

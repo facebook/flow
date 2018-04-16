@@ -1,19 +1,11 @@
 opam-version: "1.2"
 name: "flowtype"
 version: "0.70.0"
-maintainer: "gabe@fb.com"
+maintainer: "flow@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
 bug-reports: "https://github.com/facebook/flow/issues"
-authors: [
-  "Avik Chaudhuri"
-  "Basil Hosmer"
-  "Gabe Levi"
-  "Jeff Morrison"
-  "Marshall Roch"
-  "Sam Goldman"
-  "James Kyle"
-]
+authors: ["Flow Team <flow@fb.com>"]
 doc: "https://flow.org/en/docs/getting-started/"
 license: "MIT"
 depends: [

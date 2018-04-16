@@ -1,16 +1,8 @@
 opam-version: "1.2"
 name: "flow_parser"
 version: "0.70.0"
-maintainer: "gabe@fb.com"
-authors: [
-  "Avik Chaudhuri"
-  "Basil Hosmer"
-  "Gabe Levi"
-  "Jeff Morrison"
-  "Marshall Roch"
-  "Sam Goldman"
-  "James Kyle"
-]
+maintainer: "flow@fb.com"
+authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
 bug-reports: "https://github.com/facebook/flow/issues"
 license: "MIT"
