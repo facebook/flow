@@ -449,7 +449,10 @@ static char *hashtable_db_filename = NULL;
 // global SQLite DB pointer
 static sqlite3 *g_db = NULL;
 static sqlite3 *hashtable_db = NULL;
-static sqlite3_stmt *get_dep_select_stmt = NULL;
+// Global select statement for getting dep from the
+// above g_db database. It is shared between
+// requests because preparing a statement is expensive.
+static sqlite3_stmt *g_get_dep_select_stmt = NULL;
 static sqlite3_stmt *get_select_stmt = NULL;
 #endif
 
@@ -1954,6 +1957,8 @@ value Val_some(value v)
 
 #ifndef NO_SQLITE3
 
+// ------------------------ START OF SQLITE3 SECTION --------------------------
+
 static void assert_sql_with_line(
   int result,
   int correct_result,
@@ -2054,7 +2059,7 @@ static void write_sqlite_header(sqlite3 *db, const char* const buildInfo) {
   // Insert magic constant and build info
   sqlite3_stmt *insert_stmt = NULL;
   const char *sql = \
-    "INSERT INTO HEADER (MAGIC_CONSTANT, BUILDINFO) VALUES (?,?)";
+    "INSERT OR REPLACE INTO HEADER (MAGIC_CONSTANT, BUILDINFO) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db, sql, -1, &insert_stmt, NULL), SQLITE_OK);
   assert_sql(sqlite3_bind_int64(insert_stmt, 1, MAGIC_CONSTANT), SQLITE_OK);
   assert_sql(sqlite3_bind_text(insert_stmt, 2,
@@ -2126,6 +2131,21 @@ static sqlite3 * connect_and_create_dep_table_helper(
   return db_out;
 }
 
+// Forward declaration
+void destroy_prepared_stmt(sqlite3_stmt ** stmt);
+
+// Forward declaration
+query_result_t get_dep_sqlite_blob(
+  sqlite3 * const db,
+  const uint64_t key64,
+  sqlite3_stmt ** stmt
+);
+
+// Add all the entries in the in-memory deptable
+// into the connected database. This adds edges only, so the
+// resulting deptable may contain more edges than truly represented
+// in the code-base (after incremental changes), but never misses
+// any (modulo bugs).
 static void hh_update_dep_table_helper(
     sqlite3* const db_out,
     const char* const build_info
@@ -2151,8 +2171,9 @@ static void hh_update_dep_table_helper(
   uint32_t *values = NULL;
   size_t iter = 0;
   sqlite3_stmt *insert_stmt = NULL;
+  sqlite3_stmt *select_dep_stmt = NULL;
   const char * sql =
-    "INSERT INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
+    "INSERT OR REPLACE INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
     SQLITE_OK);
   for (slot = 0; slot < dep_size; ++slot) {
@@ -2160,15 +2181,20 @@ static void hh_update_dep_table_helper(
     if (count == 0) {
       continue;
     }
-    if (count > prev_count) {
+    deptbl_entry_t slotval = deptbl[slot];
+
+    query_result_t existing =
+      get_dep_sqlite_blob(db_out, slotval.s.key.num, &select_dep_stmt);
+    // Make sure we don't have malformed output
+    assert(existing.size % sizeof(uint32_t) == 0);
+    size_t existing_count = existing.size / sizeof(uint32_t);
+    if (count + existing_count > prev_count) {
       // No need to allocate new space if can just re use the old one
-      values = realloc(values, count * sizeof(uint32_t));
-      prev_count = count;
+      values = realloc(values, (count + existing_count) * sizeof(uint32_t));
+      prev_count = (count + existing_count);
     }
     assert(values != NULL);
     iter = 0;
-
-    deptbl_entry_t slotval = deptbl[slot];
 
     if (slotval.raw != 0 && slotval.s.key.tag == TAG_KEY) {
       // This is the head of a linked list aka KEY VERTEX
@@ -2186,6 +2212,15 @@ static void hh_update_dep_table_helper(
       // The final "next" in the list is always a value, not a next pointer.
       values[iter] = slotval.s.next.num;
       iter++;
+      if (existing_count > 0) {
+        assert(existing.blob != NULL);
+        memcpy(
+            &(values[iter]),
+            existing.blob,
+            existing_count * (sizeof(uint32_t))
+        );
+        iter += existing_count;
+      }
       assert_sql(
         sqlite3_bind_blob(insert_stmt, 2, values,
                           iter * sizeof(uint32_t), SQLITE_TRANSIENT),
@@ -2202,7 +2237,7 @@ static void hh_update_dep_table_helper(
 
   assert_sql(sqlite3_finalize(insert_stmt), SQLITE_OK);
   assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
-
+  destroy_prepared_stmt(&select_dep_stmt);
   assert_sql(sqlite3_close(db_out), SQLITE_OK);
 }
 
@@ -2227,7 +2262,7 @@ static long hh_save_dep_table_helper_sqlite(
 
 /*
  * Assumption: When we save the dependency table, we do a fresh load
- * aka there is saved state
+ * aka there was NO saved state loaded.
  */
 CAMLprim value hh_save_dep_table_sqlite(
     value out_filename,
@@ -2241,6 +2276,29 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLreturn(Val_long(retVal));
 }
 
+CAMLprim value hh_update_dep_table_sqlite(
+    value out_filename,
+    value build_revision
+) {
+  CAMLparam2(out_filename, build_revision);
+  char *out_filename_raw = String_val(out_filename);
+  char *build_revision_raw = String_val(build_revision);
+  sqlite3 *db_out = NULL;
+
+  // This can only happen in the master
+  assert_master();
+
+  struct timeval tv = { 0 };
+  struct timeval tv2 = { 0 };
+  gettimeofday(&tv, NULL);
+
+  assert_sql(sqlite3_open(out_filename_raw, &db_out), SQLITE_OK);
+  hh_update_dep_table_helper(db_out, build_revision_raw);
+  tv2 = log_duration("Updated dependency file with sqlite", tv);
+  long secs = tv2.tv_sec - tv.tv_sec;
+  CAMLreturn(Val_long(secs));
+}
+
 CAMLprim value hh_save_file_info_sqlite(
     value out_filename
 ) {
@@ -2249,6 +2307,20 @@ CAMLprim value hh_save_file_info_sqlite(
   long retVal =
     hh_save_file_info_helper_sqlite(out_filename_raw);
   CAMLreturn(Val_long(retVal));
+}
+
+CAMLprim value hh_get_loaded_dep_table_filename() {
+  CAMLparam0();
+  CAMLlocal1(result);
+  assert(db_filename != NULL);
+
+  // Check whether we are in SQL mode
+  if (*db_filename == '\0') {
+    CAMLreturn(caml_copy_string(""));
+  }
+
+  result = caml_copy_string(db_filename);
+  CAMLreturn(result);
 }
 
 CAMLprim value hh_load_dep_table_sqlite(
@@ -2287,40 +2359,60 @@ CAMLprim value hh_load_dep_table_sqlite(
   CAMLreturn(Val_long(secs));
 }
 
+// Must destroy the prepared statement before sqlite3_close can be used.
+// See SQLite documentation on "Closing a Database Connection".
+void destroy_prepared_stmt(sqlite3_stmt ** stmt) {
+  if (*stmt == NULL) {
+    return;
+  }
+  assert_sql(sqlite3_clear_bindings(*stmt), SQLITE_OK);
+  assert_sql(sqlite3_reset(*stmt), SQLITE_OK);
+  assert_sql(sqlite3_finalize(*stmt), SQLITE_OK);
+  *stmt = NULL;
+}
+
 // Returns the size of the result, and the BLOB of the result.
-// If no results, returns 0 and result_blob is set to NULL.
+// If no result found, returns size 0 with a NULL pointer.
 // Note: Returned blob is maintained by sqlite's memory allocator. It's memory
 // will be automatically freed (by sqlite3_reset) on the next call to this
-// function. Use it before you lose it.
+// function (so use it before you lose it), or when you call sqlite3_reset
+// on the given sqlite3_stmt. So if you won't be calling this function
+// again, you must call sqlite3_reset yourself
+// Note 2: The sqlite3_stmt on the first call invocation should be a pointer
+// to a NULL pointer. The pointer will be changed to point to a prepared
+// statement. Subsequent calls can reuse the same pointer for faster queries.
+// Note 3: Closing the DB connection will fail (with SQLITE_BUSY) until
+// sqlite3_reset is called on sqlite3_stmt.
 query_result_t get_dep_sqlite_blob(
   sqlite3 * const db,
-  const uint64_t key64
+  const uint64_t key64,
+  sqlite3_stmt ** select_stmt
 ) {
   // Extract the 32-bit key from the 64 bits.
   const uint32_t key = (uint32_t)key64;
   assert((key & 0x7FFFFFFF) == key64);
 
-  if (get_dep_select_stmt == NULL) {
+  if (*select_stmt == NULL) {
     const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
-    assert_sql(sqlite3_prepare_v2(db, sql, -1, &get_dep_select_stmt, NULL),
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, select_stmt, NULL),
       SQLITE_OK);
-    assert(get_dep_select_stmt != NULL);
+    assert(*select_stmt != NULL);
   } else {
-    assert_sql(sqlite3_clear_bindings(get_dep_select_stmt), SQLITE_OK);
-    assert_sql(sqlite3_reset(get_dep_select_stmt), SQLITE_OK);
+    assert_sql(sqlite3_clear_bindings(*select_stmt), SQLITE_OK);
+    assert_sql(sqlite3_reset(*select_stmt), SQLITE_OK);
   }
 
-  assert_sql(sqlite3_bind_int(get_dep_select_stmt, 1, key), SQLITE_OK);
+  assert_sql(sqlite3_bind_int(*select_stmt, 1, key), SQLITE_OK);
 
-  int err_num = sqlite3_step(get_dep_select_stmt);
+  int err_num = sqlite3_step(*select_stmt);
   // err_num is SQLITE_ROW if there is a row to look at,
   // SQLITE_DONE if no results
   if (err_num == SQLITE_ROW) {
     // Means we found it in the table
     // Columns are 0 indexed
     uint32_t * values =
-      (uint32_t *) sqlite3_column_blob(get_dep_select_stmt, 0);
-    size_t size = (size_t) sqlite3_column_bytes(get_dep_select_stmt, 0);
+      (uint32_t *) sqlite3_column_blob(*select_stmt, 0);
+    size_t size = (size_t) sqlite3_column_bytes(*select_stmt, 0);
     query_result_t result = { 0 };
     result.size = size;
     result.blob = values;
@@ -2372,7 +2464,8 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   uint32_t *values = NULL;
   // The caller is required to pass a 32-bit node ID.
   const uint64_t key64 = Long_val(ocaml_key);
-  query_result_t query_result = get_dep_sqlite_blob(g_db, key64);
+  query_result_t query_result =
+    get_dep_sqlite_blob(g_db, key64, &g_get_dep_select_stmt);
   // Make sure we don't have malformed output
   assert(query_result.size % sizeof(uint32_t) == 0);
   size_t count = query_result.size / sizeof(uint32_t);
@@ -2631,8 +2724,26 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
   CAMLreturn(result);
 }
 
+// --------------------------END OF SQLITE3 SECTION ---------------------------
+
 #else
+
+// ----------------------- START OF NO_SQLITE3 SECTION ------------------------
+
+CAMLprim value hh_get_loaded_dep_table_filename() {
+  CAMLparam0();
+  CAMLreturn(caml_copy_string(""));
+}
+
 CAMLprim value hh_save_dep_table_sqlite(
+    value out_filename,
+    value build_revision
+) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value hh_update_dep_table_sqlite(
     value out_filename,
     value build_revision
 ) {
