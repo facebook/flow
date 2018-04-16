@@ -822,7 +822,7 @@ begin program "flow-parser-hardcoded-test"
   sort = true
   dirname = "src/parser/test"
   files = [
-    "run_esprima_tests.ml"
+    "run_tests.ml"
   ]
   requires = [
     "flow-common-utils"

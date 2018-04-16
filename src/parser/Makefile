@@ -92,38 +92,24 @@ js:
 test-js: js
 	cd $(TOP)/packages/flow-parser; npm test
 
-../../_build/$(REL_DIR)/test/run_esprima_tests.native: build-parser
+../../_build/$(REL_DIR)/test/run_tests.native: build-parser
 	cd $(TOP); \
-	$(OCB) \
+	$(OCB) -no-links \
 		-ocamlc "ocamlopt" \
 		$(NATIVE_OBJECT_FILES); \
-	$(OCB) \
+	$(OCB) -no-links \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
-		$(REL_DIR)/test/run_esprima_tests.native; \
-	rm run_esprima_tests.native
+		$(REL_DIR)/test/run_tests.native
 
-../../_build/$(REL_DIR)/test/run_hardcoded_tests.native: build-parser
+test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_tests.native
 	cd $(TOP); \
-	$(OCB) \
-		-ocamlc "ocamlopt -ccopt -DNO_SQLITE3" \
-		$(NATIVE_OBJECT_FILES); \
-	$(OCB) \
-		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
-	 	-lib unix -lib str \
-	 	-lflags "$(NATIVE_OBJECT_FILES)" \
-		-tag debug \
-		$(REL_DIR)/test/run_hardcoded_tests.native; \
-	rm run_hardcoded_tests.native
+	_build/$(REL_DIR)/test/run_tests.native $(REL_DIR)/test/esprima/
 
-test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
+test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_tests.native
 	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_esprima_tests.native $(REL_DIR)/test/esprima/
-
-test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
-	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_esprima_tests.native $(REL_DIR)/test/flow/
+	_build/$(REL_DIR)/test/run_tests.native $(REL_DIR)/test/flow/
 
 test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
