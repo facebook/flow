@@ -113,6 +113,16 @@
 
 #define UNUSED(x) \
     ((void)(x))
+#define UNUSED1 UNUSED
+#define UNUSED2(a, b) \
+    (UNUSED(a), UNUSED(b))
+#define UNUSED3(a, b, c) \
+    (UNUSED(a), UNUSED(b), UNUSED(c))
+#define UNUSED4(a, b, c, d) \
+    (UNUSED(a), UNUSED(b), UNUSED(c), UNUSED(d))
+#define UNUSED5(a, b, c, d, e) \
+    (UNUSED(a), UNUSED(b), UNUSED(c), UNUSED(d), UNUSED(e))
+
 
 #ifndef NO_SQLITE3
 #include <sqlite3.h>
@@ -670,10 +680,26 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys);
 CAMLprim value hh_load_table_sqlite(value in_filename, value verify);
 
 CAMLprim value hh_get_sqlite(value ocaml_key);
+
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t nkind,
+        const char *filespec
+);
+
+char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
+
+static char *copy_malloc(const char *s);
+
 // END DECLARATIONS
 
-
-
+static char *copy_malloc(const char *s) {
+    char *d = malloc(1 + strlen(s));
+    assert(d);
+    return strcpy(d, s);
+}
 
 void raise_assertion_failure(char * msg) {
   caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
@@ -2933,6 +2959,62 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
 }
 
 // --------------------------END OF SQLITE3 SECTION ---------------------------
+static const char *hhfi_insert_row_sql = \
+  "INSERT INTO NAME_INFO (HASH, NAME, NKIND, FILESPEC) VALUES (?, ?, ?, ?);";
+
+// insert a row into the name_info table
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t kind,
+        const char *filespec
+) {
+    assert(db);
+    assert(name);
+    assert(filespec);
+    const char *sql = hhfi_insert_row_sql;
+    sqlite3_stmt *stmt = NULL;
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
+    assert_sql(sqlite3_bind_text(stmt, 2, name, -1, SQLITE_TRANSIENT),
+            SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 3, kind), SQLITE_OK);
+    assert_sql(sqlite3_bind_text(stmt, 4, filespec, -1, SQLITE_TRANSIENT),
+            SQLITE_OK);
+    assert_sql(sqlite3_step(stmt), SQLITE_DONE);
+    assert_sql(sqlite3_finalize(stmt), SQLITE_OK);
+    return;
+}
+
+static const char *hhfi_get_filespec_sql = \
+    "SELECT FILESPEC FROM NAME_INFO WHERE (HASH = (?));";
+
+char *hhfi_get_filespec(
+        sqlite3_ptr db,
+        int64_t hash
+) {
+    assert(db);
+    const char *sql = hhfi_get_filespec_sql;
+    sqlite3_stmt *stmt = NULL;
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
+    int sqlerr = sqlite3_step(stmt);
+    char *out = NULL;
+    if (sqlerr == SQLITE_DONE) {
+        // do nothing
+    } else if (sqlerr == SQLITE_ROW) {
+        // sqlite returns const unsigned char*
+        out = copy_malloc((char *) sqlite3_column_text(stmt, 0));
+        // make sure there are no more rows
+        assert_sql(sqlite3_step(stmt), SQLITE_DONE);
+    } else {
+        // unexpected sqlite status
+        assert(0);
+    }
+    sqlite3_finalize(stmt);
+    return out;
+}
 
 #else
 
@@ -3029,5 +3111,24 @@ CAMLprim value open_file_info_db(
   CAMLparam1(ml_unit);
   UNUSED(ml_unit);
   CAMLreturn(Val_unit);
+}
+
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t kind,
+        const char *filespec
+) {
+    UNUSED5(db, hash, name, kind, filespec);
+    return;
+}
+
+char *hhfi_get_filespec(
+        sqlite3_ptr db,
+        int64_t hash
+) {
+    UNUSED2(db, hash);
+    return NULL;
 }
 #endif
