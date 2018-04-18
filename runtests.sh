@@ -214,8 +214,7 @@ runtest() {
         if ([ ! -e "$dir/$exp_file" ] || [[ ! -e "$dir/.flowconfig" && ! -e "$dir/.testconfig" ]])
         then
             if [ "$name" = "auxiliary" ] ||
-               [ "$name" = "callable" ] ||
-               [ "$name" = "suggest" ]
+               [ "$name" = "callable" ]
             then
                 return $RUNTEST_SKIP;
             else

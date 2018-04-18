@@ -93,7 +93,7 @@ let check_file ~options ~workers ~env ~profiling ~force file_input =
       in
       if should_check then
         let file = File_key.SourceFile file in
-        let%lwt errors, warnings =
+        let%lwt _, errors, warnings =
           Types_js.typecheck_contents ~options ~workers ~env ~profiling content file
         in
         Lwt.return (convert_errors ~errors ~warnings)
@@ -167,17 +167,22 @@ let get_cycle ~workers ~env fn =
     Ok subgraph
   )
 
-let suggest =
-  let suggest_for_file ~options ~workers ~env ~profiling result_map (file, region) =
-    let%lwt result = try_with begin fun () ->
-      Type_info_service.suggest ~options ~workers ~env ~profiling
-        (File_key.SourceFile file) region (Sys_utils.cat file)
-    end in
-    Lwt.return (SMap.add file result result_map)
-  in
-
-  fun ~options ~workers ~env ~profiling files ->
-    Lwt_list.fold_left_s (suggest_for_file ~options ~workers ~env ~profiling) SMap.empty files
+let suggest ~options ~workers ~env ~profiling file_input =
+  let file = File_input.filename_of_file_input file_input in
+  let file = File_key.SourceFile file in
+  File_input.content_of_file_input file_input
+  %>>= fun content -> try_with (fun _ ->
+    let%lwt result =
+      Type_info_service.suggest ~options ~workers ~env ~profiling file content
+    in
+    match result with
+    | Ok (tc_errors, tc_warnings, suggest_warnings, annotated_program) ->
+      Lwt.return (Ok (ServerProt.Response.Suggest_Ok {
+        tc_errors; tc_warnings; suggest_warnings; annotated_program
+      }))
+    | Error errors ->
+      Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
+  )
 
 (* NOTE: currently, not only returns list of annotations, but also writes a
    timestamped file with annotations *)
@@ -418,8 +423,8 @@ let handle_ephemeral_unsafe
             | _ -> ()
           end;
           Lwt.return None
-      | ServerProt.Request.SUGGEST (files) ->
-          let%lwt result = suggest ~options ~workers ~env ~profiling files in
+      | ServerProt.Request.SUGGEST fn ->
+          let%lwt result = suggest ~options ~workers ~env ~profiling fn in
           ServerProt.Response.SUGGEST result
           |> respond;
           Lwt.return None

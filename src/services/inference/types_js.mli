@@ -55,10 +55,11 @@ val typecheck_contents:
   workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
   profiling: Profiling_js.running ->
-  string ->               (* contents *)
-  File_key.t ->           (* fake file-/module name *)
-  (Errors.ErrorSet.t *     (* errors *)
-   Errors.ErrorSet.t) Lwt.t       (* warnings *)
+  string ->                                 (* contents *)
+  File_key.t ->                             (* fake file-/module name *)
+  ((Context.t * Loc.t Ast.program) option *
+   Errors.ErrorSet.t *                      (* errors *)
+   Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 
 val ensure_checked_dependencies:
   options: Options.t ->

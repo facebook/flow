@@ -121,8 +121,11 @@ module Make(C: Config) : sig
     cx:Context.t -> ('a * Type_table.type_scheme) list -> ('a * (Ty.t, error) result) list
 
   val fold_hashtbl:
-    cx:Context.t -> f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) -> init:'a ->
-    (Loc.t, Type_table.type_scheme) Hashtbl.t -> 'a
+    cx:Context.t ->
+    f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) ->
+    g:('b -> Type_table.type_scheme) ->
+    htbl: (Loc.t, 'b) Hashtbl.t ->
+    'a -> 'a
 
 end = struct
 
@@ -1344,11 +1347,12 @@ let run_type state tparams t =
     let state = add_imports ~cx (State.empty ~cx) in
     fst (run_type state [] t)
 
-  let fold_hashtbl ~cx ~f ~init htbl =
+  let fold_hashtbl ~cx ~f ~g ~htbl init =
     let state = add_imports ~cx (State.empty ~cx) in
-    let _, acc = Hashtbl.fold (fun loc scheme (st, acc) ->
-      let Type_table.Scheme (tparams, t) = scheme in
-      let result, st' = run_type st tparams t in
+    let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
+      let Type_table.Scheme (tparams, t) = g x in
+      let env = Env.init tparams in
+      let result, st' = run st (type__ ~env t) in
       let acc' = f acc (loc, result) in
       (st', acc')
     ) htbl (state, init)

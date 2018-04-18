@@ -29,7 +29,7 @@ module Request = struct
   | PORT of string list
   | STATUS of Path.t * bool (* include_warnings *)
   | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
-  | SUGGEST of (string * string list) list
+  | SUGGEST of File_input.t
 
   let to_string = function
   | AUTOCOMPLETE fn ->
@@ -119,8 +119,20 @@ module Response = struct
     Loc.t * string option,
     string
   ) result
-  (* map of files to `Ok (line, col, annotation)` or `Error msg` *)
-  type suggest_response = ((int * int * string) list, string) result SMap.t
+
+  type suggest_result =
+  | Suggest_Ok of {
+      tc_errors: Errors.ErrorSet.t;
+      tc_warnings: Errors.ErrorSet.t;
+      suggest_warnings: Errors.ErrorSet.t;
+      annotated_program: Loc.t Ast.program;
+    }
+  | Suggest_Error of Errors.ErrorSet.t
+
+  type suggest_response = (
+    suggest_result,
+    string
+  ) result
 
   type cycle_response = (cycle_response_subgraph, string) result
   and cycle_response_subgraph = (string * string list) list
