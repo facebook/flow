@@ -265,6 +265,88 @@ module PropertyRefs: sig
 
 end = struct
 
+  (* The default visitor does not provide all of the context we need when visiting an object key. In
+   * particular, we need the location of the enclosing object literal. *)
+  class ['acc] object_key_visitor ~init = object(this)
+    inherit ['acc] Flow_ast_visitor.visitor ~init as super
+
+    method! expression (exp: Loc.t Ast.Expression.t) =
+      let open Ast.Expression in
+      begin match exp with
+      | loc, Object x ->
+        this#visit_object_literal loc x
+      | _ -> ()
+      end;
+      super#expression exp
+
+    method private visit_object_literal (loc: Loc.t) (obj: Loc.t Ast.Expression.Object.t) =
+      let open Ast.Expression.Object in
+      let get_prop_key =
+        let open Property in
+        function Init { key; _ } | Method { key; _ } | Get { key; _ } | Set { key; _ } -> key
+      in
+      let { properties } = obj in
+      properties
+      |> List.iter begin function
+        | SpreadProperty _ -> ()
+        | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc
+      end
+
+    method private visit_object_key
+        (_literal_loc: Loc.t)
+        (_key: Loc.t Ast.Expression.Object.Property.key) =
+      ()
+  end
+
+  module ObjectKeyAtLoc : sig
+    (* Given a location, returns Some (enclosing_literal_loc, name) if the given location points to
+     * an object literal key. The location returned is the location for the entire enclosing object
+     * literal. This is because later, we need to figure out which types are related to this object
+     * literal which is easier to do when we have the location of the actual object literal than if
+     * we only had the location of a single key. *)
+    val get: Loc.t Ast.program -> Loc.t -> (Loc.t * string) option
+  end = struct
+    class object_key_finder target_loc = object(this)
+      inherit [(Loc.t * string) option] object_key_visitor ~init:None
+      method! private visit_object_key
+          (literal_loc: Loc.t)
+          (key: Loc.t Ast.Expression.Object.Property.key) =
+        let open Ast.Expression.Object in
+        match key with
+        | Property.Identifier (prop_loc, name) when Loc.contains prop_loc target_loc ->
+          this#set_acc (Some (literal_loc, name))
+        | _ -> ()
+    end
+
+    let get ast target_loc =
+      let finder = new object_key_finder target_loc in
+      finder#eval finder#program ast
+  end
+
+  module LiteralToPropLoc : sig
+    (* Returns a map from object_literal_loc to prop_loc, for all object literals which contain the
+     * given property name. *)
+    val make: Loc.t Ast.program -> prop_name: string -> Loc.t LocMap.t
+  end = struct
+    class locmap_builder prop_name = object(this)
+      inherit [Loc.t LocMap.t] object_key_visitor ~init:LocMap.empty
+      method! private visit_object_key
+          (literal_loc: Loc.t)
+          (key: Loc.t Ast.Expression.Object.Property.key) =
+        let open Ast.Expression.Object in
+        match key with
+        | Property.Identifier (prop_loc, name) when name = prop_name ->
+            this#update_acc (fun map -> LocMap.add literal_loc prop_loc map)
+          (* TODO consider supporting other property keys (e.g. literals). Also update the
+           * optimization in property_access_searcher below when this happens. *)
+        | _ -> ()
+    end
+
+    let make ast ~prop_name =
+      let builder = new locmap_builder prop_name in
+      builder#eval builder#program ast
+  end
+
   class property_access_searcher name = object(this)
     inherit [bool] Flow_ast_visitor.visitor ~init:false as super
     method! member expr =
@@ -275,6 +357,14 @@ end = struct
         | _ -> ()
       end;
       super#member expr
+    method! object_key (key: Loc.t Ast.Expression.Object.Property.key) =
+      let open Ast.Expression.Object.Property in
+      begin match key with
+      | Identifier (_, x) when x = name ->
+        this#set_acc true
+      | _ -> ()
+      end;
+      super#object_key key
   end
 
   (* Returns true iff the given AST contains an access to a property with the given name *)
@@ -282,28 +372,64 @@ end = struct
     let checker = new property_access_searcher name in
     checker#eval checker#program ast
 
-  let set_def_loc_hook prop_access_info target_loc =
+  (* If the given type refers to an object literal, return the location of the object literal.
+   * Otherwise return None *)
+  let get_object_literal_loc ty : Loc.t option =
+    let open Type in
+    let open Reason in
+    let reason_desc =
+      reason_of_t ty
+      (* TODO look into unwrap *)
+      |> desc_of_reason ~unwrap:false
+    in
+    match reason_desc with
+    | RObjectLit -> Some (Type.def_loc_of_t ty)
+    | _ -> None
+
+  type def_kind =
+    (* Use of a property, e.g. `foo.bar`. Includes type of receiver (`foo`) and name of the property
+     * `bar` *)
+    | Use of Type.t * string
+    (* In a class, where a property/method is defined. Includes the type of the class and the name
+    of the property. *)
+    | Class_def of Type.t * string (* name *)
+    (* In an object type. Includes the location of the property definition and its name. *)
+    | Obj_def of Loc.t * string (* name *)
+
+  let set_def_loc_hook prop_access_info literal_key_info target_loc =
     let use_hook ret _ctxt name loc ty =
       begin if Loc.contains loc target_loc then
-        prop_access_info := Some (`Use (ty, name))
+        prop_access_info := Some (Use (ty, name))
       end;
       ret
     in
     let class_def_hook _ctxt ty name loc =
       if Loc.contains loc target_loc then
-        prop_access_info := Some (`Class_def (ty, name))
+        prop_access_info := Some (Class_def (ty, name))
     in
     let obj_def_hook _ctxt name loc =
       if Loc.contains loc target_loc then
-        prop_access_info := Some (`Obj_def (loc, name))
+        prop_access_info := Some (Obj_def (loc, name))
+    in
+    let obj_to_obj_hook _ctxt obj1 obj2 =
+      match get_object_literal_loc obj1, literal_key_info with
+      | Some loc, Some (target_loc, name) when loc = target_loc ->
+        let open Type in
+        begin match obj2 with
+        | UseT (_, (DefT (_, ObjT _) as t2)) ->
+          prop_access_info := Some (Use (t2, name))
+        | _ -> ()
+        end
+      | _ -> ()
     in
 
     Type_inference_hooks_js.set_member_hook (use_hook false);
     Type_inference_hooks_js.set_call_hook (use_hook ());
     Type_inference_hooks_js.set_class_member_decl_hook class_def_hook;
-    Type_inference_hooks_js.set_obj_prop_decl_hook obj_def_hook
+    Type_inference_hooks_js.set_obj_prop_decl_hook obj_def_hook;
+    Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
-  let set_get_refs_hook potential_refs target_name =
+  let set_get_refs_hook potential_refs potential_matching_literals target_name =
     let hook ret _ctxt name loc ty =
       begin if name = target_name then
         (* Replace previous bindings of `loc`. We should always use the result of the last call to
@@ -313,8 +439,18 @@ end = struct
       end;
       ret
     in
+    let obj_to_obj_hook _ctxt obj1 obj2 =
+      let open Type in
+      match get_object_literal_loc obj1, obj2 with
+      | Some loc, UseT (_, (DefT (_, ObjT _) as t2)) ->
+        let entry = (loc, t2) in
+        potential_matching_literals := entry:: !potential_matching_literals
+      | _ -> ()
+    in
+
     Type_inference_hooks_js.set_member_hook (hook false);
-    Type_inference_hooks_js.set_call_hook (hook ())
+    Type_inference_hooks_js.set_call_hook (hook ());
+    Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
   let unset_hooks () =
     Type_inference_hooks_js.reset_hooks ()
@@ -419,6 +555,19 @@ end = struct
       | FailureAnyType ->
           Ok AnyType
 
+  (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
+  let type_matches_locs cx ty def_locs name =
+    extract_def_loc cx ty name >>| function
+      | Found locs ->
+          (* Only take the first extracted def loc -- that is, the one for the actual definition
+           * and not overridden implementations, and compare it to the list of def locs we are
+           * interested in *)
+          let loc = Nel.hd locs in
+          Nel.mem loc def_locs
+      (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
+       * are references or not. For now we'll leave them out. *)
+      | NoDefFound | UnsupportedType | AnyType -> false
+
   let filter_refs cx potential_refs file_key local_defs def_locs name =
     potential_refs |>
       LocMap.bindings |>
@@ -426,19 +575,10 @@ end = struct
        * Make sure we include it only once despite that. *)
       List.filter (fun (loc, _) -> not (List.mem loc local_defs)) |>
       List.map begin fun (ref_loc, ty) ->
-        extract_def_loc cx ty name >>| function
-          | Found locs ->
-              (* Only take the first extracted def loc -- that is, the one for the actual definition
-               * and not overridden implementations, and compare it to the list of def locs we are
-               * interested in *)
-              let loc = Nel.hd locs in
-              if Nel.mem loc def_locs then
-                Some ref_loc
-              else
-                None
-          (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
-           * are references or not. For now we'll leave them out. *)
-          | NoDefFound | UnsupportedType | AnyType -> None
+        type_matches_locs cx ty def_locs name
+        >>| function
+        | true -> Some ref_loc
+        | false -> None
       end
       |> Result.all
       |> Result.map_error ~f:(fun err ->
@@ -452,6 +592,7 @@ end = struct
 
   let find_refs_in_file options ast_info file_key def_locs name =
     let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
+    let potential_matching_literals: (Loc.t * Type.t) list ref = ref [] in
     let (ast, file_sig, info) = ast_info in
     let local_defs =
       Nel.to_list def_locs
@@ -461,13 +602,32 @@ end = struct
     if not has_symbol then
       Ok local_defs
     else begin
-      set_get_refs_hook potential_refs name;
+      set_get_refs_hook potential_refs potential_matching_literals name;
       let cx = Merge_service.merge_contents_context_without_ensure_checked_dependencies
         options file_key ast info file_sig
       in
       unset_hooks ();
-      filter_refs cx !potential_refs file_key local_defs def_locs name
-      >>| (@) local_defs
+      let literal_prop_refs_result =
+        (* Lazy to avoid this computation if there are no potentially-relevant object literals to
+         * examine *)
+        let prop_loc_map = lazy (LiteralToPropLoc.make ast name) in
+        let get_prop_loc_if_relevant (obj_loc, into_type) =
+          type_matches_locs cx into_type def_locs name
+          >>| function
+          | false -> None
+          | true -> LocMap.get obj_loc (Lazy.force prop_loc_map)
+        in
+        !potential_matching_literals
+        |> List.map get_prop_loc_if_relevant
+        |> Result.all
+        >>| ListUtils.cat_maybes
+      in
+      literal_prop_refs_result
+      >>= begin fun literal_prop_refs_result ->
+        filter_refs cx !potential_refs file_key local_defs def_locs name
+        >>| (@) local_defs
+        >>| (@) literal_prop_refs_result
+      end
     end
 
   let find_refs_in_multiple_files genv all_deps def_locs name =
@@ -498,10 +658,11 @@ end = struct
     let options, workers = genv.options, genv.workers in
     let get_def_info: unit -> ((Loc.t Nel.t * string) option, string) result Lwt.t = fun () ->
       let props_access_info = ref None in
-      set_def_loc_hook props_access_info loc;
       let%lwt cx_result =
         compute_ast_result file_key content
         %>>| fun (ast, file_sig, info) ->
+          let literal_key_info: (Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
+          set_def_loc_hook props_access_info literal_key_info loc;
           Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
             let ensure_checked =
               Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
@@ -513,16 +674,16 @@ end = struct
         cx_result >>= fun cx ->
         match !props_access_info with
           | None -> Ok None
-          | Some (`Obj_def (loc, name)) ->
+          | Some (Obj_def (loc, name)) ->
               Ok (Some (Nel.one loc, name))
-          | Some (`Class_def (ty, name)) ->
+          | Some (Class_def (ty, name)) ->
               (* We get the type of the class back here, so we need to extract the type of an instance *)
               extract_instancet cx ty >>= fun ty ->
               begin extract_def_loc_resolved cx ty name >>= function
                 | Found locs -> Ok (Some (locs, name))
                 | _ -> Error "Unexpectedly failed to extract definition from known type"
               end
-          | Some (`Use (ty, name)) ->
+          | Some (Use (ty, name)) ->
               begin extract_def_loc cx ty name >>= function
                 | Found locs -> Ok (Some (locs, name))
                 | NoDefFound

@@ -820,6 +820,12 @@ Method declaration in an object type alias: {
     {
       "source":"objects.js",
       "type":"SourceFile",
+      "start":{"line":8,"column":20,"offset":78},
+      "end":{"line":8,"column":22,"offset":81}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
       "start":{"line":9,"column":3,"offset":100},
       "end":{"line":9,"column":5,"offset":103}
     },
@@ -844,6 +850,12 @@ Property declaration in an object type alias: {
     {
       "source":"objects.js",
       "type":"SourceFile",
+      "start":{"line":8,"column":30,"offset":88},
+      "end":{"line":8,"column":32,"offset":91}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
       "start":{"line":11,"column":3,"offset":118},
       "end":{"line":11,"column":5,"offset":121}
     },
@@ -864,6 +876,12 @@ Method call on an object type alias: {
       "type":"SourceFile",
       "start":{"line":4,"column":3,"offset":27},
       "end":{"line":4,"column":5,"offset":30}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":20,"offset":78},
+      "end":{"line":8,"column":22,"offset":81}
     },
     {
       "source":"objects.js",
@@ -979,6 +997,66 @@ Write of a shadow property introduced via a read: {
 Introduction of a shadow property that is never written: {"kind":"no-symbol-found"}
 Read of a shadow property that is never written: {"kind":"no-symbol-found"}
 Use of a property that came through type spread: {"kind":"no-symbol-found"}
+Object literal method: {
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":27},
+      "end":{"line":4,"column":5,"offset":30}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":20,"offset":78},
+      "end":{"line":8,"column":22,"offset":81}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":3,"offset":100},
+      "end":{"line":9,"column":5,"offset":103}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":3,"offset":109},
+      "end":{"line":10,"column":5,"offset":112}
+    }
+  ]
+}
+Object literal property: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":3,"offset":42},
+      "end":{"line":5,"column":5,"offset":45}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":30,"offset":88},
+      "end":{"line":8,"column":32,"offset":91}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":11,"column":3,"offset":118},
+      "end":{"line":11,"column":5,"offset":121}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":3,"offset":125},
+      "end":{"line":12,"column":5,"offset":128}
+    }
+  ]
+}
 Use as a JSX component class: {
   "kind":"symbol-found",
   "name":"Foo",
