@@ -148,6 +148,17 @@ end
 type ('param, 'input, 'output) entry = ('param, 'input, 'output) Entry.t
 
 let exec entry param ic oc =
+  (**
+  * The name "exec" is a bit of a misnomer. By the time we
+  * get here, the "exec" syscall has already finished and the
+  * process image has been replaced. We're using "exec" here to mean
+  * running the proper entry.
+  *
+  * Since Linux's "exec" has already completed, we can actaully set
+  * FD_CLOEXEC on the opened channels.
+  *)
+  let () = Unix.set_close_on_exec (descr_of_in_channel ic) in
+  let () = Unix.set_close_on_exec (descr_of_out_channel oc) in
   let f = Entry.find entry in
   try f param (ic, oc); exit 0
   with e ->
