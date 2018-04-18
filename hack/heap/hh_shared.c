@@ -108,9 +108,6 @@
 #include <lz4.h>
 #include <time.h>
 
-#define UNUSED(x) \
-    ((void)(x))
-
 #define ARRAY_SIZE(array) \
     (sizeof(array) / sizeof((array)[0]))
 
@@ -466,6 +463,217 @@ static size_t* wasted_heap_size = NULL;
 static size_t used_heap_size(void) {
   return *heap - heap_init;
 }
+
+#ifdef NO_SQLITE3
+typedef void *sqlite3_ptr;
+#else
+typedef sqlite3 *sqlite3_ptr;
+#endif
+
+// DECLARATIONS
+// All functions are declared with the same prototype regardless of
+// build configuration.
+// Some types are not available in some configurations (e.g. sqlite3).
+// For these cases,
+// use a typedef.
+void raise_assertion_failure(char *msg);
+
+static size_t get_wasted_heap_size(void);
+
+CAMLprim value hh_heap_size(void);
+
+CAMLprim value hh_log_level(void);
+
+CAMLprim value hh_hash_used_slots(void);
+
+CAMLprim value hh_hash_slots(void);
+
+struct timeval log_duration(const char *prefix, struct timeval start_t);
+
+void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail);
+
+static void raise_failed_anonymous_memfd_init(void);
+
+static void raise_less_than_minimum_available(uint64_t avail);
+
+void assert_avail_exceeds_minimum(char *shm_dir, uint64_t minimum_avail);
+
+static char *memfd_map(size_t shared_mem_size);
+
+static char *memfd_map(size_t shared_mem_size);
+
+static void raise_out_of_shared_memory(void);
+
+static void win_reserve(char *mem, size_t sz);
+
+static void memfd_reserve(char *mem, size_t sz);
+
+static void define_globals(char *shared_mem_init);
+
+static size_t get_shared_mem_size(void);
+
+static void init_shared_globals(size_t config_log_level);
+
+static void set_sizes(
+        uint64_t config_global_size,
+        uint64_t config_heap_size,
+        uint64_t config_dep_table_pow,
+        uint64_t config_hash_table_pow
+);
+
+CAMLprim value hh_shared_init( value config_val, value shm_dir_val);
+
+value hh_connect(value connector, value is_master);
+
+CAMLprim value hh_counter_next(void);
+
+void assert_master(void);
+
+void assert_not_master(void);
+
+CAMLprim value hh_stop_workers(void);
+
+CAMLprim value hh_resume_workers(void);
+
+void check_should_exit(void);
+
+void hh_shared_store(value data);
+
+CAMLprim value hh_shared_load(void);
+
+void hh_shared_clear(void);
+
+static void raise_dep_table_full(void);
+
+static uint64_t hash_uint64(uint64_t n);
+
+static int add_binding(uint64_t value);
+
+static uint32_t alloc_deptbl_node(uint32_t key, uint32_t val);
+
+static void prepend_to_deptbl_list(uint32_t key, uint32_t val);
+
+static void add_dep(uint32_t key, uint32_t val);
+
+void hh_add_dep(value ocaml_dep);
+
+CAMLprim value hh_dep_used_slots(void);
+
+CAMLprim value hh_dep_slots(void);
+
+CAMLprim value hh_get_dep(value ocaml_key);
+
+static char *temp_memory_map(void);
+
+static void temp_memory_unmap(char *tmp_heap);
+
+void hh_call_after_init(void);
+
+value hh_check_heap_overflow(void);
+
+static int should_collect(int aggressive);
+
+CAMLprim value hh_should_collect(value aggressive_val);
+
+CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val);
+
+static void raise_heap_full(void);
+
+static char* hh_alloc(hh_header_t header);
+
+static char* hh_store_ocaml(
+        value data,
+        /*out*/size_t *alloc_size,
+        /*out*/size_t *orig_size
+);
+
+static uint64_t get_hash(value key);
+
+static value write_at(unsigned int slot, value data);
+
+static void raise_hash_table_full(void);
+
+value hh_add(value key, value data);
+
+static unsigned int find_slot(value key);
+
+value hh_mem(value key);
+
+CAMLprim value hh_deserialize(char *src);
+
+CAMLprim value hh_get_and_deserialize(value key);
+
+CAMLprim value hh_get_and_deserialize_sqlite(
+        value ml_use_fileinfo_sqlite,
+        value ml_key
+);
+
+CAMLprim value hh_get_size(value key);
+
+void hh_move(value key1, value key2);
+
+void hh_remove(value key);
+
+void hh_cleanup_sqlite(void);
+
+void hh_hashtable_cleanup_sqlite(void);
+
+value Val_some(value v);
+
+static void assert_sql_with_line(
+        int result,
+        int correct_result,
+        int line_number
+);
+
+CAMLprim value get_file_info_on_disk( value ml_unit);
+
+CAMLprim value set_file_info_on_disk_path(value ml_str);
+
+CAMLprim value get_file_info_on_disk_path(value ml_unit);
+
+CAMLprim value open_file_info_db(value ml_unit);
+
+static void make_all_tables(sqlite3_ptr db);
+
+static void create_sqlite_header(sqlite3_ptr db, const char* const buildInfo);
+
+static void verify_sqlite_header(sqlite3_ptr db, int ignore_hh_version);
+
+size_t deptbl_entry_count_for_slot(size_t slot);
+
+static long hh_save_file_info_helper_sqlite(const char* const out_filename);
+
+static long hh_save_dep_table_helper_sqlite(
+        const char* const out_filename,
+        const char* const build_info
+);
+
+CAMLprim value hh_save_dep_table_sqlite(
+        value out_filename,
+        value build_revision
+);
+
+CAMLprim value hh_save_file_info_sqlite(value out_filename);
+
+CAMLprim value hh_load_dep_table_sqlite(
+        value in_filename,
+        value ignore_hh_version
+);
+
+CAMLprim value hh_get_dep_sqlite(value ocaml_key);
+
+CAMLprim value hh_save_table_sqlite(value out_filename);
+
+CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys);
+
+CAMLprim value hh_load_table_sqlite(value in_filename, value verify);
+
+CAMLprim value hh_get_sqlite(value ocaml_key);
+// END DECLARATIONS
+
+
+
 
 void raise_assertion_failure(char * msg) {
   caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
@@ -2781,7 +2989,7 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
   CAMLreturn(Val_long(0));
 }
 
-CAMLprim value hh_load_table_sqlite(value in_filename) {
+CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
 }
