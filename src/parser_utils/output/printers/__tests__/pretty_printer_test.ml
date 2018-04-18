@@ -41,6 +41,25 @@ let tests = "pretty_printer" >::: [
       assert_pretty_print ~ctxt ("return (\n  "^long_string^"\n)") layout;
     end;
 
+  "force_breaks_in_list" >::
+    begin fun ctxt ->
+      let short_string = String.make 10 'x' in
+      let layout = fuse [
+        Atom "myFunc";
+        list
+          ~wrap:(Atom "(", Atom ")")
+          ~sep:(Atom ",")
+          [
+            Atom "a";
+            fuse [
+              Atom "b"; space; Atom "=>";
+              fuse_vertically ~indent:2 ~inline:(false, true) [Atom short_string];
+            ];
+          ];
+      ] in
+      assert_pretty_print ~ctxt ("myFunc(\n  a,\n  b =>\n    "^short_string^",\n)") layout;
+    end;
+
   "sequence_inline_after" >::
     begin fun ctxt ->
       let short_string = String.make 10 'x' in
