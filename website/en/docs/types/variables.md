@@ -81,8 +81,8 @@ possible assignments.
 ```js
 let foo = 42;
 
-if (Math.random()) foo = true;
-if (Math.random()) foo = "hello";
+if (Math.random() > 0.5) foo = true;
+if (Math.random() > 0.5) foo = "hello";
 
 let isOneOf: number | boolean | string = foo; // Works!
 ```
