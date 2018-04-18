@@ -115,11 +115,17 @@ object-2.js
 
 function foo(x: {|l(): void, m(): number, n(): number|}): void {}
 
-foo({m(): number {
-  return 1;
-}, 
-n: (): number => 2, 
-l: function bar(): void {}});
+foo(
+  {
+    m(): number {
+      return 1;
+    },
+    
+    n: (): number => 2,
+    
+    l: function bar(): void {},
+  },
+);
 
 poly-0.js
 // @flow
