@@ -171,6 +171,8 @@ class mapper = object(this)
     | loc, MetaProperty x -> id this#meta_property x expr (fun x -> loc, MetaProperty x)
     | loc, New x -> id this#new_ x expr (fun x -> loc, New x)
     | loc, Object x -> id this#object_ x expr (fun x -> loc, Object x)
+    | loc, OptionalCall x -> id (this#optional_call loc) x expr (fun x -> loc, OptionalCall x)
+    | loc, OptionalMember x -> id this#optional_member x expr (fun x -> loc, OptionalMember x)
     | loc, Sequence x -> id this#sequence x expr (fun x -> loc, Sequence x)
     | loc, TaggedTemplate x -> id this#tagged_template x expr (fun x -> loc, TaggedTemplate x)
     | loc, TemplateLiteral x -> id this#template_literal x expr (fun x -> loc, TemplateLiteral x)
@@ -219,11 +221,18 @@ class mapper = object(this)
 
   method call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
-    let { callee; arguments; optional } = expr in
+    let { callee; arguments } = expr in
     let callee' = this#expression callee in
     let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
     if callee == callee' && arguments == arguments' then expr
-    else { callee = callee'; arguments = arguments'; optional }
+    else { callee = callee'; arguments = arguments' }
+
+  method optional_call loc (expr: Loc.t Ast.Expression.OptionalCall.t) =
+    let open Ast.Expression.OptionalCall in
+    let { call; optional = _ } = expr in
+    let call' = this#call loc call in
+    if call == call' then expr
+    else { expr with call = call' }
 
   method catch_clause (clause: Loc.t Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -878,11 +887,18 @@ class mapper = object(this)
 
   method member (expr: Loc.t Ast.Expression.Member.t) =
     let open Ast.Expression.Member in
-    let { _object; property; computed = _; optional } = expr in
+    let { _object; property; computed = _ } = expr in
     let _object' = this#expression _object in
     let property' = this#member_property property in
     if _object == _object' && property == property' then expr
-    else { expr with _object = _object'; property = property'; optional }
+    else { expr with _object = _object'; property = property' }
+
+  method optional_member (expr: Loc.t Ast.Expression.OptionalMember.t) =
+    let open Ast.Expression.OptionalMember in
+    let { member; optional = _ } = expr in
+    let member' = this#member member in
+    if member == member' then expr
+    else { expr with member = member' }
 
   method member_property (expr: Loc.t Ast.Expression.Member.property) =
     let open Ast.Expression.Member in

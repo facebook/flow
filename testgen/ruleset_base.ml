@@ -778,8 +778,7 @@ class ruleset_base = object(self)
       let open E.Member in
       E.Member {_object = (Loc.none, obj);
                 property = PropertyExpression (Loc.none, prop);
-                computed = false;
-                optional = false} in
+                computed = false} in
 
     let rec get_prop (oname : Loc.t E.t') (ot : Loc.t T.Object.t) (depth : int) : env_elt_t =
       let prop = self#choose depth (fun () -> self#require_prop (T.Object ot) true) in
@@ -821,8 +820,7 @@ class ruleset_base = object(self)
       let open E.Member in
       E.Member {_object = (Loc.none, obj);
                 property = PropertyExpression (Loc.none, prop);
-                computed = false;
-                optional = false} in
+                computed = false} in
 
     let rec get_prop (oname : Loc.t E.t') (ot : Loc.t T.Object.t) (depth : int) : env_elt_t =
       let prop = self#choose depth (fun () -> self#require_optional_prop (T.Object ot)) in

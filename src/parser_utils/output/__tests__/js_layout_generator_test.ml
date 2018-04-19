@@ -417,7 +417,6 @@ let tests = "js_layout_generator" >::: [
         _object = x;
         property = Ast.Expression.Member.PropertyIdentifier (Loc.none, "y");
         computed = false;
-        optional = false;
       }) in
       assert_expression ~ctxt "new x.y()" member;
 

@@ -97,13 +97,11 @@ class ruleset_func = object(self)
                   List.fold_right (fun elt acc ->
                       match elt with
                       | Expr (E.Call {callee = _, fid;
-                                      arguments = args;
-                                      optional}, _) ->
+                                      arguments = args}, _) ->
                         let ftype = self#get_type_from_expr fid env in
                         if self#is_subtype param_type ftype then begin
                           (Expr (E.Call {callee = (Loc.none, E.Identifier (Loc.none, pname));
-                                         arguments = args;
-                                         optional}, rt)) :: elt :: acc
+                                         arguments = args}, rt)) :: elt :: acc
                         end else elt :: acc
                       | _ -> elt :: acc) env []
                 (* If the parameter is an object, we create new property read *)
@@ -113,14 +111,12 @@ class ruleset_func = object(self)
                       match elt with
                       | Expr (E.Member {_object = _, obj;
                                         property = prop;
-                                        computed = c;
-                                        optional}, t) ->
+                                        computed = c}, t) ->
                         let otype = self#get_type_from_expr obj env in
                         if self#is_subtype param_type otype then begin
                           (Expr (E.Member {_object = (Loc.none, E.Identifier (Loc.none, pname));
                                            property = prop;
-                                           computed = c;
-                                           optional}, t)) :: elt :: acc
+                                           computed = c}, t)) :: elt :: acc
                         end else elt :: acc
                       | _ -> elt :: acc) env []
                 | _ -> env) in

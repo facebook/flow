@@ -45,7 +45,6 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   }
                 );
                 computed = true;
-                optional = false;
               }))
             ) in
             let refinement = Option.bind init (fun init ->
@@ -92,7 +91,6 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                     _object = init;
                     property = PropertyIdentifier (loc, name);
                     computed = false;
-                    optional = false;
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
@@ -118,7 +116,6 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                     _object = init;
                     property = PropertyExpression key;
                     computed = true;
-                    optional = false;
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->

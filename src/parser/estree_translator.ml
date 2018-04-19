@@ -470,25 +470,19 @@ end with type t = Impl.t) = struct
           "arguments", array_of_list expression_or_spread _new.arguments;
         ]
       )
-    | loc, Call call -> Call.(
-        node "CallExpression" loc [
-          "callee", expression call.callee;
-          "arguments", array_of_list expression_or_spread call.arguments;
-          "optional", bool call.optional;
-        ]
+    | loc, Call call ->
+        node "CallExpression" loc (call_node_properties call)
+    | loc, OptionalCall opt_call -> OptionalCall.(
+        node "OptionalCallExpression" loc (call_node_properties opt_call.call @ [
+          "optional", bool opt_call.optional;
+        ])
       )
-    | loc, Member member -> Member.(
-        let property = match member.property with
-        | PropertyIdentifier id -> identifier id
-        | PropertyPrivateName name -> private_name name
-        | PropertyExpression expr -> expression expr
-        in
-        node "MemberExpression" loc [
-          "object", expression member._object;
-          "property", property;
-          "computed", bool member.computed;
-          "optional", bool member.optional;
-        ]
+    | loc, Member member ->
+        node "MemberExpression" loc (member_node_properties member)
+    | loc, OptionalMember opt_member -> OptionalMember.(
+        node "OptionalMemberExpression" loc (member_node_properties opt_member.member @ [
+          "optional", bool opt_member.optional;
+        ])
       )
     | loc, Yield yield -> Yield.(
         node "YieldExpression" loc [
@@ -1446,5 +1440,23 @@ end with type t = Impl.t) = struct
       | Inferred -> "InferredPredicate", []
     in
     node _type loc value
+  )
+
+  and call_node_properties call = Expression.Call.([
+    "callee", expression call.callee;
+    "arguments", array_of_list expression_or_spread call.arguments;
+  ])
+
+  and member_node_properties member = Expression.Member.(
+    let property = match member.property with
+    | PropertyIdentifier id -> identifier id
+    | PropertyPrivateName name -> private_name name
+    | PropertyExpression expr -> expression expr
+    in
+    [
+      "object", expression member._object;
+      "property", property;
+      "computed", bool member.computed;
+    ]
   )
 end
