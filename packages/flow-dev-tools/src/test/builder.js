@@ -865,6 +865,7 @@ export class TestBuilder {
     timeoutMs: number,
     expected: 'stopped' | 'running',
   ): Promise<void> {
+    // TODO(ljw): this should check for externally-launched flow servers too
     return new Promise(resolve => {
       var timeout = null;
       const onServer = () => {
@@ -929,15 +930,6 @@ export class TestBuilder {
           this.testErrors.join('\n\n'),
         ),
       );
-    }
-  }
-
-  async waitForServerToDie(timeout: number): Promise<void> {
-    // TODO(ljw): remove this in favor of waitUntilServerStatus
-    let remaining = timeout;
-    while (remaining > 0 && this.server != null) {
-      await sleep(Math.min(remaining, 100));
-      remaining -= 100;
     }
   }
 

@@ -550,16 +550,6 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  waitForServerToDie: (timeout: number) => TestStepFirstStage = timeout => {
-    // TODO(ljw): remove this in favor of waitUntilServerStatus(timeout, 'stopped')
-    const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.waitForServerToDie(timeout);
-    });
-    ret._needsFlowServer = true;
-    ret._allowServerToDie = true;
-    return ret;
-  };
-
   dontMindServerDeath: () => TestStepFirstStage = () => {
     const ret = this._cloneWithAction(async (builder, env) => {});
     ret._allowServerToDie = true;

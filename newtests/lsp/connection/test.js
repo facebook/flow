@@ -15,7 +15,6 @@ export default suite(
     ideNotification,
     ideResponse,
     ideRequestAndWaitUntilResponse,
-    lspExpect,
     waitUntilIDEStatus,
     waitUntilServerStatus,
     flowCmd,
