@@ -3406,6 +3406,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, VoidT), MakeExactT (reason_op, k) ->
       continue cx trace (VoidT.why reason_op) k
 
+    | DefT (_, EmptyT), MakeExactT (reason_op, k) ->
+      continue cx trace (EmptyT.why reason_op) k
+
     (* unsupported kind *)
     | _, MakeExactT (ru, _) ->
       add_output cx ~trace (FlowError.EUnsupportedExact (ru, reason_of_t l))
@@ -6622,6 +6625,8 @@ and ground_subtype = function
 
   (* Allow EmptyT ~> CondT *)
   | (_, CondT _) -> false
+
+  | _, MakeExactT _ -> false
 
   | DefT (_, NumT _), UseT (_, DefT (_, NumT _))
   | DefT (_, StrT _), UseT (_, DefT (_, StrT _))
