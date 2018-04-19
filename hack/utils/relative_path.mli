@@ -45,3 +45,6 @@ module Map : module type of Reordered_argument_map(MyMap.Make(S))
 
 val relativize_set : prefix -> SSet.t -> Set.t
 val set_of_list : t list -> Set.t
+
+val storage_to_string : t -> string
+val storage_of_string : string -> t
