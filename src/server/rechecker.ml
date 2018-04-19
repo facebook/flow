@@ -76,7 +76,6 @@ let process_updates genv env updates =
     SSet.iter (Hh_logger.fatal "Modified package: %s") incompatible_packages;
     Hh_logger.fatal
       "Packages changed in an incompatible way. Exiting.\n%!";
-    Persistent_connection.send_exit env.connections FlowExitStatus.Server_out_of_date;
     FlowExitStatus.(exit Server_out_of_date)
   end;
 
