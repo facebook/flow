@@ -150,3 +150,16 @@ let connect_once ~client_type ~tmp_dir root =
     if server_exists ~tmp_dir root
     then Error (Server_busy Not_responding)
     else Error Server_missing
+
+let busy_reason_to_string (busy_reason: busy_reason) : string =
+  match busy_reason with
+  | Too_many_clients -> "Too_many_clients"
+  | Not_responding -> "Not_responding"
+  | Fail_on_init -> "Fail_on_init"
+
+let error_to_string (error: error) : string =
+  match error with
+  | Build_id_mismatch -> "Build_id_mismatch"
+  | Server_busy busy_reason -> "Server_busy(" ^ (busy_reason_to_string busy_reason) ^ ")"
+  | Server_missing -> "Server_missing"
+  | Server_socket_missing -> "Server_socket_missing"
