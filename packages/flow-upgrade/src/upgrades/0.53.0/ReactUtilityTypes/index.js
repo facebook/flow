@@ -19,7 +19,8 @@ advanced React features like higher order components.
 Some of the most powerful new utility types can be seen in the following
 example:
 
-${Styled.codeblock(`
+${Styled.codeblock(
+  `
 import * as React from 'react';
 
 function MyComponent(props: Props): React.Node {
@@ -38,7 +39,8 @@ function myHOC(
   return class extends React.Component<NewProps> {
     /* ... */
   };
-}`.slice(1))}
+}`.slice(1),
+)}
 
 ${Styled.list([
   `React.Node is the new return type for render methods. This codemod will

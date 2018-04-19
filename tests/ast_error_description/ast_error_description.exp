@@ -613,38 +613,38 @@ Error --------------------------------------------------------------------------
 Cannot cast `(1 ? 2 : 3).p` to empty because mixed [1] is incompatible with empty [2].
 
    expression.js:34:2
-   34| (((1 ? 2 : 3: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:34:29
-   34| (((1 ? 2 : 3: empty): T).p: empty);
-                                   ^^^^^ [2]
+   expression.js:34:31
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+                                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:34:4
+Error ----------------------------------------------------------------------------------------------- expression.js:34:5
 
 Cannot cast `1 ? 2 : 3` to empty because:
  - number [1] is incompatible with empty [2].
  - number [3] is incompatible with empty [2].
 
-   expression.js:34:4
-   34| (((1 ? 2 : 3: empty): T).p: empty);
-          ^^^^^^^^^
+   expression.js:34:5
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+           ^^^^^^^^^
 
 References:
-   expression.js:34:8
-   34| (((1 ? 2 : 3: empty): T).p: empty);
-              ^ [1]
-   expression.js:34:15
-   34| (((1 ? 2 : 3: empty): T).p: empty);
-                     ^^^^^ [2]
-   expression.js:34:12
-   34| (((1 ? 2 : 3: empty): T).p: empty);
-                  ^ [3]
+   expression.js:34:9
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+               ^ [1]
+   expression.js:34:17
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+                       ^^^^^ [2]
+   expression.js:34:13
+   34| ((((1 ? 2 : 3): empty): T).p: empty);
+                   ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:35:2
@@ -652,38 +652,38 @@ Error --------------------------------------------------------------------------
 Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to empty because mixed [1] is incompatible with empty [2].
 
    expression.js:35:2
-   35| ((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:35:39
-   35| ((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
-                                             ^^^^^ [2]
+   expression.js:35:41
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+                                               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:35:4
+Error ----------------------------------------------------------------------------------------------- expression.js:35:5
 
 Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because:
  - number [1] is incompatible with empty [2].
  - number [3] is incompatible with empty [2].
 
-   expression.js:35:4
-   35| ((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^^^
+   expression.js:35:5
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   expression.js:35:18
-   35| ((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
-                        ^ [1]
-   expression.js:35:25
-   35| ((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
-                               ^^^^^ [2]
-   expression.js:35:22
-   35| ((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
-                            ^ [3]
+   expression.js:35:19
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+                         ^ [1]
+   expression.js:35:27
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+                                 ^^^^^ [2]
+   expression.js:35:23
+   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
+                             ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:36:2

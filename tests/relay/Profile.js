@@ -23,15 +23,9 @@ class Profile extends React.Component<Props> {
     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
     return (
       <div>
-        <p>
-          {this.props.user.name}
-        </p>
-        <p>
-          {this.props.foo}
-        </p>
-        <p>
-          {this.props.user.pic.id}
-        </p>
+        <p>{this.props.user.name}</p>
+        <p>{this.props.foo}</p>
+        <p>{this.props.user.pic.id}</p>
         <ProfilePic image={this.props.user.pic} />
       </div>
     );

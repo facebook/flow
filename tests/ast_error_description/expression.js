@@ -31,8 +31,8 @@ function MyComponent() {}
 (((f(): empty): T).p: empty);
 (((f(42): empty): T).p: empty);
 (((class {}: empty): T).p: empty);
-(((1 ? 2 : 3: empty): T).p: empty);
-((((1 ? 2 : 3) ? 4 : 5: empty): T).p: empty);
+((((1 ? 2 : 3): empty): T).p: empty);
+(((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
 (((function() {}: empty): T).p: empty);
 (((a: empty): T).p: empty);
 (((import('fs'): empty): T).p: empty);
