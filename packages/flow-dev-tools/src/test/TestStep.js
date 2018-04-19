@@ -417,6 +417,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.sendIDERequestAndWaitForResponse(method, params);
     });
+    ret._readsIdeMessages = true;
     return ret;
   };
 
@@ -472,6 +473,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         suggestion,
       );
     });
+    ret._readsIdeMessages = true;
     return ret;
   };
 

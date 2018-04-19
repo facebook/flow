@@ -45,7 +45,7 @@ wilbur();
 `,
           },
         ],
-      }),
+      }).verifyAllIDEMessagesInStep([''], []),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
         position: {line: 3, character: 1},
@@ -55,7 +55,7 @@ wilbur();
       ),
       ideNotification('textDocument/didClose', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
-      }),
+      }).verifyAllIDEMessagesInStep([''], []),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
         position: {line: 3, character: 1},
