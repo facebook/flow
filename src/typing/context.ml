@@ -23,6 +23,7 @@ type metadata = {
   weak: bool;
   jsx: Options.jsx_mode;
   strict: bool;
+  strict_local: bool;
 
   (* global *)
   enable_const_params: bool;
@@ -134,6 +135,7 @@ let metadata_of_options options = {
   weak = Options.weak_by_default options;
   jsx = Options.Jsx_react;
   strict = false;
+  strict_local = false;
 
   (* global *)
   enable_const_params = Options.enable_const_params options;
@@ -220,7 +222,8 @@ let pop_declare_module cx =
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let annot_table cx = cx.annot_table
 let envs cx = cx.sig_cx.envs
-let enable_const_params cx = cx.metadata.enable_const_params || cx.metadata.strict
+let enable_const_params cx =
+  cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 let errors cx = cx.sig_cx.errors
 let error_suppressions cx = cx.sig_cx.error_suppressions
@@ -252,6 +255,7 @@ let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
 let is_strict cx = (Option.is_some cx.declare_module_ref) || cx.metadata.strict
+let is_strict_local cx = cx.metadata.strict_local
 let severity_cover cx = cx.sig_cx.severity_cover
 let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_kind cx = cx.module_kind

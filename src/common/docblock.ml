@@ -6,7 +6,7 @@
  *)
 
 
-type flow_mode = OptIn | OptInStrict | OptInWeak | OptOut
+type flow_mode = OptIn | OptInStrict | OptInStrictLocal | OptInWeak | OptOut
 
 type jsx_pragma =
   (**
@@ -49,6 +49,7 @@ let jsx info = info.jsx
 let is_flow info = match info.flow with
   | Some OptIn
   | Some OptInStrict
+  | Some OptInStrictLocal
   | Some OptInWeak -> true
   | Some OptOut
   | None -> false
@@ -59,6 +60,7 @@ let json_of_docblock info =
   let flow = match flow info with
   | Some OptIn -> JSON_String "OptIn"
   | Some OptInStrict -> JSON_String "OptInStrict"
+  | Some OptInStrictLocal -> JSON_String "OptInStrictLocal"
   | Some OptInWeak -> JSON_String "OptInWeak"
   | Some OptOut -> JSON_String "OptOut"
   | None -> JSON_Null in
