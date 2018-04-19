@@ -108,9 +108,12 @@ val save_dep_table_sqlite: string -> string -> int
 val update_dep_table_sqlite: string -> string -> int
 
 (*****************************************************************************)
-(* Serializes the dependency table and writes it to a file *)
+(* Serializes the file info table and writes it to a file *)
 (*****************************************************************************)
-val save_file_info_sqlite: string -> int
+val save_file_info_sqlite:
+  hash:string -> name:string -> [`ConstantK | `ClassK | `FuncK] -> string -> unit
+val save_file_info_init: string -> unit
+val save_file_info_free: unit -> unit
 
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)

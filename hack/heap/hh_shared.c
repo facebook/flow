@@ -213,6 +213,7 @@ static int win32_getpagesize(void) {
 #define getpagesize win32_getpagesize
 #endif
 
+
 /*****************************************************************************/
 /* Config settings (essentially constants, so they don't need to live in shared
  * memory), initialized in hh_shared_init */
@@ -664,8 +665,6 @@ CAMLprim value hh_save_dep_table_sqlite(
         value build_revision
 );
 
-CAMLprim value hh_save_file_info_sqlite(value out_filename);
-
 CAMLprim value hh_load_dep_table_sqlite(
         value in_filename,
         value ignore_hh_version
@@ -692,6 +691,23 @@ void hhfi_insert_row(
 char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
 
 static char *copy_malloc(const char *s);
+
+static sqlite3_ptr hhfi_db = NULL;
+
+CAMLprim value hh_save_file_info_init(value ml_path);
+
+CAMLprim value hh_save_file_info_sqlite(
+        value ml_hash,
+        value ml_name,
+        value ml_kind,
+        value ml_filespec
+);
+
+sqlite3_ptr hhfi_get_db(void);
+
+void hhfi_init_db(const char *path);
+
+void hhfi_free_db(void);
 
 // END DECLARATIONS
 
@@ -2533,14 +2549,38 @@ CAMLprim value hh_update_dep_table_sqlite(
   CAMLreturn(Val_long(secs));
 }
 
-CAMLprim value hh_save_file_info_sqlite(
-    value out_filename
+CAMLprim value hh_save_file_info_init(
+        value ml_path
 ) {
-  CAMLparam1(out_filename);
-  char *out_filename_raw = String_val(out_filename);
-  long retVal =
-    hh_save_file_info_helper_sqlite(out_filename_raw);
-  CAMLreturn(Val_long(retVal));
+    CAMLparam1(ml_path);
+    const char *path = String_val(ml_path);
+    hhfi_init_db(path);
+    make_all_tables(hhfi_get_db());
+    CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_save_file_info_free(
+    value ml_unit
+) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    hhfi_free_db();
+    CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_save_file_info_sqlite(
+    value ml_hash,
+    value ml_name,
+    value ml_kind,
+    value ml_filespec
+) {
+  CAMLparam4(ml_hash, ml_name, ml_kind, ml_filespec);
+  assert_master();
+  const char *name = String_val(ml_name);
+  int64_t kind = Int_val(ml_kind);
+  const char *filespec = String_val(ml_filespec);
+  hhfi_insert_row(hhfi_get_db(), get_hash(ml_hash), name, kind, filespec);
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_get_loaded_dep_table_filename() {
@@ -3016,6 +3056,25 @@ char *hhfi_get_filespec(
     return out;
 }
 
+void hhfi_init_db(const char *path) {
+    assert(hhfi_db == NULL);
+    assert_sql(sqlite3_open(path, &hhfi_db), SQLITE_OK);
+    assert_sql(sqlite3_exec(hhfi_db, "BEGIN TRANSACTION;", 0, 0, 0), SQLITE_OK);
+    return;
+}
+
+void hhfi_free_db(void) {
+    assert(hhfi_db != NULL);
+    assert_sql(sqlite3_exec(hhfi_db, "END TRANSACTION;", 0, 0, 0), SQLITE_OK);
+    assert_sql(sqlite3_close(hhfi_db), SQLITE_OK);
+    return;
+}
+
+sqlite3_ptr hhfi_get_db(void) {
+    assert(hhfi_db != NULL);
+    return hhfi_db;
+}
+
 #else
 
 // ----------------------- START OF NO_SQLITE3 SECTION ------------------------
@@ -3042,7 +3101,10 @@ CAMLprim value hh_update_dep_table_sqlite(
 }
 
 CAMLprim value hh_save_file_info_sqlite(
-    value out_filename
+    value out_filename,
+    value ml_name,
+    value ml_kind,
+    value ml_filespec
 ) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
@@ -3108,9 +3170,8 @@ CAMLprim value set_file_info_on_disk_path(value ml_str) {
 CAMLprim value open_file_info_db(
     value ml_unit
 ) {
-  CAMLparam1(ml_unit);
   UNUSED(ml_unit);
-  CAMLreturn(Val_unit);
+  return Val_unit;
 }
 
 void hhfi_insert_row(
@@ -3129,6 +3190,33 @@ char *hhfi_get_filespec(
         int64_t hash
 ) {
     UNUSED2(db, hash);
+    return NULL;
+}
+
+CAMLprim value hh_save_file_info_init(
+        value ml_path
+) {
+    UNUSED(ml_path);
+    return Val_unit;
+}
+
+CAMLprim value hh_save_file_info_free(
+        value ml_unit
+) {
+    UNUSED(ml_unit);
+    return Val_unit;
+}
+
+void hhfi_init_db(const char *path) {
+    UNUSED(path);
+    return;
+}
+
+void hhfi_free_db(void) {
+    return;
+}
+
+sqlite3_ptr hhfi_get_db(void) {
     return NULL;
 }
 #endif
