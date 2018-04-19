@@ -459,6 +459,54 @@ let handle_ephemeral genv env (request_id, command) =
     Lwt.return env
 
 
+let did_open genv env client (files: (string*string) Nel.t)
+  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string * Utils.callstack) result) Lwt.t =
+  let options = genv.ServerEnv.options in
+  begin match Persistent_connection.client_did_open env.connections client ~files with
+  | None -> Lwt.return (Ok (env, None)) (* No new files were opened, so do nothing *)
+  | Some (connections, client) ->
+    let env = {env with connections} in
+
+    match Options.lazy_mode options with
+    | Some Options.LAZY_MODE_IDE ->
+      (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
+       * opens. So when an IDE opens a new file, that file is now focused.
+       *
+       * If the newly opened file was previously unchecked or checked as a dependency, then
+       * we will do a new recheck.
+       *
+       * If the newly opened file was already checked, then we'll just send the errors to
+       * the client
+       *)
+      let filenames = Nel.map (fun (fn, _content) -> fn) files in
+      let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
+      if not triggered_recheck then begin
+        (* This open doesn't trigger a recheck, but we'll still send down the errors *)
+        let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+        Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
+      end;
+      Lwt.return (Ok (env, None))
+    | Some Options.LAZY_MODE_FILESYSTEM
+    | None ->
+      (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
+       * a new file is opened is to send the errors to the client *)
+      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+      Lwt.return (Ok (env, None))
+    end
+
+let did_close _genv env client (filenames: string Nel.t)
+  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string * Utils.callstack) result) Lwt.t
+  =
+  begin match Persistent_connection.client_did_close env.connections client ~filenames with
+    | None -> Lwt.return (Ok (env, None)) (* No new files were closed, so do nothing *)
+    | Some (connections, client) ->
+      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+      Lwt.return (Ok ({env with connections}, None))
+  end
+
+
 (** handle_persistent_unsafe:
    either this method returns Ok (and optionally returns some logging data),
    or it returns Error for some well-understood reason string,
@@ -488,65 +536,53 @@ let handle_persistent_unsafe genv env client profiling msg
       Lwt.return (Ok (!env, json_data))
 
   | Persistent_connection_prot.DidOpen filenames ->
-      Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
+    Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
+    let files = Nel.map (fun fn -> (fn, "%%Legacy IDE has no content")) filenames in
+    did_open genv env client files
 
-      begin match Persistent_connection.client_did_open env.connections client ~filenames with
-      | None -> Lwt.return (Ok (env, None)) (* No new files were opened, so do nothing *)
-      | Some (connections, client) ->
-        let env = {env with connections} in
+  | Persistent_connection_prot.LspToServer (NotificationMessage (DidOpenNotification params)) ->
+    let open Lsp.DidOpen in
+    let open TextDocumentItem in
+    let content = params.textDocument.text in
+    let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
+    did_open genv env client (Nel.one (fn, content))
 
-        match Options.lazy_mode options with
-        | Some Options.LAZY_MODE_IDE ->
-          (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
-           * opens. So when an IDE opens a new file, that file is now focused.
-           *
-           * If the newly opened file was previously unchecked or checked as a dependency, then
-           * we will do a new recheck.
-           *
-           * If the newly opened file was already checked, then we'll just send the errors to
-           * the client
-           *)
-          let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
-          if not triggered_recheck then begin
-            (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-            let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-            Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
-          end;
-          Lwt.return (Ok (env, None))
-        | Some Options.LAZY_MODE_FILESYSTEM
-        | None ->
-          (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
-           * a new file is opened is to send the errors to the client *)
-          let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-          Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-          Lwt.return (Ok (env, None))
-        end
+  | Persistent_connection_prot.LspToServer (NotificationMessage (DidChangeNotification params)) ->
+    begin
+      let open Lsp.DidChange in
+      let open VersionedTextDocumentIdentifier in
+      let open Persistent_connection in
+      let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
+      match client_did_change env.connections client fn params.contentChanges with
+      | Ok (connections, _client) ->
+        (* TODO(ljw): report syntax errors for the change immediately *)
+        let env = { env with connections; } in
+        Lwt.return (Ok (env, None))
+      | Error (reason, stack) ->
+        Lwt.return (Error (env, reason, stack))
+    end
 
   | Persistent_connection_prot.DidClose filenames ->
-      Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-      begin match Persistent_connection.client_did_close env.connections client ~filenames with
-        | None -> Lwt.return (Ok (env, None)) (* No new files were closed, so do nothing *)
-        | Some (connections, client) ->
-          let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-          Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-          Lwt.return (Ok ({env with connections}, None))
-      end
+    Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
+    did_close genv env client filenames
 
-  | Persistent_connection_prot.LspToServer (NotificationMessage (DidOpenNotification _params)) ->
-    (* TODO: track per-client the open editor files, and DidChange/DidClose *)
-    Lwt.return (Ok (env, None))
+  | Persistent_connection_prot.LspToServer (NotificationMessage (DidCloseNotification params)) ->
+    let open Lsp.DidClose in
+    let open TextDocumentIdentifier in
+    let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
+    did_close genv env client (Nel.one fn)
 
   | Persistent_connection_prot.LspToServer (RequestMessage (id, DefinitionRequest params)) ->
-    (* TODO: use the open editor file contents, not FileName *)
     (* TODO: factor out flow<->lsp datatype conversions *)
     (* and document that start.column is off-by-one compared to the rest! *)
     let env = ref env in
     let open TextDocumentPositionParams in
     let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
+    let file = Persistent_connection.get_file client fn in
     let line = params.position.line + 1 in
     let char = params.position.character + 1 in
     let%lwt (result, json_data) =
-      get_def ~options ~workers ~env ~profiling (File_input.FileName fn, line, char) in
+      get_def ~options ~workers ~env ~profiling (file, line, char) in
     begin match result with
       | Ok loc ->
         let default_path = params.textDocument.TextDocumentIdentifier.uri in

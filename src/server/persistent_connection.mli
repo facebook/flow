@@ -48,9 +48,35 @@ val subscribe_client:
   client:single_client ->
   current_errors:Errors.ErrorSet.t ->
   current_warnings:Errors.ErrorSet.t Utils_js.FilenameMap.t -> t
-val client_did_open: t -> single_client -> filenames:string Nel.t -> (t * single_client) option
-val client_did_close: t -> single_client -> filenames:string Nel.t -> (t * single_client) option
+
+val client_did_open:
+  t ->
+  single_client ->
+  files:(string * string) Nel.t ->
+  (t * single_client) option
+
+val client_did_change:
+  t ->
+  single_client ->
+  string ->
+  Lsp.DidChange.textDocumentContentChangeEvent list ->
+  (t * single_client, string * Utils.callstack) result
+
+val client_did_close:
+  t ->
+  single_client ->
+  filenames:string Nel.t
+  -> (t * single_client) option
+
 val get_logging_context: single_client -> FlowEventLogger.logging_context
 
+(** Returns the set of all opened files across all clients.
+   It's not meaningful to talk about the *content* of those opened files in
+   cases where clients differ. *)
 val get_opened_files: t -> SSet.t
+
+(** Returns either FileContent for this file if it was opened by the persistent
+   client, or FileName if it wasn't. *)
+val get_file: single_client -> string -> File_input.t
+
 val get_client: t -> Prot.client_id -> single_client

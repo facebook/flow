@@ -689,7 +689,17 @@ export class TestBuilder {
 
     const args = this.sanitizeOutgoingIDEMessage(argsRaw);
     await this.log('IDE >>request %s\n%s', method, JSON.stringify(args));
-    const resultRaw = await ide.connection.sendRequest(method, ...args);
+    let resultRaw;
+    try {
+      resultRaw = await ide.connection.sendRequest(method, ...args);
+    } catch (error) {
+      const message = error.message;
+      error = {message, ...error}; // otherwise it doesn't show up in JSON.stringify
+      ideMessages.push({method, error});
+      await this.log('IDE <<error %s\n%s', method, JSON.stringify(error));
+      ide.messageEmitter.emit('message');
+      return;
+    }
     const result = this.sanitizeIncomingIDEMessage(resultRaw);
     ideMessages.push({method, result});
     await this.log('IDE <<response %s\n%s', method, JSON.stringify(resultRaw));
