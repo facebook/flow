@@ -2105,11 +2105,18 @@ CAMLprim value hh_get_and_deserialize_sqlite(
     value ml_key
 ) {
   CAMLparam2(ml_use_fileinfo_sqlite, ml_key);
+  CAMLlocal1(ml_out);
+  int64_t hash = (int64_t) get_hash(ml_key);
   int use_sqlite_fallback = Bool_val(ml_use_fileinfo_sqlite);
   check_should_exit();
   if (use_sqlite_fallback) {
-      // not yet implemented
-      abort();
+      // TODO: almost certainly wrong,
+      // we're getting back a stringified Relative_path.t
+      char *fs = hhfi_get_filespec(hhfi_get_db(), hash);
+      assert(fs);
+      ml_out = caml_copy_string(fs);
+      free(fs);
+      CAMLreturn(ml_out);
   } else {
       CAMLlocal1(ml_res);
       ml_res = hh_get_and_deserialize(ml_key);
