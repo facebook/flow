@@ -455,10 +455,26 @@ end = struct
   let unset_hooks () =
     Type_inference_hooks_js.reset_hooks ()
 
+  type def_info =
+    (* Superclass implementations are also included. The list is ordered such that subclass
+     * implementations are first and superclass implementations are last. *)
+    | Class of Loc.t Nel.t
+    (* An object was found. If there are multiple relevant definition locations
+     * (e.g. the request was issued on an object literal which is associated
+     * with multiple types) then there will be multiple locations in no
+     * particular order. *)
+    | Object of Loc.t Nel.t
+
+  let all_locs_of_def_info = function
+    | Class locs
+    | Object locs -> locs
+
   type def_loc =
-    (* We found at least one def loc. Superclass implementations are also included. The list is
-    ordered such that subclass implementations are first and superclass implementations are last. *)
-    | Found of Loc.t Nel.t
+    (* We found a class property. Include all overridden implementations. Superclass implementations
+     * are listed last. *)
+    | FoundClass of Loc.t Nel.t
+    (* We found an object property. *)
+    | FoundObject of Loc.t
     (* This means we resolved the receiver type but did not find the definition. If this happens
      * there must be a type error (which may be suppresssed) *)
     | NoDefFound
@@ -467,13 +483,18 @@ end = struct
     (* This means it's not well-typed, and could be anything *)
     | AnyType
 
+  let debug_string_of_locs locs =
+    locs |> Nel.to_list |> List.map Loc.to_string |> String.concat ", "
+
   (* Disable the unused value warning -- we want to keep this around for debugging *)
   [@@@warning "-32"]
+  let debug_string_of_def_info = function
+    | Class locs -> spf "Class (%s)" (debug_string_of_locs locs)
+    | Object locs -> spf "Object (%s)" (debug_string_of_locs locs)
+
   let debug_string_of_def_loc = function
-    | Found locs ->
-      spf
-        "Found (%s)"
-        (locs |> Nel.to_list |> List.map Loc.to_string |> String.concat ", ")
+    | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
+    | FoundObject loc -> spf "FoundObject (%s)" (Loc.to_string loc)
     | NoDefFound -> "NoDefFound"
     | UnsupportedType -> "UnsupportedType"
     | AnyType -> "AnyType"
@@ -516,8 +537,8 @@ end = struct
       | None -> Ok NoDefFound
       | Some loc ->
         extract_def_loc cx super name
-        >>| begin function
-          | Found lst ->
+        >>= begin function
+          | FoundClass lst ->
               (* Avoid duplicate entries. This can happen if a class does not override a method,
                * so the definition points to the method definition in the parent class. Then we
                * look at the parent class and find the same definition. *)
@@ -527,11 +548,12 @@ end = struct
                 else
                   Nel.cons loc lst
               in
-              Found lst
+              Ok (FoundClass lst)
+          | FoundObject _ -> Error "A superclass should be a class, not an object"
           (* If the superclass does not have a definition for this method, or it is for some reason
            * not a class type, or we don't know its type, just return the location we already know
            * about. *)
-          | NoDefFound | UnsupportedType | AnyType -> Found (Nel.one loc)
+          | NoDefFound | UnsupportedType | AnyType -> Ok (FoundClass (Nel.one loc))
         end
     end
 
@@ -545,7 +567,7 @@ end = struct
           get_def_loc_from_extracted_type cx extracted_type name
           >>| begin function
             | None -> NoDefFound
-            | Some loc -> Found (Nel.one loc)
+            | Some loc -> FoundObject loc
           end
       | Success _
       | SuccessModule _
@@ -556,14 +578,23 @@ end = struct
           Ok AnyType
 
   (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
-  let type_matches_locs cx ty def_locs name =
+  let type_matches_locs cx ty def_info name =
     extract_def_loc cx ty name >>| function
-      | Found locs ->
-          (* Only take the first extracted def loc -- that is, the one for the actual definition
-           * and not overridden implementations, and compare it to the list of def locs we are
-           * interested in *)
-          let loc = Nel.hd locs in
-          Nel.mem loc def_locs
+      | FoundClass ty_def_locs ->
+        begin match def_info with
+          | Object _ -> false
+          | Class def_locs ->
+            (* Only take the first extracted def loc -- that is, the one for the actual definition
+             * and not overridden implementations, and compare it to the list of def locs we are
+             * interested in *)
+            let loc = Nel.hd ty_def_locs in
+            Nel.mem loc def_locs
+        end
+      | FoundObject loc ->
+        begin match def_info with
+        | Class _ -> false
+        | Object def_locs -> Nel.mem loc def_locs
+        end
       (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
        * are references or not. For now we'll leave them out. *)
       | NoDefFound | UnsupportedType | AnyType -> false
@@ -590,12 +621,13 @@ end = struct
       >>|
       List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
 
-  let find_refs_in_file options ast_info file_key def_locs name =
+  let find_refs_in_file options ast_info file_key def_info name =
     let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
     let potential_matching_literals: (Loc.t * Type.t) list ref = ref [] in
     let (ast, file_sig, info) = ast_info in
     let local_defs =
-      Nel.to_list def_locs
+      let all_def_locs = match def_info with Class locs | Object locs -> locs in
+      Nel.to_list all_def_locs
       |> List.filter (fun loc -> loc.Loc.source = Some file_key)
     in
     let has_symbol = check_for_matching_prop name ast in
@@ -612,7 +644,7 @@ end = struct
          * examine *)
         let prop_loc_map = lazy (LiteralToPropLoc.make ast name) in
         let get_prop_loc_if_relevant (obj_loc, into_type) =
-          type_matches_locs cx into_type def_locs name
+          type_matches_locs cx into_type def_info name
           >>| function
           | false -> None
           | true -> LocMap.get obj_loc (Lazy.force prop_loc_map)
@@ -624,13 +656,13 @@ end = struct
       in
       literal_prop_refs_result
       >>= begin fun literal_prop_refs_result ->
-        filter_refs cx !potential_refs file_key local_defs def_locs name
+        filter_refs cx !potential_refs file_key local_defs def_info name
         >>| (@) local_defs
         >>| (@) literal_prop_refs_result
       end
     end
 
-  let find_refs_in_multiple_files genv all_deps def_locs name =
+  let find_refs_in_multiple_files genv all_deps def_info name =
     let {options; workers} = genv in
     let dep_list: File_key.t list = FilenameSet.elements all_deps in
     let node_modules_containers = !Files.node_modules_containers in
@@ -640,7 +672,7 @@ end = struct
         Files.node_modules_containers := node_modules_containers;
         deps |> List.map begin fun dep ->
           get_ast_result dep >>= fun ast_info ->
-          find_refs_in_file options ast_info dep def_locs name
+          find_refs_in_file options ast_info dep def_info name
         end
       end
       ~merge: (fun refs acc -> refs::acc)
@@ -654,9 +686,33 @@ end = struct
     let result: (Loc.t list, string) Result.t = result >>| List.concat in
     Lwt.return result
 
+  (* Returns the file(s) at which we should begin looking downstream for references. *)
+  let roots_of_def_info def_info : (File_key.t Nel.t, string) result =
+    let root_locs = all_locs_of_def_info def_info in
+    let file_keys =
+      Nel.map (fun loc -> loc.Loc.source) root_locs
+      |> Nel.map (Result.of_option ~error:"Expected a location with a source file")
+    in
+    Nel.result_all file_keys
+
+  let deps_of_file_key genv env (file_key: File_key.t) : (FilenameSet.t, string) result Lwt.t =
+    let {options; workers} = genv in
+    File_key.to_path file_key %>>= fun path ->
+    let fileinput = File_input.FileName path in
+    File_input.content_of_file_input fileinput %>>| fun content ->
+    let%lwt all_deps, _ = get_dependents options workers env file_key content in
+    Lwt.return all_deps
+
+  let deps_of_file_keys genv env (file_keys: File_key.t list) : (FilenameSet.t, string) result Lwt.t =
+    (* We need to use map_s (rather than map_p) because we cannot interleave calls into
+     * MultiWorkers. *)
+    let%lwt deps_result = Lwt_list.map_s (deps_of_file_key genv env) file_keys in
+    Result.all deps_result %>>| fun (deps: FilenameSet.t list) ->
+    Lwt.return @@ List.fold_left FilenameSet.union FilenameSet.empty deps
+
   let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
-    let get_def_info: unit -> ((Loc.t Nel.t * string) option, string) result Lwt.t = fun () ->
+    let get_def_info: unit -> ((def_info * string) option, string) result Lwt.t = fun () ->
       let props_access_info = ref None in
       let%lwt cx_result =
         compute_ast_result file_key content
@@ -675,20 +731,22 @@ end = struct
         match !props_access_info with
           | None -> Ok None
           | Some (Obj_def (loc, name)) ->
-              Ok (Some (Nel.one loc, name))
+              Ok (Some (Object (Nel.one loc), name))
           | Some (Class_def (ty, name)) ->
               (* We get the type of the class back here, so we need to extract the type of an instance *)
               extract_instancet cx ty >>= fun ty ->
               begin extract_def_loc_resolved cx ty name >>= function
-                | Found locs -> Ok (Some (locs, name))
+                | FoundClass locs -> Ok (Some (Class locs, name))
+                | FoundObject _ -> Error "Expected to extract class def info from a class"
                 | _ -> Error "Unexpectedly failed to extract definition from known type"
               end
           | Some (Use (ty, name)) ->
-              begin extract_def_loc cx ty name >>= function
-                | Found locs -> Ok (Some (locs, name))
+              begin extract_def_loc cx ty name >>| function
+                | FoundClass locs -> Some (Class locs, name)
+                | FoundObject loc -> Some (Object (Nel.one loc), name)
                 | NoDefFound
                 | UnsupportedType
-                | AnyType -> Ok None
+                | AnyType -> None
               end
       )
     in
@@ -696,33 +754,42 @@ end = struct
     def_info %>>= fun def_info_opt ->
     match def_info_opt with
       | None -> Lwt.return (Ok None)
-      | Some (def_locs, name) ->
+      | Some (def_info, name) ->
           if global then
-            (* Start from the file where the symbol is defined, instead of the one where find-refs
-             * was called. *)
-            (* Since the def_locs are ordered from sub-est class to super-est class, and the
-             * subclasses must depend on the superclasses, then we can safely take the super-est
-             * class location and consider that the root. *)
-            let last_def_loc = Nel.nth def_locs ((Nel.length def_locs) - 1) in
-            Result.of_option Loc.(last_def_loc.source) ~error:"Expected a location with a source file" %>>= fun file_key ->
-            File_key.to_path file_key %>>= fun path ->
-            let%lwt new_env = lazy_mode_focus genv !env path in
-            env := new_env;
-            let fileinput = File_input.FileName path in
-            File_input.content_of_file_input fileinput %>>= fun content ->
-            let%lwt all_deps, _ = get_dependents options workers env file_key content in
-            let dependent_file_count = FilenameSet.cardinal all_deps in
-            let relevant_files = FilenameSet.add file_key all_deps in
+            roots_of_def_info def_info %>>= fun root_file_keys ->
+            let root_file_paths_result =
+              Nel.map File_key.to_path root_file_keys
+              |> Nel.result_all
+            in
+            root_file_paths_result %>>= fun root_file_paths ->
+            let%lwt () =
+              let%lwt new_env =
+                Lwt_list.fold_left_s
+                  (lazy_mode_focus genv)
+                  !env
+                  (Nel.to_list root_file_paths)
+              in
+              env := new_env;
+              Lwt.return_unit
+            in
+            let%lwt deps_result = deps_of_file_keys genv env (Nel.to_list root_file_keys) in
+            deps_result %>>= fun deps ->
+            let dependent_file_count = FilenameSet.cardinal deps in
+            let relevant_files =
+              Nel.to_list root_file_keys
+              |> FilenameSet.of_list
+              |> FilenameSet.union deps
+            in
             Hh_logger.info
               "find-refs: searching %d dependent modules for references"
               dependent_file_count;
-            let%lwt refs = find_refs_in_multiple_files genv relevant_files def_locs name in
+            let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info name in
             refs %>>| fun refs ->
             Lwt.return (Some (name, refs, Some dependent_file_count))
           else
             Lwt.return (
               compute_ast_result file_key content >>= fun ast_info ->
-              find_refs_in_file options ast_info file_key def_locs name >>= fun refs ->
+              find_refs_in_file options ast_info file_key def_info name >>= fun refs ->
               Ok (Some (name, refs, None))
             )
 end
