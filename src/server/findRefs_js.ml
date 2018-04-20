@@ -702,13 +702,12 @@ end = struct
           find_refs_in_file options ast_info dep def_info name
         end
       end
-      ~merge: (fun refs acc -> refs::acc)
+      ~merge: (fun refs acc -> List.rev_append refs acc)
       ~neutral: []
       ~next: (MultiWorkerLwt.next workers dep_list)
     in
     (* The types got a little too complicated here. Writing out the intermediate types makes it a
      * bit clearer. *)
-    let result: (Loc.t list, string) Result.t list = List.concat result in
     let result: (Loc.t list list, string) Result.t = Result.all result in
     let result: (Loc.t list, string) Result.t = result >>| List.concat in
     Lwt.return result
