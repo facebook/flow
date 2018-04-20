@@ -47,16 +47,6 @@ before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
 
 deploy:
-# Deploy the website
-- provider: script
-  repo: facebook/flow
-  script: bash -e resources/travis/deploy.sh
-  skip_cleanup: true
-  on:
-    branch: master
-    condition:
-    - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
-
 # Upload release versions of flow.js
 - provider: s3
   access_key_id: "$AWS_ACCESS_KEY_ID"
