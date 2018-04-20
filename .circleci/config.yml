@@ -332,6 +332,24 @@ jobs:
         name: Publish website
         command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
 
+  try_flow_deploy:
+    docker:
+      - image: xueshanf/awscli:latest
+    working_directory: ~/flow
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - run:
+        name: Assemble files
+        command: |
+          rm -rf ~/try_flow
+          mkdir ~/try_flow
+          cp bin/flow.js ~/try_flow/flow.js
+          cp -r lib ~/try_flow/flowlib
+    - run:
+        name: Upload to AWS
+        command: aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
+
 workflows:
   version: 2
   build_and_test:
@@ -403,3 +421,13 @@ workflows:
           filters:
             branches:
               only: master
+
+      # deploys flow.js and the libdefs to Try Flow on release branches
+      - try_flow_deploy:
+          requires:
+            - build_linux
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

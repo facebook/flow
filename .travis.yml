@@ -33,7 +33,6 @@ addons:
 before_install: bash -e resources/travis/before_install.sh
 install: bash -e resources/travis/install_deps.sh
 script: bash -e resources/travis/build.sh
-before_deploy: bash -e resources/travis/before_deploy.sh
 
 cache:
   directories:
@@ -45,18 +44,6 @@ cache:
 
 before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
-
-deploy:
-# Upload release versions of flow.js
-- provider: s3
-  access_key_id: "$AWS_ACCESS_KEY_ID"
-  secret_access_key: "$AWS_SECRET_ACCESS_KEY"
-  bucket: "$S3_BUCKET"
-  skip_cleanup: true
-  local_dir: "$HOME/static"
-  upload-dir: static
-  on:
-    tags: true
 
 # The use of secure prevents forks from spamming irc and email.
 # See https://github.com/travis-ci/travis-ci/issues/5063
