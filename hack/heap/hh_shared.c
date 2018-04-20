@@ -2398,6 +2398,23 @@ query_result_t get_dep_sqlite_blob(
   sqlite3_stmt ** stmt
 );
 
+query_result_t get_dep_sqlite_blob_with_duration(
+  sqlite3 * const db,
+  const uint64_t key64,
+  sqlite3_stmt ** stmt,
+  size_t * duration_us
+) {
+  struct timeval start = { 0 };
+  gettimeofday(&start, NULL);
+  query_result_t result = get_dep_sqlite_blob(db, key64, stmt);
+  struct timeval end = { 0 };
+  gettimeofday(&end, NULL);
+  long elapsed = (end.tv_sec - start.tv_sec) * 1000000L;
+  elapsed += (end.tv_usec - start.tv_usec);
+  *duration_us = *duration_us + elapsed;
+  return result;
+}
+
 // Add all the entries in the in-memory deptable
 // into the connected database. This adds edges only, so the
 // resulting deptable may contain more edges than truly represented
@@ -2407,6 +2424,8 @@ static void hh_update_dep_table_helper(
     sqlite3* const db_out,
     const char* const build_info
 ) {
+  struct timeval start_t = { 0 };
+  gettimeofday(&start_t, NULL);
   // Create header for verification
   write_sqlite_header(db_out, build_info);
   // Hand-off the data to the OS for writing and continue,
@@ -2433,6 +2452,9 @@ static void hh_update_dep_table_helper(
     "INSERT OR REPLACE INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
     SQLITE_OK);
+  size_t existing_rows_lookup_duration = 0L;
+  size_t existing_rows_updated_count = 0;
+  size_t new_rows_count = 0;
   for (slot = 0; slot < dep_size; ++slot) {
     count = deptbl_entry_count_for_slot(slot);
     if (count == 0) {
@@ -2441,7 +2463,11 @@ static void hh_update_dep_table_helper(
     deptbl_entry_t slotval = deptbl[slot];
 
     query_result_t existing =
-      get_dep_sqlite_blob(db_out, slotval.s.key.num, &select_dep_stmt);
+      get_dep_sqlite_blob_with_duration(
+          db_out,
+          slotval.s.key.num,
+          &select_dep_stmt,
+          &existing_rows_lookup_duration);
     // Make sure we don't have malformed output
     assert(existing.size % sizeof(uint32_t) == 0);
     size_t existing_count = existing.size / sizeof(uint32_t);
@@ -2477,6 +2503,9 @@ static void hh_update_dep_table_helper(
             existing_count * (sizeof(uint32_t))
         );
         iter += existing_count;
+        existing_rows_updated_count += 1;
+      } else {
+        new_rows_count += 1;
       }
       assert_sql(
         sqlite3_bind_blob(insert_stmt, 2, values,
@@ -2494,8 +2523,14 @@ static void hh_update_dep_table_helper(
 
   assert_sql(sqlite3_finalize(insert_stmt), SQLITE_OK);
   assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
+  start_t = log_duration("Finished SQL Transaction", start_t);
+  fprintf(stderr, "Lookup of existing rows took %lu us\n",
+      existing_rows_lookup_duration);
+  fprintf(stderr, "Wrote %lu new rows\n", new_rows_count);
+  fprintf(stderr, "Updated %lu existing rows\n", existing_rows_updated_count);
   destroy_prepared_stmt(&select_dep_stmt);
   assert_sql(sqlite3_close(db_out), SQLITE_OK);
+  log_duration("Finished closing SQL connection", start_t);
 }
 
 static long hh_save_dep_table_helper_sqlite(
