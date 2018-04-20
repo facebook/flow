@@ -33,3 +33,12 @@ type Spreaded = {
 
 const f: Spreaded = { foo() {}, bar: '', baz: 5 };
 if (f.foo != null) { f.foo() };
+
+type Alias2 = {
+  foo(): void,
+  bar: string,
+};
+
+const g = { foo() {}, bar: ''};
+(g: Alias);
+(g: Alias2);

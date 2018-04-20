@@ -113,6 +113,12 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 8 21
 printf "Object literal property: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 8 31
 
+printf "Method in object literal which flows into two types: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 42 13
+
+printf "Property in object literal which flows into two types: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 42 23
+
 printf "Use as a JSX component class: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root jsx.js 5 7
 

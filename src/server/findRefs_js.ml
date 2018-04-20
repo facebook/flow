@@ -395,21 +395,48 @@ end = struct
     | Class_def of Type.t * string (* name *)
     (* In an object type. Includes the location of the property definition and its name. *)
     | Obj_def of Loc.t * string (* name *)
+    (* List of types that the object literal flows into directly, as well as the name of the
+     * property. *)
+    | Use_in_literal of Type.t Nel.t * string (* name *)
 
   let set_def_loc_hook prop_access_info literal_key_info target_loc =
+    let set_prop_access_info new_info =
+      let set_ok info = prop_access_info := Ok (Some info) in
+      let set_err err = prop_access_info := Error err in
+      match !prop_access_info with
+        | Error _ -> ()
+        | Ok None -> prop_access_info := Ok (Some new_info)
+        | Ok (Some info) -> begin match info, new_info with
+          | Use _, Use _
+          | Class_def _, Class_def _
+          | Obj_def _, Obj_def _ ->
+            (* Due to generate_tests, we sometimes see hooks firing multiple times for the same
+             * location. This is innocuous and we should take the last result. *)
+            set_ok new_info
+          (* Literals can flow into multiple types. Include them all. *)
+          | Use_in_literal (types, name), Use_in_literal (new_types, new_name) ->
+            if name = new_name then
+              set_ok (Use_in_literal (Nel.rev_append new_types types, name))
+            else
+              set_err "Names did not match"
+          (* We should not see mismatches. *)
+          |  Use _, _ | Class_def _, _ | Obj_def _, _ | Use_in_literal _, _ ->
+            set_err "Unexpected mismatch between definition kind"
+        end
+    in
     let use_hook ret _ctxt name loc ty =
       begin if Loc.contains loc target_loc then
-        prop_access_info := Some (Use (ty, name))
+        set_prop_access_info (Use (ty, name))
       end;
       ret
     in
     let class_def_hook _ctxt ty name loc =
       if Loc.contains loc target_loc then
-        prop_access_info := Some (Class_def (ty, name))
+        set_prop_access_info (Class_def (ty, name))
     in
     let obj_def_hook _ctxt name loc =
       if Loc.contains loc target_loc then
-        prop_access_info := Some (Obj_def (loc, name))
+        set_prop_access_info (Obj_def (loc, name))
     in
     let obj_to_obj_hook _ctxt obj1 obj2 =
       match get_object_literal_loc obj1, literal_key_info with
@@ -417,7 +444,7 @@ end = struct
         let open Type in
         begin match obj2 with
         | UseT (_, (DefT (_, ObjT _) as t2)) ->
-          prop_access_info := Some (Use (t2, name))
+          set_prop_access_info (Use_in_literal (Nel.one t2, name))
         | _ -> ()
         end
       | _ -> ()
@@ -713,7 +740,7 @@ end = struct
   let find_refs genv env ~profiling ~content file_key loc ~global =
     let options, workers = genv.options, genv.workers in
     let get_def_info: unit -> ((def_info * string) option, string) result Lwt.t = fun () ->
-      let props_access_info = ref None in
+      let props_access_info = ref (Ok None) in
       let%lwt cx_result =
         compute_ast_result file_key content
         %>>| fun (ast, file_sig, info) ->
@@ -728,7 +755,15 @@ end = struct
       unset_hooks ();
       Lwt.return (
         cx_result >>= fun cx ->
-        match !props_access_info with
+        let def_info_of_type name ty =
+          extract_def_loc cx ty name >>| function
+            | FoundClass locs -> Some (Class locs, name)
+            | FoundObject loc -> Some (Object (Nel.one loc), name)
+            | NoDefFound
+            | UnsupportedType
+            | AnyType -> None
+        in
+        !props_access_info >>= function
           | None -> Ok None
           | Some (Obj_def (loc, name)) ->
               Ok (Some (Object (Nel.one loc), name))
@@ -741,13 +776,30 @@ end = struct
                 | _ -> Error "Unexpectedly failed to extract definition from known type"
               end
           | Some (Use (ty, name)) ->
-              begin extract_def_loc cx ty name >>| function
-                | FoundClass locs -> Some (Class locs, name)
-                | FoundObject loc -> Some (Object (Nel.one loc), name)
-                | NoDefFound
-                | UnsupportedType
-                | AnyType -> None
-              end
+              def_info_of_type name ty
+          | Some (Use_in_literal (types, name)) ->
+              let def_info_result =
+                let def_infos =
+                  Nel.map (def_info_of_type name) types
+                  |> Nel.result_all
+                in
+                let def_locs: (Loc.t Nel.t option Nel.t, string) result =
+                  def_infos >>= fun def_infos ->
+                  Nel.map begin function
+                    | None -> Ok None
+                    | Some (Object locs, _) -> Ok (Some locs)
+                    | Some (Class _, _) -> Error "Expected object literals to only flow into object types"
+                  end def_infos
+                  |> Nel.result_all
+                in
+                def_locs >>| Nel.fold_left begin fun acc elt -> match acc, elt with
+                  | None, None -> None
+                  | Some locs, None
+                  | None, Some locs -> Some locs
+                  | Some locs, Some new_locs -> Some (Nel.rev_append new_locs locs)
+                end None
+              in
+              def_info_result >>| Option.map ~f:(fun locs -> Object locs, name)
       )
     in
     let%lwt def_info = get_def_info () in

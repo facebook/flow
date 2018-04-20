@@ -834,6 +834,12 @@ Method declaration in an object type alias: {
       "type":"SourceFile",
       "start":{"line":10,"column":3,"offset":109},
       "end":{"line":10,"column":5,"offset":112}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":13,"offset":442},
+      "end":{"line":42,"column":15,"offset":445}
     }
   ]
 }
@@ -864,6 +870,12 @@ Property declaration in an object type alias: {
       "type":"SourceFile",
       "start":{"line":12,"column":3,"offset":125},
       "end":{"line":12,"column":5,"offset":128}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":23,"offset":452},
+      "end":{"line":42,"column":25,"offset":455}
     }
   ]
 }
@@ -894,6 +906,12 @@ Method call on an object type alias: {
       "type":"SourceFile",
       "start":{"line":10,"column":3,"offset":109},
       "end":{"line":10,"column":5,"offset":112}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":13,"offset":442},
+      "end":{"line":42,"column":15,"offset":445}
     }
   ]
 }
@@ -1024,6 +1042,12 @@ Object literal method: {
       "type":"SourceFile",
       "start":{"line":10,"column":3,"offset":109},
       "end":{"line":10,"column":5,"offset":112}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":13,"offset":442},
+      "end":{"line":42,"column":15,"offset":445}
     }
   ]
 }
@@ -1054,6 +1078,108 @@ Object literal property: {
       "type":"SourceFile",
       "start":{"line":12,"column":3,"offset":125},
       "end":{"line":12,"column":5,"offset":128}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":23,"offset":452},
+      "end":{"line":42,"column":25,"offset":455}
+    }
+  ]
+}
+Method in object literal which flows into two types: {
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":27},
+      "end":{"line":4,"column":5,"offset":30}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":20,"offset":78},
+      "end":{"line":8,"column":22,"offset":81}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":3,"offset":100},
+      "end":{"line":9,"column":5,"offset":103}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":3,"offset":109},
+      "end":{"line":10,"column":5,"offset":112}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":38,"column":3,"offset":398},
+      "end":{"line":38,"column":5,"offset":401}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":13,"offset":442},
+      "end":{"line":42,"column":15,"offset":445}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":13,"offset":442},
+      "end":{"line":42,"column":15,"offset":445}
+    }
+  ]
+}
+Property in object literal which flows into two types: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":3,"offset":42},
+      "end":{"line":5,"column":5,"offset":45}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":30,"offset":88},
+      "end":{"line":8,"column":32,"offset":91}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":11,"column":3,"offset":118},
+      "end":{"line":11,"column":5,"offset":121}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":3,"offset":125},
+      "end":{"line":12,"column":5,"offset":128}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":39,"column":3,"offset":413},
+      "end":{"line":39,"column":5,"offset":416}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":23,"offset":452},
+      "end":{"line":42,"column":25,"offset":455}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":42,"column":23,"offset":452},
+      "end":{"line":42,"column":25,"offset":455}
     }
   ]
 }
