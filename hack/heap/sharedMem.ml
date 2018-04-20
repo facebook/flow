@@ -179,6 +179,9 @@ external hh_collect: bool -> bool -> unit = "hh_collect"
 
 external loaded_dep_table_filename_c: unit -> string = "hh_get_loaded_dep_table_filename"
 
+external get_in_memory_dep_table_entry_count: unit -> int =
+  "hh_get_in_memory_dep_table_entry_count"
+
 let loaded_dep_table_filename () =
   let fn = loaded_dep_table_filename_c () in
   if String.equal "" fn then

@@ -1393,6 +1393,11 @@ static void raise_dep_table_full(void) {
   caml_raise_constant(*exn);
 }
 
+CAMLprim value hh_get_in_memory_dep_table_entry_count() {
+  CAMLparam0();
+  CAMLreturn(Val_long(*dcounter));
+}
+
 /*****************************************************************************/
 /* Hashes an integer such that the low bits are a good starting hash slot. */
 /*****************************************************************************/
