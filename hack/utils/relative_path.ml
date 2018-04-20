@@ -114,6 +114,18 @@ let create prefix s =
   end;
   prefix, String.sub s prefix_len (String.length s - prefix_len)
 
+let create_detect_prefix s =
+  let file_prefix =
+    [Root; Hhi; Tmp]
+    |> List.find ~f:(fun prefix -> String_utils.string_starts_with s (path_of_prefix prefix))
+    |> begin fun x ->
+      match x with
+      | Some prefix -> prefix
+      | None -> Dummy
+    end
+  in
+  create file_prefix s
+
 (* Strips the root and relativizes the file if possible, otherwise returns
   original string *)
 let strip_root_if_possible s =
