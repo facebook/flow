@@ -103,9 +103,12 @@ val init_done: unit -> unit
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
 (*****************************************************************************)
-val save_dep_table_sqlite: string -> string -> unit
 
-val update_dep_table_sqlite: string -> string -> unit
+(** Returns number of edges dumped from memory into the database. *)
+val save_dep_table_sqlite: string -> string -> int
+
+(** Returns number of edges dumped from memory into the database. *)
+val update_dep_table_sqlite: string -> string -> int
 
 (*****************************************************************************)
 (* Serializes the file info table and writes it to a file *)

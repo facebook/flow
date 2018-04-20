@@ -655,7 +655,7 @@ size_t deptbl_entry_count_for_slot(size_t slot);
 
 static long hh_save_file_info_helper_sqlite(const char* const out_filename);
 
-static void hh_save_dep_table_helper_sqlite(
+static size_t hh_save_dep_table_helper_sqlite(
         const char* const out_filename,
         const char* const build_info
 );
@@ -2425,7 +2425,7 @@ query_result_t get_dep_sqlite_blob_with_duration(
 // resulting deptable may contain more edges than truly represented
 // in the code-base (after incremental changes), but never misses
 // any (modulo bugs).
-static void hh_update_dep_table_helper(
+static size_t hh_update_dep_table_helper(
     sqlite3* const db_out,
     const char* const build_info
 ) {
@@ -2459,6 +2459,7 @@ static void hh_update_dep_table_helper(
     SQLITE_OK);
   size_t existing_rows_lookup_duration = 0L;
   size_t existing_rows_updated_count = 0;
+  size_t edges_added = 0;
   size_t new_rows_count = 0;
   for (slot = 0; slot < dep_size; ++slot) {
     count = deptbl_entry_count_for_slot(slot);
@@ -2520,6 +2521,7 @@ static void hh_update_dep_table_helper(
       assert_sql(sqlite3_clear_bindings(insert_stmt), SQLITE_OK);
       assert_sql(sqlite3_reset(insert_stmt), SQLITE_OK);
     }
+    edges_added += iter - existing_count;
   }
 
   if (values != NULL) {
@@ -2536,9 +2538,10 @@ static void hh_update_dep_table_helper(
   destroy_prepared_stmt(&select_dep_stmt);
   assert_sql(sqlite3_close(db_out), SQLITE_OK);
   log_duration("Finished closing SQL connection", start_t);
+  return edges_added;
 }
 
-static void hh_save_dep_table_helper_sqlite(
+static size_t hh_save_dep_table_helper_sqlite(
     const char* const out_filename,
     const char* const build_info
 ) {
@@ -2550,10 +2553,10 @@ static void hh_save_dep_table_helper_sqlite(
   gettimeofday(&tv, NULL);
 
   sqlite3 *db_out = connect_and_create_dep_table_helper(out_filename);
-  hh_update_dep_table_helper(db_out, build_info);
+  size_t edges_added = hh_update_dep_table_helper(db_out, build_info);
   tv2 = log_duration("Writing dependency file with sqlite", tv);
   UNUSED(tv2);
-  return;
+  return edges_added;
 }
 
 /*
@@ -2567,8 +2570,9 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLparam2(out_filename, build_revision);
   char *out_filename_raw = String_val(out_filename);
   char *build_revision_raw = String_val(build_revision);
-  hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
-  CAMLreturn(Val_unit);
+  size_t edges_added =
+    hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
+  CAMLreturn(Val_long(edges_added));
 }
 
 CAMLprim value hh_update_dep_table_sqlite(
@@ -2588,9 +2592,9 @@ CAMLprim value hh_update_dep_table_sqlite(
   gettimeofday(&tv, NULL);
 
   assert_sql(sqlite3_open(out_filename_raw, &db_out), SQLITE_OK);
-  hh_update_dep_table_helper(db_out, build_revision_raw);
+  size_t edges_added = hh_update_dep_table_helper(db_out, build_revision_raw);
   UNUSED(log_duration("Updated dependency file with sqlite", tv));
-  CAMLreturn(Val_unit);
+  CAMLreturn(Val_long(edges_added));
 }
 
 CAMLprim value hh_save_file_info_init(
@@ -3133,7 +3137,7 @@ CAMLprim value hh_save_dep_table_sqlite(
     value build_revision
 ) {
   CAMLparam0();
-  CAMLreturn (Val_unit);
+  CAMLreturn(Val_long(0));
 }
 
 CAMLprim value hh_update_dep_table_sqlite(
@@ -3141,7 +3145,7 @@ CAMLprim value hh_update_dep_table_sqlite(
     value build_revision
 ) {
   CAMLparam0();
-  CAMLreturn (Val_unit);
+  CAMLreturn(Val_long(0));
 }
 
 CAMLprim value hh_save_file_info_sqlite(
