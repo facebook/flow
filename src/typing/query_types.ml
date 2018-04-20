@@ -40,6 +40,7 @@ module QueryTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = false
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = false
 end)
 
 let query_type cx loc =
@@ -61,6 +62,7 @@ module DumpTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = false
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = false
 end)
 
 let dump_types ~printer cx =
@@ -81,6 +83,7 @@ module CoverageTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = true
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = false
 end)
 
 let covered_types cx ~should_check =
@@ -101,6 +104,7 @@ module SuggestTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = false
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = true
 end)
 
 (* 'suggest' can use as many types in the type tables as possible, which is why

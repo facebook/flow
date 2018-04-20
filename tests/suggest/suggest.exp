@@ -82,6 +82,15 @@ function foo(x: number, y: number): void {
 
 foo(1, 1);
 
+func-poly-0.js
+// @flow
+
+function outer<T>(y: T): void {
+  function inner<T>(x: T, z: T): void {
+    inner(x, x);
+  }
+}
+
 object-0.js
 // @flow
 
@@ -251,3 +260,27 @@ function foo(x: number, y) {
   return x + y;
 }
 
+warn-func-poly-0.js
+
+Warning ---------------------------------------------------------------------------------------- warn-func-poly-0.js:4:3
+
+Normalizer error:
+[Shadowed type parameters] Raised on type: MixedT
+
+        v---------------------------
+   4|   function inner<T>(x: T, z) {
+   5|     inner(x, y);
+   6|   }
+        ^
+
+
+Warning --------------------------------------------------------------------------------------- warn-func-poly-0.js:4:27
+
+Normalizer error:
+[Shadowed type parameters] Raised on type: MixedT
+
+   4|   function inner<T>(x: T, z) {
+                                ^
+
+
+Found 2 warnings

@@ -24,6 +24,7 @@ do_file "class-2.js"
 do_file "func-0.js"
 do_file "func-1.js"
 do_file "func-2.js"
+do_file "func-poly-0.js"
 do_file "object-0.js"
 do_file "object-1.js"
 do_file "object-2.js"
@@ -56,3 +57,6 @@ assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings wa
 
 echo "warn-empty-0.js (--fail-on-tc-errors)"
 assert_ok "$FLOW" suggest --strip-root --quiet --fail-on-tc-errors warn-empty-0.js
+
+echo "warn-func-poly-0.js"
+assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-func-poly-0.js 2>&1

@@ -54,6 +54,21 @@ module type Config = sig
   *)
   val expand_annots: bool
 
+  (* The normalizer keeps a stack of type parameters that are in scope. This stack
+     may contain the same name twice (but with different associated locations).
+     This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
+     we do not wish to allow the generation of type parameters that are shadowed by
+     another definition. For example the inferred type for `z` in:
+
+     function outer<T>(y: T) {
+       function inner<T>(x: T, z) { inner(x, y); }
+     }
+
+    is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
+    This flags toggles this behavior.
+  *)
+  val flag_shadowed_type_params: bool
+
 end
 
 
@@ -71,6 +86,7 @@ type error_kind =
   | BadInstanceT
   | BadEvalT
   | BadUse
+  | ShadowTypeParam
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
 
@@ -88,6 +104,7 @@ let error_kind_to_string = function
   | BadInstanceT -> "Bad instance type"
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
+  | ShadowTypeParam -> "Shadowed type parameters"
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
 
@@ -248,11 +265,26 @@ end = struct
 
     let descend e = { e with depth = e.depth + 1 }
 
+    (* Lookup a type parameter T in the current environment. There are three outcomes:
+       1. T appears in env and for its first occurence locations match. This means it
+          is not shadowed by another parameter with the same name. In this case
+          return the type parameter.
+       2. T appears in env but is not the first occurence. This means that some other
+          type parameter shadows it. We split cases depending on the value of
+          Config.flag_shadowed_type_params:
+          - true: flag a warning, since the type is not well-formed in this context.
+          - false: return the type normally ignoring the warning.
+       3. The type parameter is not in env. Do the default action.
+    *)
     let lookup_tparam ~default env t name loc =
-      if List.mem (name, loc) env.tparams then
-        return Ty.(Bound (Symbol (Local loc, name)))
-      else
-        default t
+      let pred (tp_name, _) = (name = tp_name) in
+      match List.find_opt pred env.tparams with
+      | Some (_, tp_loc) ->
+        if loc = tp_loc || not C.flag_shadowed_type_params
+        then return Ty.(Bound (Symbol (Local loc, name)))
+        (* If we care about shadowing of type params, then flag an error *)
+        else terr ~kind:ShadowTypeParam (Some t)
+      | None -> default t
 
     let add_typeparam env typeparam = Type.(
       let loc = Reason.loc_of_reason typeparam.reason in
