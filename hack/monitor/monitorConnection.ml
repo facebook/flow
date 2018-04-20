@@ -98,10 +98,6 @@ let rec consume_prehandoff_messages ic oc =
   let m: PH.msg = from_channel_without_buffering ic in
   match m with
   | PH.Sentinel -> Ok (ic, oc)
-  | PH.Server_name_not_found ->
-    Printf.eprintf
-      "Requested server name not found. This is probably a bug in Hack.";
-    raise (Exit_status.Exit_with (Exit_status.Server_name_not_found));
   | PH.Server_dormant_connections_limit_reached ->
     Printf.eprintf @@ "Connections limit on dormant server reached."^^
       " Be patient waiting for a server to be started.";

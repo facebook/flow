@@ -11,7 +11,6 @@ type process_data =
   {
     (** Process ID. *)
     pid : int;
-    name : string;
     start_t : float;
     (** Get occasional updates about status/busyness from typechecker here. *)
     in_fd: Unix.file_descr;

@@ -366,14 +366,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
    * server. *)
   and client_prehandoff env handoff_options client_fd =
     let module PH = Prehandoff in
-    let server_name = handoff_options.MonitorRpc.server_name in
     match env.server with
-    | Alive server when server.name = server_name ->
+    | Alive server ->
       let since_last_request =
         (Unix.time ()) -. !(server.last_request_handoff) in
       (** TODO: Send this to client so it is visible. *)
-      Hh_logger.log "Got request for %s. Prior request %.1f seconds ago"
-        server_name since_last_request;
+      Hh_logger.log "Got request for typechecker. Prior request %.1f seconds ago"
+        since_last_request;
       msg_to_channel client_fd PH.Sentinel;
       hand_off_client_connection_with_retries server 8 client_fd;
       HackEventLogger.client_connection_sent ();
@@ -405,9 +404,6 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         let () = Queue.add (handoff_options, client_fd)
           env.purgatory_clients in
         env
-    | _ ->
-      msg_to_channel client_fd PH.Server_name_not_found;
-      env
 
   and ack_and_handoff_client env client_fd =
     try

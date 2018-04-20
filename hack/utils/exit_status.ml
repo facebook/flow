@@ -49,7 +49,6 @@ type t =
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
-  | Server_name_not_found
   | IDE_malformed_request
   | IDE_no_server
   | IDE_out_of_retries
@@ -111,7 +110,6 @@ let exit_code = function
   | CantRunAI ->                    102
   | Watchman_failed ->              103
   | Hhconfig_deleted ->             104
-  | Server_name_not_found ->        105
   | EventLogger_broken_pipe ->      106
   | Redecl_heap_overflow ->         107
   | EventLogger_restart_out_of_retries -> 108
@@ -175,7 +173,6 @@ let to_string = function
   | Watchman_invalid_result -> "Watchman_invalid_result"
   | Hhconfig_deleted -> "Hhconfig_deleted"
   | Hhconfig_changed -> "Hhconfig_changed"
-  | Server_name_not_found -> "Server_name_not_found"
   | IDE_malformed_request -> "IDE_malformed_request"
   | IDE_no_server -> "IDE_no_server"
   | IDE_out_of_retries -> "IDE_out_of_retries"
