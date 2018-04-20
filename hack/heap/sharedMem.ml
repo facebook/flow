@@ -189,17 +189,17 @@ let loaded_dep_table_filename () =
   else
     Some fn
 
-external save_dep_table_sqlite_c: string -> string -> int = "hh_save_dep_table_sqlite"
+external save_dep_table_sqlite_c: string -> string -> unit = "hh_save_dep_table_sqlite"
 
-external update_dep_table_sqlite_c: string -> string -> int ="hh_update_dep_table_sqlite"
+external update_dep_table_sqlite_c: string -> string -> unit ="hh_update_dep_table_sqlite"
 
-let save_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
+let save_dep_table_sqlite : string -> string -> unit = fun fn build_revision ->
   if (loaded_dep_table_filename ()) <> None then
     failwith "save_dep_table_sqlite not supported when server is loaded from a saved state";
   Hh_logger.log "Dumping a saved state deptable.";
   save_dep_table_sqlite_c fn build_revision
 
-let update_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
+let update_dep_table_sqlite : string -> string -> unit = fun fn build_revision ->
   Hh_logger.log "Updating given saved state deptable.";
   update_dep_table_sqlite_c fn build_revision
 

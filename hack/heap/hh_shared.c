@@ -655,7 +655,7 @@ size_t deptbl_entry_count_for_slot(size_t slot);
 
 static long hh_save_file_info_helper_sqlite(const char* const out_filename);
 
-static long hh_save_dep_table_helper_sqlite(
+static void hh_save_dep_table_helper_sqlite(
         const char* const out_filename,
         const char* const build_info
 );
@@ -2538,7 +2538,7 @@ static void hh_update_dep_table_helper(
   log_duration("Finished closing SQL connection", start_t);
 }
 
-static long hh_save_dep_table_helper_sqlite(
+static void hh_save_dep_table_helper_sqlite(
     const char* const out_filename,
     const char* const build_info
 ) {
@@ -2552,9 +2552,8 @@ static long hh_save_dep_table_helper_sqlite(
   sqlite3 *db_out = connect_and_create_dep_table_helper(out_filename);
   hh_update_dep_table_helper(db_out, build_info);
   tv2 = log_duration("Writing dependency file with sqlite", tv);
-  int secs = tv2.tv_sec - tv.tv_sec;
-  // Reporting only seconds, ignore milli seconds
-  return secs;
+  UNUSED(tv2);
+  return;
 }
 
 /*
@@ -2568,9 +2567,8 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLparam2(out_filename, build_revision);
   char *out_filename_raw = String_val(out_filename);
   char *build_revision_raw = String_val(build_revision);
-  long retVal =
-    hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
-  CAMLreturn(Val_long(retVal));
+  hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_update_dep_table_sqlite(
@@ -2591,9 +2589,8 @@ CAMLprim value hh_update_dep_table_sqlite(
 
   assert_sql(sqlite3_open(out_filename_raw, &db_out), SQLITE_OK);
   hh_update_dep_table_helper(db_out, build_revision_raw);
-  tv2 = log_duration("Updated dependency file with sqlite", tv);
-  long secs = tv2.tv_sec - tv.tv_sec;
-  CAMLreturn(Val_long(secs));
+  UNUSED(log_duration("Updated dependency file with sqlite", tv));
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_save_file_info_init(
@@ -3136,7 +3133,7 @@ CAMLprim value hh_save_dep_table_sqlite(
     value build_revision
 ) {
   CAMLparam0();
-  CAMLreturn(Val_long(0));
+  CAMLreturn (Val_unit);
 }
 
 CAMLprim value hh_update_dep_table_sqlite(
@@ -3144,7 +3141,7 @@ CAMLprim value hh_update_dep_table_sqlite(
     value build_revision
 ) {
   CAMLparam0();
-  CAMLreturn(Val_long(0));
+  CAMLreturn (Val_unit);
 }
 
 CAMLprim value hh_save_file_info_sqlite(
