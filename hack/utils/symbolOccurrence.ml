@@ -38,3 +38,11 @@ let kind_to_string = function
   | ClassConst _ -> "member_const"
   | Typeconst _ -> "typeconst"
   | GConst -> "global_const"
+
+let enclosing_class occurrence =
+  match occurrence.type_ with
+  | Method (c, _)
+  | Property (c, _)
+  | ClassConst (c, _)
+  | Typeconst (c, _) -> Some c
+  | _ -> None
