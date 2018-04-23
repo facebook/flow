@@ -7,7 +7,7 @@ try {
     Throw "node tool test exited with error code: $LASTEXITCODE"
   }
 
-  .\_obuild\flow-parser-hardcoded-test\flow-parser-hardcoded-test.asm.exe .\src\parser\test\flow\
+  .\_build\src\parser\test\run_tests.native .\src\parser\test\flow\
   if ($LASTEXITCODE -gt 0) {
     Throw "flow parser hardcoded ocaml tests exited with error code: $LASTEXITCODE"
   }
