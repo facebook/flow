@@ -172,6 +172,19 @@ let try_finally ~f ~(finally: unit -> unit) =
   finally ();
   res
 
+let try_finally_with arg ~f ~(finally: unit -> unit) =
+  let res = try f arg with e -> finally (); raise e in
+  finally ();
+  res
+
+module MemGuard = struct
+  let gc_and_verify_value_collected v =
+    let weak_ref = Weak.create 1 in
+    Weak.set weak_ref 0 (Some v);
+    Gc.full_major ();
+    assert (not @@ Weak.check weak_ref 0)
+end
+
 let with_context ~enter ~exit ~do_ =
   enter ();
   let result = try do_ () with e ->
