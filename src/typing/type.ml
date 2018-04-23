@@ -1067,13 +1067,11 @@ module rec TypeTerm : sig
 
   and spread_resolve =
   (* Once we've finished resolving spreads, try to construct a tuple *)
-  | ResolveSpreadsToTuple of int * t
-  (* Once we've finished resolving spreads, try to construct an array with
-   * known element types *)
-  | ResolveSpreadsToArrayLiteral of int * t
-  (* Once we've finished resolving spreads, try to construct a non-tuple array
-   *)
-  | ResolveSpreadsToArray of int * t
+  | ResolveSpreadsToTuple of int * t * t (* elem type, array type *)
+  (* Once we've finished resolving spreads, try to construct an array with known element types *)
+  | ResolveSpreadsToArrayLiteral of int * t * t (* elem type, array type *)
+  (* Once we've finished resolving spreads, try to construct a non-tuple array *)
+  | ResolveSpreadsToArray of int * t * t (* elem type, array type *)
 
   (* Once we've finished resolving spreads for a function's arguments, call the
    * function with those arguments *)

@@ -1025,6 +1025,13 @@ let rec mk_expression_reason = Ast.Expression.(function
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
 
+(* TODO: replace RCustom descriptions with proper descriptions *)
+let unknown_elem_empty_array_desc = RCustom "unknown element type of empty array"
+let inferred_union_elem_array_desc = RCustom
+  "inferred union of array element types \
+   (alternatively, provide an annotation to summarize the array \
+   element type)"
+
 (* Classifies a reason description. These classifications can be used to
  * implement various asthetic behaviors in error messages when we would like to
  * distinguish between different error "classes".

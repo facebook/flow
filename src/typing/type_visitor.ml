@@ -577,10 +577,13 @@ class ['a] t = object(self)
         self#type_ cx pole_TODO acc t
     ) acc rrt_unresolved in
     let acc = match rrt_resolve_to with
-      | ResolveSpreadsToTuple (_, t)
-      | ResolveSpreadsToArrayLiteral (_, t)
-      | ResolveSpreadsToArray (_, t)
-        -> self#type_ cx pole_TODO acc t
+      | ResolveSpreadsToTuple (_, t1, t2)
+      | ResolveSpreadsToArray (_, t1, t2)
+      | ResolveSpreadsToArrayLiteral (_, t1, t2)
+        ->
+        let acc = self#type_ cx pole_TODO acc t1 in
+        let acc = self#type_ cx pole_TODO acc t2 in
+        acc
       | ResolveSpreadsToMultiflowCallFull (_, fn)
       | ResolveSpreadsToMultiflowSubtypeFull (_, fn)
         -> self#fun_type cx pole_TODO acc fn

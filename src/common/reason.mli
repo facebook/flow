@@ -237,3 +237,6 @@ val do_patch: string list -> (int * int * string) list -> string
 module ReasonMap : MyMap.S with type key = reason
 
 val mk_expression_reason: Loc.t Ast.Expression.t -> reason
+
+val unknown_elem_empty_array_desc: reason_desc
+val inferred_union_elem_array_desc: reason_desc

@@ -3185,8 +3185,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
        * carry an id around to break the infinite recursion that constant
        * constant folding can trigger *)
-      | ResolveSpreadsToTuple (id, tout)
-      | ResolveSpreadsToArrayLiteral (id, tout) ->
+      | ResolveSpreadsToTuple (id, elem_t, tout)
+      | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
         (* You might come across code like
          *
          * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
@@ -3225,14 +3225,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               rrt_unresolved;
               (* We need a deterministic way to generate a new id. This is fine - not many ids are
                * live at once and a collision is super duper unlikely. *)
-              rrt_resolve_to = ResolveSpreadsToArray (id + 50000, tout);
+              rrt_resolve_to = ResolveSpreadsToArray (id + 50000, elem_t, tout);
             }))
           | _ ->
             (* We've already deconstructed, so there's nothing left to do *)
             ()
         )
 
-      | ResolveSpreadsToArray (id, _) ->
+      | ResolveSpreadsToArray (id, _, _) ->
         let reason_elemt = reason_of_t elemt in
         ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
           match recursion_depth with
@@ -9825,8 +9825,11 @@ and multiflow_partial =
         (RRestArray (desc_of_reason reason_op)) reason_op in
 
       let arg_array = Tvar.mk_where cx arg_array_reason (fun tout ->
-        let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
-        resolve_spread_list cx ~use_op ~reason_op:arg_array_reason elems resolve_to
+        let reason_op = arg_array_reason in
+        let element_reason = replace_reason_const Reason.inferred_union_elem_array_desc reason_op in
+        let elem_t = Tvar.mk cx element_reason in
+        let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)) in
+        resolve_spread_list cx ~use_op ~reason_op elems resolve_to
       ) in
       let () =
         let use_op = Frame (FunRestParam {
@@ -9906,7 +9909,7 @@ and finish_resolve_spread_list =
 
   in
 
-  let finish_array cx ?trace ~reason_op ~resolve_to resolved tout =
+  let finish_array cx ?trace ~reason_op ~resolve_to resolved elemt tout =
     (* Did `any` flow to one of the rest parameters? If so, we need to resolve
      * to a type that is both a subtype and supertype of the desired type. *)
     let result = if spread_resolved_to_any resolved
@@ -9952,44 +9955,33 @@ and finish_resolve_spread_list =
       ) TypeExSet.empty elems in
 
       (* composite elem type is an upper bound of all element types *)
-      let elemt =
-        let element_reason =
-          let desc = RCustom (
-            "inferred union of array element types \
-             (alternatively, provide an annotation to summarize the array \
-               element type)") in
-          replace_reason_const desc reason_op
-        in
-        (* Should the element type of the array be the union of its element
-           types?
+      (* Should the element type of the array be the union of its element types?
 
-           No. Instead of using a union, we use an unresolved tvar to
-           represent the least upper bound of each element type. Effectively,
-           this keeps the element type "open," at least locally.[*]
+         No. Instead of using a union, we use an unresolved tvar to
+         represent the least upper bound of each element type. Effectively,
+         this keeps the element type "open," at least locally.[*]
 
-           Using a union pins down the element type prematurely, and moreover,
-           might lead to speculative matching when setting elements or caling
-           contravariant methods (`push`, `concat`, etc.) on the array.
+         Using a union pins down the element type prematurely, and moreover,
+         might lead to speculative matching when setting elements or caling
+         contravariant methods (`push`, `concat`, etc.) on the array.
 
-           In any case, using a union doesn't quite work as intended today
-           when the element types themselves could be unresolved tvars. For
-           example, the following code would work even with unions:
+         In any case, using a union doesn't quite work as intended today
+         when the element types themselves could be unresolved tvars. For
+         example, the following code would work even with unions:
 
-           declare var o: { x: number; }
-           var a = ["hey", o.x]; // no error, but is an error if 42 replaces o.x
-           declare var i: number;
-           a[i] = false;
+         declare var o: { x: number; }
+         var a = ["hey", o.x]; // no error, but is an error if 42 replaces o.x
+         declare var i: number;
+         a[i] = false;
 
-           [*] Eventually, the element type does get pinned down to a union
-           when it is part of the module's exports. In the future we might
-           have to do that pinning more carefully, and using an unresolved
-           tvar instead of a union here doesn't conflict with those plans.
-        *)
-        Tvar.mk_where cx element_reason (fun tvar ->
-          TypeExSet.elements tset |> List.iter (fun t ->
-            flow cx (t, UseT (unknown_use, tvar)))
-        )
-      in
+         [*] Eventually, the element type does get pinned down to a union
+         when it is part of the module's exports. In the future we might
+         have to do that pinning more carefully, and using an unresolved
+         tvar instead of a union here doesn't conflict with those plans.
+      *)
+      TypeExSet.elements tset |> List.iter (fun t ->
+        flow cx (t, UseT (unknown_use, elemt)));
+
       match tuple_types, resolve_to with
       | _, `Array ->
           DefT (reason_op, ArrT (ArrayAT (elemt, None)))
@@ -10144,12 +10136,12 @@ and finish_resolve_spread_list =
   in
   fun cx ?trace ~use_op ~reason_op resolved resolve_to -> (
     match resolve_to with
-    | ResolveSpreadsToTuple (_, tout)->
-      finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved tout
-    | ResolveSpreadsToArrayLiteral (_, tout) ->
-      finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved tout
-    | ResolveSpreadsToArray (_, tout) ->
-      finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
+    | ResolveSpreadsToTuple (_, elem_t, tout)->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved elem_t tout
+    | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved elem_t tout
+    | ResolveSpreadsToArray (_, elem_t, tout) ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved elem_t tout
     | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
       finish_multiflow_partial cx ?trace ~use_op ~reason_op ft call_reason resolved tout
     | ResolveSpreadsToMultiflowCallFull (_, ft) ->
