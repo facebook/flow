@@ -146,7 +146,7 @@
 #define S1(x) #x
 #define S2(x) S1(x)
 #define LOCATION __FILE__ " : " S2(__LINE__)
-#define assert(f) (f ? 0 : raise_assertion_failure(LOCATION))
+#define assert(f) ((f) ? 0 : raise_assertion_failure(LOCATION))
 #endif
 
 #define HASHTBL_WRITE_IN_PROGRESS ((char*)1)
@@ -258,12 +258,12 @@ typedef struct {
 
 /* Size of where we allocate shared objects. */
 #define Get_buf_size(x) (((hh_header_t*)(x))[-1].size + sizeof(hh_header_t))
-#define Get_buf(x)      (x - sizeof(hh_header_t))
+#define Get_buf(x)      ((x) - sizeof(hh_header_t))
 
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
 #define CACHE_MASK      (~(CACHE_LINE_SIZE - 1))
-#define ALIGNED(x)      ((x + CACHE_LINE_SIZE - 1) & CACHE_MASK)
+#define ALIGNED(x)      (((x) + CACHE_LINE_SIZE - 1) & CACHE_MASK)
 
 /* Fix the location of our shared memory so we can save and restore the
  * hashtable easily */
