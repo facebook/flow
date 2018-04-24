@@ -14,4 +14,4 @@
 <third-party/avl/*.ml*>: warn(-27)
 <third-party/core/*.ml*>: warn(-32-41)
 <utils/*.ml*>: warn(-27)
-not <{dfind,find,globals,heap,injection,procs,search,socket,third-party,utils,fsevents,fsnotify_darwin,stubs}/**/*>: package(ppx_deriving.std), package(visitors.ppx), package(visitors.runtime)
+not <{dfind,find,globals,heap,injection,procs,search,socket,third-party,utils,fsevents,fsnotify_darwin,fsnotify_linux,stubs}/**/*>: package(ppx_deriving.std), package(visitors.ppx), package(visitors.runtime)
