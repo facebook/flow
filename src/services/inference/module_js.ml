@@ -13,6 +13,7 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
+open Hh_json
 open Utils_js
 
 (* Subset of a file's context, with the important distinction that module
@@ -304,6 +305,8 @@ let eponymous_module file =
 
 (*******************************)
 
+exception Invalid_resolution
+
 module External = struct
   let external_channels = ref None
 
@@ -338,7 +341,29 @@ module External = struct
         output_string out_channel payload;
         Pervasives.flush out_channel;
 
-        Some (input_line in_channel)
+        let response_text = input_line in_channel in
+        let response_data = json_of_string response_text in
+
+        match response_data with
+          | JSON_Null -> None
+          | JSON_Array items ->
+            begin
+              match items with
+                | [ error; resolution ] ->
+                  begin
+                    match error with
+                      | JSON_Null ->
+                        begin
+                          match resolution with
+                            | JSON_Null -> None
+                            | JSON_String r -> Some r
+                            | _ -> raise (Invalid_resolution)
+                        end
+                      | _ -> None
+                  end
+                | _ -> raise (Invalid_resolution)
+            end
+          | _ -> raise (Invalid_resolution)
 end
 
 (*******************************)
@@ -604,6 +629,8 @@ module Haste: MODULE_SYSTEM = struct
      * matching candidate (rather than the first *valid* matching candidate).
      *)
     let chosen_candidate = List.hd candidates in
+
+    Utils_js.prerr_endlinef "imported_module %s -> %s" imported_name chosen_candidate;
 
     match resolve_import ~options node_modules_containers file loc ?resolution_acc chosen_candidate with
     | Some name ->

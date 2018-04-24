@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const fs = require('fs');
 const StringDecoder = require('string_decoder');
 
 let buffer = '';
@@ -20,14 +21,14 @@ process.stdin.on('data', chunk => {
     buffer = buffer.slice(index + 1);
 
     try {
-      const data = JSON.parse(line);
-      if (data[0] === `string_decoder`) {
-        process.stdout.write(`${data[0]}\n`);
+      let path = `${__dirname}/${JSON.parse(line)[0]}.${ext}.js`;
+      if (fs.existsSync(path)) {
+        process.stdout.write(`${JSON.stringify([null, path])}\n`);
       } else {
-        process.stdout.write(`${__dirname}/${data[0]}.${ext}.js\n`);
+        process.stdout.write(`${JSON.stringify([`File not found`, null])}\n`);
       }
     } catch (error) {
-      process.stdout.write(`${error.message}\n`);
+      process.stdout.write(`${JSON.stringify([error.message, null])}\n`);
     }
   } while (true);
 });

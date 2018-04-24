@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- hello.foo.js:3:9
 
-Cannot resolve module `<OUT_PARENT_DIR>/integration-module-resolver-reload/world.wrong.js`.
+Cannot resolve module `world`.
 
    3| require('world');
               ^^^^^^^
@@ -8,7 +8,7 @@ Cannot resolve module `<OUT_PARENT_DIR>/integration-module-resolver-reload/world
 
 Error ------------------------------------------------------------------------------------------------- world.foo.js:3:9
 
-Cannot resolve module `<OUT_PARENT_DIR>/integration-module-resolver-reload/hello.wrong.js`.
+Cannot resolve module `hello`.
 
    3| require('hello');
               ^^^^^^^

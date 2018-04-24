@@ -196,11 +196,6 @@ RUNTEST_SKIP=2
 RUNTEST_MISSING_FILES=3
 RUNTEST_ERROR=4
 
-normalize_output() {
-    sed "s#$(realpath $OUT_PARENT_DIR)#<OUT_PARENT_DIR>#g" |
-    sed "s#$OUT_PARENT_DIR#<OUT_PARENT_DIR>#g"
-}
-
 # This function runs in the background so it shouldn't output anything to
 # stdout or stderr. It should only communicate through its return value
 runtest() {
@@ -386,11 +381,11 @@ runtest() {
             code=$?
             if [ $code -ne 0 ]; then
               # flow failed to start
-              printf "flow start exited code %s\n" "$code" > >(normalize_output > "$abs_out_file")
+              printf "flow start exited code %s\n" "$code" > "$abs_out_file"
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
               # run test script
-              /bin/bash -e "$shell" "$FLOW" 1> >(normalize_output > "$abs_out_file") 2> >(normalize_output > "$stderr_dest")
+              /bin/bash -e "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
               code=$?
               if [ $code -ne 0 ]; then
                 printf "%s exited code %s\n" "$shell" "$code" >> "$abs_out_file"
@@ -400,12 +395,11 @@ runtest() {
             # If there's stdin, then direct that in
             # cmd should NOT be double quoted...it may contain many commands
             # and we do want word splitting
-                stream_cmd="1> >(normalize_output > $abs_out_file) 2> >(normalize_output > $stderr_dest)"
                 if [ "$stdin" != "" ]
                 then
-                    cmd="$FLOW $cmd $stream_cmd < $stdin"
+                    cmd="$FLOW $cmd < $stdin 1> $abs_out_file 2> $stderr_dest"
                 else
-                    cmd="$FLOW $cmd $stream_cmd"
+                    cmd="$FLOW $cmd 1> $abs_out_file 2> $stderr_dest"
                 fi
                 eval "$cmd"
             fi
