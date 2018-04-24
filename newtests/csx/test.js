@@ -179,18 +179,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       const params = {x: '23'};
       <Bar {...params} />;
     `)
-    .newErrors(
-      `
-        test.js:8
-          8:       <Bar {...params} />;
-                    ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
-          References:
-            8:       <Bar {...params} />;
-                     ^^^^^^^^^^^^^^^^^^^ [1]
-            6:       function Bar(props: Props) {}
-                                         ^^^^^ [2]
-      `,
-    ),
+    .noNewErrors(),
   ]),
   test('Should raise no errors if two separate JSX spreads together provide all required attributes', [
     addCode(`
@@ -212,15 +201,6 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
     .newErrors(
       `
-        test.js:8
-          8:       <Bar {...params} />;
-                    ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact \`Props\` [2].
-          References:
-            8:       <Bar {...params} />;
-                     ^^^^^^^^^^^^^^^^^^^ [1]
-            6:       function Bar(props: Props) {}
-                                         ^^^^^ [2]
-
         test.js:8
           8:       <Bar {...params} />;
                     ^^^ Cannot create \`Bar\` element because number [1] is incompatible with string [2] in property \`x\`.

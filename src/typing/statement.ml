@@ -3899,10 +3899,10 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
-  let mk_spread from_obj to_obj =
+  let mk_spread from_obj to_obj ~assert_exact =
     Tvar.mk_where cx reason_props (fun t ->
       Flow.flow cx (to_obj,
-        ObjAssignToT (reason_props, from_obj, t, default_obj_assign_kind));
+        ObjAssignToT (reason_props, from_obj, t, ObjAssign { assert_exact }));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -3918,7 +3918,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     | Some result ->
       let result =
         if not (SMap.is_empty map)
-        then mk_spread (mk_object map) result
+        then mk_spread (mk_object map) result ~assert_exact:false
         else result
       in
       if not sealed then result else
@@ -3967,8 +3967,9 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
         let spread = expression cx argument in
         let obj = eval_props (map, result) in
-        let result = mk_spread spread obj in
-        false, SMap.empty, Some result
+        let result = mk_spread spread obj
+          ~assert_exact:(not (SMap.is_empty map && result = None)) in
+        sealed, SMap.empty, Some result
   ) (true, SMap.empty, None) attributes in
 
   let map =
