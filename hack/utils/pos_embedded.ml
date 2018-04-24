@@ -33,10 +33,13 @@ let pp fmt pos =
   if pos = none then
     Format.pp_print_string fmt "[Pos.none]"
   else begin
+    let { pos_start; pos_end; _ } = pos in
     Format.pp_print_string fmt "[";
-    File_pos.pp fmt pos.pos_start;
+    File_pos.pp fmt pos_start;
     Format.pp_print_string fmt "-";
-    File_pos.pp fmt pos.pos_end;
+    if File_pos.line pos_start = File_pos.line pos_end
+    then Format.pp_print_int fmt @@ File_pos.column pos_end + 1
+    else File_pos.pp fmt pos_end;
     Format.pp_print_string fmt "]";
   end
 
