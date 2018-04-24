@@ -180,6 +180,7 @@ type reason_desc =
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
+  | RModule of string
 
   | RReactProps
   | RReactElement of string option
@@ -545,6 +546,7 @@ let rec string_of_desc = function
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
   | RCommonJSExports x -> spf "module `%s`" x
+  | RModule x -> spf "module `%s`" x
 
   | RReactProps -> "props"
   | RReactElement x ->
@@ -1180,6 +1182,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RSpreadOf _
 | RObjectPatternRestProp
 | RCommonJSExports _
+| RModule _
 | RReactProps
 | RReactElement _
 | RReactClass

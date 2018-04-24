@@ -37,6 +37,7 @@ type t =
   | TypeOf of symbol
   | Class of symbol * bool (* structural *) * type_param list option
   | Exists
+  | Module of symbol
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)

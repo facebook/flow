@@ -306,7 +306,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       <Bar>{...["a", "b", "c"]}</Bar>;
     `).noNewErrors(),
   ]),
-  test('Exact prop type with spread still does not work', [
+  test('Exact prop type with spread should work', [
     addCode(`
       // @jsx Foo
       function Foo(elem: number, props: {| x: string |}) {}
@@ -314,18 +314,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
       const props = {x: "hi"};
       <Bar {...props} />;
-    `).newErrors(
-        `
-          test.js:9
-            9:       <Bar {...props} />;
-                      ^^^ Cannot create \`Bar\` element because inexact props [1] is incompatible with exact object type [2].
-            References:
-              9:       <Bar {...props} />;
-                       ^^^^^^^^^^^^^^^^^^ [1]
-              5:       function Foo(elem: number, props: {| x: string |}) {}
-                                                         ^^^^^^^^^^^^^^^ [2]
-        `,
-      ),
+    `).noNewErrors(),
   ]),
   test('Whitespace trimming', [
     addCode(`

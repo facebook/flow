@@ -408,51 +408,10 @@ References:
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:235:1
-
-Cannot create `ClassExact_ManyProps` element because inexact props [1] is incompatible with exact `Props_ManyProps` [2].
-
-   test.js:235:1
-        v-------------------------------------------------------------------------
-   235| <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
-   236|   string1="foo"
-   237|   string2={'bar'}
-   238|   boolean1
-   239|   boolean2={false}
-   240|   {...{number: 42}}
-   241| />;
-        -^ [1]
-
-References:
-   test.js:209:52
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:242:1
-
-Cannot create `ClassExact_ManyProps` element because inexact props [1] is incompatible with exact `Props_ManyProps` [2].
-
-   test.js:242:1
-        v-------------------------------------------------------------------------
-   242| <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
-   243|   {...{string1: 'foo', string2: 'bar'}}
-   244|   {...{boolean1: true, boolean2: false}}
-   245|   {...{number: 42}}
-   246| />;
-        -^ [1]
-
-References:
-   test.js:209:52
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:247:1
 
-Cannot create `ClassExact_ManyProps` element because:
- - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
- - property `number` is missing in props [1] but exists in `Props_ManyProps` [3].
+Cannot create `ClassExact_ManyProps` element because property `number` is missing in props [1] but exists in
+`Props_ManyProps` [2].
 
    test.js:247:1
         v------------------------------------------------
@@ -463,81 +422,57 @@ Cannot create `ClassExact_ManyProps` element because:
         -^ [1]
 
 References:
-   test.js:209:52
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:209:59
    209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                                  ^^^^^^^^^^^^^^^ [3]
+                                                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:251:1
 
-Cannot create `ClassExact_ManyProps` element because inexact props [1] is incompatible with exact `Props_ManyProps` [2].
+Cannot create `ClassExact_ManyProps` element because:
+ - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
    test.js:251:1
-        v---------------------------------------------------------------------------
-   251| <ClassExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+        v-----------------------------------------------------------
+   251| <ClassExact_ManyProps // Error: Extra props are not allowed.
    252|   string1="foo"
    253|   string2={'bar'}
    254|   boolean1
    255|   boolean2={false}
    256|   {...{number: 42, a: 1, b: 2, c: 3}}
    257| />;
-        -^ [1]
+        -^ [2]
 
 References:
-   test.js:209:52
+   test.js:209:59
    209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                                                  ^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:258:1
 
-Cannot create `ClassExact_ManyProps` element because:
- - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
- - null or undefined [3] is incompatible with number [4] in property `number`.
+Cannot create `ClassExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
+`number`.
 
    test.js:258:1
-        v-----------------------------------------------------------------------------------------------------
-   258| <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
+        v------------------------------------------------------------------------------------------------
+   258| <ClassExact_ManyProps // Error (TODO), but OK: `number` is overwritten at the end of the element.
    259|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
    260|   boolean1
    261|   boolean2={false}
    262|   number={42}
    263| />;
-        -^ [1]
+        -^
 
 References:
-   test.js:209:52
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:259:54
    259|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [3]
+                                                             ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
-                  ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:264:1
-
-Cannot create `ClassExact_ManyProps` element because inexact props [1] is incompatible with exact `Props_ManyProps` [2].
-
-   test.js:264:1
-        v------------------------------------------------------------------------------
-   264| <ClassExact_ManyProps // Error: `number` cannot be null. Error for exact types.
-   265|   boolean1
-   266|   boolean2={false}
-   267|   number={42}
-   268|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   269| />;
-        -^ [1]
-
-References:
-   test.js:209:52
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:268:54
@@ -911,140 +846,71 @@ References:
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:421:1
-
-Cannot create `FunctionExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
-
-   test.js:421:1
-        v----------------------------------------------------------------------------
-   421| <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
-   422|   string1="foo"
-   423|   string2={'bar'}
-   424|   boolean1
-   425|   boolean2={false}
-   426|   {...{number: 42}}
-   427| />;
-        -^ [1]
-
-References:
-   test.js:395:41
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:428:1
-
-Cannot create `FunctionExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
-
-   test.js:428:1
-        v----------------------------------------------------------------------------
-   428| <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
-   429|   {...{string1: 'foo', string2: 'bar'}}
-   430|   {...{boolean1: true, boolean2: false}}
-   431|   {...{number: 42}}
-   432| />;
-        -^ [1]
-
-References:
-   test.js:395:41
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:433:1
 
-Cannot create `FunctionExact_ManyProps` element because:
- - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
- - property `number` is missing in props [1] but exists in `Props_ManyProps` [3].
+Cannot create `FunctionExact_ManyProps` element because property `number` is missing in props [1] but exists in
+`Props_ManyProps` [2].
 
    test.js:433:1
-        v--------------------------------------------------------------------------
-   433| <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
+        v---------------------------------------------------
+   433| <FunctionExact_ManyProps // Error: Missing `number`.
    434|   {...{string1: 'foo', string2: 'bar'}}
    435|   {...{boolean1: true, boolean2: false}}
    436| />;
         -^ [1]
 
 References:
-   test.js:395:41
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:395:48
    395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                       ^^^^^^^^^^^^^^^ [3]
+                                                       ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:437:1
 
-Cannot create `FunctionExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
+Cannot create `FunctionExact_ManyProps` element because:
+ - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
    test.js:437:1
-        v------------------------------------------------------------------------------
-   437| <FunctionExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+        v--------------------------------------------------------------
+   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
    438|   string1="foo"
    439|   string2={'bar'}
    440|   boolean1
    441|   boolean2={false}
    442|   {...{number: 42, a: 1, b: 2, c: 3}}
    443| />;
-        -^ [1]
+        -^ [2]
 
 References:
-   test.js:395:41
+   test.js:395:48
    395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                                       ^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:444:1
 
-Cannot create `FunctionExact_ManyProps` element because:
- - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
- - null or undefined [3] is incompatible with number [4] in property `number`.
+Cannot create `FunctionExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
+property `number`.
 
    test.js:444:1
-        v------------------------------------------------------------------------------
-   444| <FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+        v-------------------------------------------------------------------------
+   444| <FunctionExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
    445|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
    446|   boolean1
    447|   boolean2={false}
    448|   number={42}
    449| />;
-        -^ [1]
+        -^
 
 References:
-   test.js:395:41
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:445:54
    445|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [3]
+                                                             ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
-                  ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:450:1
-
-Cannot create `FunctionExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
-
-   test.js:450:1
-        v---------------------------------------------------------------------------------
-   450| <FunctionExact_ManyProps // Error: `number` cannot be null. Error for exact types.
-   451|   boolean1
-   452|   boolean2={false}
-   453|   number={42}
-   454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   455| />;
-        -^ [1]
-
-References:
-   test.js:395:41
-   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:454:54
@@ -1289,53 +1155,10 @@ References:
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:546:1
-
-Cannot create `AbstractExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
-
-   test.js:546:1
-        v----------------------------------------------------------------------------
-   546| <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
-   547|   string1="foo"
-   548|   string2={'bar'}
-   549|   boolean1
-   550|   boolean2={false}
-   551|   {...{number: 42}}
-   552| />;
-        -^ [1]
-
-References:
-   test.js:519:52
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:553:1
-
-Cannot create `AbstractExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
-
-   test.js:553:1
-        v----------------------------------------------------------------------------
-   553| <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
-   554|   {...{string1: 'foo', string2: 'bar'}}
-   555|   {...{boolean1: true, boolean2: false}}
-   556|   {...{number: 42}}
-   557| />;
-        -^ [1]
-
-References:
-   test.js:519:52
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:558:1
 
-Cannot create `AbstractExact_ManyProps` element because:
- - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
- - property `number` is missing in props [1] but exists in `Props_ManyProps` [3].
+Cannot create `AbstractExact_ManyProps` element because property `number` is missing in props [1] but exists in
+`Props_ManyProps` [2].
 
    test.js:558:1
         v---------------------------------------------------
@@ -1346,83 +1169,57 @@ Cannot create `AbstractExact_ManyProps` element because:
         -^ [1]
 
 References:
-   test.js:519:52
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:519:59
    519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [3]
+                                                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:562:1
 
-Cannot create `AbstractExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
+Cannot create `AbstractExact_ManyProps` element because:
+ - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
+ - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
    test.js:562:1
-        v------------------------------------------------------------------------------
-   562| <AbstractExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+        v--------------------------------------------------------------
+   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
    563|   string1="foo"
    564|   string2={'bar'}
    565|   boolean1
    566|   boolean2={false}
    567|   {...{number: 42, a: 1, b: 2, c: 3}}
    568| />;
-        -^ [1]
+        -^ [2]
 
 References:
-   test.js:519:52
+   test.js:519:59
    519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                                                  ^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:569:1
 
-Cannot create `AbstractExact_ManyProps` element because:
- - inexact props [1] is incompatible with exact `Props_ManyProps` [2].
- - null or undefined [3] is incompatible with number [4] in property `number`.
+Cannot create `AbstractExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
+property `number`.
 
    test.js:569:1
-        v------------------------------------------------------------------------------
-   569| <AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+        v-------------------------------------------------------------------------
+   569| <AbstractExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
    570|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
    571|   boolean1
    572|   boolean2={false}
    573|   number={42}
    574| />;
-        -^ [1]
+        -^
 
 References:
-   test.js:519:52
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:570:54
    570|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [3]
+                                                             ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
-                  ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:575:1
-
-Cannot create `AbstractExact_ManyProps` element because inexact props [1] is incompatible with exact
-`Props_ManyProps` [2].
-
-   test.js:575:1
-        v---------------------------------------------------------------------------------
-   575| <AbstractExact_ManyProps // Error: `number` cannot be null. Error for exact types.
-   576|   boolean1
-   577|   boolean2={false}
-   578|   number={42}
-   579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   580| />;
-        -^ [1]
-
-References:
-   test.js:519:52
-   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:579:54
@@ -2649,4 +2446,4 @@ References:
 
 
 
-Found 216 errors
+Found 207 errors

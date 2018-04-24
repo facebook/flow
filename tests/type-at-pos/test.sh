@@ -267,11 +267,21 @@ assert_ok "$FLOW" type-at-pos interface.js 9 19 --strip-root --pretty
 printf "mixed.js:18:17 = "
 assert_ok "$FLOW" type-at-pos mixed.js 18 17 --strip-root --pretty
 
-# module_export.js
-printf "module_export.js:3:24 = "
-assert_ok "$FLOW" type-at-pos module_export.js 3 24 --strip-root --pretty
-printf "module_export.js:5:25 = "
-assert_ok "$FLOW" type-at-pos module_export.js 5 25 --strip-root --pretty
+# exports.js
+printf "exports.js:3:24 = "
+assert_ok "$FLOW" type-at-pos exports.js 3 24 --strip-root --pretty
+printf "exports.js:5:25 = "
+assert_ok "$FLOW" type-at-pos exports.js 5 25 --strip-root --pretty
+
+# module-export.js
+printf "module-export.js:3:16 = "
+assert_ok "$FLOW" type-at-pos module-export.js 3 16 --strip-root --pretty
+printf "module-export.js:7:13 = "
+assert_ok "$FLOW" type-at-pos module-export.js 7 13 --strip-root --pretty
+
+# module-import.js
+printf "module-import.js:3:7 = "
+assert_ok "$FLOW" type-at-pos module-import.js 3 7 --strip-root --pretty
 
 # object_special_cases.js
 printf "object_special_cases.js:6:32 = "

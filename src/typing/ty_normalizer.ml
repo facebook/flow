@@ -662,9 +662,10 @@ end = struct
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
 
+    | ModuleT (reason, _, _) -> module_t reason t
+
     | DefT (_, CharSetT _)
-    | NullProtoT _
-    | ModuleT (_, _, _) ->
+    | NullProtoT _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
 
@@ -1311,6 +1312,16 @@ end = struct
         | _ -> return Ty.Bot
         end
       end
+
+  and module_t reason t =
+    match desc_of_reason reason with
+    | RModule name
+    | RCommonJSExports name
+    | RUntypedModule name
+    | RNamedImportedType name ->
+      symbol reason name >>| fun s -> Ty.Module s
+    | _ ->
+      terr ~kind:UnsupportedTypeCtor (Some t)
 
   and use_t ~env = function
     | T.UseT (_, t) -> type__ ~env t
