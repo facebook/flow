@@ -102,6 +102,7 @@ let type_ ?(size=5000) t =
     | Exists -> Atom "*"
     | TypeAlias ta -> type_alias ta
     | TypeOf (Symbol (_, n)) -> fuse [Atom "typeof"; space; identifier n]
+    | Module (Symbol (_, n)) -> fuse [Atom "module"; space; identifier n]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;

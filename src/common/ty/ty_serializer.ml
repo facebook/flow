@@ -63,7 +63,7 @@ let rec type_ t =
   | TypeAlias _
   | Exists
   | Mu _
-  (* | This *)
+  | Module _
     ->
     Error (Utils_js.spf "Unsupported type constructor `%s`."
       (Ty_debug.string_of_ctor t))

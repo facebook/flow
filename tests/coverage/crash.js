@@ -7,5 +7,3 @@ declare module foo {
 
 declare module bar {
 }
-
-// TODO(easy) there is currently no normalized type for a module

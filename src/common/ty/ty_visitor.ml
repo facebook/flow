@@ -46,7 +46,7 @@ module Make(M: Monoid.S)(E: Env) = struct
         opt (mapM (self#param_t env)) ps >>| fun ps -> Class (n, s, ps)
       | Mu (v, t) -> self#type_ env t >>| fun t -> Mu (v, t)
       | (Any|AnyObj|AnyFun|Bound _|Top|Bot|Void|Null|Num|Str|Bool|Exists
-        |TVar _|NumLit _|StrLit _|BoolLit _|TypeOf _) ->
+        |TVar _|NumLit _|StrLit _|BoolLit _|TypeOf _|Module _) ->
         return t
 
     method private fun_t env { fun_params; fun_rest_param; fun_return; fun_type_params } =

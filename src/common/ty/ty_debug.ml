@@ -141,6 +141,8 @@ and dump_t ?(depth = 10) t =
       (Option.value_map ta_type ~default:"" ~f:(fun t -> cut_off (dump_t ~depth t)))
   | TypeOf n ->
     spf "Typeof(%s)" (dump_symbol n)
+  | Module n ->
+    spf "Module(%s)" (dump_symbol n)
   | Exists -> "*"
   | Class (name, true, ps) ->
     spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
@@ -185,6 +187,7 @@ let string_of_ctor = function
   | TypeOf _ -> "Typeof"
   | Class _ -> "Class"
   | Exists -> "Exists"
+  | Module _ -> "Module"
   | Mu _ -> "Mu"
 
 let rec json_of_t t = Hh_json.(
@@ -238,6 +241,9 @@ let rec json_of_t t = Hh_json.(
       "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type
     ]
   | TypeOf name -> [
+      "name", json_of_symbol name;
+    ]
+  | Module name -> [
       "name", json_of_symbol name;
     ]
   | Class (name, structural, tparams) -> [
