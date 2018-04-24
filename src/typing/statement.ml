@@ -276,7 +276,7 @@ and statement_decl cx = Ast.Statement.(
       | DeclareModule.Identifier (_, value)
       | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
       in
-      let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
+      let r = mk_reason (RModule name) loc in
       let t = Tvar.mk cx r in
       Env.add_type_table cx loc t;
       Env.bind_declare_var cx (internal_module_name name) t loc
@@ -1570,7 +1570,7 @@ and statement cx = Ast.Statement.(
     toplevel_decls cx elements;
     toplevels cx elements;
 
-    let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
+    let reason = mk_reason (RModule name) loc in
     let module_t = match Context.module_kind cx with
     | Context.ESModule -> mk_module_t cx reason
     | Context.CommonJSModule clobbered ->
@@ -1857,7 +1857,7 @@ and statement cx = Ast.Statement.(
             [import_loc, local_name, module_ns_typeof, None]
           | ImportDeclaration.ImportValue ->
             let reason =
-              mk_reason (RCustom (spf "module `%s`" module_name)) import_loc
+              mk_reason (RModule module_name) import_loc
             in
             let module_ns_t =
               import_ns cx reason (fst source, module_name) import_loc
@@ -3185,9 +3185,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       } ->
 
       let imported_module_t =
-        let import_reason = mk_reason (RCustom (
-          spf "module `%s`" module_name
-        )) loc in
+        let import_reason = mk_reason (RModule module_name) loc in
         import_ns cx import_reason (source_loc, module_name) loc
       in
 

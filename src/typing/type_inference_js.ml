@@ -394,9 +394,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   end;
 
   let reason_exports_module =
-    let desc = Reason.RCustom (
-      Utils.spf "module `%s`" module_ref
-    ) in
+    let desc = Reason.RModule module_ref in
     Reason.locationless_reason desc
   in
 

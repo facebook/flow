@@ -361,7 +361,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_arg_arity cx loc targs 1 (fun () ->
       match targs with
       | Some ((_, StringLiteral { Ast.StringLiteral.value; _ })::_) ->
-          let desc = RCustom (spf "module `%s`" value) in
+          let desc = RModule value in
           let reason = mk_reason desc loc in
           let remote_module_t =
             Env.get_var_declared_type cx (internal_module_name value) loc
