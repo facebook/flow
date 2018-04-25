@@ -137,6 +137,12 @@ let maybe_send_status_to_controller fd status =
     match status with
     | Unix.WEXITED 0 ->
       ()
+    | Unix.WEXITED 1 ->
+      (* 1 is an expected exit code. On unix systems, when the master process exits, the pipe
+       * becomes readable. We fork a worker slave, which reads 0 bytes and exits with code 1.
+       * In this case, the master is dead so trying to write a message to the master will
+       * cause an exception *)
+      ()
     | _ ->
       Timeout.with_timeout
         ~timeout:10
