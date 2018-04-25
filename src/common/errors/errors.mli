@@ -170,3 +170,13 @@ module Vim_emacs_output : sig
     unit ->
     unit
 end
+
+module Lsp_output : sig
+  type t = {
+    loc: Loc.t;  (* the file+range at which the message applies *)
+    message: string;  (* the diagnostic's message *)
+    code: string;  (* an error code *)
+    relatedLocations: (Loc.t * string) list;
+  }
+  val lsp_of_error: error -> t
+end

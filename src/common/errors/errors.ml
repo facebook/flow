@@ -2996,3 +2996,44 @@ module Vim_emacs_output = struct
       end sl;
       flush oc
 end
+
+
+module Lsp_output = struct
+  type t = {
+    loc: Loc.t;  (* the file+range at which the message applies *)
+    message: string;  (* the diagnostic's message *)
+    code: string;  (* an error code *)
+    relatedLocations: (Loc.t * string) list;
+  }
+
+  let lsp_of_error (error: error) : t =
+    (* e.g. "Error about `code` in type Ref(`foo`)"                    *)
+    (* will produce LSP message "Error about `code` in type `foo` [1]" *)
+    (* and the LSP related location will have message "[1]: `foo`"      *)
+    let (kind, _, friendly) = error in
+    let (_, loc, group) =
+      Friendly.message_group_of_error ~show_all_branches:false ~show_root:true friendly in
+    let (references, group) = Friendly.extract_references group in
+    let features = Friendly.message_of_group_message group in
+    (* This is the accumulator function to build up the message and related locations... *)
+    let f (message, relatedLocations) feature =
+      match feature with
+      | Friendly.Inline inlines ->
+        let message = (message ^ Friendly.string_of_message_inlines inlines) in
+        (message, relatedLocations)
+      | Friendly.Reference (inlines, id) ->
+        let ref_id = string_of_int id in
+        let ref_text = Friendly.string_of_message_inlines inlines in
+        let ref_loc = IMap.find id references in
+        let ref_message = Printf.sprintf "[%s] %s" ref_id ref_text in
+        let message = Printf.sprintf "%s %s [%s]" message ref_text ref_id in
+        (message, (ref_loc, ref_message)::relatedLocations)
+    in
+    let (message, relatedLocations) = List.fold_left f ("", []) features in
+    {
+      loc;
+      message;
+      code = string_of_kind kind;
+      relatedLocations = List.rev relatedLocations;
+    }
+end

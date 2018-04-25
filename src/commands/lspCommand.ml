@@ -894,12 +894,67 @@ begin
     to_stdout (Lsp_fmt.print_lsp outgoing);
     state
 
-  | Connected _cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
-    let err_count = Errors.ErrorSet.cardinal errors in
-    let warn_count = Errors.ErrorSet.cardinal warnings in
-    let _text = Printf.sprintf "Received %d errors, %d warnings" err_count warn_count in
-    (* TODO: report errors properly, either direct from the server, or here *)
+  | Connected cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
+    (* I hope that flow won't produce errors with an empty path. But such errors are *)
+    (* fatal to Nuclide, so if it does, then we'll at least use a fall-back path.    *)
+    let default_uri = cenv.c_ienv.i_root |> Path.to_string |> File_url.create in
+    (* 'all' is an SMap from uri to diagnostic list, and 'add' appends the error within the map *)
+    let add
+        (severity: PublishDiagnostics.diagnosticSeverity option)
+        (error: Errors.error)
+        (all: PublishDiagnostics.diagnostic list SMap.t)
+      : PublishDiagnostics.diagnostic list SMap.t =
+      let error = Errors.Lsp_output.lsp_of_error error in
+      let location = Flow_lsp_conversions.loc_to_lsp error.Errors.Lsp_output.loc ~default_uri in
+      let uri = location.Lsp.Location.uri in
+      let related_to_lsp (loc, relatedMessage) =
+        let relatedLocation = Flow_lsp_conversions.loc_to_lsp loc ~default_uri in
+        { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
+      let diagnostic = { Lsp.PublishDiagnostics.
+        range = location.Lsp.Location.range;
+        severity;
+        code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
+        source = Some "Flow";
+        message = error.Errors.Lsp_output.message;
+        relatedLocations = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp;
+      } in
+      SMap.add ~combine:List.append uri [diagnostic] all
+    in
+    (* print: just pushes the set of diagnostis for this uri to the client *)
+    let print uri diagnostics state =
+      let msg = NotificationMessage
+        (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
+      let state = track_from_server state msg in
+      to_stdout (Lsp_fmt.print_lsp msg);
+      state
+    in
+    (* First construct an SMap from uri to diagnostic list, which gathers together *)
+    (* all the errors and warnings per uri *)
+    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
+    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all in
+    (* Next, for each uri, send its list of diagnostics to the client *)
+    let state = SMap.fold print all state in
     state
+
+  | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
+    if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
+      let msg = NotificationMessage
+        (ProgressNotification { Lsp.Progress.id = 1; label = Some "Flow rechecking..."; }) in
+      let state = track_from_server state msg in
+      to_stdout (Lsp_fmt.print_lsp msg);
+      state
+    else
+      state
+
+  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck ->
+    if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
+      let msg = NotificationMessage
+        (ProgressNotification { Lsp.Progress.id = 1; label = None; }) in
+      let state = track_from_server state msg in
+      to_stdout (Lsp_fmt.print_lsp msg);
+      state
+    else
+      state
 
   | _, Server_message _ ->
     failwith (Printf.sprintf "Unexpected %s in state %s"
