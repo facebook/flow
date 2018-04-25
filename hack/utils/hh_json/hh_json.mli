@@ -144,6 +144,7 @@ module type Access = sig
    * produce more informative error states. *)
   type 'a m = (('a * keytrace), access_failure) result
 
+  val keytrace_to_string : keytrace -> string
   val access_failure_to_string : access_failure -> string
 
   val return : 'a -> 'a m

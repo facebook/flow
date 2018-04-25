@@ -533,6 +533,7 @@ module type Access = sig
 
   type 'a m = (('a * keytrace), access_failure) result
 
+  val keytrace_to_string : keytrace -> string
   val access_failure_to_string : access_failure -> string
 
   val return : 'a -> 'a m
@@ -561,8 +562,8 @@ module Access = struct
 
   let keytrace_to_string x =
     if x = [] then "" else
-    let res = List.map x (fun x -> "[" ^ x ^ "]")  |> String.concat " " in
-    " (at field " ^ res ^ ")"
+    let res = List.rev x |> String.concat "." in
+    " (at field `" ^ res ^ "`)"
 
   let access_failure_to_string = function
     | Not_an_object x ->
