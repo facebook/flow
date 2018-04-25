@@ -165,8 +165,7 @@ The general idea is that we build in Cygwin, targeting mingw. This gives us a bi
 3. Tell opam to use this directory as the flowtype project: `opam pin add flowtype . -n`
 4. Install system dependencies `opam depext -u flowtype`
 5. Install Flow's dependencies `opam install flowtype --deps-only`
-6. We need these too: `opam install camlp4 ocp-build`
-7. Finally, build Flow: `make all-ocp`
+7. Finally, build Flow: `make all`
 
 ## Using Flow's parser from JavaScript
 

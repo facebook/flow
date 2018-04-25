@@ -151,10 +151,6 @@ NATIVE_LIBRARIES=\
   pthread\
   $(EXTRA_LIBS)
 
-OCP_BUILD_FILES=\
-  ocp_build_flow.ocp\
-  ocp_build_hack.ocp
-
 COPIED_FLOWLIB=\
 	$(foreach lib,$(wildcard lib/*.js),_build/$(lib))
 
@@ -195,7 +191,6 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
 all: bin/flow$(EXE)
-all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
@@ -212,10 +207,6 @@ clean:
 	rm -f hack/utils/get_build_id.gen.c
 	rm -f flow.odocl
 
-clean-ocp: clean
-	[ -d _obuild ] && ocp-build clean || true
-	rm -f $(OCP_BUILD_FILES)
-
 build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
@@ -226,30 +217,6 @@ build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIE
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
-
-%.ocp: %.ocp.fb scripts/script_utils.ml scripts/ocp_build_glob.ml
-	ocaml -safe-string -I scripts -w -3 \
-		str.cma unix.cma scripts/ocp_build_glob.ml $(addsuffix .fb,$@) $@
-
-build-flow-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
-	[ -d _obuild ] || ocp-build init
-	 # Force us to pick up libdef changes - ocp-build is fast so it's fine
-	rm -rf _obuild/flow-flowlib
-	rm -rf _obuild/flow-prelude
-	ocp-build build flow
-	mkdir -p bin
-	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
-	rm -f $(OCP_BUILD_FILES)
-
-build-parser-test-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
-	[ -d _obuild ] || ocp-build init
-	ocp-build build flow-parser-hardcoded-test
-	rm -f $(OCP_BUILD_FILES)
-
-test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
-	[ -d _obuild ] || ocp-build init
-	ocp-build tests flow-parser-hardcoded-test
-	rm -f $(OCP_BUILD_FILES)
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
@@ -309,10 +276,6 @@ bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
 
-copy-flow-files-ocp: build-flow-with-ocp
-	mkdir -p bin
-	cp _obuild/flow/flow.asm bin/flow$(EXE)
-
 do-test:
 	./runtests.sh bin/flow$(EXE)
 	bin/flow$(EXE) check packages/flow-dev-tools
@@ -326,9 +289,6 @@ test-tool: bin/flow$(EXE)
 	${MAKE} do-test-tool
 
 test: bin/flow$(EXE)
-	${MAKE} do-test
-
-test-ocp: build-flow-with-ocp copy-flow-files-ocp
 	${MAKE} do-test
 
 js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
@@ -378,7 +338,7 @@ dist/npm-%.tgz: FORCE
 
 FORCE:
 
-.PHONY: all js build-flow build-flow-with-ocp build-flow-debug FORCE
+.PHONY: all js build-flow build-flow-debug FORCE
 
 # This rule runs if any .ml or .mli file has been touched. It recursively calls
 # ocamldep to figure out all the modules that we use to build src/flow.ml
