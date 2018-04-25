@@ -583,8 +583,8 @@ class ['a] t = object(self)
     ) acc rrt_unresolved in
     let acc = match rrt_resolve_to with
       | ResolveSpreadsToTuple (_, t1, t2)
-      | ResolveSpreadsToArray (_, t1, t2)
       | ResolveSpreadsToArrayLiteral (_, t1, t2)
+      | ResolveSpreadsToArray (t1, t2)
         ->
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in

@@ -1354,11 +1354,11 @@ class ['a] t = object(self)
         let t2'' = self#type_ cx map_cx t2' in
         if t1'' == t1' && t2'' == t2' then t
         else ResolveSpreadsToArrayLiteral (i, t1'', t2'')
-    | ResolveSpreadsToArray (i, t1', t2') ->
+    | ResolveSpreadsToArray (t1', t2') ->
         let t1'' = self#type_ cx map_cx t1' in
         let t2'' = self#type_ cx map_cx t2' in
         if t1'' == t1' && t2'' == t2' then t
-        else ResolveSpreadsToArray (i, t1'', t2'')
+        else ResolveSpreadsToArray (t1'', t2'')
     | ResolveSpreadsToMultiflowCallFull (i, funtype) ->
         let funtype' = self#fun_type cx map_cx funtype in
         if funtype' == funtype then t

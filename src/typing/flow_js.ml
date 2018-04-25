@@ -3243,28 +3243,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow cx trace (l, ResolveSpreadT (use_op, reason_op, {
               rrt_resolved;
               rrt_unresolved;
-              (* We need a deterministic way to generate a new id. This is fine - not many ids are
-               * live at once and a collision is super duper unlikely. *)
-              rrt_resolve_to = ResolveSpreadsToArray (id + 50000, elem_t, tout);
+              rrt_resolve_to = ResolveSpreadsToArray (elem_t, tout);
             }))
           | _ ->
             (* We've already deconstructed, so there's nothing left to do *)
-            ()
-        )
-
-      | ResolveSpreadsToArray (id, _, _) ->
-        let reason_elemt = reason_of_t elemt in
-        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
-          match recursion_depth with
-          | 0 ->
-            (* The first time we see this, we process it normally *)
-            let rrt_resolved =
-              ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
-            resolve_spread_list_rec
-              cx ~trace ~use_op ~reason_op
-              (rrt_resolved, rrt_unresolved) rrt_resolve_to
-          | _ ->
-            (* Avoid infinite recursion *)
             ()
         )
 
@@ -3317,7 +3299,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _ -> ()
         )
 
-      | _ ->
+      (* no caching *)
+      | ResolveSpreadsToArray _
+      | ResolveSpreadsToCallT _
+        ->
         let rrt_resolved = ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
         resolve_spread_list_rec
           cx ~trace ~use_op ~reason_op
@@ -10155,7 +10140,7 @@ and finish_resolve_spread_list =
       finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved elem_t tout
     | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
       finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved elem_t tout
-    | ResolveSpreadsToArray (_, elem_t, tout) ->
+    | ResolveSpreadsToArray (elem_t, tout) ->
       finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved elem_t tout
     | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
       finish_multiflow_partial cx ?trace ~use_op ~reason_op ft call_reason resolved tout
