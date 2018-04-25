@@ -1,14 +1,14 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":13}},
-  "range":[0,23],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":12}},
+  "range":[0,37],
   "body":[
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
       "range":[0,8],
       "expression":{
-        "type":"MemberExpression",
+        "type":"OptionalMemberExpression",
         "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
         "range":[0,8],
         "object":{
@@ -37,11 +37,11 @@
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":13}},
       "range":[10,23],
       "expression":{
-        "type":"MemberExpression",
+        "type":"OptionalMemberExpression",
         "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":13}},
         "range":[10,23],
         "object":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":8}},
           "range":[10,18],
           "object":{
@@ -67,6 +67,49 @@
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":13}},
           "range":[20,23],
+          "name":"baz",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "computed":false,
+        "optional":true
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":12}},
+      "range":[25,37],
+      "expression":{
+        "type":"OptionalMemberExpression",
+        "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":12}},
+        "range":[25,37],
+        "object":{
+          "type":"MemberExpression",
+          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":7}},
+          "range":[25,32],
+          "object":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":3}},
+            "range":[25,28],
+            "name":"foo",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "property":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":7}},
+            "range":[29,32],
+            "name":"bar",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "computed":false
+        },
+        "property":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":12}},
+          "range":[34,37],
           "name":"baz",
           "typeAnnotation":null,
           "optional":false

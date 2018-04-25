@@ -60,6 +60,8 @@ module Expression
     | _, Literal _
     | _, Logical _
     | _, New _
+    | _, OptionalCall _
+    | _, OptionalMember _
     | _, Sequence _
     | _, Super
     | _, TaggedTemplate _
@@ -212,6 +214,8 @@ module Expression
     | _, Logical _
     | _, New _
     | _, Object _
+    | _, OptionalCall _
+    | _, OptionalMember _
     | _, Sequence _
     | _, Super
     | _, TaggedTemplate _
@@ -532,12 +536,19 @@ module Expression
     | T_LPAREN when not (no_call env) ->
         let args_loc, arguments = arguments env in
         let loc = Loc.btwn start_loc args_loc in
-        call_cover ~allow_optional_chain ~in_optional_chain env start_loc
-          (Cover_expr (loc, Expression.(Call { Call.
-            callee = as_expression env left;
-            arguments;
+        let call = { Expression.Call.
+          callee = as_expression env left;
+          arguments;
+        } in
+        let call = if in_optional_chain
+          then Expression.(OptionalCall { OptionalCall.
+            call;
             optional;
-          })))
+          })
+          else Expression.Call call
+        in
+        call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+          (Cover_expr (loc, call))
     | _ -> left
 
   and call ?(allow_optional_chain=true) env start_loc left =
@@ -625,13 +636,20 @@ module Expression
       let last_loc = Peek.loc env in
       Expect.token env T_RBRACKET;
       let loc = Loc.btwn start_loc last_loc in
-      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
-        (Cover_expr (loc, Expression.(Member { Member.
-          _object  = as_expression env left;
-          property = Member.PropertyExpression expr;
-          computed = true;
+      let member = Expression.Member.({
+        _object  = as_expression env left;
+        property = PropertyExpression expr;
+        computed = true;
+      }) in
+      let member = if in_optional_chain
+        then Expression.(OptionalMember { OptionalMember.
+          member;
           optional;
-        })))
+        })
+        else Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, member))
     in
     let static ?(allow_optional_chain=true) ?(in_optional_chain=false)
                ?(optional=false) env start_loc left =
@@ -646,13 +664,20 @@ module Expression
       | Cover_expr (_, Ast.Expression.Super) when is_private ->
           error_at env (loc, Error.SuperPrivate)
       | _ -> () end;
-      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
-        (Cover_expr (loc, Expression.(Member { Member.
-          _object = as_expression env left;
-          property;
-          computed = false;
+      let member = Expression.Member.({
+        _object = as_expression env left;
+        property;
+        computed = false;
+      }) in
+      let member = if in_optional_chain
+        then Expression.(OptionalMember { OptionalMember.
+          member;
           optional;
-        })))
+        })
+        else Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, member))
     in
     fun ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left ->
       let options = parse_options env in

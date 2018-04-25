@@ -92,9 +92,11 @@ let precedence_of_expression expr =
 
   (* Expressions involving operators *)
   | (_, E.Member _)
+  | (_, E.OptionalMember _)
   | (_, E.MetaProperty _)
   | (_, E.New _) -> 19
   | (_, E.Call _)
+  | (_, E.OptionalCall _)
   | (_, E.TaggedTemplate _)
   | (_, E.Import _) -> 18
   | (_, E.Update { E.Update.prefix = false; _ }) -> 17
@@ -711,35 +713,8 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
           expression_with_parens ~precedence ~ctxt right
         end;
       ]
-    | E.Call { E.Call.callee; arguments; optional } ->
-      let lparen = if optional then ".?(" else "(" in
-      begin match callee, arguments with
-      (* __d hack, force parens around factory function.
-        More details at: https://fburl.com/b1wv51vj
-        TODO: This is FB only, find generic way to add logic *)
-      | (_, E.Identifier (_, "__d")), [a; b; c; d] ->
-        fuse [
-          Atom "__d";
-          list
-            ~wrap:(Atom lparen, Atom ")")
-            ~sep:(Atom ",")
-            [
-              expression_or_spread a;
-              expression_or_spread b;
-              wrap_in_parens (expression_or_spread c);
-              expression_or_spread d;
-            ]
-        ]
-      (* Standard call expression printing *)
-      | _ ->
-        fuse [
-          expression_with_parens ~precedence ~ctxt callee;
-          list
-            ~wrap:(Atom lparen, Atom ")")
-            ~sep:(Atom ",")
-            (List.map expression_or_spread arguments)
-        ]
-      end
+    | E.Call c -> call ~precedence ~ctxt c
+    | E.OptionalCall { E.OptionalCall.call = c; optional } -> call ~optional ~precedence ~ctxt c
     | E.Conditional { E.Conditional.test; consequent; alternate } ->
       let test_layout =
         (* conditionals are right-associative *)
@@ -776,29 +751,9 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
           fuse [flat_pretty_space; right];
         ])
       ]
-    | E.Member { E.Member._object; property; computed; optional } ->
-      let ldelim, rdelim = begin match computed, optional with
-      | false, false -> Atom ".", Empty
-      | false, true -> Atom "?.", Empty
-      | true, false -> Atom "[", Atom "]"
-      | true, true -> Atom "?.[", Atom "]"
-      end in
-      fuse [
-        begin match _object with
-        | (_, E.Call _) -> expression ~ctxt _object
-        | (_, E.Literal { Ast.Literal.value = Ast.Literal.Number num; raw }) when not computed ->
-          (* 1.foo would be confused with a decimal point, so it needs parens *)
-          number_literal ~in_member_object:true raw num
-        | _ -> expression_with_parens ~precedence ~ctxt _object
-        end;
-        ldelim;
-        begin match property with
-        | E.Member.PropertyIdentifier (loc, id) -> SourceLocation (loc, Atom id)
-        | E.Member.PropertyPrivateName (loc, (_, id)) -> SourceLocation (loc, Atom ("#" ^id))
-        | E.Member.PropertyExpression expr -> expression ~ctxt expr
-        end;
-        rdelim;
-      ]
+    | E.Member m -> member ~precedence ~ctxt m
+    | E.OptionalMember { E.OptionalMember.member = m; optional } ->
+      member ~optional ~precedence ~ctxt m
     | E.New { E.New.callee; arguments } ->
       let callee_layout =
         if definitely_needs_parens ~precedence ctxt callee ||
@@ -892,6 +847,37 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
     | E.Generator _ -> not_supported loc "Comprehension not supported"
   )
 
+and call ?(optional=false) ~precedence ~ctxt call_node =
+  let { Ast.Expression.Call.callee; arguments } = call_node in
+  let lparen = if optional then ".?(" else "(" in
+  begin match callee, arguments with
+  (* __d hack, force parens around factory function.
+    More details at: https://fburl.com/b1wv51vj
+    TODO: This is FB only, find generic way to add logic *)
+  | (_, Ast.Expression.Identifier (_, "__d")), [a; b; c; d] ->
+    fuse [
+      Atom "__d";
+      list
+        ~wrap:(Atom lparen, Atom ")")
+        ~sep:(Atom ",")
+        [
+          expression_or_spread a;
+          expression_or_spread b;
+          wrap_in_parens (expression_or_spread c);
+          expression_or_spread d;
+        ]
+    ]
+  (* Standard call expression printing *)
+  | _ ->
+    fuse [
+      expression_with_parens ~precedence ~ctxt callee;
+      list
+        ~wrap:(Atom lparen, Atom ")")
+        ~sep:(Atom ",")
+        (List.map expression_or_spread arguments)
+    ]
+  end
+
 and expression_with_parens ~precedence ~(ctxt:expression_context) expr =
   if definitely_needs_parens ~precedence ctxt expr
   then wrap_in_parens (expression ~ctxt:normal_context expr)
@@ -942,6 +928,35 @@ and literal (loc, { Ast.Literal.raw; value; }) =
       fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
     | _ -> Atom raw
   )
+
+and member ?(optional=false) ~precedence ~ctxt member_node =
+  let { Ast.Expression.Member._object; property; computed } = member_node in
+  let ldelim, rdelim = begin match computed, optional with
+  | false, false -> Atom ".", Empty
+  | false, true -> Atom "?.", Empty
+  | true, false -> Atom "[", Atom "]"
+  | true, true -> Atom "?.[", Atom "]"
+  end in
+  fuse [
+    begin match _object with
+    | (_, Ast.Expression.Call _) -> expression ~ctxt _object
+    | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw })
+      when not computed ->
+      (* 1.foo would be confused with a decimal point, so it needs parens *)
+      number_literal ~in_member_object:true raw num
+    | _ -> expression_with_parens ~precedence ~ctxt _object
+    end;
+    ldelim;
+    begin match property with
+    | Ast.Expression.Member.PropertyIdentifier (loc, id) ->
+      SourceLocation (loc, Atom id)
+    | Ast.Expression.Member.PropertyPrivateName (loc, (_, id)) ->
+      SourceLocation (loc, Atom ("#" ^ id))
+    | Ast.Expression.Member.PropertyExpression expr ->
+      expression ~ctxt expr
+    end;
+    rdelim;
+  ]
 
 and string_literal (loc, { Ast.StringLiteral.value; _ }) =
   let quote = better_quote value in

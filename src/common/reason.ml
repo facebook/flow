@@ -783,7 +783,7 @@ end)
  * In the first example we need to wrap 1 + 2 to correctly print the property
  * access. However, we don't need to wrap o in o.p. In o[1 + 2] we don't need to
  * wrap 1 + 2 since it is already wrapped in a sense. *)
-let rec code_desc_of_expression ~wrap (_, x) =
+let rec code_desc_of_expression ~wrap (loc, x) =
 let do_wrap = if wrap then (fun s -> "(" ^ s ^ ")") else (fun s -> s) in
 Ast.Expression.(match x with
 | Array { Array.elements = []; _ } -> "[]"
@@ -815,9 +815,9 @@ Ast.Expression.(match x with
   do_wrap (left ^ " " ^ operator ^ " " ^ right)
 | Binary { Binary.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Binary operator) right)
-| Call { Call.callee; arguments = []; optional = _ } ->
+| Call { Call.callee; arguments = [] } ->
   (code_desc_of_expression ~wrap:true callee) ^ "()"
-| Call { Call.callee; arguments = _; optional = _ } ->
+| Call { Call.callee; arguments = _ } ->
   (code_desc_of_expression ~wrap:true callee) ^ "(...)"
 | Class _ -> "class { ... }"
 | Conditional { Conditional.test; consequent; alternate } ->
@@ -835,7 +835,7 @@ Ast.Expression.(match x with
 | Ast.Expression.Literal x -> code_desc_of_literal x
 | Logical { Logical.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Logical operator) right)
-| Member { Member._object; property; computed = _; optional = _ } -> Member.(
+| Member { Member._object; property; computed = _ } -> Member.(
   let o = code_desc_of_expression ~wrap:true _object in
   o ^ (match property with
   | PropertyIdentifier (_, x) -> "." ^ x
@@ -848,6 +848,16 @@ Ast.Expression.(match x with
 | New { New.callee; arguments = _ } ->
   "new " ^ (code_desc_of_expression ~wrap:true callee) ^ "(...)"
 | Object _ -> "{...}"
+| OptionalCall { OptionalCall.call; optional } ->
+  let call_desc = code_desc_of_expression ~wrap:false (loc, Call call) in
+  if optional then "?." ^ call_desc else call_desc
+| OptionalMember { OptionalMember.member; optional } ->
+  let member_desc = code_desc_of_expression ~wrap:false (loc, Member member) in
+  if optional
+  then Member.(match member.property with
+  | PropertyExpression _ -> "?." ^ member_desc
+  | PropertyIdentifier _ | PropertyPrivateName _ -> "?" ^ member_desc
+  ) else member_desc
 | Sequence { Sequence.expressions } ->
   code_desc_of_expression ~wrap (List.hd (List.rev expressions))
 | Super -> "super"

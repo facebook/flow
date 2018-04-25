@@ -153,7 +153,6 @@ let parse_json_file ~fail content file =
     _object = loc_none, Identifier (loc_none, "module");
     property = Member.PropertyIdentifier (loc_none, "exports");
     computed = false;
-    optional = false;
   }) in
   let loc = fst expr in
   let statement =

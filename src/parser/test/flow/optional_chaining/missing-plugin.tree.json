@@ -14,7 +14,7 @@
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
       "range":[0,4],
       "expression":{
-        "type":"MemberExpression",
+        "type":"OptionalMemberExpression",
         "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
         "range":[0,4],
         "object":{

@@ -363,7 +363,7 @@ class requires_calculator ~ast = object(this)
   method! member (expr: Loc.t Ast.Expression.Member.t) =
     let open Ast.Expression in
     let open Ast.Expression.Member in
-    let { _object; property; computed = _; optional = _ } = expr in
+    let { _object; property; computed = _ } = expr in
     (* Strip the loc to simplify the patterns *)
     let _, _object = _object in
     (* This gets called when patterns like `module.id` appear on the LHS of an
@@ -393,7 +393,7 @@ class requires_calculator ~ast = object(this)
 
   method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
-    let { Call.callee; arguments; optional = _ } = expr in
+    let { Call.callee; arguments } = expr in
     this#handle_call call_loc callee arguments None;
     super#call call_loc expr
 
@@ -691,7 +691,7 @@ class requires_calculator ~ast = object(this)
     | _ -> None
     end in
     begin match right with
-    | call_loc, Call { Call.callee; arguments; optional = _ } ->
+    | call_loc, Call { Call.callee; arguments } ->
       this#handle_call call_loc callee arguments bindings
     | _ -> ()
     end

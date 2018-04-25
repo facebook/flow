@@ -161,7 +161,6 @@ class exports_resolver ~ast = object(this)
         _object = module_loc, Identifier (_, "exports");
         property;
         computed = _;
-        optional = _;
       }))
     (* module.exports.foo = ... *)
     | Assignment.Assign, (_, Ast.Pattern.Expression (_, Member { Member.
@@ -171,7 +170,6 @@ class exports_resolver ~ast = object(this)
         };
         property;
         computed = _;
-        optional = _;
       }))
       (* We only care about global scope *)
       when not (Scope_api.is_local_use scope_info module_loc) ->

@@ -232,3 +232,13 @@ def('Import')
 
 def('CallExpression')
   .field('callee', or(def('Expression'), def('Import')));
+
+def('OptionalMemberExpression')
+  .bases("MemberExpression")
+  .build("optional")
+  .field("optional", Boolean)
+
+def('OptionalCallExpression')
+  .bases("CallExpression")
+  .build("optional")
+  .field("optional", Boolean)
