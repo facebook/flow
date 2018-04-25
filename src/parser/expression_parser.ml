@@ -540,7 +540,7 @@ module Expression
           callee = as_expression env left;
           arguments;
         } in
-        let call = if in_optional_chain
+        let call = if optional || in_optional_chain
           then Expression.(OptionalCall { OptionalCall.
             call;
             optional;
