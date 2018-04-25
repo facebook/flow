@@ -95,6 +95,7 @@ MODULES=\
   src/server/protocol\
   src/server/server_files\
   src/server/server_utils\
+  src/server/shmem\
   src/services/autocomplete\
   src/services/inference\
   src/services/flowFileGen\
