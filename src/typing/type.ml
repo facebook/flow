@@ -565,6 +565,8 @@ module rec TypeTerm : sig
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
 
+    | OptionalChainT of reason * (opt_use_t * t_out) Nel.t
+
     (* Function predicate uses *)
 
     (**
@@ -665,6 +667,19 @@ module rec TypeTerm : sig
     (* util for deciding subclassing relations *)
     | ExtendsUseT of use_op * reason * t list * t * t
 
+  (* use_ts which can be part of an optional chain, with t_out factored out *)
+  and opt_use_t =
+  | OptCallT of use_op * reason * opt_funcalltype
+  | OptGetPropT of use_op * reason * propref
+  | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
+  | OptTestPropT of reason * ident * propref
+  | OptGetElemT of use_op * reason * t
+
+  and opt_state =
+  | NonOptional
+  | NewChain
+  | ContinueChain
+
   and specialize_cache = reason list option
 
   and predicate =
@@ -744,6 +759,8 @@ module rec TypeTerm : sig
     call_closure_t: int;
     call_strict_arity: bool;
   }
+
+  and opt_funcalltype = t * call_arg list * int * bool
 
   and call_arg =
   | Arg of t
@@ -2009,6 +2026,7 @@ and TypeUtil : sig
   val mod_reason_of_t: (reason -> reason) -> TypeTerm.t -> TypeTerm.t
   val mod_reason_of_defer_use_t: (reason -> reason) -> TypeTerm.defer_use_t -> TypeTerm.defer_use_t
   val mod_reason_of_use_t: (reason -> reason) -> TypeTerm.use_t -> TypeTerm.use_t
+  val mod_reason_of_opt_use_t: (reason -> reason) -> TypeTerm.opt_use_t -> TypeTerm.opt_use_t
 
   val use_op_of_use_t: TypeTerm.use_t -> TypeTerm.use_op option
   val mod_use_op_of_use_t: (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
@@ -2129,6 +2147,7 @@ end = struct
     | ObjSealT (reason, _) -> reason
     | ObjTestProtoT (reason, _) -> reason
     | ObjTestT (reason, _, _) -> reason
+    | OptionalChainT (reason, _) -> reason
     | OrT (reason, _, _) -> reason
     | PredicateT (_, t) -> reason_of_t t
     | ReactKitT (_, reason, _) -> reason
@@ -2290,6 +2309,7 @@ end = struct
     | ObjSealT (reason, t) -> ObjSealT (f reason, t)
     | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
     | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
+    | OptionalChainT (reason, us) -> OptionalChainT (f reason, us)
     | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
     | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
     | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
@@ -2323,6 +2343,13 @@ end = struct
         ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
 
+  and mod_reason_of_opt_use_t f = function
+  | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
+  | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
+  | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
+    OptGetPrivatePropT (use_op, f reason, name, bindings, static)
+  | OptTestPropT (reason, id, n) -> OptTestPropT (f reason, id, n)
+  | OptGetElemT (use_op, reason, it) -> OptGetElemT (use_op, f reason, it)
   let rec util_use_op_of_use_t: 'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
   fun nope util u ->
   let util = util u in
@@ -2421,6 +2448,7 @@ end = struct
   | SentinelPropTestT (_, _, _, _, _, _)
   | IdxUnwrap (_, _)
   | IdxUnMaybeifyT (_, _)
+  | OptionalChainT (_, _)
   | CallLatentPredT (_, _, _, _, _)
   | CallOpenPredT (_, _, _, _, _)
   | SubstOnPredT (_, _, _)
@@ -2685,6 +2713,7 @@ let any_propagating_use_t = function
   | ObjKitT _
   | ObjTestProtoT _
   | ObjTestT _
+  | OptionalChainT _
   | OrT _
   | PredicateT _
   | ReactKitT _
@@ -3012,6 +3041,7 @@ let string_of_use_ctor = function
   | ObjSealT _ -> "ObjSealT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
+  | OptionalChainT _ -> "OptionalChainT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
   | ReactKitT _ -> "ReactKitT"
@@ -3231,6 +3261,9 @@ let mk_boundfunctiontype = mk_methodtype dummy_this
 let mk_functiontype reason = mk_methodtype (global_this reason)
 let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
+let mk_opt_functioncalltype reason args clos strict =
+  (global_this reason, args, clos, strict)
+
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
    "forgeting" any properties: so to extend an object type with optional
@@ -3253,3 +3286,19 @@ let mk_objecttype ?(flags=default_flags) dict pmap proto = {
   props_tmap = pmap;
   proto_t = proto
 }
+
+let apply_opt_funcalltype (this, args, clos, strict) t_out = {
+  call_this_t = this;
+  call_args_tlist = args;
+  call_tout = t_out;
+  call_closure_t = clos;
+  call_strict_arity = strict;
+}
+
+let apply_opt_use opt_use t_out = match opt_use with
+| OptCallT (u, r, f) ->
+  CallT (u, r, apply_opt_funcalltype f t_out)
+| OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
+| OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
+| OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
+| OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)

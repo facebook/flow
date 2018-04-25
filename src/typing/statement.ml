@@ -2515,119 +2515,9 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       Flow.flow cx (infer_t, UseT (use_op, t));
       t
 
-  | Member {
-      Member._object;
-      property = Member.PropertyExpression index;
-      _
-    } ->
-      let reason = mk_reason (RProperty None) loc in
-      (match Refinement.get cx (loc, e) loc with
-      | Some t -> t
-      | None ->
-        let tobj = expression cx _object in
-        let tind = expression cx index in
-        Tvar.mk_where cx reason (fun t ->
-          let use_op = Op (GetProperty (mk_expression_reason ex)) in
-          Flow.flow cx (tobj, GetElemT (use_op, reason, tind, t))
-        )
-      )
+  | Member _ -> subscript ~is_cond cx ex
 
-  | Member {
-      Member._object = _, Identifier (_, "module");
-      property = Member.PropertyIdentifier (_, "exports");
-      _
-    } ->
-      get_module_exports cx loc
-
-  | Member {
-      Member._object =
-        _, Identifier (_, ("ReactGraphQL" | "ReactGraphQLLegacy"));
-      property = Member.PropertyIdentifier (_, "Mixin");
-      _
-    } ->
-      let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
-      Flow.get_builtin cx "ReactGraphQLMixin" reason
-
-  | Member {
-      Member._object = super_loc, Super;
-      property = Member.PropertyIdentifier (ploc, name);
-      _
-    } ->
-      let super = super_ cx super_loc in
-      let id_info = "super", super, Type_table.Other in
-      Env.add_type_table_info cx super_loc id_info;
-      let expr_reason = mk_reason (RProperty (Some name)) loc in
-      (match Refinement.get cx (loc, e) loc with
-      | Some t -> t
-      | None ->
-        let prop_reason = mk_reason (RProperty (Some name)) ploc in
-
-        if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
-        then AnyT.at ploc
-        else (
-          Tvar.mk_where cx expr_reason (fun tvar ->
-            let use_op = Op (GetProperty (mk_expression_reason ex)) in
-            Flow.flow cx (
-              super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)
-            )
-          )
-        )
-      )
-      |> begin fun t ->
-        let id_info = name, t, Type_table.PropertyAccess super in
-        Env.add_type_table_info cx ploc id_info;
-        t
-      end
-
-  | Member {
-      Member._object;
-      property = Member.PropertyIdentifier (ploc, name);
-      _
-    } ->
-    let tobj = expression cx _object in
-    (
-      let expr_reason = mk_reason (RProperty (Some name)) loc in
-      if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
-      then AnyT.at ploc
-      else match Refinement.get cx (loc, e) loc with
-      | Some t -> t
-      | None ->
-        let prop_reason = mk_reason (RProperty (Some name)) ploc in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
-    )
-    |> begin fun t ->
-      let id_info = name, t, Type_table.PropertyAccess tobj in
-      Env.add_type_table_info cx ploc id_info;
-      t
-    end
-
-  | Member {
-      Member._object;
-      property = Member.PropertyPrivateName (ploc, (_, name));
-      _
-    } -> (
-      let expr_reason = mk_reason (RPrivateProperty name) loc in
-      match Refinement.get cx (loc, e) loc with
-      | Some t -> t
-      | None ->
-        let tobj = expression cx _object in
-        if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
-        then AnyT.at ploc
-        else
-          let use_op = Op (GetProperty (mk_expression_reason ex)) in
-          get_private_field cx expr_reason ~use_op tobj name
-    )
-    |> begin fun t ->
-      (* TODO use PropertyAccess *)
-      let id_info = name, t, Type_table.Other in
-      Env.add_type_table_info cx ploc id_info;
-      t
-    end
-
-  | OptionalMember { OptionalMember.member; optional } ->
-    warn_or_ignore_optional_chaining optional cx loc;
-    expression cx (loc, Member member)
+  | OptionalMember _ -> subscript ~is_cond cx ex
 
   | Object { Object.properties } ->
     let reason = mk_reason RObjectLit loc in
@@ -2653,88 +2543,6 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
           Flow.resolve_spread_list cx ~use_op:unknown_use ~reason_op elem_spread_list resolve_to
         )
     )
-
-  | Call {
-      Call.callee = _, Identifier (_, "require");
-      arguments;
-    } when not (Env.local_scope_entry_exists "require") -> (
-      match arguments with
-      | [ Expression (source_loc, Ast.Expression.Literal {
-          Ast.Literal.value = Ast.Literal.String module_name; _;
-        }) ]
-      | [ Expression (source_loc, TemplateLiteral {
-          TemplateLiteral.quasis = [_, {
-            TemplateLiteral.Element.value = {
-              TemplateLiteral.Element.cooked = module_name; _
-            }; _
-          }];
-          expressions = [];
-        }) ] ->
-        require cx (source_loc, module_name) loc
-      | _ ->
-        let ignore_non_literals =
-          Context.should_ignore_non_literal_requires cx in
-        if not ignore_non_literals
-        then
-          Flow.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-        AnyT.at loc
-    )
-
-  | Call {
-      Call.callee = _, Identifier (_, "requireLazy");
-      arguments;
-    } when not (Env.local_scope_entry_exists "requireLazy") -> (
-      match arguments with
-      | [Expression(_, Array({Array.elements;})); Expression(callback_expr);] ->
-        (**
-         * From a static perspective (and as long as side-effects aren't
-         * considered in Flow), a requireLazy call can be viewed as an immediate
-         * call to require() for each of the modules, and then an immediate call
-         * to the requireLazy() callback with the results of each of the prior
-         * calls to require().
-         *
-         * TODO: requireLazy() is FB-specific. Let's find a way to either
-         *       generalize or toggle this only for the FB environment.
-         *)
-
-        let element_to_module_tvar tvars = (function
-          | Some(Expression(source_loc, Ast.Expression.Literal({
-              Ast.Literal.value = Ast.Literal.String module_name;
-              _;
-            }))) ->
-              let module_tvar = require cx (source_loc, module_name) loc in
-              module_tvar::tvars
-          | _ ->
-              Flow.add_output cx Flow_error.(
-                EUnsupportedSyntax (loc, RequireLazyDynamicArgument)
-              );
-              tvars
-        ) in
-        let module_tvars = elements
-          |> List.fold_left element_to_module_tvar []
-          |> List.rev_map (fun e -> Arg e) in
-
-        let callback_expr_t = expression cx callback_expr in
-        let reason = mk_reason (RCustom "requireLazy() callback") loc in
-        let use_op = Op (FunCall {
-          op = mk_expression_reason ex;
-          fn = mk_expression_reason callback_expr;
-          args = [];
-        }) in
-        let _ = func_call cx reason ~use_op callback_expr_t module_tvars in
-
-        NullT.at loc
-
-      | _ ->
-        Flow.add_output cx
-          Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-        AnyT.at loc
-    )
-
-  | OptionalCall { OptionalCall.call; optional } ->
-    warn_or_ignore_optional_chaining optional cx loc;
-    expression cx (loc, Call call)
 
   | New {
       New.callee = _, Identifier (_, "Function");
@@ -2787,154 +2595,9 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       }) in
       new_call cx reason ~use_op class_ argts
 
-  | Call {
-      Call.callee = (callee_loc, Member {
-        Member._object = (_, Identifier (_, "Object") as obj);
-        property = Member.PropertyIdentifier (prop_loc, name);
-        _
-      } as expr);
-      arguments;
-    } ->
-      let obj_t = expression cx obj in
-      static_method_call_Object cx loc callee_loc prop_loc expr obj_t name arguments
+  | Call _ -> subscript ~is_cond cx ex
 
-  | Call {
-      Call.callee = (callee_loc, Member {
-        Member._object = super_loc, Super;
-        property = Member.PropertyIdentifier (ploc, name);
-        _
-      }) as callee;
-      arguments;
-      _
-    } ->
-      let reason = mk_reason (RMethodCall (Some name)) loc in
-      let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
-      let reason_prop = mk_reason (RProperty (Some name)) ploc in
-      let super = super_ cx super_loc in
-      let id_info = "super", super, Type_table.Other in
-      Env.add_type_table_info cx super_loc id_info;
-      let argts = List.map (expression_or_spread cx) arguments in
-      Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
-      Tvar.mk_where cx reason (fun t ->
-        let funtype = mk_methodcalltype super argts t in
-        let use_op = Op (FunCallMethod {
-          op = mk_expression_reason ex;
-          fn = mk_expression_reason callee;
-          prop = reason_prop;
-          args = mk_initial_arguments_reason arguments;
-        }) in
-        let prop_t = Tvar.mk cx reason_prop in
-        let id_info = name, prop_t, Type_table.PropertyAccess super in
-        Env.add_type_table_info cx ploc id_info;
-        Flow.flow cx (
-          super,
-          MethodT (use_op, reason, reason_lookup, Named (reason_prop, name),
-            funtype, Some prop_t)
-        )
-      )
-
-  | Call { Call.
-      callee = (lookup_loc, Member { Member.
-        _object;
-        property;
-        _
-      }) as callee;
-      arguments;
-    } ->
-      (* method call *)
-      let ot = expression cx _object in
-      let argts = List.map (expression_or_spread cx) arguments in
-      (match property with
-      | Member.PropertyPrivateName (prop_loc, (_, name))
-      | Member.PropertyIdentifier (prop_loc, name) ->
-        let reason_call = mk_reason (RMethodCall (Some name)) loc in
-        let use_op = Op (FunCallMethod {
-          op = mk_expression_reason ex;
-          fn = mk_expression_reason callee;
-          prop = mk_reason (RProperty (Some name)) prop_loc;
-          args = mk_initial_arguments_reason arguments;
-        }) in
-        method_call cx reason_call ~use_op prop_loc (callee, ot, name) argts
-      | Member.PropertyExpression expr ->
-        let reason_call = mk_reason (RMethodCall None) loc in
-        let reason_lookup = mk_reason (RProperty None) lookup_loc in
-        Tvar.mk_where cx reason_call (fun t ->
-          let elem_t = expression cx expr in
-          let frame = Env.peek_frame () in
-          let funtype = mk_methodcalltype ot argts t ~frame in
-          Flow.flow cx (ot,
-            CallElemT (reason_call, reason_lookup, elem_t, funtype))
-        ))
-
-  | Call {
-      Call.callee = (ploc, Super) as callee;
-      arguments;
-    } ->
-      let argts = List.map (expression_or_spread cx) arguments in
-      let reason = mk_reason (RFunctionCall RSuper) loc in
-
-      (* switch back env entries for this and super from undefined *)
-      define_internal cx reason "this";
-      define_internal cx reason "super";
-
-      let this = this_ cx loc in
-      let super = super_ cx ploc in
-      let id_info = "super", super, Type_table.Other in
-      Env.add_type_table_info cx ploc id_info;
-      let super_reason = reason_of_t super in
-      Tvar.mk_where cx reason (fun t ->
-        let funtype = mk_methodcalltype this argts t in
-        let propref = Named (super_reason, "constructor") in
-        let use_op = Op (FunCall {
-          op = mk_expression_reason ex;
-          fn = mk_expression_reason callee;
-          args = mk_initial_arguments_reason arguments;
-        }) in
-        Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None)))
-
-  (******************************************)
-  (* See ~/www/static_upstream/core/ *)
-
-  | Call {
-      Call.callee = (_, Identifier (_, "invariant")) as callee;
-      arguments;
-    } ->
-      (* TODO: require *)
-      ignore (expression cx callee);
-      (match arguments with
-      | [] ->
-        (* invariant() is treated like a throw *)
-        Env.reset_current_activation loc;
-        Abnormal.save_and_throw Abnormal.Throw
-      | (Expression (_, Ast.Expression.Literal {
-          Ast.Literal.value = Ast.Literal.Boolean false; _;
-        }))::arguments ->
-        (* invariant(false, ...) is treated like a throw *)
-        ignore (List.map (expression_or_spread cx) arguments);
-        Env.reset_current_activation loc;
-        Abnormal.save_and_throw Abnormal.Throw
-      | (Expression cond)::arguments ->
-        ignore (List.map (expression_or_spread cx) arguments);
-        let _, preds, _, xtypes = predicates_of_condition cx cond in
-        let _ = Env.refine_with_preds cx loc preds xtypes in
-        ()
-      | (Spread _)::_ ->
-        Flow.add_output cx
-          Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument))
-      );
-      VoidT.at loc
-
-  | Call { Call.callee; arguments } ->
-      let f = expression cx callee in
-      let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-      let argts =
-        List.map (expression_or_spread cx) arguments in
-      let use_op = Op (FunCall {
-        op = mk_expression_reason ex;
-        fn = mk_expression_reason callee;
-        args = mk_initial_arguments_reason arguments;
-      }) in
-      func_call cx reason ~use_op f argts
+  | OptionalCall _ -> subscript ~is_cond cx ex
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason RConditional loc in
@@ -3204,6 +2867,478 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   )
 )
 
+(* Handles subscript operations. Whereas `expression` recursively computes the
+   type of the LHS, `subscript` instead walks the AST to first build up a
+   representation of the property chain. We can then walk that representation
+   and emit constraints as we go along and omit the recursion.
+*)
+and subscript =
+  let open Ast.Expression in
+
+  (* As long as we encounter AST nodes for optional subscript operations (which
+     require recursion on the LHS), prepend those nodes to acc and recursively
+     call `build_chain` on the LHS.
+
+     We also handle non-optional subscript operations here in order to have them
+     all in one place and so that the optional nodes can leverage the
+     non-optional pattern matching.
+  *)
+  let rec build_chain ~is_cond cx ((loc, e) as ex) acc =
+    let opt_state, e' = match e with
+    | OptionalCall { OptionalCall.call = { Call.callee; arguments = _ } as call; optional } ->
+        warn_or_ignore_optional_chaining optional cx loc;
+        begin match callee with
+        | _, Member _
+        | _, OptionalMember _ ->
+          Flow.add_output cx Flow_error.(EOptionalChainingMethods loc)
+        | _ -> ()
+        end;
+        let opt_state = if optional then NewChain else ContinueChain in
+        opt_state, Call call
+
+    | OptionalMember { OptionalMember.member; optional } ->
+        warn_or_ignore_optional_chaining optional cx loc;
+        let opt_state = if optional then NewChain else ContinueChain in
+        opt_state, Member member
+    | _ -> NonOptional, e
+    in
+
+    match e' with
+    | Call {
+        Call.callee = _, Identifier (_, "require");
+        arguments;
+      } when not (Env.local_scope_entry_exists "require") -> let lhs_t = (
+        match arguments with
+        | [ Expression (source_loc, Ast.Expression.Literal {
+            Ast.Literal.value = Ast.Literal.String module_name; _;
+          }) ]
+        | [ Expression (source_loc, TemplateLiteral {
+            TemplateLiteral.quasis = [_, {
+              TemplateLiteral.Element.value = {
+                TemplateLiteral.Element.cooked = module_name; _
+              }; _
+            }];
+            expressions = [];
+          }) ] ->
+          require cx (source_loc, module_name) loc
+        | _ ->
+          let ignore_non_literals =
+            Context.should_ignore_non_literal_requires cx in
+          if not ignore_non_literals
+          then
+            Flow.add_output cx
+              Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
+          AnyT.at loc
+      ) in
+      lhs_t, acc, lhs_t
+
+    | Call {
+        Call.callee = _, Identifier (_, "requireLazy");
+        arguments;
+      } when not (Env.local_scope_entry_exists "requireLazy") -> let lhs_t = (
+        match arguments with
+        | [Expression(_, Array({Array.elements;})); Expression(callback_expr);] ->
+          (**
+           * From a static perspective (and as long as side-effects aren't
+           * considered in Flow), a requireLazy call can be viewed as an immediate
+           * call to require() for each of the modules, and then an immediate call
+           * to the requireLazy() callback with the results of each of the prior
+           * calls to require().
+           *
+           * TODO: requireLazy() is FB-specific. Let's find a way to either
+           *       generalize or toggle this only for the FB environment.
+           *)
+
+          let element_to_module_tvar tvars = (function
+            | Some(Expression(source_loc, Ast.Expression.Literal({
+                Ast.Literal.value = Ast.Literal.String module_name;
+                _;
+              }))) ->
+                let module_tvar = require cx (source_loc, module_name) loc in
+                module_tvar::tvars
+            | _ ->
+                Flow.add_output cx Flow_error.(
+                  EUnsupportedSyntax (loc, RequireLazyDynamicArgument)
+                );
+                tvars
+          ) in
+          let module_tvars = elements
+            |> List.fold_left element_to_module_tvar []
+            |> List.rev_map (fun e -> Arg e) in
+
+          let callback_expr_t = expression cx callback_expr in
+          let reason = mk_reason (RCustom "requireLazy() callback") loc in
+          let use_op = Op (FunCall {
+            op = mk_expression_reason ex;
+            fn = mk_expression_reason callback_expr;
+            args = [];
+          }) in
+          let _ = func_call cx reason ~use_op callback_expr_t module_tvars in
+
+          NullT.at loc
+
+        | _ ->
+          Flow.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
+          AnyT.at loc
+      ) in
+      lhs_t, acc, lhs_t
+
+    | Call {
+        Call.callee = (callee_loc, Member {
+          Member._object = (_, Identifier (_, "Object") as obj);
+          property = Member.PropertyIdentifier (prop_loc, name);
+          _
+        } as expr);
+        arguments;
+      } ->
+        let obj_t = expression cx obj in
+        let lhs_t =
+          static_method_call_Object cx loc callee_loc prop_loc expr obj_t name arguments
+        in
+        lhs_t, acc, lhs_t
+
+    | Call {
+        Call.callee = (callee_loc, Member {
+          Member._object = super_loc, Super;
+          property = Member.PropertyIdentifier (ploc, name);
+          _
+        }) as callee;
+        arguments;
+      } ->
+        let reason = mk_reason (RMethodCall (Some name)) loc in
+        let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
+        let reason_prop = mk_reason (RProperty (Some name)) ploc in
+        let super = super_ cx super_loc in
+        let id_info = "super", super, Type_table.Other in
+        Env.add_type_table_info cx super_loc id_info;
+        let argts = List.map (expression_or_spread cx) arguments in
+        Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
+        let lhs_t = Tvar.mk_where cx reason (fun t ->
+          let funtype = mk_methodcalltype super argts t in
+          let use_op = Op (FunCallMethod {
+            op = mk_expression_reason ex;
+            fn = mk_expression_reason callee;
+            prop = reason_prop;
+            args = mk_initial_arguments_reason arguments;
+          }) in
+          let prop_t = Tvar.mk cx reason_prop in
+          let id_info = name, prop_t, Type_table.PropertyAccess super in
+          Env.add_type_table_info cx ploc id_info;
+          Flow.flow cx (
+            super,
+            MethodT (use_op, reason, reason_lookup, Named (reason_prop, name),
+              funtype, Some prop_t)
+          )
+        ) in
+        lhs_t, acc, lhs_t
+
+    | Call {
+        Call.callee = (lookup_loc, Member { Member.
+          _object;
+          property;
+          _
+        }) as callee;
+        arguments;
+      } ->
+        (* method call *)
+        let ot = expression cx _object in
+        let argts = List.map (expression_or_spread cx) arguments in
+        let lhs_t = (match property with
+        | Member.PropertyPrivateName (prop_loc, (_, name))
+        | Member.PropertyIdentifier (prop_loc, name) ->
+          let reason_call = mk_reason (RMethodCall (Some name)) loc in
+          let use_op = Op (FunCallMethod {
+            op = mk_expression_reason ex;
+            fn = mk_expression_reason callee;
+            prop = mk_reason (RProperty (Some name)) prop_loc;
+            args = mk_initial_arguments_reason arguments;
+          }) in
+          method_call cx reason_call ~use_op prop_loc (callee, ot, name) argts
+        | Member.PropertyExpression expr ->
+          let reason_call = mk_reason (RMethodCall None) loc in
+          let reason_lookup = mk_reason (RProperty None) lookup_loc in
+          Tvar.mk_where cx reason_call (fun t ->
+            let elem_t = expression cx expr in
+            let frame = Env.peek_frame () in
+            let funtype = mk_methodcalltype ot argts t ~frame in
+            Flow.flow cx (ot,
+              CallElemT (reason_call, reason_lookup, elem_t, funtype))
+          )) in
+        lhs_t, acc, lhs_t
+
+    | Call {
+        Call.callee = (ploc, Super) as callee;
+        arguments;
+      } ->
+        let argts = List.map (expression_or_spread cx) arguments in
+        let reason = mk_reason (RFunctionCall RSuper) loc in
+
+        (* switch back env entries for this and super from undefined *)
+        define_internal cx reason "this";
+        define_internal cx reason "super";
+
+        let this = this_ cx loc in
+        let super = super_ cx ploc in
+        let id_info = "super", super, Type_table.Other in
+        Env.add_type_table_info cx ploc id_info;
+        let super_reason = reason_of_t super in
+        let lhs_t = Tvar.mk_where cx reason (fun t ->
+          let funtype = mk_methodcalltype this argts t in
+          let propref = Named (super_reason, "constructor") in
+          let use_op = Op (FunCall {
+            op = mk_expression_reason ex;
+            fn = mk_expression_reason callee;
+            args = mk_initial_arguments_reason arguments;
+          }) in
+          Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None))
+        ) in
+        lhs_t, acc, lhs_t
+
+    (******************************************)
+    (* See ~/www/static_upstream/core/ *)
+
+    | Call {
+        Call.callee = (_, Identifier (_, "invariant")) as callee;
+        arguments;
+      } ->
+        (* TODO: require *)
+        ignore (expression cx callee);
+        (match arguments with
+        | [] ->
+          (* invariant() is treated like a throw *)
+          Env.reset_current_activation loc;
+          Abnormal.save_and_throw Abnormal.Throw
+        | (Expression (_, Ast.Expression.Literal {
+            Ast.Literal.value = Ast.Literal.Boolean false; _;
+          }))::arguments ->
+          (* invariant(false, ...) is treated like a throw *)
+          ignore (List.map (expression_or_spread cx) arguments);
+          Env.reset_current_activation loc;
+          Abnormal.save_and_throw Abnormal.Throw
+        | (Expression cond)::arguments ->
+          ignore (List.map (expression_or_spread cx) arguments);
+          let _, preds, _, xtypes = predicates_of_condition cx cond in
+          let _ = Env.refine_with_preds cx loc preds xtypes in
+          ()
+        | (Spread _)::_ ->
+          Flow.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument))
+        );
+        let lhs_t = VoidT.at loc in
+        lhs_t, acc, lhs_t
+
+    | Call { Call.callee; arguments } ->
+        begin match callee with
+        | _, OptionalMember _ ->
+          Flow.add_output cx Flow_error.(EOptionalChainingMethods loc)
+        | _ -> ()
+        end;
+        let argts = List.map (expression_or_spread cx) arguments in
+        let use_op = Op (FunCall {
+          op = mk_expression_reason ex;
+          fn = mk_expression_reason callee;
+          args = mk_initial_arguments_reason arguments;
+        }) in
+        begin match opt_state with
+        | NonOptional ->
+          let f = expression cx callee in
+          let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
+          let lhs_t = func_call cx reason ~use_op f argts in
+          lhs_t, acc, lhs_t
+        | NewChain ->
+          let lhs_t = expression cx callee in
+          let reason = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
+          let tout = Tvar.mk cx reason in
+          let opt_use = func_call_opt_use reason ~use_op argts in
+          lhs_t, ref (loc, opt_use, tout) :: acc, tout
+        | ContinueChain ->
+          (* Hacky reason handling *)
+          let reason = mk_reason ROptionalChain loc in
+          let tout = Tvar.mk cx reason in
+          let opt_use = func_call_opt_use reason ~use_op argts in
+          let step = ref (loc, opt_use, tout) in
+          let lhs_t, chain, f = build_chain ~is_cond cx callee (step :: acc) in
+          let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
+          let tout = mod_reason_of_t (Fn.const reason) tout in
+          let opt_use = mod_reason_of_opt_use_t (Fn.const reason) opt_use in
+          step := (loc, opt_use, tout);
+          lhs_t, chain, tout
+        end
+
+    | Member {
+        Member._object;
+        property = Member.PropertyExpression index;
+        _
+      } ->
+        let reason = mk_reason (RProperty None) loc in
+        let tind = expression cx index in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        let opt_use = OptGetElemT (use_op, reason, tind) in
+        begin match opt_state with
+        | NonOptional ->
+          let lhs_t = (match Refinement.get cx (loc, e) loc with
+          | Some t -> t
+          | None ->
+            let tobj = expression cx _object in
+            Tvar.mk_where cx reason (fun t ->
+              let use = apply_opt_use opt_use t in
+              Flow.flow cx (tobj, use)
+            )
+          ) in
+          lhs_t, acc, lhs_t
+        | NewChain ->
+          let tout = Tvar.mk cx reason in
+          let lhs_t = expression cx _object in
+          lhs_t, ref (loc, opt_use, tout) :: acc, tout
+        | ContinueChain ->
+          let tout = Tvar.mk cx reason in
+          let lhs_t, chain, _ = build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
+          lhs_t, chain, tout
+        end
+
+    | Member {
+        Member._object = _, Identifier (_, "module");
+        property = Member.PropertyIdentifier (_, "exports");
+        _
+      } -> let lhs_t = get_module_exports cx loc in
+        lhs_t, acc, lhs_t
+
+    | Member {
+        Member._object =
+          _, Identifier (_, ("ReactGraphQL" | "ReactGraphQLLegacy"));
+        property = Member.PropertyIdentifier (_, "Mixin");
+        _
+      } ->
+        let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
+        let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
+        lhs_t, acc, lhs_t
+
+    | Member {
+        Member._object = super_loc, Super;
+        property = Member.PropertyIdentifier (ploc, name);
+        _
+      } ->
+        let super = super_ cx super_loc in
+        let id_info = "super", super, Type_table.Other in
+        Env.add_type_table_info cx super_loc id_info;
+        let expr_reason = mk_reason (RProperty (Some name)) loc in
+        let lhs_t = (match Refinement.get cx (loc, e) loc with
+        | Some t -> t
+        | None ->
+          let prop_reason = mk_reason (RProperty (Some name)) ploc in
+          if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
+          then AnyT.at ploc
+          else Tvar.mk_where cx expr_reason (fun tvar ->
+            let use_op = Op (GetProperty (mk_expression_reason ex)) in
+            Flow.flow cx (
+              super, GetPropT (use_op, expr_reason, Named (prop_reason, name), tvar)
+            )
+          )
+        )
+        |> begin fun t ->
+          let id_info = name, t, Type_table.PropertyAccess super in
+          Env.add_type_table_info cx ploc id_info;
+          t
+        end in
+        lhs_t, acc, lhs_t
+
+    | Member {
+        Member._object;
+        property = Member.PropertyIdentifier (ploc, name);
+        _
+      } ->
+        let expr_reason = mk_reason (RProperty (Some name)) loc in
+        let prop_reason = mk_reason (RProperty (Some name)) ploc in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        begin match opt_state with
+        | NonOptional ->
+          let tobj = expression cx _object in
+          (* TODO: fishythefish - support hooks in optional chains *)
+          let lhs_t = if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
+          then AnyT.at ploc
+          else begin match Refinement.get cx (loc, e) loc with
+          | Some t -> t
+          | None ->
+            get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
+          end in
+          lhs_t, acc, lhs_t, tobj
+        | NewChain ->
+          let tout = Tvar.mk cx expr_reason in
+          let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
+          let lhs_t = expression cx _object in
+          lhs_t, ref (loc, opt_use, tout) :: acc, tout, lhs_t
+        | ContinueChain ->
+          let tout = Tvar.mk cx expr_reason in
+          let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
+          let lhs_t, chain, tobj = build_chain ~is_cond cx _object
+            (ref (loc, opt_use, tout) :: acc) in
+          lhs_t, chain, tout, tobj
+        end
+        |> begin fun (lhs_t, chain, tout, tobj) ->
+          let id_info = name, tout, Type_table.PropertyAccess tobj in
+          Env.add_type_table_info cx ploc id_info;
+          lhs_t, chain, tout
+        end
+
+    | Member {
+        Member._object;
+        property = Member.PropertyPrivateName (ploc, (_, name));
+        _
+      } ->
+        let expr_reason = mk_reason (RPrivateProperty name) loc in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        begin match opt_state with
+        | NonOptional ->
+          let lhs_t = (
+            match Refinement.get cx (loc, e) loc with
+            | Some t -> t
+            | None ->
+              let tobj = expression cx _object in
+              (* TODO: fishythefish - support hooks in optional chains *)
+              if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
+              then AnyT.at ploc
+              else get_private_field cx expr_reason ~use_op tobj name
+          ) in
+          lhs_t, acc, lhs_t
+        | NewChain ->
+          let tout = Tvar.mk cx expr_reason in
+          let opt_use = get_private_field_opt_use expr_reason ~use_op name in
+          let lhs_t = expression cx _object in
+          lhs_t, ref (loc, opt_use, tout) :: acc, tout
+        | ContinueChain ->
+          let tout = Tvar.mk cx expr_reason in
+          let opt_use = get_private_field_opt_use expr_reason ~use_op name in
+          let lhs_t, chain, _ = build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
+          lhs_t, chain, tout
+        end
+        |> begin fun (lhs_t, chain, t) ->
+          (* TODO use PropertyAccess *)
+          let id_info = name, t, Type_table.Other in
+          Env.add_type_table_info cx ploc id_info;
+          lhs_t, chain, t
+        end
+    | _ ->
+        let lhs_t = expression cx ex in
+        lhs_t, acc, lhs_t
+    in
+
+  fun ~is_cond cx ex ->
+    let lhs_t, chain, tout = build_chain ~is_cond cx ex [] in
+    begin match chain with
+    | [] -> ()
+    | hd :: tl ->
+      let (hd_loc, _, _) = !hd in
+      let chain = Nel.map (fun step ->
+        let (loc, use, t) = !step in
+        Env.add_type_table cx loc t;
+        use, t
+      ) (hd, tl) in
+      let reason = mk_reason ROptionalChain hd_loc in
+      Flow.flow cx (lhs_t, OptionalChainT (reason, chain));
+    end;
+    tout
+
 (* Handles function calls that appear in conditional contexts. The main
    distinction from the case handled in `expression_` is that we also return
    the inferred types for the call receiver and the passed arguments, and
@@ -3249,12 +3384,16 @@ and new_call cx reason ~use_op class_ argts =
     Flow.flow cx (class_, ConstructorT (use_op, reason, argts, t));
   )
 
-and func_call cx reason ~use_op ?(call_strict_arity=true) func_t argts =
+and func_call_opt_use reason ~use_op ?(call_strict_arity=true) argts =
   Env.havoc_heap_refinements ();
+  let frame = Env.peek_frame () in
+  let opt_app = mk_opt_functioncalltype reason argts frame call_strict_arity in
+  OptCallT (use_op, reason, opt_app)
+
+and func_call cx reason ~use_op ?(call_strict_arity=true) func_t argts =
+  let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity argts in
   Tvar.mk_where cx reason (fun t ->
-    let frame = Env.peek_frame () in
-    let app = mk_functioncalltype reason argts t ~frame ~call_strict_arity in
-    Flow.flow cx (func_t, CallT (use_op, reason, app))
+    Flow.flow cx (func_t, apply_opt_use opt_use t)
   )
 
 and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
@@ -4665,10 +4804,14 @@ and predicates_of_condition cx e = Ast.(Expression.(
 and condition cx e =
   expression ~is_cond:true cx e
 
+and get_private_field_opt_use reason ~use_op name =
+  let class_entries = Env.get_class_entries () in
+  OptGetPrivatePropT (use_op, reason, name, class_entries, false)
+
 and get_private_field cx reason ~use_op tobj name =
   Tvar.mk_where cx reason (fun t ->
-    let class_entries = Env.get_class_entries () in
-    let get_prop_u = GetPrivatePropT (use_op, reason, name, class_entries, false, t) in
+    let opt_use = get_private_field_opt_use reason ~use_op name in
+    let get_prop_u = apply_opt_use opt_use t in
     Flow.flow cx (tobj, get_prop_u)
   )
 
@@ -4679,13 +4822,15 @@ and get_private_field cx reason ~use_op tobj name =
    expressions out of `expression`, somewhat like what assignment_lhs does. That
    would make everything involving Refinement be in the same place.
 *)
+and get_prop_opt_use ~is_cond reason ~use_op (prop_reason, name) =
+  if is_cond
+  then OptTestPropT (reason, mk_id (), Named (prop_reason, name))
+  else OptGetPropT (use_op, reason, Named (prop_reason, name))
+
 and get_prop ~is_cond cx reason ~use_op tobj (prop_reason, name) =
+  let opt_use = get_prop_opt_use ~is_cond reason ~use_op (prop_reason, name) in
   Tvar.mk_where cx reason (fun t ->
-    let get_prop_u =
-      if is_cond
-      then TestPropT (reason, mk_id (), Named (prop_reason, name), t)
-      else GetPropT (use_op, reason, Named (prop_reason, name), t)
-    in
+    let get_prop_u = apply_opt_use opt_use t in
     Flow.flow cx (tobj, get_prop_u)
   )
 

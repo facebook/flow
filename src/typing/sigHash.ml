@@ -161,6 +161,7 @@ type hash =
   | SentinelPropTestH
   | IdxUnwrapH
   | IdxUnMaybeifyH
+  | OptionalChainH
   | CallLatentPredH
   | CallOpenPredH
   | SubstOnPredH
@@ -312,6 +313,7 @@ let hash_of_use_ctor = Type.(function
   | SentinelPropTestT _ -> SentinelPropTestH
   | IdxUnwrap _ -> IdxUnwrapH
   | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
+  | OptionalChainT _ -> OptionalChainH
   | CallLatentPredT _ -> CallLatentPredH
   | CallOpenPredT _ -> CallOpenPredH
   | SubstOnPredT _ -> SubstOnPredH

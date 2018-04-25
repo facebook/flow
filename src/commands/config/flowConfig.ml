@@ -517,7 +517,7 @@ let parse_options config lines =
     |> define_opt "esproposal.optional_chaining" {
       initializer_ = USE_DEFAULT;
       flags = [];
-      optparser = optparse_esproposal_feature_flag ~allow_enable:false;
+      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> Ok {
         opts with esproposal_optional_chaining = v;
       });

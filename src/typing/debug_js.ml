@@ -788,6 +788,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out
     ]
 
+  | OptionalChainT (_, uses) -> [
+      "chain", JSON_Array (Nel.to_list @@ Nel.map (fun (use, tout) ->
+        _json_of_use_t json_cx (apply_opt_use use tout)
+      ) uses);
+    ]
+
   | CallLatentPredT (_, sense, offset, l, t) -> [
       "sense", JSON_Bool sense;
       "offset", JSON_Number (spf "%d" offset);
@@ -2096,6 +2102,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ObjSealT _ -> p t
   | ObjTestProtoT _ -> p t
   | ObjTestT _ -> p t
+  | OptionalChainT _ -> p t
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
@@ -2754,6 +2761,8 @@ let dump_flow_error =
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->
         spf "EExperimentalOptionalChaining (%s)" (string_of_loc loc)
+    | EOptionalChainingMethods loc ->
+        spf "EOptionalChainingMethods (%s)" (string_of_loc loc)
     | EInexactSpread (reason, reason_op) ->
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)

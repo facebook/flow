@@ -154,6 +154,7 @@ type error_message =
     }
   | EInvalidPrototype of reason
   | EExperimentalOptionalChaining of Loc.t
+  | EOptionalChainingMethods of Loc.t
   | EInexactSpread of reason * reason
 
 and binding_error =
@@ -367,7 +368,8 @@ let util_use_op_of_msg nope util = function
 | ELintSetting (_)
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
 | EInvalidPrototype (_)
-| EExperimentalOptionalChaining (_)
+| EExperimentalOptionalChaining _
+| EOptionalChainingMethods _
 | EInexactSpread _
   -> nope
 
@@ -1945,6 +1947,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text "may change. You may opt in to using it anyway by putting ";
       code "esproposal.optional_chaining=enable"; text " into the ";
       code "[options]"; text " section of your "; code ".flowconfig"; text ".";
+    ]
+
+  | EOptionalChainingMethods loc ->
+    mk_error ~trace_infos ~kind:ParseError loc [
+      text "Flow does not yet support method or property calls in optional chains."
     ]
 
   | EInexactSpread (reason, reason_op) ->
