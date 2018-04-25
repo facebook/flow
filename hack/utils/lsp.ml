@@ -417,11 +417,16 @@ module PublishDiagnostics = struct
   and diagnostic = {
     range: range;  (* the range at which the message applies *)
     severity: diagnosticSeverity option;  (* if omitted, client decides *)
-    code: int option;  (* the diagnostic's code. Wire: can be string too *)
+    code: diagnosticCode;  (* the diagnostic's code. *)
     source: string option;  (* human-readable string, eg. typescript/lint *)
     message: string;  (* the diagnostic's message *)
     relatedLocations: relatedLocation list;
   }
+
+  and diagnosticCode =
+    | IntCode of int
+    | StringCode of string
+    | NoCode
 
   and diagnosticSeverity =
     | Error (* 1 *)
