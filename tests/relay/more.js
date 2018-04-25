@@ -35,8 +35,8 @@ declare function createFragmentContainer<Props: {}>(
 ): React.ComponentType<$RelayProps<Props, RelayProp>>;
 
 /*********************************
-  * From generated files          *
-  *********************************/
+ * From generated files          *
+ *********************************/
 
 declare export opaque type RelayModernTypedFlowtest_user$reference: FragmentTypeof;
 export type RelayModernTypedFlowtest_user = {|
@@ -51,8 +51,8 @@ export type RelayModernTypedFlowtest_users = $ReadOnlyArray<{|
 |}>;
 
 /*********************************
-  * RelayModernTyped-flowtest     *
-  *********************************/
+ * RelayModernTyped-flowtest     *
+ *********************************/
 
 class SingularTest extends React.Component<{
   string: string,

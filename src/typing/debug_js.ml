@@ -860,16 +860,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 and json_of_resolve_to json_cx = check_depth json_of_resolve_to_impl json_cx
 and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
   match resolve_to with
-  | ResolveSpreadsToTuple (id, tout) -> [
+  | ResolveSpreadsToTuple (id, elem_t, tout)
+  | ResolveSpreadsToArrayLiteral (id, elem_t, tout) -> [
     "id", JSON_Number (string_of_int id);
+    "elem_t", _json_of_t json_cx elem_t;
     "t_out", _json_of_t json_cx tout;
   ]
-  | ResolveSpreadsToArrayLiteral (id, tout) -> [
-    "id", JSON_Number (string_of_int id);
-    "t_out", _json_of_t json_cx tout;
-  ]
-  | ResolveSpreadsToArray (id, tout) -> [
-    "id", JSON_Number (string_of_int id);
+  | ResolveSpreadsToArray (elem_t, tout) -> [
+    "elem_t", _json_of_t json_cx elem_t;
     "t_out", _json_of_t json_cx tout;
   ]
   | ResolveSpreadsToMultiflowCallFull (id, ft)
@@ -2108,9 +2106,10 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
   | ResolveSpreadT (use_op, _, {rrt_resolve_to; _;}) ->
       (match rrt_resolve_to with
-      | ResolveSpreadsToTuple (_, tout)
-      | ResolveSpreadsToArrayLiteral (_, tout)
-      | ResolveSpreadsToArray (_, tout)
+      | ResolveSpreadsToTuple (_, elem_t, tout)
+      | ResolveSpreadsToArrayLiteral (_, elem_t, tout)
+      | ResolveSpreadsToArray (elem_t, tout) ->
+        p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid elem_t) (kid tout)) t
       | ResolveSpreadsToMultiflowPartial (_, _, _, tout) ->
         p ~extra:(spf "%s, %s" (string_of_use_op use_op) (kid tout)) t
       | ResolveSpreadsToCallT (_, tin) ->

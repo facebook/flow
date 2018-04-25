@@ -14,7 +14,8 @@ exports.title =
 exports.description = `
 The recommended way to write React components used to be:
 
-${Styled.codeblock(`
+${Styled.codeblock(
+  `
 import React from 'react';
 
 type DefaultProps = { /* ... */ };
@@ -30,7 +31,8 @@ class MyComponent extends React.Component {
   render() {
     return /* ... */;
   }
-}`.slice(1))}
+}`.slice(1),
+)}
 
 While you would write React.Component in this way without type arguments the
 signature for React.Component was in fact:
@@ -38,13 +40,17 @@ React.Component<DefaultProps, Props, State>. So for Flow to get from the
 component style above to a place where React components had the correct type
 arguments it would turn:
 
-${Styled.codeblock(`
-class MyComponent extends React.Component {`.slice(1))}
+${Styled.codeblock(
+  `
+class MyComponent extends React.Component {`.slice(1),
+)}
 
 ...into:
 
-${Styled.codeblock(`
-class MyComponent extends React.Component<*, *, *> {`.slice(1))}
+${Styled.codeblock(
+  `
+class MyComponent extends React.Component<*, *, *> {`.slice(1),
+)}
 
 Where the star (*) meant "infer." However, this approach is difficult to
 understand, reduces type trustworthiness, and has some negative impacts on
@@ -54,7 +60,8 @@ This upgrade runs a codemod to make the type arguments you pass into
 React.Component explicit. We take the code in the first example above and turn
 it into:
 
-${Styled.codeblock(`
+${Styled.codeblock(
+  `
 import React from 'react';
 
 type DefaultProps = { /* ... */ };
@@ -69,6 +76,7 @@ class MyComponent extends React.Component<DefaultProps, Props, State> {
   render() {
     return /* ... */;
   }
-}`.slice(1))}`.slice(1);
+}`.slice(1),
+)}`.slice(1);
 
 exports.transformPath = path.join(__dirname, './codemod.js');

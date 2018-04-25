@@ -62,3 +62,4 @@ val find_type_info: pred:(Loc.t -> bool) -> t -> (Loc.t * scheme_entry) option
 val function_decl_loc : (Loc.t * 'a) option -> Loc.t -> Loc.t
 val coverage_to_list: t -> (Loc.t * type_scheme) list
 val coverage_hashtbl: t -> (Loc.t, type_scheme) Hashtbl.t
+val type_info_hashtbl: t -> (Loc.t, scheme_entry) Hashtbl.t

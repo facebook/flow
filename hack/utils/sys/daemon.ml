@@ -148,6 +148,17 @@ end
 type ('param, 'input, 'output) entry = ('param, 'input, 'output) Entry.t
 
 let exec entry param ic oc =
+  (**
+  * The name "exec" is a bit of a misnomer. By the time we
+  * get here, the "exec" syscall has already finished and the
+  * process image has been replaced. We're using "exec" here to mean
+  * running the proper entry.
+  *
+  * Since Linux's "exec" has already completed, we can actaully set
+  * FD_CLOEXEC on the opened channels.
+  *)
+  let () = Unix.set_close_on_exec (descr_of_in_channel ic) in
+  let () = Unix.set_close_on_exec (descr_of_out_channel oc) in
   let f = Entry.find entry in
   try f param (ic, oc); exit 0
   with e ->
@@ -178,19 +189,10 @@ let setup_channels channel_mode =
   Unix.set_close_on_exec parent_out;
   (parent_in, child_out), (child_in, parent_out)
 
-let make_pipe (descr_in, descr_out)  =
+let descr_as_channels (descr_in, descr_out)  =
   let ic = Timeout.in_channel_of_descr descr_in in
   let oc = Unix.out_channel_of_descr descr_out in
   ic, oc
-
-let close_pipe channel_mode (ch_in, ch_out) =
-  match channel_mode with
-  | `pipe ->
-    Timeout.close_in ch_in;
-    close_out ch_out
-  | `socket ->
-    (** the in and out FD's are the same. Close only once. *)
-    Timeout.close_in ch_in
 
 (* This only works on Unix, and should be avoided as far as possible. Use
  * Daemon.spawn instead. *)
@@ -201,14 +203,18 @@ let fork
     (param : param) : ('b, 'a) handle =
   let (parent_in, child_out), (child_in, parent_out)
       = setup_channels channel_mode in
-    let (parent_in, child_out) = make_pipe (parent_in, child_out) in
-    let (child_in, parent_out) = make_pipe (child_in, parent_out) in
+  (** Since don't use exec, we can actually set CLOEXEC before the fork. *)
+  Unix.set_close_on_exec child_in;
+  Unix.set_close_on_exec child_out;
+  let (parent_in, child_out) = descr_as_channels (parent_in, child_out) in
+  let (child_in, parent_out) = descr_as_channels (child_in, parent_out) in
   match Fork.fork () with
   | -1 -> failwith "Go get yourself a real computer"
   | 0 -> (* child *)
     (try
       ignore(Unix.setsid());
-      close_pipe channel_mode (parent_in, parent_out);
+      Timeout.close_in parent_in;
+      close_out parent_out;
       Sys_utils.with_umask 0o111 begin fun () ->
         let fd = null_fd () in
         Unix.dup2 fd Unix.stdin;
@@ -226,7 +232,8 @@ let fork
       Printexc.print_backtrace stderr;
       exit 1)
   | pid -> (* parent *)
-    close_pipe channel_mode (child_in, child_out);
+    Timeout.close_in child_in;
+    close_out child_out;
     { channels = parent_in, parent_out; pid }
 
 let spawn

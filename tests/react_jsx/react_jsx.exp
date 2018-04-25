@@ -148,8 +148,8 @@ Cannot create `Legacy_ManyProps` element because null or undefined [1] is incomp
 `number`.
 
    test.js:134:1
-        v------------------------------------------------------------------------------------------------------------
-   134| <Legacy_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
+        v--------------------------------------------------------------------------
+   134| <Legacy_ManyProps // OK: `number` is overwritten at the end of the element.
    135|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
    136|   boolean1
    137|   boolean2={false}
@@ -277,8 +277,8 @@ Cannot create `Class_ManyProps` element because null or undefined [1] is incompa
 `number`.
 
    test.js:196:1
-        v-----------------------------------------------------------------------------------------------------------
-   196| <Class_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
+        v-------------------------------------------------------------------------
+   196| <Class_ManyProps // OK: `number` is overwritten at the end of the element.
    197|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
    198|   boolean1
    199|   boolean2={false}
@@ -457,8 +457,8 @@ Cannot create `ClassExact_ManyProps` element because null or undefined [1] is in
 `number`.
 
    test.js:258:1
-        v----------------------------------------------------------------------------------------------------------------
-   258| <ClassExact_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
+        v------------------------------------------------------------------------------------------------
+   258| <ClassExact_ManyProps // Error (TODO), but OK: `number` is overwritten at the end of the element.
    259|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
    260|   boolean1
    261|   boolean2={false}
@@ -489,24 +489,7 @@ References:
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:273:1
-
-Cannot create `ClassExact_ManyProps` element because inexact props [1] is incompatible with exact `Props_ManyProps` [2].
-
-   test.js:273:1
-        v------------------------------------------------------------------
-   273| <ClassExact_ManyProps // Error: Non-exact type may have extra keys.
-   274|   {...(any: Props_ManyProps)}
-   275| />;
-        -^ [1]
-
-References:
-   test.js:209:52
-   209| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:278:1
+Error ---------------------------------------------------------------------------------------------------- test.js:272:1
 
 Cannot create `ClassPure_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -515,17 +498,17 @@ Cannot create `ClassPure_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:278:1
-   278| <ClassPure_ManyProps />; // Error: There are no props.
+   test.js:272:1
+   272| <ClassPure_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:277:55
-   277| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:271:55
+   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:296:1
+Error ---------------------------------------------------------------------------------------------------- test.js:290:1
 
 Cannot create `ClassPure_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -534,108 +517,108 @@ Cannot create `ClassPure_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:296:1
+   test.js:290:1
         v---------------------------------------------------------------
-   296| <ClassPure_ManyProps // Error: All props have an incorrect type.
-   297|   string1={null}
-   298|   string2={null}
-   299|   boolean1={null}
-   300|   boolean2={null}
-   301|   number={null}
-   302| />;
+   290| <ClassPure_ManyProps // Error: All props have an incorrect type.
+   291|   string1={null}
+   292|   string2={null}
+   293|   boolean1={null}
+   294|   boolean2={null}
+   295|   number={null}
+   296| />;
         -^
 
 References:
-   test.js:297:12
-   297|   string1={null}
+   test.js:291:12
+   291|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:298:12
-   298|   string2={null}
+   test.js:292:12
+   292|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:299:13
-   299|   boolean1={null}
+   test.js:293:13
+   293|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:300:13
-   300|   boolean2={null}
+   test.js:294:13
+   294|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:301:11
-   301|   number={null}
+   test.js:295:11
+   295|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:315:1
+Error ---------------------------------------------------------------------------------------------------- test.js:309:1
 
 Cannot create `ClassPure_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:315:1
+   test.js:309:1
         v-----------------------------------------------
-   315| <ClassPure_ManyProps // Error: Missing `number`.
-   316|   {...{string1: 'foo', string2: 'bar'}}
-   317|   {...{boolean1: true, boolean2: false}}
-   318| />;
+   309| <ClassPure_ManyProps // Error: Missing `number`.
+   310|   {...{string1: 'foo', string2: 'bar'}}
+   311|   {...{boolean1: true, boolean2: false}}
+   312| />;
         -^ [1]
 
 References:
-   test.js:277:55
-   277| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
+   test.js:271:55
+   271| class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
                                                               ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:326:1
+Error ---------------------------------------------------------------------------------------------------- test.js:320:1
 
 Cannot create `ClassPure_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:326:1
-        v---------------------------------------------------------------------------------------------------------------
-   326| <ClassPure_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   327|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   328|   boolean1
-   329|   boolean2={false}
-   330|   number={42}
-   331| />;
+   test.js:320:1
+        v-----------------------------------------------------------------------------
+   320| <ClassPure_ManyProps // OK: `number` is overwritten at the end of the element.
+   321|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   322|   boolean1
+   323|   boolean2={false}
+   324|   number={42}
+   325| />;
         -^
 
 References:
-   test.js:327:54
-   327|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:321:54
+   321|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:336:54
+Error --------------------------------------------------------------------------------------------------- test.js:330:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:336:54
-   336|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:330:54
+   330|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:335:11
-   335|   number={42}
+   test.js:329:11
+   329|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:340:1
+Error ---------------------------------------------------------------------------------------------------- test.js:334:1
 
 Cannot create `Function_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -644,17 +627,17 @@ Cannot create `Function_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:340:1
-   340| <Function_ManyProps />; // Error: There are no props.
+   test.js:334:1
+   334| <Function_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:339:36
-   339| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:333:36
+   333| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:358:1
+Error ---------------------------------------------------------------------------------------------------- test.js:352:1
 
 Cannot create `Function_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -663,108 +646,108 @@ Cannot create `Function_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:358:1
+   test.js:352:1
         v--------------------------------------------------------------
-   358| <Function_ManyProps // Error: All props have an incorrect type.
-   359|   string1={null}
-   360|   string2={null}
-   361|   boolean1={null}
-   362|   boolean2={null}
-   363|   number={null}
-   364| />;
+   352| <Function_ManyProps // Error: All props have an incorrect type.
+   353|   string1={null}
+   354|   string2={null}
+   355|   boolean1={null}
+   356|   boolean2={null}
+   357|   number={null}
+   358| />;
         -^
 
 References:
-   test.js:359:12
-   359|   string1={null}
+   test.js:353:12
+   353|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:360:12
-   360|   string2={null}
+   test.js:354:12
+   354|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:361:13
-   361|   boolean1={null}
+   test.js:355:13
+   355|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:362:13
-   362|   boolean2={null}
+   test.js:356:13
+   356|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:363:11
-   363|   number={null}
+   test.js:357:11
+   357|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:377:1
+Error ---------------------------------------------------------------------------------------------------- test.js:371:1
 
 Cannot create `Function_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:377:1
+   test.js:371:1
         v----------------------------------------------
-   377| <Function_ManyProps // Error: Missing `number`.
-   378|   {...{string1: 'foo', string2: 'bar'}}
-   379|   {...{boolean1: true, boolean2: false}}
-   380| />;
+   371| <Function_ManyProps // Error: Missing `number`.
+   372|   {...{string1: 'foo', string2: 'bar'}}
+   373|   {...{boolean1: true, boolean2: false}}
+   374| />;
         -^ [1]
 
 References:
-   test.js:339:36
-   339| const Function_ManyProps = (props: Props_ManyProps) => any;
+   test.js:333:36
+   333| const Function_ManyProps = (props: Props_ManyProps) => any;
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:388:1
+Error ---------------------------------------------------------------------------------------------------- test.js:382:1
 
 Cannot create `Function_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:388:1
-        v--------------------------------------------------------------------------------------------------------------
-   388| <Function_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   389|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   390|   boolean1
-   391|   boolean2={false}
-   392|   number={42}
-   393| />;
+   test.js:382:1
+        v----------------------------------------------------------------------------
+   382| <Function_ManyProps // OK: `number` is overwritten at the end of the element.
+   383|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   384|   boolean1
+   385|   boolean2={false}
+   386|   number={42}
+   387| />;
         -^
 
 References:
-   test.js:389:54
-   389|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:383:54
+   383|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:398:54
+Error --------------------------------------------------------------------------------------------------- test.js:392:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:398:54
-   398|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:392:54
+   392|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:397:11
-   397|   number={42}
+   test.js:391:11
+   391|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:402:1
+Error ---------------------------------------------------------------------------------------------------- test.js:396:1
 
 Cannot create `FunctionExact_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -773,44 +756,44 @@ Cannot create `FunctionExact_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:402:1
-   402| <FunctionExact_ManyProps />; // Error: There are no props.
+   test.js:396:1
+   396| <FunctionExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:401:48
-   401| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:395:48
+   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:410:1
+Error ---------------------------------------------------------------------------------------------------- test.js:404:1
 
 Cannot create `FunctionExact_ManyProps` element because:
  - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
-   test.js:410:1
+   test.js:404:1
         v-------------------------------------------------------
-   410| <FunctionExact_ManyProps // OK: Other props are allowed.
-   411|   string1="foo"
-   412|   string2={'bar'}
-   413|   boolean1
-   414|   boolean2={false}
-   415|   number={42}
-   416|   a={1}
-   417|   b={2}
-   418|   c={3}
-   419| />;
+   404| <FunctionExact_ManyProps // OK: Other props are allowed.
+   405|   string1="foo"
+   406|   string2={'bar'}
+   407|   boolean1
+   408|   boolean2={false}
+   409|   number={42}
+   410|   a={1}
+   411|   b={2}
+   412|   c={3}
+   413| />;
         -^ [2]
 
 References:
-   test.js:401:48
-   401| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:395:48
+   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:420:1
+Error ---------------------------------------------------------------------------------------------------- test.js:414:1
 
 Cannot create `FunctionExact_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -819,132 +802,132 @@ Cannot create `FunctionExact_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:420:1
+   test.js:414:1
         v-------------------------------------------------------------------
-   420| <FunctionExact_ManyProps // Error: All props have an incorrect type.
-   421|   string1={null}
-   422|   string2={null}
-   423|   boolean1={null}
-   424|   boolean2={null}
-   425|   number={null}
-   426| />;
+   414| <FunctionExact_ManyProps // Error: All props have an incorrect type.
+   415|   string1={null}
+   416|   string2={null}
+   417|   boolean1={null}
+   418|   boolean2={null}
+   419|   number={null}
+   420| />;
         -^
 
 References:
-   test.js:421:12
-   421|   string1={null}
+   test.js:415:12
+   415|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:422:12
-   422|   string2={null}
+   test.js:416:12
+   416|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:423:13
-   423|   boolean1={null}
+   test.js:417:13
+   417|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:424:13
-   424|   boolean2={null}
+   test.js:418:13
+   418|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:425:11
-   425|   number={null}
+   test.js:419:11
+   419|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:439:1
+Error ---------------------------------------------------------------------------------------------------- test.js:433:1
 
 Cannot create `FunctionExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:439:1
+   test.js:433:1
         v---------------------------------------------------
-   439| <FunctionExact_ManyProps // Error: Missing `number`.
-   440|   {...{string1: 'foo', string2: 'bar'}}
-   441|   {...{boolean1: true, boolean2: false}}
-   442| />;
+   433| <FunctionExact_ManyProps // Error: Missing `number`.
+   434|   {...{string1: 'foo', string2: 'bar'}}
+   435|   {...{boolean1: true, boolean2: false}}
+   436| />;
         -^ [1]
 
 References:
-   test.js:401:48
-   401| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:395:48
+   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:443:1
+Error ---------------------------------------------------------------------------------------------------- test.js:437:1
 
 Cannot create `FunctionExact_ManyProps` element because:
  - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
-   test.js:443:1
+   test.js:437:1
         v--------------------------------------------------------------
-   443| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-   444|   string1="foo"
-   445|   string2={'bar'}
-   446|   boolean1
-   447|   boolean2={false}
-   448|   {...{number: 42, a: 1, b: 2, c: 3}}
-   449| />;
+   437| <FunctionExact_ManyProps // Error: Extra props are not allowed.
+   438|   string1="foo"
+   439|   string2={'bar'}
+   440|   boolean1
+   441|   boolean2={false}
+   442|   {...{number: 42, a: 1, b: 2, c: 3}}
+   443| />;
         -^ [2]
 
 References:
-   test.js:401:48
-   401| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+   test.js:395:48
+   395| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                        ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:450:1
+Error ---------------------------------------------------------------------------------------------------- test.js:444:1
 
 Cannot create `FunctionExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:450:1
-        v-------------------------------------------------------------------------------------------------------------------
-   450| <FunctionExact_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   451|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   452|   boolean1
-   453|   boolean2={false}
-   454|   number={42}
-   455| />;
+   test.js:444:1
+        v-------------------------------------------------------------------------
+   444| <FunctionExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
+   445|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   446|   boolean1
+   447|   boolean2={false}
+   448|   number={42}
+   449| />;
         -^
 
 References:
-   test.js:451:54
-   451|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:445:54
+   445|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:460:54
+Error --------------------------------------------------------------------------------------------------- test.js:454:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:460:54
-   460|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:454:54
+   454|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:459:11
-   459|   number={42}
+   test.js:453:11
+   453|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:464:1
+Error ---------------------------------------------------------------------------------------------------- test.js:458:1
 
 Cannot create `Abstract_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -953,17 +936,17 @@ Cannot create `Abstract_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:464:1
-   464| <Abstract_ManyProps />; // Error: There are no props.
+   test.js:458:1
+   458| <Abstract_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:463:47
-   463| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:457:47
+   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:482:1
+Error ---------------------------------------------------------------------------------------------------- test.js:476:1
 
 Cannot create `Abstract_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -972,108 +955,108 @@ Cannot create `Abstract_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:482:1
+   test.js:476:1
         v--------------------------------------------------------------
-   482| <Abstract_ManyProps // Error: All props have an incorrect type.
-   483|   string1={null}
-   484|   string2={null}
-   485|   boolean1={null}
-   486|   boolean2={null}
-   487|   number={null}
-   488| />;
+   476| <Abstract_ManyProps // Error: All props have an incorrect type.
+   477|   string1={null}
+   478|   string2={null}
+   479|   boolean1={null}
+   480|   boolean2={null}
+   481|   number={null}
+   482| />;
         -^
 
 References:
-   test.js:483:12
-   483|   string1={null}
+   test.js:477:12
+   477|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:484:12
-   484|   string2={null}
+   test.js:478:12
+   478|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:485:13
-   485|   boolean1={null}
+   test.js:479:13
+   479|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:486:13
-   486|   boolean2={null}
+   test.js:480:13
+   480|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:487:11
-   487|   number={null}
+   test.js:481:11
+   481|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:501:1
+Error ---------------------------------------------------------------------------------------------------- test.js:495:1
 
 Cannot create `Abstract_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:501:1
+   test.js:495:1
         v----------------------------------------------
-   501| <Abstract_ManyProps // Error: Missing `number`.
-   502|   {...{string1: 'foo', string2: 'bar'}}
-   503|   {...{boolean1: true, boolean2: false}}
-   504| />;
+   495| <Abstract_ManyProps // Error: Missing `number`.
+   496|   {...{string1: 'foo', string2: 'bar'}}
+   497|   {...{boolean1: true, boolean2: false}}
+   498| />;
         -^ [1]
 
 References:
-   test.js:463:47
-   463| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
+   test.js:457:47
+   457| const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:512:1
+Error ---------------------------------------------------------------------------------------------------- test.js:506:1
 
 Cannot create `Abstract_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:512:1
-        v--------------------------------------------------------------------------------------------------------------
-   512| <Abstract_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   513|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   514|   boolean1
-   515|   boolean2={false}
-   516|   number={42}
-   517| />;
+   test.js:506:1
+        v----------------------------------------------------------------------------
+   506| <Abstract_ManyProps // OK: `number` is overwritten at the end of the element.
+   507|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   508|   boolean1
+   509|   boolean2={false}
+   510|   number={42}
+   511| />;
         -^
 
 References:
-   test.js:513:54
-   513|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:507:54
+   507|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:522:54
+Error --------------------------------------------------------------------------------------------------- test.js:516:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:522:54
-   522|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:516:54
+   516|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:521:11
-   521|   number={42}
+   test.js:515:11
+   515|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:527:1
+Error ---------------------------------------------------------------------------------------------------- test.js:521:1
 
 Cannot create `AbstractExact_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -1082,44 +1065,44 @@ Cannot create `AbstractExact_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:527:1
-   527| <AbstractExact_ManyProps />; // Error: There are no props.
+   test.js:521:1
+   521| <AbstractExact_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:525:59
-   525| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:519:59
+   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:535:1
+Error ---------------------------------------------------------------------------------------------------- test.js:529:1
 
 Cannot create `AbstractExact_ManyProps` element because:
  - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
-   test.js:535:1
+   test.js:529:1
         v--------------------------------------------------------------
-   535| <AbstractExact_ManyProps // Error: Other props are not allowed.
-   536|   string1="foo"
-   537|   string2={'bar'}
-   538|   boolean1
-   539|   boolean2={false}
-   540|   number={42}
-   541|   a={1}
-   542|   b={2}
-   543|   c={3}
-   544| />;
+   529| <AbstractExact_ManyProps // Error: Other props are not allowed.
+   530|   string1="foo"
+   531|   string2={'bar'}
+   532|   boolean1
+   533|   boolean2={false}
+   534|   number={42}
+   535|   a={1}
+   536|   b={2}
+   537|   c={3}
+   538| />;
         -^ [2]
 
 References:
-   test.js:525:59
-   525| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:519:59
+   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:545:1
+Error ---------------------------------------------------------------------------------------------------- test.js:539:1
 
 Cannot create `AbstractExact_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -1128,132 +1111,132 @@ Cannot create `AbstractExact_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:545:1
+   test.js:539:1
         v-------------------------------------------------------------------
-   545| <AbstractExact_ManyProps // Error: All props have an incorrect type.
-   546|   string1={null}
-   547|   string2={null}
-   548|   boolean1={null}
-   549|   boolean2={null}
-   550|   number={null}
-   551| />;
+   539| <AbstractExact_ManyProps // Error: All props have an incorrect type.
+   540|   string1={null}
+   541|   string2={null}
+   542|   boolean1={null}
+   543|   boolean2={null}
+   544|   number={null}
+   545| />;
         -^
 
 References:
-   test.js:546:12
-   546|   string1={null}
+   test.js:540:12
+   540|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:547:12
-   547|   string2={null}
+   test.js:541:12
+   541|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:548:13
-   548|   boolean1={null}
+   test.js:542:13
+   542|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:549:13
-   549|   boolean2={null}
+   test.js:543:13
+   543|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:550:11
-   550|   number={null}
+   test.js:544:11
+   544|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:564:1
+Error ---------------------------------------------------------------------------------------------------- test.js:558:1
 
 Cannot create `AbstractExact_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:564:1
+   test.js:558:1
         v---------------------------------------------------
-   564| <AbstractExact_ManyProps // Error: Missing `number`.
-   565|   {...{string1: 'foo', string2: 'bar'}}
-   566|   {...{boolean1: true, boolean2: false}}
-   567| />;
+   558| <AbstractExact_ManyProps // Error: Missing `number`.
+   559|   {...{string1: 'foo', string2: 'bar'}}
+   560|   {...{boolean1: true, boolean2: false}}
+   561| />;
         -^ [1]
 
 References:
-   test.js:525:59
-   525| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:519:59
+   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:568:1
+Error ---------------------------------------------------------------------------------------------------- test.js:562:1
 
 Cannot create `AbstractExact_ManyProps` element because:
  - property `a` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `b` is missing in `Props_ManyProps` [1] but exists in props [2].
  - property `c` is missing in `Props_ManyProps` [1] but exists in props [2].
 
-   test.js:568:1
+   test.js:562:1
         v--------------------------------------------------------------
-   568| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-   569|   string1="foo"
-   570|   string2={'bar'}
-   571|   boolean1
-   572|   boolean2={false}
-   573|   {...{number: 42, a: 1, b: 2, c: 3}}
-   574| />;
+   562| <AbstractExact_ManyProps // Error: Extra props are not allowed.
+   563|   string1="foo"
+   564|   string2={'bar'}
+   565|   boolean1
+   566|   boolean2={false}
+   567|   {...{number: 42, a: 1, b: 2, c: 3}}
+   568| />;
         -^ [2]
 
 References:
-   test.js:525:59
-   525| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+   test.js:519:59
+   519| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                                   ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:575:1
+Error ---------------------------------------------------------------------------------------------------- test.js:569:1
 
 Cannot create `AbstractExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:575:1
-        v-------------------------------------------------------------------------------------------------------------------
-   575| <AbstractExact_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   576|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   577|   boolean1
-   578|   boolean2={false}
-   579|   number={42}
-   580| />;
+   test.js:569:1
+        v-------------------------------------------------------------------------
+   569| <AbstractExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
+   570|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   571|   boolean1
+   572|   boolean2={false}
+   573|   number={42}
+   574| />;
         -^
 
 References:
-   test.js:576:54
-   576|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:570:54
+   570|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:585:54
+Error --------------------------------------------------------------------------------------------------- test.js:579:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:585:54
-   585|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:579:54
+   579|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:584:11
-   584|   number={42}
+   test.js:578:11
+   578|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:589:1
+Error ---------------------------------------------------------------------------------------------------- test.js:583:1
 
 Cannot create `Member_ManyProps.prop` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -1262,8 +1245,8 @@ Cannot create `Member_ManyProps.prop` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:589:1
-   589| <Member_ManyProps.prop />; // Error: There are no props.
+   test.js:583:1
+   583| <Member_ManyProps.prop />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1272,7 +1255,7 @@ References:
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:607:1
+Error ---------------------------------------------------------------------------------------------------- test.js:601:1
 
 Cannot create `Member_ManyProps.prop` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -1281,61 +1264,61 @@ Cannot create `Member_ManyProps.prop` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:607:1
+   test.js:601:1
         v-----------------------------------------------------------------
-   607| <Member_ManyProps.prop // Error: All props have an incorrect type.
-   608|   string1={null}
-   609|   string2={null}
-   610|   boolean1={null}
-   611|   boolean2={null}
-   612|   number={null}
-   613| />;
+   601| <Member_ManyProps.prop // Error: All props have an incorrect type.
+   602|   string1={null}
+   603|   string2={null}
+   604|   boolean1={null}
+   605|   boolean2={null}
+   606|   number={null}
+   607| />;
         -^
 
 References:
-   test.js:608:12
-   608|   string1={null}
+   test.js:602:12
+   602|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:609:12
-   609|   string2={null}
+   test.js:603:12
+   603|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:610:13
-   610|   boolean1={null}
+   test.js:604:13
+   604|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:611:13
-   611|   boolean2={null}
+   test.js:605:13
+   605|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:612:11
-   612|   number={null}
+   test.js:606:11
+   606|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:626:1
+Error ---------------------------------------------------------------------------------------------------- test.js:620:1
 
 Cannot create `Member_ManyProps.prop` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:626:1
+   test.js:620:1
         v-------------------------------------------------
-   626| <Member_ManyProps.prop // Error: Missing `number`.
-   627|   {...{string1: 'foo', string2: 'bar'}}
-   628|   {...{boolean1: true, boolean2: false}}
-   629| />;
+   620| <Member_ManyProps.prop // Error: Missing `number`.
+   621|   {...{string1: 'foo', string2: 'bar'}}
+   622|   {...{boolean1: true, boolean2: false}}
+   623| />;
         -^ [1]
 
 References:
@@ -1344,45 +1327,45 @@ References:
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:637:1
+Error ---------------------------------------------------------------------------------------------------- test.js:631:1
 
 Cannot create `Member_ManyProps.prop` element because null or undefined [1] is incompatible with number [2] in property
 `number`.
 
-   test.js:637:1
-        v-----------------------------------------------------------------------------------------------------------------
-   637| <Member_ManyProps.prop // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   638|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   639|   boolean1
-   640|   boolean2={false}
-   641|   number={42}
-   642| />;
+   test.js:631:1
+        v-------------------------------------------------------------------------------
+   631| <Member_ManyProps.prop // OK: `number` is overwritten at the end of the element.
+   632|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   633|   boolean1
+   634|   boolean2={false}
+   635|   number={42}
+   636| />;
         -^
 
 References:
-   test.js:638:54
-   638|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:632:54
+   632|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:647:54
+Error --------------------------------------------------------------------------------------------------- test.js:641:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:647:54
-   647|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:641:54
+   641|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:646:11
-   646|   number={42}
+   test.js:640:11
+   640|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:651:1
+Error ---------------------------------------------------------------------------------------------------- test.js:645:1
 
 Cannot create `EnhancedClass_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -1391,8 +1374,8 @@ Cannot create `EnhancedClass_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:651:1
-   651| <EnhancedClass_ManyProps />; // Error: There are no props.
+   test.js:645:1
+   645| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1401,7 +1384,7 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:669:1
+Error ---------------------------------------------------------------------------------------------------- test.js:663:1
 
 Cannot create `EnhancedClass_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -1410,61 +1393,61 @@ Cannot create `EnhancedClass_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:669:1
+   test.js:663:1
         v-------------------------------------------------------------------
-   669| <EnhancedClass_ManyProps // Error: All props have an incorrect type.
-   670|   string1={null}
-   671|   string2={null}
-   672|   boolean1={null}
-   673|   boolean2={null}
-   674|   number={null}
-   675| />;
+   663| <EnhancedClass_ManyProps // Error: All props have an incorrect type.
+   664|   string1={null}
+   665|   string2={null}
+   666|   boolean1={null}
+   667|   boolean2={null}
+   668|   number={null}
+   669| />;
         -^
 
 References:
-   test.js:670:12
-   670|   string1={null}
+   test.js:664:12
+   664|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:671:12
-   671|   string2={null}
+   test.js:665:12
+   665|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:672:13
-   672|   boolean1={null}
+   test.js:666:13
+   666|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:673:13
-   673|   boolean2={null}
+   test.js:667:13
+   667|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:674:11
-   674|   number={null}
+   test.js:668:11
+   668|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:688:1
+Error ---------------------------------------------------------------------------------------------------- test.js:682:1
 
 Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:688:1
+   test.js:682:1
         v---------------------------------------------------
-   688| <EnhancedClass_ManyProps // Error: Missing `number`.
-   689|   {...{string1: 'foo', string2: 'bar'}}
-   690|   {...{boolean1: true, boolean2: false}}
-   691| />;
+   682| <EnhancedClass_ManyProps // Error: Missing `number`.
+   683|   {...{string1: 'foo', string2: 'bar'}}
+   684|   {...{boolean1: true, boolean2: false}}
+   685| />;
         -^ [1]
 
 References:
@@ -1473,45 +1456,45 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:699:1
+Error ---------------------------------------------------------------------------------------------------- test.js:693:1
 
 Cannot create `EnhancedClass_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:699:1
-        v-------------------------------------------------------------------------------------------------------------------
-   699| <EnhancedClass_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   700|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   701|   boolean1
-   702|   boolean2={false}
-   703|   number={42}
-   704| />;
+   test.js:693:1
+        v---------------------------------------------------------------------------------
+   693| <EnhancedClass_ManyProps // OK: `number` is overwritten at the end of the element.
+   694|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   695|   boolean1
+   696|   boolean2={false}
+   697|   number={42}
+   698| />;
         -^
 
 References:
-   test.js:700:54
-   700|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:694:54
+   694|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:709:54
+Error --------------------------------------------------------------------------------------------------- test.js:703:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:709:54
-   709|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:703:54
+   703|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:708:11
-   708|   number={42}
+   test.js:702:11
+   702|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:713:1
+Error ---------------------------------------------------------------------------------------------------- test.js:707:1
 
 Cannot create `EnhancedFunction_ManyProps` element because:
  - property `boolean1` is missing in props [1] but exists in `Props_ManyProps` [2].
@@ -1520,8 +1503,8 @@ Cannot create `EnhancedFunction_ManyProps` element because:
  - property `string1` is missing in props [1] but exists in `Props_ManyProps` [2].
  - property `string2` is missing in props [1] but exists in `Props_ManyProps` [2].
 
-   test.js:713:1
-   713| <EnhancedFunction_ManyProps />; // Error: There are no props.
+   test.js:707:1
+   707| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1530,7 +1513,7 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:731:1
+Error ---------------------------------------------------------------------------------------------------- test.js:725:1
 
 Cannot create `EnhancedFunction_ManyProps` element because:
  - null [1] is incompatible with string [2] in property `string1`.
@@ -1539,61 +1522,61 @@ Cannot create `EnhancedFunction_ManyProps` element because:
  - null [7] is incompatible with boolean [8] in property `boolean2`.
  - null [9] is incompatible with number [10] in property `number`.
 
-   test.js:731:1
+   test.js:725:1
         v----------------------------------------------------------------------
-   731| <EnhancedFunction_ManyProps // Error: All props have an incorrect type.
-   732|   string1={null}
-   733|   string2={null}
-   734|   boolean1={null}
-   735|   boolean2={null}
-   736|   number={null}
-   737| />;
+   725| <EnhancedFunction_ManyProps // Error: All props have an incorrect type.
+   726|   string1={null}
+   727|   string2={null}
+   728|   boolean1={null}
+   729|   boolean2={null}
+   730|   number={null}
+   731| />;
         -^
 
 References:
-   test.js:732:12
-   732|   string1={null}
+   test.js:726:12
+   726|   string1={null}
                    ^^^^ [1]
    test.js:70:12
     70|   string1: string,
                    ^^^^^^ [2]
-   test.js:733:12
-   733|   string2={null}
+   test.js:727:12
+   727|   string2={null}
                    ^^^^ [3]
    test.js:71:12
     71|   string2: string,
                    ^^^^^^ [4]
-   test.js:734:13
-   734|   boolean1={null}
+   test.js:728:13
+   728|   boolean1={null}
                     ^^^^ [5]
    test.js:72:13
     72|   boolean1: boolean,
                     ^^^^^^^ [6]
-   test.js:735:13
-   735|   boolean2={null}
+   test.js:729:13
+   729|   boolean2={null}
                     ^^^^ [7]
    test.js:73:13
     73|   boolean2: boolean,
                     ^^^^^^^ [8]
-   test.js:736:11
-   736|   number={null}
+   test.js:730:11
+   730|   number={null}
                   ^^^^ [9]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [10]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:750:1
+Error ---------------------------------------------------------------------------------------------------- test.js:744:1
 
 Cannot create `EnhancedFunction_ManyProps` element because property `number` is missing in props [1] but exists in
 `Props_ManyProps` [2].
 
-   test.js:750:1
+   test.js:744:1
         v------------------------------------------------------
-   750| <EnhancedFunction_ManyProps // Error: Missing `number`.
-   751|   {...{string1: 'foo', string2: 'bar'}}
-   752|   {...{boolean1: true, boolean2: false}}
-   753| />;
+   744| <EnhancedFunction_ManyProps // Error: Missing `number`.
+   745|   {...{string1: 'foo', string2: 'bar'}}
+   746|   {...{boolean1: true, boolean2: false}}
+   747| />;
         -^ [1]
 
 References:
@@ -1602,69 +1585,69 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:761:1
+Error ---------------------------------------------------------------------------------------------------- test.js:755:1
 
 Cannot create `EnhancedFunction_ManyProps` element because null or undefined [1] is incompatible with number [2] in
 property `number`.
 
-   test.js:761:1
-        v----------------------------------------------------------------------------------------------------------------------
-   761| <EnhancedFunction_ManyProps // Error: `number` cannot be null, even though it is overwritten at the end of the element.
-   762|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-   763|   boolean1
-   764|   boolean2={false}
-   765|   number={42}
-   766| />;
+   test.js:755:1
+        v------------------------------------------------------------------------------------
+   755| <EnhancedFunction_ManyProps // OK: `number` is overwritten at the end of the element.
+   756|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   757|   boolean1
+   758|   boolean2={false}
+   759|   number={42}
+   760| />;
         -^
 
 References:
-   test.js:762:54
-   762|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:756:54
+   756|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
    test.js:74:11
     74|   number: number,
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:771:54
+Error --------------------------------------------------------------------------------------------------- test.js:765:54
 
 null or undefined [1] is incompatible with number [2].
 
-   test.js:771:54
-   771|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+   test.js:765:54
+   765|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
 
 References:
-   test.js:770:11
-   770|   number={42}
+   test.js:764:11
+   764|   number={42}
                   ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:786:1
+Error ---------------------------------------------------------------------------------------------------- test.js:780:1
 
 Cannot create `Legacy_OptionalProps` element because property `foo` is missing in props [1] but exists in propTypes of
 React component [2].
 
-   test.js:786:1
-   786| <Legacy_OptionalProps />; // Error: `foo` is required.
+   test.js:780:1
+   780| <Legacy_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:781:14
+   test.js:775:14
                      v
-   781|   propTypes: {
-   782|     foo: React.PropTypes.number.isRequired,
-   783|     bar: React.PropTypes.number,
-   784|   },
+   775|   propTypes: {
+   776|     foo: React.PropTypes.number.isRequired,
+   777|     bar: React.PropTypes.number,
+   778|   },
           ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:788:1
+Error ---------------------------------------------------------------------------------------------------- test.js:782:1
 
 Cannot create `Legacy_OptionalProps` element because undefined [1] is incompatible with number [2] in property `foo`.
 
-   test.js:788:1
-   788| <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
+   test.js:782:1
+   782| <Legacy_OptionalProps foo={undefined} />; // Error: No ?number proptype.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -1676,21 +1659,42 @@ References:
                                            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:793:1
+Error ---------------------------------------------------------------------------------------------------- test.js:787:1
 
 Cannot create `Legacy_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:793:1
+   test.js:787:1
         v----------------------------------------------------
-   793| <Legacy_OptionalProps // Error: `foo` has a bad type.
-   794|   foo="nope"
-   795|   bar={2}
-   796| />;
+   787| <Legacy_OptionalProps // Error: `foo` has a bad type.
+   788|   foo="nope"
+   789|   bar={2}
+   790| />;
         -^
 
 References:
-   test.js:794:7
-   794|   foo="nope"
+   test.js:788:7
+   788|   foo="nope"
+              ^^^^^^ [1]
+   <BUILTINS>/react.js:313:36
+   313|   number: React$PropType$Primitive<number>;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:791:1
+
+Cannot create `Legacy_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:791:1
+        v----------------------------------------------------
+   791| <Legacy_OptionalProps // Error: `bar` has a bad type.
+   792|   foo={4}
+   793|   bar="nope"
+   794| />;
+        -^
+
+References:
+   test.js:793:7
+   793|   bar="nope"
               ^^^^^^ [1]
    <BUILTINS>/react.js:313:36
    313|   number: React$PropType$Primitive<number>;
@@ -1699,492 +1703,471 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:797:1
 
-Cannot create `Legacy_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
-
-   test.js:797:1
-        v----------------------------------------------------
-   797| <Legacy_OptionalProps // Error: `bar` has a bad type.
-   798|   foo={4}
-   799|   bar="nope"
-   800| />;
-        -^
-
-References:
-   test.js:799:7
-   799|   bar="nope"
-              ^^^^^^ [1]
-   <BUILTINS>/react.js:313:36
-   313|   number: React$PropType$Primitive<number>;
-                                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:803:1
-
 Cannot create `Class_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:803:1
-   803| <Class_OptionalProps />; // Error: `foo` is required.
+   test.js:797:1
+   797| <Class_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:802:51
-   802| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+   test.js:796:51
+   796| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
                                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:810:1
+Error ---------------------------------------------------------------------------------------------------- test.js:804:1
 
 Cannot create `Class_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:810:1
+   test.js:804:1
         v---------------------------------------------------
-   810| <Class_OptionalProps // Error: `foo` has a bad type.
-   811|   foo="nope"
-   812|   bar={2}
-   813| />;
+   804| <Class_OptionalProps // Error: `foo` has a bad type.
+   805|   foo="nope"
+   806|   bar={2}
+   807| />;
         -^
 
 References:
-   test.js:811:7
-   811|   foo="nope"
+   test.js:805:7
+   805|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:814:1
+Error ---------------------------------------------------------------------------------------------------- test.js:808:1
 
 Cannot create `Class_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 
-   test.js:814:1
+   test.js:808:1
         v---------------------------------------------------
-   814| <Class_OptionalProps // Error: `bar` has a bad type.
-   815|   foo={4}
-   816|   bar="nope"
-   817| />;
+   808| <Class_OptionalProps // Error: `bar` has a bad type.
+   809|   foo={4}
+   810|   bar="nope"
+   811| />;
         -^
 
 References:
-   test.js:816:7
-   816|   bar="nope"
+   test.js:810:7
+   810|   bar="nope"
               ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:821:1
+Error ---------------------------------------------------------------------------------------------------- test.js:815:1
 
 Cannot create `ClassExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:821:1
-   821| <ClassExact_OptionalProps />; // Error: `foo` is required.
+   test.js:815:1
+   815| <ClassExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:820:34
-   820|   extends React.Component<$Exact<Props_OptionalProps>> {}
+   test.js:814:34
+   814|   extends React.Component<$Exact<Props_OptionalProps>> {}
                                          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:828:1
+Error ---------------------------------------------------------------------------------------------------- test.js:822:1
 
 Cannot create `ClassExact_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:828:1
+   test.js:822:1
         v--------------------------------------------------------
-   828| <ClassExact_OptionalProps // Error: `foo` has a bad type.
-   829|   foo="nope"
-   830|   bar={2}
-   831| />;
+   822| <ClassExact_OptionalProps // Error: `foo` has a bad type.
+   823|   foo="nope"
+   824|   bar={2}
+   825| />;
         -^
 
 References:
-   test.js:829:7
-   829|   foo="nope"
+   test.js:823:7
+   823|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:832:1
+Error ---------------------------------------------------------------------------------------------------- test.js:826:1
 
 Cannot create `ClassExact_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 
-   test.js:832:1
+   test.js:826:1
         v--------------------------------------------------------
-   832| <ClassExact_OptionalProps // Error: `bar` has a bad type.
-   833|   foo={4}
-   834|   bar="nope"
-   835| />;
+   826| <ClassExact_OptionalProps // Error: `bar` has a bad type.
+   827|   foo={4}
+   828|   bar="nope"
+   829| />;
         -^
 
 References:
-   test.js:834:7
-   834|   bar="nope"
+   test.js:828:7
+   828|   bar="nope"
               ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:839:1
+Error ---------------------------------------------------------------------------------------------------- test.js:833:1
 
 Cannot create `ClassPure_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:839:1
-   839| <ClassPure_OptionalProps />; // Error: `foo` is required.
+   test.js:833:1
+   833| <ClassPure_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:838:31
-   838|   extends React.PureComponent<Props_OptionalProps> {}
+   test.js:832:31
+   832|   extends React.PureComponent<Props_OptionalProps> {}
                                       ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:846:1
+Error ---------------------------------------------------------------------------------------------------- test.js:840:1
 
 Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:846:1
+   test.js:840:1
         v-------------------------------------------------------
-   846| <ClassPure_OptionalProps // Error: `foo` has a bad type.
-   847|   foo="nope"
-   848|   bar={2}
-   849| />;
+   840| <ClassPure_OptionalProps // Error: `foo` has a bad type.
+   841|   foo="nope"
+   842|   bar={2}
+   843| />;
         -^
 
 References:
-   test.js:847:7
-   847|   foo="nope"
+   test.js:841:7
+   841|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:844:1
+
+Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:844:1
+        v-------------------------------------------------------
+   844| <ClassPure_OptionalProps // Error: `bar` has a bad type.
+   845|   foo={4}
+   846|   bar="nope"
+   847| />;
+        -^
+
+References:
+   test.js:846:7
+   846|   bar="nope"
+              ^^^^^^ [1]
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:850:1
 
-Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
-
-   test.js:850:1
-        v-------------------------------------------------------
-   850| <ClassPure_OptionalProps // Error: `bar` has a bad type.
-   851|   foo={4}
-   852|   bar="nope"
-   853| />;
-        -^
-
-References:
-   test.js:852:7
-   852|   bar="nope"
-              ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
-                                                        ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:856:1
-
 Cannot create `Function_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:856:1
-   856| <Function_OptionalProps />; // Error: `foo` is required.
+   test.js:850:1
+   850| <Function_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:855:40
-   855| const Function_OptionalProps = (props: Props_OptionalProps) => any;
+   test.js:849:40
+   849| const Function_OptionalProps = (props: Props_OptionalProps) => any;
                                                ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:863:1
+Error ---------------------------------------------------------------------------------------------------- test.js:857:1
 
 Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:863:1
+   test.js:857:1
         v------------------------------------------------------
-   863| <Function_OptionalProps // Error: `foo` has a bad type.
-   864|   foo="nope"
-   865|   bar={2}
-   866| />;
+   857| <Function_OptionalProps // Error: `foo` has a bad type.
+   858|   foo="nope"
+   859|   bar={2}
+   860| />;
         -^
 
 References:
-   test.js:864:7
-   864|   foo="nope"
+   test.js:858:7
+   858|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:861:1
+
+Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:861:1
+        v------------------------------------------------------
+   861| <Function_OptionalProps // Error: `bar` has a bad type.
+   862|   foo={4}
+   863|   bar="nope"
+   864| />;
+        -^
+
+References:
+   test.js:863:7
+   863|   bar="nope"
+              ^^^^^^ [1]
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:867:1
 
-Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
-
-   test.js:867:1
-        v------------------------------------------------------
-   867| <Function_OptionalProps // Error: `bar` has a bad type.
-   868|   foo={4}
-   869|   bar="nope"
-   870| />;
-        -^
-
-References:
-   test.js:869:7
-   869|   bar="nope"
-              ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
-                                                        ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:873:1
-
 Cannot create `FunctionExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:873:1
-   873| <FunctionExact_OptionalProps />; // Error: `foo` is required.
+   test.js:867:1
+   867| <FunctionExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:872:52
-   872| const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
+   test.js:866:52
+   866| const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
                                                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:880:1
+Error ---------------------------------------------------------------------------------------------------- test.js:874:1
 
 Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`.
 
-   test.js:880:1
+   test.js:874:1
         v-----------------------------------------------------------
-   880| <FunctionExact_OptionalProps // Error: `foo` has a bad type.
-   881|   foo="nope"
-   882|   bar={2}
-   883| />;
+   874| <FunctionExact_OptionalProps // Error: `foo` has a bad type.
+   875|   foo="nope"
+   876|   bar={2}
+   877| />;
         -^
 
 References:
-   test.js:881:7
-   881|   foo="nope"
+   test.js:875:7
+   875|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:878:1
+
+Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
+`bar`.
+
+   test.js:878:1
+        v-----------------------------------------------------------
+   878| <FunctionExact_OptionalProps // Error: `bar` has a bad type.
+   879|   foo={4}
+   880|   bar="nope"
+   881| />;
+        -^
+
+References:
+   test.js:880:7
+   880|   bar="nope"
+              ^^^^^^ [1]
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:884:1
 
-Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
-`bar`.
-
-   test.js:884:1
-        v-----------------------------------------------------------
-   884| <FunctionExact_OptionalProps // Error: `bar` has a bad type.
-   885|   foo={4}
-   886|   bar="nope"
-   887| />;
-        -^
-
-References:
-   test.js:886:7
-   886|   bar="nope"
-              ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
-                                                        ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:890:1
-
 Cannot create `Abstract_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:890:1
-   890| <Abstract_OptionalProps />; // Error: `foo` is required.
+   test.js:884:1
+   884| <Abstract_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:889:51
-   889| const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
+   test.js:883:51
+   883| const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
                                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:897:1
+Error ---------------------------------------------------------------------------------------------------- test.js:891:1
 
 Cannot create `Abstract_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:897:1
+   test.js:891:1
         v------------------------------------------------------
-   897| <Abstract_OptionalProps // Error: `foo` has a bad type.
-   898|   foo="nope"
-   899|   bar={2}
-   900| />;
+   891| <Abstract_OptionalProps // Error: `foo` has a bad type.
+   892|   foo="nope"
+   893|   bar={2}
+   894| />;
         -^
 
 References:
-   test.js:898:7
-   898|   foo="nope"
+   test.js:892:7
+   892|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:901:1
+Error ---------------------------------------------------------------------------------------------------- test.js:895:1
 
 Cannot create `Abstract_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
 
-   test.js:901:1
+   test.js:895:1
         v------------------------------------------------------
-   901| <Abstract_OptionalProps // Error: `bar` has a bad type.
-   902|   foo={4}
-   903|   bar="nope"
-   904| />;
+   895| <Abstract_OptionalProps // Error: `bar` has a bad type.
+   896|   foo={4}
+   897|   bar="nope"
+   898| />;
         -^
 
 References:
-   test.js:903:7
-   903|   bar="nope"
+   test.js:897:7
+   897|   bar="nope"
               ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:908:1
+Error ---------------------------------------------------------------------------------------------------- test.js:902:1
 
 Cannot create `AbstractExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:908:1
-   908| <AbstractExact_OptionalProps />; // Error: `foo` is required.
+   test.js:902:1
+   902| <AbstractExact_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:907:30
-   907|   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+   test.js:901:30
+   901|   React.ComponentType<$Exact<Props_OptionalProps>> = any;
                                      ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:915:1
+Error ---------------------------------------------------------------------------------------------------- test.js:909:1
 
 Cannot create `AbstractExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`.
 
-   test.js:915:1
+   test.js:909:1
         v-----------------------------------------------------------
-   915| <AbstractExact_OptionalProps // Error: `foo` has a bad type.
-   916|   foo="nope"
-   917|   bar={2}
-   918| />;
+   909| <AbstractExact_OptionalProps // Error: `foo` has a bad type.
+   910|   foo="nope"
+   911|   bar={2}
+   912| />;
         -^
 
 References:
-   test.js:916:7
-   916|   foo="nope"
+   test.js:910:7
+   910|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:919:1
+Error ---------------------------------------------------------------------------------------------------- test.js:913:1
 
 Cannot create `AbstractExact_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`.
 
-   test.js:919:1
+   test.js:913:1
         v-----------------------------------------------------------
-   919| <AbstractExact_OptionalProps // Error: `bar` has a bad type.
-   920|   foo={4}
-   921|   bar="nope"
-   922| />;
+   913| <AbstractExact_OptionalProps // Error: `bar` has a bad type.
+   914|   foo={4}
+   915|   bar="nope"
+   916| />;
         -^
 
 References:
-   test.js:921:7
-   921|   bar="nope"
+   test.js:915:7
+   915|   bar="nope"
               ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:925:1
+Error ---------------------------------------------------------------------------------------------------- test.js:919:1
 
 Cannot create `Member_OptionalProps.prop` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:925:1
-   925| <Member_OptionalProps.prop />; // Error: `foo` is required.
+   test.js:919:1
+   919| <Member_OptionalProps.prop />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:802:51
-   802| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
+   test.js:796:51
+   796| class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
                                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:932:1
+Error ---------------------------------------------------------------------------------------------------- test.js:926:1
 
 Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `foo`.
 
-   test.js:932:1
+   test.js:926:1
         v---------------------------------------------------------
-   932| <Member_OptionalProps.prop // Error: `foo` has a bad type.
-   933|   foo="nope"
-   934|   bar={2}
-   935| />;
+   926| <Member_OptionalProps.prop // Error: `foo` has a bad type.
+   927|   foo="nope"
+   928|   bar={2}
+   929| />;
         -^
 
 References:
-   test.js:933:7
-   933|   foo="nope"
+   test.js:927:7
+   927|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:930:1
+
+Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:930:1
+        v---------------------------------------------------------
+   930| <Member_OptionalProps.prop // Error: `bar` has a bad type.
+   931|   foo={4}
+   932|   bar="nope"
+   933| />;
+        -^
+
+References:
+   test.js:932:7
+   932|   bar="nope"
+              ^^^^^^ [1]
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
+                                                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:936:1
 
-Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `bar`.
-
-   test.js:936:1
-        v---------------------------------------------------------
-   936| <Member_OptionalProps.prop // Error: `bar` has a bad type.
-   937|   foo={4}
-   938|   bar="nope"
-   939| />;
-        -^
-
-References:
-   test.js:938:7
-   938|   bar="nope"
-              ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
-                                                        ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:942:1
-
 Cannot create `EnhancedClass_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:942:1
-   942| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
+   test.js:936:1
+   936| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -2193,57 +2176,57 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:949:1
+Error ---------------------------------------------------------------------------------------------------- test.js:943:1
 
 Cannot create `EnhancedClass_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`.
 
-   test.js:949:1
+   test.js:943:1
         v-----------------------------------------------------------
-   949| <EnhancedClass_OptionalProps // Error: `foo` has a bad type.
-   950|   foo="nope"
-   951|   bar={2}
-   952| />;
+   943| <EnhancedClass_OptionalProps // Error: `foo` has a bad type.
+   944|   foo="nope"
+   945|   bar={2}
+   946| />;
         -^
 
 References:
-   test.js:950:7
-   950|   foo="nope"
+   test.js:944:7
+   944|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:953:1
+Error ---------------------------------------------------------------------------------------------------- test.js:947:1
 
 Cannot create `EnhancedClass_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`.
 
-   test.js:953:1
+   test.js:947:1
         v-----------------------------------------------------------
-   953| <EnhancedClass_OptionalProps // Error: `bar` has a bad type.
-   954|   foo={4}
-   955|   bar="nope"
-   956| />;
+   947| <EnhancedClass_OptionalProps // Error: `bar` has a bad type.
+   948|   foo={4}
+   949|   bar="nope"
+   950| />;
         -^
 
 References:
-   test.js:955:7
-   955|   bar="nope"
+   test.js:949:7
+   949|   bar="nope"
               ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:959:1
+Error ---------------------------------------------------------------------------------------------------- test.js:953:1
 
 Cannot create `EnhancedFunction_OptionalProps` element because property `foo` is missing in props [1] but exists in
 `Props_OptionalProps` [2].
 
-   test.js:959:1
-   959| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
+   test.js:953:1
+   953| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -2252,190 +2235,190 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:966:1
+Error ---------------------------------------------------------------------------------------------------- test.js:960:1
 
 Cannot create `EnhancedFunction_OptionalProps` element because string [1] is incompatible with number [2] in property
 `foo`.
 
-   test.js:966:1
+   test.js:960:1
         v--------------------------------------------------------------
-   966| <EnhancedFunction_OptionalProps // Error: `foo` has a bad type.
-   967|   foo="nope"
-   968|   bar={2}
-   969| />;
+   960| <EnhancedFunction_OptionalProps // Error: `foo` has a bad type.
+   961|   foo="nope"
+   962|   bar={2}
+   963| />;
         -^
 
 References:
-   test.js:967:7
-   967|   foo="nope"
+   test.js:961:7
+   961|   foo="nope"
               ^^^^^^ [1]
-   test.js:778:35
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:35
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:970:1
+Error ---------------------------------------------------------------------------------------------------- test.js:964:1
 
 Cannot create `EnhancedFunction_OptionalProps` element because string [1] is incompatible with number [2] in property
 `bar`.
 
-   test.js:970:1
+   test.js:964:1
         v--------------------------------------------------------------
-   970| <EnhancedFunction_OptionalProps // Error: `bar` has a bad type.
-   971|   foo={4}
-   972|   bar="nope"
-   973| />;
+   964| <EnhancedFunction_OptionalProps // Error: `bar` has a bad type.
+   965|   foo={4}
+   966|   bar="nope"
+   967| />;
         -^
 
 References:
-   test.js:972:7
-   972|   bar="nope"
+   test.js:966:7
+   966|   bar="nope"
               ^^^^^^ [1]
-   test.js:778:49
-   778| type Props_OptionalProps = {foo: ?number, bar?: number};
+   test.js:772:49
+   772| type Props_OptionalProps = {foo: ?number, bar?: number};
                                                         ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1000:1
+Error ---------------------------------------------------------------------------------------------------- test.js:994:1
 
 Cannot create `Legacy_DefaultProps` element because property `bar` is missing in props [1] but exists in propTypes of
 React component [2].
 
-   test.js:1000:1
-         v------------------------------------------------------------------------
-   1000| <Legacy_DefaultProps // Error: It is missing a required non-default prop.
-   1001|   foo={1}
-   1002| />;
-         -^ [1]
+   test.js:994:1
+        v------------------------------------------------------------------------
+   994| <Legacy_DefaultProps // Error: It is missing a required non-default prop.
+   995|   foo={1}
+   996| />;
+        -^ [1]
 
 References:
-   test.js:985:14
-                      v
-    985|   propTypes: {
-    986|     foo: React.PropTypes.number.isRequired,
-    987|     bar: React.PropTypes.number.isRequired,
-    988|   },
-           ^ [2]
+   test.js:979:14
+                     v
+   979|   propTypes: {
+   980|     foo: React.PropTypes.number.isRequired,
+   981|     bar: React.PropTypes.number.isRequired,
+   982|   },
+          ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1016:1
+Error --------------------------------------------------------------------------------------------------- test.js:1010:1
 
 Cannot create `Class_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1016:1
+   test.js:1010:1
          v-----------------------------------------------------------------------
-   1016| <Class_DefaultProps // Error: It is missing a required non-default prop.
-   1017|   foo={1}
-   1018| />;
+   1010| <Class_DefaultProps // Error: It is missing a required non-default prop.
+   1011|   foo={1}
+   1012| />;
          -^ [1]
 
 References:
-   test.js:1004:50
-   1004| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+   test.js:998:50
+    998| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
                                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1033:1
+Error --------------------------------------------------------------------------------------------------- test.js:1027:1
 
 Cannot create `ClassExact_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1033:1
+   test.js:1027:1
          v----------------------------------------------------------------------------
-   1033| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
-   1034|   foo={1}
-   1035| />;
+   1027| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
+   1028|   foo={1}
+   1029| />;
          -^ [1]
 
 References:
-   test.js:1021:34
-   1021|   extends React.Component<$Exact<Props_DefaultProps>> {
+   test.js:1015:34
+   1015|   extends React.Component<$Exact<Props_DefaultProps>> {
                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1049:1
+Error --------------------------------------------------------------------------------------------------- test.js:1043:1
 
 Cannot create `ClassPure_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1049:1
+   test.js:1043:1
          v---------------------------------------------------------------------------
-   1049| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
-   1050|   foo={1}
-   1051| />;
+   1043| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
+   1044|   foo={1}
+   1045| />;
          -^ [1]
 
 References:
-   test.js:1037:58
-   1037| class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
+   test.js:1031:58
+   1031| class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
                                                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1066:1
+Error --------------------------------------------------------------------------------------------------- test.js:1060:1
 
 Cannot create `Function_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1066:1
+   test.js:1060:1
          v--------------------------------------------------------------------------
-   1066| <Function_DefaultProps // Error: It is missing a required non-default prop.
-   1067|   foo={1}
-   1068| />;
+   1060| <Function_DefaultProps // Error: It is missing a required non-default prop.
+   1061|   foo={1}
+   1062| />;
          -^ [1]
 
 References:
-   test.js:1053:39
-   1053| function Function_DefaultProps(props: Props_DefaultProps) {
+   test.js:1047:39
+   1047| function Function_DefaultProps(props: Props_DefaultProps) {
                                                ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1083:1
+Error --------------------------------------------------------------------------------------------------- test.js:1077:1
 
 Cannot create `FunctionExact_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1083:1
+   test.js:1077:1
          v-------------------------------------------------------------------------------
-   1083| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
-   1084|   foo={1}
-   1085| />;
+   1077| <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
+   1078|   foo={1}
+   1079| />;
          -^ [1]
 
 References:
-   test.js:1070:51
-   1070| function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
+   test.js:1064:51
+   1064| function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
                                                            ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1095:1
+Error --------------------------------------------------------------------------------------------------- test.js:1089:1
 
 Cannot create `Member_DefaultProps.prop` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1095:1
+   test.js:1089:1
          v-----------------------------------------------------------------------------
-   1095| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
-   1096|   foo={1}
-   1097| />;
+   1089| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+   1090|   foo={1}
+   1091| />;
          -^ [1]
 
 References:
-   test.js:1004:50
-   1004| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
+   test.js:998:50
+    998| class Class_DefaultProps extends React.Component<Props_DefaultProps> {
                                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1107:1
+Error --------------------------------------------------------------------------------------------------- test.js:1101:1
 
 Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1107:1
+   test.js:1101:1
          v-------------------------------------------------------------------------------
-   1107| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
-   1108|   foo={1}
-   1109| />;
+   1101| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
+   1102|   foo={1}
+   1103| />;
          -^ [1]
 
 References:
@@ -2444,16 +2427,16 @@ References:
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:1119:1
+Error --------------------------------------------------------------------------------------------------- test.js:1113:1
 
 Cannot create `EnhancedFunction_DefaultProps` element because property `bar` is missing in props [1] but exists in
 `Props_DefaultProps` [2].
 
-   test.js:1119:1
+   test.js:1113:1
          v----------------------------------------------------------------------------------
-   1119| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
-   1120|   foo={1}
-   1121| />;
+   1113| <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
+   1114|   foo={1}
+   1115| />;
          -^ [1]
 
 References:
@@ -2463,4 +2446,4 @@ References:
 
 
 
-Found 208 errors
+Found 207 errors

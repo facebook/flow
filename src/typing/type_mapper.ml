@@ -1308,18 +1308,21 @@ class ['a] t = object(self)
 
   method spread_resolve cx map_cx t =
     match t with
-    | ResolveSpreadsToTuple (i, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then t
-        else ResolveSpreadsToTuple (i, t'')
-    | ResolveSpreadsToArrayLiteral (i, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then t
-        else ResolveSpreadsToArrayLiteral (i, t'')
-    | ResolveSpreadsToArray (i, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then t
-        else ResolveSpreadsToArray (i, t'')
+    | ResolveSpreadsToTuple (i, t1', t2') ->
+        let t1'' = self#type_ cx map_cx t1' in
+        let t2'' = self#type_ cx map_cx t2' in
+        if t1'' == t1' && t2'' == t2' then t
+        else ResolveSpreadsToTuple (i, t1'', t2'')
+    | ResolveSpreadsToArrayLiteral (i, t1', t2') ->
+        let t1'' = self#type_ cx map_cx t1' in
+        let t2'' = self#type_ cx map_cx t2' in
+        if t1'' == t1' && t2'' == t2' then t
+        else ResolveSpreadsToArrayLiteral (i, t1'', t2'')
+    | ResolveSpreadsToArray (t1', t2') ->
+        let t1'' = self#type_ cx map_cx t1' in
+        let t2'' = self#type_ cx map_cx t2' in
+        if t1'' == t1' && t2'' == t2' then t
+        else ResolveSpreadsToArray (t1'', t2'')
     | ResolveSpreadsToMultiflowCallFull (i, funtype) ->
         let funtype' = self#fun_type cx map_cx funtype in
         if funtype' == funtype then t

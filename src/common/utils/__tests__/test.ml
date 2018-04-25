@@ -9,6 +9,7 @@ open OUnit2
 
 let tests = "utils" >::: [
   Nel_test.tests;
+  UnionFind_test.tests;
 ]
 
 let () = run_test_tt_main tests

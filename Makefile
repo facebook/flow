@@ -125,7 +125,6 @@ NATIVE_C_FILES=\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
   hack/heap/hh_shared.c\
-  hack/heap/hh_fileinfo.c\
   hack/utils/get_build_id.c\
   hack/utils/sys/files.c\
   hack/utils/sys/getrusage.c\

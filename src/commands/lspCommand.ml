@@ -529,27 +529,6 @@ let dismiss_connected_dialog_if_necessary (state: state) (event: event) : state 
   | _ -> state
 
 
-let apply_edit (text: string) (edit: DidChange.textDocumentContentChangeEvent) : string =
-  let lsp_position_to_fc (pos: Lsp.position) : File_content.position =
-    { File_content.
-      line = pos.Lsp.line + 1;  (* LSP is 0-based; File_content is 1-based. *)
-      column = pos.Lsp.character + 1;
-    } in
-  let lsp_range_to_fc (range: Lsp.range) : File_content.range =
-    { File_content.
-      st = lsp_position_to_fc range.Lsp.start;
-      ed = lsp_position_to_fc range.Lsp.end_;
-    } in
-  let lsp_edit_to_fc (edit: Lsp.DidChange.textDocumentContentChangeEvent) : File_content.text_edit =
-    { File_content.
-      range = Option.map edit.DidChange.range ~f:lsp_range_to_fc;
-      text = edit.DidChange.text;
-    } in
-  match File_content.edit_file text [edit |> lsp_edit_to_fc] with
-  | Ok text -> text
-  | Error msg -> failwith msg
-
-
 (************************************************************************)
 (** Tracking                                                           **)
 (************************************************************************)
@@ -615,7 +594,7 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : state =
         uri;
         languageId = doc.TextDocumentItem.languageId;
         version = params.DidChange.textDocument.VersionedTextDocumentIdentifier.version;
-        text = List.fold_left ~init:text ~f:apply_edit params.DidChange.contentChanges;
+        text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges;
       } in
       SMap.add uri doc' editor_open_files
 
@@ -843,6 +822,9 @@ begin
   | _, Client_message (NotificationMessage ExitNotification) ->
     if state = Post_shutdown then lsp_exit_ok () else lsp_exit_bad ()
 
+  | _, Client_message (NotificationMessage (CancelRequestNotification _)) ->
+    state
+
   | Pre_init _, Client_message _ ->
     raise (Error.ServerNotInitialized "Server not initialized")
 
@@ -876,6 +858,18 @@ begin
         failwith (Printf.sprintf "Response %s has missing handler" (message_to_string c))
     end
 
+  | Connected cenv, Client_message c ->
+    let state = track_to_server state c in
+    send_lsp_to_server cenv c;
+    state
+
+  | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c)
+  | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c)
+  | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c)
+  | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c) ->
+    let state = track_to_server state c in
+    state
+
   | Disconnected _, Client_message c ->
     let state = track_to_server state c in
     let method_ = Lsp_fmt.message_to_string c in
@@ -905,11 +899,6 @@ begin
     let warn_count = Errors.ErrorSet.cardinal warnings in
     let _text = Printf.sprintf "Received %d errors, %d warnings" err_count warn_count in
     (* TODO: report errors properly, either direct from the server, or here *)
-    state
-
-  | Connected cenv, Client_message c ->
-    let state = track_to_server state c in
-    send_lsp_to_server cenv c;
     state
 
   | _, Server_message _ ->

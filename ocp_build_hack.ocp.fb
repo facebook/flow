@@ -345,6 +345,7 @@ begin library "hh-utils-lsp"
   ]
   requires += [
     "hh-utils-core"
+    "hh-utils-filecontent"
     "hh-utils-fileurl"
     "hh-utils-jsonrpc"
     "tp-core"

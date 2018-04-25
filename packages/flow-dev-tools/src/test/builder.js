@@ -689,7 +689,17 @@ export class TestBuilder {
 
     const args = this.sanitizeOutgoingIDEMessage(argsRaw);
     await this.log('IDE >>request %s\n%s', method, JSON.stringify(args));
-    const resultRaw = await ide.connection.sendRequest(method, ...args);
+    let resultRaw;
+    try {
+      resultRaw = await ide.connection.sendRequest(method, ...args);
+    } catch (error) {
+      const message = error.message;
+      error = {message, ...error}; // otherwise it doesn't show up in JSON.stringify
+      ideMessages.push({method, error});
+      await this.log('IDE <<error %s\n%s', method, JSON.stringify(error));
+      ide.messageEmitter.emit('message');
+      return;
+    }
     const result = this.sanitizeIncomingIDEMessage(resultRaw);
     ideMessages.push({method, result});
     await this.log('IDE <<response %s\n%s', method, JSON.stringify(resultRaw));
@@ -855,6 +865,7 @@ export class TestBuilder {
     timeoutMs: number,
     expected: 'stopped' | 'running',
   ): Promise<void> {
+    // TODO(ljw): this should check for externally-launched flow servers too
     return new Promise(resolve => {
       var timeout = null;
       const onServer = () => {
@@ -919,15 +930,6 @@ export class TestBuilder {
           this.testErrors.join('\n\n'),
         ),
       );
-    }
-  }
-
-  async waitForServerToDie(timeout: number): Promise<void> {
-    // TODO(ljw): remove this in favor of waitUntilServerStatus
-    let remaining = timeout;
-    while (remaining > 0 && this.server != null) {
-      await sleep(Math.min(remaining, 100));
-      remaining -= 100;
     }
   }
 

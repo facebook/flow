@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(**************)
-(* Query/Fill *)
-(**************)
+(*****************)
+(* Query/Suggest *)
+(*****************)
 
 (* These computations should trigger ground_type calls on the types returned by
-   query_type/fill_types: in general those types may not be ground (the only
+   query_type/suggest_types: in general those types may not be ground (the only
    non-ground parts should be strict_requires).
 
    1. Look up ResolvedRequiresHeap(Context.file cx) to get strict_reqs.
@@ -40,6 +40,7 @@ module QueryTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = false
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = false
 end)
 
 let query_type cx loc =
@@ -61,6 +62,7 @@ module DumpTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = false
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = false
 end)
 
 let dump_types ~printer cx =
@@ -81,6 +83,7 @@ module CoverageTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = true
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = false
 end)
 
 let covered_types cx ~should_check =
@@ -93,27 +96,32 @@ let covered_types cx ~should_check =
     else
       fun acc (loc, _) -> (loc, false)::acc
   in
-  Context.type_table cx
-  |> Type_table.coverage_hashtbl
-  |> CoverageTypeNormalizer.fold_hashtbl ~cx ~f ~init:[]
+  let htbl = Type_table.coverage_hashtbl (Context.type_table cx) in
+  CoverageTypeNormalizer.fold_hashtbl ~cx ~f ~g:(fun t -> t) ~htbl []
   |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
 
-
-(********)
-(* Fill *)
-(********)
-
-module FillTypeNormalizer = Ty_normalizer.Make(struct
+module SuggestTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = false
   let expand_internal_types = false
   let expand_annots = false
+  let flag_shadowed_type_params = true
 end)
 
-let fill_types cx =
-  Type_table.coverage_to_list (Context.type_table cx)
-  |> FillTypeNormalizer.from_schemes ~cx
-  |> Core_list.filter_map ~f:(function
-   | l, Ok s -> Some (l, s)
-   | _ -> None
-   )
-  |> List.map Loc.(fun (l, t) -> (l._end.line, l._end.column, t))
+(* 'suggest' can use as many types in the type tables as possible, which is why
+   we are querying the tables from both "coverage" and "type_info". Coverage
+   should be enough on its own, but "type_info" stores method types more
+   reliably. On the other hand "type_info" only stores information about
+   identifiers, so anonymous functions and arrows are not captured.
+*)
+let suggest_types cx =
+  let type_table = Context.type_table cx in
+  let result = Utils_js.LocMap.empty in
+  let result = SuggestTypeNormalizer.fold_hashtbl ~cx
+    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+    ~g:(fun t -> t)
+    ~htbl:(Type_table.coverage_hashtbl type_table) result in
+  let result = SuggestTypeNormalizer.fold_hashtbl ~cx
+    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+    ~g:(fun (_, t, _) -> t)
+    ~htbl:(Type_table.type_info_hashtbl type_table) result in
+  result

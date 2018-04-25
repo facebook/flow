@@ -38,29 +38,37 @@ Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- imports.js:20:8
+Error ------------------------------------------------------------------------------------------------- imports.js:18:14
 
 Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
-   20| import NonstrictLib from './nonstrict_lib.js'; // Error
-              ^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- imports.js:27:14
-
-Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
-
-   27| import type {S} from './nonstrict_exports.js'; // Error
+   18| import type {V} from './strict_local_exports.js'; // Error
                     ^
 
 
-Error ------------------------------------------------------------------------------------------------- imports.js:31:16
+Error -------------------------------------------------------------------------------------------------- imports.js:23:8
 
 Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
 
-   31| import typeof {FooObj as FooObjType} from './nonstrict_exports.js'; // Error
+   23| import NonstrictLib from './nonstrict_lib.js'; // Error
+              ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:30:14
+
+Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
+
+   30| import type {S} from './nonstrict_exports.js'; // Error
+                    ^
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:34:16
+
+Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
+
+   34| import typeof {FooObj as FooObjType} from './nonstrict_exports.js'; // Error
                       ^^^^^^
 
 
 
-Found 8 errors
+Found 9 errors

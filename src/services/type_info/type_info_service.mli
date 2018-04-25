@@ -41,5 +41,10 @@ val suggest :
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
   File_key.t ->
-  string list ->
-  string -> ((int * int * string) list, string) Core_result.t Lwt.t
+  string ->
+  ((Errors.ErrorSet.t *   (* Typechecking errors *)
+    Errors.ErrorSet.t *   (* Typechecking warnings *)
+    Errors.ErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
+    Loc.t Ast.program),   (* Annotated program *)
+    Errors.ErrorSet.t     (* Parsing errors *)
+  ) Core_result.t Lwt.t

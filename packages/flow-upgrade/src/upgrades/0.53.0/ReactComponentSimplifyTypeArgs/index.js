@@ -22,19 +22,22 @@ React.Component<Props> then State is assumed to be undefined and default props
 will be inferred from the statics of your component class. A component written
 without state but with default props in this new style looks like:
 
-${Styled.codeblock(`
+${Styled.codeblock(
+  `
 import React from 'react';
 
 type Props = { /* ... */ };
 
 class MyComponent extends React.Component<Props> {
   static defaultProps = { /* ... */ };
-}`.slice(1))}
+}`.slice(1),
+)}
 
 Default props is inferred from the static defaultProps object literal. If you
 want a component with state add a second type argument:
 
-${Styled.codeblock(`
+${Styled.codeblock(
+  `
 import React from 'react';
 
 type Props = { /* ... */ };
@@ -42,7 +45,8 @@ type State = { /* ... */ };
 
 class MyComponent extends React.Component<Props, State> {
   static defaultProps = { /* ... */ };
-}`.slice(1))}
+}`.slice(1),
+)}
 
 This upgrade will remove DefaultProps from the type arguments of all your
 React components.`.slice(1);

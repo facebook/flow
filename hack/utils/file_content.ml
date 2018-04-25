@@ -126,20 +126,21 @@ let print_edit b edit =
   in
   Printf.bprintf b "range = %s\n text = \n%s\n" range edit.text
 
-let edit_file content (edits: text_edit list) =
+let edit_file content (edits: text_edit list) : (string, string * Utils.callstack) result =
   try
     Ok (List.fold ~init:content ~f:apply_edit edits)
   with e ->
+    let stack = Printexc.get_backtrace () in
     let b = Buffer.create 1024 in
     Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
     Printf.bprintf b "Original content:\n%s\n" content;
     Printf.bprintf b "Edits:\n";
     List.iter edits ~f:(print_edit b);
-    Error (Buffer.contents b)
+    Error (Buffer.contents b, Utils.Callstack stack)
 
 let edit_file_unsafe fc edits =
   match edit_file fc edits with
   | Ok r -> r
-  | Error e ->
+  | Error (e, _stack) ->
       Printf.eprintf "%s" e;
       failwith e

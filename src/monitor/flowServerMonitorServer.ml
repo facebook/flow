@@ -350,6 +350,15 @@ module KeepAliveLoop = LwtLoop.Make (struct
           ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
           FlowExitStatus.Unknown_error
       | Some exit_type ->
+        (* There are a few whitelisted reasons where the persistent client wants *)
+        (* to know why the flow server is about to fatally close the persistent  *)
+        (* connection. This WEXITED case covers them. (It doesn't matter that    *)
+        (* it also sends the reason in a few additional cases as well.)          *)
+        let send_close conn =
+          try PersistentConnection.write ~msg:(PersistentProt.ServerExit exit_type) conn
+          with _ -> ()
+        in
+        PersistentConnectionMap.get_all_clients () |> List.iter send_close;
         if should_monitor_exit_with_server monitor_options exit_type
         then exit ~msg:"Dying along with server" exit_type
         else Lwt.return_unit

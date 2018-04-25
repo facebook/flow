@@ -14,7 +14,7 @@ export default suite(
     ideRequest,
     ideNotification,
     ideResponse,
-    lspExpect,
+    ideRequestAndWaitUntilResponse,
     waitUntilIDEStatus,
     waitUntilServerStatus,
     flowCmd,
@@ -174,35 +174,59 @@ export default suite(
         ),
     ]),
 
-    /*
     test('Editor open files outlive server', [
-      lspStart({needsFlowServer: true, doInitialize: true}),
-      lspSend('didOpen file'),
-      flowCmd(['stop']).serverExpectStatus({running: false, timeoutMs: 3000}),
-      flowCmd(['start']),
-      lspExpect('lost server message', '', 3000),
-      lspExpect('started server message', '', 3000),
-      serverExpectStatus({running: true, timeoutMs: 0}),
-      lspSend('definition, line, col').lspExpect(
-        'definition',
-        'response',
-        3000,
+      ideStartAndConnect(),
+      ideNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_DIR>/open.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+function jones(): number { return 15; }
+jones();
+`,
+        },
+      })
+        .ideRequestAndWaitUntilResponse('textDocument/definition', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+          position: {line: 2, character: 1},
+        })
+        .verifyAllIDEMessagesInStep(
+          ['textDocument/definition{open.js,"line":1}'],
+          [],
+        ),
+      flowCmd(['stop'])
+        .waitUntilServerStatus(3000, 'stopped')
+        .waitUntilIDEMessage(3000, 'telemetry/connectionStatus{false}')
+        .verifyAllIDEMessagesInStep(
+          ['telemetry/connectionStatus{false}'],
+          [
+            'telemetry/event{End_of_file}',
+            'window/showMessageRequest',
+            'window/actionRequired',
+            'window/progress',
+            '$/cancelRequest',
+          ],
+        ),
+      startFlowServer()
+        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus')
+        .verifyAllIDEMessagesInStep(
+          ['telemetry/connectionStatus{true}'],
+          [
+            'window/actionRequired{null}',
+            'window/showMessageRequest',
+            'window/actionRequired',
+            'window/progress',
+            '$/cancelRequest',
+          ],
+        ),
+      ideRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        position: {line: 2, character: 1},
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/definition{open.js,line":1}'],
+        [],
       ),
     ]),
-    test('Editor modified files outlive server', [
-      lspStart({needsFlowServer: true, doInitialize: true}),
-      lspSend('didOpen file'),
-      lspSend('didChange file, range, contents'),
-      flowCmd(['stop']).serverExpectStatus({running: false, timeoutMs: 3000}),
-      flowCmd(['start']),
-      lspExpect('lost server message', '', 3000),
-      lspExpect('started server message', '', 3000),
-      lspSend('definition, line, col').lspExpect(
-        'definition',
-        'response',
-        3000,
-      ),
-    ]),
-    */
   ],
 );

@@ -417,6 +417,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.sendIDERequestAndWaitForResponse(method, params);
     });
+    ret._readsIdeMessages = true;
     return ret;
   };
 
@@ -472,6 +473,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         suggestion,
       );
     });
+    ret._readsIdeMessages = true;
     return ret;
   };
 
@@ -545,16 +547,6 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     if (needsFlowServer) {
       ret._needsFlowServer = needsFlowServer;
     }
-    return ret;
-  };
-
-  waitForServerToDie: (timeout: number) => TestStepFirstStage = timeout => {
-    // TODO(ljw): remove this in favor of waitUntilServerStatus(timeout, 'stopped')
-    const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.waitForServerToDie(timeout);
-    });
-    ret._needsFlowServer = true;
-    ret._allowServerToDie = true;
     return ret;
   };
 

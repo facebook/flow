@@ -54,6 +54,21 @@ module type Config = sig
   *)
   val expand_annots: bool
 
+  (* The normalizer keeps a stack of type parameters that are in scope. This stack
+     may contain the same name twice (but with different associated locations).
+     This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
+     we do not wish to allow the generation of type parameters that are shadowed by
+     another definition. For example the inferred type for `z` in:
+
+     function outer<T>(y: T) {
+       function inner<T>(x: T, z) { inner(x, y); }
+     }
+
+    is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
+    This flags toggles this behavior.
+  *)
+  val flag_shadowed_type_params: bool
+
 end
 
 
@@ -71,6 +86,7 @@ type error_kind =
   | BadInstanceT
   | BadEvalT
   | BadUse
+  | ShadowTypeParam
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
 
@@ -88,6 +104,7 @@ let error_kind_to_string = function
   | BadInstanceT -> "Bad instance type"
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
+  | ShadowTypeParam -> "Shadowed type parameters"
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
 
@@ -121,8 +138,11 @@ module Make(C: Config) : sig
     cx:Context.t -> ('a * Type_table.type_scheme) list -> ('a * (Ty.t, error) result) list
 
   val fold_hashtbl:
-    cx:Context.t -> f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) -> init:'a ->
-    (Loc.t, Type_table.type_scheme) Hashtbl.t -> 'a
+    cx:Context.t ->
+    f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) ->
+    g:('b -> Type_table.type_scheme) ->
+    htbl: (Loc.t, 'b) Hashtbl.t ->
+    'a -> 'a
 
 end = struct
 
@@ -245,11 +265,26 @@ end = struct
 
     let descend e = { e with depth = e.depth + 1 }
 
+    (* Lookup a type parameter T in the current environment. There are three outcomes:
+       1. T appears in env and for its first occurence locations match. This means it
+          is not shadowed by another parameter with the same name. In this case
+          return the type parameter.
+       2. T appears in env but is not the first occurence. This means that some other
+          type parameter shadows it. We split cases depending on the value of
+          Config.flag_shadowed_type_params:
+          - true: flag a warning, since the type is not well-formed in this context.
+          - false: return the type normally ignoring the warning.
+       3. The type parameter is not in env. Do the default action.
+    *)
     let lookup_tparam ~default env t name loc =
-      if List.mem (name, loc) env.tparams then
-        return Ty.(Bound (Symbol (Local loc, name)))
-      else
-        default t
+      let pred (tp_name, _) = (name = tp_name) in
+      match List.find_opt pred env.tparams with
+      | Some (_, tp_loc) ->
+        if loc = tp_loc || not C.flag_shadowed_type_params
+        then return Ty.(Bound (Symbol (Local loc, name)))
+        (* If we care about shadowing of type params, then flag an error *)
+        else terr ~kind:ShadowTypeParam (Some t)
+      | None -> default t
 
     let add_typeparam env typeparam = Type.(
       let loc = Reason.loc_of_reason typeparam.reason in
@@ -627,9 +662,10 @@ end = struct
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
 
+    | ModuleT (reason, _, _) -> module_t reason t
+
     | DefT (_, CharSetT _)
-    | NullProtoT _
-    | ModuleT (_, _, _) ->
+    | NullProtoT _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
 
@@ -1277,6 +1313,16 @@ end = struct
         end
       end
 
+  and module_t reason t =
+    match desc_of_reason reason with
+    | RModule name
+    | RCommonJSExports name
+    | RUntypedModule name
+    | RNamedImportedType name ->
+      symbol reason name >>| fun s -> Ty.Module s
+    | _ ->
+      terr ~kind:UnsupportedTypeCtor (Some t)
+
   and use_t ~env = function
     | T.UseT (_, t) -> type__ ~env t
     | T.ReposLowerT (_, _, u) -> use_t ~env u
@@ -1344,11 +1390,12 @@ let run_type state tparams t =
     let state = add_imports ~cx (State.empty ~cx) in
     fst (run_type state [] t)
 
-  let fold_hashtbl ~cx ~f ~init htbl =
+  let fold_hashtbl ~cx ~f ~g ~htbl init =
     let state = add_imports ~cx (State.empty ~cx) in
-    let _, acc = Hashtbl.fold (fun loc scheme (st, acc) ->
-      let Type_table.Scheme (tparams, t) = scheme in
-      let result, st' = run_type st tparams t in
+    let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
+      let Type_table.Scheme (tparams, t) = g x in
+      let env = Env.init tparams in
+      let result, st' = run st (type__ ~env t) in
       let acc' = f acc (loc, result) in
       (st', acc')
     ) htbl (state, init)

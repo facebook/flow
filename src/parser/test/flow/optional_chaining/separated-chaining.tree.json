@@ -8,23 +8,23 @@
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":13}},
       "range":[0,13],
       "expression":{
-        "type":"MemberExpression",
+        "type":"OptionalMemberExpression",
         "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":13}},
         "range":[0,13],
         "object":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":10}},
           "range":[0,10],
           "object":{
-            "type":"MemberExpression",
+            "type":"OptionalMemberExpression",
             "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
             "range":[0,8],
             "object":{
-              "type":"MemberExpression",
+              "type":"OptionalMemberExpression",
               "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
               "range":[0,6],
               "object":{
-                "type":"MemberExpression",
+                "type":"OptionalMemberExpression",
                 "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
                 "range":[0,4],
                 "object":{
@@ -97,15 +97,15 @@
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":12}},
       "range":[15,27],
       "expression":{
-        "type":"MemberExpression",
+        "type":"OptionalMemberExpression",
         "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":12}},
         "range":[15,27],
         "object":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":10}},
           "range":[15,25],
           "object":{
-            "type":"MemberExpression",
+            "type":"OptionalMemberExpression",
             "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":8}},
             "range":[15,23],
             "object":{
@@ -132,8 +132,7 @@
                   "typeAnnotation":null,
                   "optional":false
                 },
-                "computed":false,
-                "optional":false
+                "computed":false
               },
               "property":{
                 "type":"Identifier",
@@ -143,8 +142,7 @@
                 "typeAnnotation":null,
                 "optional":false
               },
-              "computed":false,
-              "optional":false
+              "computed":false
             },
             "property":{
               "type":"Identifier",

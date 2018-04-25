@@ -14,6 +14,9 @@ const BarObj2 = require("./nonstrict_exports"); // Error
 import {A} from './strict_exports.js'; // Not an error
 import ADefault from './strict_exports.js'; // Not an error
 
+// Imports from strict-local file
+import type {V} from './strict_local_exports.js'; // Error
+
 // Import from library
 import StrictLib from './strict_lib.js'; // Not an error
 

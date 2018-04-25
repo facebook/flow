@@ -57,24 +57,15 @@ let coverage ~options ~workers ~env ~profiling ~force file content =
   >>| (fun (cx, _) -> Query_types.covered_types cx ~should_check)
   |> Lwt.return
 
-let suggest ~options ~workers ~env ~profiling file region content =
-  let%lwt result = Types_js.basic_check_contents ~options ~workers ~env ~profiling content file in
-  result
-  >>| (fun (cx, _info) ->
-    Query_types.fill_types cx
-    |> List.sort Pervasives.compare
-    |> List.map (fun (l,c,t) -> (l, c, Ty_printer.string_of_t t))
-    |> match region with
-      | [] -> fun insertions -> insertions
-      | [l1;c1;l2;c2] ->
-          let l1,c1,l2,c2 =
-            int_of_string l1,
-            int_of_string c1,
-            int_of_string l2,
-            int_of_string c2
-          in
-          List.filter (fun (l,c,_) ->
-            (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
-          )
-      | _ -> assert false
-  ) |> Lwt.return
+let suggest ~options ~workers ~env ~profiling file content =
+  let%lwt result = Types_js.typecheck_contents ~options ~workers ~env ~profiling content file in
+  Lwt.return @@
+  match result with
+  | (Some (cx, ast), tc_errors, tc_warnings) ->
+    let cxs = Query_types.suggest_types cx in
+    let visitor = new Suggest.visitor ~cxs in
+    let typed_ast = visitor#program ast in
+    let suggest_warnings = visitor#warnings () in
+    Ok (tc_errors, tc_warnings, suggest_warnings, typed_ast)
+  | (None, errors, _) ->
+    Error errors

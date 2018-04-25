@@ -64,6 +64,9 @@ let find_type_info ~pred t =
     if pred k then Some (k, v) else a
   ) t.type_info None
 
+let type_info_hashtbl t =
+  t.type_info
+
 let coverage_to_list t =
   let r = ref [] in
   Hashtbl.iter (fun l t -> r := (l, t) :: !r) t.coverage;

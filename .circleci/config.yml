@@ -45,6 +45,12 @@ jobs:
     <<: *docker_node
     steps:
       - checkout
+      - run:
+          # This job does a lot of setup to be able to access github, so
+          # fetch the list of git tags that Try Flow uses here, instead of
+          # hitting github again later.
+          name: List versions
+          command: .circleci/list_versions.sh
       - persist_to_workspace:
           root: .
           paths: .
@@ -287,6 +293,63 @@ jobs:
         name: Upload Mac libflowparser
         command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
 
+  website_deploy:
+    docker:
+      - image: flowtype/flow-website:latest
+    working_directory: ~/flow
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - restore_cache:
+        keys:
+          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "website/yarn.lock" }}
+          - v2-node-{{ arch }}-{{ .Branch }}-
+    - run:
+        name: Install yarn deps
+        command: cd website && yarn install
+    - save_cache:
+        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "website/yarn.lock" }}
+        paths:
+          - website/node_modules
+    - restore_cache:
+        keys:
+          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
+          - v2-gem-{{ arch }}-{{ .Branch }}-
+    - run:
+        name: Install gems
+        command: |
+          cd website && \
+          bundle install --path vendor/bundle && \
+          bundle exec s3_website install
+    - save_cache:
+        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
+        paths:
+          - website/vendor/bundle
+    - run:
+        name: Build website
+        command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
+    - run:
+        name: Publish website
+        command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
+
+  try_flow_deploy:
+    docker:
+      - image: xueshanf/awscli:latest
+    working_directory: ~/flow
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - run:
+        name: Assemble files
+        command: |
+          rm -rf ~/try_flow
+          mkdir ~/try_flow
+          cp bin/flow.js ~/try_flow/flow.js
+          cp -r lib ~/try_flow/flowlib
+    - run:
+        name: Upload to AWS
+        command: aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
+
 workflows:
   version: 2
   build_and_test:
@@ -343,6 +406,26 @@ workflows:
           requires:
             - runtests_macos
             - tool_test_macos
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+
+      # only deploy the website from master, so that it can include docs/blog
+      # posts about an upcoming release, and so the release branch doesn't
+      # revert those changes.
+      - website_deploy:
+          requires:
+            - build_linux
+          filters:
+            branches:
+              only: master
+
+      # deploys flow.js and the libdefs to Try Flow on release branches
+      - try_flow_deploy:
+          requires:
+            - build_linux
           filters:
             tags:
               only: /^v.*/

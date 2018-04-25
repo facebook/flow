@@ -31,6 +31,7 @@ begin library "flow-commands"
     "flow-monitor"
     "flow-parser"
     "flow-parser-utils"
+    "flow-parser-utils-output-printers"
     "flow-shmem"
     "flow-stubs"
     "flow-server"
@@ -192,6 +193,18 @@ begin library "flow-parser-utils-output"
     "ocaml-vlq"
     "tp-core"
     "wtf8"
+  ]
+end
+
+begin library "flow-parser-utils-output-printers"
+  sort = true
+  files = begin fb-glob "src/parser_utils/output/printers"
+  end
+  requires = [
+    "flow-common-utils"
+    "flow-parser"
+    "flow-parser-utils-output"
+    "ocaml-sourcemaps"
   ]
 end
 

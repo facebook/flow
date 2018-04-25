@@ -29,6 +29,8 @@ let rec fits ~width ~context nodes =
         in
         fits ~width ~context nodes
     | Concat items -> fits ~width ~context (items @ rest)
+    (* Respect forced breaks *)
+    | Sequence ({ break = Break_if_pretty | Break_always; _ }, _) -> false
     | Sequence ({ break = _; inline = (before, _); indent = _ }, items) ->
       (* TODO: need to consider `after`. and indent? *)
       (not before && context.mode = Break) || (fits ~width ~context (items @ rest))

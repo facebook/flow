@@ -1,14 +1,14 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":15}},
-  "range":[0,52],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":10}},
+  "range":[0,64],
   "body":[
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
       "range":[0,8],
       "expression":{
-        "type":"CallExpression",
+        "type":"OptionalCallExpression",
         "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
         "range":[0,8],
         "callee":{
@@ -29,7 +29,7 @@
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":12}},
       "range":[10,22],
       "expression":{
-        "type":"CallExpression",
+        "type":"OptionalCallExpression",
         "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":12}},
         "range":[10,22],
         "callee":{
@@ -67,11 +67,11 @@
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":11}},
       "range":[24,35],
       "expression":{
-        "type":"CallExpression",
+        "type":"OptionalCallExpression",
         "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":11}},
         "range":[24,35],
         "callee":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":7}},
           "range":[24,31],
           "object":{
@@ -103,11 +103,11 @@
       "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":15}},
       "range":[37,52],
       "expression":{
-        "type":"CallExpression",
+        "type":"OptionalCallExpression",
         "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":15}},
         "range":[37,52],
         "callee":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":7}},
           "range":[37,44],
           "object":{
@@ -147,6 +147,41 @@
             "optional":false
           }
         ],
+        "optional":true
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":10}},
+      "range":[54,64],
+      "expression":{
+        "type":"OptionalCallExpression",
+        "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":10}},
+        "range":[54,64],
+        "callee":{
+          "type":"MemberExpression",
+          "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":6}},
+          "range":[54,60],
+          "object":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":1}},
+            "range":[54,55],
+            "name":"a",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "property":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":2},"end":{"line":9,"column":6}},
+            "range":[56,60],
+            "name":"func",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "computed":false
+        },
+        "arguments":[],
         "optional":true
       },
       "directive":null

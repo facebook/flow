@@ -153,7 +153,6 @@ let parse_json_file ~fail content file =
     _object = loc_none, Identifier (loc_none, "module");
     property = Member.PropertyIdentifier (loc_none, "exports");
     computed = false;
-    optional = false;
   }) in
   let loc = fst expr in
   let statement =
@@ -182,6 +181,11 @@ let extract_docblock =
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
           else errors, { info with flow = Some OptInStrict } in
+        parse_attributes acc xs
+    | (loc, "@flow") :: (_, "strict-local") :: xs ->
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInStrictLocal } in
         parse_attributes acc xs
     | (loc, "@flow") :: (_, "weak") :: xs ->
         let acc =
@@ -364,6 +368,7 @@ let types_checked types_mode info =
     | Some Docblock.OptOut -> false
     | Some Docblock.OptIn
     | Some Docblock.OptInStrict
+    | Some Docblock.OptInStrictLocal
     | Some Docblock.OptInWeak -> true
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =

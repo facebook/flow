@@ -189,8 +189,16 @@ module Expressions = struct
   let identifier name =
     Loc.none, Identifier (Loc.none, name)
 
-  let call ?(optional=false) ?(args=[]) callee =
-    Loc.none, Call { Call.callee; arguments = args; optional }
+  let call_node ?(args=[]) callee = { Call.callee; arguments = args }
+
+  let call ?(args=[]) callee =
+    Loc.none, Call (call_node ~args callee)
+
+  let optional_call ~optional ?(args=[]) callee =
+    Loc.none, OptionalCall { OptionalCall.
+      call = call_node ~args callee;
+      optional;
+    }
 
   let function_ ?(generator=false) ?(params=[]) ?body () =
     let fn = Functions.make ~generator ~params ~id:None ?body ~expression:true () in
@@ -255,33 +263,36 @@ module Expressions = struct
     Loc.none, Object { Object.properties }
 
   (* _object.property *)
-  let member ?(optional=false) ~property _object =
+  let member ~property _object =
     { Member.
       _object;
       property = Member.PropertyIdentifier (Loc.none, property);
       computed = false;
-      optional;
     }
 
   (* _object[property] *)
-  let member_computed ?(optional=false) ~property _object =
+  let member_computed ~property _object =
     { Member.
       _object;
       property = Member.PropertyIdentifier (Loc.none, property);
       computed = true;
-      optional;
     }
 
-  let member_computed_expr ?(optional=false) ~property _object =
+  let member_computed_expr ~property _object =
     { Member.
       _object;
       property = Member.PropertyExpression property;
       computed = true;
-      optional;
     }
 
   let member_expression expr =
     Loc.none, Ast.Expression.Member expr
+
+  let optional_member_expression ~optional expr =
+    Loc.none, OptionalMember { OptionalMember.
+      member = expr;
+      optional;
+    }
 
   let new_ ?(args=[]) callee =
     Loc.none, New { New.callee; arguments = args }

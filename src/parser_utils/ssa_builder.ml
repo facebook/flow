@@ -949,7 +949,7 @@ class ssa_builder = object(this)
 
   method! call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
-    let { callee; arguments; optional = _ } = expr in
+    let { callee; arguments } = expr in
     ignore @@ this#expression callee;
     ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
     this#havoc_current_ssa_env;

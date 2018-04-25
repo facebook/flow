@@ -129,6 +129,7 @@ let stub_metadata ~root ~checked = { Context.
   weak = false;
   jsx = Options.Jsx_react;
   strict = false;
+  strict_local = false;
 
   (* global *)
   enable_const_params = false;

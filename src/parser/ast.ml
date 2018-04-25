@@ -723,6 +723,11 @@ and Expression : sig
     type 'M t = {
       callee: 'M Expression.t;
       arguments: 'M expression_or_spread list;
+    }
+  end
+  module OptionalCall : sig
+    type 'M t = {
+      call: 'M Call.t;
       optional: bool;
     }
   end
@@ -735,6 +740,11 @@ and Expression : sig
       _object: 'M Expression.t;
       property: 'M property;
       computed: bool;
+    }
+  end
+  module OptionalMember : sig
+    type 'M t = {
+      member: 'M Member.t;
       optional: bool;
     }
   end
@@ -799,6 +809,8 @@ and Expression : sig
     | MetaProperty of 'M MetaProperty.t
     | New of 'M New.t
     | Object of 'M Object.t
+    | OptionalCall of 'M OptionalCall.t
+    | OptionalMember of 'M OptionalMember.t
     | Sequence of 'M Sequence.t
     | Super
     | TaggedTemplate of 'M TaggedTemplate.t

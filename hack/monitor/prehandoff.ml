@@ -15,8 +15,6 @@ type exit_status = {
 type msg =
   (** Last of the prehandoff messages. *)
   | Sentinel
-  (* Client sent a malformed request asking for a server that doesn't exist *)
-  | Server_name_not_found
   (** The monitor keeps a queue of connections that will need to be passed
    * onto the next server instance. This queue has a size limit that has been
    * reached. *)

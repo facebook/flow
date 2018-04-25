@@ -1408,35 +1408,80 @@ mixed.js:18:17 = {
   "start":17,
   "end":18
 }
-module_export.js:3:24 = {
+exports.js:3:24 = {
   "type":"class klass<T>",
   "reasons":[],
   "loc":{
-    "source":"module_export.js",
+    "source":"exports.js",
     "type":"SourceFile",
     "start":{"line":3,"column":23,"offset":32},
     "end":{"line":3,"column":27,"offset":37}
   },
-  "path":"module_export.js",
+  "path":"exports.js",
   "line":3,
   "endline":3,
   "start":23,
   "end":27
 }
-module_export.js:5:25 = {
+exports.js:5:25 = {
   "type":"() => void",
   "reasons":[],
   "loc":{
-    "source":"module_export.js",
+    "source":"exports.js",
     "type":"SourceFile",
     "start":{"line":5,"column":24,"offset":69},
     "end":{"line":5,"column":26,"offset":72}
   },
-  "path":"module_export.js",
+  "path":"exports.js",
   "line":5,
   "endline":5,
   "start":24,
   "end":26
+}
+module-export.js:3:16 = {
+  "type":"module a",
+  "reasons":[],
+  "loc":{
+    "source":"module-export.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":16,"offset":25},
+    "end":{"line":3,"column":16,"offset":26}
+  },
+  "path":"module-export.js",
+  "line":3,
+  "endline":3,
+  "start":16,
+  "end":16
+}
+module-export.js:7:13 = {
+  "type":"{|A: class A|}",
+  "reasons":[],
+  "loc":{
+    "source":"module-export.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":13,"offset":72},
+    "end":{"line":7,"column":13,"offset":73}
+  },
+  "path":"module-export.js",
+  "line":7,
+  "endline":7,
+  "start":13,
+  "end":13
+}
+module-import.js:3:7 = {
+  "type":"{|m: {|A: class A|}|}",
+  "reasons":[],
+  "loc":{
+    "source":"module-import.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":7,"offset":17}
+  },
+  "path":"module-import.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":7
 }
 object_special_cases.js:6:32 = {
   "type":"string",

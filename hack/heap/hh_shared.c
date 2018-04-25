@@ -108,14 +108,21 @@
 #include <lz4.h>
 #include <time.h>
 
-#define UNUSED(x) \
-    ((void)(x))
-
 #define ARRAY_SIZE(array) \
     (sizeof(array) / sizeof((array)[0]))
 
 #define UNUSED(x) \
     ((void)(x))
+#define UNUSED1 UNUSED
+#define UNUSED2(a, b) \
+    (UNUSED(a), UNUSED(b))
+#define UNUSED3(a, b, c) \
+    (UNUSED(a), UNUSED(b), UNUSED(c))
+#define UNUSED4(a, b, c, d) \
+    (UNUSED(a), UNUSED(b), UNUSED(c), UNUSED(d))
+#define UNUSED5(a, b, c, d, e) \
+    (UNUSED(a), UNUSED(b), UNUSED(c), UNUSED(d), UNUSED(e))
+
 
 #ifndef NO_SQLITE3
 #include <sqlite3.h>
@@ -139,7 +146,7 @@
 #define S1(x) #x
 #define S2(x) S1(x)
 #define LOCATION __FILE__ " : " S2(__LINE__)
-#define assert(f) (f ? 0 : raise_assertion_failure(LOCATION))
+#define assert(f) ((f) ? 0 : raise_assertion_failure(LOCATION))
 #endif
 
 #define HASHTBL_WRITE_IN_PROGRESS ((char*)1)
@@ -206,6 +213,7 @@ static int win32_getpagesize(void) {
 #define getpagesize win32_getpagesize
 #endif
 
+
 /*****************************************************************************/
 /* Config settings (essentially constants, so they don't need to live in shared
  * memory), initialized in hh_shared_init */
@@ -250,12 +258,12 @@ typedef struct {
 
 /* Size of where we allocate shared objects. */
 #define Get_buf_size(x) (((hh_header_t*)(x))[-1].size + sizeof(hh_header_t))
-#define Get_buf(x)      (x - sizeof(hh_header_t))
+#define Get_buf(x)      ((x) - sizeof(hh_header_t))
 
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
 #define CACHE_MASK      (~(CACHE_LINE_SIZE - 1))
-#define ALIGNED(x)      ((x + CACHE_LINE_SIZE - 1) & CACHE_MASK)
+#define ALIGNED(x)      (((x) + CACHE_LINE_SIZE - 1) & CACHE_MASK)
 
 /* Fix the location of our shared memory so we can save and restore the
  * hashtable easily */
@@ -465,6 +473,248 @@ static size_t* wasted_heap_size = NULL;
 
 static size_t used_heap_size(void) {
   return *heap - heap_init;
+}
+
+#ifdef NO_SQLITE3
+typedef void *sqlite3_ptr;
+#else
+typedef sqlite3 *sqlite3_ptr;
+#endif
+
+// DECLARATIONS
+// All functions are declared with the same prototype regardless of
+// build configuration.
+// Some types are not available in some configurations (e.g. sqlite3).
+// For these cases,
+// use a typedef.
+void raise_assertion_failure(char *msg);
+
+static size_t get_wasted_heap_size(void);
+
+CAMLprim value hh_heap_size(void);
+
+CAMLprim value hh_log_level(void);
+
+CAMLprim value hh_hash_used_slots(void);
+
+CAMLprim value hh_hash_slots(void);
+
+struct timeval log_duration(const char *prefix, struct timeval start_t);
+
+void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail);
+
+static void raise_failed_anonymous_memfd_init(void);
+
+static void raise_less_than_minimum_available(uint64_t avail);
+
+void assert_avail_exceeds_minimum(char *shm_dir, uint64_t minimum_avail);
+
+static char *memfd_map(size_t shared_mem_size);
+
+static char *memfd_map(size_t shared_mem_size);
+
+static void raise_out_of_shared_memory(void);
+
+static void win_reserve(char *mem, size_t sz);
+
+static void memfd_reserve(char *mem, size_t sz);
+
+static void define_globals(char *shared_mem_init);
+
+static size_t get_shared_mem_size(void);
+
+static void init_shared_globals(size_t config_log_level);
+
+static void set_sizes(
+        uint64_t config_global_size,
+        uint64_t config_heap_size,
+        uint64_t config_dep_table_pow,
+        uint64_t config_hash_table_pow
+);
+
+CAMLprim value hh_shared_init( value config_val, value shm_dir_val);
+
+value hh_connect(value connector, value is_master);
+
+CAMLprim value hh_counter_next(void);
+
+void assert_master(void);
+
+void assert_not_master(void);
+
+CAMLprim value hh_stop_workers(void);
+
+CAMLprim value hh_resume_workers(void);
+
+void check_should_exit(void);
+
+void hh_shared_store(value data);
+
+CAMLprim value hh_shared_load(void);
+
+void hh_shared_clear(void);
+
+static void raise_dep_table_full(void);
+
+static uint64_t hash_uint64(uint64_t n);
+
+static int add_binding(uint64_t value);
+
+static uint32_t alloc_deptbl_node(uint32_t key, uint32_t val);
+
+static void prepend_to_deptbl_list(uint32_t key, uint32_t val);
+
+static void add_dep(uint32_t key, uint32_t val);
+
+void hh_add_dep(value ocaml_dep);
+
+CAMLprim value hh_dep_used_slots(void);
+
+CAMLprim value hh_dep_slots(void);
+
+CAMLprim value hh_get_dep(value ocaml_key);
+
+static char *temp_memory_map(void);
+
+static void temp_memory_unmap(char *tmp_heap);
+
+void hh_call_after_init(void);
+
+value hh_check_heap_overflow(void);
+
+static int should_collect(int aggressive);
+
+CAMLprim value hh_should_collect(value aggressive_val);
+
+CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val);
+
+static void raise_heap_full(void);
+
+static char* hh_alloc(hh_header_t header);
+
+static char* hh_store_ocaml(
+        value data,
+        /*out*/size_t *alloc_size,
+        /*out*/size_t *orig_size
+);
+
+static uint64_t get_hash(value key);
+
+static value write_at(unsigned int slot, value data);
+
+static void raise_hash_table_full(void);
+
+value hh_add(value key, value data);
+
+static unsigned int find_slot(value key);
+
+value hh_mem(value key);
+
+CAMLprim value hh_deserialize(char *src);
+
+CAMLprim value hh_get_and_deserialize(value key);
+
+CAMLprim value hh_get_and_deserialize_sqlite(
+        value ml_use_fileinfo_sqlite,
+        value ml_key
+);
+
+CAMLprim value hh_get_size(value key);
+
+void hh_move(value key1, value key2);
+
+void hh_remove(value key);
+
+void hh_cleanup_sqlite(void);
+
+void hh_hashtable_cleanup_sqlite(void);
+
+value Val_some(value v);
+
+static void assert_sql_with_line(
+        int result,
+        int correct_result,
+        int line_number
+);
+
+CAMLprim value get_file_info_on_disk( value ml_unit);
+
+CAMLprim value set_file_info_on_disk_path(value ml_str);
+
+CAMLprim value get_file_info_on_disk_path(value ml_unit);
+
+CAMLprim value open_file_info_db(value ml_unit);
+
+static void make_all_tables(sqlite3_ptr db);
+
+static void create_sqlite_header(sqlite3_ptr db, const char* const buildInfo);
+
+static void verify_sqlite_header(sqlite3_ptr db, int ignore_hh_version);
+
+size_t deptbl_entry_count_for_slot(size_t slot);
+
+static long hh_save_file_info_helper_sqlite(const char* const out_filename);
+
+static size_t hh_save_dep_table_helper_sqlite(
+        const char* const out_filename,
+        const char* const build_info
+);
+
+CAMLprim value hh_save_dep_table_sqlite(
+        value out_filename,
+        value build_revision
+);
+
+CAMLprim value hh_load_dep_table_sqlite(
+        value in_filename,
+        value ignore_hh_version
+);
+
+CAMLprim value hh_get_dep_sqlite(value ocaml_key);
+
+CAMLprim value hh_save_table_sqlite(value out_filename);
+
+CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys);
+
+CAMLprim value hh_load_table_sqlite(value in_filename, value verify);
+
+CAMLprim value hh_get_sqlite(value ocaml_key);
+
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t nkind,
+        const char *filespec
+);
+
+char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
+
+static char *copy_malloc(const char *s);
+
+static sqlite3_ptr hhfi_db = NULL;
+
+CAMLprim value hh_save_file_info_init(value ml_path);
+
+CAMLprim value hh_save_file_info_sqlite(
+        value ml_hash,
+        value ml_name,
+        value ml_kind,
+        value ml_filespec
+);
+
+sqlite3_ptr hhfi_get_db(void);
+
+void hhfi_init_db(const char *path);
+
+void hhfi_free_db(void);
+
+// END DECLARATIONS
+
+static char *copy_malloc(const char *s) {
+    char *d = malloc(1 + strlen(s));
+    assert(d);
+    return strcpy(d, s);
 }
 
 void raise_assertion_failure(char * msg) {
@@ -1141,6 +1391,11 @@ static void raise_dep_table_full(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("dep_table_full");
   caml_raise_constant(*exn);
+}
+
+CAMLprim value hh_get_in_memory_dep_table_entry_count() {
+  CAMLparam0();
+  CAMLreturn(Val_long(*dcounter));
 }
 
 /*****************************************************************************/
@@ -1855,11 +2110,18 @@ CAMLprim value hh_get_and_deserialize_sqlite(
     value ml_key
 ) {
   CAMLparam2(ml_use_fileinfo_sqlite, ml_key);
+  CAMLlocal1(ml_out);
+  int64_t hash = (int64_t) get_hash(ml_key);
   int use_sqlite_fallback = Bool_val(ml_use_fileinfo_sqlite);
   check_should_exit();
   if (use_sqlite_fallback) {
-      // not yet implemented
-      abort();
+      // TODO: almost certainly wrong,
+      // we're getting back a stringified Relative_path.t
+      char *fs = hhfi_get_filespec(hhfi_get_db(), hash);
+      assert(fs);
+      ml_out = caml_copy_string(fs);
+      free(fs);
+      CAMLreturn(ml_out);
   } else {
       CAMLlocal1(ml_res);
       ml_res = hh_get_and_deserialize(ml_key);
@@ -2141,15 +2403,34 @@ query_result_t get_dep_sqlite_blob(
   sqlite3_stmt ** stmt
 );
 
+query_result_t get_dep_sqlite_blob_with_duration(
+  sqlite3 * const db,
+  const uint64_t key64,
+  sqlite3_stmt ** stmt,
+  size_t * duration_us
+) {
+  struct timeval start = { 0 };
+  gettimeofday(&start, NULL);
+  query_result_t result = get_dep_sqlite_blob(db, key64, stmt);
+  struct timeval end = { 0 };
+  gettimeofday(&end, NULL);
+  long elapsed = (end.tv_sec - start.tv_sec) * 1000000L;
+  elapsed += (end.tv_usec - start.tv_usec);
+  *duration_us = *duration_us + elapsed;
+  return result;
+}
+
 // Add all the entries in the in-memory deptable
 // into the connected database. This adds edges only, so the
 // resulting deptable may contain more edges than truly represented
 // in the code-base (after incremental changes), but never misses
 // any (modulo bugs).
-static void hh_update_dep_table_helper(
+static size_t hh_update_dep_table_helper(
     sqlite3* const db_out,
     const char* const build_info
 ) {
+  struct timeval start_t = { 0 };
+  gettimeofday(&start_t, NULL);
   // Create header for verification
   write_sqlite_header(db_out, build_info);
   // Hand-off the data to the OS for writing and continue,
@@ -2176,6 +2457,10 @@ static void hh_update_dep_table_helper(
     "INSERT OR REPLACE INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
   assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
     SQLITE_OK);
+  size_t existing_rows_lookup_duration = 0L;
+  size_t existing_rows_updated_count = 0;
+  size_t edges_added = 0;
+  size_t new_rows_count = 0;
   for (slot = 0; slot < dep_size; ++slot) {
     count = deptbl_entry_count_for_slot(slot);
     if (count == 0) {
@@ -2184,7 +2469,11 @@ static void hh_update_dep_table_helper(
     deptbl_entry_t slotval = deptbl[slot];
 
     query_result_t existing =
-      get_dep_sqlite_blob(db_out, slotval.s.key.num, &select_dep_stmt);
+      get_dep_sqlite_blob_with_duration(
+          db_out,
+          slotval.s.key.num,
+          &select_dep_stmt,
+          &existing_rows_lookup_duration);
     // Make sure we don't have malformed output
     assert(existing.size % sizeof(uint32_t) == 0);
     size_t existing_count = existing.size / sizeof(uint32_t);
@@ -2220,6 +2509,9 @@ static void hh_update_dep_table_helper(
             existing_count * (sizeof(uint32_t))
         );
         iter += existing_count;
+        existing_rows_updated_count += 1;
+      } else {
+        new_rows_count += 1;
       }
       assert_sql(
         sqlite3_bind_blob(insert_stmt, 2, values,
@@ -2229,6 +2521,7 @@ static void hh_update_dep_table_helper(
       assert_sql(sqlite3_clear_bindings(insert_stmt), SQLITE_OK);
       assert_sql(sqlite3_reset(insert_stmt), SQLITE_OK);
     }
+    edges_added += iter - existing_count;
   }
 
   if (values != NULL) {
@@ -2237,11 +2530,18 @@ static void hh_update_dep_table_helper(
 
   assert_sql(sqlite3_finalize(insert_stmt), SQLITE_OK);
   assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
+  start_t = log_duration("Finished SQL Transaction", start_t);
+  fprintf(stderr, "Lookup of existing rows took %lu us\n",
+      existing_rows_lookup_duration);
+  fprintf(stderr, "Wrote %lu new rows\n", new_rows_count);
+  fprintf(stderr, "Updated %lu existing rows\n", existing_rows_updated_count);
   destroy_prepared_stmt(&select_dep_stmt);
   assert_sql(sqlite3_close(db_out), SQLITE_OK);
+  log_duration("Finished closing SQL connection", start_t);
+  return edges_added;
 }
 
-static long hh_save_dep_table_helper_sqlite(
+static size_t hh_save_dep_table_helper_sqlite(
     const char* const out_filename,
     const char* const build_info
 ) {
@@ -2253,11 +2553,10 @@ static long hh_save_dep_table_helper_sqlite(
   gettimeofday(&tv, NULL);
 
   sqlite3 *db_out = connect_and_create_dep_table_helper(out_filename);
-  hh_update_dep_table_helper(db_out, build_info);
+  size_t edges_added = hh_update_dep_table_helper(db_out, build_info);
   tv2 = log_duration("Writing dependency file with sqlite", tv);
-  int secs = tv2.tv_sec - tv.tv_sec;
-  // Reporting only seconds, ignore milli seconds
-  return secs;
+  UNUSED(tv2);
+  return edges_added;
 }
 
 /*
@@ -2271,9 +2570,9 @@ CAMLprim value hh_save_dep_table_sqlite(
   CAMLparam2(out_filename, build_revision);
   char *out_filename_raw = String_val(out_filename);
   char *build_revision_raw = String_val(build_revision);
-  long retVal =
+  size_t edges_added =
     hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
-  CAMLreturn(Val_long(retVal));
+  CAMLreturn(Val_long(edges_added));
 }
 
 CAMLprim value hh_update_dep_table_sqlite(
@@ -2293,20 +2592,43 @@ CAMLprim value hh_update_dep_table_sqlite(
   gettimeofday(&tv, NULL);
 
   assert_sql(sqlite3_open(out_filename_raw, &db_out), SQLITE_OK);
-  hh_update_dep_table_helper(db_out, build_revision_raw);
-  tv2 = log_duration("Updated dependency file with sqlite", tv);
-  long secs = tv2.tv_sec - tv.tv_sec;
-  CAMLreturn(Val_long(secs));
+  size_t edges_added = hh_update_dep_table_helper(db_out, build_revision_raw);
+  UNUSED(log_duration("Updated dependency file with sqlite", tv));
+  CAMLreturn(Val_long(edges_added));
+}
+
+CAMLprim value hh_save_file_info_init(
+        value ml_path
+) {
+    CAMLparam1(ml_path);
+    const char *path = String_val(ml_path);
+    hhfi_init_db(path);
+    make_all_tables(hhfi_get_db());
+    CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_save_file_info_free(
+    value ml_unit
+) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    hhfi_free_db();
+    CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_save_file_info_sqlite(
-    value out_filename
+    value ml_hash,
+    value ml_name,
+    value ml_kind,
+    value ml_filespec
 ) {
-  CAMLparam1(out_filename);
-  char *out_filename_raw = String_val(out_filename);
-  long retVal =
-    hh_save_file_info_helper_sqlite(out_filename_raw);
-  CAMLreturn(Val_long(retVal));
+  CAMLparam4(ml_hash, ml_name, ml_kind, ml_filespec);
+  assert_master();
+  const char *name = String_val(ml_name);
+  int64_t kind = Int_val(ml_kind);
+  const char *filespec = String_val(ml_filespec);
+  hhfi_insert_row(hhfi_get_db(), get_hash(ml_hash), name, kind, filespec);
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_get_loaded_dep_table_filename() {
@@ -2725,6 +3047,81 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
 }
 
 // --------------------------END OF SQLITE3 SECTION ---------------------------
+static const char *hhfi_insert_row_sql = \
+  "INSERT INTO NAME_INFO (HASH, NAME, NKIND, FILESPEC) VALUES (?, ?, ?, ?);";
+
+// insert a row into the name_info table
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t kind,
+        const char *filespec
+) {
+    assert(db);
+    assert(name);
+    assert(filespec);
+    const char *sql = hhfi_insert_row_sql;
+    sqlite3_stmt *stmt = NULL;
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
+    assert_sql(sqlite3_bind_text(stmt, 2, name, -1, SQLITE_TRANSIENT),
+            SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 3, kind), SQLITE_OK);
+    assert_sql(sqlite3_bind_text(stmt, 4, filespec, -1, SQLITE_TRANSIENT),
+            SQLITE_OK);
+    assert_sql(sqlite3_step(stmt), SQLITE_DONE);
+    assert_sql(sqlite3_finalize(stmt), SQLITE_OK);
+    return;
+}
+
+static const char *hhfi_get_filespec_sql = \
+    "SELECT FILESPEC FROM NAME_INFO WHERE (HASH = (?));";
+
+char *hhfi_get_filespec(
+        sqlite3_ptr db,
+        int64_t hash
+) {
+    assert(db);
+    const char *sql = hhfi_get_filespec_sql;
+    sqlite3_stmt *stmt = NULL;
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
+    int sqlerr = sqlite3_step(stmt);
+    char *out = NULL;
+    if (sqlerr == SQLITE_DONE) {
+        // do nothing
+    } else if (sqlerr == SQLITE_ROW) {
+        // sqlite returns const unsigned char*
+        out = copy_malloc((char *) sqlite3_column_text(stmt, 0));
+        // make sure there are no more rows
+        assert_sql(sqlite3_step(stmt), SQLITE_DONE);
+    } else {
+        // unexpected sqlite status
+        assert(0);
+    }
+    sqlite3_finalize(stmt);
+    return out;
+}
+
+void hhfi_init_db(const char *path) {
+    assert(hhfi_db == NULL);
+    assert_sql(sqlite3_open(path, &hhfi_db), SQLITE_OK);
+    assert_sql(sqlite3_exec(hhfi_db, "BEGIN TRANSACTION;", 0, 0, 0), SQLITE_OK);
+    return;
+}
+
+void hhfi_free_db(void) {
+    assert(hhfi_db != NULL);
+    assert_sql(sqlite3_exec(hhfi_db, "END TRANSACTION;", 0, 0, 0), SQLITE_OK);
+    assert_sql(sqlite3_close(hhfi_db), SQLITE_OK);
+    return;
+}
+
+sqlite3_ptr hhfi_get_db(void) {
+    assert(hhfi_db != NULL);
+    return hhfi_db;
+}
 
 #else
 
@@ -2752,7 +3149,10 @@ CAMLprim value hh_update_dep_table_sqlite(
 }
 
 CAMLprim value hh_save_file_info_sqlite(
-    value out_filename
+    value out_filename,
+    value ml_name,
+    value ml_kind,
+    value ml_filespec
 ) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
@@ -2781,7 +3181,7 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
   CAMLreturn(Val_long(0));
 }
 
-CAMLprim value hh_load_table_sqlite(value in_filename) {
+CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
 }
@@ -2818,8 +3218,53 @@ CAMLprim value set_file_info_on_disk_path(value ml_str) {
 CAMLprim value open_file_info_db(
     value ml_unit
 ) {
-  CAMLparam1(ml_unit);
   UNUSED(ml_unit);
-  CAMLreturn(Val_unit);
+  return Val_unit;
+}
+
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t kind,
+        const char *filespec
+) {
+    UNUSED5(db, hash, name, kind, filespec);
+    return;
+}
+
+char *hhfi_get_filespec(
+        sqlite3_ptr db,
+        int64_t hash
+) {
+    UNUSED2(db, hash);
+    return NULL;
+}
+
+CAMLprim value hh_save_file_info_init(
+        value ml_path
+) {
+    UNUSED(ml_path);
+    return Val_unit;
+}
+
+CAMLprim value hh_save_file_info_free(
+        value ml_unit
+) {
+    UNUSED(ml_unit);
+    return Val_unit;
+}
+
+void hhfi_init_db(const char *path) {
+    UNUSED(path);
+    return;
+}
+
+void hhfi_free_db(void) {
+    return;
+}
+
+sqlite3_ptr hhfi_get_db(void) {
+    return NULL;
 }
 #endif

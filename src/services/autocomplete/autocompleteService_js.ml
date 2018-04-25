@@ -13,6 +13,7 @@ module AutocompleteTypeNormalizer = Ty_normalizer.Make(struct
   let fall_through_merged = true
   let expand_internal_types = true
   let expand_annots = false
+  let flag_shadowed_type_params = true
 end)
 
 let add_autocomplete_token contents line column =

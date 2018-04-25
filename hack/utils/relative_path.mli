@@ -31,6 +31,8 @@ val pp : Format.formatter -> t -> unit
 val default : t
 (* Checks that string indeed has the given prefix before constructing path *)
 val create : prefix -> string -> t
+(** Creates a new path, inferring the prefix. Will default to Dummy. *)
+val create_detect_prefix : string -> t
 (* Creates a Relative_path.t relative to the root *)
 val from_root : string -> t
 val prefix : t -> prefix
@@ -45,3 +47,6 @@ module Map : module type of Reordered_argument_map(MyMap.Make(S))
 
 val relativize_set : prefix -> SSet.t -> Set.t
 val set_of_list : t list -> Set.t
+
+val storage_to_string : t -> string
+val storage_of_string : string -> t

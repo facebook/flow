@@ -33,7 +33,6 @@ let int_of_kind kind = match kind with
   | `ConstantK -> 0
   | `ClassK -> 1
   | `FuncK -> 2
-let _int_of_kind = int_of_kind
 
 let kind_of_int x = match x with
   | 0 -> `ConstantK
@@ -180,6 +179,9 @@ external hh_collect: bool -> bool -> unit = "hh_collect"
 
 external loaded_dep_table_filename_c: unit -> string = "hh_get_loaded_dep_table_filename"
 
+external get_in_memory_dep_table_entry_count: unit -> int =
+  "hh_get_in_memory_dep_table_entry_count"
+
 let loaded_dep_table_filename () =
   let fn = loaded_dep_table_filename_c () in
   if String.equal "" fn then
@@ -187,8 +189,10 @@ let loaded_dep_table_filename () =
   else
     Some fn
 
+(** Returns number of dependency edges added. *)
 external save_dep_table_sqlite_c: string -> string -> int = "hh_save_dep_table_sqlite"
 
+(** Returns number of dependency edges added. *)
 external update_dep_table_sqlite_c: string -> string -> int ="hh_update_dep_table_sqlite"
 
 let save_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
@@ -204,7 +208,18 @@ let update_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
 (*****************************************************************************)
-external save_file_info_sqlite: string -> int = "hh_save_file_info_sqlite"
+external hh_save_file_info_sqlite: string -> string -> int -> string -> unit =
+  "hh_save_file_info_sqlite"
+let save_file_info_sqlite ~hash ~name kind filespec =
+  hh_save_file_info_sqlite hash name (int_of_kind kind) filespec
+
+external hh_save_file_info_init : string -> unit =
+  "hh_save_file_info_init"
+let save_file_info_init path = hh_save_file_info_init path
+
+external hh_save_file_info_free : unit -> unit =
+  "hh_save_file_info_free"
+let save_file_info_free = hh_save_file_info_free
 
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
@@ -1152,8 +1167,8 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module Cache = LocalCache (UserKeyType) (Value)
 
-  let string_of_key _key =
-    failwith "WithCache does not support 'string_of_key'"
+  let string_of_key key =
+    Direct.string_of_key key
 
   let add x y =
     Direct.add x y;

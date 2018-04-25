@@ -276,7 +276,7 @@ and statement_decl cx = Ast.Statement.(
       | DeclareModule.Identifier (_, value)
       | DeclareModule.Literal (_, { Ast.StringLiteral.value; _ }) -> value
       in
-      let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
+      let r = mk_reason (RModule name) loc in
       let t = Tvar.mk cx r in
       Env.add_type_table cx loc t;
       Env.bind_declare_var cx (internal_module_name name) t loc
@@ -1570,7 +1570,7 @@ and statement cx = Ast.Statement.(
     toplevel_decls cx elements;
     toplevels cx elements;
 
-    let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
+    let reason = mk_reason (RModule name) loc in
     let module_t = match Context.module_kind cx with
     | Context.ESModule -> mk_module_t cx reason
     | Context.CommonJSModule clobbered ->
@@ -1857,7 +1857,7 @@ and statement cx = Ast.Statement.(
             [import_loc, local_name, module_ns_typeof, None]
           | ImportDeclaration.ImportValue ->
             let reason =
-              mk_reason (RCustom (spf "module `%s`" module_name)) import_loc
+              mk_reason (RModule module_name) import_loc
             in
             let module_ns_t =
               import_ns cx reason (fst source, module_name) import_loc
@@ -2338,9 +2338,8 @@ and variable cx kind
   ) in
   let { VariableDeclaration.Declarator.id; init } = vdecl in
   Ast.Expression.(match init with
-    | Some (call_loc, Call { Call.callee = _, Identifier (_, "require"); optional; _ })
+    | Some (_, Call { Call.callee = _, Identifier (_, "require"); _ })
         when not (Env.local_scope_entry_exists "require") ->
-      warn_or_ignore_optional_chaining optional cx call_loc;
       let loc, _ = id in
       (* Record the loc of the pattern, which contains the locations of any
          local definitions introduced by the pattern. This information is used
@@ -2519,10 +2518,8 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Member {
       Member._object;
       property = Member.PropertyExpression index;
-      optional;
       _
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
       let reason = mk_reason (RProperty None) loc in
       (match Refinement.get cx (loc, e) loc with
       | Some t -> t
@@ -2538,30 +2535,24 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Member {
       Member._object = _, Identifier (_, "module");
       property = Member.PropertyIdentifier (_, "exports");
-      optional;
       _
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
       get_module_exports cx loc
 
   | Member {
       Member._object =
         _, Identifier (_, ("ReactGraphQL" | "ReactGraphQLLegacy"));
       property = Member.PropertyIdentifier (_, "Mixin");
-      optional;
       _
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
       let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
       Flow.get_builtin cx "ReactGraphQLMixin" reason
 
   | Member {
       Member._object = super_loc, Super;
       property = Member.PropertyIdentifier (ploc, name);
-      optional;
       _
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
       let super = super_ cx super_loc in
       let id_info = "super", super, Type_table.Other in
       Env.add_type_table_info cx super_loc id_info;
@@ -2591,10 +2582,8 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Member {
       Member._object;
       property = Member.PropertyIdentifier (ploc, name);
-      optional;
       _
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
     let tobj = expression cx _object in
     (
       let expr_reason = mk_reason (RProperty (Some name)) loc in
@@ -2616,10 +2605,8 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Member {
       Member._object;
       property = Member.PropertyPrivateName (ploc, (_, name));
-      optional;
       _
     } -> (
-      warn_or_ignore_optional_chaining optional cx loc;
       let expr_reason = mk_reason (RPrivateProperty name) loc in
       match Refinement.get cx (loc, e) loc with
       | Some t -> t
@@ -2638,6 +2625,10 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       t
     end
 
+  | OptionalMember { OptionalMember.member; optional } ->
+    warn_or_ignore_optional_chaining optional cx loc;
+    expression cx (loc, Member member)
+
   | Object { Object.properties } ->
     let reason = mk_reason RObjectLit loc in
     object_ cx reason properties
@@ -2647,18 +2638,18 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
     match elements with
     | [] ->
         (* empty array, analogous to object with implicit properties *)
-        let element_reason =
-          let desc = RCustom "unknown element type of empty array" in
-          mk_reason desc loc
-        in
+        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_reason_const REmptyArrayLit reason in
         DefT (reason, ArrT (ArrayAT (elemt, Some [])))
     | elems ->
         let elem_spread_list = expression_or_spread_list cx loc elems in
         Tvar.mk_where cx reason (fun tout ->
-          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
           let reason_op = reason in
+          let element_reason = replace_reason_const Reason.inferred_union_elem_array_desc reason_op in
+          let elem_t = Tvar.mk cx element_reason in
+          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)) in
+
           Flow.resolve_spread_list cx ~use_op:unknown_use ~reason_op elem_spread_list resolve_to
         )
     )
@@ -2666,9 +2657,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Call {
       Call.callee = _, Identifier (_, "require");
       arguments;
-      optional;
     } when not (Env.local_scope_entry_exists "require") -> (
-      warn_or_ignore_optional_chaining optional cx loc;
       match arguments with
       | [ Expression (source_loc, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
@@ -2695,9 +2684,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Call {
       Call.callee = _, Identifier (_, "requireLazy");
       arguments;
-      optional;
     } when not (Env.local_scope_entry_exists "requireLazy") -> (
-      warn_or_ignore_optional_chaining optional cx loc;
       match arguments with
       | [Expression(_, Array({Array.elements;})); Expression(callback_expr);] ->
         (**
@@ -2744,6 +2731,10 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
           Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
         AnyT.at loc
     )
+
+  | OptionalCall { OptionalCall.call; optional } ->
+    warn_or_ignore_optional_chaining optional cx loc;
+    expression cx (loc, Call call)
 
   | New {
       New.callee = _, Identifier (_, "Function");
@@ -2800,14 +2791,10 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       Call.callee = (callee_loc, Member {
         Member._object = (_, Identifier (_, "Object") as obj);
         property = Member.PropertyIdentifier (prop_loc, name);
-        optional = member_optional;
         _
       } as expr);
       arguments;
-      optional;
     } ->
-      warn_or_ignore_optional_chaining member_optional cx callee_loc;
-      warn_or_ignore_optional_chaining optional cx loc;
       let obj_t = expression cx obj in
       static_method_call_Object cx loc callee_loc prop_loc expr obj_t name arguments
 
@@ -2815,15 +2802,11 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       Call.callee = (callee_loc, Member {
         Member._object = super_loc, Super;
         property = Member.PropertyIdentifier (ploc, name);
-        optional = member_optional;
         _
       }) as callee;
       arguments;
-      optional;
       _
     } ->
-      warn_or_ignore_optional_chaining member_optional cx callee_loc;
-      warn_or_ignore_optional_chaining optional cx loc;
       let reason = mk_reason (RMethodCall (Some name)) loc in
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
@@ -2854,15 +2837,11 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       callee = (lookup_loc, Member { Member.
         _object;
         property;
-        optional = member_optional;
         _
       }) as callee;
       arguments;
-      optional;
     } ->
       (* method call *)
-      warn_or_ignore_optional_chaining member_optional cx lookup_loc;
-      warn_or_ignore_optional_chaining optional cx loc;
       let ot = expression cx _object in
       let argts = List.map (expression_or_spread cx) arguments in
       (match property with
@@ -2890,9 +2869,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Call {
       Call.callee = (ploc, Super) as callee;
       arguments;
-      optional;
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason (RFunctionCall RSuper) loc in
 
@@ -2921,9 +2898,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
   | Call {
       Call.callee = (_, Identifier (_, "invariant")) as callee;
       arguments;
-      optional;
     } ->
-      warn_or_ignore_optional_chaining optional cx loc;
       (* TODO: require *)
       ignore (expression cx callee);
       (match arguments with
@@ -2949,8 +2924,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       );
       VoidT.at loc
 
-  | Call { Call.callee; arguments; optional } ->
-      warn_or_ignore_optional_chaining optional cx loc;
+  | Call { Call.callee; arguments } ->
       let f = expression cx callee in
       let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
       let argts =
@@ -3211,9 +3185,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       } ->
 
       let imported_module_t =
-        let import_reason = mk_reason (RCustom (
-          spf "module `%s`" module_name
-        )) loc in
+        let import_reason = mk_reason (RModule module_name) loc in
         import_ns cx import_reason (source_loc, module_name) loc
       in
 
@@ -3606,10 +3578,8 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression (_, Member {
             Member._object = _, Ast.Expression.Identifier (_, "module");
             property = Member.PropertyIdentifier (_, "exports");
-            optional;
             _
           }) ->
-            warn_or_ignore_optional_chaining optional cx lhs_loc;
             set_module_kind cx lhs_loc (Context.CommonJSModule(Some(lhs_loc)));
             set_module_exports cx lhs_loc t
 
@@ -3617,10 +3587,8 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object = super_loc, Super;
             property = Member.PropertyIdentifier (ploc, name);
-            optional;
             _
           }) as rx) ->
-            warn_or_ignore_optional_chaining optional cx lhs_loc;
             let reason =
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -3643,10 +3611,8 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
             property = Member.PropertyPrivateName (ploc, (_, name));
-            optional;
             _
           }) as expr) ->
-            warn_or_ignore_optional_chaining optional cx lhs_loc;
             let o = expression cx _object in
             (* if we fire this hook, it means the assignment is a sham. *)
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
@@ -3674,10 +3640,8 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
             property = Member.PropertyIdentifier (ploc, name);
-            optional;
             _
           }) as expr) ->
-            warn_or_ignore_optional_chaining optional cx lhs_loc;
             let o = expression cx _object in
             let wr_ctx = match _object, Env.var_scope_kind () with
               | (_, This), Scope.Ctor -> ThisInCtor
@@ -3708,10 +3672,8 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
             property = Member.PropertyExpression ((iloc, _) as index);
-            optional;
             _
           }) as rx) ->
-            warn_or_ignore_optional_chaining optional cx lhs_loc;
             let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let a = expression cx _object in
             let i = expression cx index in
@@ -3937,10 +3899,10 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
-  let mk_spread from_obj to_obj =
+  let mk_spread from_obj to_obj ~assert_exact =
     Tvar.mk_where cx reason_props (fun t ->
       Flow.flow cx (to_obj,
-        ObjAssignToT (reason_props, from_obj, t, default_obj_assign_kind));
+        ObjAssignToT (reason_props, from_obj, t, ObjAssign { assert_exact }));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -3956,7 +3918,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     | Some result ->
       let result =
         if not (SMap.is_empty map)
-        then mk_spread (mk_object map) result
+        then mk_spread (mk_object map) result ~assert_exact:false
         else result
       in
       if not sealed then result else
@@ -4013,7 +3975,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
           | _ -> false
         in
         let obj = eval_props (map, result) in
-        let result = mk_spread spread obj in
+        let result = mk_spread spread obj ~assert_exact:false in
         sealed && (is_exact spread), SMap.empty, Some result
   ) (true, SMap.empty, None) attributes in
 
@@ -4025,12 +3987,15 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     | _ when is_react -> map
     | _ ->
         let arr = Tvar.mk_where cx reason (fun tout ->
+          let reason_op = reason in
+          let element_reason = replace_reason_const Reason.inferred_union_elem_array_desc reason_op in
+          let elem_t = Tvar.mk cx element_reason in
           Flow.resolve_spread_list
             cx
             ~use_op:unknown_use
             ~reason_op:reason
             children
-            (ResolveSpreadsToArrayLiteral (mk_id (), tout))
+            (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout))
         ) in
         let p = Field (None, arr, Neutral) in
         SMap.add "children" p map
@@ -4089,13 +4054,11 @@ and jsx_desugar cx name component_t props attributes children locs =
         component = reason_of_t component_t;
       }) in
       Ast.Expression.(match jsx_expr with
-      | jsx_loc, Member {
+      | _, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc, name);
-        optional;
           _;
         } ->
-          warn_or_ignore_optional_chaining optional cx jsx_loc;
           let ot = jsx_pragma_expression cx raw_jsx_expr loc_element _object in
           method_call cx reason ~use_op ~call_strict_arity:false prop_loc
             (jsx_expr, ot, name) argts
@@ -4181,7 +4144,6 @@ and jsx_title_member_to_expression member =
       _object;
       property = PropertyIdentifier property;
       computed = false;
-      optional = false;
     })
   )
 
@@ -4244,11 +4206,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (expr_loc, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc, prop_name);
-        optional;
         _
       }) ->
-      warn_or_ignore_optional_chaining optional cx expr_loc;
-
       (* use `expression` instead of `condition` because `_object` is the object
          in a member expression; if it itself is a member expression, it must
          exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
@@ -4518,11 +4477,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
   | loc, Member {
       Member._object;
       property = Member.PropertyIdentifier (prop_loc, prop_name);
-      optional;
-        _
-      }
-    ->
-      warn_or_ignore_optional_chaining optional cx loc;
+      _
+    } ->
       let obj_t = match _object with
       | super_loc, Super ->
           let t = super_ cx super_loc in
@@ -4606,14 +4562,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       Call.callee = callee_loc, Member {
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, "isArray");
-        optional = member_optional;
         _ };
       arguments = [Expression arg];
-      optional;
     } -> (
-      warn_or_ignore_optional_chaining member_optional cx callee_loc;
-      warn_or_ignore_optional_chaining optional cx loc;
-
       (* get Array.isArray in order to populate the type tables, but we don't
          care about the result. *)
       (* TODO: one day we can replace this with a call to `method_call`, and
@@ -4687,17 +4638,14 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* e.m(...) *)
   (* TODO: Don't trap method calls for now *)
-  | loc, Call { Call.callee = (_, Member _); optional; _ } ->
-      warn_or_ignore_optional_chaining optional cx loc;
+  | _, Call { Call.callee = (_, Member _); _ } ->
       empty_result (expression cx e)
 
   (* f(...) *)
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
      predicated when it is resolved. *)
-  | loc, Call { Call.callee = c; arguments; optional }
-    ->
-      warn_or_ignore_optional_chaining optional cx loc;
+  | loc, Call { Call.callee = c; arguments } ->
       let is_spread = function | Spread _ -> true | _ -> false in
       if List.exists is_spread arguments then
         empty_result (expression cx e)

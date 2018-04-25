@@ -22,7 +22,7 @@ type text_edit = {
   text : string;
 }
 
-val edit_file : string -> text_edit list -> (string, string) result
+val edit_file : string -> text_edit list -> (string, string * Utils.callstack) result
 
 val edit_file_unsafe : string -> text_edit list -> string
 

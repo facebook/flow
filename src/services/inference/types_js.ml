@@ -524,6 +524,8 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         | Some OptIn -> OptIn
         (* Respect @flow strict pragma *)
         | Some OptInStrict -> OptInStrict
+        (* Respect @flow strict-local pragma *)
+        | Some OptInStrictLocal -> OptInStrictLocal
         (* Respect @flow weak pragma *)
         | Some OptInWeak -> OptInWeak
         (* Respect @noflow, which `apply_docblock_overrides` does not by
@@ -582,7 +584,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         else Errors.ErrorSet.empty
       in
 
-      Lwt.return (Some cx, errors, warnings, info)
+      Lwt.return (Some (cx, ast), errors, warnings, info)
 
   | Parsing_service_js.Parse_fail fails ->
       let errors = match fails with
@@ -607,9 +609,9 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       Lwt.return (None, errors, Errors.ErrorSet.empty, info)
 
 let typecheck_contents ~options ~workers ~env ~profiling contents filename =
-  let%lwt _cx_opt, errors, warnings, _info =
+  let%lwt cx_opt, errors, warnings, _info =
     typecheck_contents_ ~options ~workers ~env ~check_syntax:true ~profiling contents filename in
-  Lwt.return (errors, warnings)
+  Lwt.return (cx_opt, errors, warnings)
 
 let basic_check_contents ~options ~workers ~env ~profiling contents filename =
   try%lwt
@@ -617,7 +619,7 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
       typecheck_contents_
         ~options ~workers ~env ~check_syntax:false ~profiling contents filename in
     let cx = match cx_opt with
-      | Some cx -> cx
+      | Some (cx, _) -> cx
       | None -> failwith "Couldn't parse file" in
     Lwt.return (Ok (cx, info))
   with exn ->

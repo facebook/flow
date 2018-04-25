@@ -61,7 +61,7 @@
         "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":9}},
         "range":[10,19],
         "tag":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":4}},
           "range":[10,14],
           "object":{
@@ -106,11 +106,11 @@
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":12}},
       "range":[21,33],
       "expression":{
-        "type":"CallExpression",
+        "type":"OptionalCallExpression",
         "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":12}},
         "range":[21,33],
         "callee":{
-          "type":"MemberExpression",
+          "type":"OptionalMemberExpression",
           "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":4}},
           "range":[21,25],
           "object":{
@@ -171,7 +171,7 @@
       "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":11}},
       "range":[35,46],
       "expression":{
-        "type":"MemberExpression",
+        "type":"OptionalMemberExpression",
         "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":11}},
         "range":[35,46],
         "object":{
