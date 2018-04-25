@@ -397,7 +397,9 @@ end
 module Hover = struct
   type params = TextDocumentPositionParams.t
 
-  and result = {
+  and result = hoverResult option
+
+  and hoverResult = {
     contents: markedString list; (* wire: either a single one or an array *)
     range: range option;
   }

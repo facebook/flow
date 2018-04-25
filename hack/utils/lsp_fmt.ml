@@ -522,11 +522,15 @@ let parse_hover (params: json option) : Hover.params =
 
 let print_hover (r: Hover.result) : json =
   let open Hover in
-  Jprint.object_opt [
-    "contents", Some (JSON_Array
-        (List.map r.Hover.contents ~f:print_markedItem));
-    "range", Option.map r.range ~f:print_range;
-  ]
+  match r with
+  | None ->
+    JSON_Null
+  | Some r ->
+    Jprint.object_opt [
+      "contents", Some (JSON_Array
+          (List.map r.Hover.contents ~f:print_markedItem));
+      "range", Option.map r.range ~f:print_range;
+    ]
 
 
 (************************************************************************)

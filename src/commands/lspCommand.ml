@@ -274,13 +274,13 @@ let do_initialize () : Initialize.result =
         want_willSaveWaitUntil = false;
         want_didSave = Some { includeText = true }
       };
-      hoverProvider = false;
+      hoverProvider = true;
       completionProvider = Some {
         resolveProvider = false;
         completion_triggerCharacters = ["."];
       };
       signatureHelpProvider = None;
-      definitionProvider = false;
+      definitionProvider = true;
       referencesProvider = false;
       documentHighlightProvider = false;
       documentSymbolProvider = false;

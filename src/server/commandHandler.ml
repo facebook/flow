@@ -101,11 +101,12 @@ let check_file ~options ~workers ~env ~profiling ~force file_input =
         Lwt.return (ServerProt.Response.NOT_COVERED)
 
 let infer_type
-    ~options
-    ~workers
-    ~env
-    ~profiling
-    (file_input, line, col, verbose) =
+    ~(options: Options.t)
+    ~(workers: MultiWorkerLwt.worker list option)
+    ~(env: ServerEnv.env ref)
+    ~(profiling: Profiling_js.running)
+    ((file_input, line, col, verbose): (File_input.t * int * int * Verbose.t option))
+  : ((Loc.t * string option, string) Core_result.t * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   let options = { options with Options.opt_verbose = verbose } in
@@ -573,7 +574,8 @@ let handle_persistent_unsafe genv env client profiling msg
     did_close genv env client (Nel.one fn)
 
   | Persistent_connection_prot.LspToServer (RequestMessage (id, DefinitionRequest params)) ->
-    (* TODO: factor out flow<->lsp datatype conversions *)
+    (* TODO(ljw): once we've done definition, hover and autocomplete, then *)
+    (* factor out flow<->lsp datatype conversions *)
     (* and document that start.column is off-by-one compared to the rest! *)
     let env = ref env in
     let open TextDocumentPositionParams in
@@ -599,6 +601,42 @@ let handle_persistent_unsafe genv env client profiling msg
           }
         } in
         lsp_writer (ResponseMessage (id, DefinitionResult [location]));
+        Lwt.return (Ok (!env, json_data))
+      | Error reason ->
+        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+    end
+
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, HoverRequest params)) ->
+    (* TODO(ljw): once we've done definition, hover and autocomplete, then *)
+    (* factor out flow<->lsp datatype conversions *)
+    let open TextDocumentPositionParams in
+    let env = ref env in
+    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
+    let file = Persistent_connection.get_file client fn in
+    let line = params.position.line + 1 in
+    let char = params.position.character + 1 in
+    let verbose = None in (* if Some, would write to server logs *)
+    let%lwt result, json_data =
+      infer_type ~options ~workers ~env ~profiling (file, line, char, verbose)
+    in
+    begin match result with
+      | Ok (loc, content) ->
+        (* loc may be the 'none' location; content may be None. *)
+        (* If both are none then we'll return null; otherwise we'll return a hover *)
+        let range =
+          if loc = Loc.none then None
+          else Some { Lsp.
+            start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
+            end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column-1; };
+          } in
+        let contents = match content with
+          | None -> [MarkedString "?"]
+          | Some content -> [MarkedCode ("flow", content)] in
+        let r = match range, content with
+          | None, None -> None
+          | _, _ -> Some {Lsp.Hover.contents; range;} in
+        lsp_writer (ResponseMessage (id, HoverResult r));
         Lwt.return (Ok (!env, json_data))
       | Error reason ->
         let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
