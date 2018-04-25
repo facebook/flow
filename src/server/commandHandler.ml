@@ -507,46 +507,6 @@ let did_close _genv env client (filenames: string Nel.t)
       Lwt.return (Ok ({env with connections}, None))
   end
 
-let flow_completion_to_lsp
-    (item: ServerProt.Response.complete_autocomplete_result)
-  : Lsp.Completion.completionItem =
-  let open Lsp.Completion in
-  let open ServerProt.Response in
-  let trunc n s = if String.length s < n then s else (String.sub s 0 n) ^ "..." in
-  let trunc80 s = trunc 80 s in
-  let flow_params_to_string params =
-    let params = List.map (fun p -> p.param_name ^ ": " ^ p.param_ty) params in
-    "(" ^ (String.concat ", " params) ^ ")"
-  in
-  let kind, itemType, inlineDetail, detail = match item.func_details with
-    | Some func_details ->
-      let kind = Some Function in
-      let itemType = Some (trunc 30 func_details.return_ty) in
-      let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
-      let detail = Some (trunc80 item.res_ty) in
-      kind, itemType, inlineDetail, detail
-    | None ->
-      let kind = None in
-      let itemType = None in
-      let inlineDetail = Some (trunc80 item.res_ty) in
-      let detail = Some (trunc80 item.res_ty) in
-      kind, itemType, inlineDetail, detail
-  in
-  {
-    label = item.res_name;
-    kind;
-    detail = detail;
-    inlineDetail;
-    itemType;
-    documentation = None; (* This will be filled in by completionItem/resolve. *)
-    sortText = None;
-    filterText = None;
-    insertText = None;
-    insertTextFormat = Some PlainText;
-    textEdits = [];
-    command = None;
-    data = None;
-  }
 
 
 (** handle_persistent_unsafe:
@@ -615,32 +575,15 @@ let handle_persistent_unsafe genv env client profiling msg
     did_close genv env client (Nel.one fn)
 
   | Persistent_connection_prot.LspToServer (RequestMessage (id, DefinitionRequest params)) ->
-    (* TODO(ljw): once we've done definition, hover and autocomplete, then *)
-    (* factor out flow<->lsp datatype conversions *)
-    (* and document that start.column is off-by-one compared to the rest! *)
     let env = ref env in
     let open TextDocumentPositionParams in
-    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
-    let file = Persistent_connection.get_file client fn in
-    let line = params.position.line + 1 in
-    let char = params.position.character + 1 in
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let%lwt (result, json_data) =
       get_def ~options ~workers ~env ~profiling (file, line, char) in
     begin match result with
       | Ok loc ->
-        let default_path = params.textDocument.TextDocumentIdentifier.uri in
-        let uri = match loc.Loc.source with
-          | Some file_key ->
-            file_key |> File_key.to_string |> Lsp_helpers.path_to_lsp_uri ~default_path
-          | None ->
-            default_path in
-        let location = { Lsp.Location.
-          uri;
-          range = { Lsp.
-            start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
-            end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column-1; };
-          }
-        } in
+        let default_uri = params.textDocument.TextDocumentIdentifier.uri in
+        let location = Flow_lsp_conversions.loc_to_lsp ~default_uri loc in
         lsp_writer (ResponseMessage (id, DefinitionResult [location]));
         Lwt.return (Ok (!env, json_data))
       | Error reason ->
@@ -649,14 +592,9 @@ let handle_persistent_unsafe genv env client profiling msg
     end
 
   | Persistent_connection_prot.LspToServer (RequestMessage (id, HoverRequest params)) ->
-    (* TODO(ljw): once we've done definition, hover and autocomplete, then *)
-    (* factor out flow<->lsp datatype conversions *)
     let open TextDocumentPositionParams in
     let env = ref env in
-    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
-    let file = Persistent_connection.get_file client fn in
-    let line = params.position.line + 1 in
-    let char = params.position.character + 1 in
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let verbose = None in (* if Some, would write to server logs *)
     let%lwt result, json_data =
       infer_type ~options ~workers ~env ~profiling (file, line, char, verbose)
@@ -665,12 +603,9 @@ let handle_persistent_unsafe genv env client profiling msg
       | Ok (loc, content) ->
         (* loc may be the 'none' location; content may be None. *)
         (* If both are none then we'll return null; otherwise we'll return a hover *)
-        let range =
-          if loc = Loc.none then None
-          else Some { Lsp.
-            start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
-            end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column-1; };
-          } in
+        let default_uri = params.textDocument.TextDocumentIdentifier.uri in
+        let location = Flow_lsp_conversions.loc_to_lsp ~default_uri loc in
+        let range = if loc = Loc.none then None else Some location.Lsp.Location.range in
         let contents = match content with
           | None -> [MarkedString "?"]
           | Some content -> [MarkedCode ("flow", content)] in
@@ -685,12 +620,8 @@ let handle_persistent_unsafe genv env client profiling msg
     end
 
   | Persistent_connection_prot.LspToServer (RequestMessage (id, CompletionRequest params)) ->
-    (* TODO(ljw): once we've done definition, hover and autocomplete, then *)
-    (* factor out flow<->lsp datatype conversions *)
-    let open TextDocumentPositionParams in
     let env = ref env in
-    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
-    let file = Persistent_connection.get_file client fn in
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let fn_content = match file with
       | File_input.FileContent (fn, content) ->
         Ok (fn, content)
@@ -705,10 +636,6 @@ let handle_persistent_unsafe genv env client profiling msg
       | Error (reason, Utils.Callstack stack) ->
         Lwt.return (Error (!env, reason, Utils.Callstack stack))
       | Ok (fn, content) ->
-        (* lsp uses 0,0 based line/column *)
-        let line = params.position.line + 1 in
-        let char = params.position.character in
-        (* add_autocomplete_token takes a 1,0 based line/column *)
         let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
         let file_with_token = File_input.FileContent (fn, content_with_token) in
         let%lwt result, json_data =
@@ -716,7 +643,7 @@ let handle_persistent_unsafe genv env client profiling msg
         in
         begin match result with
           | Ok items ->
-            let items = List.map flow_completion_to_lsp items in
+            let items = List.map Flow_lsp_conversions.flow_completion_to_lsp items in
             let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
             lsp_writer (ResponseMessage (id, r));
             Lwt.return (Ok (!env, json_data))
@@ -725,7 +652,6 @@ let handle_persistent_unsafe genv env client profiling msg
             Lwt.return (Error (!env, reason, Utils.Callstack stack))
         end
     end
-
 
   | Persistent_connection_prot.LspToServer unhandled ->
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
