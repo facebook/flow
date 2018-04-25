@@ -524,6 +524,8 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         | Some OptIn -> OptIn
         (* Respect @flow strict pragma *)
         | Some OptInStrict -> OptInStrict
+        (* Respect @flow strict-local pragma *)
+        | Some OptInStrictLocal -> OptInStrictLocal
         (* Respect @flow weak pragma *)
         | Some OptInWeak -> OptInWeak
         (* Respect @noflow, which `apply_docblock_overrides` does not by

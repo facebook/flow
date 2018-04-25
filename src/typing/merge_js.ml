@@ -164,6 +164,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   | None -> metadata
   | Some Docblock.OptIn -> { metadata with checked = true; }
   | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true; }
+  | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true; }
   | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
@@ -241,7 +242,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
     (* local inference *)
     let ast = get_ast_unsafe filename in
     let lint_severities =
-      if metadata.Context.strict
+      if metadata.Context.strict || metadata.Context.strict_local
       then StrictModeSettings.fold
         (fun lint_kind lint_severities ->
           LintSettings.set_value lint_kind (Severity.Err, None) lint_severities

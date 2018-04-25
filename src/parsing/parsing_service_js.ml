@@ -183,6 +183,11 @@ let extract_docblock =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
           else errors, { info with flow = Some OptInStrict } in
         parse_attributes acc xs
+    | (loc, "@flow") :: (_, "strict-local") :: xs ->
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInStrictLocal } in
+        parse_attributes acc xs
     | (loc, "@flow") :: (_, "weak") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
@@ -364,6 +369,7 @@ let types_checked types_mode info =
     | Some Docblock.OptOut -> false
     | Some Docblock.OptIn
     | Some Docblock.OptInStrict
+    | Some Docblock.OptInStrictLocal
     | Some Docblock.OptInWeak -> true
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
