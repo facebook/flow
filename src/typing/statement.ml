@@ -2528,18 +2528,18 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
     match elements with
     | [] ->
         (* empty array, analogous to object with implicit properties *)
-        let element_reason =
-          let desc = RCustom "unknown element type of empty array" in
-          mk_reason desc loc
-        in
+        let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_reason_const REmptyArrayLit reason in
         DefT (reason, ArrT (ArrayAT (elemt, Some [])))
     | elems ->
         let elem_spread_list = expression_or_spread_list cx loc elems in
         Tvar.mk_where cx reason (fun tout ->
-          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
           let reason_op = reason in
+          let element_reason = replace_reason_const Reason.inferred_union_elem_array_desc reason_op in
+          let elem_t = Tvar.mk cx element_reason in
+          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)) in
+
           Flow.resolve_spread_list cx ~use_op:unknown_use ~reason_op elem_spread_list resolve_to
         )
     )
@@ -4120,12 +4120,15 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     | _ when is_react -> map
     | _ ->
         let arr = Tvar.mk_where cx reason (fun tout ->
+          let reason_op = reason in
+          let element_reason = replace_reason_const Reason.inferred_union_elem_array_desc reason_op in
+          let elem_t = Tvar.mk cx element_reason in
           Flow.resolve_spread_list
             cx
             ~use_op:unknown_use
             ~reason_op:reason
             children
-            (ResolveSpreadsToArrayLiteral (mk_id (), tout))
+            (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout))
         ) in
         let p = Field (None, arr, Neutral) in
         SMap.add "children" p map
