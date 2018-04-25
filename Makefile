@@ -90,6 +90,7 @@ MODULES=\
   src/parser_utils/output/printers\
   src/parsing\
   src/server\
+  src/server/env\
   src/server/protocol\
   src/services/autocomplete\
   src/services/inference\
