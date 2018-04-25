@@ -62,14 +62,27 @@ let process_updates genv env updates =
       | Some ast -> Module_js.package_incompatible filename_str ast
   in
 
-  (* Die if a package.json changed in an incompatible way *)
-  let incompatible_packages = SSet.filter (fun f ->
-    (String_utils.string_starts_with f sroot ||
-      Files.is_included file_options f)
+  let is_incompatible_module_resolver f = match Options.module_resolver options with
+    | None -> false
+    | Some module_resolver ->
+      module_resolver <> Path.make f
+  in
+
+  let is_incompatible_package_json f = (
+      String_utils.string_starts_with f sroot ||
+      Files.is_included file_options f
+    )
     && (Filename.basename f) = "package.json"
     && want f
     && is_incompatible f
+  in
+
+  (* Die if a package.json changed in an incompatible way *)
+  let incompatible_packages = SSet.filter (fun f ->
+    is_incompatible_module_resolver f ||
+    is_incompatible_package_json f
   ) updates in
+
   if not (SSet.is_empty incompatible_packages)
   then begin
     Hh_logger.fatal "Status: Error";

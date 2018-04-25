@@ -13,6 +13,7 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
+open Hh_json
 open Utils_js
 
 (* Subset of a file's context, with the important distinction that module
@@ -304,6 +305,69 @@ let eponymous_module file =
 
 (*******************************)
 
+exception Invalid_resolution
+
+module External = struct
+  let external_channels = ref None
+
+  let get_external_channels resolver =
+    match !external_channels with
+      | Some channels -> channels
+      | None ->
+        let program = Path.to_string resolver in
+
+        let (child_r, parent_w) = Unix.pipe () in
+        let (parent_r, child_w) = Unix.pipe () in
+
+        let channels = (
+          (Unix.out_channel_of_descr parent_w),
+          (Unix.in_channel_of_descr parent_r)
+        ) in
+
+        ignore (Unix.create_process program [| program |] child_r child_w Unix.stderr);
+
+        external_channels := Some channels;
+        channels
+
+  let resolve_import opts f r =
+    match Options.module_resolver opts with
+      | None -> None
+      | Some resolver ->
+        let issuer = File_key.to_string f in
+        let payload = Printf.sprintf "[\"%s\", \"%s\"]\n" r issuer in
+
+        let (out_channel, in_channel) = (get_external_channels resolver) in
+
+        output_string out_channel payload;
+        Pervasives.flush out_channel;
+
+        let response_text = input_line in_channel in
+        let response_data = json_of_string response_text in
+
+        match response_data with
+          | JSON_Null -> None
+          | JSON_Array items ->
+            begin
+              match items with
+                | [ error; resolution ] ->
+                  begin
+                    match error with
+                      | JSON_Null ->
+                        begin
+                          match resolution with
+                            | JSON_Null -> None
+                            | JSON_String r -> Some r
+                            | _ -> raise (Invalid_resolution)
+                        end
+                      | _ -> None
+                  end
+                | _ -> raise (Invalid_resolution)
+            end
+          | _ -> raise (Invalid_resolution)
+end
+
+(*******************************)
+
 module Node = struct
   let exported_module _ file _ =
     eponymous_module file
@@ -542,6 +606,7 @@ module Haste: MODULE_SYSTEM = struct
   let resolve_import ~options node_modules_containers f loc ?resolution_acc r =
     let file = File_key.to_string f in
     lazy_seq [
+      lazy (External.resolve_import options f r);
       lazy (Node.resolve_import ~options node_modules_containers f loc ?resolution_acc r);
       lazy (match expanded_name r with
         | Some r ->
@@ -564,6 +629,8 @@ module Haste: MODULE_SYSTEM = struct
      * matching candidate (rather than the first *valid* matching candidate).
      *)
     let chosen_candidate = List.hd candidates in
+
+    Utils_js.prerr_endlinef "imported_module %s -> %s" imported_name chosen_candidate;
 
     match resolve_import ~options node_modules_containers file loc ?resolution_acc chosen_candidate with
     | Some name ->
