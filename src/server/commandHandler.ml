@@ -507,6 +507,47 @@ let did_close _genv env client (filenames: string Nel.t)
       Lwt.return (Ok ({env with connections}, None))
   end
 
+let flow_completion_to_lsp
+    (item: ServerProt.Response.complete_autocomplete_result)
+  : Lsp.Completion.completionItem =
+  let open Lsp.Completion in
+  let open ServerProt.Response in
+  let trunc n s = if String.length s < n then s else (String.sub s 0 n) ^ "..." in
+  let trunc80 s = trunc 80 s in
+  let flow_params_to_string params =
+    let params = List.map (fun p -> p.param_name ^ ": " ^ p.param_ty) params in
+    "(" ^ (String.concat ", " params) ^ ")"
+  in
+  let kind, itemType, inlineDetail, detail = match item.func_details with
+    | Some func_details ->
+      let kind = Some Function in
+      let itemType = Some (trunc 30 func_details.return_ty) in
+      let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
+      let detail = Some (trunc80 item.res_ty) in
+      kind, itemType, inlineDetail, detail
+    | None ->
+      let kind = None in
+      let itemType = None in
+      let inlineDetail = Some (trunc80 item.res_ty) in
+      let detail = Some (trunc80 item.res_ty) in
+      kind, itemType, inlineDetail, detail
+  in
+  {
+    label = item.res_name;
+    kind;
+    detail = detail;
+    inlineDetail;
+    itemType;
+    documentation = None; (* This will be filled in by completionItem/resolve. *)
+    sortText = None;
+    filterText = None;
+    insertText = None;
+    insertTextFormat = Some PlainText;
+    textEdits = [];
+    command = None;
+    data = None;
+  }
+
 
 (** handle_persistent_unsafe:
    either this method returns Ok (and optionally returns some logging data),
@@ -642,6 +683,49 @@ let handle_persistent_unsafe genv env client profiling msg
         let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
         Lwt.return (Error (!env, reason, Utils.Callstack stack))
     end
+
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, CompletionRequest params)) ->
+    (* TODO(ljw): once we've done definition, hover and autocomplete, then *)
+    (* factor out flow<->lsp datatype conversions *)
+    let open TextDocumentPositionParams in
+    let env = ref env in
+    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename params.textDocument in
+    let file = Persistent_connection.get_file client fn in
+    let fn_content = match file with
+      | File_input.FileContent (fn, content) ->
+        Ok (fn, content)
+      | File_input.FileName fn ->
+        try
+          Ok (Some fn, Sys_utils.cat fn)
+        with e ->
+          let stack = Printexc.get_backtrace () in
+          Error (Printexc.to_string e, Utils.Callstack stack)
+    in
+    begin match fn_content with
+      | Error (reason, Utils.Callstack stack) ->
+        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+      | Ok (fn, content) ->
+        (* lsp uses 0,0 based line/column *)
+        let line = params.position.line + 1 in
+        let char = params.position.character in
+        (* add_autocomplete_token takes a 1,0 based line/column *)
+        let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
+        let file_with_token = File_input.FileContent (fn, content_with_token) in
+        let%lwt result, json_data =
+          autocomplete ~options ~workers ~env ~profiling file_with_token
+        in
+        begin match result with
+          | Ok items ->
+            let items = List.map flow_completion_to_lsp items in
+            let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
+            lsp_writer (ResponseMessage (id, r));
+            Lwt.return (Ok (!env, json_data))
+          | Error reason ->
+            let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+            Lwt.return (Error (!env, reason, Utils.Callstack stack))
+        end
+    end
+
 
   | Persistent_connection_prot.LspToServer unhandled ->
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in

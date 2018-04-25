@@ -50,5 +50,19 @@ export default suite(
         position: {line: 100, character: 0}, // past the end of the file
       }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
     ]),
+
+    test('textDocument/completion', [
+      addFile('completion.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/completion.js'},
+        position: {line: 10, character: 15}, // statement position
+      }).verifyAllIDEMessagesInStep(
+        [
+          'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
+        ],
+        [],
+      ),
+    ]),
   ],
 );
