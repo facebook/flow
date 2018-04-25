@@ -2344,6 +2344,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InternalT (IdxWrapper (reason, _)), _ ->
       add_output cx ~trace (FlowError.EIdxUse2 reason)
 
+    (*********************)
+    (* optional chaining *)
+    (*********************)
+
+    | DefT (r, (NullT | VoidT)), OptionalChainT (_, chain) ->
+      Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (DefT (r, VoidT), t_out)) chain;
+
+    | _, OptionalChainT (_, chain) when (
+        match l with
+        | DefT (_, (MaybeT _ | OptionalT _ | UnionT _ | IntersectionT _)) -> false
+        | _ -> true
+      ) ->
+      let lhs_t = ref l in
+      Nel.iter (fun (opt_use, t_out) ->
+        let t_out' = Tvar.mk cx (reason_of_t t_out) in
+        rec_flow cx trace (!lhs_t, apply_opt_use opt_use t_out');
+        rec_flow_t cx trace (t_out', t_out);
+        lhs_t := t_out';
+      ) chain;
+
     (***************)
     (* maybe types *)
     (***************)

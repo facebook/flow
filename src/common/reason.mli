@@ -133,6 +133,7 @@ type reason_desc =
   | RArrayPatternRestProp
   | RCommonJSExports of string
   | RModule of string
+  | ROptionalChain
 
   | RReactProps
   | RReactElement of string option

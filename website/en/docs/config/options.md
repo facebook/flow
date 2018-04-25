@@ -104,20 +104,17 @@ You may also set this to `ignore` to indicate that Flow should simply ignore
 the syntax. The default value of this option is `warn`, which gives a warning
 on use since this proposal is still very early-stage.
 
-#### `esproposal.optional_chaining` _`(ignore|warn)`_ <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
+#### `esproposal.optional_chaining` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
 
-Set this to `warn` to indicate that Flow should support the use of
+Set this to `enable` to indicate that Flow should support the use of
 [optional chaining](https://github.com/tc39/proposal-optional-chaining)
-per the pending spec. Flow will give a warning on
-use since this proposal is still very early-stage.
+per the pending spec.
 
 You may also set this to `ignore` to indicate that Flow should simply ignore
 the syntax.
 
-The default value of this option is `warn`.
-
-**WARNING:** This feature currently lacks type support and should only be enabled
-for parsing.
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
 
 #### `experimental.const_params` _`(boolean)`_ <a class="toc" id="toc-experimental-const-params-boolean" href="#toc-experimental-const-params-boolean"></a>
 

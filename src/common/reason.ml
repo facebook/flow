@@ -181,6 +181,7 @@ type reason_desc =
   | RArrayPatternRestProp
   | RCommonJSExports of string
   | RModule of string
+  | ROptionalChain
 
   | RReactProps
   | RReactElement of string option
@@ -547,6 +548,7 @@ let rec string_of_desc = function
   | RArrayPatternRestProp -> "rest of array pattern"
   | RCommonJSExports x -> spf "module `%s`" x
   | RModule x -> spf "module `%s`" x
+  | ROptionalChain -> "optional chain"
 
   | RReactProps -> "props"
   | RReactElement x ->
@@ -785,7 +787,7 @@ end)
  * In the first example we need to wrap 1 + 2 to correctly print the property
  * access. However, we don't need to wrap o in o.p. In o[1 + 2] we don't need to
  * wrap 1 + 2 since it is already wrapped in a sense. *)
-let rec code_desc_of_expression ~wrap (loc, x) =
+let rec code_desc_of_expression ~wrap (_, x) =
 let do_wrap = if wrap then (fun s -> "(" ^ s ^ ")") else (fun s -> s) in
 Ast.Expression.(match x with
 | Array { Array.elements = []; _ } -> "[]"
@@ -850,16 +852,26 @@ Ast.Expression.(match x with
 | New { New.callee; arguments = _ } ->
   "new " ^ (code_desc_of_expression ~wrap:true callee) ^ "(...)"
 | Object _ -> "{...}"
-| OptionalCall { OptionalCall.call; optional } ->
-  let call_desc = code_desc_of_expression ~wrap:false (loc, Call call) in
-  if optional then "?." ^ call_desc else call_desc
-| OptionalMember { OptionalMember.member; optional } ->
-  let member_desc = code_desc_of_expression ~wrap:false (loc, Member member) in
-  if optional
-  then Member.(match member.property with
-  | PropertyExpression _ -> "?." ^ member_desc
-  | PropertyIdentifier _ | PropertyPrivateName _ -> "?" ^ member_desc
-  ) else member_desc
+| OptionalCall { OptionalCall.
+    call = { Call.callee; arguments };
+    optional;
+  } ->
+  let arg_string = begin match arguments with
+  | [] -> "()"
+  | _ -> "(...)"
+  end in
+  code_desc_of_expression ~wrap:true callee ^ (if optional then "?." else "") ^ arg_string
+| OptionalMember { OptionalMember.
+    member = { Member._object; property; computed = _ };
+    optional;
+  } ->
+  let o = code_desc_of_expression ~wrap:true _object in
+  o ^ Member.(match property with
+  | PropertyIdentifier (_, x) -> (if optional then "?." else ".") ^ x
+  | PropertyPrivateName (_, (_, x)) -> (if optional then "?.#" else ".#") ^ x
+  | PropertyExpression x ->
+    (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
+  )
 | Sequence { Sequence.expressions } ->
   code_desc_of_expression ~wrap (List.hd (List.rev expressions))
 | Super -> "super"
@@ -1183,6 +1195,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RObjectPatternRestProp
 | RCommonJSExports _
 | RModule _
+| ROptionalChain
 | RReactProps
 | RReactElement _
 | RReactClass

@@ -822,6 +822,13 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else IdxUnMaybeifyT (r, t'')
+    | OptionalChainT (r, uses) ->
+        let uses' = Nel.map (fun (use, tout) ->
+          self#opt_use_type cx map_cx use,
+          self#type_ cx map_cx tout
+        ) uses in
+        if uses' == uses then t
+        else OptionalChainT (r, uses')
     | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -857,6 +864,28 @@ class ['a] t = object(self)
       if tlist' == tlist && t1' == t1 && t2' == t2 then t
       else ExtendsUseT (use_op, r, tlist', t1', t2')
 
+  method private opt_use_type cx map_cx t = match t with
+  | OptCallT (op, r, funcall) ->
+    let funcall' = self#opt_fun_call_type cx map_cx funcall in
+    if funcall == funcall' then t
+    else OptCallT (op, r, funcall')
+  | OptGetPropT (use_op, r, prop) ->
+    let prop' = self#prop_ref cx map_cx prop in
+    if prop' == prop then t
+    else OptGetPropT (use_op, r, prop')
+  | OptGetPrivatePropT (use_op, r, prop, scopes, static) ->
+    let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
+    if scopes' == scopes then t
+    else OptGetPrivatePropT (use_op, r, prop, scopes', static)
+  | OptTestPropT (r, id, prop) ->
+    let prop' = self#prop_ref cx map_cx prop in
+    if prop' == prop then t
+    else OptTestPropT (r, id, prop')
+  | OptGetElemT (use_op, r, t') ->
+    let t'' = self#type_ cx map_cx t' in
+    if t'' == t' then t
+    else OptGetElemT (use_op, r, t'')
+
   method fun_call_type cx map_cx ({call_this_t; call_args_tlist; call_tout;
       call_closure_t; call_strict_arity} as t) =
     let call_this_t' = self#type_ cx map_cx call_this_t in
@@ -867,6 +896,13 @@ class ['a] t = object(self)
     then t
     else {call_this_t = call_this_t'; call_args_tlist = call_args_tlist';
       call_tout = call_tout'; call_closure_t; call_strict_arity}
+
+  method private opt_fun_call_type cx map_cx ((this, args, clos, strict) as t) =
+    let this' = self#type_ cx map_cx this in
+    let args' = ListUtils.ident_map (self#call_arg cx map_cx) args in
+    if this' == this && args' == args
+    then t
+    else (this', args', clos, strict)
 
   method prop_ref cx map_cx t =
     match t with
