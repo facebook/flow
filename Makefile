@@ -93,6 +93,7 @@ MODULES=\
   src/server/env\
   src/server/persistent_connection\
   src/server/protocol\
+  src/server/server_files\
   src/server/server_utils\
   src/services/autocomplete\
   src/services/inference\
