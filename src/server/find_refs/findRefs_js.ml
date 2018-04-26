@@ -814,11 +814,8 @@ end = struct
             in
             root_file_paths_result %>>= fun root_file_paths ->
             let%lwt () =
-              let%lwt new_env =
-                Lwt_list.fold_left_s
-                  (lazy_mode_focus genv)
-                  !env
-                  (Nel.to_list root_file_paths)
+              let%lwt new_env, _ =
+                Lazy_mode_utils.focus_and_check genv !env root_file_paths
               in
               env := new_env;
               Lwt.return_unit
