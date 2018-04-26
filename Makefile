@@ -94,6 +94,7 @@ MODULES=\
   src/server/error_collator\
   src/server/persistent_connection\
   src/server/protocol\
+  src/server/rechecker\
   src/server/server_files\
   src/server/server_utils\
   src/server/shmem\
