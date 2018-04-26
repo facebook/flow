@@ -8,6 +8,7 @@
 type 'a t = 'a * 'a list
 
 val to_list: 'a t -> 'a list
+val of_list: 'a list -> 'a t option
 val one: 'a -> 'a t
 val cons: 'a -> 'a t -> 'a t
 val mem: 'a -> 'a t -> bool

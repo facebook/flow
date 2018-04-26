@@ -11,6 +11,10 @@ type 'a t = 'a * 'a list
 
 let to_list (x, xs) = x::xs
 
+let of_list = function
+  | x::xs -> Some (x, xs)
+  | [] -> None
+
 let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1::xs)
