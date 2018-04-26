@@ -1884,8 +1884,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   | EUnclearType loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.UnclearType) loc [
-      text "Unclear type. Using "; code "any"; text ", "; code "Object"; text ", or ";
-      code "Function"; text " types is not safe!"
+      text "Unclear type. Using "; code "any"; text ", ";
+      code "Object"; text ", "; code "Function"; text ", ";
+      code "$Subtype<...>"; text ", or "; code "$Supertype<...>"; text " types is not safe!"
     ]
 
   | EUnsafeGettersSetters loc ->

@@ -235,6 +235,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
+    add_unclear_type_error_if_not_lib_file cx loc;
     check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       AnyWithLowerBoundT t
@@ -242,6 +243,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Subtype<T> acts as any over subtypes of T *)
   | "$Subtype" ->
+    add_unclear_type_error_if_not_lib_file cx loc;
     check_type_arg_arity cx loc targs 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       AnyWithUpperBoundT t
