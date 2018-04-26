@@ -92,6 +92,7 @@ MODULES=\
   src/server\
   src/server/env\
   src/server/error_collator\
+  src/server/lazy_mode_utils\
   src/server/persistent_connection\
   src/server/protocol\
   src/server/rechecker\
