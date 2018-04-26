@@ -485,72 +485,73 @@ let deps_of_file_keys genv env (file_keys: File_key.t list) : (FilenameSet.t, st
   Result.all deps_result %>>| fun (deps: FilenameSet.t list) ->
   Lwt.return @@ List.fold_left FilenameSet.union FilenameSet.empty deps
 
-let find_refs genv env ~profiling ~content file_key loc ~global =
-  let options, workers = genv.options, genv.workers in
-  let get_def_info: unit -> ((def_info * string) option, string) result Lwt.t = fun () ->
-    let props_access_info = ref (Ok None) in
-    let%lwt cx_result =
-      compute_ast_result file_key content
-      %>>| fun (ast, file_sig, info) ->
-        let literal_key_info: (Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
-        set_def_loc_hook props_access_info literal_key_info loc;
-        Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
-          let ensure_checked =
-            Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
-          Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
-        )
-    in
-    unset_hooks ();
-    Lwt.return (
-      cx_result >>= fun cx ->
-      let def_info_of_type name ty =
-        extract_def_loc cx ty name >>| function
-          | FoundClass locs -> Some (Class locs, name)
-          | FoundObject loc -> Some (Object (Nel.one loc), name)
-          | NoDefFound
-          | UnsupportedType
-          | AnyType -> None
-      in
-      !props_access_info >>= function
-        | None -> Ok None
-        | Some (Obj_def (loc, name)) ->
-            Ok (Some (Object (Nel.one loc), name))
-        | Some (Class_def (ty, name)) ->
-            (* We get the type of the class back here, so we need to extract the type of an instance *)
-            extract_instancet cx ty >>= fun ty ->
-            begin extract_def_loc_resolved cx ty name >>= function
-              | FoundClass locs -> Ok (Some (Class locs, name))
-              | FoundObject _ -> Error "Expected to extract class def info from a class"
-              | _ -> Error "Unexpectedly failed to extract definition from known type"
-            end
-        | Some (Use (ty, name)) ->
-            def_info_of_type name ty
-        | Some (Use_in_literal (types, name)) ->
-            let def_info_result =
-              let def_infos =
-                Nel.map (def_info_of_type name) types
-                |> Nel.result_all
-              in
-              let def_locs: (Loc.t Nel.t option Nel.t, string) result =
-                def_infos >>= fun def_infos ->
-                Nel.map begin function
-                  | None -> Ok None
-                  | Some (Object locs, _) -> Ok (Some locs)
-                  | Some (Class _, _) -> Error "Expected object literals to only flow into object types"
-                end def_infos
-                |> Nel.result_all
-              in
-              def_locs >>| Nel.fold_left begin fun acc elt -> match acc, elt with
-                | None, None -> None
-                | Some locs, None
-                | None, Some locs -> Some locs
-                | Some locs, Some new_locs -> Some (Nel.rev_append new_locs locs)
-              end None
-            in
-            def_info_result >>| Option.map ~f:(fun locs -> Object locs, name)
-    )
+let get_def_info genv env profiling file_key content loc: ((def_info * string) option, string) result Lwt.t =
+  let {options; workers} = genv in
+  let props_access_info = ref (Ok None) in
+  let%lwt cx_result =
+    compute_ast_result file_key content
+    %>>| fun (ast, file_sig, info) ->
+      let literal_key_info: (Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
+      set_def_loc_hook props_access_info literal_key_info loc;
+      Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
+        let ensure_checked =
+          Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
+        Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+      )
   in
-  let%lwt def_info = get_def_info () in
+  unset_hooks ();
+  Lwt.return (
+    cx_result >>= fun cx ->
+    let def_info_of_type name ty =
+      extract_def_loc cx ty name >>| function
+        | FoundClass locs -> Some (Class locs, name)
+        | FoundObject loc -> Some (Object (Nel.one loc), name)
+        | NoDefFound
+        | UnsupportedType
+        | AnyType -> None
+    in
+    !props_access_info >>= function
+      | None -> Ok None
+      | Some (Obj_def (loc, name)) ->
+          Ok (Some (Object (Nel.one loc), name))
+      | Some (Class_def (ty, name)) ->
+          (* We get the type of the class back here, so we need to extract the type of an instance *)
+          extract_instancet cx ty >>= fun ty ->
+          begin extract_def_loc_resolved cx ty name >>= function
+            | FoundClass locs -> Ok (Some (Class locs, name))
+            | FoundObject _ -> Error "Expected to extract class def info from a class"
+            | _ -> Error "Unexpectedly failed to extract definition from known type"
+          end
+      | Some (Use (ty, name)) ->
+          def_info_of_type name ty
+      | Some (Use_in_literal (types, name)) ->
+          let def_info_result =
+            let def_infos =
+              Nel.map (def_info_of_type name) types
+              |> Nel.result_all
+            in
+            let def_locs: (Loc.t Nel.t option Nel.t, string) result =
+              def_infos >>= fun def_infos ->
+              Nel.map begin function
+                | None -> Ok None
+                | Some (Object locs, _) -> Ok (Some locs)
+                | Some (Class _, _) -> Error "Expected object literals to only flow into object types"
+              end def_infos
+              |> Nel.result_all
+            in
+            def_locs >>| Nel.fold_left begin fun acc elt -> match acc, elt with
+              | None, None -> None
+              | Some locs, None
+              | None, Some locs -> Some locs
+              | Some locs, Some new_locs -> Some (Nel.rev_append new_locs locs)
+            end None
+          in
+          def_info_result >>| Option.map ~f:(fun locs -> Object locs, name)
+  )
+
+let find_refs genv env ~profiling ~content file_key loc ~global =
+  let {options; _} = genv in
+  let%lwt def_info = get_def_info genv env profiling file_key content loc in
   def_info %>>= fun def_info_opt ->
   match def_info_opt with
     | None -> Lwt.return (Ok None)
