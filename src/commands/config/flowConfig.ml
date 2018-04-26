@@ -34,6 +34,7 @@ let error ln msg = multi_error [(ln, msg)]
 module Opts = struct
   type t = {
     emoji: bool;
+    max_literal_length: int;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool;
@@ -138,6 +139,7 @@ module Opts = struct
 
   let default_options = {
     emoji = false;
+    max_literal_length = 100;
     enable_const_params = false;
     enforce_strict_call_arity = true;
     enforce_well_formed_exports = false;
@@ -836,6 +838,15 @@ let parse_options config lines =
       );
     }
 
+    |> define_opt "max_literal_length" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts v ->
+        Ok {opts with max_literal_length = v;}
+      );
+    }
+
     |> define_opt "experimental.const_params" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -998,6 +1009,7 @@ let libs config = config.libs
 (* options *)
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji
+let max_literal_length c = c.options.Opts.max_literal_length
 let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports

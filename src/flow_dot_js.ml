@@ -132,6 +132,7 @@ let stub_metadata ~root ~checked = { Context.
   strict_local = false;
 
   (* global *)
+  max_literal_length = 100;
   enable_const_params = false;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;

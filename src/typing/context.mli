@@ -28,6 +28,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  max_literal_length: int;
   enable_const_params: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
@@ -60,6 +61,7 @@ val find_module_sig: sig_t -> string -> Type.t
 (* accessors *)
 val all_unresolved: t -> ISet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
+val max_literal_length: t -> int
 val enable_const_params: t -> bool
 val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t

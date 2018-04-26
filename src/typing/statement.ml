@@ -3463,8 +3463,9 @@ and identifier cx name loc =
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
       (* It's too expensive to track literal information for large strings.*)
+      let max_literal_length = Context.max_literal_length cx in
       let lit =
-        if String.length s < 100
+        if max_literal_length = 0 || String.length s < max_literal_length
         then Literal (None, s)
         else AnyLiteral
       in
