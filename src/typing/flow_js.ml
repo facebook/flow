@@ -5851,12 +5851,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (************************)
 
     (* When a class value flows to a function annotation or call site, check for
-       the presence of a $call property in the former (as a static) compatible
-       with the latter. *)
-    | DefT (_, ClassT _), (UseT (use_op, DefT (reason, FunT _)) | CallT (use_op, reason, _)) ->
-      let propref = Named (reason, "$call") in
-      rec_flow cx trace (l,
-        GetPropT (use_op, reason, propref, tvar_with_constraint ~trace cx u))
+       the presence of a call property in the former (as a static) compatible
+       with the latter.
+
+       TODO: Call properties are excluded from the subclass compatibility
+       checks, which makes it unsafe to call a Class<T> type like this.
+       For example:
+
+           declare class A { static (): string };
+           declare class B extends A { static (): number }
+           var klass: Class<A> = B;
+           var foo: string = klass(); // passes, but `foo` is a number
+
+       The same issue is also true for constructors, which are similarly
+       excluded from subclass compatibility checks, but are allowed on ClassT
+       types.
+    *)
+    | DefT (reason, ClassT instance), (UseT (_, DefT (_, FunT _)) | CallT _) ->
+      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
+      let loc = loc_of_reason reason in
+      let reason = mk_reason desc loc in
+      let static = Tvar.mk cx reason in
+      rec_flow cx trace (instance, GetStaticsT (reason, static));
+      rec_flow cx trace (static, ReposLowerT (reason, false, u))
 
     (************)
     (* indexing *)
