@@ -7,7 +7,7 @@
 
 let (>>|) = Core_result.(>>|)
 
-open FindRefsUtils
+open Utils_js
 
 let sort_find_refs_result = function
   | Ok (Some (name, locs)) ->

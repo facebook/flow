@@ -10,20 +10,6 @@ open Utils_js
 module Result = Core_result
 let (>>=) = Result.(>>=)
 
-(* The problem with Core_result's >>= and >>| is that the function second argument cannot return
- * an Lwt.t. These helper infix operators handle that case *)
-let (%>>=) result f =
-  match result with
-  | Error e -> Lwt.return (Error e)
-  | Ok x -> f x
-
-let (%>>|) result f =
-  match result with
-  | Error e -> Lwt.return (Error e)
-  | Ok x ->
-    let%lwt new_x = f x in
-    Lwt.return (Ok new_x)
-
 let compute_docblock file content =
   let open Parsing_service_js in
   let max_tokens = docblock_max_tokens in

@@ -5,16 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val (%>>=):
-  ('ok, 'err) result ->
-  ('ok -> ('a, 'err) result Lwt.t) ->
-  ('a, 'err) result Lwt.t
-
-val (%>>|):
-  ('ok, 'err) result ->
-  ('ok -> 'a Lwt.t) ->
-  ('a, 'err) result Lwt.t
-
 val compute_docblock: File_key.t -> string (* content *) -> Docblock.t
 
 val compute_ast_result:

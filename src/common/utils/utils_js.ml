@@ -233,6 +233,16 @@ let (%>>=)
   | Error e -> Lwt.return (Error e)
   | Ok x -> f x
 
+let (%>>|)
+  (result: ('ok, 'err) Core_result.t)
+  (f: 'ok -> 'a Lwt.t)
+  : ('a, 'err) Core_result.t Lwt.t =
+  match result with
+  | Error e -> Lwt.return (Error e)
+  | Ok x ->
+    let%lwt new_x = f x in
+    Lwt.return (Ok new_x)
+
 let to_exn_string backtrace exn =
   let backtrace = String.trim backtrace in
   Printf.sprintf "%s%s%s"
