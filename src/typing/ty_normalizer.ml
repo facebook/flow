@@ -623,7 +623,7 @@ end = struct
     | OpaqueT (r, o) -> opaque_t ~env r o None
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
-    | TypeDestructorTriggerT _ -> return Ty.Any
+    | TypeDestructorTriggerT _ -> return Ty.Bot
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return Ty.Exists
     | ObjProtoT _ -> return (Ty.builtin_t "Object.prototype")
