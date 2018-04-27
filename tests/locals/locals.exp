@@ -125,108 +125,108 @@ References:
             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- locals.js:12:16
+Error -------------------------------------------------------------------------------------------------- locals.js:10:16
 
 boolean [1] is incompatible with number [2].
 
-   locals.js:12:16
-   12|         var x: bool = true;
+   locals.js:10:16
+   10|         var x: bool = true;
                       ^^^^ [1]
 
 References:
-   locals.js:10:16
-   10|         var x: number | string = 1337;
+   locals.js:8:16
+    8|         var x: number | string = 1337;
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- locals.js:12:16
+Error -------------------------------------------------------------------------------------------------- locals.js:10:16
 
 boolean [1] is incompatible with string [2].
 
-   locals.js:12:16
-   12|         var x: bool = true;
+   locals.js:10:16
+   10|         var x: bool = true;
                       ^^^^ [1]
 
 References:
-   locals.js:10:25
-   10|         var x: number | string = 1337;
+   locals.js:8:25
+    8|         var x: number | string = 1337;
                                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- locals.js:12:16
+Error -------------------------------------------------------------------------------------------------- locals.js:10:16
 
 All branches are incompatible:
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   locals.js:12:16
-   12|         var x: bool = true;
+   locals.js:10:16
+   10|         var x: bool = true;
                       ^^^^ [1]
 
 References:
-   locals.js:10:16
-   10|         var x: number | string = 1337;
+   locals.js:8:16
+    8|         var x: number | string = 1337;
                       ^^^^^^ [2]
-   locals.js:10:25
-   10|         var x: number | string = 1337;
+   locals.js:8:25
+    8|         var x: number | string = 1337;
                                ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- locals.js:12:23
+Error -------------------------------------------------------------------------------------------------- locals.js:10:23
 
 Cannot assign `true` to `x` because:
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   locals.js:12:23
-   12|         var x: bool = true;
+   locals.js:10:23
+   10|         var x: bool = true;
                              ^^^^ [1]
 
 References:
-   locals.js:10:16
-   10|         var x: number | string = 1337;
+   locals.js:8:16
+    8|         var x: number | string = 1337;
                       ^^^^^^ [2]
-   locals.js:10:25
-   10|         var x: number | string = 1337;
+   locals.js:8:25
+    8|         var x: number | string = 1337;
                                ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- locals.js:14:9
+Error --------------------------------------------------------------------------------------------------- locals.js:12:9
 
 Cannot call `foo` with `x` bound to `p` because:
  - number [1] is incompatible with boolean [2].
  - string [3] is incompatible with boolean [2].
 
-   locals.js:14:9
-   14|     foo(x);
+   locals.js:12:9
+   12|     foo(x);
                ^
 
 References:
-   locals.js:10:16
-   10|         var x: number | string = 1337;
+   locals.js:8:16
+    8|         var x: number | string = 1337;
                       ^^^^^^ [1]
-   locals.js:6:17
-    6| function foo(p: bool) {}
+   locals.js:4:17
+    4| function foo(p: bool) {}
                        ^^^^ [2]
-   locals.js:10:25
-   10|         var x: number | string = 1337;
+   locals.js:8:25
+    8|         var x: number | string = 1337;
                                ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- locals.js:22:10
+Error -------------------------------------------------------------------------------------------------- locals.js:20:10
 
 Cannot return `x` because string [1] is incompatible with number [2].
 
-   locals.js:22:10
-   22|   return x;
+   locals.js:20:10
+   20|   return x;
                 ^
 
 References:
-   locals.js:20:13
-   20|     var x = ""; // error: string ~> number
+   locals.js:18:13
+   18|     var x = ""; // error: string ~> number
                    ^^ [1]
-   locals.js:17:25
-   17| function foo0(b: bool): number {
+   locals.js:15:25
+   15| function foo0(b: bool): number {
                                ^^^^^^ [2]
 
 

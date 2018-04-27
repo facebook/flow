@@ -237,13 +237,6 @@ let rec convert cx tparams_map = Ast.Type.(function
       AnyWithUpperBoundT t
     )
 
-  (* $Type<T> acts as the type of T *)
-  | "$Type" ->
-    check_type_arg_arity cx loc targs 1 (fun () ->
-      let t = convert_type_params () |> List.hd in
-      DefT (mk_reason (RCustom "type") loc, TypeT t)
-    )
-
   (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
   | "$PropertyType" ->
     check_type_arg_arity cx loc targs 2 (fun () ->
