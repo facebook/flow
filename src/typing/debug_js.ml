@@ -525,7 +525,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | AndT (_, right, res)
-  | OrT (_, right, res) -> [
+  | OrT (_, right, res)
+  | NullishCoalesceT (_, right, res) -> [
       "rightType", _json_of_t json_cx right;
       "resultType", _json_of_t json_cx res
     ]
@@ -2090,6 +2091,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
+  | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ObjAssignToT (_, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
   | ObjAssignFromT (_, arg1, arg2, _) -> p t

@@ -700,6 +700,7 @@ and Expression : sig
     type operator =
       | Or
       | And
+      | NullishCoalesce
     type 'M t = {
       operator: operator;
       left: 'M Expression.t;

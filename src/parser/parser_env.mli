@@ -33,6 +33,7 @@ type parse_options = {
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
   esproposal_optional_chaining: bool;
+  esproposal_nullish_coalescing: bool;
   types: bool;
   use_strict: bool;
 }

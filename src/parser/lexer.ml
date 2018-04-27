@@ -854,6 +854,7 @@ let token (env: Lex_env.t) lexbuf : result =
     end
 
   | "?." -> Token (env, T_PLING_PERIOD)
+  | "??" -> Token (env, T_PLING_PLING)
   | "?" -> Token (env, T_PLING)
   | "&&" -> Token (env, T_AND)
   | "||" -> Token (env, T_OR)

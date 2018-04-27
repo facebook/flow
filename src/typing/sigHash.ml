@@ -117,6 +117,7 @@ type hash =
   | EqH
   | AndH
   | OrH
+  | NullishCoalesceH
   | NotH
   | SpecializeH
   | ThisSpecializeH
@@ -269,6 +270,7 @@ let hash_of_use_ctor = Type.(function
   | EqT _ -> EqH
   | AndT _ -> AndH
   | OrT _ -> OrH
+  | NullishCoalesceT _ -> NullishCoalesceH
   | NotT _ -> NotH
   | SpecializeT _ -> SpecializeH
   | ThisSpecializeT _ -> ThisSpecializeH

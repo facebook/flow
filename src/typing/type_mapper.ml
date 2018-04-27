@@ -628,6 +628,11 @@ class ['a] t = object(self)
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
         else OrT (r, t1', t2')
+    | NullishCoalesceT (r, t1, t2) ->
+        let t1' = self#type_ cx map_cx t1 in
+        let t2' = self#type_ cx map_cx t2 in
+        if t1' == t1 && t2' == t2 then t
+        else NullishCoalesceT (r, t1', t2')
     | NotT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

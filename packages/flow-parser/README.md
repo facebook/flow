@@ -39,4 +39,5 @@ The second argument to `flow.parse` is the options object. Currently supported o
 * `esproposal_class_static_fields` (boolean, default `false`) - enable parsing of class static fields
 * `esproposal_export_star_as` (boolean, default `false`) - enable parsing of `export * as` syntax
 * `esproposal_optional_chaining` (boolean, default `false`) - enable parsing of optional chaining (`?.`)
+* `esproposal_nullish_coalescing` (boolean, default `false`) - enable parsing of nullish coalescing (`??`)
 * `types` (boolean, default `true`) - enable parsing of Flow types

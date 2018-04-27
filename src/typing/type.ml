@@ -421,6 +421,7 @@ module rec TypeTerm : sig
     (* logical operators *)
     | AndT of reason * t * t
     | OrT of reason * t * t
+    | NullishCoalesceT of reason * t * t
     | NotT of reason * t
 
     (* operation on polymorphic types *)
@@ -2138,6 +2139,7 @@ end = struct
     | MethodT (_,reason,_,_,_,_) -> reason
     | MixinT (reason, _) -> reason
     | NotT (reason, _) -> reason
+    | NullishCoalesceT (reason, _, _) -> reason
     | ObjAssignToT (reason, _, _, _) -> reason
     | ObjAssignFromT (reason, _, _, _) -> reason
     | ObjFreezeT (reason, _) -> reason
@@ -2298,6 +2300,7 @@ end = struct
         MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
     | MixinT (reason, inst) -> MixinT (f reason, inst)
     | NotT (reason, t) -> NotT (f reason, t)
+    | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
     | ObjAssignToT (reason, t, t2, kind) ->
         ObjAssignToT (f reason, t, t2, kind)
     | ObjAssignFromT (reason, t, t2, kind) ->
@@ -2411,6 +2414,7 @@ end = struct
   | EqT (_, _, _)
   | AndT (_, _, _)
   | OrT (_, _, _)
+  | NullishCoalesceT (_, _, _)
   | NotT (_, _)
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _)
@@ -2705,6 +2709,7 @@ let any_propagating_use_t = function
   | MethodT _
   | MixinT _
   | NotT _
+  | NullishCoalesceT _
   | ObjFreezeT _
   | ObjRestT _
   | ObjSealT _
@@ -3032,6 +3037,7 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | MixinT _ -> "MixinT"
   | NotT _ -> "NotT"
+  | NullishCoalesceT _ -> "NullishCoalesceT"
   | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjFreezeT _ -> "ObjFreezeT"

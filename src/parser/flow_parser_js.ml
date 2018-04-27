@@ -74,6 +74,11 @@ let parse_options jsopts = Parser_env.(
     then { opts with esproposal_optional_chaining = Js.to_bool optional_chaining; }
     else opts in
 
+  let nullish_coalescing = Js.Unsafe.get jsopts "esproposal_nullish_coalescing" in
+  let opts = if Js.Optdef.test nullish_coalescing
+    then { opts with esproposal_nullish_coalescing = Js.to_bool nullish_coalescing; }
+    else opts in
+
   let types = Js.Unsafe.get jsopts "types" in
   let opts = if Js.Optdef.test types
     then { opts with types = Js.to_bool types; }

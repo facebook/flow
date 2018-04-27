@@ -3682,6 +3682,13 @@ and logical cx loc = Ast.Expression.Logical.(function
       Tvar.mk_where cx reason (fun t ->
         Flow.flow cx (t1, AndT (reason, t2, t));
       )
+  | { operator = NullishCoalesce; left; right } ->
+      let t1 = expression cx left in
+      let t2 = expression cx right in
+      let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
+      Tvar.mk_where cx reason (fun t ->
+        Flow.flow cx (t1, NullishCoalesceT (reason, t2, t));
+      )
 )
 
 and assignment_lhs cx = Ast.Pattern.(function

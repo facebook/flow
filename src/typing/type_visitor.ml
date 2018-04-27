@@ -358,7 +358,8 @@ class ['a] t = object(self)
     self#type_ cx pole_TODO acc t
 
   | AndT (_, a, b)
-  | OrT (_, a, b) ->
+  | OrT (_, a, b)
+  | NullishCoalesceT (_, a, b) ->
     let acc = self#type_ cx pole_TODO acc a in
     let acc = self#type_ cx pole_TODO acc b in
     acc

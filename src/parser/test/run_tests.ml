@@ -132,6 +132,9 @@ end = struct
         | "esproposal_optional_chaining" -> get_bool k v >>= fun v ->
           return { opts with Parser_env.esproposal_optional_chaining = v }
 
+        | "esproposal_nullish_coalescing" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.esproposal_nullish_coalescing = v }
+
         | "types" -> get_bool k v >>= fun v ->
           return { opts with Parser_env.types = v }
 

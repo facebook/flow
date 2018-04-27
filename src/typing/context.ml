@@ -33,6 +33,7 @@ type metadata = {
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
+  esproposal_nullish_coalescing: Options.esproposal_feature_mode;
   facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
@@ -145,6 +146,7 @@ let metadata_of_options options = {
   esproposal_decorators = Options.esproposal_decorators options;
   esproposal_export_star_as = Options.esproposal_export_star_as options;
   esproposal_optional_chaining = Options.esproposal_optional_chaining options;
+  esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
   facebook_fbt = Options.facebook_fbt options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
@@ -232,6 +234,7 @@ let esproposal_class_instance_fields cx = cx.metadata.esproposal_class_instance_
 let esproposal_decorators cx = cx.metadata.esproposal_decorators
 let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
+let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
 let evaluated cx = cx.sig_cx.evaluated
 let file cx = cx.file
 let find_props cx id =

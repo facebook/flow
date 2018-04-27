@@ -242,3 +242,6 @@ def('OptionalCallExpression')
   .bases("CallExpression")
   .build("optional")
   .field("optional", Boolean)
+
+def('LogicalExpression')
+  .field('operator', or("||", "&&", "??"));

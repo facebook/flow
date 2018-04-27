@@ -283,6 +283,7 @@ module Expression
           logical_and env (make_logical env left right Logical.And loc) loc
       | _  -> lloc, left
     and logical_or env left lloc =
+      let options = parse_options env in
       match Peek.token env with
       | T_OR ->
           Expect.token env T_OR;
@@ -290,6 +291,15 @@ module Expression
           let rloc, right = logical_and env right rloc in
           let loc = Loc.btwn lloc rloc in
           logical_or env (make_logical env left right Logical.Or loc) loc
+      | T_PLING_PLING ->
+          if not options.esproposal_nullish_coalescing
+          then error env Parse_error.NullishCoalescingDisabled;
+
+          Expect.token env T_PLING_PLING;
+          let rloc, right = with_loc binary_cover env in
+          let rloc, right = logical_and env right rloc in
+          let loc = Loc.btwn lloc rloc in
+          logical_or env (make_logical env left right Logical.NullishCoalesce loc) loc
       | _ -> left
     in fun env ->
       let loc, left = with_loc binary_cover env in

@@ -23,6 +23,7 @@ can be overridden with command line flags.
 * [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
 * [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
 * [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
+* [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
 * [`log.file`](#toc-log-file-string)
@@ -108,6 +109,18 @@ on use since this proposal is still very early-stage.
 
 Set this to `enable` to indicate that Flow should support the use of
 [optional chaining](https://github.com/tc39/proposal-optional-chaining)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
+
+#### `esproposal.nullish_coalescing` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-nullish-coalescing-enable-ignore-warn" href="#toc-esproposal-nullish-coalescing-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
 per the pending spec.
 
 You may also set this to `ignore` to indicate that Flow should simply ignore

@@ -129,6 +129,7 @@ let precedence_of_expression expr =
     end
   | (_, E.Logical { E.Logical.operator = E.Logical.And; _ }) -> 6
   | (_, E.Logical { E.Logical.operator = E.Logical.Or; _ }) -> 5
+  | (_, E.Logical { E.Logical.operator = E.Logical.NullishCoalesce; _ }) -> 5
   | (_, E.Conditional _) -> 4
   | (_, E.Assignment _) -> precedence_of_assignment
   | (_, E.Yield _) -> 2
@@ -738,6 +739,7 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
       let operator = match operator with
         | E.Logical.Or -> Atom "||"
         | E.Logical.And -> Atom "&&"
+        | E.Logical.NullishCoalesce -> Atom "??"
       in
       let right = expression_with_parens ~precedence:(precedence + 1) ~ctxt right in
 

@@ -450,6 +450,7 @@ end with type t = Impl.t) = struct
         let operator = match logical.operator with
         | Or -> "||"
         | And -> "&&"
+        | NullishCoalesce -> "??"
         in
         node "LogicalExpression" loc [
           "operator", string operator;

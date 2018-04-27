@@ -950,11 +950,13 @@ and code_desc_of_operation = Ast.Expression.(
     | Instanceof -> "instanceof")
   | `Logical op -> (match op with
     | Logical.Or -> "||"
-    | Logical.And -> "&&")
+    | Logical.And -> "&&"
+    | Logical.NullishCoalesce -> "??")
   ) in
   let should_flatten = Binary.(
     let precedence = function
     | `Logical Logical.Or -> 0
+    | `Logical Logical.NullishCoalesce -> 0
     | `Logical Logical.And -> 1
     | `Binary BitOr -> 2
     | `Binary Xor -> 3

@@ -2501,6 +2501,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
       )
 
+    | (left, NullishCoalesceT(_, right, u)) when (
+        match left with
+        | DefT (_, (
+            OptionalT _
+          | MaybeT _
+          | UnionT _
+          | IntersectionT _
+        )) -> false
+        | _ -> true
+      ) ->
+      begin match left with
+      | DefT (_, (
+          NullT
+        | VoidT
+      )) -> rec_flow_t cx trace (right, u)
+      | _ -> rec_flow_t cx trace (left, u)
+      end
+
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
