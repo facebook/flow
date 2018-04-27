@@ -143,6 +143,7 @@ type error_message =
   | EUntypedImport of Loc.t * string
   | ENonstrictImport of Loc.t
   | EUnclearType of Loc.t
+  | EDeprecatedType of Loc.t
   | EUnsafeGettersSetters of Loc.t
   | EUnusedSuppression of Loc.t
   | ELintSetting of LintSettings.lint_parse_error
@@ -363,6 +364,7 @@ let util_use_op_of_msg nope util = function
 | EUntypedImport (_, _)
 | ENonstrictImport (_)
 | EUnclearType (_)
+| EDeprecatedType (_)
 | EUnsafeGettersSetters (_)
 | EUnusedSuppression (_)
 | ELintSetting (_)
@@ -1887,6 +1889,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text "Unclear type. Using "; code "any"; text ", ";
       code "Object"; text ", "; code "Function"; text ", ";
       code "$Subtype<...>"; text ", or "; code "$Supertype<...>"; text " types is not safe!"
+    ]
+
+  | EDeprecatedType loc ->
+    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedType) loc [
+      text "Deprecated type. Using "; code "*"; text " types is not recommended!"
     ]
 
   | EUnsafeGettersSetters loc ->

@@ -64,6 +64,12 @@ let add_unclear_type_error_if_not_lib_file cx loc = Loc.(
     | _ -> ()
 )
 
+let add_deprecated_type_error_if_not_lib_file cx loc = Loc.(
+  match loc.source with
+    | Some file when not @@ File_key.is_lib_file file ->
+      Flow_js.add_output cx (FlowError.EDeprecatedType loc)
+    | _ -> ()
+)
 
 (**********************************)
 (* Transform annotations to types *)
@@ -881,6 +887,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ()))
 
 | loc, Exists ->
+  add_deprecated_type_error_if_not_lib_file cx loc;
   (* Do not evaluate existential type variables when map is non-empty. This
      ensures that existential type variables under a polymorphic type remain
      unevaluated until the polymorphic type is applied. *)

@@ -2730,6 +2730,8 @@ let dump_flow_error =
       spf "ENonstrictImport (%s)" (string_of_loc loc)
     | EUnclearType loc ->
       spf "EUnclearType (%s)" (string_of_loc loc)
+    | EDeprecatedType loc ->
+      spf "EDeprecatedType (%s)" (string_of_loc loc)
     | EUnsafeGettersSetters loc ->
       spf "EUnclearGettersSetters (%s)" (string_of_loc loc)
     | EUnusedSuppression loc ->
