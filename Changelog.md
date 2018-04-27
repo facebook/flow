@@ -1,3 +1,60 @@
+### 0.71.0
+
+Likely to cause new Flow errors:
+* The result of the unary minus (negation) operator would sometimes be incorrectly generalized to
+  `number` rather than a literal type. This has been fixed.
+* Further restrictions on `module` and `exports`. The disallowed patterns include computed property
+  accesses as well as clobbering or aliasing `module` and/or `exports`.
+  - These restrictions are only enabled if `experimental.well_formed_exports=true` is specified in
+    `.flowconfig`.
+
+New Features:
+* `Fragment` has been added to the default exports of the `React` libdef.
+* Invoking `find-refs` on a property key in a type declaration will now also yield that key in
+  object literals.
+* Files can now be marked `@flow strict-local`. This mode is the same as `@flow strict`, except it
+  does not require dependencies to also be strict. `@flow strict` is still the recommended mode, but
+  `@flow strict-local` allows enabling strict checking for files before all dependencies can be made
+  strict. Once all the dependencies are strict, a `@flow strict-local` file can be upgraded to a
+  `@flow strict` file. A `@flow strict` file cannot depend on a `@flow strict-local` file.
+* Type support for the Stage 1
+  [Optional Chaining proposal](https://github.com/tc39/proposal-optional-chaining). To use this
+  feature, set `esproposal.optional_chaining=enable` in your `.flowconfig`.
+  - **Note**: We currently disallow calls whose callees are member expressions when the call or member
+    is part of an optional chain. This restriction will be lifted in the future when we reconcile the
+    optional chaining implementation with our implementation of method calls.
+
+Notable bug fixes:
+* The type normalizer now correctly tracks the scope of type parameters instead of assuming they
+  share the scope of the type definition.
+* Test output files are cleared before running tests. This prevents old errors from being printed on
+  subsequent failing runs when those runs do not produce errors.
+* `estree_translator` properly handles all cases of the `DeclareClass` AST node.
+* The `suggest` command has been fixed to work with the new type normalizer.
+* When evaluating spreads inside array literals, we determine the element type early, preventing
+  exponential complexity and infinite loops.
+* Object spread in JSX props now preserves exactness.
+
+Misc:
+* Various improvements to `find-refs`.
+* Optimizations for polymorphic subtyping.
+* Adds CircleCI for continuous integration and migrates the [flow.org](flow.org) build from Travis to Circle.
+* New tests for LSP support (disabled by default).
+* Certain exceptions will now print backtraces in addition to the exception string.
+* Improvements to spreading in array literals.
+* Support for Flow coverage reports using [codecov.io](codecov.io).
+
+Parser:
+* The AST has been updated to use snake_case for record fields rather than camelCase. Some field
+  names have also been updated.
+* Support has been added for the
+  [Numeric Separators proposal](https://github.com/tc39/proposal-numeric-separator), currently
+  Stage 3.
+* The AST representation for [Optional Chaining](https://github.com/tc39/proposal-optional-chaining)
+  has been updated to use new `OptionalMember` and `OptionalCall` nodes instead of the existing
+  `Member` and `Call` nodes, and parentheses now correctly limit the scope of short-circuiting.
+  This reflects the current [Babel](https://github.com/babel/babel/issues/7256) implementation.
+
 ### 0.70.0
 
 Likely to cause new Flow errors:
