@@ -177,12 +177,25 @@ let try_finally_with arg ~f ~(finally: unit -> unit) =
   finally ();
   res
 
-module MemGuard = struct
-  let gc_and_verify_value_collected v =
-    let weak_ref = Weak.create 1 in
-    Weak.set weak_ref 0 (Some v);
-    Gc.full_major ();
-    assert (not @@ Weak.check weak_ref 0)
+module MemGuard: sig
+  type 'a t
+  val track: 'a -> 'a t
+  val gc : unit -> unit
+  val verify_value_collected: 'a t -> unit
+  val gc_and_verify_value_collected: 'a t -> unit
+end = struct
+  type 'a t = 'a Weak.t
+  let track v =
+    let w = Weak.create 1 in
+    Weak.set w 0 (Some v);
+    w
+  let gc () =
+    Gc.compact ()
+  let verify_value_collected w =
+    assert (not @@ Weak.check w 0)
+  let gc_and_verify_value_collected w =
+    gc ();
+    verify_value_collected w
 end
 
 let with_context ~enter ~exit ~do_ =
