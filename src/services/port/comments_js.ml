@@ -131,7 +131,7 @@ and parse_dynamic_type s =
   assert (i = String.length s);
   match ts with
   | [t] -> t
-  | _ -> spf "$Either<%s>" (ts |> List.rev |> String.concat ", ")
+  | _ -> ts |> List.rev |> String.concat " | "
 
 (* if there is a comment whose scope spans the given location,
    return the map with that comment removed, and parsed type annos

@@ -214,24 +214,6 @@ let rec convert cx tparams_map = Ast.Type.(function
       DefT (mk_reason RArrayType loc, ArrT (ArrayAT (elemt, None)))
     )
 
-  (* $Either<...T> is the union of types ...T *)
-  | "$Either" ->
-    (match convert_type_params () with
-    | t0::t1::ts ->
-      let rep = UnionRep.make t0 t1 ts in
-      DefT (mk_reason RUnionType loc, UnionT rep)
-    | _ ->
-      error_type cx loc (FlowError.ETypeParamMinArity (loc, 2)))
-
-  (* $All<...T> is the intersection of types ...T *)
-  | "$All" ->
-    (match convert_type_params () with
-    | t0::t1::ts ->
-      let rep = InterRep.make t0 t1 ts in
-      DefT (mk_reason RIntersectionType loc, IntersectionT rep)
-    | _ ->
-      error_type cx loc (FlowError.ETypeParamMinArity (loc, 2)))
-
   (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
   | "$ReadOnlyArray" ->
     check_type_arg_arity cx loc targs 1 (fun () ->
