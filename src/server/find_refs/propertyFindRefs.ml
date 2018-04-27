@@ -551,44 +551,47 @@ let get_def_info genv env profiling file_key content loc: ((def_info * string) o
   !props_access_info %>>= fun props_access_info ->
   Lwt.return @@ def_info_of_typecheck_results cx props_access_info
 
+let find_refs_global genv env def_info name =
+  roots_of_def_info def_info %>>= fun root_file_keys ->
+  let root_file_paths_result =
+    Nel.map File_key.to_path root_file_keys
+    |> Nel.result_all
+  in
+  root_file_paths_result %>>= fun root_file_paths ->
+  let%lwt () =
+    let%lwt new_env, _ =
+      Lazy_mode_utils.focus_and_check genv !env root_file_paths
+    in
+    env := new_env;
+    Lwt.return_unit
+  in
+  let%lwt deps_result = deps_of_file_keys genv env (Nel.to_list root_file_keys) in
+  deps_result %>>= fun deps ->
+  let dependent_file_count = FilenameSet.cardinal deps in
+  let relevant_files =
+    Nel.to_list root_file_keys
+    |> FilenameSet.of_list
+    |> FilenameSet.union deps
+  in
+  Hh_logger.info
+    "find-refs: searching %d dependent modules for references"
+    dependent_file_count;
+  let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info name in
+  refs %>>| fun refs ->
+  Lwt.return @@ Some (name, refs, Some dependent_file_count)
+
+let find_refs_local genv file_key content def_info name =
+  compute_ast_result file_key content >>= fun ast_info ->
+  find_refs_in_file genv.options ast_info file_key def_info name >>= fun refs ->
+  Ok (Some (name, refs, None))
+
 let find_refs genv env ~profiling ~content file_key loc ~global =
-  let {options; _} = genv in
   let%lwt def_info = get_def_info genv env profiling file_key content loc in
   def_info %>>= fun def_info_opt ->
   match def_info_opt with
     | None -> Lwt.return (Ok None)
     | Some (def_info, name) ->
         if global then
-          roots_of_def_info def_info %>>= fun root_file_keys ->
-          let root_file_paths_result =
-            Nel.map File_key.to_path root_file_keys
-            |> Nel.result_all
-          in
-          root_file_paths_result %>>= fun root_file_paths ->
-          let%lwt () =
-            let%lwt new_env, _ =
-              Lazy_mode_utils.focus_and_check genv !env root_file_paths
-            in
-            env := new_env;
-            Lwt.return_unit
-          in
-          let%lwt deps_result = deps_of_file_keys genv env (Nel.to_list root_file_keys) in
-          deps_result %>>= fun deps ->
-          let dependent_file_count = FilenameSet.cardinal deps in
-          let relevant_files =
-            Nel.to_list root_file_keys
-            |> FilenameSet.of_list
-            |> FilenameSet.union deps
-          in
-          Hh_logger.info
-            "find-refs: searching %d dependent modules for references"
-            dependent_file_count;
-          let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info name in
-          refs %>>| fun refs ->
-          Lwt.return (Some (name, refs, Some dependent_file_count))
+          find_refs_global genv env def_info name
         else
-          Lwt.return (
-            compute_ast_result file_key content >>= fun ast_info ->
-            find_refs_in_file options ast_info file_key def_info name >>= fun refs ->
-            Ok (Some (name, refs, None))
-          )
+          Lwt.return @@ find_refs_local genv file_key content def_info name
