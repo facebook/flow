@@ -81,7 +81,7 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 ## `$Values<T>` <a class="toc" id="toc-values" href="#toc-values"></a>
 
-`$Values<T>` represents the union type of all the value types (not values, but their *types*!) of the enumerable properties in an [Object Type](../objects/) `T`.
+`$Values<T>` represents the union type of all the value types (not the values, but their *types*!) of the enumerable properties in an [Object Type](../objects/) `T`.
 
 For example:
 ```js
