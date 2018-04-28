@@ -137,3 +137,7 @@
     - path: "/docs/linting/flowlint-comments/"
     - path: "/docs/linting/ide-integration/"
     - path: "/docs/linting/rule-reference/"
+
+- id: strict
+  pages:
+    - path: "/docs/strict/"

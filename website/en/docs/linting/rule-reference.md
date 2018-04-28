@@ -15,6 +15,7 @@ layout: guide
 * [`unclear-type`](#toc-unclear-type)
 * [`unsafe-getters-setters`](#toc-unsafe-getters-setters)
 * [`deprecated-declare-exports`](#toc-deprecated-declare-exports)
+* [`nonstrict-import`](#toc-nonstrict-import)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -100,6 +101,9 @@ const o = {
   c: 10,
 };
 ```
+
+#### `nonstrict-import` <a class="toc" id="toc-nonstrict-import" href="#toc-nonstrict-import"></a>
+Used in conjuction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
 #### `deprecated-declare-exports` <a class="toc" id="toc-deprecated-declare-exports" href="#toc-deprecated-declare-exports"></a>
 
