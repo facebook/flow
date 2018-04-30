@@ -1333,7 +1333,24 @@ import_lib.js:7:8 = {
   "start":3,
   "end":12
 }
-import_lib.js:7:25 = {
+import_lib.js:7:25 (--expand-json-output) = {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{
+      "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
+      "name":"Listener"
+    },
+    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}],
+    "body":{
+      "kind":"Generic",
+      "typeArgs":[{"kind":"Bound","bound":"TFields"}],
+      "type":{
+        "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
+        "name":"Listener"
+      },
+      "structural":true
+    }
+  },
   "type":"imported Listener<TFields>",
   "reasons":[],
   "loc":{

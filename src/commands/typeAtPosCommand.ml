@@ -31,6 +31,8 @@ let spec = {
     |> verbose_flags
     |> from_flag
     |> path_flag
+    |> flag "--expand-json-output" no_arg
+        ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
     |> anon "args" (required (list_of string))
   )
 }
@@ -60,7 +62,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t) ~json ~pretty ~strip_root =
+let handle_response (loc, t) ~json ~pretty ~strip_root ~expanded =
   let ty = match t with
     | None -> "(unknown)"
     | Some ty -> Ty_printer.string_of_t ty
@@ -75,6 +77,12 @@ let handle_response (loc, t) ~json ~pretty ~strip_root =
         ("loc", json_of_loc ~strip_root loc) ::
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
+    let json_assoc =
+      if expanded then
+        ("expanded_type", match t with
+        | Some ty -> Ty_debug.json_of_t ~strip_root ty
+        | None -> JSON_Null) :: json_assoc
+      else json_assoc in
     let json = JSON_Object json_assoc in
     print_json_endline ~pretty json
   ) else (
@@ -95,9 +103,9 @@ let handle_error err ~json ~pretty =
     prerr_endline err
   )
 
-let main option_values json pretty root strip_root verbose from path args () =
+let main option_values json pretty root strip_root verbose from path expanded args () =
   FlowEventLogger.set_from from;
-  let json = json || pretty in
+  let json = json || pretty || expanded in
   let (file, line, column) = parse_args path args in
   let root = guess_root (
     match root with
@@ -112,7 +120,8 @@ let main option_values json pretty root strip_root verbose from path args () =
   let request = ServerProt.Request.INFER_TYPE (file, line, column, verbose) in
   match connect_and_make_request option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
-  | ServerProt.Response.INFER_TYPE (Ok resp) -> handle_response resp ~json ~pretty ~strip_root
+  | ServerProt.Response.INFER_TYPE (Ok resp) ->
+    handle_response resp ~json ~pretty ~strip_root ~expanded
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main
