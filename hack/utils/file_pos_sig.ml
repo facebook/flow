@@ -7,6 +7,8 @@
  *
  *)
 
+module type S =
+sig
 type t
 
 val pp : Format.formatter -> t -> unit
@@ -48,3 +50,4 @@ val line_column_offset : t -> int * int * int
 val line_beg_offset : t -> int * int * int
 
 val to_lexing_pos : string -> t -> Lexing.position
+end
