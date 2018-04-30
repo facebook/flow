@@ -4552,8 +4552,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* statics can be read   *)
     (*************************)
 
-    | DefT (lreason, InstanceT (static, _, _, _)), GetStaticsT (ureason, t) ->
-      rec_flow_t cx trace (ReposT (lreason, static), ReposT (ureason, t))
+    | DefT (_, InstanceT (static, _, _, _)), GetStaticsT (reason_op, tout) ->
+      rec_flow cx trace (static, ReposLowerT (reason_op, false,
+        UseT (unknown_use, tout)))
 
     (* GetStaticsT is only ever called on the instance type of a ClassT. There
      * is exactly one place where we create a ClassT with an ObjT instance type:
@@ -4562,17 +4563,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Mixins don't have statics at all, so we can just prune here. *)
       ()
 
-    | DefT (_, AnyT), GetStaticsT (reason_op, t) ->
-      rec_flow_t cx trace (AnyT.why reason_op, t)
+    | DefT (_, AnyT), GetStaticsT (reason_op, tout) ->
+      rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | ObjProtoT reason, GetStaticsT (_, t) ->
+    | ObjProtoT _, GetStaticsT (reason_op, tout) ->
       (* ObjProtoT not only serves as the instance type of the root class, but
          also as the statics of the root class. *)
-      let static_reason = replace_reason (fun desc ->
-        RStatics desc
-      ) reason in
-      let static = ObjProtoT static_reason in
-      rec_flow_t cx trace (static, t)
+      rec_flow cx trace (l, ReposLowerT (reason_op, false,
+        UseT (unknown_use, tout)))
 
     (********************)
     (* __proto__ getter *)
@@ -5857,12 +5855,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (instance, ReposLowerT (reason, false, u))
 
     | DefT (reason, ClassT instance), _ when object_use u || object_like_op u ->
-      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
-      let loc = loc_of_reason reason in
-      let reason = mk_reason desc loc in
-      let static = Tvar.mk cx reason in
-      rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (static, ReposLowerT (reason, false, u))
+      let statics = Tvar.mk cx reason in
+      rec_flow cx trace (instance, GetStaticsT (reason, statics));
+      rec_flow cx trace (statics, u)
 
     (************************)
     (* classes as functions *)
@@ -5886,12 +5881,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        types.
     *)
     | DefT (reason, ClassT instance), (UseT (_, DefT (_, FunT _)) | CallT _) ->
-      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
-      let loc = loc_of_reason reason in
-      let reason = mk_reason desc loc in
-      let static = Tvar.mk cx reason in
-      rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (static, ReposLowerT (reason, false, u))
+      let statics = Tvar.mk cx reason in
+      rec_flow cx trace (instance, GetStaticsT (reason, statics));
+      rec_flow cx trace (statics, u)
 
     (************)
     (* indexing *)
@@ -6112,12 +6104,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, u)
 
     | DefT (reason, ClassT instance), ExtendsUseT _ ->
-      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
-      let loc = loc_of_reason reason in
-      let reason = mk_reason desc loc in
-      let static = Tvar.mk cx reason in
-      rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (static, u)
+      let statics = Tvar.mk cx reason in
+      rec_flow cx trace (instance, GetStaticsT (reason, statics));
+      rec_flow cx trace (statics, u)
 
     | DefT (_, NullT),
       ExtendsUseT (use_op, reason, next::try_ts_on_failure, l, u) ->
@@ -11486,13 +11475,9 @@ and object_kit =
      * top-level pattern matching against class lower bounds to object-like
      * uses. This duplication should be removed. *)
     | DefT (r, ClassT i) ->
-      let desc = RStatics (desc_of_reason (reason_of_t i)) in
-      let loc = loc_of_reason r in
-      let r = mk_reason desc loc in
-      let static = Tvar.mk cx r in
-      rec_flow cx trace (i, GetStaticsT (r, static));
-      rec_flow cx trace (static, ReposLowerT (r, false,
-        ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout)))
+      let t = Tvar.mk cx r in
+      rec_flow cx trace (i, GetStaticsT (r, t));
+      rec_flow cx trace (t, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
     (* Resolve each member of a union. *)
     | DefT (_, UnionT rep) ->
       let t, todo = UnionRep.members_nel rep in

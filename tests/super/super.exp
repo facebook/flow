@@ -140,9 +140,9 @@ Cannot call `super.doesntExist` because property `doesntExist` is missing in sta
             ^^^^^^^^^^^^^^^^^^^
 
 References:
-   super.js:2:7
-    2| class A {
-             ^ [1]
+   super.js:8:17
+    8| class B extends A {
+                       ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- super.js:19:13
