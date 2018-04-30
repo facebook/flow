@@ -4112,26 +4112,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        expressable with our current type syntax, so we've hacked in special
        handling. Terminate with extreme prejudice. *)
 
-    | CustomFunT (_, MergeInto),
-      CallT (_, reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
-      let dest_t = extract_non_spread cx ~trace dest_t in
-      ignore (chain_objects cx ~trace reason_op dest_t ts);
-      rec_flow_t cx trace (VoidT.why reason_op, call_tout)
-
-    | CustomFunT (_, MergeDeepInto),
-      CallT (_, reason_op, { call_tout; _ }) ->
-      (* TODO *)
-      rec_flow_t cx trace (VoidT.why reason_op, call_tout)
-
-    | CustomFunT (_, Merge),
-      CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
-      rec_flow_t cx trace (spread_objects cx reason_op call_args_tlist, call_tout)
-
-    | CustomFunT (_, Mixin),
-      CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
-      let t = class_type (spread_objects cx reason_op call_args_tlist) in
-      rec_flow_t cx trace (t, call_tout)
-
     | CustomFunT (_, DebugPrint),
       CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
       List.iter (fun arg -> match arg with
@@ -4555,13 +4535,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, InstanceT (static, _, _, _)), GetStaticsT (reason_op, tout) ->
       rec_flow cx trace (static, ReposLowerT (reason_op, false,
         UseT (unknown_use, tout)))
-
-    (* GetStaticsT is only ever called on the instance type of a ClassT. There
-     * is exactly one place where we create a ClassT with an ObjT instance type:
-     * $Facebookism$Mixin. This rule should only fire for that case. *)
-    | DefT (_, ObjT _), GetStaticsT _ ->
-      (* Mixins don't have statics at all, so we can just prune here. *)
-      ()
 
     | DefT (_, AnyT), GetStaticsT (reason_op, tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -7502,17 +7475,7 @@ and specialize_class cx trace ~reason_op ~reason_tapp c = function
    existing object receives properties from other objects. This pattern suffers
    from "races" in the type checker, since the object supposed to receive
    properties is available even when the other objects supplying the properties
-   are not yet available. In the `mergeProperties` model (spread_objects), a new
-   object receives properties from other objects and is returned, but the new
-   object is made available only when the properties have actually been
-   received. Similarly, clone_object makes the receiving object available only
-   when the properties have actually been received. These patterns are useful
-   when merging properties across modules, e.g., and should eventually replace
-   other patterns wherever they are potentially racy. *)
-
-and spread_objects cx reason those =
-  let obj = Obj_type.mk cx reason in
-  chain_objects cx reason obj those
+   are not yet available. *)
 
 and chain_objects cx ?trace reason this those =
   let result = List.fold_left (fun result that ->
@@ -10724,10 +10687,6 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
   | ObjectSetPrototypeOf
   | ReactPropType _
   | ReactCreateClass
-  | Merge
-  | MergeDeepInto
-  | MergeInto
-  | Mixin
   | Idx
   | DebugPrint
   | DebugThrow

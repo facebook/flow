@@ -246,10 +246,6 @@ class ['a] t = object(self)
   | ReactCreateClass
   | ReactCreateElement
   | ReactCloneElement
-  | Merge
-  | MergeDeepInto
-  | MergeInto
-  | Mixin
   | Idx
   | DebugPrint
   | DebugThrow

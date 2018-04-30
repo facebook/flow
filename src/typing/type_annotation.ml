@@ -522,14 +522,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         (use_op reason, reason,
           ReactElementRefType), mk_id ())
     )
-  | "$Facebookism$Merge" ->
-      mk_custom_fun cx loc targs Merge
-  | "$Facebookism$MergeDeepInto" ->
-      mk_custom_fun cx loc targs MergeDeepInto
-  | "$Facebookism$MergeInto" ->
-      mk_custom_fun cx loc targs MergeInto
-  | "$Facebookism$Mixin" ->
-      mk_custom_fun cx loc targs Mixin
+
   | "$Facebookism$Idx" ->
       mk_custom_fun cx loc targs Idx
 

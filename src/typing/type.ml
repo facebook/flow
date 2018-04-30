@@ -1020,10 +1020,6 @@ module rec TypeTerm : sig
   | ReactElementFactory of t
 
   (* Facebookisms *)
-  | Merge
-  | MergeDeepInto
-  | MergeInto
-  | Mixin
   | Idx
 
   (* Internal tools *)

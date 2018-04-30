@@ -214,10 +214,6 @@ let rec gen_type t env = Type.(
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
   | CustomFunT (_, ReactCloneElement) -> add_str "React$CloneElement" env
   | CustomFunT (_, ReactElementFactory _) -> add_str "React$ElementFactory" env
-  | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
-  | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env
-  | CustomFunT (_, MergeInto) -> add_str "$Facebookism$MergeInto" env
-  | CustomFunT (_, Mixin) -> add_str "$Facebookism$Mixin" env
   | CustomFunT (_, Idx) -> add_str "$Facebookism$Idx" env
   | CustomFunT (_, DebugPrint) -> add_str "$Flow$DebugPrint" env
   | CustomFunT (_, DebugThrow) -> add_str "$Flow$DebugThrow" env

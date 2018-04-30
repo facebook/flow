@@ -175,16 +175,4 @@ export default suite(({addFile, addFiles, addCode}) => [
       )
       .because('But this is an error since the array contains non-objects'),
   ]),
-  test('mergeInto', [
-    addCode('declare var mergeInto: $Facebookism$MergeInto'),
-    addCode('mergeInto(...arr, ...arr)')
-      .newErrors(
-        `
-          test.js:7
-            7: mergeInto(...arr, ...arr)
-                            ^^^ A spread argument is unsupported here.
-        `,
-      )
-      .because('First arg cant be a spread, second can'),
-  ]),
 ]).beforeEach((({addCode}) => [ addCode('const arr = [1,2,3];') ]));

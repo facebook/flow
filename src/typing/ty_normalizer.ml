@@ -1070,32 +1070,6 @@ end = struct
   and custom_fun_expanded ~env =
     let open Type in
     function
-    (* $Facebookism$Merge: (...objects: Array<Object>): Object *)
-    | Merge -> return Ty.(mk_fun
-        ~rest:(Some "objects", Arr AnyObj)
-        AnyObj
-      )
-
-    (* $Facebookism$MergeDeepInto: (target: Object, ...objects: Array<Object>): void *)
-    | MergeDeepInto -> return Ty.(mk_fun
-        ~params:[(Some "target", AnyObj, non_opt_param)]
-        ~rest:(Some "objects", Arr AnyObj)
-        Void
-      )
-
-    (* $Facebookism$MergeInto: (target: Object, ...objects: Array<Object>): void *)
-    | MergeInto -> return Ty.(mk_fun
-        ~params:[(Some "target", AnyObj, non_opt_param)]
-        ~rest:(Some "objects", Arr AnyObj)
-        Void
-      )
-
-    (* $Facebookism$Mixin: (...objects: Array<Object>): Class *)
-    | Mixin -> return Ty.(mk_fun
-        ~rest:(Some "objects", Arr AnyObj)
-        (Class (builtin_symbol "Object", false, None))
-      )
-
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
         ~params:[(Some "target", Any, non_opt_param)]
@@ -1215,10 +1189,6 @@ end = struct
     | ReactElementFactory t ->
       type__ ~env t >>| fun t ->
       Ty.generic_builtin_t "React$ElementFactory" [t]
-    | Merge -> return (Ty.builtin_t "$Facebookism$Merge")
-    | MergeDeepInto -> return (Ty.builtin_t "$Facebookism$MergeDeepInto")
-    | MergeInto -> return (Ty.builtin_t "$Facebookism$MergeInto")
-    | Mixin -> return (Ty.builtin_t "$Facebookism$Mixin")
     | Idx -> return (Ty.builtin_t "$Facebookism$Idx")
     | DebugPrint -> return (Ty.builtin_t "$Flow$DebugPrint")
     | DebugThrow -> return (Ty.builtin_t "$Flow$DebugThrow")

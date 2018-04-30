@@ -2303,7 +2303,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("customfun.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'customfun.js', '11', '2'],
+      ['autocomplete', '--strip-root', '--json', 'customfun.js', '6', '1'],
       'customfun.js',
     ).stdout(
        `
@@ -2322,8 +2322,8 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "customfun.js",
-               "line": 8,
-               "endline": 8,
+               "line": 4,
+               "endline": 4,
                "start": 13,
                "end": 32
              },
@@ -2344,90 +2344,10 @@ export default suite(({addFile, flowCmd}) => [
                  ]
                },
                "path": "customfun.js",
-               "line": 9,
-               "endline": 9,
-               "start": 13,
-               "end": 24
-             },
-             {
-               "name": "mixin",
-               "type": "(...objects: Array<Object>) => class Object",
-               "func_details": {
-                 "return_type": "class Object",
-                 "params": [
-                   {
-                     "name": "...objects",
-                     "type": "Array<Object>"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 7,
-               "endline": 7,
-               "start": 13,
-               "end": 17
-             },
-             {
-               "name": "mergeInto",
-               "type": "(target: Object, ...objects: Array<Object>) => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": [
-                   {
-                     "name": "target",
-                     "type": "Object"
-                   },
-                   {
-                     "name": "...objects",
-                     "type": "Array<Object>"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 6,
-               "endline": 6,
-               "start": 13,
-               "end": 21
-             },
-             {
-               "name": "mergeDeepInto",
-               "type": "(target: Object, ...objects: Array<Object>) => void",
-               "func_details": {
-                 "return_type": "void",
-                 "params": [
-                   {
-                     "name": "target",
-                     "type": "Object"
-                   },
-                   {
-                     "name": "...objects",
-                     "type": "Array<Object>"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
                "line": 5,
                "endline": 5,
                "start": 13,
-               "end": 25
-             },
-             {
-               "name": "merge",
-               "type": "(...objects: Array<Object>) => Object",
-               "func_details": {
-                 "return_type": "Object",
-                 "params": [
-                   {
-                     "name": "...objects",
-                     "type": "Array<Object>"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 4,
-               "endline": 4,
-               "start": 13,
-               "end": 17
+               "end": 24
              },
              {
                "name": "idx",

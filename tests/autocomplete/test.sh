@@ -72,7 +72,7 @@ assert_ok \
 
 printf "customfun.js = "
 assert_ok \
-  "$FLOW" autocomplete --strip-root --pretty customfun.js 11 2 < customfun.js
+  "$FLOW" autocomplete --strip-root --pretty customfun.js 6 1 < customfun.js
 
 printf "issue-1368.js = "
 assert_ok \
