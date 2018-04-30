@@ -320,12 +320,7 @@ let gen_named_exports =
       | ThisClassT (_, DefT (_, InstanceT (static, super, implements, {
           fields_tmap;
           methods_tmap;
-          (* TODO: The only way to express `mixins` right now is with a
-           *       `declare` statement. This is possible in implementation
-           *       files, but it is extremely rare -- so punting on this for
-           *       now.
-           *)
-          mixins = _;
+          has_unknown_react_mixins = _;
           structural;
           _;
         }))) ->

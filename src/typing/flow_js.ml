@@ -4592,11 +4592,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let pmap = SMap.union fields_pmap methods_pmap in
       (match SMap.get x pmap with
       | None ->
-        (* mixins=true for React.createClass components which have mixins (note:
-           this is not the same as mixins for declared classes). If there are
-           mixins, then lookup should become nonstrict, as the searched-for
-           property may be found in a mixin. *)
-        let kind = match instance.mixins, kind with
+        (* If there are unknown mixins, the lookup should become nonstrict, as
+           the searched-for property may be found in a mixin. *)
+        let kind = match instance.has_unknown_react_mixins, kind with
         | true, Strict _ -> NonstrictReturning (None, None)
         | _ -> kind
         in
@@ -4672,7 +4670,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict =
-        if instance.mixins then NonstrictReturning (None, None)
+        if instance.has_unknown_react_mixins then NonstrictReturning (None, None)
         else Strict reason_c
       in
       get_prop cx trace ~use_op reason_prop reason_op strict l super x fields tout
@@ -4719,7 +4717,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let methods = SMap.union fields_tmap methods_tmap in
       let funt = Tvar.mk cx reason_lookup in
       let strict =
-        if instance.mixins then NonstrictReturning (None, None)
+        if instance.has_unknown_react_mixins then NonstrictReturning (None, None)
         else Strict reason_c
       in
       get_prop cx trace ~use_op reason_prop reason_lookup strict l super x methods funt;

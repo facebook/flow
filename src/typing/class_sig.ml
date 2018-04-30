@@ -376,7 +376,7 @@ let insttype cx ~tparams_map ~initialized_static_field_names s =
     initialized_field_names = inited_fields;
     initialized_static_field_names;
     methods_tmap = Context.make_property_map cx methods;
-    mixins = false;
+    has_unknown_react_mixins = false;
     structural = s.structural;
   }
 

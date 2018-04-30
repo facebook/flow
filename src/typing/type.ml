@@ -913,7 +913,7 @@ module rec TypeTerm : sig
     initialized_field_names: SSet.t;
     initialized_static_field_names: SSet.t;
     methods_tmap: Properties.id;
-    mixins: bool;
+    has_unknown_react_mixins: bool;
     structural: bool;
   }
 

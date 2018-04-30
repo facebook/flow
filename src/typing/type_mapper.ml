@@ -297,7 +297,7 @@ class ['a] t = object(self)
       initialized_field_names;
       initialized_static_field_names;
       methods_tmap;
-      mixins;
+      has_unknown_react_mixins;
       structural
     } = i in
     let type_args' = SMap.ident_map (fun x ->
@@ -326,7 +326,7 @@ class ['a] t = object(self)
       initialized_field_names;
       initialized_static_field_names;
       methods_tmap = methods_tmap';
-      mixins;
+      has_unknown_react_mixins;
       structural;
     }
 

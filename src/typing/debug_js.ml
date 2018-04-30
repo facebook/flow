@@ -1070,7 +1070,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
     "fieldTypes", json_of_pmap json_cx field_pmap;
     "methodTypes", json_of_pmap json_cx method_pmap;
-    "mixins", JSON_Bool insttype.mixins;
+    "mixins", JSON_Bool insttype.has_unknown_react_mixins;
     "structural", JSON_Bool insttype.structural;
   ]
 )
