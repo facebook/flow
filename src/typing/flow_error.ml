@@ -258,6 +258,7 @@ and upper_kind =
   | IncompatibleUnaryMinusT
   | IncompatibleMapTypeTObject
   | IncompatibleTypeAppVarianceCheckT
+  | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
@@ -1061,6 +1062,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | IncompatibleSetElemT prop_loc
     | IncompatibleCallElemT prop_loc
       -> mk_prop_missing_error prop_loc None lower use_op
+    | IncompatibleGetStaticsT
+      -> nope "is not an instance type"
     (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
        to throw on a use type, so mark the error instead *)

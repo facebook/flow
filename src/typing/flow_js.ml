@@ -6277,6 +6277,7 @@ and flow_error_kind_of_upper = function
   | UnaryMinusT _ -> FlowError.IncompatibleUnaryMinusT
   | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> FlowError.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> FlowError.IncompatibleTypeAppVarianceCheckT
+  | GetStaticsT _ -> FlowError.IncompatibleGetStaticsT
   | use_t -> FlowError.IncompatibleUnclassified (string_of_use_ctor use_t)
 
 and use_op_of_lookup_action = function

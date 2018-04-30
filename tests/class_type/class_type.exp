@@ -54,5 +54,19 @@ References:
              ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
-Found 4 errors
+null [1] is not an instance type.
+
+   test3.js:5:1
+   5| o.p.foo;
+      ^^^
+
+References:
+   test3.js:1:28
+   1| type T = { [string]: Class<null> }
+                                 ^^^^ [1]
+
+
+
+Found 5 errors

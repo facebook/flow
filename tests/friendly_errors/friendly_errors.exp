@@ -1047,7 +1047,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- misc-incompatibles.js:11:21
 
-number [1] is not supported by unclassified use GetStaticsT.
+number [1] is not an instance type.
 
    11| interface B extends A {}
                            ^ [1]

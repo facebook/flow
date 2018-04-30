@@ -2402,6 +2402,7 @@ let dump_flow_error =
   | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
   | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
   | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
+  | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
   | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
   in
   fun cx err ->
