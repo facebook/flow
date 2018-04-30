@@ -63,7 +63,7 @@ let parse_args path args =
 let handle_response (loc, t) ~json ~pretty ~strip_root =
   let ty = match t with
     | None -> "(unknown)"
-    | Some str -> str
+    | Some ty -> Ty_printer.string_of_t ty
   in
   if json
   then (

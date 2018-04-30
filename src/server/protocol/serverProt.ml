@@ -116,7 +116,7 @@ module Response = struct
   type get_def_response = (Loc.t, string) result
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
   type infer_type_response = (
-    Loc.t * string option,
+    Loc.t * Ty.t option,
     string
   ) result
 

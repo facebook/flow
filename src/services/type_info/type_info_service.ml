@@ -35,7 +35,6 @@ let type_at_pos ~options ~workers ~env ~profiling file content line col =
           mk_data "SUCCESS" loc json, loc, Some ty
       ) in
 
-    let ty = Option.map ~f:Ty_printer.string_of_t ty in
     Ok ((loc, ty), Some json_data)
 
 let dump_types ~options ~workers ~env ~profiling file content =

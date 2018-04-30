@@ -14,7 +14,7 @@ val type_at_pos :
   string ->
   int ->
   int ->
-  ((Loc.t * string option) * Hh_json.json option,
+  ((Loc.t * Ty.t option) * Hh_json.json option,
     string * Hh_json.json option) Core_result.t Lwt.t
 
 val dump_types :

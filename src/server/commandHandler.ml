@@ -106,7 +106,7 @@ let infer_type
     ~(env: ServerEnv.env ref)
     ~(profiling: Profiling_js.running)
     ((file_input, line, col, verbose): (File_input.t * int * int * Verbose.t option))
-  : ((Loc.t * string option, string) Core_result.t * Hh_json.json option) Lwt.t =
+  : ((Loc.t * Ty.t option, string) Core_result.t * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   let options = { options with Options.opt_verbose = verbose } in
@@ -608,7 +608,7 @@ let handle_persistent_unsafe genv env client profiling msg
         let range = if loc = Loc.none then None else Some location.Lsp.Location.range in
         let contents = match content with
           | None -> [MarkedString "?"]
-          | Some content -> [MarkedCode ("flow", content)] in
+          | Some content -> [MarkedCode ("flow", Ty_printer.string_of_t content)] in
         let r = match range, content with
           | None, None -> None
           | _, _ -> Some {Lsp.Hover.contents; range;} in
