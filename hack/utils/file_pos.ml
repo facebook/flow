@@ -9,6 +9,5 @@
 
 include (val (
    if 1 lsl 31 <> 0
-   (* TODO: Implement special compact encoding for 64 bit wordsize *)
-   then (module File_pos_32 : File_pos_sig.S)
+   then (module File_pos_64 : File_pos_sig.S)
    else (module File_pos_32 : File_pos_sig.S)) : File_pos_sig.S)
