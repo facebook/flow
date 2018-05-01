@@ -273,6 +273,9 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 	$(OCB) -I scripts scripts/ppx_gen_flowlibs.native
 
+_build/scripts/ppx_gen_rec.native: scripts/ppx_gen_rec.ml
+	$(OCB) -I scripts scripts/ppx_gen_rec.native
+
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
