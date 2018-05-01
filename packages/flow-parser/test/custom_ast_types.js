@@ -175,7 +175,8 @@ def("ObjectTypeAnnotation")
     .field("exact", Boolean)
     .field("properties", [or(
       def("ObjectTypeProperty"),
-      def("ObjectTypeSpreadProperty"))]);
+      def("ObjectTypeSpreadProperty"))])
+    .field("internalSlots", [def("ObjectTypeInternalSlot")]);
 
 def("MetaProperty")
     .bases("Expression")
@@ -216,6 +217,13 @@ def("ObjectTypeSpreadProperty")
   .bases("Node")
   .build("argument")
   .field("argument", def("GenericTypeAnnotation"));
+
+def("ObjectTypeInternalSlot")
+  .bases("Node")
+  .build("id", "static", "method")
+  .field("id", def("Identifier"))
+  .field("static", Boolean)
+  .field("method", Boolean);
 
 // https://github.com/benjamn/ast-types/issues/186
 def("ForAwaitStatement")

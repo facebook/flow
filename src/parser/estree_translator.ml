@@ -1090,25 +1090,30 @@ end with type t = Impl.t) = struct
     function_type_param argument
 
   and object_type (loc, o) = Type.Object.(
-    let props, ixs, calls = List.fold_left (fun (props, ixs, calls) -> function
+    let props, ixs, calls, slots = List.fold_left (fun (props, ixs, calls, slots) ->
+      function
       | Property p ->
         let prop = object_type_property p in
-        prop::props, ixs, calls
+        prop::props, ixs, calls, slots
       | SpreadProperty p ->
         let prop = object_type_spread_property p in
-        prop::props, ixs, calls
+        prop::props, ixs, calls, slots
       | Indexer i ->
         let ix = object_type_indexer i in
-        props, ix::ixs, calls
+        props, ix::ixs, calls, slots
       | CallProperty c ->
         let call = object_type_call_property c in
-        props, ixs, call::calls
-    ) ([], [], []) o.properties in
+        props, ixs, call::calls, slots
+      | InternalSlot s ->
+        let slot = object_type_internal_slot s in
+        props, ixs, calls, slot::slots
+    ) ([], [], [], []) o.properties in
     node "ObjectTypeAnnotation" loc [
       "exact", bool o.exact;
       "properties", array (List.rev props);
       "indexers", array (List.rev ixs);
       "callProperties", array (List.rev calls);
+      "internalSlots", array (List.rev slots);
     ]
   )
 
@@ -1159,6 +1164,14 @@ end with type t = Impl.t) = struct
     node "ObjectTypeCallProperty" loc [
       "value", function_type callProperty.value;
       "static", bool callProperty.static;
+    ]
+  )
+
+  and object_type_internal_slot (loc, slot) = Type.Object.InternalSlot.(
+    node "ObjectTypeInternalSlot" loc [
+      "id", identifier slot.id;
+      "static", bool slot.static;
+      "method", bool slot._method;
     ]
   )
 

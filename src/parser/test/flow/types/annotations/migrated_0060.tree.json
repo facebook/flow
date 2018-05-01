@@ -83,7 +83,8 @@
                 }
               ],
               "indexers":[],
-              "callProperties":[]
+              "callProperties":[],
+              "internalSlots":[]
             }
           }
         }

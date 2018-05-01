@@ -199,6 +199,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       break;
     case 'ObjectTypeAnnotation':
       esprima.exact = esprima.exact || false;
+      esprima.internalSlots = esprima.internalSlots || [];
       break;
     case 'ObjectTypeProperty':
       esprima.kind = "init"; // esprima-fb doesn't support getters/setters

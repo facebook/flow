@@ -107,7 +107,8 @@
                       }
                     ],
                     "indexers":[],
-                    "callProperties":[]
+                    "callProperties":[],
+                    "internalSlots":[]
                   }
                 },
                 "typeParameters":null

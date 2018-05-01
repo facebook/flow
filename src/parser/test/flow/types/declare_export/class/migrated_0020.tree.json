@@ -54,7 +54,8 @@
               "variance":null
             }
           ],
-          "callProperties":[]
+          "callProperties":[],
+          "internalSlots":[]
         },
         "extends":[],
         "implements":[],

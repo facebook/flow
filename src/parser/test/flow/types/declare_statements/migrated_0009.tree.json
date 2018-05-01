@@ -43,7 +43,8 @@
             },
             "static":true
           }
-        ]
+        ],
+        "internalSlots":[]
       },
       "extends":[],
       "implements":[],

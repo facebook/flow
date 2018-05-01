@@ -833,6 +833,14 @@ let add_interface_properties cx properties s =
 
       )
 
+    | InternalSlot (loc, { InternalSlot.id = (_, name); static; _ }) ->
+      Flow.add_output cx Flow_error.(
+        EUnsupportedSyntax (loc, UnsupportedInternalSlot {
+          name;
+          static;
+        }));
+      x
+
     | SpreadProperty (loc, _) ->
       Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x

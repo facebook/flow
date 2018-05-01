@@ -188,7 +188,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
       "extends":[]
     }

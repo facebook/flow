@@ -76,7 +76,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],

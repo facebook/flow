@@ -458,7 +458,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
     in let indexer_property env start_loc static variance =
       let indexer = with_loc ~start_loc (fun env ->
-        Expect.token env T_LBRACKET;
+        (* Note: T_LBRACKET has already been consumed *)
         let id =
           if Peek.ith_token ~i:1 env = T_COLON
           then begin
@@ -479,6 +479,36 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         }
       ) env in
       Type.Object.Indexer indexer
+
+    in let internal_slot env start_loc static =
+      let islot = with_loc ~start_loc (fun env ->
+        (* Note: First T_LBRACKET has already been consumed *)
+        Expect.token env T_LBRACKET;
+        let id = identifier_name env in
+        Expect.token env T_RBRACKET;
+        Expect.token env T_RBRACKET;
+        let _method, value = match Peek.token env with
+        | T_LESS_THAN
+        | T_LPAREN ->
+          let tparams = type_parameter_declaration ~allow_default:false env in
+          let value =
+            let fn_loc, fn = methodish env start_loc tparams in
+            fn_loc, Type.Function fn
+          in
+          true, value
+        | _ ->
+          Expect.token env T_COLON;
+          let value = _type env in
+          false, value
+        in
+        { Type.Object.InternalSlot.
+          id;
+          value;
+          static = static <> None;
+          _method;
+        }
+      ) env in
+      Type.Object.InternalSlot islot
 
     in let spread_property env start_loc =
       let spread = with_loc ~start_loc (fun env ->
@@ -545,7 +575,13 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_LBRACKET ->
         error_unexpected_proto env proto;
-        indexer_property env start_loc static variance
+        Expect.token env T_LBRACKET;
+        (match Peek.token env with
+        | T_LBRACKET ->
+          error_unexpected_variance env variance;
+          internal_slot env start_loc static
+        | _ ->
+          indexer_property env start_loc static variance)
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we

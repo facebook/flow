@@ -48,7 +48,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
       "extends":[]
     },
@@ -97,7 +98,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
       "extends":[]
     },
@@ -154,7 +156,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
       "extends":[]
     },
@@ -264,7 +267,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
       "extends":[]
     }

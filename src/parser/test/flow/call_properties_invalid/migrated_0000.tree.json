@@ -58,7 +58,8 @@
                     },
                     "static":false
                   }
-                ]
+                ],
+                "internalSlots":[]
               }
             },
             "optional":false

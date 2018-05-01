@@ -827,6 +827,13 @@ let rec convert cx tparams_map = Ast.Type.(function
       add_dict loc i o, ts, spread
     | Object.Property (loc, p) ->
       add_prop loc p o, ts, spread
+    | Object.InternalSlot (loc, { Object.InternalSlot.id = (_, name); _ }) ->
+      Flow.add_output cx FlowError.(
+        EUnsupportedSyntax (loc, UnsupportedInternalSlot {
+          name;
+          static = false;
+        }));
+      o, ts, spread
     | Object.SpreadProperty (_, { Object.SpreadProperty.argument }) ->
       let ts = match o with
       | None -> ts

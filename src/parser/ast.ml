@@ -145,11 +145,21 @@ and Type : sig
         static: bool;
       }
     end
+    module InternalSlot: sig
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        id: 'M Identifier.t;
+        value: 'M Type.t;
+        _method: bool;
+        static: bool;
+      }
+    end
     type 'M property =
       | Property of 'M Property.t
       | SpreadProperty of 'M SpreadProperty.t
       | Indexer of 'M Indexer.t
       | CallProperty of 'M CallProperty.t
+      | InternalSlot of 'M InternalSlot.t
     type 'M t = {
       exact: bool;
       properties: 'M property list;

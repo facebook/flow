@@ -126,7 +126,8 @@
               }
             ],
             "indexers":[],
-            "callProperties":[]
+            "callProperties":[],
+            "internalSlots":[]
           }
         }
       },

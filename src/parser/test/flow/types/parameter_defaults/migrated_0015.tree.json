@@ -69,7 +69,8 @@
         "exact":false,
         "properties":[],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
       "extends":[],
       "implements":[],

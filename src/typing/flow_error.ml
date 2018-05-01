@@ -223,6 +223,7 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
   | IllegalName
+  | UnsupportedInternalSlot of { name: string; static: bool }
 
 and lower_kind =
   | Possibly_null
@@ -1604,6 +1605,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
         [text "A spread argument is unsupported here."]
       | IllegalName ->
         [text "Illegal name."]
+      | UnsupportedInternalSlot {name; static = false} ->
+        [text "Unsupported internal slot "; code name; text "."]
+      | UnsupportedInternalSlot {name; static = true} ->
+        [text "Unsupported static internal slot "; code name; text "."]
     in
     mk_error ~trace_infos loc msg
 
