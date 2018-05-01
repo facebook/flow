@@ -39,7 +39,7 @@ using "covariant" properties throughout your state object.
 ```js
 type State = {
   +users: Array<{
-    +id: string
+    +id: string,
     +name: string,
     +age: number,
     +phoneNumber: string,
