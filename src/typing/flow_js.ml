@@ -5005,6 +5005,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), ObjFreezeT (reason_op, t) ->
       rec_flow_t cx trace (AnyT.why reason_op, t)
 
+    | DefT (_, AnyObjT), ObjFreezeT (reason_op, t) ->
+      rec_flow_t cx trace (DefT (reason_op, AnyObjT), t)
+
     (*******************************************)
     (* objects may have their fields looked up *)
     (*******************************************)
