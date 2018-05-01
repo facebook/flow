@@ -243,6 +243,9 @@ let (%>>|)
     let%lwt new_x = f x in
     Lwt.return (Ok new_x)
 
+let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
+let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
+
 let to_exn_string backtrace exn =
   let backtrace = String.trim backtrace in
   Printf.sprintf "%s%s%s"
