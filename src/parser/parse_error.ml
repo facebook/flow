@@ -19,6 +19,7 @@ type t =
   | UnexpectedEOS
   | UnexpectedVariance
   | UnexpectedStatic
+  | UnexpectedProto
   | UnexpectedTypeAlias
   | UnexpectedOpaqueTypeAlias
   | UnexpectedTypeAnnotation
@@ -137,6 +138,7 @@ module PP =
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedVariance -> "Unexpected variance sigil"
       | UnexpectedStatic -> "Unexpected static modifier"
+      | UnexpectedProto -> "Unexpected proto modifier"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
       | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"

@@ -18,7 +18,7 @@ module type TYPE = sig
   val type_parameter_declaration_with_defaults : env -> Loc.t Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> Loc.t Ast.Type.ParameterInstantiation.t option
   val generic : env -> Loc.t * Loc.t Ast.Type.Generic.t
-  val _object : allow_static:bool -> env -> Loc.t * Loc.t Type.Object.t
+  val _object : allow_static:bool -> allow_proto:bool -> env -> Loc.t * Loc.t Type.Object.t
   val function_param_list : env -> Loc.t Type.Function.Params.t
   val annotation : env -> Loc.t Ast.Type.annotation
   val annotation_opt : env -> Loc.t Ast.Type.annotation option
@@ -146,7 +146,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_LCURLY
     | T_LCURLYBAR ->
       let loc, o = _object env
-        ~allow_static:false ~allow_exact:true ~allow_spread:true in
+        ~allow_static:false ~allow_proto:false ~allow_exact:true ~allow_spread:true in
       loc, Type.Object o
     | T_TYPEOF ->
         with_loc (fun env ->
@@ -394,6 +394,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         value = Init value;
         optional = false;
         static = static <> None;
+        proto = false;
         _method = true;
         variance = None;
       })))
@@ -409,7 +410,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       ) env in
       Type.Object.CallProperty prop
 
-    in let init_property env start_loc static variance key =
+    in let init_property env start_loc ~variance ~static ~proto key =
+      ignore proto;
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeAnnotation;
       let prop = with_loc ~start_loc (fun env ->
@@ -421,6 +423,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           value = Init value;
           optional;
           static = static <> None;
+          proto = proto <> None;
           _method = false;
           variance;
         })
@@ -446,6 +449,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           value = if is_getter then Get value else Set value;
           optional = false;
           static = static <> None;
+          proto = false;
           _method = false;
           variance = None;
         })
@@ -492,11 +496,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_RCURLY when not exact -> ()
       | _ -> error_unexpected env
 
-    in let error_unsupported_variance env = function
+    in let error_unexpected_variance env = function
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
-    in let rec properties ~allow_static ~allow_spread ~exact env acc =
+    in let error_unexpected_proto env = function
+    | Some loc -> error_at env (loc, Error.UnexpectedProto)
+    | None -> ()
+
+    in let rec properties ~allow_static ~allow_proto ~allow_spread ~exact env acc =
       assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
       match Peek.token env with
@@ -506,40 +514,49 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_ELLIPSIS when allow_spread ->
         let prop = spread_property env start_loc in
         semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env (prop::acc)
+        properties ~allow_static ~allow_proto ~allow_spread ~exact env (prop::acc)
       | _ ->
-        let prop = property ~variance:None ~allow_static ~static:None env start_loc in
+        let prop = property env start_loc ~allow_static ~allow_proto
+          ~variance:None ~static:None ~proto:None in
         semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env (prop::acc)
+        properties ~allow_static ~allow_proto ~allow_spread ~exact env (prop::acc)
 
-    and property env ~variance ~allow_static ~static start_loc =
+    and property env ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
       match Peek.token env with
       | T_PLUS when variance = None ->
         let loc = Peek.loc env in
         Eat.token env;
         let variance = Some (loc, Variance.Plus) in
-        property env ~variance ~allow_static:false ~static start_loc
+        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_MINUS when variance = None ->
         let loc = Peek.loc env in
         Eat.token env;
         let variance = Some (loc, Variance.Minus) in
-        property env ~variance ~allow_static:false ~static start_loc
+        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_STATIC when allow_static ->
         assert (variance = None); (* if we parsed variance, allow_static = false *)
         let static = Some (Peek.loc env) in
         Eat.token env;
-        property env ~variance ~allow_static:false ~static start_loc
+        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+      | T_IDENTIFIER { raw = "proto"; _ } when allow_proto ->
+        assert (variance = None); (* if we parsed variance, allow_proto = false *)
+        let proto = Some (Peek.loc env) in
+        Eat.token env;
+        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_LBRACKET ->
+        error_unexpected_proto env proto;
         indexer_property env start_loc static variance
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we
            successfully parsed the static modifier above. *)
-        error_unsupported_variance env variance;
+        error_unexpected_proto env proto;
+        error_unexpected_variance env variance;
         call_property env start_loc static
       | token ->
-        match static, token with
-        | Some static_loc, (T_PLING | T_COLON) ->
+        match static, proto, token with
+        | Some _, Some _, _ -> failwith "Can not have both `static` and `proto`"
+        | Some static_loc, None, (T_PLING | T_COLON) ->
           (* We speculatively parsed `static` as a static modifier, but now
              that we've parsed the next token, we changed our minds and want
              to parse `static` as the key of a named property. *)
@@ -548,7 +565,17 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             "static"
           ) in
           let static = None in
-          init_property env start_loc static variance key
+          init_property env start_loc ~variance ~static ~proto key
+        | None, Some proto_loc, (T_PLING | T_COLON) ->
+          (* We speculatively parsed `proto` as a proto modifier, but now
+             that we've parsed the next token, we changed our minds and want
+             to parse `proto` as the key of a named property. *)
+          let key = Expression.Object.Property.Identifier (
+            proto_loc,
+            "proto"
+          ) in
+          let proto = None in
+          init_property env start_loc ~variance ~static ~proto key
         | _ ->
           let object_key env =
             Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -562,32 +589,35 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
               begin match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
-                error_unsupported_variance env variance;
+                error_unexpected_proto env proto;
+                error_unexpected_variance env variance;
                 method_property env start_loc static key
               | T_COLON
               | T_PLING ->
-                init_property env start_loc static variance key
+                init_property env start_loc ~variance ~static ~proto key
               | _ ->
                 let key = object_key env in
                 let is_getter = name = "get" in
-                error_unsupported_variance env variance;
+                error_unexpected_proto env proto;
+                error_unexpected_variance env variance;
                 getter_or_setter ~is_getter env start_loc static key
               end
           | _, key ->
               begin match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
-                error_unsupported_variance env variance;
+                error_unexpected_proto env proto;
+                error_unexpected_variance env variance;
                 method_property env start_loc static key
               | _ ->
-                init_property env start_loc static variance key
+                init_property env start_loc ~variance ~static ~proto key
               end
 
-    in fun ~allow_static ~allow_exact ~allow_spread env ->
+    in fun ~allow_static ~allow_proto ~allow_exact ~allow_spread env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       with_loc (fun env ->
         Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
-        let properties = properties ~allow_static ~exact ~allow_spread env [] in
+        let properties = properties ~allow_static ~allow_proto ~exact ~allow_spread env [] in
         Expect.token env (if exact then T_RCURLYBAR else T_RCURLY);
         { Type.Object.exact; properties; }
       ) env
@@ -745,8 +775,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   let type_parameter_declaration =
     wrap (type_parameter_declaration ~allow_default:false)
   let type_parameter_instantiation = wrap type_parameter_instantiation
-  let _object ~allow_static env =
-    wrap (_object ~allow_static ~allow_exact:false ~allow_spread:false) env
+  let _object ~allow_static ~allow_proto env =
+    wrap (_object ~allow_static ~allow_proto ~allow_exact:false ~allow_spread:false) env
   let function_param_list = wrap function_param_list
   let annotation = wrap annotation
   let annotation_opt = wrap annotation_opt

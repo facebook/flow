@@ -182,6 +182,7 @@
             "method":true,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"init"
           }

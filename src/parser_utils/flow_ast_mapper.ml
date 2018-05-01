@@ -529,10 +529,10 @@ class mapper = object(this)
 
   method object_property_type (opt: Loc.t Ast.Type.Object.Property.t) =
     let open Ast.Type.Object.Property in
-    let loc, { key; value; optional; static; _method; variance; } = opt in
+    let loc, { key; value; optional; static; proto; _method; variance; } = opt in
     let value' = this#object_property_value_type value in
     if value' == value then opt
-    else loc, { key; value = value'; optional; static; _method; variance }
+    else loc, { key; value = value'; optional; static; proto; _method; variance }
 
   method object_type (ot: Loc.t Ast.Type.Object.t) =
     let open Ast.Type.Object in

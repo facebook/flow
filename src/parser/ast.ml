@@ -116,6 +116,7 @@ and Type : sig
         value: 'M value;
         optional: bool;
         static: bool;
+        proto: bool;
         _method: bool;
         variance: 'M Variance.t option;
       }

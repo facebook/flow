@@ -1959,22 +1959,24 @@ and type_function ~sep { Ast.Type.Function.
 
 and type_object_property = Ast.Type.Object.(function
   | Property (loc, { Property.
-      key; value; optional; static; variance; _method=_
+      key; value; optional; static; proto; variance; _method=_
     }) ->
     let s_static = if static then fuse [Atom "static"; space] else Empty in
+    let s_proto = if proto then fuse [Atom "proto"; space] else Empty in
     SourceLocation (
       loc,
-      match value, variance, optional with
+      match value, variance, proto, optional with
         (* Functions with no special properties can be rendered as methods *)
-      | Property.Init (loc, Ast.Type.Function func), None, false ->
+      | Property.Init (loc, Ast.Type.Function func), None, false, false ->
         SourceLocation (loc, fuse [
           s_static;
           object_property_key key;
           type_function ~sep:(Atom ":") func;
         ])
         (* Normal properties *)
-      | Property.Init t, _, _ -> fuse [
+      | Property.Init t, _, _, _ -> fuse [
           s_static;
+          s_proto;
           option variance_ variance;
           object_property_key key;
           if optional then Atom "?" else Empty;
@@ -1983,12 +1985,12 @@ and type_object_property = Ast.Type.Object.(function
           type_ t
         ]
         (* Getters/Setters *)
-      | Property.Get (loc, func), _, _ -> SourceLocation (loc, fuse [
+      | Property.Get (loc, func), _, _, _ -> SourceLocation (loc, fuse [
           Atom "get"; space;
           object_property_key key;
           type_function ~sep:(Atom ":") func;
         ])
-      | Property.Set (loc, func), _, _ -> SourceLocation (loc, fuse [
+      | Property.Set (loc, func), _, _, _ -> SourceLocation (loc, fuse [
           Atom "set"; space;
           object_property_key key;
           type_function ~sep:(Atom ":") func;

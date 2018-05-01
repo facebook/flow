@@ -153,6 +153,7 @@ and obj_named_prop x =
       value = T.Object.Property.Init t;
       optional = fld.fld_optional;
       static = false;
+      proto = false;
       _method = false;
       variance = variance_ fld.fld_polarity;
     }
@@ -161,6 +162,7 @@ and obj_named_prop x =
       value = T.Object.Property.Init (Loc.none, T.Function fun_t);
       optional = false;
       static = false;
+      proto = false;
       _method = true;
       variance = None;
     }
@@ -169,6 +171,7 @@ and obj_named_prop x =
       value = T.Object.Property.Get (Loc.none, t);
       optional = false;
       static = false;
+      proto = false;
       _method = false;
       variance = None;
     }
@@ -177,6 +180,7 @@ and obj_named_prop x =
       value = T.Object.Property.Set (Loc.none, t);
       optional = false;
       static = false;
+      proto = false;
       _method = false;
       variance = None;
     }

@@ -69,6 +69,7 @@ and mk_obj_literal_expr (t : Loc.t T.Object.t) : Loc.t E.t' =
                                  value = Init (_, ptype);
                                  optional = o;
                                  static = _;
+                                 proto = _;
                                  _method = _;
                                  variance = _}) -> (k, o, mk_literal_expr ptype)
         | _ -> failwith "Unsupported property") T.Object.(t.properties)

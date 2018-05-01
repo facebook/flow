@@ -132,6 +132,7 @@ class ruleset_base = object(self)
                                    value = Init (_, t);
                                    optional = o;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) ->
             if o then Hashtbl.add opt_tbl name t
@@ -205,6 +206,7 @@ class ruleset_base = object(self)
                                      value = Init (_, t);
                                      optional = o;
                                      static = _;
+                                     proto = _;
                                      _method = _;
                                      variance = _;}) ->
               if take_opt || (not o) then
@@ -225,6 +227,7 @@ class ruleset_base = object(self)
                                      value = Init (_, t);
                                      optional = true;
                                      static = _;
+                                     proto = _;
                                      _method = _;
                                      variance = _;}) ->
                 Expr (E.Identifier (Loc.none, name), t) :: acc
@@ -282,6 +285,7 @@ class ruleset_base = object(self)
                                           value = Init (Loc.none, e);
                                           optional = if index >= prop_num then true else false;
                                           static = false;
+                                          proto = false;
                                           _method = false;
                                           variance = None})) props in
       let open T.Object in
@@ -318,6 +322,7 @@ class ruleset_base = object(self)
                                           value = Init (Loc.none, t);
                                           optional = if index >= prop_num then true else false;
                                           static = false;
+                                          proto = false;
                                           _method = false;
                                           variance = None})) props in
       let open T.Object in
@@ -399,6 +404,7 @@ class ruleset_base = object(self)
            value = Init (Loc.none, T.Number);
            optional = false;
            static = false;
+           proto = false;
            _method = false;
            variance = None} in
         let open T.Object in

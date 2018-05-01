@@ -1,4 +1,10 @@
 {
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":23}},
+      "message":"Unexpected proto modifier"
+    }
+  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
   "range":[0,35],
@@ -11,7 +17,7 @@
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
         "range":[14,15],
-        "name":"A",
+        "name":"C",
         "typeAnnotation":null,
         "optional":false
       },
@@ -28,18 +34,26 @@
             "range":[18,33],
             "key":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":24}},
-              "range":[18,24],
-              "name":"static",
+              "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
+              "range":[24,25],
+              "name":"m",
               "typeAnnotation":null,
               "optional":false
             },
             "value":{
-              "type":"NumberTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":33}},
-              "range":[27,33]
+              "type":"FunctionTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":33}},
+              "range":[18,33],
+              "params":[],
+              "returnType":{
+                "type":"VoidTypeAnnotation",
+                "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":33}},
+                "range":[29,33]
+              },
+              "rest":null,
+              "typeParameters":null
             },
-            "method":false,
+            "method":true,
             "optional":false,
             "static":false,
             "proto":false,

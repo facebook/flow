@@ -31,6 +31,7 @@ class ruleset_depth = object(self)
                                    value = Init (_, t);
                                    optional = _;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) -> Hashtbl.add tbl name t
           | _ -> ()) T.Object.(o.properties);
@@ -67,6 +68,7 @@ class ruleset_depth = object(self)
                                       value = Init (Loc.none, etype);
                                       optional = false;
                                       static = false;
+                                      proto = false;
                                       _method = false;
                                       variance = None;}) in
       T.Object.(T.Object {exact = false; properties = [prop_type]}) in

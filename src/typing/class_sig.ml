@@ -754,7 +754,8 @@ let add_interface_properties cx properties s =
       x
         |> add_field ~static "$key" (None, polarity, Annot k)
         |> add_field ~static "$value" (None, polarity, Annot v)
-    | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
+    | Property (loc, { Property.key; value; static; proto; _method; optional; variance; }) ->
+      ignore proto; (* TODO *)
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in

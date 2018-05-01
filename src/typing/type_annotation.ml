@@ -719,6 +719,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     | { Object.Property.
         key; value = Object.Property.Init value; optional; variance; _method;
         static = _; (* object types don't have static props *)
+        proto = _; (* ditto proto props *)
       } ->
       begin match key with
       | Ast.Expression.Object.Property.Literal

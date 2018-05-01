@@ -1113,7 +1113,7 @@ end with type t = Impl.t) = struct
   )
 
   and object_type_property (loc, { Type.Object.Property.
-    key; value; optional; static; variance = variance_; _method;
+    key; value; optional; static; proto; variance = variance_; _method;
   }) =
     let key = match key with
     | Expression.Object.Property.Literal lit -> literal lit
@@ -1134,6 +1134,7 @@ end with type t = Impl.t) = struct
       "method", bool _method;
       "optional", bool optional;
       "static", bool static;
+      "proto", bool proto;
       "variance", option variance variance_;
       "kind", string kind;
     ]

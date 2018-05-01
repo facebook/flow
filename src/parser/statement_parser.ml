@@ -613,7 +613,7 @@ module Statement
         Expect.token env T_EXTENDS;
         supers env []
       end else [] in
-      let body = Type._object ~allow_static:false env in
+      let body = Type._object ~allow_static:false ~allow_proto:false env in
       Statement.Interface.({
         id;
         tparams;
@@ -661,7 +661,7 @@ module Statement
       | T_IMPLEMENTS -> Eat.token env; Object.class_implements env []
       | _ -> []
       in
-      let body = Type._object ~allow_static:true env in
+      let body = Type._object ~allow_static:true ~allow_proto:true env in
       Statement.DeclareClass.({
         id;
         tparams;

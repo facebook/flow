@@ -52,6 +52,7 @@
             "method":false,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},

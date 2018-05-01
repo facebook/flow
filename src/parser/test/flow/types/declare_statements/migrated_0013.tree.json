@@ -50,6 +50,7 @@
             "method":false,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"get"
           },
@@ -101,6 +102,7 @@
             "method":false,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"set"
           }

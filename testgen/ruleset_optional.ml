@@ -34,6 +34,7 @@ class ruleset_optional = object(self)
                                    value = Init (_, t);
                                    optional = o;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) ->
             if o then Hashtbl.add opt_tbl name t

@@ -50,6 +50,7 @@
             "method":true,
             "optional":false,
             "static":true,
+            "proto":false,
             "variance":null,
             "kind":"init"
           },
@@ -73,6 +74,7 @@
             "method":false,
             "optional":false,
             "static":true,
+            "proto":false,
             "variance":null,
             "kind":"init"
           }

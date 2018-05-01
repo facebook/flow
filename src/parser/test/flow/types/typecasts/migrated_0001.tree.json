@@ -96,6 +96,7 @@
                 "method":false,
                 "optional":false,
                 "static":false,
+                "proto":false,
                 "variance":null,
                 "kind":"init"
               },
@@ -119,6 +120,7 @@
                 "method":false,
                 "optional":false,
                 "static":false,
+                "proto":false,
                 "variance":null,
                 "kind":"init"
               }
