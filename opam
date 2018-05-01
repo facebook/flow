@@ -20,7 +20,7 @@ depends: [
   "lwt_ppx" { >= "1.1.0" }
   "wtf8"
 ]
-available: [ocaml-version >= "4.03.0"]
+available: [ocaml-version >= "4.05.0"]
 build: [ [ "env" "FLOW_RELEASE=1" make ] ]
 depexts: [
 ]

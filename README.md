@@ -60,7 +60,7 @@ opam depext --install flowtype
 If you don't have a new enough version of OCaml to compile Flow, you can also use OPAM to bootstrap a modern version.  Install OPAM via the [binary packages](http://opam.ocaml.org/doc/Install.html#InstallOPAMin2minutes) for your operating system and run:
 
 ```
-opam init --comp=4.03.0
+opam init --comp=4.05.0
 opam install flowtype
 eval `opam config env`
 flow --help
@@ -90,20 +90,20 @@ More thorough documentation and many examples can be found at https://flow.org.
 
 ## Building Flow
 
-Flow is written in OCaml (OCaml 4.03.0 or higher is required). You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
+Flow is written in OCaml (OCaml 4.05.0 or higher is required). You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
 
 For example, on Ubuntu 16.04 and similar systems:
 
 ```
 sudo apt-get install opam
-opam init --comp 4.03.0
+opam init --comp 4.05.0
 ```
 
 On OS X, using the [brew package manager](http://brew.sh/):
 
 ```
 brew install opam
-opam init --comp 4.03.0
+opam init --comp 4.05.0
 ```
 
 Then, restart your shell and install these additional libraries:
@@ -156,7 +156,7 @@ The general idea is that we build in Cygwin, targeting mingw. This gives us a bi
 3. `tar -xf opam64.tar.xz`
 4. `cd opam64`
 5. Install opam `./install.sh`
-6. Initialize opam to point to a mingw fork: `opam init -a default "https://github.com/fdopen/opam-repository-mingw.git" --comp "4.03.0+mingw64c" --switch "4.03.0+mingw64c"`
+6. Initialize opam to point to a mingw fork: `opam init -a default "https://github.com/fdopen/opam-repository-mingw.git" --comp "4.05.0+mingw64c" --switch "4.05.0+mingw64c"`
 7. Make sure opam stuff is in your path: ```eval `opam config env` ```
 
 ### Install Flow
