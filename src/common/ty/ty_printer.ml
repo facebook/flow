@@ -66,7 +66,7 @@ let type_ ?(size=5000) t =
 
   and type_impl ~depth (t: Ty.t) =
     match t with
-    | TVar v -> type_var v
+    | TVar (v, ts) -> type_generic ~depth (type_var v) ts
     | Bound (Symbol (_, s)) -> Atom s
     | Any -> Atom "any"
     | AnyObj -> Atom "Object"
@@ -84,7 +84,7 @@ let type_ ?(size=5000) t =
         func
     | Obj obj -> type_object ~depth obj
     | Arr t -> fuse [Atom "Array<"; type_ ~depth t; Atom ">"]
-    | Generic (sym, _, ts) -> type_generic ~depth sym ts
+    | Generic (Symbol (_, id), _, ts) -> type_generic ~depth (identifier id) ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
     | Inter (t1, t2, ts) ->
@@ -110,9 +110,9 @@ let type_ ?(size=5000) t =
 
   and type_var (RVar i) = Atom (varname i)
 
-  and type_generic ~depth (Symbol (_, id)) typeParameters =
+  and type_generic ~depth base typeParameters =
     fuse [
-      identifier id;
+      base;
       option (type_parameter_instantiation ~depth) typeParameters;
     ]
 

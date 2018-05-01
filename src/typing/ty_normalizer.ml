@@ -387,6 +387,33 @@ end = struct
 
   (* Helper functions *)
 
+  (* We shouldn't really create bare Mu types for two reasons.
+
+     First, substitutions and type applications may replace the recursive variables with
+     a non-recursive type part, rendering the entire type non-recursive. When
+     `check_recursive` is set to true, we first perform the check.
+
+     Second, TypeAliases and Mu types can both imply recursion, so we have little
+     to gain from nesting them. Therefore, before creating a Mu type, we should check if
+     the type under the Mu is a TypeAlias and if it is then use that structure to
+     express the recursion. To do this we replace 'i' for 'ta_name' in the body of
+     the alias.
+
+     PV: The second one is a seemingly awkward fix. However, I am not very concerned as
+     `TypeAlias` is abusively treated as a type. Eventually, the goal is to include it
+     in a "module element" category rather than the Ty.t structure.
+  *)
+  let mk_mu ~check_recursive i t =
+    let is_rec =
+      if check_recursive
+      then Ty_utils.FreeVars.is_free_in ~is_top:true i t
+      else true in
+    if is_rec then
+      Ty.(match t with
+      | TypeAlias {ta_name;_} -> Ty_utils.subst (RVar i) (true, ta_name) t
+      | _ -> Mu (i, t))
+    else t
+
   (* When inferring recursive types, the top-level appearances of the recursive
      variable should be eliminated. This visitor performs the following
      transformations:
@@ -432,10 +459,10 @@ end = struct
             mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
         | Ty.Inter (t0,t1,ts) ->
             mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
-        | Ty.TVar (Ty.RVar v') when v = v' ->
+        | Ty.TVar (Ty.RVar v', _) when v = v' ->
             tell true >>| fun _ -> Env.zero env
         | Ty.Mu (v, t) ->
-            self#type_ env t >>| fun t -> Ty.Mu (v, t)
+            self#type_ env t >>| mk_mu ~check_recursive:true v
         | t ->
             return t
       end
@@ -477,16 +504,8 @@ end = struct
       (* Maybe recursive (might be a degenerate) *)
       let t, changed = RemoveTopLevelTvarVisitor.run i t in
       let t = if changed then simplify_unions_inters t else t in
-      if not changed then (
-        (* If it didn't change then all free_vars are still in *)
-        Ty.Mu (i, t)
-      ) else (
-        (* If it changed, recompute the free variables. *)
-        if Ty_utils.FreeVars.is_free_in ~is_top:true i t then
-          Ty.Mu (i, t)
-        else
-          t
-      )
+      (* If not changed then all free_vars are still in, o.w. recompute free vars *)
+      mk_mu ~check_recursive:changed i t
     else
       (* Definitely not recursive *)
       t
@@ -687,7 +706,7 @@ end = struct
   and type_variable ~env id =
     find_cons id >>= fun (root_id, constraints) ->      (* step 1 *)
     find_tvar root_id >>= function                      (* step 2 *)
-      | Some (Ok (Ty.TVar (Ty.RVar v) as t)) ->         (* step 2a *)
+      | Some (Ok Ty.(TVar (Ty.RVar v, _) as t)) ->      (* step 2a *)
         modify State.(fun st -> { st with
           free_tvars = VSet.add v st.free_tvars
         }) >>= fun _ ->
@@ -710,7 +729,7 @@ end = struct
     fresh_num >>= fun rid ->
     let rvar = Ty.RVar rid in
     (* Set current variable "under resolution" *)
-    update_tvar_cache root_id (Ok (Ty.TVar rvar)) >>= fun _ ->
+    update_tvar_cache root_id (Ok (Ty.TVar (rvar, None))) >>= fun _ ->
     get >>= fun in_st ->
 
     (* Resolve the tvar *)
@@ -1000,43 +1019,18 @@ end = struct
   and type_app ~env t targs =
     type__ ~env t >>= fun ty ->
     mapM (type__ ~env) targs >>= fun targs ->
-    (match ty with
+    match ty with
     | Ty.Class (name, _, _)
     | Ty.TypeAlias { Ty.ta_name=name; _ } ->
       return (Ty.generic_t name targs)
     | Ty.Any ->
       return Ty.Any
+    (* "Fix" type application on recursive types *)
+    | Ty.TVar (Ty.RVar v, None) ->
+      return (Ty.TVar (Ty.RVar v, Some targs))
     | _ ->
-      (* The following "hack" is an unfortunate shortcoming of our support for
-         polymorphic recursive types. It happens when attempting to `type_app`
-         on a recursive variable, during resolution.
-
-         This is not expected to happen often, but happens in the following
-         (https://github.com/facebook/flow/blob/master/lib/react.js#L224):
-
-           declare export type ChildrenArray<+T> =
-             $ReadOnlyArray<ChildrenArray<T>> | T;
-
-         When encountering the type application `ChildrenArray<T>` in the body
-         above, the algorithm attempts to apply the type `T` on `ChildrenArray`,
-         which (at the moment) is a type variable "under resolution" (since it is
-         indeed recursive). Therefore, its type at this point is still a
-         `Ty.ID v`, and so cannot match against any of the above cases, since
-         there is no name attached to it.
-
-         The way we manage to bail out in this case is through the information
-         in the reason.
-
-         This could be a to-do, but this pattern is not that common.
-      *)
-      let reason = T.reason_of_t t in
-      match desc_of_reason reason with
-      | RType name ->
-        symbol reason name >>| fun s -> Ty.generic_t s targs
-      | _ ->
-        let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
-        terr ~kind:BadTypeApp ~msg (Some t)
-    )
+      let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
+      terr ~kind:BadTypeApp ~msg (Some t)
 
   (* We are being a bit lax here with opaque types so that we don't have to
      introduce a new constructor in Ty.t to support all kinds of OpaqueT.

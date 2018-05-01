@@ -17,7 +17,7 @@ type identifier = string
 type symbol = Symbol of (provenance * identifier) [@@unboxed]
 
 type t =
-  | TVar of tvar
+  | TVar of tvar * t list option
   | Bound of symbol
   | Generic of symbol * bool (* structural *) * t list option
   | Any | AnyObj | AnyFun
@@ -142,7 +142,7 @@ let generic_t symbol targs =
   Generic (symbol, false, Some targs)
 
 let generic_builtin_t name targs =
-  generic_t (Symbol (Builtin, name)) targs
+  generic_t (builtin_symbol name) targs
 
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }

@@ -29,6 +29,9 @@ module Make(M: Monoid.S)(E: Env) = struct
     method type_ (env: E.t) t =
       let env = E.descend t env in
       match t with
+      | TVar (i, Some ts) ->
+        mapM (self#type_ env) ts >>| fun ts -> TVar (i, Some ts)
+      | TVar (_, None) -> return t
       | Generic (n, st, Some ts) ->
         mapM (self#type_ env) ts >>| fun ts -> Generic (n, st, Some ts)
       | Generic (_, _, None) -> return t
@@ -46,7 +49,7 @@ module Make(M: Monoid.S)(E: Env) = struct
         opt (mapM (self#param_t env)) ps >>| fun ps -> Class (n, s, ps)
       | Mu (v, t) -> self#type_ env t >>| fun t -> Mu (v, t)
       | (Any|AnyObj|AnyFun|Bound _|Top|Bot|Void|Null|Num|Str|Bool|Exists
-        |TVar _|NumLit _|StrLit _|BoolLit _|TypeOf _|Module _) ->
+        |NumLit _|StrLit _|BoolLit _|TypeOf _|Module _) ->
         return t
 
     method private fun_t env { fun_params; fun_rest_param; fun_return; fun_type_params } =

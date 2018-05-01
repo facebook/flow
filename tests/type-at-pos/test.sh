@@ -400,6 +400,10 @@ printf "recursive.js:41:17 = "
 assert_ok "$FLOW" type-at-pos recursive.js 41 17 --strip-root --pretty
 printf "recursive.js:58:1 = "
 assert_ok "$FLOW" type-at-pos recursive.js 58 1 --strip-root --pretty
+printf "recursive.js:60:6 = "
+assert_ok "$FLOW" type-at-pos recursive.js 60 6 --strip-root --pretty
+printf "recursive.js:60:31 = "
+assert_ok "$FLOW" type-at-pos recursive.js 60 31 --strip-root --pretty
 
 # refinement.js
 printf "refinement.js:7:25 = "

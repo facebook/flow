@@ -107,7 +107,9 @@ and dump_t ?(depth = 10) t =
   if depth < 0 then "..." else
   let depth = depth - 1 in
   match t with
-  | TVar v -> dump_tvar v
+  | TVar (v, ts) ->
+    spf "TVAR(%s, params=%s)" (dump_tvar v)
+      (dump_generics ~depth ts)
   | Bound s -> spf "Bound(%s)" (dump_symbol s)
   | Generic (s, st, ts) ->
     spf "Generic(%s, struct= %b, params=%s)"
@@ -161,7 +163,7 @@ let string_of_polarity = function
   | Positive -> "Positive"
 
 let string_of_ctor = function
-  | TVar (RVar _) -> "RecVar"
+  | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
   | Any -> "Any"
@@ -211,15 +213,12 @@ let json_of_t ~strip_root =
       "kind", JSON_String (string_of_ctor t)
     ] @
     match t with
-    | TVar v -> json_of_tvar v
+    | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
     | Bound (Ty.Symbol (_, s)) -> [
         "bound", JSON_String s
       ]
-    | Generic (s, str, targs_opt) -> (
-      match targs_opt with
-        | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
-        | None -> []
-      ) @ [
+    | Generic (s, str, targs_opt) ->
+      json_of_targs targs_opt @ [
         "type", json_of_symbol s;
         "structural", JSON_Bool str;
       ]
@@ -306,6 +305,12 @@ let json_of_t ~strip_root =
     match ps with
     | None -> JSON_Null
     | Some tparams -> JSON_Array (List.map json_of_typeparam tparams)
+  )
+
+  and json_of_targs targs_opt = Hh_json.(
+    match targs_opt with
+    | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
+    | None -> []
   )
 
   and json_of_typeparam  {

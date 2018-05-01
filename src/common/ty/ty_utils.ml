@@ -66,9 +66,10 @@ end = struct
     (* The visitor class is also a mapper. This visitor does not alter its input. *)
     let visitor = object(self) inherit c as super
       method! type_ env = function
-      | Ty.TVar (Ty.RVar i) as t when not (TVarSet.mem i env.skip)
-        ->
-        tell (TVarSet.singleton i) >>| fun _ -> t
+      | Ty.TVar (Ty.RVar i, _) as t when not (TVarSet.mem i env.skip) ->
+        tell (TVarSet.singleton i) >>= fun _ ->
+        super#type_ env t >>| fun _ ->
+        t
 
       | Ty.TypeAlias { Ty.ta_tparams; ta_type=Some t_body; _ } as t
         ->
@@ -103,3 +104,19 @@ end = struct
   let is_free_in ~is_top v t = TVarSet.mem v (from_type ~is_top t)
 
 end
+
+
+(******************)
+(* Substitution   *)
+(******************)
+
+(* Substitute a recursive type variable `from_v` for a symbol `to_sym` in a given type *)
+let subst from_v (structural, to_sym) t =
+  let open Ty_visitor.UnitVisitor in
+  let visitor = object inherit c as super
+    method! type_ env = function
+    | Ty.TVar (i, ts) when from_v = i ->
+      super#type_ env (Ty.Generic (to_sym, structural, ts))
+    | t -> super#type_ env t
+  end in
+  fst (visitor#type_ () t)

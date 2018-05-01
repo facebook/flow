@@ -56,3 +56,5 @@ while (0 < 1) {
   x = (0 < 1) ? x : "";
 }
 x;
+
+type CA<+T> = $ReadOnlyArray<CA<T>>;

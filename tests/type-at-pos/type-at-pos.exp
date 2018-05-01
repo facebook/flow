@@ -2265,6 +2265,36 @@ recursive.js:58:1 = {
   "start":1,
   "end":1
 }
+recursive.js:60:6 = {
+  "type":"type CA<+T> = Array<CA<T>>",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":60,"column":6,"offset":915},
+    "end":{"line":60,"column":7,"offset":917}
+  },
+  "path":"recursive.js",
+  "line":60,
+  "endline":60,
+  "start":6,
+  "end":7
+}
+recursive.js:60:31 = {
+  "type":"type CA<+T> = Array<CA<T>>",
+  "reasons":[],
+  "loc":{
+    "source":"recursive.js",
+    "type":"SourceFile",
+    "start":{"line":60,"column":30,"offset":939},
+    "end":{"line":60,"column":31,"offset":941}
+  },
+  "path":"recursive.js",
+  "line":60,
+  "endline":60,
+  "start":30,
+  "end":31
+}
 refinement.js:7:25 = {
   "type":"() => void",
   "reasons":[],

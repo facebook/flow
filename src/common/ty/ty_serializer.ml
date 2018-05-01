@@ -35,7 +35,7 @@ let variance_ = function
 let rec type_ t =
   let just t = return (Loc.none, t) in
   match t with
-  | TVar v -> tvar v
+  | TVar (v, _) -> tvar v
   | Bound (Symbol (_, s)) -> builtin s
   | Generic (x, _, ts) -> generic x ts
   | Any -> just T.Any
