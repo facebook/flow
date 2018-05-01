@@ -1,1 +1,2 @@
 true: safe_string
+<ppx_gen_flowlibs.*>: package(compiler-libs.common), package(unix)

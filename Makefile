@@ -199,6 +199,8 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
 RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
 
+OCB=ocamlbuild -use-ocamlfind -no-links
+
 all: bin/flow$(EXE)
 
 all-homebrew:
@@ -220,26 +222,20 @@ build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIE
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	ocamlbuild \
-		-use-ocamlfind\
-		-no-links  $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
-	ocamlbuild \
-		-use-ocamlfind \
-		-no-links $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex \
-		-no-links $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -275,11 +271,7 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 	rm -rf _build/src/prelude
 
 _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
-	ocamlbuild \
-		-use-ocamlfind -pkgs compiler-libs.common,unix \
-		-I scripts \
-		scripts/ppx_gen_flowlibs.native
-	rm -f ppx_gen_flowlibs.native
+	$(OCB) -I scripts scripts/ppx_gen_flowlibs.native
 
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
@@ -306,10 +298,10 @@ js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLI
 	# hack/third-party/core/result.ml and the opam `result` module both define
 	# result.cma, and this is the most expedient (though fragile) way to unblock
 	# ourselves.
-	ocamlbuild -use-ocamlfind \
+	$(OCB) \
 		-pkg js_of_ocaml \
 		-build-dir _build \
-		-lflags -custom -no-links \
+		-lflags -custom \
 		$(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
 		src/flow_dot_js.byte
