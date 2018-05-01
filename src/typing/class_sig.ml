@@ -18,6 +18,7 @@ type signature = {
   super: Type.t;
   fields: field SMap.t;
   private_fields: field SMap.t;
+  proto_fields: field SMap.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
   methods: (Loc.t option * Func_sig.t) Nel.t SMap.t;
@@ -58,6 +59,7 @@ let empty id reason tparams tparams_map super =
     reason; super;
     fields = SMap.empty;
     private_fields = SMap.empty;
+    proto_fields = SMap.empty;
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
@@ -154,9 +156,19 @@ let add_field ~static name fld x =
   map_sig ~static (fun s -> {
     s with
     fields = SMap.add name fld s.fields;
+    proto_fields = if flat then SMap.remove name s.proto_fields else s.proto_fields;
     methods = if flat then SMap.remove name s.methods else s.methods;
     getters = if flat then SMap.remove name s.getters else s.getters;
     setters = if flat then SMap.remove name s.setters else s.setters;
+  }) x
+
+let add_proto_field name fld x =
+  map_sig ~static:false (fun s -> {
+    s with
+    proto_fields = SMap.add name fld s.proto_fields;
+    methods = SMap.remove name s.methods;
+    getters = SMap.remove name s.getters;
+    setters = SMap.remove name s.setters;
   }) x
 
 let add_method ~static name loc fsig x =
@@ -164,6 +176,7 @@ let add_method ~static name loc fsig x =
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
+    proto_fields = SMap.remove name s.proto_fields;
     methods = SMap.add name (Nel.one (loc, fsig)) s.methods;
     getters = SMap.remove name s.getters;
     setters = SMap.remove name s.setters;
@@ -177,6 +190,7 @@ let append_method ~static name loc fsig x =
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
+    proto_fields = SMap.remove name s.proto_fields;
     methods = (
       match SMap.get name s.methods with
       | Some fsigs -> SMap.add name (Nel.cons (loc, fsig) fsigs) s.methods
@@ -191,6 +205,7 @@ let add_getter ~static name loc fsig x =
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
+    proto_fields = SMap.remove name s.proto_fields;
     methods = SMap.remove name s.methods;
     getters = SMap.add name (loc, fsig) s.getters;
   }) x
@@ -200,6 +215,7 @@ let add_setter ~static name loc fsig x =
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
+    proto_fields = SMap.remove name s.proto_fields;
     methods = SMap.remove name s.methods;
     setters = SMap.add name (loc, fsig) s.setters;
   }) x
@@ -235,6 +251,7 @@ let subst_sig cx map s =
     super = Flow.subst cx map s.super;
     fields = SMap.map (subst_field cx map) s.fields;
     private_fields = SMap.map (subst_field cx map) s.private_fields;
+    proto_fields = SMap.map (subst_field cx map) s.proto_fields;
     methods = SMap.map (Nel.map subst_func_sig) s.methods;
     getters = SMap.map (subst_func_sig) s.getters;
     setters = SMap.map (subst_func_sig) s.setters;
@@ -330,6 +347,11 @@ let elements cx ~tparams_map ?constructor s =
   let fields = SMap.union getters_and_setters fields in
 
   let methods = SMap.map (fun (loc, t) -> Type.Method (loc, t)) methods in
+
+  (* Treat proto fields as methods, as they are on the proto object *)
+  let methods = SMap.fold (fun name fld acc ->
+    SMap.add name (to_field fld) acc
+  ) s.proto_fields methods in
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
@@ -765,7 +787,6 @@ let add_interface_properties cx properties s =
         |> add_field ~static "$key" (None, polarity, Annot k)
         |> add_field ~static "$value" (None, polarity, Annot v)
     | Property (loc, { Property.key; value; static; proto; _method; optional; variance; }) ->
-      ignore proto; (* TODO *)
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in
@@ -793,7 +814,8 @@ let add_interface_properties cx properties s =
           Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.optional t else t in
-          add_field ~static name (Some id_loc, polarity, Annot t) x
+          let add = if proto then add_proto_field else add_field ~static in
+          add name (Some id_loc, polarity, Annot t) x
 
       (* unsafe getter property *)
       | _, Property.Identifier (id_loc, name),
@@ -997,6 +1019,7 @@ let toplevels cx ~decls ~stmts ~expr x =
         let config = Context.esproposal_class_instance_fields cx in
         SMap.iter (field config this super ~static:false) s.fields;
         SMap.iter (field config this super ~static:false) s.private_fields;
+        SMap.iter (field config this super ~static:false) s.proto_fields;
       end
   ))
 
