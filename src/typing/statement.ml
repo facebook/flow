@@ -4107,10 +4107,17 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     (* <element {...spread} /> *)
     | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
         let spread = expression cx argument in
+        let rec is_exact t =
+          let resolved = Context.find_resolved cx t in
+          match resolved with
+          | Some(DefT (_, (ObjT { flags; _ }))) -> flags.exact
+          | Some(ExactT(_, _)) -> true
+          | Some(u) -> if t == u then false else is_exact(u)
+          | _ -> false
+        in
         let obj = eval_props (map, result) in
-        let result = mk_spread spread obj
-          ~assert_exact:(not (SMap.is_empty map && result = None)) in
-        sealed, SMap.empty, Some result
+        let result = mk_spread spread obj ~assert_exact:false in
+        sealed && (is_exact spread), SMap.empty, Some result
   ) (true, SMap.empty, None) attributes in
 
   let map =
