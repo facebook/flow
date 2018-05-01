@@ -461,14 +461,28 @@ let find_refs_in_multiple_files genv all_deps def_info name =
   let result: (Loc.t list, string) Result.t = result >>| List.concat in
   Lwt.return result
 
+(* Get the source for each loc. Error if any loc is missing a source. *)
+let files_of_locs (locs: Loc.t Nel.t) : (FilenameSet.t, string) result =
+  let files_result =
+    locs
+    |> Nel.map (fun loc -> loc.Loc.source)
+    |> Nel.map (Result.of_option ~error:"Expected a location with a source file")
+    |> Nel.result_all
+  in
+  files_result >>| fun files ->
+  Nel.to_list files |> FilenameSet.of_list
+
+(* Error if the set is empty *)
+let nel_of_filename_set (set: FilenameSet.t) : (File_key.t Nel.t, string) result =
+  set
+  |> FilenameSet.elements
+  |> Nel.of_list
+  |> Result.of_option ~error:"Expected a nonempty filename set"
+
 (* Returns the file(s) at which we should begin looking downstream for references. *)
 let roots_of_def_info def_info : (File_key.t Nel.t, string) result =
   let root_locs = all_locs_of_def_info def_info in
-  let file_keys =
-    Nel.map (fun loc -> loc.Loc.source) root_locs
-    |> Nel.map (Result.of_option ~error:"Expected a location with a source file")
-  in
-  Nel.result_all file_keys
+  files_of_locs root_locs >>= nel_of_filename_set
 
 let deps_of_file_key genv env (file_key: File_key.t) : (FilenameSet.t, string) result Lwt.t =
   let {options; workers} = genv in
