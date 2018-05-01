@@ -17,7 +17,7 @@ module Request = struct
   | CYCLE of string
   | DUMP_TYPES of File_input.t
   | FIND_MODULE of string * string
-  | FIND_REFS of File_input.t * int * int * bool (* filename, line, char, global *)
+  | FIND_REFS of File_input.t * int * int * bool * bool (* filename, line, char, global, multi_hop *)
   | GEN_FLOW_FILES of File_input.t list * bool (* include_warnings *)
   | GET_DEF of File_input.t * int * int (* filename, line, char *)
   | GET_IMPORTS of string list
@@ -44,8 +44,8 @@ module Request = struct
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
   | FIND_MODULE (moduleref, filename) ->
       Printf.sprintf "find-module %s %s" moduleref filename
-  | FIND_REFS (fn, line, char, global) ->
-      Printf.sprintf "find-refs %s:%d:%d:%B" (File_input.filename_of_file_input fn) line char global
+  | FIND_REFS (fn, line, char, global, multi_hop) ->
+      Printf.sprintf "find-refs %s:%d:%d:%B:%B" (File_input.filename_of_file_input fn) line char global multi_hop
   | FORCE_RECHECK {files; focus; profile=_} ->
       Printf.sprintf
         "force-recheck %s (focus = %b)" (String.concat " " files) focus

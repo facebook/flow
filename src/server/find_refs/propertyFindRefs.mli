@@ -13,4 +13,5 @@ val find_refs:
   File_key.t ->
   Loc.t ->
   global: bool ->
+  multi_hop: bool ->
   ((string * Loc.t list * int option) option, string) result Lwt.t

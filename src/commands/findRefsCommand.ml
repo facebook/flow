@@ -30,6 +30,7 @@ let spec = {
     |> from_flag
     |> path_flag
     |> flag "--global" no_arg ~doc:"Search for references in other files (beta)"
+    |> flag "--multi-hop" no_arg ~doc:"Include references on related object types (implies `--global`; experimental)"
     |> anon "args" (required (list_of string))
   )
 }
@@ -79,9 +80,10 @@ let to_string result option_values ~strip_root =
    - strip_root toggles whether output positions are relativized w.r.t. root
    - path is a user-specified path to use as incoming content source path
    - global indicates whether to search for references in different files (much slower)
+   - multi_hop indicates whether to include properties on related objects (even slower)
    - args is mandatory command args; see parse_args above
     *)
-let main option_values json pretty root strip_root from path global args () =
+let main option_values json pretty root strip_root from path global multi_hop args () =
   FlowEventLogger.set_from from;
   let (file, line, column) = parse_args path args in
   let root = guess_root (
@@ -91,7 +93,7 @@ let main option_values json pretty root strip_root from path global args () =
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.FIND_REFS (file, line, column, global) in
+  let request = ServerProt.Request.FIND_REFS (file, line, column, global, multi_hop) in
   (* command result will be a position structure with full file path *)
   match connect_and_make_request option_values root request with
   | ServerProt.Response.FIND_REFS (Ok result) ->

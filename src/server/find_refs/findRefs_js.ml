@@ -15,7 +15,7 @@ let sort_find_refs_result = function
       Ok (Some (name, locs))
   | x -> x
 
-let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
+let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.make file_key line col in
@@ -26,7 +26,7 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global =
       let%lwt refs = VariableFindRefs.find_refs genv env file_key ~content loc ~global in
       refs %>>= function
         | Some _ as result -> Lwt.return (Ok result)
-        | None -> PropertyFindRefs.find_refs genv env ~profiling ~content file_key loc ~global
+        | None -> PropertyFindRefs.find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop
     in
     let json_data = match result with
       | Ok (Some (_, _, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]

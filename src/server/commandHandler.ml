@@ -263,8 +263,8 @@ let gen_flow_files ~options env files =
   in
   result
 
-let find_refs ~genv ~env ~profiling (file_input, line, col, global) =
-  FindRefs_js.find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global
+let find_refs ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
+  FindRefs_js.find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
@@ -364,8 +364,8 @@ let handle_ephemeral_unsafe
             find_module ~options (moduleref, filename): File_key.t option
           ) |> respond;
           Lwt.return None
-      | ServerProt.Request.FIND_REFS (fn, line, char, global) ->
-          let%lwt result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global) in
+      | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
+          let%lwt result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
           ServerProt.Response.FIND_REFS result |> respond;
           Lwt.return json_data
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->

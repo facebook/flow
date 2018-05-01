@@ -499,6 +499,137 @@ let deps_of_file_keys genv env (file_keys: File_key.t list) : (FilenameSet.t, st
   Result.all deps_result %>>| fun (deps: FilenameSet.t list) ->
   Lwt.return @@ List.fold_left FilenameSet.union FilenameSet.empty deps
 
+let focus_and_check genv env paths =
+  let%lwt new_env, _ =
+    Lazy_mode_utils.focus_and_check genv !env paths
+  in
+  env := new_env;
+  Lwt.return_unit
+
+let focus_and_check_filename_set genv env files =
+  let paths =
+    files
+    |> FilenameSet.elements
+    |> List.map File_key.to_path
+    |> Result.all
+  in
+  paths %>>| fun paths ->
+  Nel.of_list paths
+  |> Option.value_map ~default:Lwt.return_unit ~f:(focus_and_check genv env)
+
+(* Returns location pairs such that:
+ * - Each location is the definition location for a property with the given
+ *   name.
+ * - Each pair indicates that the definition locations it contains are related.
+ * - For two definition locations to be related, their enclosing object types
+ *   must be related.
+ * - Two object types are considered related when, in the course of typechecking
+ *   the given file, we evaluate an `ObjT ~> ObjT` constraint relating the two
+ *   object types.
+ * - Note that this can return locations outside of the given file.
+*)
+let find_related_defs_in_file genv file name =
+  let {options; _} = genv in
+  let get_loc_pair_if_relevant cx (t1, t2) =
+    map2 (extract_def_loc cx t1 name) (extract_def_loc cx t2 name) ~f:begin fun x y -> match x, y with
+    | FoundObject loc1, FoundObject loc2 -> Some (loc1, loc2)
+    | _ -> None
+    end
+  in
+  let related_objects: (Type.t * Type.t) list ref = ref [] in
+  Type_inference_hooks_js.set_obj_to_obj_hook begin fun _cx t1 t2 ->
+    let open Type in
+    match t2 with
+    | UseT (_, t2) -> related_objects := (t1, t2)::!related_objects
+    (* This really should never happen, so don't even bother propagating an error with the result
+     * monad *)
+    | _ -> failwith "obj_to_obj_hook did not return a UseT for the sink type"
+  end;
+  let cx_result =
+    get_ast_result file >>| fun (ast, file_sig, docblock) ->
+    Merge_service.merge_contents_context_without_ensure_checked_dependencies
+      options file ast docblock file_sig
+  in
+  unset_hooks ();
+  cx_result %>>= fun cx ->
+  let results: (((Loc.t * Loc.t) option) list, string) result =
+    !related_objects
+    |> List.map (get_loc_pair_if_relevant cx)
+    |> Result.all
+  in
+  Lwt.return (results >>| ListUtils.cat_maybes)
+
+(* Returns all locations which are considered related to the given definition locations. Definition
+ * locations are considered related if they refer to a property with the same name, and their
+ * enclosing object types appear in a subtype relationship with each other. *)
+let find_related_defs
+    genv
+    env
+    (def_locs: Loc.t Nel.t)
+    (name: string)
+    : (Loc.t Nel.t, string) result Lwt.t =
+  (* Outline:
+   * - Create a disjoint set for definition locations
+   * - Seed it with every given def_loc
+   * - In all files we need to inspect:
+   *   - Look for cases where both ObjTs in an ObjT ~> ObjT constraint have a
+   *     property with the name we are looking for.
+   *   - Add the definition locations of those properties to the disjoint set
+   * - Look in the set of related definition locations that we are interested in:
+   *   - If any has a source file we have not yet inspected, inspect that file
+   *     and all its dependents (less those we have already inspected) as
+   *     described above.
+   *   - Iterate until we reach a fixed point
+   *)
+  let related_defs = UnionFind.of_list (Nel.to_list def_locs) in
+  let process_file file =
+    let%lwt result = find_related_defs_in_file genv file name in
+    result %>>| fun pairs ->
+    List.iter (fun (x, y) -> UnionFind.union related_defs x y) pairs;
+    Lwt.return_unit
+  in
+  let process_files file_set =
+    (* TODO parallelize with workers *)
+    let%lwt result = Lwt_list.map_s process_file (FilenameSet.elements file_set) in
+    Result.all result %>>| fun (_: unit list) ->
+    Lwt.return_unit
+  in
+  let get_unchecked_roots current_defs checked_files =
+    files_of_locs current_defs >>| fun roots ->
+    FilenameSet.diff roots checked_files
+  in
+  let get_files_to_check unchecked_roots checked_files =
+    let%lwt deps = deps_of_file_keys genv env (FilenameSet.elements unchecked_roots) in
+    deps %>>| fun deps ->
+    Lwt.return (
+      FilenameSet.union
+        (FilenameSet.diff deps checked_files)
+        unchecked_roots
+    )
+  in
+  let rec loop current_defs checked_files =
+    get_unchecked_roots current_defs checked_files %>>= fun unchecked_roots ->
+    if FilenameSet.is_empty unchecked_roots then
+      Lwt.return (Ok current_defs)
+    else begin
+      let%lwt result = focus_and_check_filename_set genv env unchecked_roots in
+      result %>>= fun () ->
+      let%lwt files_to_check = get_files_to_check unchecked_roots checked_files in
+      files_to_check %>>= fun files_to_check ->
+      let%lwt check_result = process_files files_to_check in
+      check_result %>>= fun () ->
+      let checked_files = FilenameSet.union checked_files files_to_check in
+      let current_defs =
+        let updated_def_locs = UnionFind.members related_defs (Nel.hd current_defs) in
+        Nel.of_list updated_def_locs
+        |> Result.of_option ~error:"Unexpected empty list"
+      in
+      current_defs %>>= fun current_defs ->
+      loop current_defs checked_files
+    end
+  in
+  loop def_locs FilenameSet.empty
+
 let def_info_of_typecheck_results cx props_access_info =
   let def_info_of_type name ty =
     extract_def_loc cx ty name >>| function
@@ -565,20 +696,25 @@ let get_def_info genv env profiling file_key content loc: ((def_info * string) o
   !props_access_info %>>= fun props_access_info ->
   Lwt.return @@ def_info_of_typecheck_results cx props_access_info
 
-let find_refs_global genv env def_info name =
+let find_refs_global genv env multi_hop def_info name =
+  let%lwt def_info =
+    if multi_hop then
+      match def_info with
+        | Class _ -> Lwt.return (Ok def_info)
+        | Object locs ->
+            let%lwt locs = find_related_defs genv env locs name in
+            locs %>>= fun locs -> Lwt.return (Ok (Object locs))
+    else
+      Lwt.return (Ok def_info)
+  in
+  def_info %>>= fun def_info ->
   roots_of_def_info def_info %>>= fun root_file_keys ->
   let root_file_paths_result =
     Nel.map File_key.to_path root_file_keys
     |> Nel.result_all
   in
   root_file_paths_result %>>= fun root_file_paths ->
-  let%lwt () =
-    let%lwt new_env, _ =
-      Lazy_mode_utils.focus_and_check genv !env root_file_paths
-    in
-    env := new_env;
-    Lwt.return_unit
-  in
+  let%lwt () = focus_and_check genv env root_file_paths in
   let%lwt deps_result = deps_of_file_keys genv env (Nel.to_list root_file_keys) in
   deps_result %>>= fun deps ->
   let dependent_file_count = FilenameSet.cardinal deps in
@@ -599,13 +735,13 @@ let find_refs_local genv file_key content def_info name =
   find_refs_in_file genv.options ast_info file_key def_info name >>= fun refs ->
   Ok (Some (name, refs, None))
 
-let find_refs genv env ~profiling ~content file_key loc ~global =
+let find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop =
   let%lwt def_info = get_def_info genv env profiling file_key content loc in
   def_info %>>= fun def_info_opt ->
   match def_info_opt with
     | None -> Lwt.return (Ok None)
     | Some (def_info, name) ->
-        if global then
-          find_refs_global genv env def_info name
+        if global || multi_hop then
+          find_refs_global genv env multi_hop def_info name
         else
           Lwt.return @@ find_refs_local genv file_key content def_info name
