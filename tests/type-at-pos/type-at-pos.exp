@@ -2535,6 +2535,21 @@ unions.js:57:5 = {
   "start":5,
   "end":5
 }
+unions.js:59:18 = {
+  "type":"?empty",
+  "reasons":[],
+  "loc":{
+    "source":"unions.js",
+    "type":"SourceFile",
+    "start":{"line":59,"column":13,"offset":830},
+    "end":{"line":59,"column":23,"offset":841}
+  },
+  "path":"unions.js",
+  "line":59,
+  "endline":59,
+  "start":13,
+  "end":23
+}
 opaque.js:3:20 = {
   "type":"type Foo = number",
   "reasons":[],

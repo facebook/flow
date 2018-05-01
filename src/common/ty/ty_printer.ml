@@ -254,6 +254,9 @@ let type_ ?(size=5000) t =
     let prefix, ts =
       if List.mem Null ts && List.mem Void ts then
         let ts = List.filter (fun t -> t <> Null && t <> Void) ts in
+        let ts = match ts with
+          | [] -> [Bot]
+          | _ -> ts in
         (Atom "?", ts)
       else
         (Empty, ts)

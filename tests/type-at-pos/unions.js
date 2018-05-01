@@ -55,3 +55,5 @@ type A = { f: number }
 var a1 = { f: 1 };
 var a2 = { f: 2 };
 var a = (0<1) ? a1 : a2;
+
+declare var maybe_empty: ?empty;

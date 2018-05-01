@@ -457,6 +457,8 @@ printf "unions.js:52:1 = "
 assert_ok "$FLOW" type-at-pos unions.js 52 1 --strip-root --pretty
 printf "unions.js:57:5 = "
 assert_ok "$FLOW" type-at-pos unions.js 57 5 --strip-root --pretty
+printf "unions.js:59:18 = "
+assert_ok "$FLOW" type-at-pos unions.js 59 18 --strip-root --pretty
 
 # opaque.js
 printf "opaque.js:3:20 = "
