@@ -497,16 +497,16 @@ Cannot call `Intl.PluralRules` because:
  - a callable signature is missing in statics of `Intl$PluralRules` [2].
 
    plural_rules.js:3:11
-    3| const a = Intl.PluralRules(); // incorrect
-                 ^^^^^^^^^^^^^^^^^^
+     3| const a = Intl.PluralRules(); // incorrect
+                  ^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/intl.js:12:16
-   12|   PluralRules: ?Class<Intl$PluralRules>,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/intl.js:12:23
-   12|   PluralRules: ?Class<Intl$PluralRules>,
-                             ^^^^^^^^^^^^^^^^ [2]
+    12|   PluralRules: ?Class<Intl$PluralRules>,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/intl.js:147:15
+   147| declare class Intl$PluralRules {
+                      ^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:6:13
@@ -514,13 +514,13 @@ Error --------------------------------------------------------------------------
 Cannot call `PluralRules` because a callable signature is missing in statics of `Intl$PluralRules` [1].
 
    plural_rules.js:6:13
-    6|   const b = PluralRules(); // incorrect
-                   ^^^^^^^^^^^^^
+     6|   const b = PluralRules(); // incorrect
+                    ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:12:23
-   12|   PluralRules: ?Class<Intl$PluralRules>,
-                             ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/intl.js:147:15
+   147| declare class Intl$PluralRules {
+                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:8:19
@@ -626,13 +626,13 @@ Cannot call `PluralRules.getCanonicalLocales` because property `getCanonicalLoca
 `Intl$PluralRules` [1].
 
    plural_rules.js:37:3
-   37|   PluralRules.getCanonicalLocales() // incorrect
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    37|   PluralRules.getCanonicalLocales() // incorrect
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:12:23
-   12|   PluralRules: ?Class<Intl$PluralRules>,
-                             ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/intl.js:147:15
+   147| declare class Intl$PluralRules {
+                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- plural_rules.js:39:34
