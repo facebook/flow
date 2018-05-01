@@ -1,28 +1,64 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
-      "message":"Unexpected static modifier"
+      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
+      "message":"Unexpected identifier"
     },
     {
-      "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":17}},
-      "message":"Unexpected static modifier"
+      "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
+      "message":"Unexpected token :"
     },
     {
-      "loc":{"source":null,"start":{"line":8,"column":11},"end":{"line":8,"column":17}},
-      "message":"Unexpected static modifier"
+      "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
+      "message":"Unexpected identifier"
     },
     {
-      "loc":{"source":null,"start":{"line":14,"column":11},"end":{"line":14,"column":17}},
-      "message":"Unexpected static modifier"
+      "loc":{"source":null,"start":{"line":2,"column":23},"end":{"line":2,"column":24}},
+      "message":"Unexpected token }"
     },
     {
-      "loc":{"source":null,"start":{"line":23,"column":11},"end":{"line":23,"column":17}},
-      "message":"Unexpected static modifier"
+      "loc":{"source":null,"start":{"line":5,"column":18},"end":{"line":5,"column":19}},
+      "message":"Unexpected token ["
     },
     {
-      "loc":{"source":null,"start":{"line":26,"column":11},"end":{"line":26,"column":17}},
-      "message":"Unexpected static modifier"
+      "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":21}},
+      "message":"Unexpected token ]"
+    },
+    {
+      "loc":{"source":null,"start":{"line":8,"column":18},"end":{"line":8,"column":21}},
+      "message":"Unexpected token ..."
+    },
+    {
+      "loc":{"source":null,"start":{"line":14,"column":18},"end":{"line":14,"column":24}},
+      "message":"Use of future reserved word in strict mode"
+    },
+    {
+      "loc":{"source":null,"start":{"line":14,"column":24},"end":{"line":14,"column":25}},
+      "message":"Unexpected token :"
+    },
+    {
+      "loc":{"source":null,"start":{"line":14,"column":26},"end":{"line":14,"column":27}},
+      "message":"Unexpected identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":14,"column":28},"end":{"line":14,"column":29}},
+      "message":"Unexpected token }"
+    },
+    {
+      "loc":{"source":null,"start":{"line":23,"column":18},"end":{"line":23,"column":24}},
+      "message":"Use of future reserved word in strict mode"
+    },
+    {
+      "loc":{"source":null,"start":{"line":23,"column":26},"end":{"line":23,"column":27}},
+      "message":"Unexpected token :"
+    },
+    {
+      "loc":{"source":null,"start":{"line":26,"column":18},"end":{"line":26,"column":24}},
+      "message":"Use of future reserved word in strict mode"
+    },
+    {
+      "loc":{"source":null,"start":{"line":26,"column":29},"end":{"line":26,"column":30}},
+      "message":"Unexpected token :"
     }
   ],
   "type":"Program",
@@ -50,33 +86,47 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":22}},
-            "range":[59,70],
+            "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":19}},
+            "range":[59,67],
             "key":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
-              "range":[66,67],
-              "name":"x",
+              "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+              "range":[59,65],
+              "name":"static",
               "typeAnnotation":null,
               "optional":false
             },
             "value":{
-              "type":"GenericTypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
-              "range":[69,70],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
-                "range":[69,70],
-                "name":"X",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "typeParameters":null
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
+              "range":[67,68]
             },
             "method":false,
             "optional":false,
-            "static":true,
+            "static":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":22}},
+            "range":[67,70],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
+              "range":[67,68],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":23},"end":{"line":2,"column":24}},
+              "range":[71,72]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
             "variance":null,
             "kind":"init"
           }
@@ -103,14 +153,20 @@
         "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":26}},
         "range":[152,169],
         "exact":false,
-        "properties":[],
-        "indexers":[
+        "properties":[
           {
-            "type":"ObjectTypeIndexer",
-            "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":24}},
-            "range":[154,167],
-            "id":null,
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":20}},
+            "range":[154,163],
             "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":17}},
+              "range":[154,160],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
               "type":"GenericTypeAnnotation",
               "loc":{"source":null,"start":{"line":5,"column":19},"end":{"line":5,"column":20}},
               "range":[162,163],
@@ -123,6 +179,24 @@
                 "optional":false
               },
               "typeParameters":null
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":24}},
+            "range":[163,167],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":5,"column":20},"end":{"line":5,"column":21}},
+              "range":[163,164],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":{
               "type":"GenericTypeAnnotation",
@@ -138,10 +212,14 @@
               },
               "typeParameters":null
             },
-            "static":true,
-            "variance":null
+            "method":false,
+            "optional":false,
+            "static":false,
+            "variance":null,
+            "kind":"init"
           }
         ],
+        "indexers":[],
         "callProperties":[]
       }
     },
@@ -165,10 +243,18 @@
         "exact":false,
         "properties":[
           {
-            "type":"ObjectTypeSpreadProperty",
+            "type":"ObjectTypeProperty",
             "loc":{"source":null,"start":{"line":8,"column":11},"end":{"line":8,"column":22}},
             "range":[249,260],
-            "argument":{
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":8,"column":11},"end":{"line":8,"column":17}},
+              "range":[249,255],
+              "name":"static",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
               "type":"GenericTypeAnnotation",
               "loc":{"source":null,"start":{"line":8,"column":21},"end":{"line":8,"column":22}},
               "range":[259,260],
@@ -181,7 +267,12 @@
                 "optional":false
               },
               "typeParameters":null
-            }
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "variance":null,
+            "kind":"init"
           }
         ],
         "indexers":[],
@@ -265,33 +356,47 @@
         "properties":[
           {
             "type":"ObjectTypeProperty",
-            "loc":{"source":null,"start":{"line":14,"column":11},"end":{"line":14,"column":27}},
-            "range":[359,375],
+            "loc":{"source":null,"start":{"line":14,"column":11},"end":{"line":14,"column":24}},
+            "range":[359,372],
             "key":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":14,"column":18},"end":{"line":14,"column":24}},
-              "range":[366,372],
+              "loc":{"source":null,"start":{"line":14,"column":11},"end":{"line":14,"column":17}},
+              "range":[359,365],
               "name":"static",
               "typeAnnotation":null,
               "optional":false
             },
             "value":{
-              "type":"GenericTypeAnnotation",
-              "loc":{"source":null,"start":{"line":14,"column":26},"end":{"line":14,"column":27}},
-              "range":[374,375],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":14,"column":26},"end":{"line":14,"column":27}},
-                "range":[374,375],
-                "name":"X",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "typeParameters":null
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":14,"column":24},"end":{"line":14,"column":25}},
+              "range":[372,373]
             },
             "method":false,
             "optional":false,
-            "static":true,
+            "static":false,
+            "variance":null,
+            "kind":"init"
+          },
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":14,"column":24},"end":{"line":14,"column":27}},
+            "range":[372,375],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":14,"column":24},"end":{"line":14,"column":25}},
+              "range":[372,373],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":14,"column":28},"end":{"line":14,"column":29}},
+              "range":[376,377]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
             "variance":null,
             "kind":"init"
           }
@@ -468,16 +573,16 @@
             "range":[565,583],
             "key":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":23,"column":18},"end":{"line":23,"column":24}},
-              "range":[572,578],
+              "loc":{"source":null,"start":{"line":23,"column":11},"end":{"line":23,"column":17}},
+              "range":[565,571],
               "name":"static",
               "typeAnnotation":null,
               "optional":false
             },
             "value":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":23,"column":11},"end":{"line":23,"column":29}},
-              "range":[565,583],
+              "loc":{"source":null,"start":{"line":23,"column":24},"end":{"line":23,"column":29}},
+              "range":[578,583],
               "params":[],
               "returnType":{
                 "type":"GenericTypeAnnotation",
@@ -496,9 +601,9 @@
               "rest":null,
               "typeParameters":null
             },
-            "method":true,
+            "method":false,
             "optional":false,
-            "static":true,
+            "static":false,
             "variance":null,
             "kind":"init"
           }
@@ -532,16 +637,16 @@
             "range":[640,661],
             "key":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":26,"column":18},"end":{"line":26,"column":24}},
-              "range":[647,653],
+              "loc":{"source":null,"start":{"line":26,"column":11},"end":{"line":26,"column":17}},
+              "range":[640,646],
               "name":"static",
               "typeAnnotation":null,
               "optional":false
             },
             "value":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":26,"column":11},"end":{"line":26,"column":32}},
-              "range":[640,661],
+              "loc":{"source":null,"start":{"line":26,"column":24},"end":{"line":26,"column":32}},
+              "range":[653,661],
               "params":[],
               "returnType":{
                 "type":"GenericTypeAnnotation",
@@ -575,9 +680,9 @@
                 ]
               }
             },
-            "method":true,
+            "method":false,
             "optional":false,
-            "static":true,
+            "static":false,
             "variance":null,
             "kind":"init"
           }

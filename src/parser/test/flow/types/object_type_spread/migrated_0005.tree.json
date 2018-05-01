@@ -1,8 +1,16 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
-      "message":"Unexpected variance sigil"
+      "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":14}},
+      "message":"Unexpected token ..."
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
+      "message":"Unexpected identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
+      "message":"Unexpected token }"
     }
   ],
   "type":"Program",
@@ -29,23 +37,32 @@
         "exact":false,
         "properties":[
           {
-            "type":"ObjectTypeSpreadProperty",
+            "type":"ObjectTypeProperty",
             "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":15}},
             "range":[10,15],
-            "argument":{
-              "type":"GenericTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
-              "range":[14,15],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
-                "range":[14,15],
-                "name":"O",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "typeParameters":null
-            }
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":14}},
+              "range":[11,14],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"AnyTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
+              "range":[15,16]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "variance":{
+              "type":"Variance",
+              "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
+              "range":[10,11],
+              "kind":"plus"
+            },
+            "kind":"init"
           }
         ],
         "indexers":[],
