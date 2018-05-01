@@ -61,16 +61,20 @@ and dump_fun_t ~depth { fun_params; fun_rest_param; fun_return; fun_type_params 
     (dump_rest_params ~depth  fun_rest_param)
     (dump_t ~depth fun_return)
 
-and dump_field { fld_polarity; fld_optional } =
-  spf "%s%s" (dump_polarity fld_polarity) (if fld_optional then "?" else "")
+and dump_field ~depth name { fld_polarity; fld_optional } t =
+  spf "%s%s%s: %s"
+    (dump_polarity fld_polarity)
+    name
+    (if fld_optional then "?" else "")
+    (dump_t ~depth t)
 
 and dump_prop ~depth = function
-  | NamedProp (s, p) -> spf "%s: %s" s (dump_named_prop ~depth p)
+  | NamedProp (s, p) -> dump_named_prop ~depth s p
   | IndexProp d -> dump_dict ~depth d
   | CallProp f -> dump_fun_t ~depth f
 
-and dump_named_prop ~depth = function
-  | Field (t, field) -> spf "%s: %s" (dump_t ~depth t) (dump_field field)
+and dump_named_prop ~depth x = function
+  | Field (t, field) -> dump_field ~depth x field t
   | Method t -> dump_fun_t ~depth t
   | Get t -> spf "get %s" (dump_t ~depth t)
   | Set t -> spf "get %s" (dump_t ~depth t)
