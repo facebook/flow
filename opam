@@ -13,6 +13,7 @@ depends: [
   "base-bytes"
   "dtoa" { >= "0.3.1" }
   "ocamlbuild" {build}
+  "ocamlfind" {build}
   "sedlex" { >= "1.99.4" }
   "lwt" { >= "3.3.0" }
   "lwt_log" { = "1.0.0" }
