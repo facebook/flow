@@ -1872,12 +1872,7 @@ and statement cx = Ast.Statement.(
       | Some local ->
           let local_name = ident_name local in
           let loc = fst local in
-
-          let import_reason_str =
-            spf "Default import from `%s`" module_name
-          in
-          let import_reason = mk_reason (RCustom import_reason_str) loc in
-
+          let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let imported_t =
             if Type_inference_hooks_js.dispatch_member_hook
               cx "default" loc module_t

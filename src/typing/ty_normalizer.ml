@@ -994,7 +994,8 @@ end = struct
   and type_t_with_reason ~env r t ta_tparams =
     match desc_of_reason r with
     (* Locally defined alias *)
-    | RType name ->
+    | RType name
+    | RDefaultImportedType (name, _) ->
       type__ ~env t >>= fun ta_type ->
       symbol r name >>| fun symbol ->
       (* TODO option to skip computing this *)

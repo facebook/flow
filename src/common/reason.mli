@@ -106,6 +106,7 @@ type reason_desc =
   | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string
+  | RDefaultImportedType of string * string
   | RCode of string
   | RCustom of string
   | RPolyType of reason_desc

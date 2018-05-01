@@ -1515,6 +1515,21 @@ module-import.js:3:7 = {
   "start":7,
   "end":7
 }
+import-default.js:3:16 = {
+  "type":"type MyFileOneType = {||}",
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":13,"offset":22},
+    "end":{"line":3,"column":25,"offset":35}
+  },
+  "path":"import-default.js",
+  "line":3,
+  "endline":3,
+  "start":13,
+  "end":25
+}
 object_special_cases.js:6:32 = {
   "type":"string",
   "reasons":[],

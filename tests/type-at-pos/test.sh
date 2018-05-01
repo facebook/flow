@@ -285,6 +285,10 @@ assert_ok "$FLOW" type-at-pos module-export.js 7 13 --strip-root --pretty
 printf "module-import.js:3:7 = "
 assert_ok "$FLOW" type-at-pos module-import.js 3 7 --strip-root --pretty
 
+# import-default.js
+printf "import-default.js:3:16 = "
+assert_ok "$FLOW" type-at-pos import-default.js 3 16 --strip-root --pretty
+
 # object_special_cases.js
 printf "object_special_cases.js:6:32 = "
 assert_ok "$FLOW" type-at-pos object_special_cases.js 6 32 --strip-root --pretty
