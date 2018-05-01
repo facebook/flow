@@ -1225,8 +1225,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 107,
                "endline": 107,
-               "start": 12,
-               "end": 35
+               "start": 18,
+               "end": 41
              },
              {
                "name": "arguments",
@@ -1257,8 +1257,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 108,
                "endline": 108,
-               "start": 11,
-               "end": 33
+               "start": 17,
+               "end": 39
              },
              {
                "name": "call",
@@ -1279,8 +1279,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 109,
                "endline": 109,
-               "start": 11,
-               "end": 33
+               "start": 17,
+               "end": 39
              },
              {
                "name": "caller",
@@ -1438,8 +1438,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 107,
                "endline": 107,
-               "start": 12,
-               "end": 35
+               "start": 18,
+               "end": 41
              },
              {
                "name": "arguments",
@@ -1470,8 +1470,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 108,
                "endline": 108,
-               "start": 11,
-               "end": 33
+               "start": 17,
+               "end": 39
              },
              {
                "name": "call",
@@ -1492,8 +1492,8 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 109,
                "endline": 109,
-               "start": 11,
-               "end": 33
+               "start": 17,
+               "end": 39
              },
              {
                "name": "caller",
