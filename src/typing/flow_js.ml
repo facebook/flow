@@ -11991,6 +11991,7 @@ class assert_ground_visitor skip = object (self)
         ) lower seen)
     | AnnotT (t, _) -> self#typeapp targs cx pole seen t
     | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen (tparams, targs)
+    | DefT (_, EmptyT) -> seen
     | DefT (_, AnyT) -> seen
     | c ->
       add_output cx FlowError.(EInternal
