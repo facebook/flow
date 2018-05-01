@@ -192,8 +192,8 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
     | Some loc, Some (target_loc, name) when loc = target_loc ->
       let open Type in
       begin match obj2 with
-      | UseT (_, (DefT (_, ObjT _) as t2)) ->
-        set_prop_access_info (Use_in_literal (Nel.one t2, name))
+      | DefT (_, ObjT _) ->
+        set_prop_access_info (Use_in_literal (Nel.one obj2, name))
       | _ -> ()
       end
     | _ -> ()
@@ -218,8 +218,8 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
   let obj_to_obj_hook _ctxt obj1 obj2 =
     let open Type in
     match get_object_literal_loc obj1, obj2 with
-    | Some loc, UseT (_, (DefT (_, ObjT _) as t2)) ->
-      let entry = (loc, t2) in
+    | Some loc, DefT (_, ObjT _) ->
+      let entry = (loc, obj2) in
       potential_matching_literals := entry:: !potential_matching_literals
     | _ -> ()
   in
@@ -538,12 +538,7 @@ let find_related_defs_in_file genv file name =
   in
   let related_objects: (Type.t * Type.t) list ref = ref [] in
   Type_inference_hooks_js.set_obj_to_obj_hook begin fun _cx t1 t2 ->
-    let open Type in
-    match t2 with
-    | UseT (_, t2) -> related_objects := (t1, t2)::!related_objects
-    (* This really should never happen, so don't even bother propagating an error with the result
-     * monad *)
-    | _ -> failwith "obj_to_obj_hook did not return a UseT for the sink type"
+    related_objects := (t1, t2)::!related_objects
   end;
   let cx_result =
     get_ast_result file >>| fun (ast, file_sig, docblock) ->

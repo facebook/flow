@@ -118,7 +118,7 @@ type hook_state_t = {
   obj_to_obj_hook:
       (Context.t ->
         Type.t (* ObjT 1 *) ->
-        Type.use_t (* ObjT 2 *) ->
+        Type.t (* ObjT 2 *) ->
         unit);
 }
 
