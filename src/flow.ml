@@ -124,7 +124,9 @@ let _ =
     FlowShell.main ()
   with
   | SharedMem_js.Out_of_shared_memory ->
-      FlowExitStatus.(exit Out_of_shared_memory)
+      let bt = Printexc.get_backtrace () in
+      let msg = Utils.spf "Out of shared memory%s" (if bt = "" then bt else ":\n"^bt) in
+      FlowExitStatus.(exit ~msg Out_of_shared_memory)
   | e ->
       let bt = Printexc.get_backtrace () in
       let msg = Utils.spf "Unhandled exception: %s%s"
