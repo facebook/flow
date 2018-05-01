@@ -146,16 +146,6 @@ NATIVE_C_FILES=\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 
-FINDLIB_PACKAGES=\
-  sedlex\
-  lwt\
-  lwt.log\
-  lwt.unix\
-  lwt_ppx\
-  unix\
-  str\
-  bigarray
-
 NATIVE_LIBRARIES=\
   pthread\
   $(EXTRA_LIBS)
@@ -187,7 +177,6 @@ CC_FLAGS=-DNO_SQLITE3
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
-FINDLIB_OPTS=$(foreach lib,$(FINDLIB_PACKAGES),-pkg $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l -cclib $(lib))
 ALL_INCLUDE_PATHS=$(sort $(realpath $(BUILT_C_DIRS))) $(EXTRA_INCLUDE_PATHS)
 EXTRA_INCLUDE_OPTS=$(foreach dir, $(ALL_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
@@ -222,20 +211,20 @@ build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIE
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INCLUDE_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INCLUDE_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INCLUDE_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -305,7 +294,7 @@ js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLI
 		-pkg js_of_ocaml \
 		-build-dir _build \
 		-lflags -custom \
-		$(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		$(INCLUDE_OPTS) \
 		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
 		src/flow_dot_js.byte
 	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
