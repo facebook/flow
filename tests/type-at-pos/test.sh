@@ -237,6 +237,8 @@ printf "generics.js:22:1 = "
 assert_ok "$FLOW" type-at-pos generics.js 22 1 --strip-root --pretty
 printf "generics.js:26:1 = "
 assert_ok "$FLOW" type-at-pos generics.js 26 1 --strip-root --pretty
+printf "generics.js:30:13 = "
+assert_ok "$FLOW" type-at-pos generics.js 30 13 --strip-root --pretty
 
 # implements.js
 printf "implements.js:7:8 = "

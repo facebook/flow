@@ -1028,6 +1028,8 @@ end = struct
     (* "Fix" type application on recursive types *)
     | Ty.TVar (Ty.RVar v, None) ->
       return (Ty.TVar (Ty.RVar v, Some targs))
+    | Ty.Bot ->
+      return Ty.Bot
     | _ ->
       let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
       terr ~kind:BadTypeApp ~msg (Some t)
