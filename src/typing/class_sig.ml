@@ -149,50 +149,60 @@ let add_default_constructor reason s =
 let append_constructor loc fsig s =
   {s with constructor = (loc, Func_sig.to_ctor_sig fsig)::s.constructor}
 
-let add_field ~static name fld = map_sig ~static (fun s -> {
-  s with
-  fields = SMap.add name fld s.fields;
-  methods = if static then SMap.remove name s.methods else s.methods;
-  getters = SMap.remove name s.getters;
-  setters = SMap.remove name s.setters;
-})
+let add_field ~static name fld x =
+  let flat = static || x.structural in
+  map_sig ~static (fun s -> {
+    s with
+    fields = SMap.add name fld s.fields;
+    methods = if flat then SMap.remove name s.methods else s.methods;
+    getters = if flat then SMap.remove name s.getters else s.getters;
+    setters = if flat then SMap.remove name s.setters else s.setters;
+  }) x
 
-let add_method ~static name loc fsig = map_sig ~static (fun s -> {
-  s with
-  fields = if static then SMap.remove name s.fields else s.fields;
-  methods = SMap.add name (Nel.one (loc, fsig)) s.methods;
-  getters = SMap.remove name s.getters;
-  setters = SMap.remove name s.setters;
-})
+let add_method ~static name loc fsig x =
+  let flat = static || x.structural in
+  map_sig ~static (fun s -> {
+    s with
+    fields = if flat then SMap.remove name s.fields else s.fields;
+    methods = SMap.add name (Nel.one (loc, fsig)) s.methods;
+    getters = SMap.remove name s.getters;
+    setters = SMap.remove name s.setters;
+  }) x
 
 (* Appending a method builds a list of function signatures. This implements the
    bahvior of interfaces and declared classes, which interpret duplicate
    definitions as branches of a single overloaded method. *)
-let append_method ~static name loc fsig = map_sig ~static (fun s -> {
-  s with
-  fields = if static then SMap.remove name s.fields else s.fields;
-  methods = (
-    match SMap.get name s.methods with
-    | Some fsigs -> SMap.add name (Nel.cons (loc, fsig) fsigs) s.methods
-    | None -> SMap.add name (Nel.one (loc, fsig)) s.methods
-  );
-  getters = SMap.remove name s.getters;
-  setters = SMap.remove name s.setters;
-})
+let append_method ~static name loc fsig x =
+  let flat = static || x.structural in
+  map_sig ~static (fun s -> {
+    s with
+    fields = if flat then SMap.remove name s.fields else s.fields;
+    methods = (
+      match SMap.get name s.methods with
+      | Some fsigs -> SMap.add name (Nel.cons (loc, fsig) fsigs) s.methods
+      | None -> SMap.add name (Nel.one (loc, fsig)) s.methods
+    );
+    getters = SMap.remove name s.getters;
+    setters = SMap.remove name s.setters;
+  }) x
 
-let add_getter ~static name loc fsig = map_sig ~static (fun s -> {
-  s with
-  fields = if static then SMap.remove name s.fields else s.fields;
-  methods = SMap.remove name s.methods;
-  getters = SMap.add name (loc, fsig) s.getters;
-})
+let add_getter ~static name loc fsig x =
+  let flat = static || x.structural in
+  map_sig ~static (fun s -> {
+    s with
+    fields = if flat then SMap.remove name s.fields else s.fields;
+    methods = SMap.remove name s.methods;
+    getters = SMap.add name (loc, fsig) s.getters;
+  }) x
 
-let add_setter ~static name loc fsig = map_sig ~static (fun s -> {
-  s with
-  fields = if static then SMap.remove name s.fields else s.fields;
-  methods = SMap.remove name s.methods;
-  setters = SMap.add name (loc, fsig) s.setters;
-})
+let add_setter ~static name loc fsig x =
+  let flat = static || x.structural in
+  map_sig ~static (fun s -> {
+    s with
+    fields = if flat then SMap.remove name s.fields else s.fields;
+    methods = SMap.remove name s.methods;
+    setters = SMap.add name (loc, fsig) s.setters;
+  }) x
 
 let mk_method cx ~expr x loc func =
   Func_sig.mk cx x.tparams_map ~expr loc func

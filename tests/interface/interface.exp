@@ -260,8 +260,42 @@ References:
                    ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test5.js:12:2
 
-Found 17 errors
+Cannot cast `a.x` to empty because function type [1] is incompatible with empty [2].
+
+   test5.js:12:2
+   12| (a.x: empty); // error: function ~> empty
+        ^^^
+
+References:
+   test5.js:3:3
+    3|   x(): void;
+         ^^^^^^^^^ [1]
+   test5.js:12:7
+   12| (a.x: empty); // error: function ~> empty
+             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test5.js:15:2
+
+Cannot cast `b.x` to empty because number [1] is incompatible with empty [2].
+
+   test5.js:15:2
+   15| (b.x: empty); // error: number ~> empty
+        ^^^
+
+References:
+   test5.js:8:6
+    8|   x: number;
+            ^^^^^^ [1]
+   test5.js:15:7
+   15| (b.x: empty); // error: number ~> empty
+             ^^^^^ [2]
+
+
+
+Found 19 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
