@@ -299,6 +299,11 @@ let append_file ~file s =
   let chan = open_out_gen [Open_wronly; Open_append; Open_creat] 0o666 file in
   (output_string chan s; close_out chan)
 
+let write_strings_to_file ~file ss =
+  let chan = open_out_gen [Open_wronly; Open_creat] 0o666 file in
+  List.iter ~f:(output_string chan) ss;
+  close_out chan
+
 (* could be in control section too *)
 
 let filemtime file =
