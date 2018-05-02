@@ -7,7 +7,7 @@
  *
  *)
 
-type t = int array
+type t = int array [@@deriving show]
 
 let make text =
   (* Clever Tricks Warning

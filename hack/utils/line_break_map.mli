@@ -12,7 +12,7 @@
  * break) allowing binary search from an offset to a line number (the index in
  * the map itself + 1).
  *)
-type t
+type t [@@deriving show]
 
 (* Creates a line break map from/for the given string. *)
 val make : string -> t
