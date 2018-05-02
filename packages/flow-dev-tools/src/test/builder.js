@@ -640,7 +640,7 @@ export class TestBuilder {
   ): Promise<void> {
     const ide = this.ide;
     if (ide == null) {
-      throw new Error('No IDE process running!');
+      throw new Error('No IDE process running! Cannot sendIDENotification');
     }
     const args = this.sanitizeOutgoingIDEMessage(argsRaw);
     await this.log('IDE >>notification %s\n%s', method, JSON.stringify(args));
@@ -653,7 +653,7 @@ export class TestBuilder {
   ): Promise<void> {
     const ide = this.ide;
     if (ide == null) {
-      throw new Error('No IDE process running!');
+      throw new Error('No IDE process running! Cannot sendIDEResponse');
     }
     if (id === 'mostRecent') {
       id = ide.outstandingRequestsInfo.mostRecent || 0;
@@ -684,7 +684,9 @@ export class TestBuilder {
     const ide = this.ide;
     const ideMessages = this.ideMessages;
     if (ide == null) {
-      throw new Error('No ide process running!');
+      throw new Error(
+        'No ide process running! Cannot sendIDERequestAndWaitForResponse',
+      );
     }
 
     const args = this.sanitizeOutgoingIDEMessage(argsRaw);
@@ -711,42 +713,52 @@ export class TestBuilder {
     const ideMessages = this.ideMessages;
 
     return new Promise(resolve => {
+      var timeout = null;
+      var emitter = null;
+      var alreadyDone = false;
+      const startTime = new Date().getTime();
+
       if (ide == null) {
-        throw new Error('No ide process running!');
+        this.log('No IDE process running! Cannot waitUntilIDEMessage');
+        resolve();
+        return;
       }
-      const onMessage = () => {
-        const message = ideMessages.slice(-1)[0];
+
+      const doneWithVerb = async verb => {
+        if (alreadyDone) {
+          return;
+        }
+        alreadyDone = true;
+        const duration = new Date().getTime() - startTime;
+        emitter && emitter.removeListener('message', checkLastMessage);
+        timeout && clearTimeout(timeout);
+        await this.log('%s message %s in %dms', verb, expected, duration);
+        resolve();
+      };
+
+      const checkMessage = message => {
         if (Builder.doesMessageMatch(message, expected)) {
-          done('Received');
+          doneWithVerb('Got');
         }
       };
-      var timeout = null;
-      const done = ok => {
-        this.ide &&
-          this.ide.messageEmitter.removeListener('message', onMessage);
-        timeout && clearTimeout(timeout);
-        this.log('%s message %s in under %dms', ok, expected, timeoutMs).then(
-          resolve,
-        );
+      const checkLastMessage = () => {
+        checkMessage(ideMessages.slice(-1)[0]);
       };
+
+      // It's unavoidably racey whether the log message gets printed
+      // before or after we get the right message
+      this.log('Starting to wait %dms for %s', timeoutMs, expected);
 
       // Our backlog of messages gets cleared out at the start of each step.
       // If we've already received some messages since the start of the step,
-      // let's account for them:
-      ideMessages.forEach(onMessage);
+      // let's account for them
+      ideMessages.forEach(checkMessage);
 
-      // And account for all further messages that arrive, until our stopping
-      // condition:
-      this.log('Starting to wait %dms for %s', timeoutMs, expected).then(() => {
-        const onTimeout = () => {
-          this.log('%dms timeout fired', timeoutMs).then(() =>
-            done('Failed to receive'),
-          );
-        };
-        timeout = setTimeout(onTimeout, timeoutMs);
-      });
+      // And account for all further messages that arrive
+      emitter = ide.messageEmitter.on('message', checkLastMessage);
 
-      ide.messageEmitter.on('message', onMessage);
+      // ... until our stopping condition
+      timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);
     });
   }
 
@@ -764,7 +776,9 @@ export class TestBuilder {
 
     return new Promise(resolve => {
       if (ide == null) {
-        throw new Error('No ide process running!');
+        this.log('No IDE process running! Cannot waitUntilIDEMessageCount');
+        resolve();
+        return;
       }
       if (expectedCount === 0) {
         resolve();
@@ -832,32 +846,43 @@ export class TestBuilder {
   ): Promise<void> {
     return new Promise(resolve => {
       var timeout = null;
-      const onIde = () => {
+      var emitter = null;
+      var alreadyDone = false;
+      const startTime = new Date().getTime();
+
+      const doneWithVerb = async verb => {
+        if (alreadyDone) {
+          return;
+        }
+        alreadyDone = true;
+        const duration = new Date().getTime() - startTime;
+        timeout && clearTimeout(timeout);
+        emitter && emitter.removeListener('ide', checkStatus);
+        await this.log('%s IDE %s status in %dms', verb, expected, duration);
+        resolve();
+      };
+
+      const checkStatus = () => {
         if (
           (expected === 'running' && this.ide != null) ||
           (expected === 'stopped' && this.ide == null)
         ) {
-          this.log('Got IDE %s within %dms', expected, timeoutMs).then(done);
+          doneWithVerb('Got');
         }
       };
-      const done = () => {
-        this.ideEmitter.removeListener('ide', onIde);
-        timeout && clearTimeout(timeout);
-        resolve();
-      };
+
+      // It's unavoidably racey whether the async logger does its work before
+      // or after we get the first successfull checkStatus
+      this.log('Waiting up to %dms for %s IDE status', timeoutMs, expected);
 
       // Test whether we're okay already?
-      onIde();
+      checkStatus();
 
-      // And account for further changes, until our stopping condition:
-      this.log('Starting to wait %dms for IDE status', timeoutMs).then(() => {
-        const onTimeout = () => {
-          this.log('Timeout waiting for IDE status').then(done);
-        };
-        timeout = setTimeout(onTimeout, timeoutMs);
-      });
+      // And look for further changes
+      emitter = this.ideEmitter.on('ide', checkStatus);
 
-      this.ideEmitter.on('ide', onIde);
+      // ... until our stopping condition
+      timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);
     });
   }
 
@@ -868,41 +893,43 @@ export class TestBuilder {
     // TODO(ljw): this should check for externally-launched flow servers too
     return new Promise(resolve => {
       var timeout = null;
-      const onServer = () => {
+      var emitter = null;
+      var alreadyDone = false;
+      const startTime = new Date().getTime();
+
+      const doneWithVerb = async verb => {
+        if (alreadyDone) {
+          return;
+        }
+        alreadyDone = true;
+        const duration = new Date().getTime() - startTime;
+        emitter && emitter.removeListener('server', checkStatus);
+        timeout && clearTimeout(timeout);
+        await this.log('%s server %s status in %dms', verb, expected, duration);
+        resolve();
+      };
+
+      const checkStatus = () => {
         if (
           (expected === 'running' && this.server != null) ||
           (expected === 'stopped' && this.server == null)
         ) {
-          done('Received');
+          doneWithVerb('Got');
         }
       };
-      const done = ok => {
-        this.serverEmitter.removeListener('server', onServer);
-        timeout && clearTimeout(timeout);
-        this.log(
-          '%s server %s status in under %dms',
-          ok,
-          expected,
-          timeoutMs,
-        ).then(resolve);
-      };
+
+      // It's unavoidably racey whether the async logger does its work before
+      // or after we get the first successfull checkStatus
+      this.log('Waiting up to %dms for %s server status', timeoutMs, expected);
 
       // Test whether we're okay already?
-      onServer();
+      checkStatus();
 
-      // And account for further changes, until our stopping condition:
-      this.log('Starting to wait %dms for server status', timeoutMs).then(
-        () => {
-          const onTimeout = () => {
-            this.log('%dms timeout fired', timeoutMs).then(() =>
-              done('Failed to receive'),
-            );
-          };
-          timeout = setTimeout(onTimeout, timeoutMs);
-        },
-      );
+      // And look for further changes
+      emitter = this.serverEmitter.on('server', checkStatus);
 
-      this.ideEmitter.on('server', onServer);
+      // ... until our stopping condition
+      timeout = setTimeout(() => doneWithVerb('Failed to get'), timeoutMs);
     });
   }
 

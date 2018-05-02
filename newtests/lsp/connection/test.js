@@ -126,7 +126,9 @@ export default suite(
           ],
         ),
       ideResponse('mostRecent', {title: 'Restart'})
-        .waitUntilServerStatus(20000, 'running')
+        // .waitUntilServerStatus(20000, 'running') -- commented out because
+        // the method currently only waits for servers that the test infrastructure
+        // launched; not ones that lspCommand launched.
         .waitUntilIDEMessage(10000, 'telemetry/connectionStatus')
         .verifyAllIDEMessagesInStep(
           [
@@ -162,15 +164,16 @@ export default suite(
     test('Terminates in response to flowconfig version change', [
       ideStartAndConnect(),
       modifyFile('.flowconfig', '>0.60.0', '>0.61.0')
-        .waitUntilServerStatus(3000, 'stopped')
+        .waitUntilServerStatus(6000, 'stopped')
         .waitUntilIDEStatus(6000, 'stopped')
         .verifyAllIDEMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{Server fatal exception}',
-            'telemetry/event{Version in flowconfig}',
           ],
-          [],
+          [
+            'telemetry/event{Version in flowconfig}', // might or might not come depending on how fast
+          ],
         ),
     ]),
 
