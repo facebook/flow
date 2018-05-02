@@ -172,32 +172,6 @@ let try_finally ~f ~(finally: unit -> unit) =
   finally ();
   res
 
-let try_finally_with arg ~f ~(finally: unit -> unit) =
-  let res = try f arg with e -> finally (); raise e in
-  finally ();
-  res
-
-module MemGuard: sig
-  type 'a t
-  val track: 'a -> 'a t
-  val gc : unit -> unit
-  val verify_value_collected: 'a t -> unit
-  val gc_and_verify_value_collected: 'a t -> unit
-end = struct
-  type 'a t = 'a Weak.t
-  let track v =
-    let w = Weak.create 1 in
-    Weak.set w 0 (Some v);
-    w
-  let gc () =
-    Gc.compact ()
-  let verify_value_collected w =
-    assert (not @@ Weak.check w 0)
-  let gc_and_verify_value_collected w =
-    gc ();
-    verify_value_collected w
-end
-
 let with_context ~enter ~exit ~do_ =
   enter ();
   let result = try do_ () with e ->
