@@ -977,8 +977,16 @@ let rec error_of_msg ~trace_reasons ~source_file =
         )
       (* Default incompatibility. *)
       | _ ->
-        mk_use_op_error (loc_of_reason lower) use_op
-          [ref lower; text " is incompatible with "; ref upper]
+        begin match desc_of_reason lower, desc_of_reason upper with
+          | RPolyTest _, RPolyTest _ when loc_of_reason lower = loc_of_reason upper ->
+            mk_use_op_error (loc_of_reason lower) use_op
+              [text "the expected type is not parametric in "; ref upper;
+               text ", perhaps due to the use of "; code "*";
+               text " or the lack of a type annotation";]
+          | _ ->
+            mk_use_op_error (loc_of_reason lower) use_op
+              [ref lower; text " is incompatible with "; ref upper]
+        end
       )
   in
 

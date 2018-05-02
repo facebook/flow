@@ -9,6 +9,7 @@
 
 declare opaque type FragmentTypeof;
 declare opaque type FragmentReference<T: FragmentTypeof>;
+declare opaque type BadFragmentReference<T>;
 declare opaque type RelayProp;
 
 const React = require('React');
@@ -83,7 +84,7 @@ declare var usersRef: $ReadOnlyArray<{
 }>;
 
 declare var nonUserRef: {
-  +__fragments: FragmentReference<{thing: true}>,
+  +__fragments: BadFragmentReference<{thing: true}>,
 };
 
 function cb(): void {}

@@ -3693,10 +3693,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
 
-    | DefT (_, PolyT (ids,t,_)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
+    | DefT (_, PolyT (xs,t,id)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
       let ts = Option.value ts ~default:[] in
-      let t_ = instantiate_poly_with_targs cx trace
-        ~use_op ~reason_op ~reason_tapp ?cache (ids,t) ts in
+      let t_ = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t ts in
       rec_flow_t cx trace (t_, tvar)
 
     | DefT (_, PolyT (tps, _, _)), VarianceCheckT(_, ts, polarity) ->
@@ -7553,9 +7552,9 @@ and canonicalize_imported_type cx trace reason t =
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
-  | DefT (_, PolyT (typeparams, ThisClassT _, id)) ->
+  | DefT (_, PolyT (typeparams, ThisClassT _, _)) ->
     let targs = List.map (fun tp -> BoundT tp) typeparams in
-    Some (poly_type id typeparams (class_type (typeapp t targs)))
+    Some (poly_type (mk_id ()) typeparams (class_type (typeapp t targs)))
 
   | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->
     Some t
@@ -10341,9 +10340,13 @@ and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t
   let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts in
   mk_instance cx ~trace reason_tapp t
 
-and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts =
-  let key = id, ts in
-  match Cache.Subst.find key with
+and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t ts =
+  match cache with
+  | Some cache ->
+    instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ~cache (xs,t) ts
+  | None ->
+    let key = id, ts in
+    match Cache.Subst.find key with
     | None ->
       let t = instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (xs,t) ts in
       Cache.Subst.add key t;

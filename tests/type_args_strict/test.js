@@ -76,8 +76,10 @@ var num_array:Array<number> = singleton(0); // ok, type arg inferred
 
 // empty type args lead to arity errors
 
-var poly: MyClass<> = new MyClass; // error, too few arguments
+class MyClass4<X> { }
 
-class MyClass4 { }
+var poly: MyClass4<> = new MyClass4; // error, too few arguments
 
-var mono: MyClass4<> = new MyClass4; // error, class is not polymorphic
+class MyClass5 { }
+
+var mono: MyClass5<> = new MyClass5; // error, class is not polymorphic
