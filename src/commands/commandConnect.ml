@@ -54,7 +54,7 @@ let start_flow_server env =
   if not quiet then Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
-  let exe = Sys.argv.(0) in
+  let exe = Sys.executable_name in
   let args = [ Path.to_string root ]
   |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
   |> arg_map "--sharedmemory-dep-table-pow" ~f:string_of_int shm_dep_table_pow
