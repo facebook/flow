@@ -3807,7 +3807,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT (_, _, id1)), UseT (_, DefT (_, PolyT (_, _, id2)))
       when id1 = id2 -> ()
 
-    | DefT (_, PolyT (params1, t1, _)), UseT (use_op, DefT (_, PolyT (params2, t2, _)))
+    | DefT (_, PolyT (params1, t1, id1)), UseT (use_op, DefT (_, PolyT (params2, t2, id2)))
       when List.length params1 = List.length params2 ->
       (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
           by these *)
@@ -3816,12 +3816,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
       let inst1 =
         let r = reason_of_t t1 in
-        instantiate_poly_with_targs cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r (params1, t1) args1 in
+        mk_typeapp_of_poly cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
       let inst2 =
         let r = reason_of_t t2 in
-        instantiate_poly_with_targs cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r (params2, t2) args2 in
+        mk_typeapp_of_poly cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
       rec_flow_t cx trace (inst1, inst2)
 
     (** general case **)
@@ -7471,7 +7471,7 @@ and instantiate_poly_with_targs
     )
     (SMap.empty, ts)
     xs in
-  subst cx ~use_op map (reposition cx ~trace (loc_of_reason reason_tapp) t)
+  reposition cx ~trace (loc_of_reason reason_tapp) (subst cx ~use_op map t)
 
 (* Given a type parameter, a supplied type argument for specializing it, and a
    reason for specialization, either return the type argument or, when directed,
@@ -9508,7 +9508,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
   | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
     when id1 = id2 -> ()
 
-  | DefT (_, PolyT (params1, t1, _)), DefT (_, PolyT (params2, t2, _))
+  | DefT (_, PolyT (params1, t1, id1)), DefT (_, PolyT (params2, t2, id2))
     when List.length params1 = List.length params2 ->
     (** for equal-arity polymorphic types, unify param upper bounds
         with each other, then instances parameterized by these *)
@@ -9517,12 +9517,12 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
     List.iter2 (rec_unify cx trace ~use_op) args1 args2;
     let inst1 =
       let r = reason_of_t t1 in
-      instantiate_poly_with_targs cx trace
-        ~use_op ~reason_op:r ~reason_tapp:r (params1, t1) args1 in
+      mk_typeapp_of_poly cx trace
+        ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
     let inst2 =
       let r = reason_of_t t2 in
-      instantiate_poly_with_targs cx trace
-        ~use_op ~reason_op:r ~reason_tapp:r (params2, t2) args2 in
+      mk_typeapp_of_poly cx trace
+        ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
     rec_unify cx trace ~use_op inst1 inst2
 
   | DefT (_, ArrT (ArrayAT(t1, ts1))),
@@ -10338,14 +10338,17 @@ and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
   mk_instance cx ?trace (reason_of_t c) t
 
 and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts =
+  let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts in
+  mk_instance cx ~trace reason_tapp t
+
+and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts =
   let key = id, ts in
-  let t = match Cache.Subst.find key with
+  match Cache.Subst.find key with
     | None ->
       let t = instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (xs,t) ts in
       Cache.Subst.add key t;
       t
-    | Some t -> t in
-  mk_instance cx ~trace reason_tapp t
+    | Some t -> t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
