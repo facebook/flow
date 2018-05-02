@@ -433,31 +433,39 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  // verifyAllIDEMessagesInStep(expects=['A','B{C,D}'], ignores=['D','E'])
-  // will look at all the actual messages that arrived in this step, and strip
-  // away the ones with ignored method names D, E. Of those remaining it will
-  // verify that the first had method name A, the second had method name B,
-  // and that the strings C and D were both found in the JSON representation
-  // of the second message (up to whitespace).
+  // verifyAllIDEMessagesInStep(expects=['A','B{C,D}'], ignores=['B','E'])
+  // will look at all the actual messages that arrived in this step.
+  // In this case there must be an "A", followed by a "B" which has
+  // the strings C and D in its JSON representation (up to whitespace).
+  // It's okay if there are unexpected messages so long as they're in
+  // ignores list - in this case we'd ignore any "B" (either because it came
+  // in the wrong order or because it didn't have C and D), and ignore any "E".
+  // But if there are unexpected messages not in the ignore list, then we fail.
   verifyAllIDEMessagesInStep: (
     Array<string>,
     Array<string>,
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
-      const actualMessages = env
-        .getIDEMessagesSinceStartOfStep()
-        .filter(
-          msg => !ignores.some(ignore => Builder.doesMessageMatch(msg, ignore)),
-        );
+      const actualMessages = env.getIDEMessagesSinceStartOfStep();
       let actuals: Array<string> = [];
-      for (let i = 0; i < actualMessages.length; i++) {
-        const actual =
-          i < expects.length &&
-          Builder.doesMessageMatch(actualMessages[i], expects[i])
-            ? expects[i]
-            : actualMessages[i].method;
-        actuals.push(actual);
+      let iExpect = 0;
+      for (let iActual = 0; iActual < actualMessages.length; iActual++) {
+        if (
+          iExpect < expects.length &&
+          Builder.doesMessageMatch(actualMessages[iActual], expects[iExpect])
+        ) {
+          actuals.push(expects[iExpect]);
+          iExpect++;
+        } else if (
+          ignores.some(ignore =>
+            Builder.doesMessageMatch(actualMessages[iActual], ignore),
+          )
+        ) {
+          // ignore it
+        } else {
+          actuals.push(actualMessages[iActual].method);
+        }
       }
 
       const suggestion = {
