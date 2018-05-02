@@ -12,6 +12,20 @@ References:
                                      ^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- bad_default_props.js:20:18
+
+Cannot use property `Component` [1] with less than 1 type argument.
+
+   bad_default_props.js:20:18
+   20| class C4 extends React.Component {
+                        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- classes.js:7:1
 
 Cannot extend property `Component` [1] with `Foo` because:
@@ -921,7 +935,7 @@ References:
 
 
 
-Found 59 errors
+Found 60 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

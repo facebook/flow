@@ -96,25 +96,25 @@ References:
                       ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:81:11
+Error ---------------------------------------------------------------------------------------------------- test.js:79:11
 
-Cannot use `MyClass4` [1] with less than 1 type argument.
+Cannot use `MyClass` [1] with less than 1 type argument.
 
-   test.js:81:11
-   81| var poly: MyClass4<> = new MyClass4; // error, too few arguments
-                 ^^^^^^^^^^
+   test.js:79:11
+   79| var poly: MyClass<> = new MyClass; // error, too few arguments
+                 ^^^^^^^^^
 
 References:
-   test.js:79:16
-   79| class MyClass4<X> { }
-                      ^ [1]
+   test.js:14:15
+   14| class MyClass<T> {
+                     ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:85:11
+Error ---------------------------------------------------------------------------------------------------- test.js:83:11
 
-Cannot instantiate `MyClass5` because `MyClass5` [1] is not a polymorphic type.
+Cannot instantiate `MyClass4` because `MyClass4` [1] is not a polymorphic type.
 
-   85| var mono: MyClass5<> = new MyClass5; // error, class is not polymorphic
+   83| var mono: MyClass4<> = new MyClass4; // error, class is not polymorphic
                  ^^^^^^^^^^ [1]
 
 

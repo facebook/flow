@@ -7439,6 +7439,7 @@ and instantiate_poly_with_targs
   ~reason_op
   ~reason_tapp
   ?cache
+  ?errs_ref
   (xs,t)
   ts
   =
@@ -7446,8 +7447,11 @@ and instantiate_poly_with_targs
   let maximum_arity = List.length xs in
   let reason_arity = mk_poly_arity_reason xs in
   if List.length ts > maximum_arity
-  then add_output cx ~trace
-    (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+  then begin
+    add_output cx ~trace (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+    Option.iter errs_ref
+      ~f:(fun errs_ref -> errs_ref := `ETooManyTypeArgs(reason_arity, maximum_arity)::!errs_ref)
+  end;
   let map, _ = List.fold_left
     (fun (map, ts) typeparam ->
       let t, ts = match typeparam, ts with
@@ -7456,8 +7460,9 @@ and instantiate_poly_with_targs
           subst cx ~use_op map default, []
       | {default=None; _;}, [] ->
           (* fewer arguments than params but no default *)
-          add_output cx ~trace (FlowError.ETooFewTypeArgs
-            (reason_tapp, reason_arity, minimum_arity));
+          add_output cx ~trace (FlowError.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
+          Option.iter errs_ref
+            ~f:(fun errs_ref -> errs_ref := `ETooFewTypeArgs(reason_arity, minimum_arity)::!errs_ref);
           DefT (reason_op, AnyT), []
       | _, t::ts ->
           t, ts in
@@ -10348,10 +10353,21 @@ and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t t
     let key = id, ts in
     match Cache.Subst.find key with
     | None ->
-      let t = instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (xs,t) ts in
-      Cache.Subst.add key t;
+      let errs_ref = ref [] in
+      let t = instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp
+        ~errs_ref (xs,t) ts in
+      Cache.Subst.add key (!errs_ref, t);
       t
-    | Some t -> t
+    | Some (errs, t) ->
+      errs |> List.iter (function
+        | `ETooManyTypeArgs (reason_arity, maximum_arity) ->
+          let msg = FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) in
+          add_output cx ~trace msg
+        | `ETooFewTypeArgs (reason_arity, maximum_arity) ->
+          let msg = FlowError.ETooFewTypeArgs (reason_tapp, reason_arity, maximum_arity) in
+          add_output cx ~trace msg
+      );
+      t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
