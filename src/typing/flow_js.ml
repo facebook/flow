@@ -684,6 +684,13 @@ module Cache = struct
         found
   end
 
+  (* Cache that maps TypeApp(Poly (...id), ts) to its result. *)
+  module Subst = struct
+    let cache = Hashtbl.create 0
+    let find = Hashtbl.find_opt cache
+    let add = Hashtbl.replace cache
+  end
+
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
      for each operation on a polymorphic definition, we remember the type
      arguments we use to specialize the type parameters. An operation is
@@ -753,6 +760,7 @@ module Cache = struct
 
   let clear () =
     FlowConstraint.cache := FlowSet.empty;
+    Hashtbl.clear Subst.cache;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
     Hashtbl.clear Eval.id_cache;
@@ -2621,8 +2629,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * true. *)
     | DefT (r1, TypeAppT (op1, c1, ts1)),
       UseT (use_op, DefT (r2, TypeAppT (op2, c2, ts2))) ->
-      rec_flow cx trace (c2, ConcretizeTypeAppsT
-        (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true))
+      if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
+        if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
+          rec_flow cx trace (c2, ConcretizeTypeAppsT
+            (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true));
+            TypeAppExpansion.pop ();
+        );
+        TypeAppExpansion.pop ();
+      );
+
 
     (* When we have concretized the c for our upper bound TypeAppT then we want
      * to concretize the lower bound. We flip all our arguments to
@@ -2657,17 +2672,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* This is the case which implements the expansion for our
      * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
-    | DefT (_, PolyT _) as c1,
-      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), ((DefT (_, PolyT _) as c2), ts2, op2, r2), false) ->
-      if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
-        let t1 = mk_typeapp_instance cx ~trace ~use_op:op2 ~reason_op:r2 ~reason_tapp:r1 c1 ts1 in
-        if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
-          let t2 = mk_typeapp_instance cx ~trace ~use_op:op1 ~reason_op:r1 ~reason_tapp:r2 c2 ts2 in
-          rec_flow cx trace (t1, UseT (use_op, t2));
-          TypeAppExpansion.pop ();
-        );
-        TypeAppExpansion.pop ();
-      );
+    | DefT (_, PolyT (xs1, t1, id1)),
+      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (DefT (_, PolyT (xs2, t2, id2)), ts2, op2, r2), false) ->
+      let t1 = mk_typeapp_instance_of_poly cx trace ~use_op:op2 ~reason_op:r2 ~reason_tapp:r1
+        id1 xs1 t1 ts1 in
+      let t2 = mk_typeapp_instance_of_poly cx trace ~use_op:op1 ~reason_op:r1 ~reason_tapp:r2
+        id2 xs2 t2 ts2 in
+      rec_flow cx trace (t1, UseT (use_op, t2))
 
     | DefT (reason_tapp, TypeAppT (use_op, c, ts)), _ ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
@@ -10325,6 +10336,16 @@ and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
   let t = Tvar.mk cx reason_op in
   flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
   mk_instance cx ?trace (reason_of_t c) t
+
+and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts =
+  let key = id, ts in
+  let t = match Cache.Subst.find key with
+    | None ->
+      let t = instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (xs,t) ts in
+      Cache.Subst.add key t;
+      t
+    | Some t -> t in
+  mk_instance cx ~trace reason_tapp t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
