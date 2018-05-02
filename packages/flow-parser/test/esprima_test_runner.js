@@ -261,6 +261,10 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         delete param.typeAnnotation;
         delete param.optional;
       }
+    case 'CallExpression':
+    case 'NewExpression':
+      delete flow.typeArguments;
+      break;
   }
 
   switch (esprima.type) {

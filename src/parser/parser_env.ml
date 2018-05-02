@@ -882,4 +882,9 @@ module Try = struct
     let saved_state = save_state env in
     try success env saved_state (parse env)
     with Rollback -> rollback_state env saved_state
+
+  let or_else env ~fallback parse =
+    match to_parse env parse with
+    | ParsedSuccessfully result -> result
+    | FailedToParse -> fallback
 end

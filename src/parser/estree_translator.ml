@@ -468,6 +468,7 @@ end with type t = Impl.t) = struct
     | loc, New _new -> New.(
         node "NewExpression" loc [
           "callee", expression _new.callee;
+          "typeArguments", option type_parameter_instantiation _new.targs;
           "arguments", array_of_list expression_or_spread _new.arguments;
         ]
       )
@@ -1459,6 +1460,7 @@ end with type t = Impl.t) = struct
 
   and call_node_properties call = Expression.Call.([
     "callee", expression call.callee;
+    "typeArguments", option type_parameter_instantiation call.targs;
     "arguments", array_of_list expression_or_spread call.arguments;
   ])
 

@@ -221,11 +221,12 @@ class mapper = object(this)
 
   method call _loc (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression.Call in
-    let { callee; arguments } = expr in
+    let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
+    let targs' = map_opt this#type_parameter_instantiation targs in
     let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
-    if callee == callee' && arguments == arguments' then expr
-    else { callee = callee'; arguments = arguments' }
+    if callee == callee' && targs == targs' && arguments == arguments' then expr
+    else { callee = callee'; targs = targs'; arguments = arguments' }
 
   method optional_call loc (expr: Loc.t Ast.Expression.OptionalCall.t) =
     let open Ast.Expression.OptionalCall in
@@ -926,11 +927,12 @@ class mapper = object(this)
 
   method new_ (expr: Loc.t Ast.Expression.New.t) =
     let open Ast.Expression.New in
-    let { callee; arguments } = expr in
+    let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
+    let targs' = map_opt this#type_parameter_instantiation targs in
     let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
-    if callee == callee' && arguments == arguments' then expr
-    else { callee = callee'; arguments = arguments' }
+    if callee == callee' && targs == targs' && arguments == arguments' then expr
+    else { callee = callee'; targs = targs'; arguments = arguments' }
 
   method object_ (expr: Loc.t Ast.Expression.Object.t) =
     let open Ast.Expression.Object in

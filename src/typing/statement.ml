@@ -2541,6 +2541,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
 
   | New {
       New.callee = _, Identifier (_, "Function");
+      targs = _; (* TODO *)
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2559,6 +2560,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
 
   | New {
       New.callee = _, Identifier (_, "Array");
+      targs = _; (* TODO *)
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2579,8 +2581,11 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
       )
     )
 
-  | New { New.callee; arguments } ->
+  | New { New.callee; targs; arguments } ->
       let class_ = expression cx callee in
+      let targts = Option.map targs (fun (_, args) ->
+        List.map (Anno.convert cx SMap.empty) args
+      ) in
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason (RConstructorCall (desc_of_t class_)) loc in
       let use_op = Op (FunCall {
@@ -2588,7 +2593,7 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
         fn = mk_expression_reason callee;
         args = mk_initial_arguments_reason arguments;
       }) in
-      new_call cx reason ~use_op class_ argts
+      new_call cx reason ~use_op class_ targts argts
 
   | Call _ -> subscript ~is_cond cx ex
 
@@ -2878,7 +2883,7 @@ and subscript =
   *)
   let rec build_chain ~is_cond cx ((loc, e) as ex) acc =
     let opt_state, e' = match e with
-    | OptionalCall { OptionalCall.call = { Call.callee; arguments = _ } as call; optional } ->
+    | OptionalCall { OptionalCall.call = { Call.callee; targs = _; arguments = _ } as call; optional } ->
         warn_or_ignore_optional_chaining optional cx loc;
         begin match callee with
         | _, Member _
@@ -2899,6 +2904,7 @@ and subscript =
     match e' with
     | Call {
         Call.callee = _, Identifier (_, "require");
+        targs = _; (* TODO *)
         arguments;
       } when not (Env.local_scope_entry_exists "require") -> let lhs_t = (
         match arguments with
@@ -2927,6 +2933,7 @@ and subscript =
 
     | Call {
         Call.callee = _, Identifier (_, "requireLazy");
+        targs = _; (* TODO *)
         arguments;
       } when not (Env.local_scope_entry_exists "requireLazy") -> let lhs_t = (
         match arguments with
@@ -2966,7 +2973,7 @@ and subscript =
             fn = mk_expression_reason callback_expr;
             args = [];
           }) in
-          let _ = func_call cx reason ~use_op callback_expr_t module_tvars in
+          let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
 
           NullT.at loc
 
@@ -2983,6 +2990,7 @@ and subscript =
           property = Member.PropertyIdentifier (prop_loc, name);
           _
         } as expr);
+        targs = _; (* TODO *)
         arguments;
       } ->
         let obj_t = expression cx obj in
@@ -2997,6 +3005,7 @@ and subscript =
           property = Member.PropertyIdentifier (ploc, name);
           _
         }) as callee;
+        targs = _; (* TODO *)
         arguments;
       } ->
         let reason = mk_reason (RMethodCall (Some name)) loc in
@@ -3032,6 +3041,7 @@ and subscript =
           property;
           _
         }) as callee;
+        targs = _; (* TODO *)
         arguments;
       } ->
         (* method call *)
@@ -3062,6 +3072,7 @@ and subscript =
 
     | Call {
         Call.callee = (ploc, Super) as callee;
+        targs = _; (* TODO *)
         arguments;
       } ->
         let argts = List.map (expression_or_spread cx) arguments in
@@ -3093,6 +3104,7 @@ and subscript =
 
     | Call {
         Call.callee = (_, Identifier (_, "invariant")) as callee;
+        targs = _; (* TODO *)
         arguments;
       } ->
         (* TODO: require *)
@@ -3121,12 +3133,15 @@ and subscript =
         let lhs_t = VoidT.at loc in
         lhs_t, acc, lhs_t
 
-    | Call { Call.callee; arguments } ->
+    | Call { Call.callee; targs; arguments } ->
         begin match callee with
         | _, OptionalMember _ ->
           Flow.add_output cx Flow_error.(EOptionalChainingMethods loc)
         | _ -> ()
         end;
+        let targts = Option.map targs (fun (_, args) ->
+          List.map (Anno.convert cx SMap.empty) args
+        ) in
         let argts = List.map (expression_or_spread cx) arguments in
         let use_op = Op (FunCall {
           op = mk_expression_reason ex;
@@ -3137,19 +3152,19 @@ and subscript =
         | NonOptional ->
           let f = expression cx callee in
           let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-          let lhs_t = func_call cx reason ~use_op f argts in
+          let lhs_t = func_call cx reason ~use_op f targts argts in
           lhs_t, acc, lhs_t
         | NewChain ->
           let lhs_t = expression cx callee in
           let reason = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
           let tout = Tvar.mk cx reason in
-          let opt_use = func_call_opt_use reason ~use_op argts in
+          let opt_use = func_call_opt_use reason ~use_op targts argts in
           lhs_t, ref (loc, opt_use, tout) :: acc, tout
         | ContinueChain ->
           (* Hacky reason handling *)
           let reason = mk_reason ROptionalChain loc in
           let tout = Tvar.mk cx reason in
-          let opt_use = func_call_opt_use reason ~use_op argts in
+          let opt_use = func_call_opt_use reason ~use_op targts argts in
           let step = ref (loc, opt_use, tout) in
           let lhs_t, chain, f = build_chain ~is_cond cx callee (step :: acc) in
           let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
@@ -3337,9 +3352,9 @@ and subscript =
    the inferred types for the call receiver and the passed arguments, and
    potenially the keys that correspond to the supplied arguments.
 *)
-and predicated_call_expression cx (loc, callee, arguments) =
+and predicated_call_expression cx (loc, callee, targs, arguments) =
   let (f, argks, argts, t) =
-    predicated_call_expression_ cx loc callee arguments in
+    predicated_call_expression_ cx loc callee targs arguments in
   Env.add_type_table cx loc t;
   (f, argks, argts, t)
 
@@ -3349,11 +3364,13 @@ and predicated_call_expression cx (loc, callee, arguments) =
    - the arguments types
    - the returned type
 *)
-and predicated_call_expression_ cx loc callee arguments =
+and predicated_call_expression_ cx loc callee targs arguments =
   let args = arguments |> List.map (function
     | Ast.Expression.Expression e -> e
     | _ -> Utils_js.assert_false "No spreads should reach here"
   ) in
+  ignore targs; (* TODO *)
+  let targs = None in
   let f = expression cx callee in
   let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
   let argts = List.map (expression cx) args in
@@ -3363,7 +3380,7 @@ and predicated_call_expression_ cx loc callee arguments =
     fn = mk_expression_reason callee;
     args = mk_initial_arguments_reason arguments;
   }) in
-  let t = func_call cx reason ~use_op f (List.map (fun e -> Arg e) argts) in
+  let t = func_call cx reason ~use_op f targs (List.map (fun e -> Arg e) argts) in
   (f, argks, argts, t)
 
 (* We assume that constructor functions return void
@@ -3372,19 +3389,21 @@ and predicated_call_expression_ cx loc callee arguments =
    If construction functions return non-void values (e.g., functions),
    then those values are returned by constructions.
 *)
-and new_call cx reason ~use_op class_ argts =
+and new_call cx reason ~use_op class_ targs args =
+  ignore targs; (* TODO *)
   Tvar.mk_where cx reason (fun t ->
-    Flow.flow cx (class_, ConstructorT (use_op, reason, argts, t));
+    Flow.flow cx (class_, ConstructorT (use_op, reason, args, t));
   )
 
-and func_call_opt_use reason ~use_op ?(call_strict_arity=true) argts =
+and func_call_opt_use reason ~use_op ?(call_strict_arity=true) targts argts =
+  ignore targts; (* TODO *)
   Env.havoc_heap_refinements ();
   let frame = Env.peek_frame () in
   let opt_app = mk_opt_functioncalltype reason argts frame call_strict_arity in
   OptCallT (use_op, reason, opt_app)
 
-and func_call cx reason ~use_op ?(call_strict_arity=true) func_t argts =
-  let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity argts in
+and func_call cx reason ~use_op ?(call_strict_arity=true) func_t targts argts =
+  let opt_use = func_call_opt_use reason ~use_op ~call_strict_arity targts argts in
   Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (func_t, apply_opt_use opt_use t)
   )
@@ -3543,7 +3562,7 @@ and unary cx loc = Ast.Expression.Unary.(function
       fn = reason_of_t await;
       args = [mk_expression_reason argument];
     }) in
-    func_call cx reason ~use_op await [Arg arg]
+    func_call cx reason ~use_op await None [Arg arg]
 )
 
 (* numeric pre/post inc/dec *)
@@ -4198,7 +4217,7 @@ and jsx_desugar cx name component_t props attributes children locs =
             (jsx_expr, ot, name) argts
       | _ ->
           let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-          func_call cx reason ~use_op ~call_strict_arity:false f argts
+          func_call cx reason ~use_op ~call_strict_arity:false f None argts
       )
   | Options.Jsx_csx ->
       let reason = mk_reason (RJSXFunctionCall name) loc_element in
@@ -4206,7 +4225,7 @@ and jsx_desugar cx name component_t props attributes children locs =
         op = reason;
         component = reason_of_t component_t;
       }) in
-      func_call cx reason ~use_op ~call_strict_arity:false component_t [Arg props]
+      func_call cx reason ~use_op ~call_strict_arity:false component_t None [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *
@@ -4697,6 +4716,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, "isArray");
         _ };
+      targs = _; (* TODO *)
       arguments = [Expression arg];
     } -> (
       (* get Array.isArray in order to populate the type tables, but we don't
@@ -4779,13 +4799,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
      predicated when it is resolved. *)
-  | loc, Call { Call.callee = c; arguments } ->
+  | loc, Call { Call.callee = c; targs; arguments } ->
       let is_spread = function | Spread _ -> true | _ -> false in
       if List.exists is_spread arguments then
         empty_result (expression cx e)
       else
         let fun_t, keys, arg_ts, ret_t =
-          predicated_call_expression cx (loc, c, arguments) in
+          predicated_call_expression cx (loc, c, targs, arguments) in
         let args_with_offset = ListUtils.zipi keys arg_ts in
         let emp_pred_map = empty_result ret_t in
         List.fold_left (fun pred_map arg_info -> match arg_info with

@@ -756,7 +756,7 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
     | E.Member m -> member ~precedence ~ctxt m
     | E.OptionalMember { E.OptionalMember.member = m; optional } ->
       member ~optional ~precedence ~ctxt m
-    | E.New { E.New.callee; arguments } ->
+    | E.New { E.New.callee; targs; arguments } ->
       let callee_layout =
         if definitely_needs_parens ~precedence ctxt callee ||
            contains_call_expression callee
@@ -768,6 +768,7 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
           Atom "new";
           callee_layout;
         ];
+        option type_parameter_instantiation targs;
         list
           ~wrap:(Atom "(", Atom ")")
           ~sep:(Atom ",")
@@ -850,13 +851,13 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
   )
 
 and call ?(optional=false) ~precedence ~ctxt call_node =
-  let { Ast.Expression.Call.callee; arguments } = call_node in
-  let lparen = if optional then ".?(" else "(" in
-  begin match callee, arguments with
+  let { Ast.Expression.Call.callee; targs; arguments } = call_node in
+  match callee, targs, arguments with
   (* __d hack, force parens around factory function.
     More details at: https://fburl.com/b1wv51vj
     TODO: This is FB only, find generic way to add logic *)
-  | (_, Ast.Expression.Identifier (_, "__d")), [a; b; c; d] ->
+  | (_, Ast.Expression.Identifier (_, "__d")), None, [a; b; c; d] ->
+    let lparen = if optional then ".?(" else "(" in
     fuse [
       Atom "__d";
       list
@@ -871,14 +872,28 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
     ]
   (* Standard call expression printing *)
   | _ ->
+    let targs, lparen = match targs with
+    | None ->
+      let lparen = if optional then ".?(" else "(" in
+      Empty, lparen
+    | Some (loc, args) ->
+      let less_than = if optional then "?.<" else "<" in
+      SourceLocation (
+        loc,
+        list
+          ~wrap:(Atom less_than, Atom ">")
+          ~sep:(Atom ",")
+          (List.map type_ args)
+      ), "("
+    in
     fuse [
       expression_with_parens ~precedence ~ctxt callee;
+      targs;
       list
         ~wrap:(Atom lparen, Atom ")")
         ~sep:(Atom ",")
         (List.map expression_or_spread arguments)
     ]
-  end
 
 and expression_with_parens ~precedence ~(ctxt:expression_context) expr =
   if definitely_needs_parens ~precedence ctxt expr

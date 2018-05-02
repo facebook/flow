@@ -189,7 +189,7 @@ module Expressions = struct
   let identifier name =
     Loc.none, Identifier (Loc.none, name)
 
-  let call_node ?(args=[]) callee = { Call.callee; arguments = args }
+  let call_node ?targs ?(args=[]) callee = { Call.callee; targs; arguments = args }
 
   let call ?(args=[]) callee =
     Loc.none, Call (call_node ~args callee)
@@ -294,8 +294,8 @@ module Expressions = struct
       optional;
     }
 
-  let new_ ?(args=[]) callee =
-    Loc.none, New { New.callee; arguments = args }
+  let new_ ?targs ?(args=[]) callee =
+    Loc.none, New { New.callee; targs; arguments = args }
 
   let sequence exprs =
     Loc.none, Sequence { Sequence.expressions = exprs }

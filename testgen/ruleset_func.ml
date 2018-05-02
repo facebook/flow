@@ -97,10 +97,12 @@ class ruleset_func = object(self)
                   List.fold_right (fun elt acc ->
                       match elt with
                       | Expr (E.Call {callee = _, fid;
+                                      targs;
                                       arguments = args}, _) ->
                         let ftype = self#get_type_from_expr fid env in
                         if self#is_subtype param_type ftype then begin
                           (Expr (E.Call {callee = (Loc.none, E.Identifier (Loc.none, pname));
+                                         targs;
                                          arguments = args}, rt)) :: elt :: acc
                         end else elt :: acc
                       | _ -> elt :: acc) env []

@@ -728,12 +728,14 @@ and Expression : sig
   module New : sig
     type 'M t = {
       callee: 'M Expression.t;
+      targs: 'M Type.ParameterInstantiation.t option;
       arguments: 'M expression_or_spread list;
     }
   end
   module Call : sig
     type 'M t = {
       callee: 'M Expression.t;
+      targs: 'M Type.ParameterInstantiation.t option;
       arguments: 'M expression_or_spread list;
     }
   end

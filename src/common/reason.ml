@@ -821,10 +821,17 @@ Ast.Expression.(match x with
   do_wrap (left ^ " " ^ operator ^ " " ^ right)
 | Binary { Binary.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Binary operator) right)
-| Call { Call.callee; arguments = [] } ->
-  (code_desc_of_expression ~wrap:true callee) ^ "()"
-| Call { Call.callee; arguments = _ } ->
-  (code_desc_of_expression ~wrap:true callee) ^ "(...)"
+| Call { Call.callee; targs; arguments } ->
+  let targs = match targs with
+  | None -> ""
+  | Some (_, []) -> "<>"
+  | Some (_, _::_) -> "<...>"
+  in
+  let args = match arguments with
+  | [] -> "()"
+  | _::_ -> "(...)"
+  in
+  (code_desc_of_expression ~wrap:true callee) ^ targs ^ args
 | Class _ -> "class { ... }"
 | Conditional { Conditional.test; consequent; alternate } ->
   let wrap_test = match test with _, Conditional _ -> true | _ -> false in
@@ -849,20 +856,34 @@ Ast.Expression.(match x with
   | PropertyExpression x -> "[" ^ code_desc_of_expression ~wrap:false x ^ "]"
   ))
 | MetaProperty { MetaProperty.meta = (_, o); property = (_, p) } -> o ^ "." ^ p
-| New { New.callee; arguments = [] } ->
-  "new " ^ (code_desc_of_expression ~wrap:true callee) ^ "()"
-| New { New.callee; arguments = _ } ->
-  "new " ^ (code_desc_of_expression ~wrap:true callee) ^ "(...)"
+| New { New.callee; targs; arguments } ->
+  let targs = match targs with
+  | None -> ""
+  | Some (_, []) -> "<>"
+  | Some (_, _::_) -> "<...>"
+  in
+  let args = match arguments with
+  | [] -> "()"
+  | _::_ -> "(...)"
+  in
+  "new " ^ (code_desc_of_expression ~wrap:true callee) ^ targs ^ args
 | Object _ -> "{...}"
 | OptionalCall { OptionalCall.
-    call = { Call.callee; arguments };
+    call = { Call.callee; targs; arguments };
     optional;
   } ->
+  let targ_string = match targs with
+  | None -> ""
+  | Some (_, []) -> "<>"
+  | Some (_, _::_) -> "<...>"
+  in
   let arg_string = begin match arguments with
   | [] -> "()"
   | _ -> "(...)"
   end in
-  code_desc_of_expression ~wrap:true callee ^ (if optional then "?." else "") ^ arg_string
+  code_desc_of_expression ~wrap:true callee ^
+    (if optional then "?." else "") ^
+    targ_string ^ arg_string
 | OptionalMember { OptionalMember.
     member = { Member._object; property; computed = _ };
     optional;

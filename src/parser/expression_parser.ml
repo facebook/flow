@@ -542,23 +542,38 @@ module Expression
   and call_cover ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left =
     let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
     let optional = last_token env = Some T_PLING_PERIOD in
-    match Peek.token env with
-    | T_LPAREN when not (no_call env) ->
-        let args_loc, arguments = arguments env in
-        let loc = Loc.btwn start_loc args_loc in
-        let call = { Expression.Call.
-          callee = as_expression env left;
-          arguments;
-        } in
-        let call = if optional || in_optional_chain
-          then Expression.(OptionalCall { OptionalCall.
-            call;
-            optional;
-          })
-          else Expression.Call call
-        in
-        call_cover ~allow_optional_chain ~in_optional_chain env start_loc
-          (Cover_expr (loc, call))
+    let arguments ?targs env =
+      let args_loc, arguments = arguments env in
+      let loc = Loc.btwn start_loc args_loc in
+      let call = { Expression.Call.
+        callee = as_expression env left;
+        targs;
+        arguments;
+      } in
+      let call = if optional || in_optional_chain
+        then Expression.(OptionalCall { OptionalCall.
+          call;
+          optional;
+        })
+        else Expression.Call call
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, call))
+    in
+    if no_call env then left
+    else match Peek.token env with
+    | T_LPAREN -> arguments env
+    | T_LESS_THAN when should_parse_types env ->
+        (* If we are parsing types, then f<T>(e) is a function call with a
+           type application. If we aren't, it's a nested binary expression. *)
+        let error_callback _ _ = raise Try.Rollback in
+        let env = env |> with_error_callback error_callback in
+        (* Parameterized call syntax is ambiguous, so we fall back to
+           standard parsing if it fails. *)
+        Try.or_else env ~fallback:left (fun env ->
+          let targs = Type.type_parameter_instantiation env in
+          arguments ?targs env
+        )
     | _ -> left
 
   and call ?(allow_optional_chain=true) env start_loc left =
@@ -597,12 +612,27 @@ module Expression
       let callee = match Peek.token env with
       | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
       | _ -> callee in
-      let end_loc, arguments = match Peek.token env with
-      | T_LPAREN -> arguments env
+      let targs =
+        (* If we are parsing types, then new C<T>(e) is a constructor with a
+           type application. If we aren't, it's a nested binary expression. *)
+        if should_parse_types env
+        then
+          (* Parameterized call syntax is ambiguous, so we fall back to
+             standard parsing if it fails. *)
+          let error_callback _ _ = raise Try.Rollback in
+          let env = env |> with_error_callback error_callback in
+          Try.or_else env ~fallback:None Type.type_parameter_instantiation
+        else
+          None
+      in
+      let end_loc, arguments = match Peek.token env, targs with
+      | T_LPAREN, _ -> arguments env
+      | _, Some (targs_loc, _) -> targs_loc, []
       | _ -> fst callee, [] in
 
       Loc.btwn start_loc end_loc, Expression.(New New.({
         callee;
+        targs;
         arguments;
       }))
 
@@ -711,6 +741,7 @@ module Expression
             error env Parse_error.OptionalChainTemplate;
             left
           | T_LPAREN -> left
+          | T_LESS_THAN when should_parse_types env -> left
           | _ ->
             error_unexpected env;
             left

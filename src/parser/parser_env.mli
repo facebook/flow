@@ -171,4 +171,5 @@ module Try : sig
   exception Rollback
 
   val to_parse: env -> (env -> 'a) -> 'a parse_result
+  val or_else: env -> fallback:'a -> (env -> 'a) -> 'a
 end
