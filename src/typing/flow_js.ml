@@ -455,7 +455,7 @@ let rec assume_ground cx ?(depth=1) ids t =
   | GetPropT (_, _, _, t)
   | CallT (_, _, { call_tout = t; _ })
   | MethodT (_, _, _, _, { call_tout = t; _ }, _)
-  | ConstructorT (_, _, _, t) ->
+  | ConstructorT (_, _, _, _, t) ->
     assume_ground cx ~depth:(depth + 1) ids (UseT (unknown_use, t))
 
   | _ -> ()
@@ -2243,46 +2243,59 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * ...of course having a `?.` operator in the language would be a nice
      *    reason to throw all of this clownerous hackery away...
      *)
-    | CustomFunT (_, Idx),
+    | CustomFunT (lreason, Idx),
       CallT (use_op, reason_op, {
         call_this_t;
+        call_targs;
         call_args_tlist;
         call_tout;
         call_closure_t;
         call_strict_arity;
       }) ->
-      (match call_args_tlist with
-        | (Arg obj)::(Arg cb)::[] ->
-          let wrapped_obj = InternalT (IdxWrapper (reason_op, obj)) in
-          let callback_result = Tvar.mk_where cx reason_op (fun t ->
-            rec_flow cx trace (cb, CallT (use_op, reason_op, {
-              call_this_t;
-              call_args_tlist = [Arg wrapped_obj];
-              call_tout = t;
-              call_closure_t;
-              call_strict_arity;
-            }))
-          ) in
-          let unwrapped_t = Tvar.mk_where cx reason_op (fun t ->
-            rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
-          ) in
-          let maybe_r = replace_reason (fun desc -> RMaybe desc) reason_op in
-          let maybe = DefT (maybe_r, MaybeT unwrapped_t) in
-          rec_flow_t cx trace (maybe, call_tout)
-        | (SpreadArg t1)::(SpreadArg t2)::_ ->
-          add_output cx ~trace
-            (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
-          add_output cx ~trace
-            (FlowError.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument)))
-        | (SpreadArg t)::_
-        | _::(SpreadArg t)::_ ->
-          let spread_loc = loc_of_t t in
-          add_output cx ~trace
-            (FlowError.(EUnsupportedSyntax (spread_loc, SpreadArgument)))
-        | _ ->
-          (* Why is idx strict about arity? No other functions are. *)
-          add_output cx ~trace (FlowError.EIdxArity reason_op)
-      )
+      let tout = match call_targs, call_args_tlist with
+      | None, (Arg obj)::(Arg cb)::[] ->
+        let wrapped_obj = InternalT (IdxWrapper (reason_op, obj)) in
+        let callback_result = Tvar.mk_where cx reason_op (fun t ->
+          rec_flow cx trace (cb, CallT (use_op, reason_op, {
+            call_this_t;
+            call_targs = None;
+            call_args_tlist = [Arg wrapped_obj];
+            call_tout = t;
+            call_closure_t;
+            call_strict_arity;
+          }))
+        ) in
+        let unwrapped_t = Tvar.mk_where cx reason_op (fun t ->
+          rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
+        ) in
+        let maybe_r = replace_reason (fun desc -> RMaybe desc) reason_op in
+        DefT (maybe_r, MaybeT unwrapped_t)
+      | None, (SpreadArg t1)::(SpreadArg t2)::_ ->
+        add_output cx ~trace FlowError.(
+          EUnsupportedSyntax (loc_of_t t1, SpreadArgument));
+        add_output cx ~trace FlowError.(
+          EUnsupportedSyntax (loc_of_t t2, SpreadArgument));
+        AnyT.why reason_op
+      | None, (SpreadArg t)::_
+      | None, _::(SpreadArg t)::_ ->
+        let spread_loc = loc_of_t t in
+        add_output cx ~trace FlowError.(
+          EUnsupportedSyntax (spread_loc, SpreadArgument));
+        AnyT.why reason_op
+      | Some _, _ ->
+        add_output cx ~trace FlowError.(ECallTypeArity {
+          call_loc = loc_of_reason reason_op;
+          is_new = false;
+          reason_arity = lreason;
+          expected_arity = 0;
+        });
+        AnyT.why reason_op
+      | _ ->
+        (* Why is idx strict about arity? No other functions are. *)
+        add_output cx ~trace FlowError.(EIdxArity reason_op);
+        AnyT.why reason_op
+      in
+      rec_flow_t cx trace (tout, call_tout)
 
     (* Unwrap idx() callback param *)
     | InternalT (IdxWrapper (_, obj)), IdxUnwrap (_, t) -> rec_flow_t cx trace (obj, t)
@@ -3871,13 +3884,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          without fearing regressions in termination guarantees.
       *)
       | CallT (use_op, _, calltype) when not (is_typemap_reason reason_op) ->
-        let arg_reasons = List.map (function
-          | Arg t -> reason_of_t t
-          | SpreadArg t -> reason_of_t t
-        ) calltype.call_args_tlist in
-        let t_ = instantiate_poly cx trace
-          ~use_op ~reason_op ~reason_tapp ~cache:arg_reasons (ids,t) in
-        rec_flow cx trace (t_, u)
+        begin match calltype.call_targs with
+        | None ->
+          let arg_reasons = List.map (function
+            | Arg t -> reason_of_t t
+            | SpreadArg t -> reason_of_t t
+          ) calltype.call_args_tlist in
+          let t_ = instantiate_poly cx trace
+            ~use_op ~reason_op ~reason_tapp ~cache:arg_reasons (ids,t) in
+          rec_flow cx trace (t_, u)
+        | Some targs ->
+          let t_ = instantiate_poly_with_targs cx trace (ids, t) targs
+            ~use_op ~reason_op ~reason_tapp in
+          rec_flow cx trace (t_,
+            CallT (use_op, reason_op, {calltype with call_targs = None}))
+        end
+      | ConstructorT (use_op, reason_op, Some targs, args, tout) ->
+        let t_ = instantiate_poly_with_targs cx trace (ids, t) targs
+          ~use_op ~reason_op ~reason_tapp in
+        rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
       | _ ->
         let t_ = instantiate_poly cx trace
           ~use_op:unknown_use ~reason_op ~reason_tapp (ids,t) in
@@ -3966,17 +3991,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* FunT ~> CallT *)
 
-    | DefT (reason_fundef, FunT (_, _,
-        ({ this_t = o1; params = _; return_t = t1;
-          closure_t = func_scope_id; changeset; _ } as ft))),
-      CallT (use_op, reason_callsite,
-        { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
-          call_closure_t = call_scope_id; call_strict_arity})
-      ->
+    | DefT (reason_fundef, FunT (_, _, funtype)),
+      CallT (use_op, reason_callsite, calltype) ->
+      let {
+        this_t = o1;
+        params = _;
+        return_t = t1;
+        closure_t = func_scope_id;
+        changeset; _
+      } = funtype in
+      let {
+        call_this_t = o2;
+        call_targs;
+        call_args_tlist = tins2;
+        call_tout = t2;
+        call_closure_t = call_scope_id;
+        call_strict_arity
+      } = calltype in
+
       rec_flow cx trace (o2, UseT (use_op, o1));
+
+      Option.iter call_targs ~f:(fun _ ->
+        add_output cx ~trace FlowError.(ECallTypeArity {
+          call_loc = loc_of_reason reason_callsite;
+          is_new = false;
+          reason_arity = reason_fundef;
+          expected_arity = 0;
+        }));
+
       if call_strict_arity
-      then multiflow_call cx trace ~use_op reason_callsite tins2 ft
-      else multiflow_subtype cx trace ~use_op reason_callsite tins2 ft;
+      then multiflow_call cx trace ~use_op reason_callsite tins2 funtype
+      else multiflow_subtype cx trace ~use_op reason_callsite tins2 funtype;
 
       (* flow return type of function to the tvar holding the return type of the
          call. clears the op stack because the result of the call is not the
@@ -3994,9 +4039,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       havoc_call_env cx func_scope_id call_scope_id changeset;
 
     | DefT (reason_fundef, (AnyFunT | AnyT)),
-      CallT (use_op, reason_op,
-        { call_this_t; call_args_tlist; call_tout; call_closure_t=_;
-          call_strict_arity=_;}) ->
+      CallT (use_op, reason_op, calltype) ->
+      let {
+        call_this_t;
+        call_targs = _; (* An untyped receiver can't do anything with type args *)
+        call_args_tlist;
+        call_tout;
+        call_closure_t = _;
+        call_strict_arity = _;
+      } = calltype in
       let any = AnyT.why reason_fundef in
       rec_flow_t cx trace (call_this_t, any);
       call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
@@ -4005,18 +4056,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Special handlers for builtin functions *)
 
     | CustomFunT (_, ObjectAssign),
-      CallT (_, reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      CallT (_, reason_op, { call_targs = None; call_args_tlist = dest_t::ts; call_tout; _ }) ->
       let dest_t = extract_non_spread cx ~trace dest_t in
       let t = chain_objects cx ~trace reason_op dest_t ts in
       rec_flow_t cx trace (t, call_tout)
 
     | CustomFunT (_, ObjectGetPrototypeOf),
-      CallT (_, reason_op, { call_args_tlist = arg::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_targs = None; call_args_tlist = arg::_; call_tout; _ }) ->
       let l = extract_non_spread cx ~trace arg in
       rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
 
     | CustomFunT (_, ObjectSetPrototypeOf),
-      CallT (_, reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_targs = None; call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
       let target = extract_non_spread cx ~trace arg1 in
       let proto = extract_non_spread cx ~trace arg2 in
       rec_flow cx trace (target, SetProtoT (reason_op, proto));
@@ -4073,7 +4124,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, u)
 
     | CustomFunT (_, ReactPropType React.PropType.Complex kind),
-      CallT (_, reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
       let open React in
       let tool = match kind with
       | PropType.ArrayOf -> SimplifyPropType.ArrayOf
@@ -4092,7 +4143,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
 
     | CustomFunT (_, ReactCreateClass),
-      CallT (use_op, reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      CallT (use_op, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
       let loc_op = loc_of_reason reason_op in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = Tvar.mk cx (f reason_op) in
@@ -4113,7 +4164,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        handling. Terminate with extreme prejudice. *)
 
     | CustomFunT (_, DebugPrint),
-      CallT (_, reason_op, { call_args_tlist; call_tout; _ }) ->
+      CallT (_, reason_op, { call_targs = None; call_args_tlist; call_tout; _ }) ->
       List.iter (fun arg -> match arg with
         | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
         | SpreadArg t ->
@@ -4126,18 +4177,38 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       raise (Flow_error.EDebugThrow (loc_of_reason reason_op))
 
     | CustomFunT (_, DebugSleep),
-      CallT (_, reason_op, { call_args_tlist=arg1::_; call_tout; _ }) ->
+      CallT (_, reason_op, { call_targs = None; call_args_tlist=arg1::_; call_tout; _ }) ->
       let t = extract_non_spread cx ~trace arg1 in
       rec_flow cx trace (t, DebugSleepT reason_op);
       rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
-    | CustomFunT (_, (
+    | CustomFunT (lreason, (
           Compose _
         | ReactCreateElement
         | ReactCloneElement
         | ReactElementFactory _
        as kind)),
-      CallT (use_op, reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
+      CallT (use_op, reason_op, calltype) ->
+      let {
+        call_targs;
+        call_args_tlist = args;
+        call_tout = tout;
+        call_this_t = _;
+        call_closure_t = _;
+        call_strict_arity = _;
+      } = calltype in
+
+      (* None of the supported custom funs are polymorphic, so error here
+         instead of threading targs into spread resolution. *)
+      Option.iter call_targs ~f:(fun _ ->
+        add_output cx ~trace FlowError.(
+          ECallTypeArity {
+            call_loc = loc_of_reason reason_op;
+            is_new = false;
+            reason_arity = lreason;
+            expected_arity = 0;
+          }));
+
       resolve_call_list cx ~trace ~use_op reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
@@ -4467,11 +4538,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*********************************************************)
 
     | DefT (reason, ClassT this),
-      ConstructorT (use_op, reason_op, args, t) ->
+      ConstructorT (use_op, reason_op, targs, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason in
+      (* early error if type args passed to non-polymorphic class *)
+      Option.iter targs ~f:(fun _ ->
+        add_output cx ~trace FlowError.(ECallTypeArity {
+          call_loc = loc_of_reason reason_op;
+          is_new = true;
+          reason_arity = reason_of_t this;
+          expected_arity = 0;
+        }));
       (* call this.constructor(args) *)
       let ret = Tvar.mk_where cx reason_op (fun t ->
-        let funtype = mk_methodcalltype this args t in
+        let funtype = mk_methodcalltype this None args t in
         let propref = Named (reason_o, "constructor") in
         rec_flow cx trace (
           this,
@@ -4485,11 +4564,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types derive objects through explicit instantiation *)
     (****************************************************************)
 
-    | DefT (_, FunT (_, proto, ({
+    | DefT (lreason, FunT (_, proto, ({
         this_t = this;
         return_t = ret;
         _ } as ft))),
-      ConstructorT (use_op, reason_op, args, t) ->
+      ConstructorT (use_op, reason_op, targs, args, t) ->
       (* TODO: closure *)
       (** create new object **)
       let reason_c = replace_reason_const RNewObject reason_op in
@@ -4499,6 +4578,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let dict = None in
       let pmap = Context.make_property_map cx SMap.empty in
       let new_obj = DefT (reason_c, ObjT (mk_objecttype ~flags dict pmap proto)) in
+      (** error if type arguments are provided to non-polymorphic constructor **)
+      Option.iter targs ~f:(fun _ ->
+        add_output cx ~trace FlowError.(ECallTypeArity {
+          call_loc = loc_of_reason reason_op;
+          is_new = true;
+          reason_arity = lreason;
+          expected_arity = 0;
+        }));
       (** call function with this = new_obj, params = args **)
       rec_flow_t cx trace (new_obj, this);
       multiflow_call cx trace ~use_op reason_op args ft;
@@ -4506,14 +4593,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_o = replace_reason_const RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | DefT (_, AnyFunT), ConstructorT (use_op, reason_op, args, t) ->
+    | DefT (_, AnyFunT), ConstructorT (use_op, reason_op, targs, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason_op in
+      ignore targs; (* An untyped receiver can't do anything with type args *)
       call_args_iter
         (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.why reason_op)))
         args;
       rec_flow_t cx trace (DefT (reason_o, AnyObjT), t);
 
-    | DefT (_, AnyT), ConstructorT (use_op, reason_op, args, t) ->
+    | DefT (_, AnyT), ConstructorT (use_op, reason_op, targs, args, t) ->
+      ignore targs; (* An untyped receiver can't do anything with type args *)
       call_args_iter (fun t ->
         rec_flow cx trace (t, UseT (use_op, AnyT.why reason_op))
       ) args;
@@ -5473,22 +5562,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* functions may be bound by passing a receiver and (partial) arguments *)
     (************************************************************************)
 
-    | FunProtoBindT _,
+    | FunProtoBindT lreason,
       CallT (use_op, reason_op, ({
         call_this_t = func;
+        call_targs;
         call_args_tlist = first_arg::call_args_tlist;
         _
       } as funtype)) ->
+      Option.iter call_targs ~f:(fun _ ->
+        add_output cx ~trace FlowError.(ECallTypeArity {
+          call_loc = loc_of_reason reason_op;
+          is_new = false;
+          reason_arity = lreason;
+          expected_arity = 0;
+        }));
       let call_this_t = extract_non_spread cx ~trace first_arg in
-      let funtype = { funtype with call_this_t; call_args_tlist } in
+      let call_targs = None in
+      let funtype = { funtype with call_this_t; call_targs; call_args_tlist } in
       rec_flow cx trace (func, BindT (use_op, reason_op, funtype, false))
 
     | DefT (reason, FunT (_, _, ({this_t = o1; _} as ft))),
-      BindT (use_op, reason_op, {
-        call_this_t = o2;
-        call_args_tlist = tins2;
-        call_tout; call_closure_t=_; call_strict_arity = _;
-      }, _) ->
+      BindT (use_op, reason_op, calltype, _) ->
+        let {
+          call_this_t = o2;
+          call_targs = _; (* always None *)
+          call_args_tlist = tins2;
+          call_tout;
+          call_closure_t = _;
+          call_strict_arity = _;
+        } = calltype in
+
         (* TODO: closure *)
 
         rec_flow_t cx trace (o2,o1);
@@ -5498,12 +5601,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         resolve_call_list cx ~trace ~use_op reason tins2 resolve_to;
 
     | DefT (_, (AnyT | AnyFunT)),
-      BindT (use_op, reason, {
+      BindT (use_op, reason, calltype, _) ->
+      let {
         call_this_t;
+        call_targs = _; (* always None *)
         call_args_tlist;
         call_tout;
-        _;
-      }, _) ->
+        call_closure_t = _;
+        call_strict_arity = _;
+      } = calltype in
       rec_flow_t cx trace (AnyT.why reason, call_this_t);
       call_args_iter (fun param_t ->
         rec_flow cx trace (AnyT.why reason, UseT (use_op, param_t))
@@ -7114,7 +7220,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let reason_op = replace_reason_const (RProperty (Some x)) reason in
     GetPropT (use_op, reason, Named (reason_op, x), tout)
   | ElementType t -> GetElemT (use_op, reason, t, tout)
-  | Bind t -> BindT (use_op, reason, mk_methodcalltype t [] tout, true)
+  | Bind t -> BindT (use_op, reason, mk_methodcalltype t None [] tout, true)
   | SpreadType (options, todo_rev) ->
     let open Object in
     let open Object.Spread in
@@ -7133,7 +7239,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
   | ValuesType -> GetValuesT (reason, tout)
   | CallType args ->
     let args = List.map (fun arg -> Arg arg) args in
-    let call = mk_functioncalltype reason args tout in
+    let call = mk_functioncalltype reason None args tout in
     let call = {call with call_strict_arity = false} in
     CallT (use_op, reason, call)
   | TypeMap tmap -> MapTypeT (reason, tmap, tout)
@@ -10706,7 +10812,7 @@ and run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tout =
       let tvar = Tvar.mk_where cx reason (fun tvar ->
         run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar) in
       rec_flow cx trace (fn,
-        CallT (use_op, reason, mk_functioncalltype reason_op [Arg tvar] tout))
+        CallT (use_op, reason, mk_functioncalltype reason_op None [Arg tvar] tout))
 
     (* If the compose function is reversed then we want to call the tail
      * functions in our array after we call the head function. *)
@@ -10715,7 +10821,7 @@ and run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tout =
         (reason_of_t fn) in
       let tvar = Tvar.mk_where cx reason (fun tvar ->
         rec_flow cx trace (fn,
-          CallT (use_op, reason, mk_functioncalltype reason_op [Arg tin] tvar))) in
+          CallT (use_op, reason, mk_functioncalltype reason_op None [Arg tin] tvar))) in
       run_compose cx trace ~use_op reason_op reverse fns spread_fn tvar tout
 
     (* If there are no functions and no spread function then we are an identity

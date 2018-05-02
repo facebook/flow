@@ -386,7 +386,7 @@ module rec TypeTerm : sig
     | ReposUseT of reason * bool (* use_desc *) * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of use_op * reason * call_arg list * t
+    | ConstructorT of use_op * reason * t list option * call_arg list * t
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
@@ -755,13 +755,14 @@ module rec TypeTerm : sig
   (* Used by CallT and similar constructors *)
   and funcalltype = {
     call_this_t: t;
+    call_targs: t list option;
     call_args_tlist: call_arg list;
     call_tout: t;
     call_closure_t: int;
     call_strict_arity: bool;
   }
 
-  and opt_funcalltype = t * call_arg list * int * bool
+  and opt_funcalltype = t * t list option * call_arg list * int * bool
 
   and call_arg =
   | Arg of t
@@ -2101,7 +2102,7 @@ end = struct
     | CJSExtractNamedExportsT (reason, _, _) -> reason
     | CJSRequireT (reason, _, _) -> reason
     | ComparatorT (reason,_,_) -> reason
-    | ConstructorT (_,reason,_,_) -> reason
+    | ConstructorT (_,reason,_,_,_) -> reason
     | CopyNamedExportsT (reason, _, _) -> reason
     | CopyTypeExportsT (reason, _, _) -> reason
     | DebugPrintT reason -> reason
@@ -2252,7 +2253,8 @@ end = struct
         CJSExtractNamedExportsT (f reason, exports, t2)
     | CJSRequireT (reason, t, is_strict) -> CJSRequireT (f reason, t, is_strict)
     | ComparatorT (reason, flip, t) -> ComparatorT (f reason, flip, t)
-    | ConstructorT (use_op, reason, ts, t) -> ConstructorT (use_op, f reason, ts, t)
+    | ConstructorT (use_op, reason, targs, args, tout) ->
+        ConstructorT (use_op, f reason, targs, args, tout)
     | CopyNamedExportsT (reason, target_module_t, t_out) ->
         CopyNamedExportsT(f reason, target_module_t, t_out)
     | CopyTypeExportsT (reason, target_module_t, t_out) ->
@@ -2374,7 +2376,7 @@ end = struct
   | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
-  | ConstructorT (op, r, c, t) -> util op (fun op -> ConstructorT (op, r, c, t))
+  | ConstructorT (op, r, targs, args, t) -> util op (fun op -> ConstructorT (op, r, targs, args, t))
   | SuperT (op, r, i) -> util op (fun op -> SuperT (op, r, i))
   | AdderT (op, d, f, l, r) -> util op (fun op -> AdderT (op, d, f, l, r))
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
@@ -3239,9 +3241,10 @@ let mk_methodtype
 }
 
 let mk_methodcalltype
-    this tins ?(frame=0) ?(call_strict_arity=true) tout = {
+    this targs args ?(frame=0) ?(call_strict_arity=true) tout = {
   call_this_t = this;
-  call_args_tlist = tins;
+  call_targs = targs;
+  call_args_tlist = args;
   call_tout = tout;
   call_closure_t = frame;
   call_strict_arity;
@@ -3261,8 +3264,8 @@ let mk_boundfunctiontype = mk_methodtype dummy_this
 let mk_functiontype reason = mk_methodtype (global_this reason)
 let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
-let mk_opt_functioncalltype reason args clos strict =
-  (global_this reason, args, clos, strict)
+let mk_opt_functioncalltype reason targs args clos strict =
+  (global_this reason, targs, args, clos, strict)
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
@@ -3287,8 +3290,9 @@ let mk_objecttype ?(flags=default_flags) dict pmap proto = {
   proto_t = proto
 }
 
-let apply_opt_funcalltype (this, args, clos, strict) t_out = {
+let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
   call_this_t = this;
+  call_targs = targs;
   call_args_tlist = args;
   call_tout = t_out;
   call_closure_t = clos;

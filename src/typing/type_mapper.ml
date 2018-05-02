@@ -556,11 +556,12 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ReposUseT (r, use_desc, use_op, t'')
-    | ConstructorT (op, r, callargs, t') ->
-        let callargs' = ListUtils.ident_map (self#call_arg cx map_cx) callargs in
+    | ConstructorT (op, r, targs, args, t') ->
+        let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) targs in
+        let args' = ListUtils.ident_map (self#call_arg cx map_cx) args in
         let t'' = self#type_ cx map_cx t' in
-        if callargs' == callargs && t'' == t' then t
-        else ConstructorT (op, r, callargs', t'')
+        if targs' == targs && args' == args && t'' == t' then t
+        else ConstructorT (op, r, targs', args', t'')
     | SuperT (op, r, DerivedInstance i) ->
         let i' = self#inst_type cx map_cx i in
         if i' == i then t
@@ -887,23 +888,42 @@ class ['a] t = object(self)
     if t'' == t' then t
     else OptGetElemT (use_op, r, t'')
 
-  method fun_call_type cx map_cx ({call_this_t; call_args_tlist; call_tout;
-      call_closure_t; call_strict_arity} as t) =
+  method fun_call_type cx map_cx t =
+    let  {
+      call_this_t;
+      call_targs;
+      call_args_tlist;
+      call_tout;
+      call_closure_t;
+      call_strict_arity;
+    } = t in
     let call_this_t' = self#type_ cx map_cx call_this_t in
+    let call_targs' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) call_targs in
     let call_args_tlist' = ListUtils.ident_map (self#call_arg cx map_cx) call_args_tlist in
     let call_tout' = self#type_ cx map_cx call_tout in
-    if call_this_t' == call_this_t && call_args_tlist' == call_args_tlist
-      && call_tout' == call_tout
+    if (
+      call_this_t' == call_this_t &&
+      call_targs' == call_targs &&
+      call_args_tlist' == call_args_tlist &&
+      call_tout' == call_tout
+    )
     then t
-    else {call_this_t = call_this_t'; call_args_tlist = call_args_tlist';
-      call_tout = call_tout'; call_closure_t; call_strict_arity}
+    else {
+      call_this_t = call_this_t';
+      call_targs = call_targs';
+      call_args_tlist = call_args_tlist';
+      call_tout = call_tout';
+      call_closure_t;
+      call_strict_arity;
+    }
 
-  method private opt_fun_call_type cx map_cx ((this, args, clos, strict) as t) =
+  method private opt_fun_call_type cx map_cx ((this, targs, args, clos, strict) as t) =
     let this' = self#type_ cx map_cx this in
+    let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) targs in
     let args' = ListUtils.ident_map (self#call_arg cx map_cx) args in
-    if this' == this && args' == args
+    if this' == this && targs' == targs && args' == args
     then t
-    else (this', args', clos, strict)
+    else (this', targs', args', clos, strict)
 
   method prop_ref cx map_cx t =
     match t with

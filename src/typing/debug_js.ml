@@ -466,7 +466,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ConstructorT (_, _, args, t) -> [
+  | ConstructorT (_, _, targs, args, t) -> [
+      "typeArgs", (match targs with
+        | None -> JSON_Null
+        | Some ts -> JSON_Array (List.map (_json_of_t json_cx) ts));
       "argTypes", JSON_Array (List.map (json_of_funcallarg json_cx) args);
       "type", _json_of_t json_cx t
     ]
@@ -1033,6 +1036,7 @@ and json_of_funtype_impl json_cx {
 and json_of_funcalltype json_cx = check_depth json_of_funcalltype_impl json_cx
 and json_of_funcalltype_impl json_cx {
   call_this_t;
+  call_targs;
   call_args_tlist;
   call_tout;
   call_closure_t;
@@ -1041,6 +1045,9 @@ and json_of_funcalltype_impl json_cx {
   let arg_types = List.map (json_of_funcallarg json_cx) call_args_tlist in
   JSON_Object ([
     "thisType", _json_of_t json_cx call_this_t;
+    "typeArgs", (match call_targs with
+      | None -> JSON_Null
+      | Some ts -> JSON_Array (List.map (_json_of_t json_cx) ts));
     "argTypes", JSON_Array arg_types;
     "tout", _json_of_t json_cx call_tout;
     "closureIndex", int_ call_closure_t;
@@ -2577,6 +2584,9 @@ let dump_flow_error =
         spf "ETypeParamArity (%s, %d)" (string_of_loc loc) expected
     | ETypeParamMinArity (loc, expected) ->
         spf "ETypeParamMinArity (%s, %d)" (string_of_loc loc) expected
+    | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity } ->
+        spf "ECallTypeArity { call_loc=%s; is_new=%b; reason_arity=%s; expected_arity=%d; }"
+          (string_of_loc call_loc) is_new (dump_reason cx reason_arity) expected_arity
     | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
         spf "ETooManyTypeArgs (%s, %s, %d)"
           (dump_reason cx reason_tapp)

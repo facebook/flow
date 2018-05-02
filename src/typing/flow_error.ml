@@ -88,6 +88,12 @@ type error_message =
   | EIdxUse2 of reason
   | EUnexpectedThisType of Loc.t
   | ETypeParamArity of Loc.t * int
+  | ECallTypeArity of {
+      call_loc: Loc.t;
+      is_new: bool;
+      reason_arity: reason;
+      expected_arity: int;
+    }
   | ETypeParamMinArity of Loc.t * int
   | ETooManyTypeArgs of reason * reason * int
   | ETooFewTypeArgs of reason * reason * int
@@ -322,6 +328,7 @@ let util_use_op_of_msg nope util = function
 | EIdxUse2 (_)
 | EUnexpectedThisType (_)
 | ETypeParamArity (_, _)
+| ECallTypeArity _
 | ETypeParamMinArity (_, _)
 | ETooManyTypeArgs (_, _, _)
 | ETooFewTypeArgs (_, _, _)
@@ -1253,6 +1260,19 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text "Cannot use type without at least ";
       text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"));
     ]
+
+  | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity = n } ->
+    let use = if is_new then "construct " else "call " in
+    if n = 0 then
+      mk_error ~trace_infos call_loc [
+        text "Cannot "; text use; text "non-polymorphic "; ref reason_arity;
+        text " with type arguments.";
+      ]
+    else
+      mk_error ~trace_infos call_loc [
+        text "Cannot "; text use; ref reason_arity; text " without exactly ";
+        text (spf "%n type argument%s." n (if n == 1 then "" else "s"));
+      ]
 
   | EValueUsedAsType reasons ->
     let (value, _) = reasons in

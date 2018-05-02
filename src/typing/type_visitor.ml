@@ -313,7 +313,8 @@ class ['a] t = object(self)
   | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
   | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
 
-  | ConstructorT (_, _, args, t) ->
+  | ConstructorT (_, _, targs, args, t) ->
+    let acc = Option.fold ~init:acc ~f:(List.fold_left (self#type_ cx pole_TODO)) targs in
     let acc = List.fold_left (self#call_arg cx) acc args in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -757,9 +758,18 @@ class ['a] t = object(self)
     let acc = self#opt (self#type_ cx pole) acc cjs_export in
     acc
 
-  method private fun_call_type cx acc { call_this_t; call_args_tlist; call_tout; _ } =
+  method private fun_call_type cx acc call =
+    let {
+      call_this_t;
+      call_targs;
+      call_args_tlist;
+      call_tout;
+      call_closure_t = _;
+      call_strict_arity = _;
+    } = call in
     let acc = self#type_ cx pole_TODO acc call_this_t in
-    let acc = List.fold_left (self#call_arg cx) acc call_args_tlist in
+    let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc call_targs in
+    let acc = self#list (self#call_arg cx) acc call_args_tlist in
     let acc = self#type_ cx pole_TODO acc call_tout in
     acc
 
