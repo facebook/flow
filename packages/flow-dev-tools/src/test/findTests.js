@@ -18,7 +18,7 @@ import type {SuiteResult} from './runTestSuite';
 const testSuiteRegex = /(.*)[\/\\]test.js/;
 
 async function findTestSuites(): Promise<Array<string>> {
-  const testSuites = await glob(format('%s/!(lsp)/**/test.js', getTestsDir()), {
+  const testSuites = await glob(format('%s/**/test.js', getTestsDir()), {
     cwd: __dirname,
   });
   // On Windows, glob still uses unix dir seperators, so we need to normalize
