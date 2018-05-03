@@ -160,8 +160,8 @@ The default value of `max_header_tokens` is 10.
 
 #### `module.file_ext` _`(string)`_ <a class="toc" id="toc-module-file-ext-string" href="#toc-module-file-ext-string"></a>
 
-By default, Flow will look for files with the extensions `.js`, `.jsx`, and
-`.json`. You can override this behavior with this option.
+By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`
+and `.json`. You can override this behavior with this option.
 
 For example, if you do:
 
