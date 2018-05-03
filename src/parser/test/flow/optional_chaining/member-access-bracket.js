@@ -9,3 +9,5 @@ obj?.[true]?.[true]
 obj.a?.[expr]
 
 obj.a?.[true]
+
+obj?.["case"]

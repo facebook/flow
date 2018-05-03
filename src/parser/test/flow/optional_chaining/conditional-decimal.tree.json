@@ -79,27 +79,29 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":7}},
-      "range":[26,33],
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":9}},
+      "range":[26,35],
       "expression":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":4}},
-        "range":[26,30],
-        "value":true,
-        "raw":"true"
-      },
-      "directive":null
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
-      "range":[34,35],
-      "expression":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
-        "range":[34,35],
-        "value":3,
-        "raw":"3"
+        "type":"OptionalMemberExpression",
+        "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":9}},
+        "range":[26,35],
+        "object":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":4}},
+          "range":[26,30],
+          "value":true,
+          "raw":"true"
+        },
+        "property":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
+          "range":[34,35],
+          "name":"",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "computed":false,
+        "optional":true
       },
       "directive":null
     },
