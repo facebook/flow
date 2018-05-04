@@ -10,3 +10,7 @@
 include Set.Make (IntKey)
 let to_string iset =
   "{" ^ (String.concat "," (List.map string_of_int (elements iset))) ^ "}"
+
+(* temporary implementations to placate deriving show *)
+let show = to_string
+let pp : Format.formatter -> t -> unit = fun _ x -> Printf.printf "%s\n" (show x)
