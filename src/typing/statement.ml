@@ -1520,8 +1520,10 @@ and statement cx = Ast.Statement.(
       Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
       let class_t = mk_class cx class_loc reason c in
       Env.add_type_table cx class_loc class_t;
-      let id_info = name, class_t, Type_table.Other in
-      Env.add_type_table_info cx name_loc id_info;
+      Option.iter c.Ast.Class.id ~f:(fun (id_loc, id_name) ->
+        let id_info = id_name, class_t, Type_table.Other in
+        Env.add_type_table_info cx id_loc id_info;
+      );
       Env.init_implicit_let
         Scope.Entry.ClassNameBinding
         cx
