@@ -24,3 +24,13 @@ let rec iter_all threads =
     (* If any thread in threads fails during this nchoose, the whole all function will fail *)
     let%lwt _, sleeping_threads = Lwt.nchoose_split threads in
     iter_all sleeping_threads
+
+let get_value_unsafe thread = match Lwt.state thread with
+  | Lwt.Return x -> x
+  | _ -> failwith "Not yet completed"
+
+let all threads =
+  let%lwt () = iter_all threads in
+  threads
+  |> List.map get_value_unsafe
+  |> Lwt.return
