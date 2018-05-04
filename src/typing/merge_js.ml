@@ -5,44 +5,68 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module RequireMap = MyMap.Make (struct
+  (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
+  type t = string * File_key.t
+
+  let compare (r1, f1) (r2, f2) =
+    match String.compare r1 r2 with
+    | 0 -> File_key.compare f1 f2
+    | n -> n
+end)
+
 module FilenameMap = Utils_js.FilenameMap
+module LocSet = Utils_js.LocSet
 
 module Reqs = struct
-  type impl = File_key.t * string * Loc.t Nel.t * File_key.t
-  type dep_impl = Context.sig_t * string * Loc.t Nel.t * File_key.t
-  type unchecked = string * Loc.t Nel.t * File_key.t
-  type res = Loc.t Nel.t * string * File_key.t
-  type decl = string * Loc.t Nel.t * Modulename.t * File_key.t
+  type impl = LocSet.t
+  type dep_impl = Context.sig_t * LocSet.t
+  type unchecked = LocSet.t
+  type res = LocSet.t
+  type decl = LocSet.t * Modulename.t
   type t = {
-    impls: impl list;
-    dep_impls: dep_impl list;
-    unchecked: unchecked list;
-    res: res list;
-    decls: decl list;
+    impls: impl RequireMap.t;
+    dep_impls: dep_impl RequireMap.t;
+    unchecked: unchecked RequireMap.t;
+    res: res RequireMap.t;
+    decls: decl RequireMap.t;
   }
 
   let empty = {
-    impls = [];
-    dep_impls = [];
-    unchecked = [];
-    res = [];
-    decls = [];
+    impls = RequireMap.empty;
+    dep_impls = RequireMap.empty;
+    unchecked = RequireMap.empty;
+    res = RequireMap.empty;
+    decls = RequireMap.empty;
   }
 
-  let add_impl impl reqs =
-    { reqs with impls = impl::reqs.impls }
+  let add_impl require requirer require_locs reqs =
+    let impls = RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.impls in
+    { reqs with impls }
 
-  let add_dep_impl dep_impl reqs =
-    { reqs with dep_impls = dep_impl::reqs.dep_impls }
+  let add_dep_impl =
+    let combine (from_cx, locs1) (_, locs2) = from_cx, LocSet.union locs1 locs2 in
+    fun require requirer (from_cx, require_locs) reqs ->
+      let dep_impls =
+        RequireMap.add ~combine (require, requirer) (from_cx, require_locs) reqs.dep_impls
+      in
+      { reqs with dep_impls }
 
-  let add_unchecked unchecked reqs =
-    { reqs with unchecked = unchecked::reqs.unchecked }
+  let add_unchecked require requirer require_locs reqs =
+    let unchecked =
+      RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.unchecked
+    in
+    { reqs with unchecked }
 
-  let add_res res reqs =
-    { reqs with res = res::reqs.res }
+  let add_res require requirer require_locs reqs =
+    let res = RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.res in
+    { reqs with res }
 
-  let add_decl decl reqs =
-    { reqs with decls = decl::reqs.decls }
+  let add_decl =
+    let combine (locs1, modulename) (locs2, _) = LocSet.union locs1 locs2, modulename in
+    fun require requirer (require_locs, modulename) reqs ->
+    let decls = RequireMap.add ~combine (require, requirer) (require_locs, modulename) reqs.decls in
+    { reqs with decls }
 end
 
 (* Connect the builtins object in master_cx to the builtins reference in some
@@ -270,38 +294,42 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
 
   let open Reqs in
 
-  reqs.impls |> List.iter (fun (fn_from, m, locs, fn_to) ->
-    ignore fn_from; (* TODO: remove if unneeded *)
+  reqs.impls
+  |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    Nel.iter (fun loc ->
+    LocSet.iter (fun loc ->
       explicit_impl_require_strict cx (sig_cx, m, loc, cx_to);
     ) locs;
   );
 
-  reqs.dep_impls |> List.iter (fun (cx_from, m, locs, fn_to) ->
+  reqs.dep_impls
+  |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    Nel.iter (fun loc ->
+    LocSet.iter (fun loc ->
       explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
     ) locs
   );
 
-  reqs.res |> List.iter (fun (locs, f, fn_to) ->
+  reqs.res
+  |> RequireMap.iter (fun (f, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    Nel.iter (fun loc ->
+    LocSet.iter (fun loc ->
       explicit_res_require_strict cx (loc, f, cx_to)
     ) locs
   );
 
-  reqs.decls |> List.iter (fun (m, locs, resolved_m, fn_to) ->
+  reqs.decls
+  |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    Nel.iter (fun loc ->
+    LocSet.iter (fun loc ->
       explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
     ) locs
   );
 
-  reqs.unchecked |> List.iter (fun (m, locs, fn_to) ->
+  reqs.unchecked
+  |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    Nel.iter (fun loc ->
+    LocSet.iter (fun loc ->
       explicit_unchecked_require_strict cx (m, loc, cx_to)
     ) locs
   );

@@ -194,11 +194,11 @@ let infer_and_merge ~root filename ast file_sig =
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
   let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-  let decls = SMap.fold (fun module_name locs acc ->
+  let reqs = SMap.fold (fun module_name locs reqs ->
     let m = Modulename.String module_name in
-    (module_name, locs, m, filename) :: acc
-  ) require_loc_map [] in
-  let reqs = Merge_js.Reqs.({ empty with decls }) in
+    let locs = locs |> Nel.to_list |> Utils_js.LocSet.of_list in
+    Merge_js.Reqs.add_decl module_name filename (locs, m) reqs
+  ) require_loc_map Merge_js.Reqs.empty in
   let lint_severities = LintSettings.empty_severities in
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
