@@ -62,7 +62,7 @@ Status command options:
   --strip-root         Print paths without the root
   --temp-dir           Directory in which to store temp files (default: /tmp/flow/)
   --timeout            Maximum time to wait, in seconds
-  --version            (Deprecated, use `flow version` instead) Print version number and exit
+  --version            Print version number and exit
 ```
 
 You can then, further dig into particular COMMANDs by adding the `--help` flag.
