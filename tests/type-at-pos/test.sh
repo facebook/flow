@@ -265,6 +265,10 @@ assert_ok "$FLOW" type-at-pos interface.js 9 19 --strip-root --pretty
 # printf "interface.js:13:6 = "
 # assert_ok "$FLOW" type-at-pos interface.js 13 6 --strip-root --pretty
 
+# declare_class.js
+printf "declare_class.js:3:15 = "
+assert_ok "$FLOW" type-at-pos declare_class.js 3 15 --strip-root --pretty
+
 # mixed.js
 printf "mixed.js:18:17 = "
 assert_ok "$FLOW" type-at-pos mixed.js 18 17 --strip-root --pretty

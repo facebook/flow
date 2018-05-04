@@ -1425,6 +1425,21 @@ interface.js:9:19 = {
   "start":18,
   "end":19
 }
+declare_class.js:3:15 = {
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"declare_class.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":15,"offset":25}
+  },
+  "path":"declare_class.js",
+  "line":3,
+  "endline":3,
+  "start":15,
+  "end":15
+}
 mixed.js:18:17 = {
   "type":"A | B",
   "reasons":[],

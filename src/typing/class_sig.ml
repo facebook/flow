@@ -886,7 +886,7 @@ let of_interface cx reason { Ast.Statement.Interface.
 
 
 let of_declare_class cx reason { Ast.Statement.DeclareClass.
-  id = ident;
+  id = (id_loc, id_name) as ident;
   tparams;
   body = (_, { Ast.Type.Object.properties; _ });
   extends;
@@ -897,6 +897,9 @@ let of_declare_class cx reason { Ast.Statement.DeclareClass.
 
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx tparams in
+
+  let id_info = id_name, self, Type_table.Other in
+  Env.add_type_table_info cx ~tparams_map id_loc id_info;
 
   let tparams, tparams_map = add_this self cx reason tparams tparams_map in
 
