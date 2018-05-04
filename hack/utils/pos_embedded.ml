@@ -17,11 +17,11 @@ type 'a pos = {
   pos_file: 'a ;
   pos_start: File_pos.t ;
   pos_end: File_pos.t ;
-}
+} [@@deriving show]
 
-type t = Relative_path.t pos
+type t = Relative_path.t pos [@@deriving show]
 
-type absolute = string pos
+type absolute = string pos [@@deriving show]
 
 let none = {
   pos_file = Relative_path.default ;
