@@ -17,10 +17,10 @@
  * to work, but it wouldn't preserve stack traces. Anyway, Promise.all doesn't cancel running
  * promises either :P
  *)
-let rec all threads =
+let rec iter_all threads =
   if threads = []
   then Lwt.return_unit
   else
     (* If any thread in threads fails during this nchoose, the whole all function will fail *)
     let%lwt _, sleeping_threads = Lwt.nchoose_split threads in
-    all sleeping_threads
+    iter_all sleeping_threads

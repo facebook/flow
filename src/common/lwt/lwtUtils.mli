@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val all: unit Lwt.t list -> unit Lwt.t
+val iter_all: unit Lwt.t list -> unit Lwt.t

@@ -63,7 +63,7 @@ include MultiWorker.CallFunctor (struct
         run_worker worker
     in
 
-    let%lwt () = LwtUtils.all (List.map run_worker workers) in
+    let%lwt () = LwtUtils.iter_all (List.map run_worker workers) in
 
     Lwt.return (!acc)
 end)

@@ -246,7 +246,7 @@ let run ~monitor_channels ~shared_mem_config options =
     ) in
 
     (* Run both these threads. If either of them fail, return immediately *)
-    LwtUtils.all [
+    LwtUtils.iter_all [
       listening_thread;
       serve ~dfind ~genv ~env
     ]
