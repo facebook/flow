@@ -730,21 +730,19 @@ module Expression
           then error env Parse_error.OptionalChainNew;
 
           Expect.token env T_PLING_PERIOD;
-          if Expect.maybe env T_LBRACKET
-          then dynamic ~allow_optional_chain ~in_optional_chain:true
-                       ~optional:true env start_loc left
-          else if Peek.is_identifier env
-          then static ~allow_optional_chain ~in_optional_chain:true
-                      ~optional:true env start_loc left
-          else begin match Peek.token env with
+          begin match Peek.token env with
           | T_TEMPLATE_PART _ ->
             error env Parse_error.OptionalChainTemplate;
             left
           | T_LPAREN -> left
           | T_LESS_THAN when should_parse_types env -> left
+          | T_LBRACKET ->
+            Expect.token env T_LBRACKET;
+            dynamic ~allow_optional_chain ~in_optional_chain:true
+                    ~optional:true env start_loc left
           | _ ->
-            error_unexpected env;
-            left
+            static ~allow_optional_chain ~in_optional_chain:true
+                   ~optional:true env start_loc left
           end
       | T_LBRACKET ->
           Expect.token env T_LBRACKET;

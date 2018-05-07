@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":12}},
-  "range":[0,37],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":9}},
+  "range":[0,48],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -111,6 +111,35 @@
           "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":12}},
           "range":[34,37],
           "name":"baz",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "computed":false,
+        "optional":true
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":9}},
+      "range":[39,48],
+      "expression":{
+        "type":"OptionalMemberExpression",
+        "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":9}},
+        "range":[39,48],
+        "object":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":3}},
+          "range":[39,42],
+          "name":"foo",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "property":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":7,"column":5},"end":{"line":7,"column":9}},
+          "range":[44,48],
+          "name":"case",
           "typeAnnotation":null,
           "optional":false
         },

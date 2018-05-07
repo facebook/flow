@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":13}},
-  "range":[0,97],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":13}},
+  "range":[0,112],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -225,6 +225,34 @@
           "range":[92,96],
           "value":true,
           "raw":"true"
+        },
+        "computed":true,
+        "optional":true
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":13}},
+      "range":[99,112],
+      "expression":{
+        "type":"OptionalMemberExpression",
+        "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":13}},
+        "range":[99,112],
+        "object":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":3}},
+          "range":[99,102],
+          "name":"obj",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "property":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":13,"column":6},"end":{"line":13,"column":12}},
+          "range":[105,111],
+          "value":"case",
+          "raw":"\"case\""
         },
         "computed":true,
         "optional":true
