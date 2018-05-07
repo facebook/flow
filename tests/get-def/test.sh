@@ -16,8 +16,20 @@ assert_ok "$FLOW" get-def imports.js 4 4 --strip-root --pretty
 
 # import {foo, bar as baz} from "./helpers/exports_named.js";
 #          ^
-printf "named import points to named export = "
+printf "named import of const points to named export = "
 assert_ok "$FLOW" get-def imports.js 6 10 --strip-root --pretty
+
+printf "named import of let points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 29 --strip-root --pretty
+
+printf "named import of var points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 40 --strip-root --pretty
+
+printf "named import of function points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 51 --strip-root --pretty
+
+printf "named import of class points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 56 --strip-root --pretty
 
 # import {foo, bar as baz} from "./helpers/exports_named.js";
 #                   ^

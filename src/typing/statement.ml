@@ -1687,9 +1687,8 @@ and statement cx = Ast.Statement.(
               "Parser Error: Immediate exports of nameless functions can " ^
               "only exist for default exports!"
             )
-          | loc, FunctionDeclaration {Ast.Function.id = Some ident; _} ->
-            let name = ident_name ident in
-            [(spf "function %s() {}" name, loc, name, None)]
+          | _, FunctionDeclaration {Ast.Function.id = Some (id_loc, name); _} ->
+            [(spf "function %s() {}" name, id_loc, name, None)]
           | _, ClassDeclaration {Ast.Class.id = None; _} ->
             failwith (
               "Parser Error: Immediate exports of nameless classes can " ^

@@ -3,7 +3,7 @@
 import thing from "./helpers/exports_default.js";
 thing;
 
-import {foo, bar as baz} from "./helpers/exports_named.js";
+import {foo, bar as baz, letBinding, varBinding, fun, Cls} from "./helpers/exports_named.js";
 foo;
 baz;
 
