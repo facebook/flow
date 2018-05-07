@@ -48,10 +48,11 @@ type merge_strict_context_result = {
 let reqs_of_component component required =
   let dep_cxs, reqs =
     List.fold_left (fun (dep_cxs, reqs) req ->
-      let r, loc, resolved_r, file = req in
+      let r, locs, resolved_r, file = req in
+      let locs = locs |> Nel.to_list |> LocSet.of_list in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
-        dep_cxs, Reqs.add_res (loc, f, file) reqs
+        dep_cxs, Reqs.add_res f file locs reqs
       | Some dep ->
         let info = get_info_unsafe ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
@@ -59,18 +60,18 @@ let reqs_of_component component required =
           let m = Files.module_ref dep in
           if Nel.mem dep component then
             (* impl is part of component *)
-            dep_cxs, Reqs.add_impl (dep, m, loc, file) reqs
+            dep_cxs, Reqs.add_impl m file locs reqs
           else
             (* look up impl sig_context *)
             let leader = Context_cache.find_leader dep in
             let dep_cx = Context_cache.find_sig leader in
-            dep_cx::dep_cxs, Reqs.add_dep_impl (dep_cx, m, loc, file) reqs
+            dep_cx::dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs
         else
           (* unchecked implementation exists *)
-          dep_cxs, Reqs.add_unchecked (r, loc, file) reqs
+          dep_cxs, Reqs.add_unchecked r file locs reqs
       | None ->
         (* implementation doesn't exist *)
-        dep_cxs, Reqs.add_decl (r, loc, resolved_r, file) reqs
+        dep_cxs, Reqs.add_decl r file (locs, resolved_r) reqs
       )
     ) ([], Reqs.empty) required
   in
