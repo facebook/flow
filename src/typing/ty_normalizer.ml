@@ -278,7 +278,7 @@ end = struct
     *)
     let lookup_tparam ~default env t name loc =
       let pred (tp_name, _) = (name = tp_name) in
-      match List.find_opt pred env.tparams with
+      match ListUtils.find_opt pred env.tparams with
       | Some (_, tp_loc) ->
         if loc = tp_loc || not C.flag_shadowed_type_params
         then return Ty.(Bound (Symbol (Local loc, name)))
