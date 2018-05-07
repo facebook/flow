@@ -1,5 +1,5 @@
 {"path":"library.js","line":5,"endline":5,"start":3,"end":14}
-default import points to default export = {"path":"helpers/exports_default.js","line":5,"endline":5,"start":16,"end":16}
+default import points to default export = {"path":"helpers/exports_default.js","line":5,"endline":5,"start":8,"end":14}
 local reference points to default import = {"path":"helpers/exports_default.js","line":3,"endline":3,"start":11,"end":15}
 named import of const points to named export = {"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
 named import of let points to named export = {"path":"helpers/exports_named.js","line":5,"endline":5,"start":12,"end":21}

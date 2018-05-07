@@ -1941,7 +1941,9 @@ and export_statement cx loc
     set_module_t cx reason (fun t ->
       Flow.flow cx (
         module_t_of_cx cx,
-        (* TODO we may need a more precise loc here *)
+        (* Use the location of the "default" keyword if this is a default export. For named exports,
+         * use the location of the identifier. *)
+        let loc = Option.value ~default:loc default in
         ExportNamedT(reason, false, SMap.singleton local_name (Some loc, local_tvar), t)
       )
     )
