@@ -215,8 +215,3 @@ end
 (* Stringify a list given a separator and a printer for the element type *)
 let to_string separator printer list =
   String.concat separator @@ List.map printer list
-
-(* This is available in List as of Ocaml version 4.05
- * Adding here since we're still using older versions in some builds. *)
-let find_opt p xs =
-  try Some (List.find p xs) with Not_found -> None
