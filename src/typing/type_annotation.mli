@@ -31,6 +31,12 @@ val mk_interface_super: Context.t ->
   Loc.t * Loc.t Ast.Type.Generic.t ->
   Type.t
 
+val mk_super: Context.t ->
+  Type.t SMap.t ->
+  Type.t ->
+  Loc.t Ast.Type.ParameterInstantiation.t option ->
+  Type.t
+
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->
   Reason.t ->

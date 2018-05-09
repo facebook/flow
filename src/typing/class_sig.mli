@@ -45,6 +45,8 @@ val empty:
     overwrite former ones. *)
 val add_constructor: Loc.t option -> Func_sig.t -> t -> t
 
+val add_default_constructor: Reason.t -> t -> t
+
 (** Add constructor override to signature.
 
     Does not overwrite existing constructors. This implements the behavior of
@@ -54,6 +56,9 @@ val append_constructor: Loc.t option -> Func_sig.t -> t -> t
 
 (** Add field to signature. *)
 val add_field: static:bool -> string -> field -> t -> t
+
+(** Add proto field to signature. *)
+val add_proto_field: string -> field -> t -> t
 
 (** Add method to signature.
 
@@ -75,6 +80,20 @@ val add_getter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 (** Add setter to signature. *)
 val add_setter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 
+(** Check if this signature defines a given field *)
+val mem_field: string -> static:bool -> t -> bool
+
+(** Check if this signature defines a constructor *)
+val mem_constructor: t -> bool
+
+val add_this:
+  Type.t -> (* self *)
+  Context.t ->
+  Reason.t ->
+  Type.typeparam list ->
+  Type.t SMap.t -> (* tparams_map *)
+  Type.typeparam list * Type.t SMap.t
+
 (** Create signature from class AST. *)
 val mk: Context.t ->
   Loc.t ->
@@ -83,18 +102,6 @@ val mk: Context.t ->
   expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   Loc.t Ast.Class.t ->
   t
-
-(** Create signature from interface AST. *)
-val of_interface: Context.t ->
-  Reason.t ->
-  Loc.t Ast.Statement.Interface.t ->
-  (t * Type.t (* self *))
-
-(** Create signature from DeclareClass AST. *)
-val of_declare_class: Context.t ->
-  Reason.t ->
-  Loc.t Ast.Statement.DeclareClass.t ->
-  (t * Type.t (* self *))
 
 (** 1. Manipulation *)
 

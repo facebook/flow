@@ -1055,3 +1055,24 @@ and polarity = Ast.Variance.(function
   | Some (_, Minus) -> Negative
   | None -> Neutral
 )
+
+let mk_super cx tparams_map c targs = Type.(
+  (* A super class must be parameterized by This, so that it can be
+     specialized to this class and its subclasses when properties are looked
+     up on their instances. *)
+  let targs = extract_type_param_instantiations targs in
+  let this = SMap.find_unsafe "this" tparams_map in
+  match targs with
+  | None ->
+      (* No type args, but `c` could still be a polymorphic class that must
+         be implicitly instantiated. We need to do this before we try to
+         this-specialize `c`. *)
+      let reason = reason_of_t c in
+      let c = Tvar.mk_derivable_where cx reason (fun tvar ->
+        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
+      ) in
+      this_typeapp c this None
+  | Some targs ->
+      let targs = List.map (convert cx tparams_map) targs in
+      this_typeapp c this (Some targs)
+)
