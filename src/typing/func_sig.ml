@@ -26,7 +26,7 @@ type t = {
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
-  body: Loc.t Ast.Function.body;
+  body: Loc.t Ast.Function.body option;
   return_t: Type.t;
 }
 
@@ -100,6 +100,7 @@ let mk cx tparams_map ~expr loc func =
     Anno.mk_type_param_declarations cx ~tparams_map tparams
   in
   let fparams = mk_params cx tparams_map ~expr func in
+  let body = Some body in
   let ret_reason = mk_reason RReturn (return_loc func) in
   let return_t =
     Anno.mk_type_annotation cx tparams_map ret_reason return
@@ -119,11 +120,6 @@ let mk cx tparams_map ~expr loc func =
         Anno.mk_type_annotation cx tparams_map ret_reason None
   ) in
   {reason; kind; tparams; tparams_map; fparams; body; return_t}
-
-let empty_body =
-  let loc = Loc.none in
-  let body = [] in
-  Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body})
 
 let convert_params cx tparams_map func =
   let open Ast.Type.Function in
@@ -156,7 +152,7 @@ let convert cx tparams_map loc func =
     Anno.mk_type_param_declarations cx ~tparams_map tparams
   in
   let fparams = convert_params cx tparams_map func in
-  let body = empty_body in
+  let body = None in
   let return_t = Anno.convert cx tparams_map return in
 
   {reason; kind; tparams; tparams_map; fparams; body; return_t}
@@ -167,7 +163,7 @@ let default_constructor reason = {
   tparams = [];
   tparams_map = SMap.empty;
   fparams = Func_params.empty;
-  body = empty_body;
+  body = None;
   return_t = VoidT.why reason;
 }
 
@@ -177,7 +173,7 @@ let field_initializer tparams_map reason expr return_t = {
   tparams = [];
   tparams_map;
   fparams = Func_params.empty;
-  body = empty_body;
+  body = None;
   return_t;
 }
 
@@ -255,13 +251,12 @@ let settertype {fparams; _} =
 let toplevels id cx this super static ~decls ~stmts ~expr
   {reason=reason_fn; kind; tparams_map; fparams; body; return_t; _} =
 
-  let loc, reason =
-    let loc = Ast.Function.(match body with
-      | BodyBlock (loc, _)
-      | BodyExpression (loc, _) -> loc
-    ) in
-    loc, mk_reason RFunctionBody loc
-  in
+  let loc = Ast.Function.(match body with
+  | Some (BodyBlock (loc, _)) -> loc
+  | Some (BodyExpression (loc, _)) -> loc
+  | None -> Loc.none
+  ) in
+  let reason = mk_reason RFunctionBody loc in
 
   let env =  Env.peek_env () in
   let new_env = Env.clone_env env in
@@ -359,9 +354,10 @@ let toplevels id cx this super static ~decls ~stmts ~expr
 
   let statements = Ast.Statement.(
     match body with
-    | Ast.Function.BodyBlock (_, {Block.body}) ->
+    | None -> []
+    | Some (Ast.Function.BodyBlock (_, {Block.body})) ->
       body
-    | Ast.Function.BodyExpression expr ->
+    | Some (Ast.Function.BodyExpression expr) ->
       [fst expr, Return {Return.argument = Some expr}]
   ) in
 

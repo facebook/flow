@@ -15,7 +15,7 @@ type t = {
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
-  body: Loc.t Ast.Function.body;
+  body: Loc.t Ast.Function.body option;
   return_t: Type.t;
 }
 
