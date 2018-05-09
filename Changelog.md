@@ -1,3 +1,72 @@
+### 0.72.0
+
+Likely to cause new Flow errors:
+* We've made explicit the order in which imports are merged into a module during typechecking.
+  This fixes an edge case in which lazy modes and non-lazy modes would report different errors.
+  This may change the order in which code is typechecked, and therefore may expose errors that Flow
+  previously missed.
+* Treat `$Exact<empty>` as `empty`. Before, `({p:0}:$Exact<empty>)` was not an error due to
+  missing ground subtyping and decomposition cases. It is now an error.
+* The `$Either<T>`, `$All<T>` and `$Type<T>` types are not supported any more.
+
+New Features:
+* Find-refs now includes references to all types related to an object literal through subtyping,
+  and a `multi-hop` mode was added that determines when object types are related through subtyping
+  and links them.
+* Work towards the new object model:
+  - Ensure fields overwrite methods in interface definitions (since properties there are flat).
+  - Store proto fields in a separate map than the one used for own properties in classes.
+  - Declare `Function.prototype.bind` as a proto field.
+* New/call can now be passed explicit type arguments for polymorphic instantiation. Currently this is
+  supported by the Flow parser. Babylon support does not exist, but it is planned.
+* Made `*` a deprecated type, under the `deprecated-type` strict flag.
+* Added support for hover, completion and error reporting (publishDiagnostics) to flow LSP.
+* Implemented nullish coalescing as per the [TC39 proposal](https://github.com/tc39/proposal-nullish-coalescing).
+* Added a debug flag `--expand-json-output` to print an extended JSON output for `type-at-pos`.
+* Updates in typings:
+  - Added the definition for `onclose` to the `IDBDatabase` interface in `lib/indexeddb.js`
+    ([reference](https://www.w3.org/TR/IndexedDB/#database-interface)).
+  - Added `onmessageerror` to `Worker` interface and fixed type of `MessagePort.onmessage`
+    in `lib/bom.js`.
+  - Added a `swap64()` to the `Buffer` type and a `Buffer` property in `lib/node.js`.
+  - Added `Intl` objects for the built-in JS language API (ECMA-402 - Internationalization API).
+  - Added tuple types to WebGL `uniform**v` setters in `lib/dom.js`.
+
+Notable bug fixes:
+* LSP: Fixed races in reporting exit status over persistent connection and in test.
+* Fixed error reporting when accessing statics and simplified error localization.
+
+Misc:
+* Added documentation for `Object` type, "Flow for Atom IDE" in Atom plugins, Flow Strict
+  and the `nonstrict-import` lint rule.
+* LSP supports file edits. Each client now stores the content of files that are opened.
+* Added LSP test checking that contents of open files persist after restart.
+* Removed Travis from CIs.
+* Type normalizer: added option to flag cases where the inferred type parameter is shadowed
+  by another parameter with the same name, and fixed support for recursive polymorphic types.
+* Removed dependency on ocp-build (windows now uses `ocamlbuild`).
+* Introduced a [union-find/disjoint-set data structure](https://en.wikipedia.org/wiki/Disjoint-set_data_structure)
+  used in find-refs to maintain sets of related types.
+* Fixed return types for `WebGLRenderingContext#is*` methods to all return booleans.
+* Rearranged contents of `src/server` directory.
+* Refactored find-refs by splitting variable and property handling in separate files,
+  and breaking down functions based on their purpose (e.g. local vs global).
+* Made `$Subtype` and `$Supertype` "unclear" types when not in a library context.
+* `type-at-pos` now prints types at the client-side.
+* Minimum OCaml version is increased to 4.05.0.
+* Avoid redundant substitution by caching the result of substituting a polymorphic
+  definition with a list of type args.
+
+Parser:
+* Added support for nullish coalescing `??` (as above).
+* Simplified object type parsing. Dangling `+` or `static` inside an object type
+  (e.g. `{+}`) are now disallowed.
+* Added support for a `proto` modifier in declare class, to specify that the property is
+  a prototype property instead of a class one.
+* Internal slot properties in object types (e.g. `[[new]]`).
+* Explicit type arguments in new and call expressions, e.g., `f<T>(x)`.
+* Allow reserved words as optional chain property names.
+
 ### 0.71.0
 
 Likely to cause new Flow errors:
