@@ -35,11 +35,10 @@ val default_constructor:
     from this module to evaluate the initializer in the appropriate context,
     where `this` and `super` point to the appropriate types. *)
 val field_initializer:
-  Context.t ->
   Type.t SMap.t -> (* type params map *)
   Reason.t ->
   Loc.t Ast.Expression.t -> (* init *)
-  Loc.t Ast.Type.annotation option -> (* return type *)
+  Type.t -> (* return *)
   t
 
 (** 1. Manipulation *)

@@ -226,8 +226,9 @@ let mk_method cx ~expr x loc func =
 let mk_field cx loc ~polarity x reason annot init =
   loc, polarity, match init with
   | None -> Annot (Anno.mk_type_annotation cx x.tparams_map reason annot)
-  | Some expr -> Infer (
-    Func_sig.field_initializer cx x.tparams_map reason expr annot)
+  | Some expr ->
+    let return_t = Anno.mk_type_annotation cx x.tparams_map reason annot in
+    Infer (Func_sig.field_initializer x.tparams_map reason expr return_t)
 
 let mem_constructor {constructor; _} = constructor <> []
 
