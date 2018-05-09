@@ -60,6 +60,9 @@ val add_field: static:bool -> string -> field -> t -> t
 (** Add proto field to signature. *)
 val add_proto_field: string -> field -> t -> t
 
+(** Add private field to signature. *)
+val add_private_field: string -> field -> static:bool -> t -> t
+
 (** Add method to signature.
 
     Overwrites any existing synonymous method. This implements the behavior of
@@ -93,15 +96,6 @@ val add_this:
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
   Type.typeparam list * Type.t SMap.t
-
-(** Create signature from class AST. *)
-val mk: Context.t ->
-  Loc.t ->
-  Reason.t ->
-  Type.t -> (* self *)
-  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
-  Loc.t Ast.Class.t ->
-  t
 
 (** 1. Manipulation *)
 

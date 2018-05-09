@@ -5106,9 +5106,7 @@ and mk_class cx loc reason c =
   let def_reason = repos_reason loc reason in
   let this_in_class = Class_sig.This.in_class c in
   let self = Tvar.mk cx reason in
-  let class_sig =
-    Class_sig.mk cx loc reason self c ~expr:expression
-  in
+  let class_sig = mk_class_sig cx loc reason self c in
     class_sig |> Class_sig.generate_tests cx (fun class_sig ->
       Class_sig.check_super cx def_reason class_sig;
       Class_sig.check_implements cx def_reason class_sig;
@@ -5121,6 +5119,238 @@ and mk_class cx loc reason c =
     let class_t = Class_sig.classtype cx class_sig in
     Flow.unify cx self class_t;
     class_t
+
+(* Process a class definition, returning a (polymorphic) class type. A class
+   type is a wrapper around an instance type, which contains types of instance
+   members, a pointer to the super instance type, and a container for types of
+   static members. The static members can be thought of as instance members of a
+   "metaclass": thus, the static type is itself implemented as an instance
+   type. *)
+and mk_class_sig =
+  let open Class_sig in
+
+  let mk_field cx tparams_map loc ~polarity reason annot init =
+    loc, polarity, match init with
+    | None -> Annot (Anno.mk_type_annotation cx tparams_map reason annot)
+    | Some expr ->
+      let return_t = Anno.mk_type_annotation cx tparams_map reason annot in
+      Infer (Func_sig.field_initializer tparams_map reason expr return_t)
+  in
+
+  let mk_method cx tparams_map loc func =
+    Mk_func_sig.mk cx tparams_map ~expr:expression loc func
+  in
+
+  let mk_extends cx tparams_map = function
+    | None, None -> Implicit { null = false }
+    | None, _ -> assert false (* type args with no head expr *)
+    | Some e, targs ->
+      let loc = match e, targs with
+      | (e, _), Some (targs, _) -> Loc.btwn e targs
+      | (e, _), _ -> e
+      in
+      let c = expression cx e in
+      let c = Flow.reposition cx loc ~annot_loc:loc c in
+      Explicit (Anno.mk_super cx tparams_map c targs)
+  in
+
+  let warn_or_ignore_decorators cx = function
+  | [] -> ()
+  | (start_loc, _)::ds ->
+    let loc = List.fold_left (fun start_loc (end_loc, _) ->
+      Loc.btwn start_loc end_loc
+    ) start_loc ds in
+    match Context.esproposal_decorators cx with
+    | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
+    | Options.ESPROPOSAL_IGNORE -> ()
+    | Options.ESPROPOSAL_WARN ->
+      Flow.add_output cx (Flow_error.EExperimentalDecorators loc)
+  in
+
+  let warn_or_ignore_class_properties cx ~static loc =
+    let config_setting =
+      if static
+      then Context.esproposal_class_static_fields cx
+      else Context.esproposal_class_instance_fields cx
+    in
+    match config_setting with
+    | Options.ESPROPOSAL_ENABLE
+    | Options.ESPROPOSAL_IGNORE -> ()
+    | Options.ESPROPOSAL_WARN ->
+      Flow.add_output cx
+        (Flow_error.EExperimentalClassProperties (loc, static))
+  in
+
+  fun cx _loc reason self { Ast.Class.
+    body = (_, { Ast.Class.Body.body = elements });
+    tparams;
+    super;
+    super_targs;
+    implements;
+    classDecorators;
+    _;
+  } ->
+
+  warn_or_ignore_decorators cx classDecorators;
+
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx tparams
+  in
+
+  let tparams, tparams_map =
+    add_this self cx reason tparams tparams_map
+  in
+
+  let class_sig =
+    let id = Context.make_nominal cx in
+    let extends =
+      mk_extends cx tparams_map (super, super_targs)
+    in
+    let implements = List.map (fun (_, i) ->
+      let { Ast.Class.Implements.id = (loc, name); targs } = i in
+      let super_loc = match targs with
+      | Some (ts, _) -> Loc.btwn loc ts
+      | None -> loc in
+      let reason = mk_reason (RType name) super_loc in
+      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
+      let id_info = name, c, Type_table.Other in
+      let targs = Anno.extract_type_param_instantiations targs in
+      let t = Anno.mk_nominal_type cx reason tparams_map (c, targs) in
+      Env.add_type_table_info cx ~tparams_map loc id_info;
+      Flow.reposition cx super_loc ~annot_loc:super_loc t
+    ) implements in
+    let super = Class { extends; mixins = []; implements } in
+    empty id reason tparams tparams_map super
+  in
+
+  (* In case there is no constructor, pick up a default one. *)
+  let class_sig =
+    if super <> None
+    then
+      (* Subclass default constructors are technically of the form (...args) =>
+         { super(...args) }, but we can approximate that using flow's existing
+         inheritance machinery. *)
+      (* TODO: Does this distinction matter for the type checker? *)
+      class_sig
+    else
+      let reason = replace_reason_const RDefaultConstructor reason in
+      add_default_constructor reason class_sig
+  in
+
+  (* All classes have a static "name" property. *)
+  let class_sig =
+    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
+    let t = Type.StrT.why reason in
+    add_field ~static:true "name" (None, Type.Neutral, Annot t) class_sig
+  in
+
+  (* NOTE: We used to mine field declarations from field assignments in a
+     constructor as a convenience, but it was not worth it: often, all that did
+     was exchange a complaint about a missing field for a complaint about a
+     missing annotation. Moreover, it caused fields declared in the super class
+     to be redeclared if they were assigned in the constructor. So we don't do
+     it. In the future, we could do it again, but only for private fields. *)
+
+  List.fold_left Ast.Class.(fun c -> function
+    (* instance and static methods *)
+    | Body.Property (_, {
+        Property.key = Ast.Expression.Object.Property.PrivateName _;
+        _
+      }) -> failwith "Internal Error: Found non-private field with private name"
+
+    | Body.Method (_, {
+        Method.key = Ast.Expression.Object.Property.PrivateName _;
+        _
+      }) -> failwith "Internal Error: Found method with private name"
+
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Identifier (id_loc, name);
+        value = (_, func);
+        kind;
+        static;
+        decorators;
+      }) ->
+
+      Type_inference_hooks_js.dispatch_class_member_decl_hook cx self name id_loc;
+      warn_or_ignore_decorators cx decorators;
+
+      (match kind with
+      | Method.Get | Method.Set -> Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc)
+      | _ -> ());
+
+      let add = match kind with
+      | Method.Constructor -> add_constructor (Some id_loc)
+      | Method.Method -> add_method ~static name (Some id_loc)
+      | Method.Get -> add_getter ~static name (Some id_loc)
+      | Method.Set -> add_setter ~static name (Some id_loc)
+      in
+      let method_sig = mk_method cx tparams_map loc func in
+      add method_sig c
+
+    (* fields *)
+    | Body.PrivateField(loc, {
+        PrivateField.key = (_, (id_loc, name));
+        annot;
+        value;
+        static;
+        variance;
+        _;
+      }) ->
+        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self name id_loc;
+
+        if value <> None
+        then warn_or_ignore_class_properties cx ~static loc;
+
+        let reason = mk_reason (RProperty (Some name)) loc in
+        let polarity = Anno.polarity variance in
+        let field = mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
+        add_private_field ~static name field c
+
+    | Body.Property (loc, {
+      Property.key = Ast.Expression.Object.Property.Identifier (id_loc, name);
+        annot;
+        value;
+        static;
+        variance;
+        _;
+      }) ->
+        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self name id_loc;
+
+        if value <> None
+        then warn_or_ignore_class_properties cx ~static loc;
+
+        let reason = mk_reason (RProperty (Some name)) loc in
+        let polarity = Anno.polarity variance in
+        let field = mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
+        add_field ~static name field c
+
+    (* literal LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Literal _;
+        _
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Literal _;
+        _
+      }) ->
+        Flow.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
+        c
+
+    (* computed LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Computed _;
+        _
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Computed _;
+        _
+      }) ->
+        Flow.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
+        c
+  ) class_sig elements
+
 
 and add_interface_properties cx tparams_map properties s =
   let open Class_sig in
