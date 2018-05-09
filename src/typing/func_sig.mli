@@ -1,6 +1,23 @@
 (** Intermediate representation for functions *)
 
-type t
+type kind =
+  | Ordinary
+  | Async
+  | Generator
+  | AsyncGenerator
+  | FieldInit of Loc.t Ast.Expression.t
+  | Predicate
+  | Ctor
+
+type t = {
+  reason: Reason.t;
+  kind: kind;
+  tparams: Type.typeparam list;
+  tparams_map: Type.t SMap.t;
+  fparams: Func_params.t;
+  body: Loc.t Ast.Function.body;
+  return_t: Type.t;
+}
 
 (** 1. Constructors *)
 
