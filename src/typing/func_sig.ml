@@ -242,14 +242,13 @@ let toplevels id cx this super static ~decls ~stmts ~expr
 
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
-  fparams |> Func_params.iter Scope.(fun (name, t, loc) ->
-    let reason = mk_reason (RParameter name) loc in
-    let name = Option.value name ~default:"_" in
+  fparams |> Func_params.iter Scope.(fun (name, loc, t, default) ->
+    let reason = mk_reason (RParameter (Some name)) loc in
     (* add default value as lower bound, if provided *)
-    Func_params.with_default name (fun default ->
+    Option.iter ~f:(fun default ->
       let default_t = Flow.mk_default cx reason default ~expr in
       Flow.flow_t cx (default_t, t)
-    ) fparams;
+    ) default;
     (* add to scope *)
     if const_params
     then Env.bind_implicit_const ~state:State.Initialized
