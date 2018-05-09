@@ -14,7 +14,6 @@
    body of a function. These may not be the same due to default values and
    destructuring. *)
 
-module Anno = Type_annotation
 module Flow = Flow_js
 
 open Reason
@@ -86,28 +85,6 @@ let add_rest cx ~tparams_map loc id t x =
   | Some (_, name) -> (name, loc, t, None) :: x.bindings_rev
   in
   { x with rest; bindings_rev }
-
-(* Ast.Type.Function.t -> Func_params.t *)
-let convert cx tparams_map func = Ast.Type.Function.(
-  let add_param (loc, {Param.name=id; annot; optional; _}) =
-    let t = Anno.convert cx tparams_map annot in
-    add_simple cx ~tparams_map ~optional loc id t
-  in
-  let add_rest (loc, {Param.name=id; annot; _}) =
-    let t = Anno.convert cx tparams_map annot in
-    let () =
-      let name = Option.map id ~f:snd in
-      let reason = mk_reason (RRestParameter name) (loc_of_t t) in
-      Flow.flow cx (t, AssertRestParamT reason)
-    in
-    add_rest cx ~tparams_map loc id t
-  in
-  let (_, { Params.params; rest }) = func.Ast.Type.Function.params in
-  let params = List.fold_left (fun acc param -> add_param param acc) empty params in
-  match rest with
-  | Some (_, { RestParam.argument }) -> add_rest argument params
-  | None -> params
-)
 
 let value {params_rev; _} = List.rev params_rev
 

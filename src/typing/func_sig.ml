@@ -125,6 +125,29 @@ let empty_body =
   let body = [] in
   Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body})
 
+let convert_params cx tparams_map func =
+  let open Ast.Type.Function in
+  let add_param (loc, {Param.name=id; annot; optional; _}) =
+    let t = Anno.convert cx tparams_map annot in
+    Func_params.add_simple cx ~tparams_map ~optional loc id t
+  in
+  let add_rest (loc, {Param.name=id; annot; _}) =
+    let t = Anno.convert cx tparams_map annot in
+    let () =
+      let name = Option.map id ~f:snd in
+      let reason = mk_reason (RRestParameter name) (loc_of_t t) in
+      Flow.flow cx (t, AssertRestParamT reason)
+    in
+    Func_params.add_rest cx ~tparams_map loc id t
+  in
+  let (_, { Params.params; rest }) = func.Ast.Type.Function.params in
+  let params = List.fold_left (fun acc param ->
+    add_param param acc
+  ) Func_params.empty params in
+  match rest with
+  | Some (_, { RestParam.argument }) -> add_rest argument params
+  | None -> params
+
 let convert cx tparams_map loc func =
   let {Ast.Type.Function.tparams; return; _} = func in
   let reason = mk_reason RFunctionType loc in
@@ -132,7 +155,7 @@ let convert cx tparams_map loc func =
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map tparams
   in
-  let fparams = Func_params.convert cx tparams_map func in
+  let fparams = convert_params cx tparams_map func in
   let body = empty_body in
   let return_t = Anno.convert cx tparams_map return in
 

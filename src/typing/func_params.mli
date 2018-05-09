@@ -32,11 +32,6 @@ val add_rest: Context.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->
   t -> t
 
-val convert: Context.t ->
-  (Type.t SMap.t) -> (* type params map *)
-  Loc.t Ast.Type.Function.t ->
-  t
-
 (* (name, type) of each param, in order *)
 (* destructured params will be unnamed *)
 val value: t -> (string option * Type.t) list
