@@ -20,12 +20,6 @@ val convert_qualification: ?lookup_mode:Env.LookupMode.t ->
   Loc.t Ast.Type.Generic.Identifier.t ->
   Type.t
 
-val func_sig: Context.t ->
-  Type.t SMap.t ->
-  Loc.t ->
-  Loc.t Ast.Type.Function.t ->
-  Func_sig.t
-
 val mk_interface_super: Context.t ->
   Type.t SMap.t ->
   Loc.t * Loc.t Ast.Type.Generic.t ->
@@ -54,6 +48,16 @@ val mk_type_param_declarations: Context.t ->
   ?tparams_map:(Type.t SMap.t) ->
   Loc.t Ast.Type.ParameterDeclaration.t option ->
   (Type.typeparam list * Type.t SMap.t)
+
+val mk_interface_sig: Context.t ->
+  Reason.t ->
+  Loc.t Ast.Statement.Interface.t ->
+  Class_sig.t * Type.t
+
+val mk_declare_class_sig: Context.t ->
+  Reason.t ->
+  Loc.t Ast.Statement.DeclareClass.t ->
+  Class_sig.t * Type.t
 
 val extract_type_param_instantiations:
   Loc.t Ast.Type.ParameterInstantiation.t option ->
