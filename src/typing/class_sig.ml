@@ -221,7 +221,7 @@ let add_setter ~static name loc fsig x =
   }) x
 
 let mk_method cx ~expr x loc func =
-  Func_sig.mk cx x.tparams_map ~expr loc func
+  Mk_func_sig.mk cx x.tparams_map ~expr loc func
 
 let mk_field cx loc ~polarity x reason annot init =
   loc, polarity, match init with
@@ -774,7 +774,7 @@ let add_interface_properties cx properties s =
   let { tparams_map; _ } = s in
   List.fold_left Ast.Type.Object.(fun x -> function
     | CallProperty (loc, { CallProperty.value = (_, func); static }) ->
-      let fsig = Func_sig.convert cx tparams_map loc func in
+      let fsig = Anno.func_sig cx tparams_map loc func in
       append_method ~static "$call" None fsig x
     | Indexer (loc, { Indexer.static; _ }) when mem_field ~static "$key" x ->
       Flow.add_output cx
@@ -799,7 +799,7 @@ let add_interface_properties cx properties s =
           x
       | true, Property.Identifier (id_loc, name),
           Ast.Type.Object.Property.Init (_, Ast.Type.Function func) ->
-          let fsig = Func_sig.convert cx tparams_map loc func in
+          let fsig = Anno.func_sig cx tparams_map loc func in
           let append_method = match static, name with
           | false, "constructor" -> append_constructor (Some id_loc)
           | _ -> append_method ~static name (Some id_loc)
@@ -822,14 +822,14 @@ let add_interface_properties cx properties s =
       | _, Property.Identifier (id_loc, name),
           Ast.Type.Object.Property.Get (_, func) ->
           Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
-          let fsig = Func_sig.convert cx tparams_map loc func in
+          let fsig = Anno.func_sig cx tparams_map loc func in
           add_getter ~static name (Some id_loc) fsig x
 
       (* unsafe setter property *)
       | _, Property.Identifier (id_loc, name),
           Ast.Type.Object.Property.Set (_, func) ->
           Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
-          let fsig = Func_sig.convert cx tparams_map loc func in
+          let fsig = Anno.func_sig cx tparams_map loc func in
           add_setter ~static name (Some id_loc) fsig x
 
       )

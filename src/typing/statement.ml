@@ -5128,7 +5128,7 @@ and mk_class cx loc reason c =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx loc func this super =
-  let func_sig = Func_sig.mk cx SMap.empty ~expr:expression loc func in
+  let func_sig = Mk_func_sig.mk cx SMap.empty ~expr:expression loc func in
 
   let this, super =
     let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in

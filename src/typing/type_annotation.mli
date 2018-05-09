@@ -20,6 +20,12 @@ val convert_qualification: ?lookup_mode:Env.LookupMode.t ->
   Loc.t Ast.Type.Generic.Identifier.t ->
   Type.t
 
+val func_sig: Context.t ->
+  Type.t SMap.t ->
+  Loc.t ->
+  Loc.t Ast.Type.Function.t ->
+  Func_sig.t
+
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->
   Reason.t ->

@@ -21,21 +21,6 @@ type t = {
 
 (** 1. Constructors *)
 
-(** Create signature from function AST. *)
-val mk: Context.t ->
-  Type.t SMap.t -> (* type params map *)
-  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
-  Loc.t ->
-  Loc.t Ast.Function.t ->
-  t
-
-(** Create signature from function type AST. *)
-val convert: Context.t ->
-  Type.t SMap.t -> (* type params map *)
-  Loc.t ->
-  Loc.t Ast.Type.Function.t ->
-  t
-
 (** Create signature for a default constructor.
 
     Flow represents default constructors as empty functions, i.e., functions
