@@ -32,12 +32,6 @@ val add_rest: Context.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->
   t -> t
 
-val mk: Context.t ->
-  (Type.t SMap.t) -> (* type params map *)
-  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
-  Loc.t Ast.Function.t ->
-  t
-
 val convert: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
   Loc.t Ast.Type.Function.t ->

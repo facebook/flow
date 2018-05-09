@@ -87,50 +87,6 @@ let add_rest cx ~tparams_map loc id t x =
   in
   { x with rest; bindings_rev }
 
-(* Loc.t Ast.Function.t -> Func_params.t *)
-let mk cx tparams_map ~expr func =
-  let add_param_with_default default = function
-    | loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-        name = (_, name) as id;
-        annot;
-        optional;
-      } ->
-      let reason = mk_reason (RParameter (Some name)) loc in
-      let t = Anno.mk_type_annotation cx tparams_map reason annot in
-      add_simple cx ~tparams_map ~optional ?default loc (Some id) t
-    | loc, _ as patt ->
-      let reason = mk_reason RDestructuring loc in
-      let annot = type_of_pattern patt in
-      let t = Anno.mk_type_annotation cx tparams_map reason annot in
-      add_complex cx ~tparams_map ~expr ?default patt t
-  in
-  let add_rest patt params =
-    match patt with
-    | loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-        name = (_, name) as id;
-        annot;
-        _;
-      } ->
-      let reason = mk_reason (RRestParameter (Some name)) loc in
-      let t = Anno.mk_type_annotation cx tparams_map reason annot in
-      add_rest cx ~tparams_map loc (Some id) t params
-    | loc, _ ->
-      Flow_js.add_output cx
-        Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
-      params
-  in
-  let add_param = function
-    | _, Ast.Pattern.Assignment { Ast.Pattern.Assignment.left; right; } ->
-      add_param_with_default (Some right) left
-    | patt ->
-      add_param_with_default None patt
-  in
-  let {Ast.Function.params = (_, { Ast.Function.Params.params; rest }); _} = func in
-  let params = List.fold_left (fun acc param -> add_param param acc) empty params in
-  match rest with
-  | Some (_, { Ast.Function.RestElement.argument }) -> add_rest argument params
-  | None -> params
-
 (* Ast.Type.Function.t -> Func_params.t *)
 let convert cx tparams_map func = Ast.Type.Function.(
   let add_param (loc, {Param.name=id; annot; optional; _}) =
