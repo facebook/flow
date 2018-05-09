@@ -521,18 +521,6 @@ let mk_super cx tparams_map c targs = Type.(
       this_typeapp c this (Some targs)
 )
 
-let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
-  let lookup_mode = Env.LookupMode.ForType in
-  let i = Anno.convert_qualification ~lookup_mode cx "extends" id in
-  let loc = match targs with
-  | Some (targs, _) -> Loc.btwn loc targs
-  | None -> loc
-  in
-  let r = mk_reason (RType (Anno.qualified_name id)) loc in
-  let targs = Anno.extract_type_param_instantiations targs in
-  let t = Anno.mk_nominal_type cx r tparams_map (i, targs) in
-  Flow.reposition cx loc ~annot_loc:loc t
-
 let mk_extends cx tparams_map ~expr = function
   | None, None -> Implicit { null = false }
   | None, _ -> assert false (* type args with no head expr *)
@@ -864,7 +852,7 @@ let of_interface cx reason { Ast.Statement.Interface.
 
   let iface_sig =
     let id = Context.make_nominal cx in
-    let extends = List.map (mk_interface_super cx tparams_map) extends in
+    let extends = List.map (Anno.mk_interface_super cx tparams_map) extends in
     let super =
       let callable = List.exists Ast.Type.Object.(function
         | CallProperty (_, { CallProperty.static; _ }) -> not static

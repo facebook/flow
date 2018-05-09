@@ -26,6 +26,11 @@ val func_sig: Context.t ->
   Loc.t Ast.Type.Function.t ->
   Func_sig.t
 
+val mk_interface_super: Context.t ->
+  Type.t SMap.t ->
+  Loc.t * Loc.t Ast.Type.Generic.t ->
+  Type.t
+
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->
   Reason.t ->

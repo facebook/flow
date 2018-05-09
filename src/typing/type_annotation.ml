@@ -932,6 +932,18 @@ and func_sig =
       return_t = convert cx tparams_map func.return;
     }
 
+and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
+  let lookup_mode = Env.LookupMode.ForType in
+  let i = convert_qualification ~lookup_mode cx "extends" id in
+  let loc = match targs with
+  | Some (targs, _) -> Loc.btwn loc targs
+  | None -> loc
+  in
+  let r = mk_reason (RType (qualified_name id)) loc in
+  let targs = extract_type_param_instantiations targs in
+  let t = mk_nominal_type cx r tparams_map (i, targs) in
+  Flow.reposition cx loc ~annot_loc:loc t
+
 and mk_type cx tparams_map reason = function
   | None ->
       let t =
