@@ -214,8 +214,8 @@ let make_from file =
   }
 
 let small_to_large_file_pos p =
-  let lnum, cnum, bol = File_pos_small.line_column_beg p in
-  File_pos_large.of_lnum_bol_cnum lnum bol cnum
+  let lnum, col, bol = File_pos_small.line_column_beg p in
+  File_pos_large.of_lnum_bol_cnum lnum bol (bol + col)
 
 let as_large_pos p =
   match p with
@@ -235,11 +235,23 @@ let btw_nocheck x1 x2 =
   | Pos_large { pos_file; pos_start; _ }, Pos_small { pos_end; _ } ->
     Pos_large { pos_file; pos_start; pos_end = small_to_large_file_pos pos_end }
 
+let set_file pos_file pos =
+  match pos with
+  | Pos_small { pos_start; pos_end; _ } ->
+    Pos_small { pos_file; pos_start; pos_end }
+  | Pos_large { pos_start; pos_end; _ } ->
+    Pos_large { pos_file; pos_start; pos_end }
+
+let to_absolute p =
+  set_file (Relative_path.to_absolute (filename p)) p
+
+
 let btw x1 x2 =
   if filename x1 <> filename x2
   then failwith "Position in separate files";
   if end_cnum x1 > end_cnum x2
-  then failwith "Invalid positions";
+  then failwith (Printf.sprintf "btw: invalid positions %s and %s"
+    (string (to_absolute x1)) (string (to_absolute x2)));
   btw_nocheck x1 x2
 
 let rec merge x1 x2 =
@@ -302,16 +314,6 @@ let first_char_of_line p =
   | Pos_large { pos_start; pos_end; pos_file } ->
     let start = File_pos_large.set_column 0 pos_start in
     Pos_large { pos_start = start; pos_end = start; pos_file }
-
-let set_file pos_file pos =
-  match pos with
-  | Pos_small { pos_start; pos_end; _ } ->
-    Pos_small { pos_file; pos_start; pos_end }
-  | Pos_large { pos_start; pos_end; _ } ->
-    Pos_large { pos_file; pos_start; pos_end }
-
-let to_absolute p =
-  set_file (Relative_path.to_absolute (filename p)) p
 
 let to_relative_string p =
   set_file (Relative_path.suffix (filename p)) p

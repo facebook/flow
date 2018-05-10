@@ -83,7 +83,7 @@ val btw_nocheck : 'a pos -> 'a pos -> 'a pos
 
 (* Fill in the gap "between" first position and second position.
  * Not valid if from different files or second position precedes first *)
-val btw : 'a pos -> 'a pos -> 'a pos
+val btw : t -> t -> t
 
 (* Symmetric version of above: order doesn't matter *)
 val merge : t -> t -> t
