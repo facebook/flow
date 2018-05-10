@@ -403,8 +403,7 @@ let find_refs_in_file options ast_info file_key def_info name =
   let (ast, file_sig, info) = ast_info in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let local_defs =
-    let all_def_locs = match def_info with Class locs | Object locs -> locs in
-    Nel.to_list all_def_locs
+    Nel.to_list (all_locs_of_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
   in
   let has_symbol = check_for_matching_prop name ast in
