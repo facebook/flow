@@ -12,20 +12,20 @@ simple ES6 exports/imports:
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":7,"column":1,"offset":41},
-      "end":{"line":7,"column":3,"offset":44}
+      "start":{"line":9,"column":1,"offset":70},
+      "end":{"line":9,"column":3,"offset":73}
     },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
-      "start":{"line":3,"column":9,"offset":21},
-      "end":{"line":3,"column":11,"offset":24}
+      "start":{"line":3,"column":14,"offset":26},
+      "end":{"line":3,"column":16,"offset":29}
     },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
-      "start":{"line":5,"column":1,"offset":48},
-      "end":{"line":5,"column":3,"offset":51}
+      "start":{"line":6,"column":1,"offset":85},
+      "end":{"line":6,"column":3,"offset":88}
     }
   ]
 }
@@ -38,14 +38,14 @@ shadowing an export:
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":10,"column":14,"offset":125},
-      "end":{"line":10,"column":16,"offset":128}
+      "start":{"line":12,"column":14,"offset":154},
+      "end":{"line":12,"column":16,"offset":157}
     },
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":11,"column":15,"offset":146},
-      "end":{"line":11,"column":17,"offset":149}
+      "start":{"line":13,"column":15,"offset":175},
+      "end":{"line":13,"column":17,"offset":178}
     }
   ]
 }
@@ -58,20 +58,20 @@ class method:
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":15,"column":3,"offset":176},
-      "end":{"line":15,"column":5,"offset":179}
+      "start":{"line":17,"column":3,"offset":205},
+      "end":{"line":17,"column":5,"offset":208}
     },
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":17,"column":10,"offset":216},
-      "end":{"line":17,"column":12,"offset":219}
+      "start":{"line":19,"column":10,"offset":245},
+      "end":{"line":19,"column":12,"offset":248}
     },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
-      "start":{"line":8,"column":3,"offset":79},
-      "end":{"line":8,"column":5,"offset":82}
+      "start":{"line":9,"column":3,"offset":116},
+      "end":{"line":9,"column":5,"offset":119}
     },
     {
       "source":"extendsFoo.js",
@@ -101,20 +101,20 @@ class method, queried from a use instead of the definition:
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":16,"column":3,"offset":193},
-      "end":{"line":16,"column":5,"offset":196}
+      "start":{"line":18,"column":3,"offset":222},
+      "end":{"line":18,"column":5,"offset":225}
     },
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":11,"offset":240},
-      "end":{"line":21,"column":13,"offset":243}
+      "start":{"line":23,"column":11,"offset":269},
+      "end":{"line":23,"column":13,"offset":272}
     },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
-      "start":{"line":16,"column":3,"offset":165},
-      "end":{"line":16,"column":5,"offset":168}
+      "start":{"line":17,"column":3,"offset":202},
+      "end":{"line":17,"column":5,"offset":205}
     }
   ]
 }
@@ -126,20 +126,20 @@ class method that overrides a superclass implementation:
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":16,"column":3,"offset":193},
-      "end":{"line":16,"column":5,"offset":196}
+      "start":{"line":18,"column":3,"offset":222},
+      "end":{"line":18,"column":5,"offset":225}
     },
     {
       "source":"es6-1.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":11,"offset":240},
-      "end":{"line":21,"column":13,"offset":243}
+      "start":{"line":23,"column":11,"offset":269},
+      "end":{"line":23,"column":13,"offset":272}
     },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
-      "start":{"line":16,"column":3,"offset":165},
-      "end":{"line":16,"column":5,"offset":168}
+      "start":{"line":17,"column":3,"offset":202},
+      "end":{"line":17,"column":5,"offset":205}
     },
     {
       "source":"extendsFoo.js",

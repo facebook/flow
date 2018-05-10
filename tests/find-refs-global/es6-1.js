@@ -4,6 +4,8 @@ export function foo() {
 
 }
 
+export default class Bar {}
+
 foo();
 
 // This foo shadows the other one: it is not the same variable
@@ -19,3 +21,5 @@ export class Foo {
 }
 
 new Foo().bar();
+
+new Bar();

@@ -1,6 +1,7 @@
 /* @flow */
 
-import {foo, Foo} from './es6-1';
+import Bar, {foo, Foo} from './es6-1';
+import * as all from './es6-1';
 
 foo();
 
@@ -14,3 +15,6 @@ export function returnsFoo(): Foo {
 }
 
 x.bar();
+
+new Bar();
+new all.default();
