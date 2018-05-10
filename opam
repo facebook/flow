@@ -23,4 +23,5 @@ depends: [
 available: [ocaml-version >= "4.05.0"]
 build: [ [ "env" "FLOW_RELEASE=1" make ] ]
 depexts: [
+  [["alpine"] ["linux-headers"]]
 ]
