@@ -247,14 +247,15 @@ class mapper = object(this)
     let open Ast.Class in
     let {
       id; body; tparams = _;
-      super; super_targs = _;
+      super; super_targs;
       implements = _; classDecorators = _;
     } = cls in
     let id' = map_opt this#class_identifier id in
     let body' = this#class_body body in
     let super' = map_opt this#expression super in
-    if id == id' && body == body' && super' == super then cls
-    else { cls with id = id'; body = body'; super = super' }
+    let super_targs' = map_opt this#type_parameter_instantiation super_targs in
+    if id == id' && body == body' && super' == super && super_targs' == super_targs then cls
+    else { cls with id = id'; body = body'; super = super'; super_targs = super_targs' }
 
   method class_identifier (ident: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
