@@ -8,7 +8,9 @@
  *)
 
 include (val (
+   (* If we're on a 64-bit architecture then use the small (integer) rep
+    * representation for file positions *)
    if 1 lsl 31 <> 0
-   (* TODO: Implement special compact encoding for 64 bit wordsize *)
-   then (module File_pos_32 : File_pos_sig.S)
-   else (module File_pos_32 : File_pos_sig.S)) : File_pos_sig.S)
+   then (module File_pos_small : File_pos_sig.S)
+   (* Otherwise use the full record representation *)
+   else (module File_pos_large : File_pos_sig.S)) : File_pos_sig.S)

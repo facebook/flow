@@ -70,11 +70,23 @@ val exactly_matches_range :
 
 val contains : 'a pos -> 'a pos -> bool
 
+(* Does first position strictly overlap the second position? *)
+val overlaps : 'a pos -> 'a pos -> bool
+
 val make : 'a -> b -> 'a pos
 
 val make_from : 'a -> 'a pos
 
+val btw_nocheck : 'a pos -> 'a pos -> 'a pos
+
+(* Fill in the gap "between" first position and second position.
+ * Not valid if from different files or second position precedes first *)
 val btw : 'a pos -> 'a pos -> 'a pos
+
+(* Symmetric version of above: order doesn't matter *)
+val merge : t -> t -> t
+
+val last_char : t -> t
 
 val to_absolute : t -> absolute
 
@@ -89,8 +101,8 @@ val compare : 'a pos -> 'a pos -> int
 
 (* XXX deprecated: do not use! Talk to @jezng if you are not hack_sgrep and
  * you feel a need to use this. *)
-val pos_start : 'a pos -> File_pos.t
-val pos_end : 'a pos -> File_pos.t
+val deprecated_pos_start : 'a pos -> File_pos.t
+val deprecated_pos_end : 'a pos -> File_pos.t
 
 (* XXX deprecated: should only be used by Flow *)
 val make_from_file_pos :

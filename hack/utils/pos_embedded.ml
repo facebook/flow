@@ -114,6 +114,10 @@ let contains pos_container pos =
     pos.pos_start >= pos_container.pos_start &&
     pos.pos_end <= pos_container.pos_end
 
+let overlaps pos1 pos2 =
+  filename pos1 = filename pos2 &&
+  pos1.pos_end > pos2.pos_start
+
 let make file (lb: b) =
   let pos_start = lexeme_start_p lb in
   let pos_end = lexeme_end_p lb in
@@ -129,12 +133,39 @@ let make_from file =
     pos_end = pos;
   }
 
+let btw_nocheck x1 x2 =
+  { x1 with pos_end = x2.pos_end }
+
 let btw x1 x2 =
   if x1.pos_file <> x2.pos_file
-  then failwith "Position in separate files" ;
-  if File_pos.compare x1.pos_end x2.pos_end > 0
-  then failwith "Invalid positions Pos.btw" ;
-  { x1 with pos_end = x2.pos_end }
+  then failwith "Position in separate files";
+  if end_cnum x1 > end_cnum x2
+  then failwith "Invalid positions";
+  btw_nocheck x1 x2
+
+let merge x1 x2 =
+  let pos_start =
+    if File_pos.is_dummy x1.pos_start
+    then x2.pos_start
+    else
+    if File_pos.is_dummy x2.pos_start
+    then x1.pos_start
+    else if start_cnum x1 < start_cnum x2 then x1.pos_start else x2.pos_start in
+  let pos_end =
+    if File_pos.is_dummy x1.pos_end
+    then x2.pos_end
+    else
+    if File_pos.is_dummy x2.pos_end
+    then x1.pos_end
+    else if end_cnum x1 < end_cnum x2 then x2.pos_end else x1.pos_end in
+  { x1 with pos_start = pos_start; pos_end = pos_end }
+
+
+let last_char p =
+  if p = none
+  then none
+  else
+  { p with pos_start = p.pos_end }
 
 let to_absolute p = { p with pos_file = Relative_path.to_absolute (p.pos_file) }
 
@@ -157,8 +188,8 @@ let compare x y =
     if r <> 0 then r
     else File_pos.compare x.pos_end y.pos_end
 
-let pos_start p = p.pos_start
-let pos_end p = p.pos_end
+let deprecated_pos_start p = p.pos_start
+let deprecated_pos_end p = p.pos_end
 
 (* This returns a half-open interval. *)
 let destruct_range (p : 'a pos) : (int * int * int * int) =
