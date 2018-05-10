@@ -78,7 +78,7 @@ end = struct
       let name = match get x parent_env with
         | Some def -> def.Def.name
         | None -> next () in
-      SMap.add x { Def.locs; name; actual_name=x } env
+      SMap.add x { Def.locs=(Nel.to_list locs); name; actual_name=x } env
     ) SMap.empty bindings in
     env::parent_env
 end

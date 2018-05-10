@@ -23,7 +23,7 @@ module Bindings: sig
   val add: entry -> t -> t
   val push: t -> t -> t
   val exists: (entry -> bool) -> t -> bool
-  val to_assoc: t -> (string * Loc.t list) list
+  val to_assoc: t -> (string * Loc.t Nel.t) list
   val to_map: t -> Loc.t list SMap.t
 end = struct
   type entry = Loc.t Ast.Identifier.t
@@ -36,10 +36,10 @@ end = struct
   let to_assoc t =
     let xs, map = List.fold_left (fun (xs, map) (loc, x) ->
       match SMap.get x map with
-        | Some locs -> xs, SMap.add x (loc::locs) map
-        | None -> x::xs, SMap.add x [loc] map
+        | Some locs -> xs, SMap.add x (Nel.cons loc locs) map
+        | None -> x::xs, SMap.add x (Nel.one loc) map
     ) ([], SMap.empty) (List.rev t) in
-    List.rev_map (fun x -> x, List.rev @@ SMap.find x map) xs
+    List.rev_map (fun x -> x, Nel.rev @@ SMap.find x map) xs
   let to_map t =
     let map = List.fold_left (fun map (loc, x) ->
       match SMap.get x map with
