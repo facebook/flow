@@ -401,6 +401,7 @@ let find_refs_in_file options ast_info file_key def_info name =
   let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
   let potential_matching_literals: (Loc.t * Type.t) list ref = ref [] in
   let (ast, file_sig, info) = ast_info in
+  let info = Docblock.set_flow_mode_for_ide_command info in
   let local_defs =
     let all_def_locs = match def_info with Class locs | Object locs -> locs in
     Nel.to_list all_def_locs
@@ -678,6 +679,7 @@ let get_def_info genv env profiling file_key content loc: ((def_info * string) o
   let%lwt cx_result =
     compute_ast_result file_key content
     %>>| fun (ast, file_sig, info) ->
+      let info = Docblock.set_flow_mode_for_ide_command info in
       let literal_key_info: (Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
       set_def_loc_hook props_access_info literal_key_info loc;
       Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->

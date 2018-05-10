@@ -1249,3 +1249,21 @@ object created via `import *`: {
     }
   ]
 }
+Property in an unchecked file: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"unchecked.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":14,"offset":54},
+      "end":{"line":3,"column":16,"offset":57}
+    },
+    {
+      "source":"unchecked.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":5,"offset":68},
+      "end":{"line":4,"column":7,"offset":71}
+    }
+  ]
+}

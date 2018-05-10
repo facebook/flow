@@ -1,1 +1,2 @@
+all: false
 shell: test.sh
