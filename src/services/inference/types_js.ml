@@ -512,30 +512,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
   match parse_result with
   | Parsing_service_js.Parse_ok (ast, file_sig) ->
       (* override docblock info *)
-      let info =
-        let open Docblock in
-        let flow = match flow info with
-        (* If the file does not specify a @flow pragma, we still want to try
-          to infer something, but the file might be huge and unannotated,
-          which can cause performance issues (including non-termination).
-          To avoid this case, we infer the file using "weak mode." *)
-        | None -> OptInWeak
-        (* Respect @flow pragma *)
-        | Some OptIn -> OptIn
-        (* Respect @flow strict pragma *)
-        | Some OptInStrict -> OptInStrict
-        (* Respect @flow strict-local pragma *)
-        | Some OptInStrictLocal -> OptInStrictLocal
-        (* Respect @flow weak pragma *)
-        | Some OptInWeak -> OptInWeak
-        (* Respect @noflow, which `apply_docblock_overrides` does not by
-          default. Again, large files can cause non-termination, so
-          respecting this pragma gives programmers a way to tell Flow to
-          avoid inference on such files. *)
-        | Some OptOut -> OptInWeak
-        in
-        { info with flow = Some flow }
-      in
+      let info = Docblock.set_flow_mode_for_ide_command info in
 
       (* merge *)
       let%lwt cx = with_timer_lwt ~options "MergeContents" profiling (fun () ->
