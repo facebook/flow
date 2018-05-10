@@ -792,7 +792,7 @@ class mapper = object(this)
     let loc, { name; value } = attr in
     let value' = map_opt this#jsx_attribute_value value in
     if value == value' then attr
-    else loc, { name; value }
+    else loc, { name; value = value' }
 
   method jsx_attribute_value (value: Loc.t Ast.JSX.Attribute.value) =
     let open Ast.JSX.Attribute in
