@@ -130,3 +130,6 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root importStar.js 5 10
 
 printf 'Property in an unchecked file: '
 assert_ok "$FLOW" find-refs --json --pretty --strip-root unchecked.js 4 5
+
+printf 'Property in a file read from stdin: '
+assert_ok "$FLOW" find-refs --json --pretty --strip-root --path empty.js 3 15 < empty.js-contents.txt
