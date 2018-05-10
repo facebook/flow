@@ -1908,7 +1908,7 @@ static value write_at(unsigned int slot, value data) {
   CAMLlocal1(result);
   result = caml_alloc_tuple(2);
   // Try to write in a value to indicate that the data is being written.
-  if(hashtbl[slot].addr == NULL &&
+  if(
      __sync_bool_compare_and_swap(
        &(hashtbl[slot].addr),
        NULL,
