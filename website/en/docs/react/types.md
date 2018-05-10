@@ -38,7 +38,7 @@ If you are using CommonJS you can also require React:
 const React = require('react');
 ```
 
-You can also used named type imports in either an ES module environment or a
+You can also use named type imports in either an ES module environment or a
 CommonJS environment:
 
 ```js
