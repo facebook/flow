@@ -36,6 +36,7 @@ let mask_by bits x = x land (mask bits)
 
 let max_column = mask column_bits
 let max_line = mask line_bits
+let max_bol = mask bol_bits
 
 let dummy = -1
 
@@ -50,17 +51,16 @@ let line (pos:t) =
 let column (pos:t) =
   if is_dummy pos then -1 else mask_by column_bits pos
 
-let cnum (pos:t) =
-  if is_dummy pos then -1 else beg_of_line pos + column pos
-
-let bol_line_col bol line col =
+let bol_line_col_unchecked bol line col =
   if col < 0
   then dummy
   else
-  let col = min col max_column in
-  let line = min line max_line in
-  assert (bol <= mask bol_bits);
   bol lsl (column_bits + line_bits) + (line lsl column_bits) + col
+
+let bol_line_col bol line col =
+  if col > max_column || line > max_line || bol > max_bol
+  then None
+  else Some (bol_line_col_unchecked bol line col)
 
 let pp fmt pos = begin
   Format.pp_print_int fmt (line pos);
@@ -71,7 +71,7 @@ end
 let compare = Pervasives.compare
 
 
-let beg_of_file = bol_line_col 0 1 0
+let beg_of_file = bol_line_col_unchecked 0 1 0
 
 (* constructors *)
 
@@ -96,13 +96,16 @@ let line_column t = line t, column t
 
 let line_column_beg t = line t, column t, beg_of_line t
 
-let line_column_offset t = line t, column t, cnum t
+let line_column_offset t = line t, column t, offset t
 
-let line_beg_offset t = line t, beg_of_line t, cnum t
+let line_beg_offset t = line t, beg_of_line t, offset t
+
+let set_column c p =
+  bol_line_col_unchecked (beg_of_line p) (line p) c
 
 let to_lexing_pos pos_fname t = {
   Lexing.pos_fname;
   Lexing.pos_lnum = line t;
   Lexing.pos_bol = beg_of_line t;
-  Lexing.pos_cnum = cnum t;
+  Lexing.pos_cnum = offset t;
 }

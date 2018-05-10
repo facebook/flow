@@ -75,6 +75,8 @@ val overlaps : 'a pos -> 'a pos -> bool
 
 val make : 'a -> b -> 'a pos
 
+val make_from_lexing_pos : 'a -> Lexing.position -> Lexing.position -> 'a pos
+
 val make_from : 'a -> 'a pos
 
 val btw_nocheck : 'a pos -> 'a pos -> 'a pos
@@ -88,6 +90,8 @@ val merge : t -> t -> t
 
 val last_char : t -> t
 
+val first_char_of_line : t -> t
+
 val to_absolute : t -> absolute
 
 val to_relative_string : t -> string pos
@@ -99,18 +103,13 @@ val destruct_range : 'a pos -> (int * int * int * int)
  * end position *)
 val compare : 'a pos -> 'a pos -> int
 
-(* XXX deprecated: do not use! Talk to @jezng if you are not hack_sgrep and
- * you feel a need to use this. *)
-val deprecated_pos_start : 'a pos -> File_pos.t
-val deprecated_pos_end : 'a pos -> File_pos.t
-
-(* XXX deprecated: should only be used by Flow *)
-val make_from_file_pos :
-  pos_file:Relative_path.t -> pos_start:File_pos.t ->
-    pos_end:File_pos.t -> t
-
 val set_file : 'a -> 'a pos -> 'a pos
 
+val make_from_lnum_bol_cnum :
+  pos_file:Relative_path.t ->
+  pos_start:int*int*int ->
+  pos_end:int*int*int ->
+  t
 module Map : MyMap.S with type key = t
 module AbsolutePosMap : MyMap.S with type key = absolute
 

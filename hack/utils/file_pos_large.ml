@@ -59,6 +59,12 @@ let line t = t.pos_lnum
 let column t = t.pos_cnum - t.pos_bol
 let beg_of_line t = t.pos_bol
 
+let set_column c p =
+  { pos_lnum = p.pos_lnum;
+    pos_bol = p.pos_bol;
+    pos_cnum = p.pos_bol + c;
+  }
+
 let line_beg t = t.pos_lnum, t.pos_bol
 
 let line_column t = t.pos_lnum, t.pos_cnum - t.pos_bol
