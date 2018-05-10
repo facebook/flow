@@ -78,7 +78,7 @@ end = struct
       let name = match get x parent_env with
         | Some def -> def.Def.name
         | None -> next () in
-      SMap.add x { Def.locs=(Nel.to_list locs); name; actual_name=x } env
+      SMap.add x { Def.locs; name; actual_name=x } env
     ) SMap.empty bindings in
     env::parent_env
 end
@@ -119,7 +119,7 @@ class scope_builder = object(this)
       this#update_acc (fun acc ->
         let defs = Env.defs env in
         let locals = SMap.fold (fun _ def locals ->
-          List.fold_left (fun locals loc -> LocMap.add loc def locals) locals def.Def.locs
+          Nel.fold_left (fun locals loc -> LocMap.add loc def locals) locals def.Def.locs
         ) defs LocMap.empty in
         let locals, globals = List.fold_left (fun (locals, globals) (loc, x) ->
           match Env.get x env with

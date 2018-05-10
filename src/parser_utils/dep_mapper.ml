@@ -184,7 +184,7 @@ class mapper = object(this)
       LocMap.fold (fun loc { Scope_api.Def.locs; _ } acc ->
         (* TODO: investigate whether picking the first location where there could
           be multiple is fine in principle *)
-        LocMap.add loc (List.hd locs) acc
+        LocMap.add loc (Nel.hd locs) acc
       ) scope.Scope_api.Scope.locals acc
     ) scopes LocMap.empty;
     LocMap.iter

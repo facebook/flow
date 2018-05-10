@@ -27,7 +27,7 @@ let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_def
     let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
     let defs = List.map (Scope_api.def_of_use info) all_uses in
     let locs_of_defs = List.map (
-      fun { Scope_api.Def.locs; _ } -> locs
+      fun { Scope_api.Def.locs; _ } -> Nel.to_list locs
     ) defs in
     let printer = print_list @@ print_list Loc.to_string in
     assert_equal ~ctxt

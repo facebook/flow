@@ -14,7 +14,7 @@ type uses = LocSet.t
 
 module Def = struct
   type t = {
-    locs: Loc.t list;
+    locs: Loc.t Nel.t;
     name: int;
     actual_name: string;
   }
@@ -27,10 +27,10 @@ module Def = struct
         let i = Loc.compare loc1 loc2 in
         if i = 0 then iter locs1 locs2
         else i
-    in fun t1 t2 -> iter t1.locs t2.locs
+    in fun t1 t2 -> iter (Nel.to_list t1.locs) (Nel.to_list t2.locs)
 
   let is x t =
-    List.exists (Loc.equal x) t.locs
+    Nel.exists (Loc.equal x) t.locs
 end
 module DefMap = MyMap.Make(Def)
 

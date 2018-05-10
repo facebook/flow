@@ -186,7 +186,7 @@ class exports_resolver ~ast = object(this)
     match expr with
     | _, Identifier (loc, _) ->
       begin match Scope_api.def_of_use scope_info loc with
-      | { Scope_api.Def.locs = [loc]; _ } ->
+      | { Scope_api.Def.locs = (loc, []); _ } ->
         begin match ast_of_def_loc ~ast ~loc with
         | Some (DefFunction { line_loc; func }) ->
           this#set_cjs_default_export (ExportFunction { line_loc; func })
@@ -221,7 +221,7 @@ class exports_resolver ~ast = object(this)
     match expr with
     | _, Identifier (loc, _) ->
       begin match Scope_api.def_of_use scope_info loc with
-      | { Scope_api.Def.locs = [loc]; _ } ->
+      | { Scope_api.Def.locs = (loc, []); _ } ->
         begin match ast_of_def_loc ~ast ~loc with
         | Some (DefFunction { line_loc; func }) ->
           this#add_cjs_named_export name (ExportFunction { line_loc; func })

@@ -10,7 +10,7 @@ type use = Loc.t
 type uses = Utils_js.LocSet.t
 module Def: sig
   type t = {
-    locs: Loc.t list;
+    locs: Loc.t Nel.t;
     name: int;
     actual_name: string;
   }
