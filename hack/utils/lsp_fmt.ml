@@ -390,6 +390,39 @@ let parse_didChange (params: json option) : DidChange.params =
   }
 
 
+
+(************************************************************************)
+(** textDocument/signatureHelp notification                            **)
+(************************************************************************)
+
+let parse_signatureHelp (params: json option) : SignatureHelp.params =
+  parse_textDocumentPositionParams params
+
+let print_signatureHelp (r: SignatureHelp.result) : json =
+  let open SignatureHelp in
+  let print_parInfo parInfo =
+    Jprint.object_opt [
+      "label", Some (Hh_json.JSON_String parInfo.parinfo_label);
+      "documentation", Option.map ~f:Hh_json.string_ parInfo.parinfo_documentation;
+    ]
+  in
+  let print_sigInfo sigInfo =
+    Jprint.object_opt [
+      "label", Some (Hh_json.JSON_String sigInfo.siginfo_label);
+      "documentation", Option.map ~f:Hh_json.string_ sigInfo.siginfo_documentation;
+      "parameters", Some (Hh_json.JSON_Array (List.map ~f:print_parInfo sigInfo.parameters))
+    ]
+  in
+  match r with
+  | None -> Hh_json.JSON_Null
+  | Some r ->
+    Hh_json.JSON_Object [
+      "signatures", Hh_json.JSON_Array (List.map ~f:print_sigInfo r.signatures);
+      "activeSignature", Hh_json.int_ r.activeSignature;
+      "activeParameter", Hh_json.int_ r.activeParameter;
+    ]
+
+
 (************************************************************************)
 (** textDocument/publishDiagnostics notification                       **)
 (************************************************************************)

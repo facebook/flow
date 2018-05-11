@@ -742,6 +742,31 @@ module DocumentOnTypeFormatting = struct
 end
 
 
+(* Document Signature Help request, method="textDocument/signatureHelp" *)
+module SignatureHelp = struct
+  type params = TextDocumentPositionParams.t
+
+  and result = t option
+
+  and t = {
+    signatures: signature_information list;
+    activeSignature: int;
+    activeParameter: int;
+  }
+
+  and signature_information = {
+    siginfo_label: string;
+    siginfo_documentation: string option;
+    parameters: parameter_information list;
+  }
+
+  and parameter_information = {
+    parinfo_label: string;
+    parinfo_documentation: string option;
+  }
+end
+
+
 (* LogMessage notification, method="window/logMessage" *)
 module LogMessage = struct
   type params = logMessageParams
