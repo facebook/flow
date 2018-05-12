@@ -17,8 +17,6 @@ type monitor_config =
     server_log_file: string;
     (** The path to the monitor log file *)
     monitor_log_file: string;
-    (** The path to the load script log file *)
-    load_script_log_file: string;
   }
 
 (** Informant-induced restart may specify the mini saved state

@@ -26,6 +26,5 @@ let check_exit_status proc_stat process monitor_config  =
     HackEventLogger.bad_exit
       time_taken proc_stat
       (monitor_config.server_log_file,
-      monitor_config.monitor_log_file,
-      monitor_config.load_script_log_file)
+      monitor_config.monitor_log_file)
       ~is_oom
