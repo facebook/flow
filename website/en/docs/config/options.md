@@ -156,6 +156,9 @@ start lexing a file to see if it has `@flow` or `@noflow` in it. This option
 lets you configure how much of the file Flow lexes before it decides there is
 no relevant docblock.
 
+> **Note** `@flow` means "parse the file with types allowed, and run Flow"
+>`@noflow` means "parse the file with types allowed, but suppress all the errors." this is meant as an escape hatch to suppress flow without having to delete all the annotations.
+
 The default value of `max_header_tokens` is 10.
 
 #### `module.file_ext` _`(string)`_ <a class="toc" id="toc-module-file-ext-string" href="#toc-module-file-ext-string"></a>
