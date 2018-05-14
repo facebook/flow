@@ -275,7 +275,7 @@ let typecheck
   ~errors
   ~unchanged_checked
   ~infer_input
-  ~parsed
+  ~dependency_graph
   ~all_dependent_files
   ~make_merge_input
   ~persistent_connections =
@@ -296,9 +296,6 @@ let typecheck
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
     let roots = CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files infer_input) in
-    let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-      Dep_service.calc_dependency_graph workers parsed
-    ) in
     (* So we want to prune our dependencies to only the dependencies which changed. However,
      * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
      * check both of them. So we need to calculate components before we can prune *)
@@ -477,10 +474,13 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
     let parsed = !env.ServerEnv.files in
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
+    let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+      Dep_service.calc_dependency_graph workers parsed
+    ) in
     let%lwt checked, errors = typecheck
       ~options ~profiling ~workers ~errors
       ~unchanged_checked ~infer_input
-      ~parsed ~all_dependent_files
+      ~dependency_graph ~all_dependent_files
       ~persistent_connections
       ~make_merge_input:(fun inferred ->
         let recheck_map = CheckedSet.fold (fun map f ->
@@ -641,9 +641,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
  * - Around 75% of the time is dependent_files looking up the dependents
  * - Around 20% of the time is calc_dependency_graph building the dependency graph
  **)
-let focused_files_to_infer ~workers ~focused ~parsed =
-  let%lwt dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-
+let focused_files_to_infer ~workers ~focused ~parsed ~dependency_graph =
   let focused = focused |> FilenameSet.filter (fun f ->
     Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
     && Module_js.checked_file ~audit:Expensive.warn f)
@@ -679,22 +677,21 @@ let filter_out_node_modules ~options =
 (* Without a set of focused files, we just focus on every parsed file. We won't focus on
  * node_modules. If a node module is a dependency, then we'll just treat it as a dependency.
  * Otherwise, we'll ignore it. *)
-let unfocused_files_to_infer ~options ~workers ~parsed =
+let unfocused_files_to_infer ~options ~parsed ~dependency_graph =
   (* All the non-node_modules files *)
   let focused = filter_out_node_modules ~options parsed in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
-  let%lwt dependency_graph = Dep_service.calc_dependency_graph workers parsed in
   let dependencies = Dep_service.calc_all_dependencies dependency_graph focused in
   Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty)
 
-let files_to_infer ~options ~workers ~focused ~profiling ~parsed =
+let files_to_infer ~options ~workers ~focused ~profiling ~parsed ~dependency_graph =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
-      unfocused_files_to_infer ~options ~workers ~parsed
+      unfocused_files_to_infer ~options ~parsed ~dependency_graph
     | Some focused ->
-      focused_files_to_infer ~workers ~focused ~parsed
+      focused_files_to_infer ~workers ~focused ~parsed ~dependency_graph
   )
 
 (* We maintain the following invariant across rechecks: The set of
@@ -930,6 +927,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       ~new_or_changed:(FilenameSet.elements new_or_changed)
       ~errors in
 
+  let parsed = FilenameSet.union freshparsed unchanged in
+
   (* direct_dependent_files are unchanged files which directly depend on changed modules,
      or are new / changed files that are phantom dependents. dependent_files are
      direct_dependent_files plus their dependents (transitive closure) *)
@@ -963,9 +962,10 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
   ) in
 
-  let parsed = FilenameSet.union freshparsed unchanged in
-
   Hh_logger.info "Recalculating dependency graph";
+  let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    Dep_service.calc_dependency_graph workers parsed
+  ) in
   let%lwt updated_checked_files, all_dependent_files =
     with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
       match Options.lazy_mode options with
@@ -978,7 +978,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
           old_focus_targets
           unparsed in
         let parsed = FilenameSet.union old_focus_targets freshparsed in
-        let%lwt updated_checked_files = unfocused_files_to_infer ~options ~workers ~parsed in
+        let%lwt updated_checked_files = unfocused_files_to_infer ~options ~parsed ~dependency_graph in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
@@ -1012,7 +1012,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         let focused = old_focused
           |> FilenameSet.union open_in_ide
           |> FilenameSet.union forced_focus in
-        let%lwt updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
+        let%lwt updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed ~dependency_graph in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
          * dependency. That's fine if foo.js is in the checked set. But if it's just some random
@@ -1035,7 +1035,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
     ~errors
     ~unchanged_checked
     ~infer_input
-    ~parsed
+    ~dependency_graph
     ~all_dependent_files
     ~persistent_connections:(Some env.ServerEnv.connections)
     ~make_merge_input:(fun inferred ->
@@ -1167,8 +1167,11 @@ let init ~profiling ~workers options =
   Lwt.return (parsed, libs, libs_ok, errors)
 
 let full_check ~profiling ~options ~workers ~focus_targets parsed errors =
+  let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    Dep_service.calc_dependency_graph workers parsed
+  ) in
   let%lwt infer_input = files_to_infer
-    ~options ~workers ~focused:focus_targets ~profiling ~parsed in
+    ~options ~workers ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
   typecheck
     ~options
     ~profiling
@@ -1176,7 +1179,7 @@ let full_check ~profiling ~options ~workers ~focus_targets parsed errors =
     ~errors
     ~unchanged_checked:CheckedSet.empty
     ~infer_input
-    ~parsed
+    ~dependency_graph
     ~all_dependent_files:FilenameSet.empty
     ~persistent_connections:None
     ~make_merge_input:(fun inferred ->
