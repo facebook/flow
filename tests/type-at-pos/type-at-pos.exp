@@ -2895,3 +2895,78 @@ opaque.js:21:28 = {
   "start":25,
   "end":34
 }
+optional_chaining.js:16:7 = {
+  "type":"void | number",
+  "reasons":[],
+  "loc":{
+    "source":"optional_chaining.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":7,"offset":120},
+    "end":{"line":16,"column":7,"offset":121}
+  },
+  "path":"optional_chaining.js",
+  "line":16,
+  "endline":16,
+  "start":7,
+  "end":7
+}
+optional_chaining.js:16:11 = {
+  "type":"?Foo",
+  "reasons":[],
+  "loc":{
+    "source":"optional_chaining.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":11,"offset":124},
+    "end":{"line":16,"column":13,"offset":127}
+  },
+  "path":"optional_chaining.js",
+  "line":16,
+  "endline":16,
+  "start":11,
+  "end":13
+}
+optional_chaining.js:16:16 = {
+  "type":"Bar | void",
+  "reasons":[],
+  "loc":{
+    "source":"optional_chaining.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":16,"offset":129},
+    "end":{"line":16,"column":18,"offset":132}
+  },
+  "path":"optional_chaining.js",
+  "line":16,
+  "endline":16,
+  "start":16,
+  "end":18
+}
+optional_chaining.js:16:20 = {
+  "type":"Baz | void",
+  "reasons":[],
+  "loc":{
+    "source":"optional_chaining.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":20,"offset":133},
+    "end":{"line":16,"column":22,"offset":136}
+  },
+  "path":"optional_chaining.js",
+  "line":16,
+  "endline":16,
+  "start":20,
+  "end":22
+}
+optional_chaining.js:16:24 = {
+  "type":"void | number",
+  "reasons":[],
+  "loc":{
+    "source":"optional_chaining.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":24,"offset":137},
+    "end":{"line":16,"column":26,"offset":140}
+  },
+  "path":"optional_chaining.js",
+  "line":16,
+  "endline":16,
+  "start":24,
+  "end":26
+}
