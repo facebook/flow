@@ -100,7 +100,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
     let entry =
       info.module_name,
     (* For every required module m, add f to the reverse dependency list for m,
-       stored in `module_dependent_map`. This will be used downstream when computing
+       stored in `module_dependents_tbl`. This will be used downstream when computing
        direct_dependents, and also in calc_all_dependents.
 
        TODO: should generate this map once on startup, keep required_by in
@@ -125,50 +125,45 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
       ~neutral: []
       ~next: (MultiWorkerLwt.next workers (FilenameSet.elements fileset))
   in
+  let module_dependents_tbl = Hashtbl.create 0 in
+  let modules, resolution_path_files =
   List.fold_left
-    (fun (modules, module_dependent_map, resolution_path_files) (f, (m, rs, b)) ->
+    (fun (modules, resolution_path_files) (f, (m, rs, b)) ->
+      Modulename.Set.iter (fun r ->
+        Hashtbl.add module_dependents_tbl r f
+      ) rs;
       FilenameMap.add f m modules,
-      Modulename.Set.fold (fun r module_dependent_map ->
-        Modulename.Map.add r FilenameSet.(
-          match Modulename.Map.get r module_dependent_map with
-            | None -> singleton f
-            | Some files -> add f files
-        ) module_dependent_map
-      ) rs module_dependent_map,
       if b then FilenameSet.add f resolution_path_files else resolution_path_files
     )
-    (FilenameMap.empty, Modulename.Map.empty, FilenameSet.empty)
-    result
-  |> Lwt.return
+    (FilenameMap.empty, FilenameSet.empty)
+    result in
+
+  Lwt.return (modules, module_dependents_tbl, resolution_path_files)
 )
 
 (* given a reverse dependency map (from modules to the files which
    require them), generate the closure of the dependencies of a
    given fileset, using get_info_unsafe to map files to modules
  *)
-let calc_all_dependents modules module_dependent_map fileset =
-  let module_dependents m = Modulename.Map.get m module_dependent_map in
+let calc_all_dependents modules module_dependents_tbl fileset =
+  let module_dependents m = Hashtbl.find_all module_dependents_tbl m in
   let file_dependents f =
     let m = FilenameMap.find_unsafe f modules in
     let f_module = Module_js.eponymous_module f in
     (* In general, a file exports its module via two names. See Modulename for
        details. It suffices to note here that dependents of the file can use
        either of those names to import the module. *)
-    match module_dependents m, module_dependents f_module with
-      | None, None -> FilenameSet.empty
-      | None, Some dependents
-      | Some dependents, None -> dependents
-      | Some dependents1, Some dependents2 -> FilenameSet.union dependents1 dependents2
+    List.rev_append (module_dependents m) (module_dependents f_module) |> FilenameSet.of_list
   in
-  let rec expand module_dependent_map fileset seen =
+  let rec expand fileset seen =
     FilenameSet.fold (fun f acc ->
       if FilenameSet.mem f !seen then acc else (
         seen := FilenameSet.add f !seen;
         let dependents = file_dependents f in
-        FilenameSet.add f (FilenameSet.union acc (expand module_dependent_map dependents seen))
+        FilenameSet.add f (FilenameSet.union acc (expand dependents seen))
       )
     ) fileset FilenameSet.empty
-  in expand module_dependent_map fileset (ref FilenameSet.empty)
+  in expand fileset (ref FilenameSet.empty)
 
 (* Identify the direct and transitive dependents of new, changed, and deleted
    files.
@@ -191,20 +186,19 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
   (* Get the modules provided by unchanged files, the reverse dependency map
      for unchanged files, and the subset of unchanged files whose resolution
      paths may encounter new or changed modules. *)
-  let%lwt modules, module_dependent_map, resolution_path_files =
+  let%lwt modules, module_dependents_tbl, resolution_path_files =
     dependent_calc_utils workers unchanged new_or_changed
   in
 
   (* resolution_path_files, plus files that require changed_modules *)
   let direct_dependents = Modulename.Set.fold (fun m acc ->
-    match Modulename.Map.get m module_dependent_map with
-    | Some files -> FilenameSet.union acc files
-    | None -> acc
+    let files = Hashtbl.find_all module_dependents_tbl m in
+    List.fold_left (fun acc f -> FilenameSet.add f acc) acc files
   ) changed_modules resolution_path_files in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
   Lwt.return (
-    calc_all_dependents modules module_dependent_map direct_dependents,
+    calc_all_dependents modules module_dependents_tbl direct_dependents,
     direct_dependents
   )
 
