@@ -40,6 +40,8 @@ type collated_errors = {
 type env = {
     (* All the files that we at least parse. *)
     files: Utils_js.FilenameSet.t;
+    (* All the files that we at least parse. *)
+    dependency_graph: Utils_js.FilenameSet.t Utils_js.FilenameMap.t;
     (* All the current files we typecheck. *)
     checked_files: CheckedSet.t;
     libs: SSet.t; (* a subset of `files` *)

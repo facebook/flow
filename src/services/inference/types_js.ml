@@ -471,12 +471,9 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
   then Lwt.return_unit
   else begin
     let errors = !env.ServerEnv.errors in
-    let parsed = !env.ServerEnv.files in
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
-    let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-      Dep_service.calc_dependency_graph workers parsed
-    ) in
+    let dependency_graph = !env.ServerEnv.dependency_graph in
     let%lwt checked, errors = typecheck
       ~options ~profiling ~workers ~errors
       ~unchanged_checked ~infer_input
@@ -1080,6 +1077,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   Lwt.return (
     ({ env with ServerEnv.
       files = parsed;
+      dependency_graph;
       checked_files = checked;
       errors;
     },
@@ -1163,13 +1161,12 @@ let init ~profiling ~workers options =
       ~new_or_changed:all_files
       ~errors
   in
-
-  Lwt.return (parsed, libs, libs_ok, errors)
-
-let full_check ~profiling ~options ~workers ~focus_targets parsed errors =
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
     Dep_service.calc_dependency_graph workers parsed
   ) in
+  Lwt.return (parsed, dependency_graph, libs, libs_ok, errors)
+
+let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
   let%lwt infer_input = files_to_infer
     ~options ~workers ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
   typecheck

@@ -41,7 +41,8 @@ let init ~focus_targets genv =
 
   let should_print_summary = Options.should_profile options in
   let%lwt env = Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
-    let%lwt parsed, libs, libs_ok, errors = Types_js.init ~profiling ~workers options in
+    let%lwt parsed, dependency_graph, libs, libs_ok, errors =
+      Types_js.init ~profiling ~workers options in
 
     (* If any libs errored, skip typechecking and just show lib errors. Note
      * that `init` above has done all parsing, not just lib parsing, resolved
@@ -53,7 +54,7 @@ let init ~focus_targets genv =
       if not libs_ok || Options.is_lazy_mode options then
         Lwt.return (CheckedSet.empty, errors)
       else
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options parsed errors
+        Types_js.full_check ~profiling ~workers ~focus_targets ~options parsed dependency_graph errors
     in
 
     sample_init_memory profiling;
@@ -65,6 +66,7 @@ let init ~focus_targets genv =
        `errors` contains the current set of errors. *)
     let env = { ServerEnv.
       files = parsed;
+      dependency_graph;
       checked_files = checked;
       libs;
       errors;
