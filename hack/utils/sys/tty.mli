@@ -44,7 +44,7 @@ val cprintf : ?color_mode:color_mode -> ?out_channel:out_channel -> style ->
 (* These two functions provide a four-state TTY-friendly spinner that
  * a client can output between sleeps if it happens to be waiting on
  * a busy server (e.g. one that's initializing) *)
-val spinner : unit -> string
+val spinner : ?angery_reaccs_only:bool -> unit -> string
 val spinner_used : unit -> bool
 
 (* Output a "clear current line" escape sequence to out_channel if it's

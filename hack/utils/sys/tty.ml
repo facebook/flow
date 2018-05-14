@@ -89,6 +89,13 @@ let should_color color_mode =
   | Color_Never -> false
   | Color_Auto -> supports_color ()
 
+let emoji_spinner = [
+  "\xF0\x9F\x98\xA1"; (* Angry Face *)
+  "\xF0\x9F\x98\x82"; (* Face With Tears of Joy *)
+  "\xF0\x9F\xA4\x94"; (* Thinking Face *)
+  "\xF0\x9F\x92\xAF" (* Hundred Points *)
+]
+
 (* See https://github.com/yarnpkg/yarn/issues/405. *)
 let supports_emoji () = Sys.os_type <> "Win32" && supports_color ()
 
@@ -105,9 +112,11 @@ let cprintf ?(color_mode=Color_Auto) ?(out_channel=stdout) c =
 
 let (spinner, spinner_used) =
   let state = ref 0 in
-  (fun () ->
+  (fun ?(angery_reaccs_only=false) () ->
     begin
-      let str = List.nth_exn ["-"; "\\"; "|"; "/"] (!state mod 4) in
+      let spinner =
+        if angery_reaccs_only then emoji_spinner else ["-"; "\\"; "|"; "/"] in
+      let str = List.nth_exn spinner (!state mod 4) in
       state := !state + 1;
       str
     end),
