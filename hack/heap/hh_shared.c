@@ -2018,18 +2018,22 @@ static unsigned int find_slot(value key) {
   }
 }
 
-/*****************************************************************************/
-/* Returns true if the key is present. We need to check both the hash and
- * the address of the data. This is due to the fact that we remove by setting
- * the address slot to NULL (we never remove a hash from the table, outside
- * of garbage collection).
- */
-/*****************************************************************************/
+/*
+hh_mem_inner
+ 1 -- key exists and is associated with non-zero data
+-1 -- key is not present in the hash table at all
+-2 -- key is present in the hash table but associated with zero-valued data.
+      This means that the data has been explicitly deleted.
+
+Note that the only valid return values are {1,-1,-2}. In order to use the result
+of this function in an "if" statement an explicit test must be performed.
+*/
 int hh_mem_inner(value key) {
   check_should_exit();
   unsigned int slot = find_slot(key);
-  if(hashtbl[slot].hash == get_hash(key) &&
-     hashtbl[slot].addr != NULL) {
+  _Bool good_hash = hashtbl[slot].hash == get_hash(key);
+  _Bool non_null_addr = hashtbl[slot].addr != NULL;
+  if (good_hash && non_null_addr) {
     // The data is currently in the process of being written, wait until it
     // actually is ready to be used before returning.
     time_t start = 0;
@@ -2050,12 +2054,26 @@ int hh_mem_inner(value key) {
     }
     return 1;
   }
-  return 0;
+  else if (good_hash) {
+    // if the hash matches and the key is zero
+    // then we've removed the key.
+    return -2;
+  } else {
+    // otherwise the key is simply absent
+    return -1;
+  }
 }
 
+/*****************************************************************************/
+/* Returns true if the key is present. We need to check both the hash and
+ * the address of the data. This is due to the fact that we remove by setting
+ * the address slot to NULL (we never remove a hash from the table, outside
+ * of garbage collection).
+ */
+/*****************************************************************************/
 value hh_mem(value key) {
   CAMLparam1(key);
-  CAMLreturn(Val_bool(hh_mem_inner(key)));
+  CAMLreturn(Val_bool(hh_mem_inner(key) == 1));
 }
 
 /*****************************************************************************/
