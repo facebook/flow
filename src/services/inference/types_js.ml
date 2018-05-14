@@ -949,7 +949,13 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
 
   Hh_logger.info "Recalculating dependency graph";
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    Dep_service.calc_dependency_graph workers parsed
+    let%lwt updated_dependency_graph = Dep_service.calc_partial_dependency_graph workers
+      (FilenameSet.union freshparsed direct_dependent_files) in
+    let old_dependency_graph = env.ServerEnv.dependency_graph in
+    old_dependency_graph
+    |> FilenameSet.fold FilenameMap.remove deleted
+    |> FilenameMap.union updated_dependency_graph
+    |> Lwt.return
   ) in
   let%lwt updated_checked_files, all_dependent_files =
     with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->

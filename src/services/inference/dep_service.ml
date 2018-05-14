@@ -233,17 +233,18 @@ let file_dependencies ~audit file = Module_js.(
   ) require_loc FilenameSet.empty
 )
 
+let calc_partial_dependency_graph workers files =
+  MultiWorkerLwt.call
+    workers
+    ~job: (List.fold_left (fun dependency_graph file ->
+      FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
+    ))
+    ~neutral: FilenameMap.empty
+    ~merge: FilenameMap.union
+    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files))
+
 let calc_dependency_graph workers files =
-  let%lwt result =
-    MultiWorkerLwt.call
-      workers
-      ~job: (List.fold_left (fun dependency_graph file ->
-        FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
-      ))
-      ~neutral: FilenameMap.empty
-      ~merge: FilenameMap.union
-      ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files))
-  in
+  let%lwt result = calc_partial_dependency_graph workers files in
   FilenameMap.map (FilenameSet.filter (fun f -> FilenameSet.mem f files)) result
   |> Lwt.return
 
