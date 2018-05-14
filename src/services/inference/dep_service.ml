@@ -253,18 +253,30 @@ let calc_dependency_graph workers files =
   FilenameMap.map (FilenameSet.filter (fun f -> FilenameSet.mem f files)) result
   |> Lwt.return
 
-(* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
- * of `files`. This set does include `files`.
- *)
-let calc_all_dependencies =
-  let rec loop dependency_graph =
-    FilenameSet.fold (fun file acc ->
-      match FilenameMap.get file dependency_graph with
+let rec closure graph =
+  FilenameSet.fold (fun file acc ->
+    match FilenameMap.get file graph with
       | Some files ->
         let files = FilenameSet.diff files acc in
         let acc = FilenameSet.union files acc in
-        loop dependency_graph files acc
+        closure graph files acc
       | None -> acc
-    ) in
-  fun dependency_graph files ->
-    loop dependency_graph files files
+  )
+
+(* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
+ * of `files`. This set does include `files`.
+ *)
+let calc_all_dependencies dependency_graph files =
+  closure dependency_graph files files
+
+(* `calc_all_reverse_dependencies graph files` will return the set of direct and transitive
+ * dependents of `files`. This set does include `files`.  *)
+let calc_all_reverse_dependencies dependency_graph files =
+  let rev_dependency_graph = FilenameMap.fold (fun from_f to_fs acc ->
+    FilenameSet.fold (fun to_f acc ->
+      match FilenameMap.get to_f acc with
+        | None -> FilenameMap.add to_f (FilenameSet.singleton from_f) acc
+        | Some from_fs -> FilenameMap.add to_f (FilenameSet.add from_f from_fs) acc
+    ) to_fs acc
+  ) dependency_graph FilenameMap.empty in
+  closure rev_dependency_graph files files

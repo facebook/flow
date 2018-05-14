@@ -638,28 +638,16 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
  * - Around 75% of the time is dependent_files looking up the dependents
  * - Around 20% of the time is calc_dependency_graph building the dependency graph
  **)
-let focused_files_to_infer ~workers ~focused ~parsed ~dependency_graph =
+let focused_files_to_infer ~focused ~dependency_graph =
   let focused = focused |> FilenameSet.filter (fun f ->
     Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
     && Module_js.checked_file ~audit:Expensive.warn f)
   in
 
-  let changed_modules = FilenameSet.fold (fun f changed_modules ->
-    let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
-    Modulename.Set.add module_name changed_modules
-  ) focused Modulename.Set.empty in
+  let roots = Dep_service.calc_all_reverse_dependencies dependency_graph focused in
 
-  let unchanged = FilenameSet.diff parsed focused in
-
-  let%lwt dependents, _ = Dep_service.dependent_files workers
-    ~unchanged
-    ~new_or_changed:focused
-    (* TODO: (glevi) T21987218 isn't it possible that _module is not provided by f? *)
-    ~changed_modules
-  in
-
-  let roots = FilenameSet.union focused dependents in
   let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+  let dependents = FilenameSet.diff roots focused in
 
   Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
 
@@ -682,13 +670,13 @@ let unfocused_files_to_infer ~options ~parsed ~dependency_graph =
   let dependencies = Dep_service.calc_all_dependencies dependency_graph focused in
   Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty)
 
-let files_to_infer ~options ~workers ~focused ~profiling ~parsed ~dependency_graph =
+let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
       unfocused_files_to_infer ~options ~parsed ~dependency_graph
     | Some focused ->
-      focused_files_to_infer ~workers ~focused ~parsed ~dependency_graph
+      focused_files_to_infer ~focused ~dependency_graph
   )
 
 (* We maintain the following invariant across rechecks: The set of
@@ -1009,7 +997,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         let focused = old_focused
           |> FilenameSet.union open_in_ide
           |> FilenameSet.union forced_focus in
-        let%lwt updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed ~dependency_graph in
+        let%lwt updated_checked_files = focused_files_to_infer ~focused ~dependency_graph in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
          * dependency. That's fine if foo.js is in the checked set. But if it's just some random
@@ -1168,7 +1156,7 @@ let init ~profiling ~workers options =
 
 let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
   let%lwt infer_input = files_to_infer
-    ~options ~workers ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
+    ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
   typecheck
     ~options
     ~profiling

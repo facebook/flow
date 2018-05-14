@@ -24,3 +24,8 @@ val calc_all_dependencies:
   FilenameSet.t FilenameMap.t -> (* dependency graph *)
   FilenameSet.t -> (* files *)
   FilenameSet.t
+
+val calc_all_reverse_dependencies:
+  FilenameSet.t FilenameMap.t ->
+  FilenameSet.t ->
+  FilenameSet.t
