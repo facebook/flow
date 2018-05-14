@@ -269,14 +269,17 @@ let rec closure graph =
 let calc_all_dependencies dependency_graph files =
   closure dependency_graph files files
 
+let reverse graph =
+  let acc = Hashtbl.create 0 in
+  FilenameMap.iter (fun f -> FilenameSet.iter (fun f' ->
+    Hashtbl.add acc f' f
+  )) graph;
+  FilenameMap.mapi (fun f _ ->
+    FilenameSet.of_list @@ Hashtbl.find_all acc f
+  ) graph
+
 (* `calc_all_reverse_dependencies graph files` will return the set of direct and transitive
  * dependents of `files`. This set does include `files`.  *)
 let calc_all_reverse_dependencies dependency_graph files =
-  let rev_dependency_graph = FilenameMap.fold (fun from_f to_fs acc ->
-    FilenameSet.fold (fun to_f acc ->
-      match FilenameMap.get to_f acc with
-        | None -> FilenameMap.add to_f (FilenameSet.singleton from_f) acc
-        | Some from_fs -> FilenameMap.add to_f (FilenameSet.add from_f from_fs) acc
-    ) to_fs acc
-  ) dependency_graph FilenameMap.empty in
+  let rev_dependency_graph = reverse dependency_graph in
   closure rev_dependency_graph files files
