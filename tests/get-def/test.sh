@@ -107,3 +107,12 @@ printf "shadow prop created on write = "
 assert_ok "$FLOW" get-def objects.js 12 4 --strip-root --pretty
 printf "shadow prop created on read = "
 assert_ok "$FLOW" get-def objects.js 14 4 --strip-root --pretty
+
+printf "optional chain initial property = "
+assert_ok "$FLOW" get-def optional_chaining.js 17 6 --strip-root --pretty
+printf "optional chain subsequent property = "
+assert_ok "$FLOW" get-def optional_chaining.js 17 10 --strip-root --pretty
+printf "optional chain initial property of null = "
+assert_ok "$FLOW" get-def optional_chaining.js 18 7 --strip-root --pretty
+printf "optional chain subsequent property of null = "
+assert_ok "$FLOW" get-def optional_chaining.js 18 11 --strip-root --pretty

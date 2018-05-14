@@ -29,3 +29,7 @@ member of an object type alias = {"path":"objects.js","line":3,"endline":3,"star
 member of an unannotated object type = {"path":"objects.js","line":7,"endline":7,"start":12,"end":14}
 shadow prop created on write = {"path":"objects.js","line":11,"endline":11,"start":3,"end":5}
 shadow prop created on read = {"path":"objects.js","line":13,"endline":13,"start":3,"end":5}
+optional chain initial property = {"path":"optional_chaining.js","line":4,"endline":4,"start":3,"end":5}
+optional chain subsequent property = {"path":"optional_chaining.js","line":5,"endline":5,"start":5,"end":7}
+optional chain initial property of null = {"path":"optional_chaining.js","line":4,"endline":4,"start":3,"end":5}
+optional chain subsequent property of null = {"path":"optional_chaining.js","line":5,"endline":5,"start":5,"end":7}
