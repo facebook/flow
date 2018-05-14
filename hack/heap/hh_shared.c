@@ -2025,9 +2025,8 @@ static unsigned int find_slot(value key) {
  * of garbage collection).
  */
 /*****************************************************************************/
-value hh_mem(value key) {
-  CAMLparam1(key);
-  check_should_exit ();
+int hh_mem_inner(value key) {
+  check_should_exit();
   unsigned int slot = find_slot(key);
   if(hashtbl[slot].hash == get_hash(key) &&
      hashtbl[slot].addr != NULL) {
@@ -2049,9 +2048,14 @@ value hh_mem(value key) {
         caml_failwith("hh_mem busy-wait loop stuck for 60s");
       }
     }
-    CAMLreturn(Val_bool(1));
+    return 1;
   }
-  CAMLreturn(Val_bool(0));
+  return 0;
+}
+
+value hh_mem(value key) {
+  CAMLparam1(key);
+  CAMLreturn(Val_bool(hh_mem_inner(key)));
 }
 
 /*****************************************************************************/
