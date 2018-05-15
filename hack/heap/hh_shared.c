@@ -1762,7 +1762,11 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
 
   // Walking the table
   for(size_t i = 0; i < hashtbl_size; i++) {
-    if(hashtbl[i].addr != NULL) { // Found a non empty slot
+    if (hashtbl[i].addr == NULL) {
+      continue;
+    }
+    else {
+      // Found a non empty slot
       // No workers should be writing at the moment. If a worker died in the
       // middle of a write, that is also very bad
       assert(hashtbl[i].addr != HASHTBL_WRITE_IN_PROGRESS);
