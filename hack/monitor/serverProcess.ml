@@ -15,7 +15,7 @@ type process_data =
     (** Get occasional updates about status/busyness from typechecker here. *)
     in_fd: Unix.file_descr;
     (** Send client's File Descriptors to the typechecker over this. *)
-    out_fd : Unix.file_descr;
+    out_fds : (string * Unix.file_descr) list;
     last_request_handoff : float ref;
   }
 

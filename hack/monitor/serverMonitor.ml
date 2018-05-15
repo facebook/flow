@@ -305,8 +305,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       wait_for_server_exit_with_check env.server kill_signal_time;
       Exit_status.(exit No_error)
 
-  and hand_off_client_connection server client_fd =
-    let status = Libancillary.ancil_send_fd server.out_fd client_fd in
+  and hand_off_client_connection server_fd client_fd =
+    let status = Libancillary.ancil_send_fd server_fd client_fd in
     if (status <> 0) then
       (Hh_logger.log "Failed to handoff FD to server.";
        raise (Send_fd_failure status))
@@ -315,16 +315,16 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   (** Sends the client connection FD to the server process then closes the
    * FD. *)
-  and hand_off_client_connection_with_retries server retries client_fd =
-    let _, ready_l, _ = Unix.select [] [server.out_fd] [] (0.5) in
+  and hand_off_client_connection_with_retries server_fd retries client_fd =
+    let _, ready_l, _ = Unix.select [] [server_fd] [] (0.5) in
     if ready_l <> [] then
-      try hand_off_client_connection server client_fd
+      try hand_off_client_connection server_fd client_fd
       with
       | e ->
         if retries > 0 then
           (Hh_logger.log "Retrying FD handoff";
            hand_off_client_connection_with_retries
-             server (retries - 1) client_fd)
+             server_fd (retries - 1) client_fd)
         else
           (Hh_logger.log "No more retries. Ignoring request.";
            HackEventLogger.send_fd_failure e;
@@ -332,7 +332,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     else if retries > 0 then
       (Hh_logger.log "server socket not yet ready. Retrying.";
        hand_off_client_connection_with_retries
-         server (retries - 1) client_fd)
+         server_fd (retries - 1) client_fd)
     else begin
       Hh_logger.log
         "server socket not yet ready. No more retries. Ignoring request.";
@@ -368,13 +368,16 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let module PH = Prehandoff in
     match env.server with
     | Alive server ->
+      let server_fd = snd @@ List.find_exn server.out_fds
+        (* TODO: nothing is sent to priority pipe yet *)
+        ~f:(fun x -> fst x = "default") in
       let since_last_request =
         (Unix.time ()) -. !(server.last_request_handoff) in
       (** TODO: Send this to client so it is visible. *)
       Hh_logger.log "Got request for typechecker. Prior request %.1f seconds ago"
         since_last_request;
       msg_to_channel client_fd PH.Sentinel;
-      hand_off_client_connection_with_retries server 8 client_fd;
+      hand_off_client_connection_with_retries server_fd 8 client_fd;
       HackEventLogger.client_connection_sent ();
       server.last_request_handoff := Unix.time ();
       { env with server = (Alive server) }
