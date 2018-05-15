@@ -747,12 +747,13 @@ CAMLprim value hh_hash_used_slots(void) {
   uint64_t nonempty_slots = 0;
   uintptr_t i = 0;
   for (i = 0; i < hashtbl_size; ++i) {
-    if (hashtbl[i].addr != NULL) {
-      filled_slots++;
-    }
     if (hashtbl[i].hash != 0) {
       nonempty_slots++;
     }
+    if (hashtbl[i].addr == NULL) {
+      continue;
+    }
+    filled_slots++;
   }
   assert(nonempty_slots == *hcounter);
   value connector = caml_alloc_tuple(2);
