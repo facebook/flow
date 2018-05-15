@@ -55,6 +55,12 @@ module Jget = struct
       try Some (int_of_string s)
       with Failure _ -> raise (Parse ("not an int: " ^ s))
 
+  let float_string_opt (s: string option) : float option = match s with
+    | None -> None
+    | Some s ->
+      try Some (float_of_string s)
+      with Failure _ -> raise (Parse ("not a float: " ^ s))
+
   let list_opt (l: 'a list option) : 'a option list option = match l with
     | None -> None
     | Some x -> Some (List.map (fun a -> Some a) x)
@@ -65,6 +71,7 @@ module Jget = struct
   let obj_opt = get_opt Access.get_obj
   let val_opt = get_opt Access.get_val
   let int_opt json key = get_opt Access.get_number json key |> int_string_opt
+  let float_opt json key = get_opt Access.get_number json key |> float_string_opt
   let array_opt json key = get_opt Access.get_array json key |> list_opt
   (* array_opt lifts all the array's members into the "json option" monad *)
 
@@ -72,6 +79,7 @@ module Jget = struct
   let string_d json key ~default = Option.value (string_opt json key) ~default
   let bool_d json key ~default = Option.value (bool_opt json key) ~default
   let int_d json key ~default = Option.value (int_opt json key) ~default
+  let float_d json key ~default = Option.value (float_opt json key) ~default
   let array_d json key ~default = Option.value (array_opt json key) ~default
 
   (* Accessors which throw "Error.Parse key" on absence *)
@@ -79,6 +87,7 @@ module Jget = struct
   let string_exn = get_exn string_opt
   let val_exn = get_exn val_opt
   let int_exn = get_exn int_opt
+  let float_exn = get_exn float_opt
   let obj_exn json key = Some (get_exn obj_opt json key)
   (* obj_exn lifts the result into the "json option" monad *)
 end
