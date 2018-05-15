@@ -9,6 +9,9 @@ First install `babel-cli` and `babel-preset-flow` with either
 {{include.install_command}} babel-cli babel-preset-flow
 ```
 
+Note that if you're already using `babel-preset-react`, you don't also 
+need `babel-preset-flow`, since the Flow preset is included in the React preset.
+
 Next you need to create a `.babelrc` file at the root of your project with
 `"flow"` in your `"presets"`.
 
