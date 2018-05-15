@@ -20,13 +20,11 @@ exception Coalesced_failures of (WorkerController.worker_failure list)
 
 type interrupt_result = Cancel | Continue
 
-type 'env interrupt_handler =
-  'env -> Unix.file_descr list -> 'env * interrupt_result
+type 'env interrupt_handler = 'env -> 'env * interrupt_result
 
 type 'env interrupt_config = {
-  fds : Unix.file_descr list;
   env : 'env;
-  handler : 'env interrupt_handler;
+  handlers : 'env -> (Unix.file_descr * 'env interrupt_handler) list;
 }
 
 val no_interrupt : 'a -> 'a interrupt_config

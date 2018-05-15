@@ -13,18 +13,15 @@ exception Coalesced_failures of (WorkerController.worker_failure list)
 
 type interrupt_result = Cancel | Continue
 
-type 'env interrupt_handler =
-  'env -> Unix.file_descr list -> 'env * interrupt_result
+type 'env interrupt_handler = 'env -> 'env * interrupt_result
 
 type 'env interrupt_config = {
-  fds : Unix.file_descr list;
   env : 'env;
-  handler : 'env interrupt_handler;
+  handlers : 'env -> (Unix.file_descr * 'env interrupt_handler) list;
 }
 
 let no_interrupt env = {
-  fds = [];
-  handler = (fun _ _ -> assert false);
+  handlers = (fun _ -> []);
   env;
 }
 
@@ -37,7 +34,13 @@ let multi_threaded_call
   (next: a Bucket.next)
   (interrupt: d interrupt_config) =
 
-  let merge x acc = merge x (fst acc), snd acc in
+  (* merge accumulator, leaving environment and interrupt handlers untouched *)
+  let merge x (y1, y2, y3) = merge x y1, y2, y3 in
+
+  (* interrupt handlers are irrelevant after job is done *)
+  let unpack_result (acc, env, _handlers) = acc, env in
+
+  let handler_fds (_, _, handlers) = List.map handlers ~f:fst in
 
   let rec add_pending acc = match next () with
     | Bucket.Done -> acc
@@ -49,25 +52,33 @@ let multi_threaded_call
 
   (* When a job is cancelled, return all the jobs that were not started OR were
    * cancelled in the middle (so you better hope they are idempotent).*)
-  let check_cancel handles ready_fds (acc, env) =
-    let env, result =
-      if ready_fds <> [] then interrupt.handler env ready_fds
-      else env, Continue
+  let check_cancel handles ready_fds (acc, env, handlers) =
+    let env, decision, handlers = List.fold handlers
+      ~init:(env, Continue, handlers)
+      ~f:begin fun (env, decision, handlers) (fd, handler) ->
+        if decision = Cancel || not @@ List.mem ready_fds fd
+          then env, decision, handlers else
+        let env, decision = handler env in
+        (* running a handler could have changed the handlers,
+         * so need to regenerate them based on new environment *)
+        let handlers = interrupt.handlers env in
+        env, decision, handlers
+      end
     in
-    let acc = acc, env in
-    if result = Cancel then begin
+    let res = acc, env, handlers in
+    if decision = Cancel then begin
       WorkerController.cancel handles;
       let unfinished = List.map handles ~f:WorkerController.get_job in
       let unfinished = add_pending unfinished in
-      acc, Some unfinished
-    end else acc, None in
+      res, Some unfinished
+    end else res, None in
 
   let rec dispatch workers handles acc =
     (* 'worker' represents available workers. *)
     (* 'handles' represents pendings jobs. *)
     (* 'acc' are the accumulated results. *)
     match workers with
-    | [] when handles = [] -> acc, []
+    | [] when handles = [] -> unpack_result acc, []
     | [] ->
         (* No worker available: wait for some workers to finish. *)
         collect [] handles acc
@@ -87,7 +98,7 @@ let multi_threaded_call
             dispatch workers (handle :: handles) acc
   and collect workers handles acc =
     let { WorkerController.readys; waiters; ready_fds } =
-      WorkerController.select handles interrupt.fds in
+      WorkerController.select handles (handler_fds acc) in
     let workers = List.map ~f:WorkerController.get_worker readys @ workers in
     (* Collect the results. *)
     let acc, failures =
@@ -109,11 +120,11 @@ let multi_threaded_call
       raise (Coalesced_failures failures)
     else
     match check_cancel waiters ready_fds acc with
-    | acc, Some unfinished -> acc, unfinished
+    | acc, Some unfinished -> unpack_result acc, unfinished
     | acc, None ->
       (* And continue.. *)
       dispatch workers waiters acc in
-  dispatch workers [] (neutral, interrupt.env)
+  dispatch workers [] (neutral, interrupt.env, interrupt.handlers interrupt.env)
 
 let call workers job merge neutral next =
   let (res, ()), unfinished =
