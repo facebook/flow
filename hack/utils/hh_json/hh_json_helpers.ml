@@ -22,9 +22,9 @@ module Jget = struct
      and the usefuless of error-checking (in case a required field is absent)...
      - We use "json option" throughout. Things which you might expect to return
        a json are instead lifted to return a json option, so you can use all the
-       accessors on them more easily. When you attempt to get "o.m", either
-       it's present both because "o" is Some, and because "m" is a member.
-       Or it's absent because either of those things is false...
+       accessors on them more easily. When you attempt to get string "o.m", either
+       it's present both because "o" is Some, and because "m" is a string member
+       Or it's absent because any of those three things is false...
      - The "_opt" accessors uniformally return Some (present) or None (absent),
        regardless of which of the two things caused absence.
      - The "_d" accessors uniformally return a value (present) or default.
@@ -33,8 +33,10 @@ module Jget = struct
      The effect of this is you lose precise information about what exactly
      caused an absence (which is usually only of marginal benefit), and in
      return you gain a consistent way to handle both optionals and requireds.
-     Note: if you wish to get an int, and it's present but not parseable as
-     an int, then this always throws.
+
+     Note one exception to the above: if you wish to get an int/float, and it's
+     present as a JSON_Number but not parseable as an int/float, then all
+     accessors will throw.
   *)
 
   let get_opt hhjson_getter json key = match json with
