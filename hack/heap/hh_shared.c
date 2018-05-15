@@ -2040,7 +2040,7 @@ int hh_mem_inner(value key) {
     // The data is currently in the process of being written, wait until it
     // actually is ready to be used before returning.
     time_t start = 0;
-    while (hashtbl[slot].addr == (char*)1) {
+    while (hashtbl[slot].addr == HASHTBL_WRITE_IN_PROGRESS) {
 #if defined(__aarch64__) || defined(__powerpc64__)
       asm volatile("yield" : : : "memory");
 #else
