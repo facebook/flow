@@ -610,6 +610,8 @@ static unsigned int find_slot(value key);
 
 value hh_mem(value key);
 
+CAMLprim value hh_mem_status(value key);
+
 CAMLprim value hh_deserialize(char *src);
 
 CAMLprim value hh_get_and_deserialize(value key);
@@ -2076,6 +2078,19 @@ value hh_mem(value key) {
   CAMLreturn(Val_bool(hh_mem_inner(key) == 1));
 }
 
+CAMLprim value hh_mem_status(value key) {
+  CAMLparam1(key);
+  int res = hh_mem_inner(key);
+  switch (res) {
+    case 1:
+    case -1:
+    case -2:
+      CAMLreturn(Val_int(res));
+    default:
+      caml_failwith("Unreachable case: result must be 1 or -1 or -2");
+  }
+}
+
 /*****************************************************************************/
 /* Deserializes the value pointed by src. */
 /* The src is an OCaml style pointer, */
@@ -3242,17 +3257,6 @@ CAMLprim value open_file_info_db(
 ) {
   UNUSED(ml_unit);
   return Val_unit;
-}
-
-void hhfi_insert_row(
-        sqlite3_ptr db,
-        int64_t hash,
-        const char *name,
-        int64_t kind,
-        const char *filespec
-) {
-    UNUSED5(db, hash, name, kind, filespec);
-    return;
 }
 
 char *hhfi_get_filespec(

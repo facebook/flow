@@ -461,10 +461,15 @@ end = struct
    * if no new memory was allocated *)
   external hh_add    : Key.md5 -> Value.t -> int * int = "hh_add"
   external hh_mem         : Key.md5 -> bool            = "hh_mem"
+  external hh_mem_status  : Key.md5 -> int             = "hh_mem_status"
   external hh_get_size    : Key.md5 -> int             = "hh_get_size"
   external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
   external hh_remove      : Key.md5 -> unit            = "hh_remove"
   external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
+
+  let hh_mem_status x = with_worker_exit (fun () -> hh_mem_status x)
+
+  let _ = hh_mem_status
 
   let hh_mem x = with_worker_exit (fun () -> hh_mem x)
   let hh_add x y = with_worker_exit (fun () -> hh_add x y)
