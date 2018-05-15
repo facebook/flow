@@ -3,6 +3,7 @@
 (* Practical readbable guide: https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol-json-structures *)
 
 open Hh_core
+module J = Hh_json_helpers.AdhocJsonHelpers
 
 type writer = Hh_json.json -> unit
 type kind = Request | Notification | Response
@@ -43,13 +44,13 @@ let message_to_short_string (c: message) : string =
   Printf.sprintf "{%s%s,%s%s}" (kind_to_string c.kind) disposition method_ id
 
 let parse_message ~(json: Hh_json.json) ~(timestamp: float) : message =
-  let id = Hh_json_helpers.try_get_val "id" json in
-  let method_opt = Hh_json_helpers.try_get_val "method" json
+  let id = J.try_get_val "id" json in
+  let method_opt = J.try_get_val "method" json
     |> Option.map ~f:Hh_json.get_string_exn in
   let method_ = Option.value method_opt ~default:"" in (* is easier to consume *)
-  let params = Hh_json_helpers.try_get_val "params" json in
-  let result = Hh_json_helpers.try_get_val "result" json in
-  let error = Hh_json_helpers.try_get_val "error" json in
+  let params = J.try_get_val "params" json in
+  let result = J.try_get_val "result" json in
+  let error = J.try_get_val "error" json in
   (* Following categorization mostly mirrors that of VSCode except that     *)
   (* VSCode allows number+string+null ID for response, but we allow any ID. *)
   let kind = match id, method_opt, result, error with
@@ -283,7 +284,7 @@ let respond
   let open Hh_json in
   let is_error = match result_or_error with
     | JSON_Object _ ->
-      Hh_json_helpers.try_get_val "code" result_or_error
+      J.try_get_val "code" result_or_error
         |> Option.is_some
     | _ -> false in
   let response = JSON_Object (

@@ -122,7 +122,7 @@ module Watchman_actual = struct
     | Watchman_dead of dead_env
     | Watchman_alive of env
 
-  module J = Hh_json_helpers
+  module J = Hh_json_helpers.AdhocJsonHelpers
 
   (****************************************************************************)
   (* JSON methods. *)
