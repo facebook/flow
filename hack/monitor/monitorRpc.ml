@@ -11,6 +11,10 @@ type handoff_options = {
   (** If server is dormant because it is waiting for Informant to start one,
    * set this to true to start a server anyway. *)
   force_dormant_start : bool;
+  (* There can be multiple named channels between server and monitor in order
+   * to prioritize some requests over others. Connecting code needs to specify
+   * which channel it wants to use. *)
+  pipe_name : string;
 }
 
 type command =

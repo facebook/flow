@@ -369,13 +369,12 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     match env.server with
     | Alive server ->
       let server_fd = snd @@ List.find_exn server.out_fds
-        (* TODO: nothing is sent to priority pipe yet *)
-        ~f:(fun x -> fst x = "default") in
+        ~f:(fun x -> fst x = handoff_options.MonitorRpc.pipe_name) in
       let since_last_request =
         (Unix.time ()) -. !(server.last_request_handoff) in
       (** TODO: Send this to client so it is visible. *)
-      Hh_logger.log "Got request for typechecker. Prior request %.1f seconds ago"
-        since_last_request;
+      Hh_logger.log "Got %s request for typechecker. Prior request %.1f seconds ago"
+        handoff_options.MonitorRpc.pipe_name since_last_request;
       msg_to_channel client_fd PH.Sentinel;
       hand_off_client_connection_with_retries server_fd 8 client_fd;
       HackEventLogger.client_connection_sent ();
