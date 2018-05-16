@@ -125,9 +125,6 @@ let identifier_name env =
   Eat.token env;
   loc, name
 
-let assert_identifier_name_is_type_identifier env (loc, name) =
-  if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType)
-
 (**
  * The abstract operation IsLabelledFunction
  *
