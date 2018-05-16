@@ -72,6 +72,13 @@ let fold_left_for n f acc lst =
     (0, acc)
     lst)
 
+let rec first_some_map f = function
+  | [] -> None
+  | hd::tl -> begin match f hd with
+    | Some _ as x -> x
+    | None -> first_some_map f tl
+  end
+
 (* truncate a list to first 0 < n <= len items *)
 let first_n n lst =
   List.rev (fold_left_for n (fun rl x -> x :: rl) [] lst)
