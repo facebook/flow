@@ -840,6 +840,12 @@ Method declaration in an object type alias: {
       "type":"SourceFile",
       "start":{"line":42,"column":13,"offset":442},
       "end":{"line":42,"column":15,"offset":445}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":10,"offset":538},
+      "end":{"line":47,"column":12,"offset":541}
     }
   ]
 }
@@ -876,6 +882,12 @@ Property declaration in an object type alias: {
       "type":"SourceFile",
       "start":{"line":42,"column":23,"offset":452},
       "end":{"line":42,"column":25,"offset":455}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":15,"offset":543},
+      "end":{"line":47,"column":17,"offset":546}
     }
   ]
 }
@@ -912,6 +924,12 @@ Method call on an object type alias: {
       "type":"SourceFile",
       "start":{"line":42,"column":13,"offset":442},
       "end":{"line":42,"column":15,"offset":445}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":10,"offset":538},
+      "end":{"line":47,"column":12,"offset":541}
     }
   ]
 }
@@ -1048,6 +1066,12 @@ Object literal method: {
       "type":"SourceFile",
       "start":{"line":42,"column":13,"offset":442},
       "end":{"line":42,"column":15,"offset":445}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":10,"offset":538},
+      "end":{"line":47,"column":12,"offset":541}
     }
   ]
 }
@@ -1084,6 +1108,12 @@ Object literal property: {
       "type":"SourceFile",
       "start":{"line":42,"column":23,"offset":452},
       "end":{"line":42,"column":25,"offset":455}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":15,"offset":543},
+      "end":{"line":47,"column":17,"offset":546}
     }
   ]
 }
@@ -1132,6 +1162,12 @@ Method in object literal which flows into two types: {
       "type":"SourceFile",
       "start":{"line":42,"column":13,"offset":442},
       "end":{"line":42,"column":15,"offset":445}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":10,"offset":538},
+      "end":{"line":47,"column":12,"offset":541}
     }
   ]
 }
@@ -1180,6 +1216,12 @@ Property in object literal which flows into two types: {
       "type":"SourceFile",
       "start":{"line":42,"column":23,"offset":452},
       "end":{"line":42,"column":25,"offset":455}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":47,"column":15,"offset":543},
+      "end":{"line":47,"column":17,"offset":546}
     }
   ]
 }

@@ -114,6 +114,15 @@ class property_access_searcher name = object(this)
     | _ -> ()
     end;
     super#object_key key
+  method! pattern_object_property ?kind (prop: Loc.t Ast.Pattern.Object.Property.t') =
+    let open Ast.Pattern.Object.Property in
+    let { key; _ } = prop in
+    begin match key with
+    | Identifier (_, x) when x = name ->
+      this#set_acc true
+    | _ -> ()
+    end;
+    super#pattern_object_property ?kind prop
 end
 
 (* Returns true iff the given AST contains an access to a property with the given name *)
@@ -220,6 +229,11 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
     end;
     ret
   in
+  let lval_hook cx name loc = function
+    (* Treat destructuring as a property access *)
+    | Type_inference_hooks_js.Parent ty -> hook () cx name loc ty
+    | _ -> ()
+  in
   let obj_to_obj_hook _ctxt obj1 obj2 =
     let open Type in
     match get_object_literal_loc obj1, obj2 with
@@ -231,6 +245,7 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
 
   Type_inference_hooks_js.set_member_hook (hook false);
   Type_inference_hooks_js.set_call_hook (hook ());
+  Type_inference_hooks_js.set_lval_hook (lval_hook);
   Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
 let unset_hooks () =

@@ -42,3 +42,7 @@ type Alias2 = {
 const g = { foo() {}, bar: ''};
 (g: Alias);
 (g: Alias2);
+
+function destructuring(x: Alias): void {
+  const {foo, bar: baz} = x;
+}
