@@ -15,6 +15,15 @@ let sort_find_refs_result = function
       Ok (Some (name, locs))
   | x -> x
 
+(* Checks if the symbol we are interested in is introduced as part of an export or an import. If so,
+ * use the canonical definition for that export or import so that global find-refs for that symbol
+ * is triggered. The original starting location will be added back later. *)
+let get_import_or_export_location ast file_sig loc =
+  let local_refs = VariableFindRefs.local_find_refs ast loc in
+  Option.bind local_refs begin fun (_, _, def_loc) ->
+    ImportExportSymbols.find_related_symbol file_sig def_loc
+  end
+
 let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
@@ -23,10 +32,17 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   | Error err -> Lwt.return (Error err, None)
   | Ok content ->
     let%lwt result =
-      let%lwt refs = VariableFindRefs.find_refs genv env file_key ~content loc ~global in
+      let%lwt refs =
+        FindRefsUtils.compute_ast_result file_key content %>>= fun (ast, file_sig, _) ->
+        let loc =
+          get_import_or_export_location ast file_sig loc
+          |> Option.value ~default:loc
+        in
+        PropertyFindRefs.find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop
+      in
       refs %>>= function
         | Some _ as result -> Lwt.return (Ok result)
-        | None -> PropertyFindRefs.find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop
+        | None -> VariableFindRefs.find_refs genv env file_key ~content loc ~global
     in
     let json_data = match result with
       | Ok (Some (_, _, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]

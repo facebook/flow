@@ -123,6 +123,11 @@ class property_access_searcher name = object(this)
     | _ -> ()
     end;
     super#pattern_object_property ?kind prop
+  method! export_default_declaration loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
+    if name = "default" then begin
+      this#set_acc true
+    end;
+    super#export_default_declaration loc decl
 end
 
 (* Returns true iff the given AST contains an access to a property with the given name *)
@@ -454,6 +459,16 @@ let find_refs_in_file options ast_info file_key def_info name =
       filter_refs cx !potential_refs file_key local_defs def_info name
       >>| (@) local_defs
       >>| (@) literal_prop_refs_result
+    end
+    >>| begin fun refs ->
+      let related_bindings = ImportExportSymbols.find_related_symbols file_sig refs in
+      List.fold_left begin fun acc loc ->
+        let new_refs =
+          VariableFindRefs.local_find_refs ast loc
+          |> Option.value_map ~default:[] ~f:(fun (_, refs, _) -> refs)
+        in
+        List.rev_append new_refs acc
+      end refs related_bindings
     end
   end
 
