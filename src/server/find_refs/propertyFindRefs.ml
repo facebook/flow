@@ -339,14 +339,13 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
   match Flow_js.Members.extract_type cx ty with
     | Success (DefT (_, InstanceT (_, super, _, _))) as extracted_type ->
         extract_def_loc_from_instancet cx extracted_type super name
-    | Success (DefT (_, ObjT _)) as extracted_type ->
+    | Success (DefT (_, ObjT _)) | SuccessModule _ as extracted_type ->
         get_def_loc_from_extracted_type cx extracted_type name
         >>| begin function
           | None -> NoDefFound
           | Some loc -> FoundObject loc
         end
     | Success _
-    | SuccessModule _
     | FailureNullishType
     | FailureUnhandledType _ ->
         Ok UnsupportedType

@@ -121,6 +121,12 @@ Use of ES6 default import imported through import *
     {
       "source":"es6-2.js",
       "type":"SourceFile",
+      "start":{"line":3,"column":8,"offset":20},
+      "end":{"line":3,"column":10,"offset":23}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
       "start":{"line":20,"column":9,"offset":229},
       "end":{"line":20,"column":15,"offset":236}
     }
