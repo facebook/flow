@@ -862,9 +862,27 @@ let rec convert cx tparams_map = Ast.Type.(function
     let target = Annot {make_exact = exact} in
     EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ()))
 
-| loc, Interface _ ->
-  Flow.add_output cx Flow_error.(EUnsupportedSyntax (loc, WIPInterfaceType));
-  AnyT.at loc
+  | loc, Interface {Interface.extends; body} ->
+    let (_, {Ast.Type.Object.properties; _}) = body in
+    let reason = mk_reason RInterfaceType loc in
+    let iface_sig =
+      let id = Context.make_nominal cx in
+      let extends = List.map (mk_interface_super cx tparams_map) extends in
+      let super =
+        let callable = List.exists Ast.Type.Object.(function
+          | CallProperty (_, { CallProperty.static; _ }) -> not static
+          | _ -> false
+        ) properties in
+        Class_sig.Interface { extends; callable }
+      in
+      Class_sig.empty id reason [] tparams_map super
+    in
+    let iface_sig = add_interface_properties cx tparams_map properties iface_sig in
+    Class_sig.generate_tests cx (fun iface_sig ->
+      Class_sig.check_super cx reason iface_sig;
+      Class_sig.check_implements cx reason iface_sig
+    ) iface_sig;
+    Class_sig.thistype cx iface_sig
 
 | loc, Exists ->
   add_deprecated_type_error_if_not_lib_file cx loc;
@@ -1048,28 +1066,7 @@ and polarity = Ast.Variance.(function
   | None -> Neutral
 )
 
-let mk_super cx tparams_map c targs = Type.(
-  (* A super class must be parameterized by This, so that it can be
-     specialized to this class and its subclasses when properties are looked
-     up on their instances. *)
-  let targs = extract_type_param_instantiations targs in
-  let this = SMap.find_unsafe "this" tparams_map in
-  match targs with
-  | None ->
-      (* No type args, but `c` could still be a polymorphic class that must
-         be implicitly instantiated. We need to do this before we try to
-         this-specialize `c`. *)
-      let reason = reason_of_t c in
-      let c = Tvar.mk_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
-      ) in
-      this_typeapp c this None
-  | Some targs ->
-      let targs = List.map (convert cx tparams_map) targs in
-      this_typeapp c this (Some targs)
-)
-
-let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
+and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let lookup_mode = Env.LookupMode.ForType in
   let i = convert_qualification ~lookup_mode cx "extends" id in
   let loc = match targs with
@@ -1081,7 +1078,7 @@ let mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let t = mk_nominal_type cx r tparams_map (i, targs) in
   Flow.reposition cx loc ~annot_loc:loc t
 
-let add_interface_properties cx tparams_map properties s =
+and add_interface_properties cx tparams_map properties s =
   let open Class_sig in
   List.fold_left Ast.Type.Object.(fun x -> function
     | CallProperty (loc, { CallProperty.value = (_, func); static }) ->
@@ -1157,6 +1154,27 @@ let add_interface_properties cx tparams_map properties s =
       Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x
   ) s properties
+
+let mk_super cx tparams_map c targs = Type.(
+  (* A super class must be parameterized by This, so that it can be
+     specialized to this class and its subclasses when properties are looked
+     up on their instances. *)
+  let targs = extract_type_param_instantiations targs in
+  let this = SMap.find_unsafe "this" tparams_map in
+  match targs with
+  | None ->
+      (* No type args, but `c` could still be a polymorphic class that must
+         be implicitly instantiated. We need to do this before we try to
+         this-specialize `c`. *)
+      let reason = reason_of_t c in
+      let c = Tvar.mk_derivable_where cx reason (fun tvar ->
+        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
+      ) in
+      this_typeapp c this None
+  | Some targs ->
+      let targs = List.map (convert cx tparams_map) targs in
+      this_typeapp c this (Some targs)
+)
 
 let mk_interface_sig cx reason decl =
   let open Class_sig in

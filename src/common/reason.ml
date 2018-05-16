@@ -66,6 +66,7 @@ type reason_desc =
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RInterfaceType
   | RArray
   | RArrayLit
   | REmptyArrayLit
@@ -408,6 +409,7 @@ let rec string_of_desc = function
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"
   | RObjectClassName -> "Object"
+  | RInterfaceType -> "interface type"
   | RArray -> "array"
   | RArrayLit -> "array literal"
   | REmptyArrayLit -> "empty array literal"
@@ -1120,6 +1122,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RObjectLit
 | RObjectType
 | RObjectClassName
+| RInterfaceType
 | RTupleElement
 | RTupleOutOfBoundsAccess
 | RFunction _

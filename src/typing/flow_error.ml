@@ -230,7 +230,6 @@ and unsupported_syntax =
   | ImportDynamicArgument
   | IllegalName
   | UnsupportedInternalSlot of { name: string; static: bool }
-  | WIPInterfaceType
 
 and lower_kind =
   | Possibly_null
@@ -1638,8 +1637,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
         [text "Unsupported internal slot "; code name; text "."]
       | UnsupportedInternalSlot {name; static = true} ->
         [text "Unsupported static internal slot "; code name; text "."]
-      | WIPInterfaceType ->
-        [text "Unsupported interface type"]
     in
     mk_error ~trace_infos loc msg
 

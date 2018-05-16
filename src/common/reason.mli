@@ -18,6 +18,7 @@ type reason_desc =
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RInterfaceType
   | RArray
   | RArrayLit
   | REmptyArrayLit

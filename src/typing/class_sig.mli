@@ -120,6 +120,8 @@ val toplevels: Context.t ->
 
 (** 1. Type Conversion *)
 
+val thistype: Context.t -> t -> Type.t
+
 (* Create a (polymorphic) class type. *)
 val classtype: Context.t ->
   ?check_polarity:bool ->
