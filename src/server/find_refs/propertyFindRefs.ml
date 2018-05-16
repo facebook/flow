@@ -523,8 +523,7 @@ let focus_and_check_filename_set genv env files =
  *   object types.
  * - Note that this can return locations outside of the given file.
 *)
-let find_related_defs_in_file genv file name =
-  let {options; _} = genv in
+let find_related_defs_in_file options name file =
   let get_loc_pair_if_relevant cx (t1, t2) =
     map2 (extract_def_loc cx t1 name) (extract_def_loc cx t2 name) ~f:begin fun x y -> match x, y with
     | FoundObject loc1, FoundObject loc2 -> Some (loc1, loc2)
@@ -541,13 +540,13 @@ let find_related_defs_in_file genv file name =
       options file ast docblock file_sig
   in
   unset_hooks ();
-  cx_result %>>= fun cx ->
+  cx_result >>= fun cx ->
   let results: (((Loc.t * Loc.t) option) list, string) result =
     !related_objects
     |> List.map (get_loc_pair_if_relevant cx)
     |> Result.all
   in
-  Lwt.return (results >>| ListUtils.cat_maybes)
+  results >>| ListUtils.cat_maybes
 
 (* Returns all locations which are considered related to the given definition locations. Definition
  * locations are considered related if they refer to a property with the same name, and their
@@ -571,17 +570,22 @@ let find_related_defs
    *     described above.
    *   - Iterate until we reach a fixed point
    *)
+  let {options; workers} = genv in
   let related_defs = UnionFind.of_list (Nel.to_list def_locs) in
-  let process_file file =
-    let%lwt result = find_related_defs_in_file genv file name in
-    result %>>| fun pairs ->
-    List.iter (fun (x, y) -> UnionFind.union related_defs x y) pairs;
-    Lwt.return_unit
-  in
   let process_files file_set =
-    (* TODO parallelize with workers *)
-    let%lwt result = Lwt_list.map_s process_file (FilenameSet.elements file_set) in
-    Result.all result %>>| fun (_: unit list) ->
+    let node_modules_containers = !Files.node_modules_containers in
+    let%lwt result: ((Loc.t * Loc.t) list, string) result list Lwt.t =
+      MultiWorkerLwt.call workers
+        ~job: begin fun _acc files ->
+          Files.node_modules_containers := node_modules_containers;
+          List.map (find_related_defs_in_file options name) files
+        end
+        ~merge: List.rev_append
+        ~neutral: []
+        ~next: (MultiWorkerLwt.next workers (FilenameSet.elements file_set))
+    in
+    Result.all result %>>| fun (pairs: (Loc.t * Loc.t) list list) ->
+    List.iter (List.iter (fun (x, y) -> UnionFind.union related_defs x y)) pairs;
     Lwt.return_unit
   in
   let get_unchecked_roots current_defs checked_files =
