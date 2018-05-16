@@ -147,4 +147,24 @@ let tests = "scope_builder" >::: [
     "declare function foo(): void; foo()"
     [mk_loc (1, 17) (1, 20);
      mk_loc (1, 30) (1, 33)];
+  "export_named_function" >:: mk_scope_builder_all_uses_test
+    "export function foo() {}; foo()"
+    [mk_loc (1, 16) (1, 19);
+     mk_loc (1, 26) (1, 29)];
+  "export_named_class" >:: mk_scope_builder_all_uses_test
+    "export class Foo {}; new Foo()"
+    [mk_loc (1, 13) (1, 16);
+     mk_loc (1, 25) (1, 28)];
+  "export_named_binding" >:: mk_scope_builder_all_uses_test
+    "export const foo = () => {}; foo()"
+    [mk_loc (1, 13) (1, 16);
+     mk_loc (1, 29) (1, 32)];
+  "export_default_function" >:: mk_scope_builder_all_uses_test
+    "export default function foo() {}; foo()"
+    [mk_loc (1, 24) (1, 27);
+     mk_loc (1, 34) (1, 37)];
+  "export_default_class" >:: mk_scope_builder_all_uses_test
+    "export default class Foo {} new Foo()"
+    [mk_loc (1, 21) (1, 24);
+     mk_loc (1, 32) (1, 35)];
 ]

@@ -154,6 +154,7 @@ class lexical_hoister = object(this)
     | (_, VariableDeclaration _)
     | (_, ClassDeclaration _)
     | (_, ExportNamedDeclaration _)
+    | (_, ExportDefaultDeclaration _)
     | (_, ImportDeclaration _) -> super#statement stmt
     | _ -> stmt
 
