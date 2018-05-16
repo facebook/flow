@@ -14,3 +14,11 @@ c.baz;
 c.baz = '';
 c.bar;
 c.bar;
+
+{
+  const {foo} = a;
+  const {foo: bar} = a;
+};
+{ const {foo} = b; }
+{ const {foo} = c; }
+{ const [foo] = a; }

@@ -116,3 +116,16 @@ printf "optional chain initial property of null = "
 assert_ok "$FLOW" get-def optional_chaining.js 18 7 --strip-root --pretty
 printf "optional chain subsequent property of null = "
 assert_ok "$FLOW" get-def optional_chaining.js 18 11 --strip-root --pretty
+
+printf "shorthand destructuring = "
+assert_ok "$FLOW" get-def objects.js 19 11 --strip-root --pretty
+printf "non-shorthand destructuring = "
+assert_ok "$FLOW" get-def objects.js 20 11 --strip-root --pretty
+printf "destructuring without type alias = "
+assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
+# TODO this should return results
+printf "destructuring a shadow prop = "
+assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
+# This one should return no results
+printf "bogus array destructuring of an object = "
+assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty
