@@ -35,6 +35,18 @@ let find_related_symbol_from_require loc = function
         in
         if List.mem loc locs then Some loc else None
     end
+  | Require {bindings=Some bindings; _} ->
+    begin match bindings with
+    | BindIdent _ -> None
+    | BindNamed map ->
+      SMap.values map
+      |> ListUtils.first_some_map begin fun (local_loc, (remote_loc, _)) ->
+        if loc = remote_loc then
+          Some local_loc
+        else
+          None
+      end
+    end
   | _ -> None
 
 let find_related_symbol_from_requires loc requires =
