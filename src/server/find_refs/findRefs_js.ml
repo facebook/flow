@@ -9,11 +9,12 @@ let (>>|) = Core_result.(>>|)
 
 open Utils_js
 
-let sort_find_refs_result = function
-  | Ok (Some (name, locs)) ->
-      let locs = List.fast_sort Loc.compare locs in
-      Ok (Some (name, locs))
-  | x -> x
+let sort_and_dedup =
+  Core_result.map ~f:begin
+    Option.map ~f:begin
+      fun (name, locs) -> name, LocSet.of_list locs |> LocSet.elements
+    end
+  end
 
 (* Checks if the symbol we are interested in is introduced as part of an export or an import. If so,
  * use the canonical definition for that export or import so that global find-refs for that symbol
@@ -50,7 +51,7 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
     in
     (* Drop the dependent file count  from the result *)
     let result = result >>| Option.map ~f:(fun (name, locs, _) -> (name, locs)) in
-    let result = sort_find_refs_result result in
+    let result = sort_and_dedup result in
     let json_data =
       ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE"))
       :: ("global", Hh_json.JSON_Bool global)
