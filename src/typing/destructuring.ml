@@ -106,6 +106,17 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                     EvalT (curr_t, DestructuringT (reason, Prop name), mk_id())
                 ) in
                 let default = Option.map default (Default.prop name reason) in
+                (**
+                 * We are within a destructuring pattern and a `get-def` on this identifier should
+                 * point at the "def" of the original property. To accompish this, we emit the type
+                 * of the parent pattern so that get-def can dive in to that type and extract the
+                 * location of the "def" of this property.
+                 *)
+                Type_inference_hooks_js.dispatch_lval_hook
+                  cx
+                  name
+                  loc
+                  (Type_inference_hooks_js.Parent parent_pattern_t);
                 recurse ~parent_pattern_t tvar init default p
             | { Property.key = Property.Computed key; pattern = p; _; } ->
                 let key_t = expr cx key in
@@ -145,24 +156,17 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
     )
 
   | loc, Identifier { Identifier.name = (id_loc, name); _ } ->
-      Type_inference_hooks_js.dispatch_lval_hook cx name loc (
-        match parent_pattern_t with
-        (**
-         * If there was a parent_pattern, we must be within a destructuring
-         * pattern and a `get-def` on this identifier should point at the "def"
-         * of the original property. To accompish this, we emit the type of the
-         * parent pattern so that get-def can dive in to that type and extract
-         * the location of the "def" of this property.
-         *)
-        | Some rhs_t -> Type_inference_hooks_js.Parent rhs_t
-
-        (**
-         * If there was no parent_pattern, we must not be within a destructuring
-         * pattern and a `get-def` on this identifier should point at the
-         * location where the binding is introduced.
-         *)
-        | None -> Type_inference_hooks_js.Id
-      );
+      begin match parent_pattern_t with
+      (* If there was a parent pattern, we already dispatched the hook if relevant. *)
+      | Some _ -> ()
+      (**
+       * If there was no parent_pattern, we must not be within a destructuring
+       * pattern and a `get-def` on this identifier should point at the
+       * location where the binding is introduced.
+       *)
+      | None ->
+        Type_inference_hooks_js.dispatch_lval_hook cx name loc Type_inference_hooks_js.Id
+      end;
       let curr_t = mod_reason_of_t (replace_reason (function
       | RDefaultValue
       | RArrayPatternRestProp
