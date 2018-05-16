@@ -96,45 +96,6 @@ end = struct
     builder#eval builder#program ast
 end
 
-class property_access_searcher name = object(this)
-  inherit [bool] Flow_ast_visitor.visitor ~init:false as super
-  method! member expr =
-    let open Ast.Expression.Member in
-    begin match expr.property with
-      | PropertyIdentifier (_, x) when x = name ->
-          this#set_acc true
-      | _ -> ()
-    end;
-    super#member expr
-  method! object_key (key: Loc.t Ast.Expression.Object.Property.key) =
-    let open Ast.Expression.Object.Property in
-    begin match key with
-    | Identifier (_, x) when x = name ->
-      this#set_acc true
-    | _ -> ()
-    end;
-    super#object_key key
-  method! pattern_object_property ?kind (prop: Loc.t Ast.Pattern.Object.Property.t') =
-    let open Ast.Pattern.Object.Property in
-    let { key; _ } = prop in
-    begin match key with
-    | Identifier (_, x) when x = name ->
-      this#set_acc true
-    | _ -> ()
-    end;
-    super#pattern_object_property ?kind prop
-  method! export_default_declaration loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
-    if name = "default" then begin
-      this#set_acc true
-    end;
-    super#export_default_declaration loc decl
-end
-
-(* Returns true iff the given AST contains an access to a property with the given name *)
-let check_for_matching_prop name ast =
-  let checker = new property_access_searcher name in
-  checker#eval checker#program ast
-
 (* If the given type refers to an object literal, return the location of the object literal.
  * Otherwise return None *)
 let get_object_literal_loc ty : Loc.t option =
@@ -430,7 +391,7 @@ let find_refs_in_file options ast_info file_key def_info name =
     Nel.to_list (all_locs_of_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
   in
-  let has_symbol = check_for_matching_prop name ast in
+  let has_symbol = PropertyAccessSearcher.search name ast in
   if not has_symbol then
     Ok local_defs
   else begin
