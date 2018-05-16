@@ -2053,6 +2053,26 @@ and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties } =
     ~sep
     (List.map type_object_property properties)
 
+and type_interface { Ast.Type.Interface.extends; body=(loc, obj) } =
+  fuse [
+    Atom "interface";
+    interface_extends extends;
+    pretty_space;
+    SourceLocation (loc, type_object ~sep:(Atom ",") obj)
+  ]
+
+and interface_extends = function
+  | [] -> Empty
+  | xs -> fuse [
+    space; Atom "extends"; space;
+    fuse_list
+      ~sep:(Atom ",")
+      (List.map
+        (fun (loc, generic) -> SourceLocation (loc, type_generic generic))
+        xs
+      )
+    ]
+
 and type_generic { Ast.Type.Generic.id; targs } =
   let rec generic_identifier = Ast.Type.Generic.Identifier.(function
   | Unqualified id -> identifier id
@@ -2099,6 +2119,7 @@ and type_ ((loc, t): Loc.t Ast.Type.t) =
         ~sep:(fuse [pretty_space; Atom "=>"])
         func
     | T.Object obj -> type_object obj
+    | T.Interface i -> type_interface i
     | T.Array t -> fuse [type_ t; Atom "[]"]
     | T.Generic generic -> type_generic generic
     | T.Union (t1, t2, ts) ->
@@ -2124,18 +2145,7 @@ and interface_declaration_base ~def { Ast.Statement.Interface.
     def;
     identifier id;
     option type_parameter tparams;
-    begin match extends with
-    | [] -> Empty
-    | _ -> fuse [
-        space; Atom "extends"; space;
-        fuse_list
-          ~sep:(Atom ",")
-          (List.map
-            (fun (loc, generic) -> SourceLocation (loc, type_generic generic))
-            extends
-          )
-      ]
-    end;
+    interface_extends extends;
     pretty_space;
     SourceLocation (loc, type_object ~sep:(Atom ",") obj)
   ]

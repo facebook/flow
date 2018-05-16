@@ -166,6 +166,13 @@ and Type : sig
     }
   end
 
+  module Interface : sig
+    type 'M t = {
+      body: 'M * 'M Object.t;
+      extends: ('M * 'M Generic.t) list;
+    }
+  end
+
   type 'M t = 'M * 'M t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -181,6 +188,7 @@ and Type : sig
     | Nullable of 'M t
     | Function of 'M Function.t
     | Object of 'M Object.t
+    | Interface of 'M Interface.t
     | Array of 'M t
     | Generic of 'M Generic.t
     | Union of 'M t * 'M t * 'M t list
@@ -378,8 +386,8 @@ and Statement : sig
     type 'M t = {
       id: 'M Identifier.t;
       tparams: 'M Type.ParameterDeclaration.t option;
-      body: 'M * 'M Type.Object.t;
       extends: ('M * 'M Type.Generic.t) list;
+      body: 'M * 'M Type.Object.t;
     }
   end
   module DeclareClass : sig

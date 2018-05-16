@@ -862,6 +862,10 @@ let rec convert cx tparams_map = Ast.Type.(function
     let target = Annot {make_exact = exact} in
     EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ()))
 
+| loc, Interface _ ->
+  Flow.add_output cx Flow_error.(EUnsupportedSyntax (loc, WIPInterfaceType));
+  AnyT.at loc
+
 | loc, Exists ->
   add_deprecated_type_error_if_not_lib_file cx loc;
   (* Do not evaluate existential type variables when map is non-empty. This

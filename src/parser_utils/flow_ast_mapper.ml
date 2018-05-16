@@ -546,6 +546,14 @@ class mapper = object(this)
     if properties' == properties then ot
     else { properties = properties'; exact }
 
+  method interface_type (i: Loc.t Ast.Type.Interface.t) =
+    let open Ast.Type.Interface in
+    let { extends; body } = i in
+    let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
+    let body' = map_loc this#object_type body in
+    if extends' == extends && body' == body then i
+    else { extends = extends'; body = body' }
+
   method generic_identifier_type (git: Loc.t Ast.Type.Generic.Identifier.t) =
     let open Ast.Type.Generic.Identifier in
     match git with
@@ -601,6 +609,7 @@ class mapper = object(this)
     | loc, Typeof t' -> id this#type_ t' t (fun t' -> loc, Typeof t')
     | loc, Function ft -> id this#function_type ft t (fun ft -> loc, Function ft)
     | loc, Object ot -> id this#object_type ot t (fun ot -> loc, Object ot)
+    | loc, Interface i -> id this#interface_type i t (fun i -> loc, Interface i)
     | loc, Generic gt -> id this#generic_type gt t (fun gt -> loc, Generic gt)
     | loc, Union (t0, t1, ts) ->
       let t0' = this#type_ t0 in
@@ -668,14 +677,14 @@ class mapper = object(this)
 
   method interface (interface: Loc.t Ast.Statement.Interface.t) =
     let open Ast.Statement.Interface in
-    let { id = ident; tparams; body; extends } = interface in
+    let { id = ident; tparams; extends; body } = interface in
     let id' = this#class_identifier ident in
     let tparams' = map_opt this#type_parameter_declaration tparams in
-    let body' = map_loc this#object_type body in
     let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
-    if id' == ident && tparams' == tparams && body' == body && extends' == extends
+    let body' = map_loc this#object_type body in
+    if id' == ident && tparams' == tparams && extends' == extends && body' == body
     then interface
-    else { id = id'; tparams = tparams'; body = body'; extends = extends' }
+    else { id = id'; tparams = tparams'; extends = extends'; body = body' }
 
   method interface_declaration (decl: Loc.t Ast.Statement.Interface.t) =
     this#interface decl

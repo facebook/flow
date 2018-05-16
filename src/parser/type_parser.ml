@@ -19,6 +19,7 @@ module type TYPE = sig
   val type_parameter_instantiation : env -> Loc.t Ast.Type.ParameterInstantiation.t option
   val generic : env -> Loc.t * Loc.t Ast.Type.Generic.t
   val _object : allow_static:bool -> allow_proto:bool -> env -> Loc.t * Loc.t Type.Object.t
+  val interface_helper : env -> Loc.t Type.Interface.t
   val function_param_list : env -> Loc.t Type.Function.Params.t
   val annotation : env -> Loc.t Ast.Type.annotation
   val annotation_opt : env -> Loc.t Ast.Type.annotation option
@@ -148,6 +149,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let loc, o = _object env
         ~allow_static:false ~allow_proto:false ~allow_exact:true ~allow_spread:true in
       loc, Type.Object o
+    | T_INTERFACE ->
+      with_loc (fun env ->
+        Expect.token env T_INTERFACE;
+        Type.Interface (interface_helper env)
+      ) env
     | T_TYPEOF ->
         with_loc (fun env ->
           Expect.token env T_TYPEOF;
@@ -658,6 +664,28 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         { Type.Object.exact; properties; }
       ) env
 
+  and interface_helper =
+    let rec supers env acc =
+      let super = generic env in
+      let acc = super::acc in
+      match Peek.token env with
+      | T_COMMA ->
+          Expect.token env T_COMMA;
+          supers env acc
+      | _ -> List.rev acc
+
+    in fun env ->
+      let extends = if Peek.token env = T_EXTENDS
+      then begin
+        Expect.token env T_EXTENDS;
+        supers env []
+      end else [] in
+      let body = _object env
+        ~allow_exact:false ~allow_spread:false
+        ~allow_static:false ~allow_proto:false
+      in
+      { Type.Interface.extends; body }
+
   and type_identifier env =
     let loc, name = identifier_name env in
     if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
@@ -813,6 +841,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   let type_parameter_instantiation = wrap type_parameter_instantiation
   let _object ~allow_static ~allow_proto env =
     wrap (_object ~allow_static ~allow_proto ~allow_exact:false ~allow_spread:false) env
+  let interface_helper = wrap interface_helper
   let function_param_list = wrap function_param_list
   let annotation = wrap annotation
   let annotation_opt = wrap annotation_opt

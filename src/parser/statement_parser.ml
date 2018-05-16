@@ -592,34 +592,19 @@ module Statement
         loc, Statement.OpaqueType opaque_t
     | _ -> Parse.statement env
 
-  and interface_helper =
-    let rec supers env acc =
-      let super = Type.generic env in
-      let acc = super::acc in
-      match Peek.token env with
-      | T_COMMA ->
-          Expect.token env T_COMMA;
-          supers env acc
-      | _ -> List.rev acc
-    in
-    fun env ->
-      if not (should_parse_types env)
-      then error env Error.UnexpectedTypeInterface;
-      Expect.token env T_INTERFACE;
-      let id = Type.type_identifier env in
-      let tparams = Type.type_parameter_declaration_with_defaults env in
-      let extends = if Peek.token env = T_EXTENDS
-      then begin
-        Expect.token env T_EXTENDS;
-        supers env []
-      end else [] in
-      let body = Type._object ~allow_static:false ~allow_proto:false env in
-      Statement.Interface.({
-        id;
-        tparams;
-        body;
-        extends;
-      })
+  and interface_helper env =
+    if not (should_parse_types env)
+    then error env Error.UnexpectedTypeInterface;
+    Expect.token env T_INTERFACE;
+    let id = Type.type_identifier env in
+    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let { Ast.Type.Interface.extends; body } = Type.interface_helper env in
+    Statement.Interface.({
+      id;
+      tparams;
+      body;
+      extends;
+    })
 
   and declare_interface env = with_loc (fun env ->
     Expect.token env T_DECLARE;

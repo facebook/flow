@@ -1,4 +1,3 @@
-let x: interface = 123; // Should not parse
 let y: extends = 123; // Should not parse
 
 import {type interface} from 'foo'; // Should not parse

@@ -1029,6 +1029,7 @@ end with type t = Impl.t) = struct
     | Nullable t -> nullable_type loc t
     | Function fn -> function_type (loc, fn)
     | Object o -> object_type (loc, o)
+    | Interface i -> interface_type (loc, i)
     | Array t -> array_type loc t
     | Generic g -> generic_type (loc, g)
     | Union (t0, t1, ts) -> union_type (loc, t0::t1::ts)
@@ -1173,6 +1174,13 @@ end with type t = Impl.t) = struct
       "id", identifier slot.id;
       "static", bool slot.static;
       "method", bool slot._method;
+    ]
+  )
+
+  and interface_type (loc, i) = Type.Interface.(
+    node "InterfaceType" loc [
+      "extends", array_of_list interface_extends i.extends;
+      "body", object_type i.body;
     ]
   )
 
