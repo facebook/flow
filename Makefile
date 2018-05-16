@@ -149,7 +149,7 @@ NATIVE_C_FILES=\
 FINDLIB_PACKAGES=\
   sedlex\
   lwt\
-  lwt.log\
+  lwt_log\
   lwt.unix\
   lwt_ppx\
   unix\
