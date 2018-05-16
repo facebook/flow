@@ -65,33 +65,41 @@ let get_imported_locations (query: import_query) file_key (dep_file_key: File_ke
   ) [] file_sig.module_sig.requires in
   List.fast_sort Loc.compare locs
 
-
-let local_find_refs file_key ~content loc =
-  let open File_sig in
+let local_find_refs ast loc =
   let open Scope_api in
-  compute_ast_result file_key content >>= fun (ast, file_sig, _) ->
   let scope_info = Scope_builder.program ast in
   let all_uses = all_uses scope_info in
   let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
   let num_matching_uses = LocSet.cardinal matching_uses in
-  if num_matching_uses = 0 then begin match file_sig.module_sig.module_kind with
-  | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) }
-    when Loc.contains id_loc loc -> Ok (Some (id_name, [id_loc]))
-  | CommonJS { exports = Some (CJSExportProps props) } ->
-    let props = SMap.filter (fun _ (CJSExport prop) -> Loc.contains prop.loc loc) props in
-    begin match SMap.choose props with
-    | Some (prop_name, CJSExport prop) -> Ok (Some (prop_name, [prop.loc]))
-    | None -> Ok None
-    end
-  | _ -> Ok None
-  end
-  else if num_matching_uses > 1 then Error "Multiple identifiers were unexpectedly matched"
+  if num_matching_uses = 0 then
+    None
+  else if num_matching_uses > 1 then
+    (* This is unlikely enough that we can just throw *)
+    failwith "Multiple identifiers were unexpectedly matched"
   else
     let use = LocSet.choose matching_uses in
     let def = def_of_use scope_info use in
     let sorted_locs = LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
     let name = Def.(def.actual_name) in
-    Ok (Some (name, sorted_locs))
+    Some (name, sorted_locs, Nel.hd def.Def.locs)
+
+let local_find_refs_with_exports file_key ~content loc =
+  let open File_sig in
+  compute_ast_result file_key content >>| fun (ast, file_sig, _) ->
+  match local_find_refs ast loc with
+  | Some (name, refs, _def_loc) -> Some (name, refs)
+  | None ->
+    begin match file_sig.module_sig.module_kind with
+    | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) }
+      when Loc.contains id_loc loc -> Some (id_name, [id_loc])
+    | CommonJS { exports = Some (CJSExportProps props) } ->
+      let props = SMap.filter (fun _ (CJSExport prop) -> Loc.contains prop.loc loc) props in
+      begin match SMap.choose props with
+      | Some (prop_name, CJSExport prop) -> Some (prop_name, [prop.loc])
+      | None -> None
+      end
+    | _ -> None
+    end
 
 let find_external_refs genv env file_key ~content ~query local_refs =
   let {options; workers} = genv in
@@ -115,14 +123,14 @@ let find_external_refs genv env file_key ~content ~query local_refs =
         let filekey_result =
           Result.of_option
             Loc.(imported_loc.source)
-            ~error:"local_find_refs should return locs with sources"
+            ~error:"local_find_refs_with_exports should return locs with sources"
         in
         filekey_result >>= fun filekey ->
         File_key.to_path filekey >>= fun path ->
         let file_input = File_input.FileName path in
         File_input.content_of_file_input file_input >>= fun content ->
-        local_find_refs filekey ~content imported_loc >>= fun refs_option ->
-        Result.of_option refs_option ~error:"Expected results from local_find_refs" >>= fun (_name, locs) ->
+        local_find_refs_with_exports filekey ~content imported_loc >>= fun refs_option ->
+        Result.of_option refs_option ~error:"Expected results from local_find_refs_with_exports" >>= fun (_name, locs) ->
         Ok locs
       end |>
       Result.all >>= fun locs ->
@@ -135,7 +143,7 @@ let find_external_refs genv env file_key ~content ~query local_refs =
 let find_refs genv env file_key ~content loc ~global =
   (* TODO right now we assume that the symbol was defined in the given file. do a get-def or similar
   first *)
-  local_find_refs file_key content loc %>>= function
+  local_find_refs_with_exports file_key content loc %>>= function
     | None -> Lwt.return (Ok None)
     | Some (name, refs) ->
         if global then
