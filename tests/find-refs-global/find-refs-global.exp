@@ -30,7 +30,30 @@ simple ES6 exports/imports:
   ]
 }
 ES6 default export:
-{"kind":"no-symbol-found"}
+{
+  "kind":"symbol-found",
+  "name":"default",
+  "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":8,"offset":48},
+      "end":{"line":7,"column":14,"offset":55}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":8,"offset":20},
+      "end":{"line":3,"column":10,"offset":23}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":20,"column":9,"offset":229},
+      "end":{"line":20,"column":15,"offset":236}
+    }
+  ]
+}
 ES6 default export from the identifier:
 {
   "kind":"symbol-found",

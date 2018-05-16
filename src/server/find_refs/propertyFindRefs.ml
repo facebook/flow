@@ -187,6 +187,10 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
     if Loc.contains loc target_loc then
       set_prop_access_info (Obj_def (loc, name))
   in
+  let export_default_hook loc =
+    if Loc.contains loc target_loc then
+      set_prop_access_info (Obj_def (loc, "default"))
+  in
   let obj_to_obj_hook _ctxt obj1 obj2 =
     match get_object_literal_loc obj1, literal_key_info with
     | Some loc, Some (target_loc, name) when loc = target_loc ->
@@ -203,6 +207,7 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
   Type_inference_hooks_js.set_call_hook (use_hook ());
   Type_inference_hooks_js.set_class_member_decl_hook class_def_hook;
   Type_inference_hooks_js.set_obj_prop_decl_hook obj_def_hook;
+  Type_inference_hooks_js.set_export_default_hook export_default_hook;
   Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
 
 let set_get_refs_hook potential_refs potential_matching_literals target_name =

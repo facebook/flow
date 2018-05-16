@@ -27,6 +27,8 @@ let require_pattern_nop _ = ()
 
 let obj_to_obj_nop _ _ _ = ()
 
+let export_default_nop _ = ()
+
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
   (**
@@ -120,6 +122,8 @@ type hook_state_t = {
         Type.t (* ObjT 1 *) ->
         Type.t (* ObjT 2 *) ->
         unit);
+
+  export_default_hook: Loc.t -> unit;
 }
 
 let nop_hook_state = {
@@ -134,6 +138,7 @@ let nop_hook_state = {
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
   obj_to_obj_hook = obj_to_obj_nop;
+  export_default_hook = export_default_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -171,6 +176,9 @@ let set_require_pattern_hook hook =
 let set_obj_to_obj_hook hook =
   hook_state := { !hook_state with obj_to_obj_hook = hook }
 
+let set_export_default_hook hook =
+  hook_state := { !hook_state with export_default_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -206,3 +214,6 @@ let dispatch_require_pattern_hook loc =
 
 let dispatch_obj_to_obj_hook cx t1 t2 =
   !hook_state.obj_to_obj_hook cx t1 t2
+
+let dispatch_export_default_hook loc =
+  !hook_state.export_default_hook loc
