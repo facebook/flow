@@ -272,6 +272,9 @@ external dep_slots : unit -> int = "hh_dep_slots"
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
+
+external hh_removed_count : unit -> int = "hh_removed_count"
+
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
 external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"

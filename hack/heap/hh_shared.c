@@ -627,6 +627,10 @@ void hh_move(value key1, value key2);
 
 void hh_remove(value key);
 
+CAMLprim value hh_removed_count(value ml_unit);
+
+static long removed_count = 0;
+
 void hh_cleanup_sqlite(void);
 
 void hh_hashtable_cleanup_sqlite(void);
@@ -2224,6 +2228,7 @@ void hh_remove(value key) {
   size_t slot_size = ALIGNED(Get_buf_size(hashtbl[slot].addr));
   __sync_fetch_and_add(wasted_heap_size, slot_size);
   hashtbl[slot].addr = NULL;
+  removed_count += 1;
 }
 
 /*****************************************************************************/
@@ -2262,6 +2267,12 @@ value Val_some(value v)
 #ifndef NO_SQLITE3
 
 // ------------------------ START OF SQLITE3 SECTION --------------------------
+
+CAMLprim value hh_removed_count(value ml_unit) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    return Val_long(removed_count);
+}
 
 static void assert_sql_with_line(
   int result,
@@ -3297,5 +3308,11 @@ void hhfi_free_db(void) {
 
 sqlite3_ptr hhfi_get_db(void) {
     return NULL;
+}
+
+CAMLprim value hh_removed_count(value ml_unit) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    return Val_long(removed_count);
 }
 #endif
