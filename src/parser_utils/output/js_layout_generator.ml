@@ -2036,12 +2036,14 @@ and type_object_property = Ast.Type.Object.(function
       if static then fuse [Atom "static"; space] else Empty;
       SourceLocation (call_loc, type_function ~sep:(Atom ":") func);
     ])
-  | InternalSlot (loc, { InternalSlot.id; value; static; _method=_ }) ->
+  | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method=_ }) ->
     SourceLocation (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;
       Atom "[[";
       identifier id;
-      Atom "]]"; Atom ":"; pretty_space;
+      Atom "]]";
+      if optional then Atom "?" else Empty;
+      Atom ":"; pretty_space;
       type_ value;
     ])
   )

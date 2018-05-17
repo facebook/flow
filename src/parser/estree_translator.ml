@@ -1172,6 +1172,7 @@ end with type t = Impl.t) = struct
   and object_type_internal_slot (loc, slot) = Type.Object.InternalSlot.(
     node "ObjectTypeInternalSlot" loc [
       "id", identifier slot.id;
+      "optional", bool slot.optional;
       "static", bool slot.static;
       "method", bool slot._method;
     ]

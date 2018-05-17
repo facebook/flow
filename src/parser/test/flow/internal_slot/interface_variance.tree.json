@@ -43,6 +43,7 @@
               "typeAnnotation":null,
               "optional":false
             },
+            "optional":false,
             "static":false,
             "method":true
           }

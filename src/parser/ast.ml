@@ -150,8 +150,9 @@ and Type : sig
       and 'M t' = {
         id: 'M Identifier.t;
         value: 'M Type.t;
-        _method: bool;
+        optional: bool;
         static: bool;
+        _method: bool;
       }
     end
     type 'M property =

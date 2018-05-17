@@ -493,7 +493,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let id = identifier_name env in
         Expect.token env T_RBRACKET;
         Expect.token env T_RBRACKET;
-        let _method, value = match Peek.token env with
+        let optional, _method, value = match Peek.token env with
         | T_LESS_THAN
         | T_LPAREN ->
           let tparams = type_parameter_declaration ~allow_default:false env in
@@ -501,15 +501,17 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             let fn_loc, fn = methodish env start_loc tparams in
             fn_loc, Type.Function fn
           in
-          true, value
+          false, true, value
         | _ ->
+          let optional = Expect.maybe env T_PLING in
           Expect.token env T_COLON;
           let value = _type env in
-          false, value
+          optional, false, value
         in
         { Type.Object.InternalSlot.
           id;
           value;
+          optional;
           static = static <> None;
           _method;
         }
