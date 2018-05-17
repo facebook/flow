@@ -936,7 +936,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   Hh_logger.info "Re-resolving directly dependent files";
   (** TODO [perf] Consider oldifying **)
   Module_js.remove_batch_resolved_requires direct_dependent_files;
-  SharedMem_js.collect `gentle;
 
   let node_modules_containers = !Files.node_modules_containers in
   (* requires in direct_dependent_files must be re-resolved before merging. *)
@@ -1058,8 +1057,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
          with dependents) should be merged: see below. *)
       (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
       Context_cache.oldify_merge_batch (CheckedSet.all to_merge);
-      (** TODO [perf]: Consider `aggressive **)
-      SharedMem_js.collect `gentle;
 
       ()
     ))

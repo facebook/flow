@@ -881,7 +881,8 @@ let commit_modules workers ~options new_or_changed dirty_modules =
   Lwt.return (providers, changed_modules, errmap)
 
 let remove_batch_resolved_requires files =
-  ResolvedRequiresHeap.remove_batch files
+  ResolvedRequiresHeap.remove_batch files;
+  SharedMem_js.collect `gentle
 
 let get_files ~audit filename module_name =
   (module_name, get_file ~audit module_name)::

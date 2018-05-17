@@ -113,12 +113,14 @@ let oldify_merge_batch files =
 let remove_merge_batch files =
   LeaderHeap.remove_batch files;
   SigContextHeap.remove_batch files;
-  SigHashHeap.remove_batch files
+  SigHashHeap.remove_batch files;
+  SharedMem_js.collect `gentle
 
 let remove_old_merge_batch files =
   LeaderHeap.remove_old_batch files;
   SigContextHeap.remove_old_batch files;
-  SigHashHeap.remove_old_batch files
+  SigHashHeap.remove_old_batch files;
+  SharedMem_js.collect `gentle
 
 let revive_merge_batch files =
   LeaderHeap.revive_batch files;

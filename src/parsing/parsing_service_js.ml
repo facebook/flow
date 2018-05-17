@@ -90,12 +90,14 @@ module ParsingHeaps = struct
   let remove_batch files =
     ASTHeap.remove_batch files;
     DocblockHeap.remove_batch files;
-    FileSigHeap.remove_batch files
+    FileSigHeap.remove_batch files;
+    SharedMem_js.collect `gentle
 
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
-    FileSigHeap.remove_old_batch files
+    FileSigHeap.remove_old_batch files;
+    SharedMem_js.collect `gentle
 
   let revive_batch files =
     ASTHeap.revive_batch files;
@@ -565,10 +567,10 @@ let reparse
   ) modified results.parse_skips in
   (* discard old parsing info for modified files *)
   ParsingHeaps.remove_old_batch modified;
+  SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParsingHeaps.revive_batch unchanged;
-  SharedMem_js.collect `gentle;
   Lwt.return (modified, results)
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
@@ -606,4 +608,5 @@ let get_file_sig_unsafe file =
   with Not_found -> raise (Requires_not_found (File_key.to_string file))
 
 let remove_batch files =
-  ParsingHeaps.remove_batch files
+  ParsingHeaps.remove_batch files;
+  SharedMem_js.collect `gentle
