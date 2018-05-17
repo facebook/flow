@@ -449,6 +449,8 @@ static char** heap = NULL;
 static pid_t* master_pid = NULL;
 static pid_t my_pid = 0;
 
+static size_t allow_hashtable_writes_by_current_process = 1;
+
 static char *db_filename = NULL;
 static char *hashtable_db_filename = NULL;
 
@@ -1332,6 +1334,10 @@ void assert_allow_removes(void) {
   assert(*allow_removes);
 }
 
+void assert_allow_hashtable_writes_by_current_process(void) {
+  assert(allow_hashtable_writes_by_current_process);
+}
+
 /*****************************************************************************/
 
 CAMLprim value hh_stop_workers(void) {
@@ -1351,6 +1357,12 @@ CAMLprim value hh_resume_workers(void) {
 CAMLprim value hh_allow_removes(value val) {
   CAMLparam0();
   *allow_removes = Bool_val(val);
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_allow_hashtable_writes_by_current_process(value val) {
+  CAMLparam0();
+  allow_hashtable_writes_by_current_process = Bool_val(val);
   CAMLreturn(Val_unit);
 }
 
@@ -1943,6 +1955,7 @@ static value write_at(unsigned int slot, value data) {
        HASHTBL_WRITE_IN_PROGRESS
      )
   ) {
+    assert_allow_hashtable_writes_by_current_process();
     size_t alloc_size = 0;
     size_t orig_size = 0;
     hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size, &orig_size);

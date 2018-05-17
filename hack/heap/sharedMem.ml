@@ -164,6 +164,9 @@ let with_worker_exit f =
 
 external allow_removes : bool -> unit = "hh_allow_removes"
 
+external allow_hashtable_writes_by_current_process : bool -> unit
+  = "hh_allow_hashtable_writes_by_current_process"
+
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
 (*****************************************************************************)
