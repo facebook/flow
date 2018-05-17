@@ -1175,6 +1175,7 @@ end with type t = Impl.t) = struct
       "optional", bool slot.optional;
       "static", bool slot.static;
       "method", bool slot._method;
+      "value", _type slot.value;
     ]
   )
 

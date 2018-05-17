@@ -223,7 +223,8 @@ def("ObjectTypeInternalSlot")
   .build("id", "static", "method")
   .field("id", def("Identifier"))
   .field("static", Boolean)
-  .field("method", Boolean);
+  .field("method", Boolean)
+  .field("value", def("Type"));
 
 // https://github.com/benjamn/ast-types/issues/186
 def("ForAwaitStatement")
