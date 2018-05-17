@@ -220,9 +220,9 @@ let error_set_of_merge_error file msg =
   let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
   Errors.ErrorSet.singleton error
 
-let calc_deps ~options ~profiling ~workers to_merge =
+let calc_deps ~options ~profiling ~dependency_graph to_merge =
   with_timer_lwt ~options "CalcDeps" profiling (fun () ->
-    let%lwt dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
+    let dependency_graph = Dep_service.filter_dependency_graph dependency_graph to_merge in
     let components = Sort_js.topsort ~roots:to_merge dependency_graph in
     if Options.should_profile options then Sort_js.log components;
     let component_map = List.fold_left (fun component_map component ->
@@ -391,7 +391,7 @@ let typecheck
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let%lwt dependency_graph, component_map =
-    calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge) in
+    calc_deps ~options ~profiling ~dependency_graph (CheckedSet.all to_merge) in
 
   Hh_logger.info "Merging";
   let%lwt merge_errors, suppressions, severity_cover_set = try%lwt
@@ -950,7 +950,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   Hh_logger.info "Recalculating dependency graph";
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
     let%lwt updated_dependency_graph = Dep_service.calc_partial_dependency_graph workers
-      (FilenameSet.union freshparsed direct_dependent_files) in
+      (FilenameSet.union freshparsed direct_dependent_files) ~parsed in
     let old_dependency_graph = env.ServerEnv.dependency_graph in
     old_dependency_graph
     |> FilenameSet.fold FilenameMap.remove deleted
@@ -1156,7 +1156,7 @@ let init ~profiling ~workers options =
       ~errors
   in
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    Dep_service.calc_dependency_graph workers parsed
+    Dep_service.calc_dependency_graph workers ~parsed
   ) in
   Lwt.return (parsed, dependency_graph, libs, libs_ok, errors)
 

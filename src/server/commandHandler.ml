@@ -136,10 +136,10 @@ let coverage ~options ~workers ~env ~profiling ~force file_input =
       Type_info_service.coverage ~options ~workers ~env ~profiling ~force file content
     end
 
-let get_cycle ~workers ~env fn =
+let get_cycle ~env fn =
   (* Re-calculate SCC *)
   let parsed = !env.ServerEnv.files in
-  let%lwt dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+  let dependency_graph = !env.ServerEnv.dependency_graph in
   Lwt.return (
     let components = Sort_js.topsort ~roots:parsed dependency_graph in
 
@@ -350,7 +350,7 @@ let handle_ephemeral_unsafe
       | ServerProt.Request.CYCLE fn ->
           let file_options = Options.file_options options in
           let fn = Files.filename_from_string ~options:file_options fn in
-          let%lwt response = get_cycle ~workers ~env fn in
+          let%lwt response = get_cycle ~env fn in
           ServerProt.Response.CYCLE response
           |> respond;
           Lwt.return None
