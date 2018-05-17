@@ -23,8 +23,7 @@ module Make
 
   (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
-    (* outgoing edges not yet explored *)
-    mutable unexplored_edges: NSet.t NMap.t;
+    graph: NSet.t NMap.t;
     (* nodes not yet visited *)
     mutable not_yet_visited: NSet.t;
     (* number of nodes visited *)
@@ -40,7 +39,7 @@ module Make
   }
 
   let initial_state ~roots graph = {
-    unexplored_edges = graph;
+    graph;
     not_yet_visited = roots;
     visit_count = 0;
     indices = Hashtbl.create 0;
@@ -57,7 +56,6 @@ module Make
     (* visit m *)
     Hashtbl.replace state.indices m i;
     state.not_yet_visited <- NSet.remove m state.not_yet_visited;
-    state.unexplored_edges <- NMap.remove m state.unexplored_edges;
 
     (* push on stack *)
     state.stack <- m :: state.stack;
@@ -67,8 +65,16 @@ module Make
 
     (* for each require r in rs: *)
     rs |> NSet.iter (fun r ->
-      match NMap.get r state.unexplored_edges with
-      | Some rs_ ->
+      if Hashtbl.mem state.indices r
+      then begin
+        if (List.mem r state.stack) then
+          (** either back edge, or cross edge where strongly connected component
+              is not yet complete **)
+          (* update lowlink with index of r *)
+          let index_r = Hashtbl.find state.indices r in
+          lowlink := min !lowlink index_r
+      end else match NMap.get r state.graph with
+        | Some rs_ ->
           (* recursively compute strongly connected component of r *)
           strongconnect state r rs_;
 
@@ -76,13 +82,7 @@ module Make
           let lowlink_r = Hashtbl.find state.lowlinks r in
           lowlink := min !lowlink lowlink_r
 
-      | None ->
-          if (List.mem r state.stack) then
-            (** either back edge, or cross edge where strongly connected component
-                is not yet complete **)
-            (* update lowlink with index of r *)
-            let index_r = Hashtbl.find state.indices r in
-            lowlink := min !lowlink index_r
+        | None -> ()
     );
 
     Hashtbl.replace state.lowlinks m !lowlink;
@@ -106,7 +106,7 @@ module Make
       (** NOTE: this choice is non-deterministic, so any computations that depend
           on the visit order, such as heights, are in general non-repeatable. **)
       let m = NSet.choose state.not_yet_visited in
-      let rs = NMap.find_unsafe m state.unexplored_edges in
+      let rs = NMap.find_unsafe m state.graph in
       strongconnect state m rs
     done
 
