@@ -133,6 +133,8 @@ let call workers job merge neutral next =
   res
 
 let call_with_interrupt workers job merge neutral next interrupt =
+  SharedMem.allow_removes false;
   let (res, interrupt_env), unfinished =
     multi_threaded_call workers job merge neutral next interrupt in
+  SharedMem.allow_removes true;
   res, interrupt_env, unfinished

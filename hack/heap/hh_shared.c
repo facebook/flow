@@ -437,6 +437,8 @@ static size_t* log_level = NULL;
 
 static size_t* workers_should_exit = NULL;
 
+static size_t* allow_removes = NULL;
+
 /* This should only be used before forking */
 static uintptr_t early_counter = 1;
 
@@ -1087,9 +1089,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   wasted_heap_size = (size_t*)(mem + 7*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  allow_removes = (size_t*)(mem + 8*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 8*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 9*CACHE_LINE_SIZE + (int)sizeof(int));
 
   /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
    * page_size - it should be since page_size is quite big for a string
@@ -1149,6 +1154,7 @@ static void init_shared_globals(size_t config_log_level) {
   *log_level = config_log_level;
   *workers_should_exit = 0;
   *wasted_heap_size = 0;
+  *allow_removes = 1;
 
   // Initialize top heap pointers
   *heap = heap_init;
@@ -1322,6 +1328,10 @@ void assert_not_master(void) {
   assert(my_pid != *master_pid);
 }
 
+void assert_allow_removes(void) {
+  assert(*allow_removes);
+}
+
 /*****************************************************************************/
 
 CAMLprim value hh_stop_workers(void) {
@@ -1335,6 +1345,12 @@ CAMLprim value hh_resume_workers(void) {
   CAMLparam0();
   assert_master();
   *workers_should_exit = 0;
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_allow_removes(value val) {
+  CAMLparam0();
+  *allow_removes = Bool_val(val);
   CAMLreturn(Val_unit);
 }
 
@@ -1753,6 +1769,7 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   if (!allow_in_worker) {
     assert_master();
   }
+  assert_allow_removes();
   char* tmp_heap = NULL;
   char* dest = NULL;
   size_t mem_size = 0;
@@ -2203,6 +2220,7 @@ void hh_move(value key1, value key2) {
   unsigned int slot2 = find_slot(key2);
 
   assert_master();
+  assert_allow_removes();
   assert(hashtbl[slot1].hash == get_hash(key1));
   assert(hashtbl[slot2].addr == NULL);
   // We are taking up a previously empty slot. Let's increment the counter.
@@ -2223,6 +2241,7 @@ void hh_remove(value key) {
   unsigned int slot = find_slot(key);
 
   assert_master();
+  assert_allow_removes();
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
   size_t slot_size = ALIGNED(Get_buf_size(hashtbl[slot].addr));

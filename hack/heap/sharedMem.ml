@@ -162,6 +162,8 @@ let with_worker_exit f =
     !on_worker_cancelled ();
     exit 0
 
+external allow_removes : bool -> unit = "hh_allow_removes"
+
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
 (*****************************************************************************)
