@@ -46,3 +46,5 @@ module Monad2 (M : M_.S2) : sig
 end
 
 val to_string: string -> ('a -> string) -> ('a list -> string)
+val assoc_to_string: string -> ('a -> string) -> string -> ('b -> string) ->
+  (('a * 'b) list -> string)
