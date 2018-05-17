@@ -898,8 +898,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   (* remove sig context, leader heap, and sig hash entries for deleted files *)
   Context_cache.remove_merge_batch deleted;
 
-  let dependent_file_count = ref 0 in
-
   let freshparsed_list = FilenameSet.elements freshparsed in
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
@@ -1036,7 +1034,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       let n = FilenameSet.cardinal all_dependent_files in
       if n > 0
       then Hh_logger.info "remerge %d dependent files:" n;
-      dependent_file_count := n;
 
       let _ = FilenameSet.fold (fun f i ->
         Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
@@ -1057,8 +1054,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
 
       (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)
+      let roots = CheckedSet.add ~dependents:direct_dependent_files inferred in
       let recheck_map = to_merge |> CheckedSet.fold (
-        let roots = CheckedSet.add ~dependents:direct_dependent_files inferred in
         fun recheck_map file ->
           FilenameMap.add file (CheckedSet.mem file roots) recheck_map
       ) FilenameMap.empty in
