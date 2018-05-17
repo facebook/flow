@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -36,6 +35,9 @@ val json_truncate_string : ?max_string_length:int -> ?max_child_count:int
   -> ?max_depth:int -> ?max_total_count:int
   -> ?allowed_total_length:int -> ?if_reformat_multiline:bool
   -> string -> string
+
+val print_json_endline : ?pretty:bool -> json -> unit
+val prerr_json_endline : ?pretty:bool -> json -> unit
 
 val get_object_exn : json -> (string * json) list
 val get_array_exn : json -> json list
@@ -142,6 +144,7 @@ module type Access = sig
    * produce more informative error states. *)
   type 'a m = (('a * keytrace), access_failure) result
 
+  val keytrace_to_string : keytrace -> string
   val access_failure_to_string : access_failure -> string
 
   val return : 'a -> 'a m
@@ -174,6 +177,17 @@ module type Access = sig
   val get_number_int : string -> json * keytrace -> int m
   val get_array: string -> json * keytrace -> (json list) m
   val get_val: string -> json * keytrace -> json m (* any expected type *)
+
+
 end
 
 module Access : Access
+
+val get_field : (json * Access.keytrace -> 'a Access.m) -> (string -> 'a) -> json -> 'a
+val get_field_opt : (json * Access.keytrace -> 'a Access.m) -> json -> 'a option
+
+module JsonKey : Set.OrderedType with type t = json
+
+module JSet : Set.S with type elt = json
+
+module JMap : MyMap.S with type key = json

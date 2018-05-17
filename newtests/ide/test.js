@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile}) => [
   test('The initial subscribe does not send existing errors', [
@@ -13,32 +13,108 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `
           test.js:3
             3: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            3: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              3: var x: string = 123;
+                                 ^^^ [1]
+              3: var x: string = 123;
+                        ^^^^^^ [2]
         `,
       ),
-    ideStart()
-      .ideNoNewMessagesAfterSleep(500)
+    ideStart({mode: 'legacy'})
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because('We are connected, but not subscribed'),
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -59,40 +135,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -108,25 +150,98 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('Recheck behavior', [
     addFile('existingError.js')
-      .ideStart()
+      .ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -147,40 +262,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   }
@@ -195,14 +276,17 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `
           existingError.js:1
             1: var existingError: number = true;
-                                           ^^^^ boolean. This type is incompatible with
-            1: var existingError: number = true;
-                                  ^^^^^^ number
+                                           ^^^^ Cannot assign \`true\` to \`existingError\` because boolean [1] is incompatible with number [2].
+            References:
+              1: var existingError: number = true;
+                                             ^^^^ [1]
+              1: var existingError: number = true;
+                                    ^^^^^^ [2]
         `,
       ),
     addCode('var notAnError: number = 123;')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -217,99 +301,88 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
-                    "message": [
+                    "extra": [
                       {
-                        "context": "var existingError: number = true;",
-                        "descr": "boolean",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 29,
-                            "offset": 28
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 32,
-                            "offset": 32
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
                           }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 29,
-                        "end": 32
+                        ]
                       },
                       {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
                       },
                       {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
                             "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
                           }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
+                        ]
                       }
-                    ]
-                  }
-                ],
-                "passed": false
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -330,40 +403,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   }
@@ -376,8 +415,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       )
       .because('No errors should be streamed during the recheck'),
     addCode('var newError: string = 123;')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -388,15 +427,88 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 24,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 26,
+                                "offset": 70
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 24,
+                            "end": 26
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 15,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 20,
+                                "offset": 64
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 15,
+                            "end": 20
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var newError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `newError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -417,40 +529,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 5,
                         "start": 24,
                         "end": 26
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 15,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 20,
-                            "offset": 64
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 15,
-                        "end": 20
                       }
                     ]
                   }
@@ -468,15 +546,88 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 29,
+                                "offset": 28
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 32,
+                                "offset": 32
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 29,
+                            "end": 32
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var existingError: number = true;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "existingError.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 1,
+                                "column": 20,
+                                "offset": 19
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 25,
+                                "offset": 25
+                              }
+                            },
+                            "path": "existingError.js",
+                            "line": 1,
+                            "endline": 1,
+                            "start": 20,
+                            "end": 25
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var existingError: number = true;",
-                        "descr": "boolean",
+                        "descr": "Cannot assign `true` to `existingError` because boolean [1] is incompatible with number [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "existingError.js",
@@ -497,40 +648,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 1,
                         "start": 29,
                         "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
                       }
                     ]
                   },
@@ -538,10 +655,82 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 24,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 26,
+                                "offset": 70
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 24,
+                            "end": 26
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var newError: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 5,
+                                "column": 15,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 5,
+                                "column": 20,
+                                "offset": 64
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 5,
+                            "endline": 5,
+                            "start": 15,
+                            "end": 20
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var newError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `newError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -562,189 +751,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                         "endline": 5,
                         "start": 24,
                         "end": 26
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 15,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 20,
-                            "offset": 64
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 15,
-                        "end": 20
-                      }
-                    ]
-                  }
-                ],
-                "passed": false
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
-                    "message": [
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "boolean",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 29,
-                            "offset": 28
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 32,
-                            "offset": 32
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 29,
-                        "end": 32
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var existingError: number = true;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "existingError.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 1,
-                            "column": 20,
-                            "offset": 19
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 25,
-                            "offset": 25
-                          }
-                        },
-                        "path": "existingError.js",
-                        "line": 1,
-                        "endline": 1,
-                        "start": 20,
-                        "end": 25
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
-                    "message": [
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 24,
-                            "offset": 67
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 26,
-                            "offset": 70
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 24,
-                        "end": 26
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var newError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 5,
-                            "column": 15,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 5,
-                            "column": 20,
-                            "offset": 64
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 5,
-                        "endline": 5,
-                        "start": 15,
-                        "end": 20
                       }
                     ]
                   }
@@ -763,24 +769,27 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
   ]),
 
   test('autocomplete', [
-    ideStart()
-      .ideRequest('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
-      .ideNewMessagesWithTimeout(
-        5000,
+    ideStart({mode:'legacy'})
+      .ideRequestAndWaitUntilResponse('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        0, // no need for timeout here since we already waited for the response
         [
           {
-            "result": [
-              {
-                "name": "x",
-                "type": "number",
-                "func_details": null,
-                "path": "test.js",
-                "line": 1,
-                "endline": 1,
-                "start": 6,
-                "end": 8
-              }
-            ]
+            "method": "autocomplete",
+            "result": {
+              "result": [
+                {
+                  "name": "x",
+                  "type": "number",
+                  "func_details": null,
+                  "path": "test.js",
+                  "line": 1,
+                  "endline": 1,
+                  "start": 6,
+                  "end": 8
+                }
+              ]
+            }
           }
         ],
       ),
@@ -790,19 +799,20 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
    * that appeared during a recheck */
   test('connect during recheck', [
     // For some reason this order of actions triggered the bug
-    ideStart()
+    ideStart({mode:'legacy'})
       .addCode('var x = 123')
-      .ideNoNewMessagesAfterSleep(100)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(100)
       .because('Starting the IDE does not fire any messages'),
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -816,52 +826,46 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didOpen before subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('didOpen', 'fileWithWarning.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because('We have not subscribed yet, so there is no response on open'),
 
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
                     "extra": [
                       {
                         "message": [
                           {
-                            "context": "var x: ?boolean = true;",
-                            "descr": "Potentially null/undefined value.",
+                            "context": null,
+                            "descr": "References:",
                             "type": "Blame",
-                            "loc": {
-                              "source": "fileWithWarning.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 37
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 15,
-                                "offset": 45
-                              }
-                            },
-                            "path": "fileWithWarning.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 15
-                          },
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "Potentially false value.",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -884,15 +888,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                             "end": 15
                           }
                         ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          }
+                        ]
                       }
                     ],
-                    "kind": "lint",
-                    "level": "warning",
-                    "suppressions": [],
                     "message": [
                       {
                         "context": "if (x) {",
-                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "descr": "Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)",
                         "type": "Blame",
                         "loc": {
                           "source": "fileWithWarning.js",
@@ -928,16 +957,17 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didOpen after subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -948,46 +978,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('We do not report warnings in files that are not open'),
 
     ideNotification('didOpen', 'fileWithWarning.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
                     "extra": [
                       {
                         "message": [
                           {
-                            "context": "var x: ?boolean = true;",
-                            "descr": "Potentially null/undefined value.",
+                            "context": null,
+                            "descr": "References:",
                             "type": "Blame",
-                            "loc": {
-                              "source": "fileWithWarning.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 37
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 15,
-                                "offset": 45
-                              }
-                            },
-                            "path": "fileWithWarning.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 15
-                          },
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "Potentially false value.",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1010,15 +1034,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                             "end": 15
                           }
                         ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          }
+                        ]
                       }
                     ],
-                    "kind": "lint",
-                    "level": "warning",
-                    "suppressions": [],
                     "message": [
                       {
                         "context": "if (x) {",
-                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "descr": "Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)",
                         "type": "Blame",
                         "loc": {
                           "source": "fileWithWarning.js",
@@ -1052,7 +1101,7 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('We should receive the warning when we open the file'),
 
       ideNotification('didOpen', 'fileWithWarning.js')
-        .ideNoNewMessagesAfterSleep(500)
+        .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
         .because(
           'When we open an already open file, we dont get the current errors',
         ),
@@ -1060,23 +1109,24 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didClose before subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('didOpen', 'fileWithWarning.js')
       .ideNotification('didClose', 'fileWithWarning.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because(
         'We have not subscribed yet, so there is no response on open or close',
       ),
 
     ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1089,16 +1139,17 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didClose after subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1109,46 +1160,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('Subscribing gives us the current errors'),
 
     ideNotification('didOpen', 'fileWithWarning.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
                     "extra": [
                       {
                         "message": [
                           {
-                            "context": "var x: ?boolean = true;",
-                            "descr": "Potentially null/undefined value.",
+                            "context": null,
+                            "descr": "References:",
                             "type": "Blame",
-                            "loc": {
-                              "source": "fileWithWarning.js",
-                              "type": "SourceFile",
-                              "start": {
-                                "line": 2,
-                                "column": 8,
-                                "offset": 37
-                              },
-                              "end": {
-                                "line": 2,
-                                "column": 15,
-                                "offset": 45
-                              }
-                            },
-                            "path": "fileWithWarning.js",
-                            "line": 2,
-                            "endline": 2,
-                            "start": 8,
-                            "end": 15
-                          },
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
                           {
                             "context": "var x: ?boolean = true;",
-                            "descr": "Potentially false value.",
+                            "descr": "[1]",
                             "type": "Blame",
                             "loc": {
                               "source": "fileWithWarning.js",
@@ -1171,15 +1216,40 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                             "end": 15
                           }
                         ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          }
+                        ]
                       }
                     ],
-                    "kind": "lint",
-                    "level": "warning",
-                    "suppressions": [],
                     "message": [
                       {
                         "context": "if (x) {",
-                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "descr": "Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-bool`)",
                         "type": "Blame",
                         "loc": {
                           "source": "fileWithWarning.js",
@@ -1213,14 +1283,15 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('When we open a new file we get the current errors'),
 
     ideNotification('didClose', 'fileWithWarning.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1231,14 +1302,14 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
       .because('When we close a new file we get the current errors'),
 
     ideNotification('didClose', 'fileWithWarning.js')
-      .ideNoNewMessagesAfterSleep(500)
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
       .because(
         'When we close an already closed file, we dont get the current errors',
       ),
   ]),
 
   test('Stop the flow ide command without killing the server', [
-    ideStart(),
+    ideStart({mode: 'legacy'}),
     addCode('var x = 123')
       .ideStop()
       .sleep(500),
@@ -1247,9 +1318,12 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         `
           test.js:5
             5: var y: string = 123
-                               ^^^ number. This type is incompatible with
-            5: var y: string = 123
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`y\` because number [1] is incompatible with string [2].
+            References:
+              5: var y: string = 123
+                                 ^^^ [1]
+              5: var y: string = 123
+                        ^^^^^^ [2]
         `,
       )
       .because('Stopping the flow ide command used to kill the server accidentally'),

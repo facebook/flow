@@ -2,20 +2,17 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
-type 'a nextlist = 'a list Bucket.next
+(* Hide the worker type from our users *)
+type worker = WorkerController.worker
 
-type 'a bucket = 'a Bucket.bucket =
-  | Job of 'a
-  | Wait
-  | Done
+type 'a interrupt_config = 'a MultiThreadedCall.interrupt_config
 
 let single_threaded_call job merge neutral next =
   let x = ref (next()) in
@@ -25,68 +22,69 @@ let single_threaded_call job merge neutral next =
    * mode.
    *)
   let _ = Marshal.to_string job [Marshal.Closures] in
-  while !x <> Done do
+  while !x <> Bucket.Done do
     match !x with
-    | Wait ->
+    | Bucket.Wait ->
         (* this state should never be reached in single threaded mode, since
            there is no hope for ever getting out of this state *)
         failwith "stuck!"
-    | Job l ->
-        let res = job neutral l in
-        acc := merge res !acc;
-        x := next()
-    | Done -> ()
+    | Bucket.Job l ->
+      let res = job neutral l in
+      acc := merge res !acc;
+      x := next()
+    | Bucket.Done -> ()
   done;
   !acc
 
-let multi_threaded_call
-  (type a) (type b) (type c)
-  workers (job: c -> a -> b)
-  (merge: b -> c -> c)
-  (neutral: c)
-  (next: a Bucket.next) =
-  let rec dispatch workers handles acc =
-    (* 'worker' represents available workers. *)
-    (* 'handles' represents pendings jobs. *)
-    (* 'acc' are the accumulated results. *)
+module type CALLER = sig
+  type 'a result
+
+  val return: 'a -> 'a result
+
+  val multi_threaded_call:
+    WorkerController.worker list ->
+    ('c -> 'a -> 'b) ->
+    ('b -> 'c -> 'c) ->
+    'c ->
+    'a Bucket.next ->
+    'c result
+end
+
+module CallFunctor(Caller: CALLER): sig
+  val call:
+    WorkerController.worker list option ->
+    job:('c -> 'a -> 'b) ->
+    merge:('b -> 'c -> 'c) -> neutral:'c ->
+    next:'a Bucket.next ->
+    'c Caller.result
+end = struct
+  let call workers ~job ~merge ~neutral ~next =
     match workers with
-    | [] when handles = [] -> acc
-    | [] ->
-        (* No worker available: wait for some workers to finish. *)
-        collect [] handles acc
-    | worker :: workers ->
-        (* At least one worker is available... *)
-        match next () with
-        | Wait -> collect (worker :: workers) handles acc
-        | Done ->
-            (* ... but no more job to be distributed, let's collect results. *)
-            dispatch [] handles acc
-        | Job bucket ->
-            (* ... send a job to the worker.*)
-            let handle =
-              Worker.call worker
-                (fun xl -> job neutral xl)
-                bucket in
-            dispatch workers (handle :: handles) acc
-  and collect workers handles acc =
-    let { Worker.readys; waiters } = Worker.select handles in
-    let workers = List.map ~f:Worker.get_worker readys @ workers in
-    (* Collect the results. *)
-    let acc =
-      List.fold_left
-        ~f:(fun acc h -> merge (Worker.get_result h) acc)
-        ~init:acc
-        readys in
-    (* And continue.. *)
-    dispatch workers waiters acc in
-  dispatch workers [] neutral
+      | None ->
+        Caller.return (single_threaded_call job merge neutral next)
+      | Some workers -> Caller.multi_threaded_call workers job merge neutral next
+end
 
-let call workers ~job ~merge ~neutral ~next =
+module Call = CallFunctor(struct
+  type 'a result = 'a
+  let return x = x
+  let multi_threaded_call = MultiThreadedCall.call
+end)
+
+let call = Call.call
+
+(* If we ever want this in MultiWorkerLwt then move this into CallFunctor *)
+let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt =
   match workers with
-  | None -> single_threaded_call job merge neutral next
-  | Some workers -> multi_threaded_call workers job merge neutral next
+  | None -> single_threaded_call job merge neutral next, interrupt.MultiThreadedCall.env, []
+  | Some workers ->
+    MultiThreadedCall.call_with_interrupt workers job merge neutral next
+      interrupt
 
-let next ?max_size workers =
+let next ?progress_fn ?max_size workers =
   Bucket.make
     ~num_workers: (match workers with Some w -> List.length w | None -> 1)
+    ?progress_fn
     ?max_size
+
+let make = WorkerController.make

@@ -1,96 +1,179 @@
-Error: map.js:23
- 23:     let x = new Map(['foo', 123]); // error
-                 ^^^^^^^^^^^^^^^^^^^^^ constructor call
- 23:     let x = new Map(['foo', 123]); // error
-                          ^^^^^ string. This type is incompatible with
-542:     constructor(iterable: ?Iterable<[K, V]>): void;
-                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:542
+Error ----------------------------------------------------------------------------------------------------- map.js:23:21
 
-Error: map.js:23
- 23:     let x = new Map(['foo', 123]); // error
-                 ^^^^^^^^^^^^^^^^^^^^^ constructor call
- 23:     let x = new Map(['foo', 123]); // error
-                                 ^^^ number. This type is incompatible with
-542:     constructor(iterable: ?Iterable<[K, V]>): void;
-                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:542
+Cannot call `Map` with array literal bound to `iterable` because:
+ - string [1] is incompatible with tuple type [2] in type argument `Yield` [3] of the return value of property
+   `@@iterator`.
+ - number [4] is incompatible with tuple type [2] in type argument `Yield` [3] of the return value of property
+   `@@iterator`.
 
-Error: map.js:24
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                ^^^^^ string. This type is incompatible with
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                    ^^^^^^ number
+   map.js:23:21
+    23|     let x = new Map(['foo', 123]); // error
+                            ^^^^^^^^^^^^
 
-Error: map.js:24
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                       ^^^ number. This type is incompatible with
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                            ^^^^^^ string
+References:
+   map.js:23:22
+    23|     let x = new Map(['foo', 123]); // error
+                             ^^^^^ [1]
+   <BUILTINS>/core.js:527:37
+   527|     constructor(iterable: ?Iterable<[K, V]>): void;
+                                            ^^^^^^ [2]
+   <BUILTINS>/core.js:481:22
+   481| interface $Iterator<+Yield,+Return,-Next> {
+                             ^^^^^ [3]
+   map.js:23:29
+    23|     let x = new Map(['foo', 123]); // error
+                                    ^^^ [4]
 
-Error: map.js:29
- 29:     (x.get('foo'): boolean); // error, string | void
-          ^^^^^^^^^^^^ number. This type is incompatible with
- 29:     (x.get('foo'): boolean); // error, string | void
-                        ^^^^^^^ boolean
 
-Error: map.js:29
- 29:     (x.get('foo'): boolean); // error, string | void
-          ^^^^^^^^^^^^ undefined. This type is incompatible with
- 29:     (x.get('foo'): boolean); // error, string | void
-                        ^^^^^^^ boolean
+Error ----------------------------------------------------------------------------------------------------- map.js:24:34
 
-Error: map.js:30
- 30:     x.get(123); // error, wrong key type
-               ^^^ number. This type is incompatible with the expected param type of
- 28:   function(x: Map<string, number>) {
-                       ^^^^^^ string
+Cannot assign `new Map(...)` to `y` because:
+ - string [1] is incompatible with number [2] in type argument `K` [3].
+ - number [4] is incompatible with string [5] in type argument `V` [6].
 
-Error: regexp.js:26
- 26:     RegExp('foo', 'z'); // error
-                       ^^^ string literal `z`. This type is incompatible with
-333:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                   ^^^^^^^^^^^^ character set `gimsuy`. See lib: <BUILTINS>/core.js:333
-   26:     RegExp('foo', 'z'); // error
-                         ^^^ `z` is not a member of the set
+   map.js:24:34
+    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                         ^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: regexp.js:27
- 27:     new RegExp('foo', 'z'); // error
-                           ^^^ string literal `z`. This type is incompatible with
-335:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                       ^^^^^^^^^^^^ character set `gimsuy`. See lib: <BUILTINS>/core.js:335
-   27:     new RegExp('foo', 'z'); // error
-                             ^^^ `z` is not a member of the set
+References:
+   map.js:24:44
+    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                   ^^^^^ [1]
+   map.js:24:16
+    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                       ^^^^^^ [2]
+   <BUILTINS>/core.js:525:19
+   525| declare class Map<K, V> {
+                          ^ [3]
+   map.js:24:51
+    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                          ^^^ [4]
+   map.js:24:24
+    24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                               ^^^^^^ [5]
+   <BUILTINS>/core.js:525:22
+   525| declare class Map<K, V> {
+                             ^ [6]
 
-Error: weakset.js:19
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                            ^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
 
-Error: weakset.js:19
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                               ^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+Error ------------------------------------------------------------------------------------------------------ map.js:29:6
 
-Error: weakset.js:19
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                                  ^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+Cannot cast `x.get(...)` to boolean because:
+ - undefined [1] is incompatible with boolean [2].
+ - number [3] is incompatible with boolean [2].
 
-Error: weakset.js:36
- 36: let ws5 = new WeakSet(numbers()); // error, must be objects
-               ^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 29: function* numbers(): Iterable<number> {
-                                   ^^^^^^ number. This type is incompatible with
-580: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:580
+   map.js:29:6
+    29|     (x.get('foo'): boolean); // error, string | void
+             ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:532:22
+   532|     get(key: K): V | void;
+                             ^^^^ [1]
+   map.js:29:20
+    29|     (x.get('foo'): boolean); // error, string | void
+                           ^^^^^^^ [2]
+   map.js:28:27
+    28|   function(x: Map<string, number>) {
+                                  ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:30:11
+
+Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2].
+
+   map.js:30:11
+   30|     x.get(123); // error, wrong key type
+                 ^^^ [1]
+
+References:
+   map.js:28:19
+   28|   function(x: Map<string, number>) {
+                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- regexp.js:26:19
+
+Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2]
+since `z` is not a member of the set.
+
+   regexp.js:26:19
+    26|     RegExp('foo', 'z'); // error
+                          ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:331:21
+   331| type RegExp$flags = $CharSet<"gimsuy">
+                            ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- regexp.js:27:23
+
+Cannot call `RegExp` with `'z'` bound to `flags` because string literal `z` [1] is incompatible with `RegExp$flags` [2]
+since `z` is not a member of the set.
+
+   regexp.js:27:23
+    27|     new RegExp('foo', 'z'); // error
+                              ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:331:21
+   331| type RegExp$flags = $CharSet<"gimsuy">
+                            ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
+
+Cannot call `WeakSet` with array literal bound to `iterable` because:
+ - number [1] is incompatible with object type [2] in type argument `Yield` [3] of the return value of property
+   `@@iterator`.
+ - number [4] is incompatible with object type [2] in type argument `Yield` [3] of the return value of property
+   `@@iterator`.
+ - number [5] is incompatible with object type [2] in type argument `Yield` [3] of the return value of property
+   `@@iterator`.
+
+   weakset.js:19:23
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^^^^^^^^^
+
+References:
+   weakset.js:19:24
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                               ^ [1]
+   <BUILTINS>/core.js:565:26
+   565| declare class WeakSet<T: Object> {
+                                 ^^^^^^ [2]
+   <BUILTINS>/core.js:481:22
+   481| interface $Iterator<+Yield,+Return,-Next> {
+                             ^^^^^ [3]
+   weakset.js:19:27
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                  ^ [4]
+   weakset.js:19:30
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                     ^ [5]
+
+
+Error ------------------------------------------------------------------------------------------------- weakset.js:36:23
+
+Cannot call `WeakSet` with `numbers()` bound to `iterable` because number [1] is incompatible with object type [2] in
+type argument `Yield` [3].
+
+   weakset.js:36:23
+    36| let ws5 = new WeakSet(numbers()); // error, must be objects
+                              ^^^^^^^^^
+
+References:
+   weakset.js:29:31
+    29| function* numbers(): Iterable<number> {
+                                      ^^^^^^ [1]
+   <BUILTINS>/core.js:565:26
+   565| declare class WeakSet<T: Object> {
+                                 ^^^^^^ [2]
+   <BUILTINS>/core.js:487:22
+   487| interface $Iterable<+Yield,+Return,-Next> {
+                             ^^^^^ [3]
+
 
 
 Found 13 errors

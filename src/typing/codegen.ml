@@ -97,7 +97,7 @@ let gen_if conditional gen_fn env =
 let gen_builtin_class_type t env = Type.(
   (* AVERT YOUR EYES *)
   let reason = reason_of_t t in
-  let builtin_name = Reason.(string_of_desc (desc_of_reason reason)) in
+  let builtin_name = DescFormat.name_of_instance_reason reason in
 
   (**
    * Assert that the builtin name we found does match with the class_id we're
@@ -147,7 +147,7 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AnnotT (tvar, _) -> gen_type (resolve_tvar tvar env) env
+  | AnnotT (source_t, _) -> gen_type (resolve_type source_t env) env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
@@ -213,13 +213,11 @@ let rec gen_type t env = Type.(
   | CustomFunT (_, ReactCreateClass) -> add_str "React$CreateClass" env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
   | CustomFunT (_, ReactCloneElement) -> add_str "React$CloneElement" env
-  | CustomFunT (_, ReactElementFactory _) -> add_str "React$ReactElementFactory" env
-  | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
-  | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env
-  | CustomFunT (_, MergeInto) -> add_str "$Facebookism$MergeInto" env
-  | CustomFunT (_, Mixin) -> add_str "$Facebookism$Mixin" env
+  | CustomFunT (_, ReactElementFactory _) -> add_str "React$ElementFactory" env
   | CustomFunT (_, Idx) -> add_str "$Facebookism$Idx" env
   | CustomFunT (_, DebugPrint) -> add_str "$Flow$DebugPrint" env
+  | CustomFunT (_, DebugThrow) -> add_str "$Flow$DebugThrow" env
+  | CustomFunT (_, DebugSleep) -> add_str "$Flow$DebugSleep" env
   (* TODO: Once predicate types are a little more fleshed out, fill out this
    *       codegen.
    *)
@@ -308,7 +306,7 @@ let rec gen_type t env = Type.(
   | ThisClassT (_, t) -> gen_type t env
   | ThisTypeAppT (_, t, _, Some ts) -> add_applied_tparams ts env |> gen_type t
   | ThisTypeAppT (_, t, _, None) -> gen_type t env
-  | DefT (_, TypeAppT (t, ts)) -> add_applied_tparams ts env |> gen_type t
+  | DefT (_, TypeAppT (_, t, ts)) -> add_applied_tparams ts env |> gen_type t
   | DefT (_, TypeT t) -> gen_type t env
   | DefT (_, UnionT union) -> gen_union_list union env
   | DefT (_, VoidT) -> add_str "void" env
@@ -368,7 +366,7 @@ and gen_prop k p env =
   in
 
   match p with
-  | Field (t, polarity) ->
+  | Field (_, t, polarity) ->
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
@@ -379,11 +377,11 @@ and gen_prop k p env =
       |> add_str k
       |> add_str sep
       |> gen_type t
-  | Get t -> gen_getter k t env
-  | Set t -> gen_setter k t env
-  | GetSet (t1, t2) ->
+  | Get (_, t) -> gen_getter k t env
+  | Set (_, t) -> gen_setter k t env
+  | GetSet (_, t1, _, t2) ->
     gen_getter k t1 env |> gen_setter k t2
-  | Method t -> gen_method k t env
+  | Method (_, t) -> gen_method k t env
 
 and gen_func_params params rest_param env =
   let params_rev = List.fold_left (fun acc (name, t) ->

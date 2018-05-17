@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -87,6 +86,12 @@ let rpartition s c =
     String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
   first, second
 
+(** If s is longer than length len, return a copy of s truncated to length len. *)
+let truncate len s =
+  if String.length s <= len then
+    s
+  else
+    String.sub s 0 len
 
 (** [index_not_from_opt str i chars] is like [index_from_opt], but returns the index of the first
     char in [str] after position [i] that is not in [chars] if it exists, or [None] otherwise. *)
@@ -178,6 +183,15 @@ let split_into_lines str =
     (fun lines (start, len) -> (String.sub str start len)::lines)
     []
     ((last_start, String.length str - last_start)::lines)
+
+(* Splits a string into lines, indents each non-empty line, and concats with newlines *)
+let indent indent_size str =
+  let padding = String.make indent_size ' ' in
+  str
+  |> split_into_lines
+  |> List.map (fun str -> if str = "" then "" else (padding ^ str))
+  |> String.concat "\n"
+
 
 (* Splits a string into a list of strings using only "\n" as a delimiter.
  * If the string ends with a delimiter, an empty string representing the

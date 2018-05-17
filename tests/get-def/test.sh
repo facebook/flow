@@ -16,8 +16,20 @@ assert_ok "$FLOW" get-def imports.js 4 4 --strip-root --pretty
 
 # import {foo, bar as baz} from "./helpers/exports_named.js";
 #          ^
-printf "named import points to named export = "
+printf "named import of const points to named export = "
 assert_ok "$FLOW" get-def imports.js 6 10 --strip-root --pretty
+
+printf "named import of let points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 29 --strip-root --pretty
+
+printf "named import of var points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 40 --strip-root --pretty
+
+printf "named import of function points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 51 --strip-root --pretty
+
+printf "named import of class points to named export = "
+assert_ok "$FLOW" get-def imports.js 6 56 --strip-root --pretty
 
 # import {foo, bar as baz} from "./helpers/exports_named.js";
 #                   ^
@@ -63,3 +75,57 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 #    ^
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
+
+printf "class property read = "
+assert_ok "$FLOW" get-def class.js 13 6 --strip-root --pretty
+printf "class property write = "
+assert_ok "$FLOW" get-def class.js 14 6 --strip-root --pretty
+printf "class methods = "
+assert_ok "$FLOW" get-def class.js 15 6 --strip-root --pretty
+printf "refined class properties = "
+assert_ok "$FLOW" get-def class.js 18 8 --strip-root --pretty
+# TODO get private properties working
+printf "private class property access = "
+assert_ok "$FLOW" get-def class.js 7 15 --strip-root --pretty
+printf "private class property assignment = "
+assert_ok "$FLOW" get-def class.js 8 15 --strip-root --pretty
+printf "members of maybe types = "
+assert_ok "$FLOW" get-def class.js 22 5 --strip-root --pretty
+printf "members of unions with null/void = "
+assert_ok "$FLOW" get-def class.js 26 5 --strip-root --pretty
+
+printf "member of a nonexistent imported type with type parameters = "
+assert_ok "$FLOW" get-def imports.js 16 4 --strip-root --pretty 2>&1
+printf "member of a type alias for \`any\` with type parameters = "
+assert_ok "$FLOW" get-def imports.js 22 4 --strip-root --pretty 2>&1
+
+printf "member of an object type alias = "
+assert_ok "$FLOW" get-def objects.js 5 4 --strip-root --pretty
+printf "member of an unannotated object type = "
+assert_ok "$FLOW" get-def objects.js 8 4 --strip-root --pretty
+printf "shadow prop created on write = "
+assert_ok "$FLOW" get-def objects.js 12 4 --strip-root --pretty
+printf "shadow prop created on read = "
+assert_ok "$FLOW" get-def objects.js 14 4 --strip-root --pretty
+
+printf "optional chain initial property = "
+assert_ok "$FLOW" get-def optional_chaining.js 17 6 --strip-root --pretty
+printf "optional chain subsequent property = "
+assert_ok "$FLOW" get-def optional_chaining.js 17 10 --strip-root --pretty
+printf "optional chain initial property of null = "
+assert_ok "$FLOW" get-def optional_chaining.js 18 7 --strip-root --pretty
+printf "optional chain subsequent property of null = "
+assert_ok "$FLOW" get-def optional_chaining.js 18 11 --strip-root --pretty
+
+printf "shorthand destructuring = "
+assert_ok "$FLOW" get-def objects.js 19 11 --strip-root --pretty
+printf "non-shorthand destructuring = "
+assert_ok "$FLOW" get-def objects.js 20 11 --strip-root --pretty
+printf "destructuring without type alias = "
+assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
+# TODO this should return results
+printf "destructuring a shadow prop = "
+assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
+# This one should return no results
+printf "bogus array destructuring of an object = "
+assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty

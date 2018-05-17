@@ -115,14 +115,17 @@ class scope_builder = object(this)
       uses <- [];
       current_scope_opt <- Some child;
       env <- Env.mk_env (fun () -> this#next) old_env bindings;
-      let node' = visit node in
+      let result = Core_result.try_with (fun () -> visit node) in
       this#update_acc (fun acc ->
+        let defs = Env.defs env in
+        let locals = SMap.fold (fun _ def locals ->
+          Nel.fold_left (fun locals loc -> LocMap.add loc def locals) locals def.Def.locs
+        ) defs LocMap.empty in
         let locals, globals = List.fold_left (fun (locals, globals) (loc, x) ->
           match Env.get x env with
           | Some def -> LocMap.add loc def locals, globals
           | None -> locals, SSet.add x globals
-        ) (LocMap.empty, SSet.empty) uses in
-        let defs = Env.defs env in
+        ) (locals, SSet.empty) uses in
         let scopes = IMap.add child { Scope.lexical; parent; defs; locals; globals; } acc.scopes in
         { acc with scopes }
       );
@@ -130,11 +133,17 @@ class scope_builder = object(this)
       current_scope_opt <- parent;
       env <- old_env;
       counter <- save_counter;
-      node'
+      Core_result.ok_exn result
 
   method! identifier (expr: Loc.t Ast.Identifier.t) =
     uses <- expr::uses;
     expr
+
+  method! jsx_identifier (id: Loc.t Ast.JSX.Identifier.t) =
+    let open Ast.JSX.Identifier in
+    let loc, {name} = id in
+    uses <- (loc, name)::uses;
+    id
 
   (* don't rename the `foo` in `x.foo` *)
   method! member_property_identifier (id: Loc.t Ast.Identifier.t) = id
@@ -202,14 +211,10 @@ class scope_builder = object(this)
     let open Ast.Statement.Try.CatchClause in
     let { param; body = _ } = clause in
 
-    this#with_bindings (
-      let open Ast.Pattern in
-      let _, patt = param in
-      match patt with
-      | Identifier { Identifier.name; _ } -> Bindings.singleton name
-      | _ -> (* TODO *)
-        Bindings.empty
-    ) super#catch_clause clause
+    (* hoisting *)
+    let lexical_hoist = new lexical_hoister in
+    let bindings = lexical_hoist#eval lexical_hoist#catch_clause_pattern param in
+    this#with_bindings ~lexical:true bindings super#catch_clause clause
 
   (* helper for function params and body *)
   method private lambda params body =
@@ -249,7 +254,7 @@ class scope_builder = object(this)
       let open Ast.Function in
       let {
         id; params; body; async = _; generator = _; expression = _;
-        predicate = _; returnType = _; typeParameters = _;
+        predicate = _; return = _; tparams = _;
       } = expr in
 
       run_opt this#function_identifier id;
@@ -271,13 +276,13 @@ class scope_builder = object(this)
       let open Ast.Function in
       let {
         id; params; body; async = _; generator = _; expression = _;
-        predicate = _; returnType = _; typeParameters = _;
+        predicate = _; return = _; tparams = _;
       } = expr in
 
       let bindings = match id with
         | Some name -> Bindings.singleton name
         | None -> Bindings.empty in
-      this#with_bindings bindings (fun () ->
+      this#with_bindings ~lexical:true bindings (fun () ->
         run_opt this#function_identifier id;
         this#lambda params body;
       ) ();

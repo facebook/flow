@@ -9,6 +9,7 @@ val mk_id: unit -> int
 
 type reason_desc =
   | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+  | RNullOrVoid
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
@@ -17,6 +18,7 @@ type reason_desc =
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RInterfaceType
   | RArray
   | RArrayLit
   | REmptyArrayLit
@@ -28,18 +30,23 @@ type reason_desc =
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
-  | RFunctionCall
+  | RFunctionCall of reason_desc
+  | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
   | RJSXText
+  | RFbt
+  | RUnaryOperator of string * reason_desc
+  | RBinaryOperator of string * reason_desc * reason_desc
+  | RLogical of string * reason_desc * reason_desc
   | RAnyObject
   | RAnyFunction
+  | RTemplateString
   | RUnknownString
-  | RStringEnum
-  | RNumberEnum
+  | REnum
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -57,11 +64,15 @@ type reason_desc =
   | RAnd
   | RConditional
   | RPrototype
+  | RObjectPrototype
+  | RFunctionPrototype
   | RDestructuring
+  | RDefaultValue
   | RConstructor
   | RDefaultConstructor
-  | RConstructorCall
+  | RConstructorCall of reason_desc
   | RReturn
+  | RImplicitReturn of reason_desc
   | RRegExp
   | RSuper
   | RNoSuper
@@ -71,8 +82,11 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
+  | RTypeAlias of string * reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * reason_desc
+  | RTypeParam of string * reason_desc * Loc.t
+  | RTypeof of string
+  | RMethod of string option
   | RMethodCall of string option
   | RParameter of string option
   | RRestParameter of string option
@@ -80,6 +94,7 @@ type reason_desc =
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option
   | RProperty of string option
+  | RPrivateProperty of string
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
@@ -91,9 +106,12 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
+  | RNamedImportedType of string
+  | RDefaultImportedType of string * string
+  | RCode of string
   | RCustom of string
   | RPolyType of reason_desc
-  | RClassType of reason_desc
+  | RPolyTest of string * reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
@@ -110,19 +128,22 @@ type reason_desc =
   | RPredicateOf of reason_desc
   | RPredicateCall of reason_desc
   | RPredicateCallNeg of reason_desc
+  | RRefined of reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
+  | RModule of string
+  | ROptionalChain
 
+  | RReactProps
   | RReactElement of string option
   | RReactClass
   | RReactComponent
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string option
   | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of reason_desc
@@ -156,6 +177,7 @@ val string_of_desc: reason_desc -> string
 val string_of_loc_pos: Loc.t -> string
 val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
+val json_of_loc_props: ?strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
 
 val locationless_reason: reason_desc -> reason
 
@@ -166,14 +188,23 @@ val internal_name: string -> string
 
 val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
+val uninternal_module_name: string -> string
 
 val internal_pattern_name: Loc.t -> string
 
 val is_instantiable_reason: reason -> bool
 
-val is_constant_property_reason: reason -> bool
+val is_constant_reason: reason -> bool
 
 val is_typemap_reason: reason -> bool
+val is_calltype_reason: reason -> bool
+
+val is_nullish_reason: reason -> bool
+val is_scalar_reason: reason -> bool
+val is_array_reason: reason -> bool
+
+val is_literal_object_reason: reason -> bool
+val is_literal_array_reason: reason -> bool
 
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
@@ -194,15 +225,22 @@ val dump_reason: ?strip_root:Path.t option -> reason -> string
 (* accessors *)
 val loc_of_reason: reason -> Loc.t
 val def_loc_of_reason: reason -> Loc.t
-val desc_of_reason: reason -> reason_desc
+val annot_loc_of_reason: reason -> Loc.t option
+val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
-val replace_reason: (reason_desc -> reason_desc) -> reason -> reason
-val replace_reason_const: ?keep_def_loc: bool -> reason_desc -> reason -> reason
+val replace_reason: ?keep_def_loc:bool -> (reason_desc -> reason_desc) -> reason -> reason
+val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
 
-val repos_reason: Loc.t -> reason -> reason
+val repos_reason: Loc.t -> ?annot_loc:Loc.t -> reason -> reason
+val annot_reason: reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 
 module ReasonMap : MyMap.S with type key = reason
+
+val mk_expression_reason: Loc.t Ast.Expression.t -> reason
+
+val unknown_elem_empty_array_desc: reason_desc
+val inferred_union_elem_array_desc: reason_desc

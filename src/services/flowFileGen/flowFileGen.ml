@@ -54,14 +54,7 @@ let gen_imports env =
       | None ->
         ([], None)
     in
-    let source =
-      match source with
-      | (_, {Literal.value = Literal.String s; _;}) -> s
-      | _ -> failwith (
-        "Internal error: Parsed a non-string for the `from` clause of an " ^
-        "import!"
-      )
-    in
+    let _, { Ast.StringLiteral.value = source; _ } = source in
 
     let env = Codegen.add_str "import " env in
     let env =
@@ -126,7 +119,7 @@ let gen_class_body =
      *)
     let is_static_name_field = static && field_name = "name" && (
       match p with
-      | Field (t, _) ->
+      | Field (_, t, _) ->
         (match resolve_type t env with
         | DefT (_, StrT AnyLiteral) -> true
         | _ -> false)
@@ -135,7 +128,7 @@ let gen_class_body =
 
     let is_empty_constructor = not static && field_name = "constructor" && (
       match p with
-      | Method t ->
+      | Method (_, t) ->
         (match resolve_type t env with
         | DefT (_, FunT (_, _, { params; return_t; _ })) ->
           (params = []) && (
@@ -327,12 +320,7 @@ let gen_named_exports =
       | ThisClassT (_, DefT (_, InstanceT (static, super, implements, {
           fields_tmap;
           methods_tmap;
-          (* TODO: The only way to express `mixins` right now is with a
-           *       `declare` statement. This is possible in implementation
-           *       files, but it is extremely rare -- so punting on this for
-           *       now.
-           *)
-          mixins = _;
+          has_unknown_react_mixins = _;
           structural;
           _;
         }))) ->
@@ -399,6 +387,8 @@ let gen_exports named_exports cjs_export env =
 let flow_file cx =
   let module_ref = Context.module_ref cx in
   let (named_exports, cjs_export) = exports_map cx module_ref in
+  (* Drop the loc *)
+  let named_exports = SMap.map snd named_exports in
 
   Codegen.mk_env cx
     |> Codegen.add_str "// @flow\n\n"

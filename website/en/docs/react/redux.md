@@ -16,7 +16,7 @@ object, works the same as typing any other object in Flow.
 ```js
 type State = {
   users: Array<{
-    id: string
+    id: string,
     name: string,
     age: number,
     phoneNumber: string,
@@ -39,7 +39,7 @@ using "covariant" properties throughout your state object.
 ```js
 type State = {
   +users: Array<{
-    +id: string
+    +id: string,
     +name: string,
     +age: number,
     +phoneNumber: string,

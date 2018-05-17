@@ -13,13 +13,21 @@ let member_nop _ _ _ _ = false
 
 let call_nop _ _ _ _ = ()
 
-let require_nop _ _ _ = ()
-
 let import_nop _ _ _ = ()
 
 let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
+
+let class_member_decl_nop _ _ _ _ = ()
+
+let obj_prop_decl_nop _ _ _ = ()
+
+let require_pattern_nop _ = ()
+
+let obj_to_obj_nop _ _ _ = ()
+
+let export_default_nop _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
@@ -78,14 +86,9 @@ type hook_state_t = {
       string -> Loc.t -> Type.t ->
       unit);
 
-  require_hook:
-     (Context.t ->
-      string -> Loc.t ->
-      unit);
-
   import_hook:
       (Context.t ->
-       string -> Loc.t ->
+       (Loc.t * string) -> Loc.t ->
        unit);
 
   jsx_hook:
@@ -98,6 +101,29 @@ type hook_state_t = {
        Loc.t ->
        Loc.t ->
        unit);
+
+  class_member_decl_hook:
+     (Context.t ->
+      Type.t (* self *) ->
+      string -> Loc.t ->
+      unit);
+
+  obj_prop_decl_hook:
+      (Context.t ->
+        string -> Loc.t ->
+        unit);
+
+  require_pattern_hook:
+    Loc.t -> unit;
+
+  (* Called when ObjT 1 ~> ObjT 2 *)
+  obj_to_obj_hook:
+      (Context.t ->
+        Type.t (* ObjT 1 *) ->
+        Type.t (* ObjT 2 *) ->
+        unit);
+
+  export_default_hook: Loc.t -> unit;
 }
 
 let nop_hook_state = {
@@ -105,10 +131,14 @@ let nop_hook_state = {
   lval_hook = lval_nop;
   member_hook = member_nop;
   call_hook = call_nop;
-  require_hook = require_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
   ref_hook = ref_nop;
+  class_member_decl_hook = class_member_decl_nop;
+  obj_prop_decl_hook = obj_prop_decl_nop;
+  require_pattern_hook = require_pattern_nop;
+  obj_to_obj_hook = obj_to_obj_nop;
+  export_default_hook = export_default_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -125,9 +155,6 @@ let set_member_hook hook =
 let set_call_hook hook =
   hook_state := { !hook_state with call_hook = hook }
 
-let set_require_hook hook =
-  hook_state := { !hook_state with require_hook = hook }
-
 let set_import_hook hook =
   hook_state := { !hook_state with import_hook = hook }
 
@@ -136,6 +163,21 @@ let set_jsx_hook hook =
 
 let set_ref_hook hook =
   hook_state := { !hook_state with ref_hook = hook }
+
+let set_class_member_decl_hook hook =
+  hook_state := { !hook_state with class_member_decl_hook = hook }
+
+let set_obj_prop_decl_hook hook =
+  hook_state := { !hook_state with obj_prop_decl_hook = hook }
+
+let set_require_pattern_hook hook =
+  hook_state := { !hook_state with require_pattern_hook = hook }
+
+let set_obj_to_obj_hook hook =
+  hook_state := { !hook_state with obj_to_obj_hook = hook }
+
+let set_export_default_hook hook =
+  hook_state := { !hook_state with export_default_hook = hook }
 
 let reset_hooks () =
   hook_state := nop_hook_state
@@ -152,9 +194,6 @@ let dispatch_member_hook cx name loc this_t =
 let dispatch_call_hook cx name loc this_t =
   !hook_state.call_hook cx name loc this_t
 
-let dispatch_require_hook cx name loc =
-  !hook_state.require_hook cx name loc
-
 let dispatch_import_hook cx name loc =
   !hook_state.import_hook cx name loc
 
@@ -163,3 +202,18 @@ let dispatch_jsx_hook cx name loc this_t =
 
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
+
+let dispatch_class_member_decl_hook cx self name loc =
+  !hook_state.class_member_decl_hook cx self name loc
+
+let dispatch_obj_prop_decl_hook cx name loc =
+  !hook_state.obj_prop_decl_hook cx name loc
+
+let dispatch_require_pattern_hook loc =
+  !hook_state.require_pattern_hook loc
+
+let dispatch_obj_to_obj_hook cx t1 t2 =
+  !hook_state.obj_to_obj_hook cx t1 t2
+
+let dispatch_export_default_hook loc =
+  !hook_state.export_default_hook loc

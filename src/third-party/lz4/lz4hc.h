@@ -231,7 +231,7 @@ LZ4LIB_API LZ4_DEPRECATED("use LZ4_resetStreamHC() instead")  int   LZ4_resetStr
  * They should not be linked from DLL,
  * as there is no guarantee of API stability yet.
  * Prototypes will be promoted to "stable" status
- * after successfull usage in real-life scenarios.
+ * after successful usage in real-life scenarios.
  *************************************************/
 #ifdef LZ4_HC_STATIC_LINKING_ONLY   /* protection macro */
 #ifndef LZ4_HC_SLO_098092834

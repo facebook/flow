@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -20,9 +19,10 @@ let unix_socket sock_name =
         else
           Unix.(PF_UNIX, Unix.ADDR_UNIX sock_name) in
       let sock = Unix.socket domain Unix.SOCK_STREAM 0 in
-      let _ = Unix.setsockopt sock Unix.SO_REUSEADDR true in
-      let _ = Unix.bind sock addr in
-      let _ = Unix.listen sock 10 in
+      let () = Unix.set_close_on_exec sock in
+      let () = Unix.setsockopt sock Unix.SO_REUSEADDR true in
+      let () = Unix.bind sock addr in
+      let () = Unix.listen sock 10 in
       let () =
         match Unix.getsockname sock with
         | Unix.ADDR_UNIX _ -> ()

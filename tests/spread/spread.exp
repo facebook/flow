@@ -1,43 +1,260 @@
-Error: test3.js:8
-  8: var y: number = o.y;
-                     ^^^ string. This type is incompatible with
-  8: var y: number = o.y;
-            ^^^^^^ number
+Error --------------------------------------------------------------------------------------------------- exact.js:15:50
 
-Error: test3.js:9
-  9: var z: number = o.z;
-                     ^^^ string. This type is incompatible with
-  9: var z: number = o.z;
-            ^^^^^^ number
+Cannot determine the type of object literal [1] because it contains a spread of inexact object type [2]. Being inexact,
+object type [2] might be missing the types of some properties that are being copied. Perhaps you could make it exact?
+(`inexact-spread`)
 
-Error: test3.js:17
- 17: var t: boolean = s.y; // error, string or number
-                      ^^^ number. This type is incompatible with
- 17: var t: boolean = s.y; // error, string or number
-            ^^^^^^^ boolean
+   exact.js:15:50
+   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
+                                                        ^^^^^^^^^^^
 
-Error: test3.js:17
- 17: var t: boolean = s.y; // error, string or number
-                      ^^^ string. This type is incompatible with
- 17: var t: boolean = s.y; // error, string or number
-            ^^^^^^^ boolean
-
-Error: test6.js:10
- 10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-      ^ object literal. This type is incompatible with
- 10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `abc` is incompatible:
-     10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `abc`. Property not found in
-     10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-          ^ object literal
-
-Error: test7.js:6
-  6:     ({...x}: void); // error, Object
-          ^^^^^^ object literal. This type is incompatible with
-  6:     ({...x}: void); // error, Object
-                  ^^^^ undefined
+References:
+   exact.js:15:36
+   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   exact.js:13:20
+   13| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
+                          ^^^^^^^^^^^^^^^ [2]
 
 
-Found 6 errors
+Error ------------------------------------------------------------------------------------------------------ null.js:6:4
+
+Cannot get `empty.x` because property `x` is missing in object literal [1].
+
+   null.js:6:4
+   6|   (empty.x);
+         ^^^^^^^
+
+References:
+   null.js:5:17
+   5|   const empty = {...bar};
+                      ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test10.js:3:2
+
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
+
+   test10.js:3:2
+   3| (o.p: empty); // error: number ~> empty
+       ^^^
+
+References:
+   test10.js:2:14
+   2| var o = { p: 0, ...x };
+                   ^ [1]
+   test10.js:3:7
+   3| (o.p: empty); // error: number ~> empty
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test3.js:8:17
+
+Cannot assign `o.y` to `y` because string [1] is incompatible with number [2].
+
+   test3.js:8:17
+   8| var y: number = o.y;
+                      ^^^
+
+References:
+   test3.js:1:14
+   1| var p = { y: "" };
+                   ^^ [1]
+   test3.js:8:8
+   8| var y: number = o.y;
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test3.js:9:17
+
+Cannot assign `o.z` to `z` because string [1] is incompatible with number [2].
+
+   test3.js:9:17
+   9| var z: number = o.z;
+                      ^^^
+
+References:
+   test3.js:2:14
+   2| var q = { z: "" };
+                   ^^ [1]
+   test3.js:9:8
+   9| var z: number = o.z;
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test3.js:17:18
+
+Cannot assign `s.y` to `t` because:
+ - string [1] is incompatible with boolean [2].
+ - number [3] is incompatible with boolean [2].
+
+   test3.js:17:18
+   17| var t: boolean = s.y; // error, string or number
+                        ^^^
+
+References:
+   test3.js:1:14
+    1| var p = { y: "" };
+                    ^^ [1]
+   test3.js:17:8
+   17| var t: boolean = s.y; // error, string or number
+              ^^^^^^^ [2]
+   test3.js:12:14
+   12| var r = { y: 123 };
+                    ^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
+
+Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
+
+   test6.js:10:2
+   10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+        ^
+
+References:
+   test6.js:7:9
+               v
+    7| var p = {
+    8|   foo: 'bar'
+    9| };
+       ^ [1]
+   test6.js:10:5
+   10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test7.js:6:6
+
+Cannot cast object literal to undefined because object literal [1] is incompatible with undefined [2].
+
+   test7.js:6:6
+   6|     ({...x}: void); // error, Object
+           ^^^^^^ [1]
+
+References:
+   test7.js:6:14
+   6|     ({...x}: void); // error, Object
+                   ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
+
+Cannot cast object literal to object type because string [1] is incompatible with number [2] in property `q`.
+
+   test8.js:7:2
+    7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
+        ^^^^^^^^
+
+References:
+   test8.js:12:15
+   12| type B = { q: string };
+                     ^^^^^^ [1]
+   test8.js:7:28
+    7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
+                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
+
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `p`.
+
+   test8.js:8:2
+    8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
+        ^^^^^^^^
+
+References:
+   test8.js:11:15
+   11| type A = { p: number };
+                     ^^^^^^ [1]
+   test8.js:8:17
+    8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test9.js:5:2
+
+Cannot cast object literal to object type because a callable signature is missing in object literal [1] but exists in
+object type [2].
+
+   test9.js:5:2
+   5| ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   test9.js:5:17
+   5| ({ ...o_call }: { "$call": any }); // error: callable should not be copied
+                      ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test9.js:11:2
+
+Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in
+object type [2].
+
+   test9.js:11:2
+   11| ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+        ^^^^^^^^^^^^^^ [1]
+
+References:
+   test9.js:11:18
+   11| ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
+                        ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test9.js:12:2
+
+Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in
+object type [2].
+
+   test9.js:12:2
+   12| ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+        ^^^^^^^^^^^^^^ [1]
+
+References:
+   test9.js:12:18
+   12| ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied
+                        ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:6:10
+
+Cannot return `o` because inexact object literal [1] is incompatible with exact object type [2].
+
+   unsealed.js:6:10
+   6|   return o; // error, unsealed implies inexact
+               ^
+
+References:
+   unsealed.js:4:11
+   4|   var o = {};
+                ^^ [1]
+   unsealed.js:3:25
+   3| function foo1(b: bool): {| x?: number |} {
+                              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:25:4
+
+Cannot cast `b2.x` to string because:
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
+
+   unsealed.js:25:4
+   25|   (b2.x: string); // expected error: number ~/~> string
+          ^^^^
+
+References:
+   unsealed.js:9:31
+    9| function foo2(b: bool): { x?: number } {
+                                     ^^^^^^ [1]
+   unsealed.js:25:10
+   25|   (b2.x: string); // expected error: number ~/~> string
+                ^^^^^^ [2]
+   unsealed.js:16:18
+   16|   const a = { x: 42 };
+                        ^^ [3]
+
+
+
+Found 17 errors

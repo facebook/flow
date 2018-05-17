@@ -67,16 +67,21 @@
               "rest":null,
               "typeParameters":null
             },
+            "method":false,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"set"
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
-      "extends":[]
+      "extends":[],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[]

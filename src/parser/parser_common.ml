@@ -125,9 +125,6 @@ let identifier_name env =
   Eat.token env;
   loc, name
 
-let assert_identifier_name_is_type_identifier env (loc, name) =
-  if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType)
-
 (**
  * The abstract operation IsLabelledFunction
  *
@@ -142,8 +139,11 @@ let rec is_labelled_function = function
   | _ ->
     false
 
-let with_loc fn env =
-  let start_loc = Peek.loc env in
+let with_loc ?start_loc fn env =
+  let start_loc = match start_loc with
+  | Some x -> x
+  | None -> Peek.loc env
+  in
   let result = fn env in
   let loc = match last_loc env with
   | Some end_loc -> Loc.btwn start_loc end_loc

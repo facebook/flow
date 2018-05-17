@@ -97,11 +97,11 @@ module rec Parse : PARSER = struct
     | T_EXPORT -> Statement.export_declaration ~decorators env
     | T_IMPORT ->
         error_on_decorators env decorators;
-        let statement = match Peek.token ~i:1 env with
+        let statement = match Peek.ith_token ~i:1 env with
           | T_LPAREN -> Statement.expression env
           | _ -> Statement.import_declaration env in
         statement
-    | T_DECLARE when Peek.token ~i:1 env = T_EXPORT ->
+    | T_DECLARE when Peek.ith_token ~i:1 env = T_EXPORT ->
         error_on_decorators env decorators;
         Statement.declare_export_declaration env
     | _ -> statement_list_item env ~decorators
@@ -187,6 +187,7 @@ module rec Parse : PARSER = struct
     | T_RBRACKET
     | T_COMMA
     | T_PERIOD
+    | T_PLING_PERIOD
     | T_ARROW
     | T_IN
     | T_INSTANCEOF
@@ -210,10 +211,10 @@ module rec Parse : PARSER = struct
         let func = Declaration._function env in
         function_as_statement_error_at env (fst func);
         func
-    | T_LET when Peek.token ~i:1 env = T_LBRACKET ->
+    | T_LET when Peek.ith_token ~i:1 env = T_LBRACKET ->
         (* `let [foo]` is ambiguous: either a let binding pattern, or a
            member expression, so it is banned. *)
-        let loc = Loc.btwn (Peek.loc env) (Peek.loc ~i:1 env) in
+        let loc = Loc.btwn (Peek.loc env) (Peek.ith_loc ~i:1 env) in
         error_at env (loc, Parse_error.AmbiguousLetBracket);
         Statement.expression env (* recover as a member expression *)
     | _ when Peek.is_identifier env -> maybe_labeled env
@@ -296,14 +297,14 @@ module rec Parse : PARSER = struct
         then error env Error.UnexpectedTypeAnnotation;
         Expect.token env T_PLING
       end;
-      let typeAnnotation =
+      let annot =
         if Peek.token env = T_COLON
         then Some (Type.annotation env)
         else None in
       Ast.Pattern.Identifier.({
         name;
         optional;
-        typeAnnotation;
+        annot;
       })
 
     in fun env ?(no_optional=false) restricted_error ->
@@ -367,7 +368,7 @@ let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content file
   | T_NULL ->
     do_parse env Parse.expression fail
   | T_MINUS ->
-    (match Peek.token ~i:1 env with
+    (match Peek.ith_token ~i:1 env with
     | T_NUMBER _ ->
       do_parse env Parse.expression fail
     | _ ->

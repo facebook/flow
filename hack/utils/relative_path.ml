@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 open Reordered_argument_collections
 open Utils
 open String_utils
@@ -60,14 +59,38 @@ let suffix (p : t) = snd p
 
 let default = (Dummy, "")
 
+(* We could have simply used Marshal.to_string here, but this does slightly
+ * better on space usage. *)
+let storage_to_string (p, rest) = string_of_prefix p ^ "|" ^ rest
+
+let index_opt str ch =
+  try Some (String.index str ch)
+  with Not_found -> None
+
+let storage_of_string str =
+  match index_opt str '|' with
+  | Some idx ->
+      let (a, a') = (0, idx) in
+      let b = idx + 1 in
+      let b' = String.length str - b in
+      let prefix = String.sub str a a' in
+      let content = String.sub str b b' in
+      let prefix = begin match prefix with
+      | "root" -> Root
+      | "hhi" -> Hhi
+      | "tmp" -> Tmp
+      | "" -> Dummy
+      | _ -> failwith "invalid prefix"
+      end in
+      (prefix, content)
+  | None -> failwith "not a Relative_path.t"
+
 module S = struct
   type t = relative_path
 
   let compare = Pervasives.compare
 
-  (* We could have simply used Marshal.to_string here, but this does slightly
-   * better on space usage. *)
-  let to_string (p, rest) = string_of_prefix p ^ "|" ^ rest
+  let to_string = storage_to_string
 end
 
 let to_absolute (p, rest) = path_of_prefix p ^ rest
@@ -90,6 +113,28 @@ let create prefix s =
     assert_false_log_backtrace None;
   end;
   prefix, String.sub s prefix_len (String.length s - prefix_len)
+
+let create_detect_prefix s =
+  let file_prefix =
+    [Root; Hhi; Tmp]
+    |> List.find ~f:(fun prefix -> String_utils.string_starts_with s (path_of_prefix prefix))
+    |> begin fun x ->
+      match x with
+      | Some prefix -> prefix
+      | None -> Dummy
+    end
+  in
+  create file_prefix s
+
+(* Strips the root and relativizes the file if possible, otherwise returns
+  original string *)
+let strip_root_if_possible s =
+  let prefix_s = path_of_prefix Root in
+  let prefix_len = String.length prefix_s in
+  if not (string_starts_with s prefix_s)
+  then s else
+  String.sub s prefix_len (String.length s - prefix_len)
+
 
 let from_root (s : string) : t = Root, s
 

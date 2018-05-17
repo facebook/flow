@@ -157,6 +157,8 @@ type parse_options = {
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
+  esproposal_optional_chaining: bool;
+  esproposal_nullish_coalescing: bool;
   types: bool;
   use_strict: bool;
 }
@@ -165,6 +167,8 @@ let default_parse_options = {
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
   esproposal_export_star_as = false;
+  esproposal_optional_chaining = false;
+  esproposal_nullish_coalescing = false;
   types = true;
   use_strict = false;
 }
@@ -337,7 +341,7 @@ let add_used_private env name loc =
   | (declared, used)::xs -> env.privates := ((declared, (name, loc) :: used) :: xs)
 
 (* lookahead: *)
-let lookahead ?(i=0) env =
+let lookahead ~i env =
   assert (i < maximum_lookahead);
   Lookahead.peek !(env.lookahead) i
 
@@ -452,8 +456,9 @@ let is_reserved str_val =
 
 let is_reserved_type str_val =
   match str_val with
-  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null"
-  | "number" | "static" | "string" | "true" | "typeof" | "void" -> true
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
+  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends"
+    -> true
   | _ -> false
 
 (* Answer questions about what comes next *)
@@ -461,11 +466,17 @@ module Peek = struct
   open Loc
   open Token
 
-  let token ?(i=0) env = Lex_result.token (lookahead ~i env)
-  let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
-  let errors ?(i=0) env = Lex_result.errors (lookahead ~i env)
-  let comments ?(i=0) env = Lex_result.comments (lookahead ~i env)
-  let lex_env ?(i=0) env = Lookahead.lex_env !(env.lookahead) i
+  let ith_token ~i env = Lex_result.token (lookahead ~i env)
+  let ith_loc ~i env = Lex_result.loc (lookahead ~i env)
+  let ith_errors ~i env = Lex_result.errors (lookahead ~i env)
+  let ith_comments ~i env = Lex_result.comments (lookahead ~i env)
+  let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
+
+  let token env = ith_token ~i:0 env
+  let loc env = ith_loc ~i:0 env
+  let errors env = ith_errors ~i:0 env
+  let comments env = ith_comments ~i:0 env
+  let lex_env env = ith_lex_env ~i:0 env
 
   (* True if there is a line terminator before the next token *)
   let is_line_terminator env =
@@ -480,10 +491,8 @@ module Peek = struct
     | T_SEMICOLON -> false
     | _ -> is_line_terminator env
 
-  (* This returns true if the next token is identifier-ish (even if it is an
-   * error) *)
-  let is_identifier ?(i=0) env =
-    match token ~i env with
+  let ith_is_identifier ~i env =
+    match ith_token ~i env with
     | t when token_is_strict_reserved t -> true
     | t when token_is_future_reserved t -> true
     | t when token_is_restricted t -> true
@@ -498,10 +507,10 @@ module Peek = struct
     | T_IDENTIFIER _ -> true
     | _ -> false
 
-  let is_type_identifier ?(i=0) env =
+  let ith_is_type_identifier ~i env =
     match lex_mode env with
     | Lex_mode.TYPE ->
-      begin match token ~i env with
+      begin match ith_token ~i env with
       | T_IDENTIFIER _ -> true
       | _ -> false
       end
@@ -510,7 +519,7 @@ module Peek = struct
          example, when deciding whether a `type` token is an identifier or the
          start of a type declaration, based on whether the following token
          `is_type_identifier`. *)
-      begin match token ~i env with
+      begin match ith_token ~i env with
       | T_IDENTIFIER { raw; _ } when is_reserved_type raw -> false
 
       (* reserved type identifiers, but these don't appear in NORMAL mode *)
@@ -610,6 +619,8 @@ module Peek = struct
       | T_MINUS_ASSIGN
       | T_PLUS_ASSIGN
       | T_ASSIGN
+      | T_PLING_PERIOD
+      | T_PLING_PLING
       | T_PLING
       | T_COLON
       | T_OR
@@ -658,21 +669,23 @@ module Peek = struct
     | Lex_mode.TEMPLATE
     | Lex_mode.REGEXP -> false
 
-  let is_identifier_name ?(i=0) env =
-    is_identifier ~i env || is_type_identifier ~i env
+  let ith_is_identifier_name ~i env =
+    ith_is_identifier ~i env || ith_is_type_identifier ~i env
 
-  let is_literal_property_name ?(i=0) env =
-    is_identifier ~i env || match token ~i env with
-    | T_STRING _
-    | T_NUMBER _ -> true
-    | _ -> false
+  (* This returns true if the next token is identifier-ish (even if it is an
+     error) *)
+  let is_identifier env = ith_is_identifier ~i:0 env
 
-  let is_function ?(i=0) env =
-    token ~i env = T_FUNCTION ||
-    (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
+  let is_identifier_name env = ith_is_identifier_name ~i:0 env
 
-  let is_class ?(i=0) env =
-    match token ~i env with
+  let is_type_identifier env = ith_is_type_identifier ~i:0 env
+
+  let is_function env =
+    token env = T_FUNCTION ||
+    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION)
+
+  let is_class env =
+    match token env with
     | T_CLASS
     | T_AT -> true
     | _ -> false
@@ -750,7 +763,7 @@ module Eat = struct
 
     error_list env (Peek.errors env);
     comment_list env (Peek.comments env);
-    env.last_lex_result := Some (lookahead env);
+    env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
 
@@ -870,4 +883,9 @@ module Try = struct
     let saved_state = save_state env in
     try success env saved_state (parse env)
     with Rollback -> rollback_state env saved_state
+
+  let or_else env ~fallback parse =
+    match to_parse env parse with
+    | ParsedSuccessfully result -> result
+    | FailedToParse -> fallback
 end

@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -21,6 +20,7 @@ type kind =
 type 'a t = {
   name:  string;
   type_: kind;
+  is_declaration: bool;
   (* Span of the symbol itself *)
   pos: 'a Pos.pos;
 }
@@ -38,3 +38,11 @@ let kind_to_string = function
   | ClassConst _ -> "member_const"
   | Typeconst _ -> "typeconst"
   | GConst -> "global_const"
+
+let enclosing_class occurrence =
+  match occurrence.type_ with
+  | Method (c, _)
+  | Property (c, _)
+  | ClassConst (c, _)
+  | Typeconst (c, _) -> Some c
+  | _ -> None

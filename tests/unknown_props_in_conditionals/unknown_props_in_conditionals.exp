@@ -1,0 +1,147 @@
+Error ---------------------------------------------------------------------------------------------------- cycle1.js:5:5
+
+Property `q` is missing in object literal [1].
+
+   cycle1.js:5:5
+   5| if (o_loop.q) {} // error: o_loop.q does not exist (NB: this is `o` exported from here)
+          ^^^^^^^^
+
+References:
+   cycle1.js:7:16
+   7| export var o = { p: 0 };
+                     ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- cycle2.js:5:5
+
+Property `q` is missing in object literal [1].
+
+   cycle2.js:5:5
+   5| if (o.q) {} // error: o.q does not exist
+          ^^^
+
+References:
+   cycle1.js:7:16
+   7| export var o = { p: 0 };
+                     ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- dependent.js:5:5
+
+Property `q` is missing in object literal [1].
+
+   dependent.js:5:5
+   5| if (o.q) {} // error, o.q not declared
+          ^^^
+
+References:
+   dependency.js:3:16
+   3| export var o = { p: 0 };
+                     ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:11
+
+Property `thisPropDoesNotExist` is missing in mixed [1].
+
+   test.js:18:11
+   18| if (mixed.thisPropDoesNotExist) {} // Error
+                 ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:3:20
+    3| declare var mixed: mixed;
+                          ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:5
+
+Property `thisPropDoesNotExist` is missing in object type [1].
+
+   test.js:29:5
+   29| if (inexactObject.thisPropDoesNotExist) {} // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:8:28
+    8| declare var inexactObject: { x: string };
+                                  ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:5
+
+Property `thisPropDoesNotExist` is missing in object type [1].
+
+   test.js:32:5
+   32| if (exactObject.thisPropDoesNotExist) {} // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:9:26
+    9| declare var exactObject: {| x: string |};
+                                ^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:5
+
+Property `thisPropDoesNotExist` is missing in object type [1].
+
+   test.js:35:5
+   35| if (unionOfObjects.thisPropDoesNotExist) {} // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:11:29
+   11| declare var unionOfObjects: { x: string } | { y: string };
+                                   ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:5
+
+All branches are incompatible:
+ - Either property `thisPropDoesNotExist` is missing in object type [1].
+ - Or property `thisPropDoesNotExist` is missing in object type [2].
+
+   test.js:40:5
+   40| if (intersectionOfObjects.thisPropDoesNotExist) {} // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:12:36
+   12| declare var intersectionOfObjects: { x: string } & { y: string };
+                                          ^^^^^^^^^^^^^ [1]
+   test.js:12:52
+   12| declare var intersectionOfObjects: { x: string } & { y: string };
+                                                          ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:5
+
+Property `thisPropDoesNotExist` is missing in statics of `myClass` [1].
+
+   test.js:45:5
+   45| if (myClass.thisPropDoesNotExist) {} // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:14:7
+   14| class myClass {}
+             ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:5
+
+Property `thisPropDoesNotExist` is missing in `myClass` [1].
+
+   test.js:47:5
+   47| if (instance.thisPropDoesNotExist) {} // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:15:23
+   15| declare var instance: myClass;
+                             ^^^^^^^ [1]
+
+
+
+Found 10 errors

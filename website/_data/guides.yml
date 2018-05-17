@@ -58,6 +58,7 @@
     - path: "/docs/lang/width-subtyping/"
 
     - path: "/docs/lang/refinements/"
+    - path: "/docs/lang/lazy-modes/"
     # - path: "/docs/lang/sealing/"
 
 - id: cli
@@ -136,3 +137,7 @@
     - path: "/docs/linting/flowlint-comments/"
     - path: "/docs/linting/ide-integration/"
     - path: "/docs/linting/rule-reference/"
+
+- id: strict
+  pages:
+    - path: "/docs/strict/"

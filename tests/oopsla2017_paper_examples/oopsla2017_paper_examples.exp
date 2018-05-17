@@ -1,65 +1,72 @@
-Error: example1.js:6
-  6: pipe("hello", null); // error
-     ^^^^^^^^^^^^^^^^^^^ function call
-  3: function pipe(x, f) { f(x); }
-                           ^^^^ function call. Function cannot be called on possibly null value
-  3: function pipe(x, f) { f(x); }
-                           ^ null
+Error ------------------------------------------------------------------------------------------------- example1.js:3:23
 
-Error: example5.js:12
- 12:   return x.kind; // error
-                ^^^^ property `kind`. Property cannot be accessed on possibly null value
- 12:   return x.kind; // error
-              ^ null
+Cannot call `f` because null [1] is not a function.
 
-Error: example6.js:9
-  9: onString(id);
-              ^^ function. Could not decide which case to select
-  7: function onString(f: Ambiguous) { f(""); }
-                          ^^^^^^^^^ union type
-  Case 1 may work:
-    5: type Ambiguous = IDString | IDNullableString;
-                        ^^^^^^^^ IDString
-  But if it doesn't, case 2 looks promising too:
-    5: type Ambiguous = IDString | IDNullableString;
-                                   ^^^^^^^^^^^^^^^^ IDNullableString
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-    8: let id = (x) => x;
-                       ^ return
-    8: let id = (x) => x;
-                 ^ parameter `x`
+   example1.js:3:23
+   3| function pipe(x, f) { f(x); }
+                            ^^^^
 
-Error: example7.js:14
- 14: stringIsString({ type: "string", val: 0 }); // error
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  9: function stringIsString(x: Correlated) {
-                                ^^^^^^^^^^ union: object type(s)
-  Member 1:
-    6:   | { type: "string", val: string }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   14: stringIsString({ type: "string", val: 0 }); // error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    6:   | { type: "string", val: string }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `val` is incompatible:
-       14: stringIsString({ type: "string", val: 0 }); // error
-                                                 ^ number. This type is incompatible with
-        6:   | { type: "string", val: string }
-                                      ^^^^^^ string
-  Member 2:
-    7:   | { type: "number", val: number };
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Error:
-   14: stringIsString({ type: "string", val: 0 }); // error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    7:   | { type: "number", val: number };
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-    Property `type` is incompatible:
-       14: stringIsString({ type: "string", val: 0 }); // error
-                                  ^^^^^^^^ string. Expected string literal `number`, got `string` instead
-        7:   | { type: "number", val: number };
-                       ^^^^^^^^ string literal `number`
+References:
+   example1.js:6:15
+   6| pipe("hello", null); // error
+                    ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ example5.js:12:10
+
+Cannot get `x.kind` because property `kind` is missing in null [1].
+
+   example5.js:12:10
+   12|   return x.kind; // error
+                ^^^^^^
+
+References:
+   example5.js:9:27
+    9|   let reset = () => { x = null; }
+                                 ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- example6.js:9:10
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3] or to `x` [4].
+
+   example6.js:9:10
+   9| onString(id);
+               ^^
+
+References:
+   example6.js:5:18
+   5| type Ambiguous = IDString | IDNullableString;
+                       ^^^^^^^^ [1]
+   example6.js:5:29
+   5| type Ambiguous = IDString | IDNullableString;
+                                  ^^^^^^^^^^^^^^^^ [2]
+   example6.js:8:17
+   8| let id = (x) => x;
+                      ^ [3]
+   example6.js:8:11
+   8| let id = (x) => x;
+                ^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------ example7.js:14:16
+
+Cannot call `stringIsString` with object literal bound to `x` because number [1] is incompatible with string [2] in
+property `val`.
+
+   example7.js:14:16
+   14| stringIsString({ type: "string", val: 0 }); // error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   example7.js:14:39
+   14| stringIsString({ type: "string", val: 0 }); // error
+                                             ^ [1]
+   example7.js:6:28
+    6|   | { type: "string", val: string }
+                                  ^^^^^^ [2]
+
 
 
 Found 4 errors

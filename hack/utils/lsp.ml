@@ -2,9 +2,8 @@
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
 *)
 
@@ -41,6 +40,9 @@
  *   entirely.
 *)
 
+type lsp_id =
+  | NumberId of int
+  | StringId of string
 
 type documentUri = string
 
@@ -151,7 +153,7 @@ end
 
 (* A document filter denotes a document through properties like language,
    schema or pattern. E.g. language:"typescript",scheme:"file"
-   or langauge:"json",pattern:"**/package.json" *)
+   or language:"json",pattern:"**/package.json" *)
 module DocumentFilter = struct
   type t = {
     language: string option;  (* a language id, like "typescript" *)
@@ -212,7 +214,7 @@ module CancelRequest = struct
   type params = cancelParams
 
   and cancelParams = {
-    id: string;  (* the request id to cancel *)
+    id: lsp_id;  (* the request id to cancel *)
   }
 end
 
@@ -222,7 +224,7 @@ module Initialize = struct
     processId: int option;  (* pid of parent process *)
     rootPath: string option;  (* deprecated *)
     rootUri: documentUri option;  (* the root URI of the workspace *)
-    (* omitted: initiaization_options *)
+    initializationOptions: initializationOptions;
     client_capabilities: client_capabilities;  (* "capabilities" over wire *)
     trace: trace;  (* the initial trace setting, default="off" *)
   }
@@ -240,10 +242,22 @@ module Initialize = struct
     | Messages
     | Verbose
 
+  (** Although all of the values in here are technically optional, we don't
+      represent any of them as options. When working with optional
+      configuration, it's very important to track where optional values get
+      their defaults from in order to avoid some costly confusion later.
+      Instead of having the defaults implicitly defined by `match` statements
+      scattered far and wide throughout the code, we can use the type system to
+      enforce that they're only set in one easily-greppable place. *)
+  and initializationOptions = {
+    use_textedit_autocomplete: bool;
+  }
+
   and client_capabilities = {
     workspace: workspaceClientCapabilities;
     textDocument: textDocumentClientCapabilities;
     window: windowClientCapabilities;
+    telemetry: telemetryClientCapabilities;
     (* omitted: experimental *)
   }
 
@@ -283,6 +297,10 @@ module Initialize = struct
   and windowClientCapabilities = {
     progress: bool;  (* Nuclide-specific: client supports window/progress *)
     actionRequired: bool;  (* Nuclide-specific: client supports window/actionRequired *)
+  }
+
+  and telemetryClientCapabilities = {
+    connectionStatus: bool;  (* Nuclide-specific: client supports telemetry/connectionStatus *)
   }
 
   (* What capabilities the server provides *)
@@ -358,7 +376,6 @@ end
 
 (* Shutdown request, method="shutdown" *)
 module Shutdown = struct
-  type result = unit
 end
 
 (* Exit notification, method="exit" *)
@@ -380,7 +397,9 @@ end
 module Hover = struct
   type params = TextDocumentPositionParams.t
 
-  and result = {
+  and result = hoverResult option
+
+  and hoverResult = {
     contents: markedString list; (* wire: either a single one or an array *)
     range: range option;
   }
@@ -398,11 +417,16 @@ module PublishDiagnostics = struct
   and diagnostic = {
     range: range;  (* the range at which the message applies *)
     severity: diagnosticSeverity option;  (* if omitted, client decides *)
-    code: int option;  (* the diagnostic's code. Wire: can be string too *)
+    code: diagnosticCode;  (* the diagnostic's code. *)
     source: string option;  (* human-readable string, eg. typescript/lint *)
     message: string;  (* the diagnostic's message *)
     relatedLocations: relatedLocation list;
   }
+
+  and diagnosticCode =
+    | IntCode of int
+    | StringCode of string
+    | NoCode
 
   and diagnosticSeverity =
     | Error (* 1 *)
@@ -488,7 +512,7 @@ module Completion = struct
     sortText: string option;  (* used for sorting; if absent, uses label *)
     filterText: string option;  (* used for filtering; if absent, uses label *)
     insertText: string option;  (* used for inserting; if absent, uses label *)
-    insertTextFormat: insertTextFormat;
+    insertTextFormat: insertTextFormat option;
     textEdits: TextEdit.t list;  (* wire: split into hd and tl *)
     command: Command.t option;  (* if present, is executed after completion *)
     data: Hh_json.json option;
@@ -514,9 +538,68 @@ module Completion = struct
     | File (* 17 *)
     | Reference (* 18 *)
 
-  and insertTextFormat =
+    (** Keep this in sync with `int_of_completionItemKind`. *)
+    and insertTextFormat =
     | PlainText (* 1 *)  (* the insertText/textEdits are just plain strings *)
     | SnippetFormat (* 2 *)  (* wire: just "Snippet" *)
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with completionItemKind_of_int_opt. *)
+  let int_of_completionItemKind = function
+    | Text -> 1
+    | Method -> 2
+    | Function -> 3
+    | Constructor -> 4
+    | Field -> 5
+    | Variable -> 6
+    | Class -> 7
+    | Interface -> 8
+    | Module -> 9
+    | Property -> 10
+    | Unit -> 11
+    | Value -> 12
+    | Enum -> 13
+    | Keyword -> 14
+    | Snippet -> 15
+    | Color -> 16
+    | File -> 17
+    | Reference -> 18
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with int_of_completionItemKind. *)
+  let completionItemKind_of_int_opt = function
+    | 1 -> Some Text
+    | 2 -> Some Method
+    | 3 -> Some Function
+    | 4 -> Some Constructor
+    | 5 -> Some Field
+    | 6 -> Some Variable
+    | 7 -> Some Class
+    | 8 -> Some Interface
+    | 9 -> Some Module
+    | 10 -> Some Property
+    | 11 -> Some Unit
+    | 12 -> Some Value
+    | 13 -> Some Enum
+    | 14 -> Some Keyword
+    | 15 -> Some Snippet
+    | 16 -> Some Color
+    | 17 -> Some File
+    | 18 -> Some Reference
+    | _ -> None
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with insertFormat_of_int_opt. *)
+  let int_of_insertFormat = function
+    | PlainText -> 1
+    | SnippetFormat -> 2
+
+(** Once we get better PPX support we can use [@@deriving enum].
+    Keep in sync with int_of_insertFormat. *)
+  let insertFormat_of_int_opt = function
+    | 1 -> Some PlainText
+    | 2 -> Some SnippetFormat
+    | _ -> None
 end
 
 
@@ -573,7 +656,7 @@ end
 
 
 (* Document Highlights request, method="textDocument/documentHighlight" *)
-module DocumentHighlights = struct
+module DocumentHighlight = struct
   type params = TextDocumentPositionParams.t
 
   and result = documentHighlight list
@@ -659,6 +742,31 @@ module DocumentOnTypeFormatting = struct
 end
 
 
+(* Document Signature Help request, method="textDocument/signatureHelp" *)
+module SignatureHelp = struct
+  type params = TextDocumentPositionParams.t
+
+  and result = t option
+
+  and t = {
+    signatures: signature_information list;
+    activeSignature: int;
+    activeParameter: int;
+  }
+
+  and signature_information = {
+    siginfo_label: string;
+    siginfo_documentation: string option;
+    parameters: parameter_information list;
+  }
+
+  and parameter_information = {
+    parinfo_label: string;
+    parinfo_documentation: string option;
+  }
+end
+
+
 (* LogMessage notification, method="window/logMessage" *)
 module LogMessage = struct
   type params = logMessageParams
@@ -683,9 +791,11 @@ end
 
 (* ShowMessage request, method="window/showMessageRequest" *)
 module ShowMessageRequest = struct
-  type t = Some of {cancel: unit -> unit;} | None
+  type t = Some of {id: lsp_id;} | None
 
   and params = showMessageRequestParams
+
+  and result = messageActionItem option
 
   and showMessageRequestParams = {
     type_: MessageType.t;
@@ -730,6 +840,24 @@ module ActionRequired = struct
 end
 
 
+(* ConnectionStatus notification, method="telemetry/connectionStatus" *)
+module ConnectionStatus = struct
+  type params = connectionStatusParams
+
+  and connectionStatusParams = {
+    isConnected: bool;
+  }
+end
+
+
+(* Module for dynamic view, method="workspace/toggleTypeCoverage" *)
+module ToggleTypeCoverage = struct
+  type params = toggleTypeCoverageParams
+  and toggleTypeCoverageParams = {
+    toggle: bool;
+  }
+end
+
 (* ErrorResponse *)
 module Error = struct
   (* Defined by JSON-RPC. *)
@@ -746,3 +874,85 @@ module Error = struct
   (* Defined by the protocol. *)
   exception RequestCancelled of string (* -32800 *)
 end
+
+
+(**
+ * Here are gathered-up ADTs for all the messages we handle
+*)
+
+type lsp_request =
+  | InitializeRequest of Initialize.params
+  | ShutdownRequest
+  | HoverRequest of Hover.params
+  | DefinitionRequest of Definition.params
+  | CompletionRequest of Completion.params
+  | CompletionItemResolveRequest of CompletionItemResolve.params
+  | WorkspaceSymbolRequest of WorkspaceSymbol.params
+  | DocumentSymbolRequest of DocumentSymbol.params
+  | FindReferencesRequest of FindReferences.params
+  | DocumentHighlightRequest of DocumentHighlight.params
+  | TypeCoverageRequest of TypeCoverage.params
+  | DocumentFormattingRequest of DocumentFormatting.params
+  | DocumentRangeFormattingRequest of DocumentRangeFormatting.params
+  | DocumentOnTypeFormattingRequest of DocumentOnTypeFormatting.params
+  | ShowMessageRequestRequest of ShowMessageRequest.params
+  | RageRequest
+
+type lsp_result =
+  | InitializeResult of Initialize.result
+  | ShutdownResult
+  | HoverResult of Hover.result
+  | DefinitionResult of Definition.result
+  | CompletionResult of Completion.result
+  | CompletionItemResolveResult of CompletionItemResolve.result
+  | WorkspaceSymbolResult of WorkspaceSymbol.result
+  | DocumentSymbolResult of DocumentSymbol.result
+  | FindReferencesResult of FindReferences.result
+  | DocumentHighlightResult of DocumentHighlight.result
+  | TypeCoverageResult of TypeCoverage.result
+  | DocumentFormattingResult of DocumentFormatting.result
+  | DocumentRangeFormattingResult of DocumentRangeFormatting.result
+  | DocumentOnTypeFormattingResult of DocumentOnTypeFormatting.result
+  | ShowMessageRequestResult of ShowMessageRequest.result
+  | RageResult of Rage.result
+  | ErrorResult of exn * string
+
+type lsp_notification =
+  | ExitNotification
+  | CancelRequestNotification of CancelRequest.params
+  | PublishDiagnosticsNotification of PublishDiagnostics.params
+  | DidOpenNotification of DidOpen.params
+  | DidCloseNotification of DidClose.params
+  | DidSaveNotification of DidSave.params
+  | DidChangeNotification of DidChange.params
+  | LogMessageNotification of LogMessage.params
+  | ShowMessageNotification of ShowMessage.params
+  | ProgressNotification of Progress.params
+  | ActionRequiredNotification of ActionRequired.params
+  | ConnectionStatusNotification of ConnectionStatus.params
+
+type lsp_message =
+  | RequestMessage of lsp_id * lsp_request
+  | ResponseMessage of lsp_id * lsp_result
+  | NotificationMessage of lsp_notification
+
+type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
+
+and 'a lsp_error_handler = (exn * string) -> 'a -> 'a
+
+and 'a lsp_result_handler =
+  | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
+
+module IdKey = struct
+  type t = lsp_id
+
+  let compare (x: t) (y:t) =
+    match x, y with
+    | NumberId x, NumberId y -> x - y
+    | NumberId _, StringId _ -> -1
+    | StringId x, StringId y -> String.compare x y
+    | StringId _, NumberId _ -> 1
+end
+
+module IdSet = Set.Make (IdKey)
+module IdMap = MyMap.Make (IdKey)

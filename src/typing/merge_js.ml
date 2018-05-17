@@ -5,64 +5,88 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module RequireMap = MyMap.Make (struct
+  (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
+  type t = string * File_key.t
+
+  let compare (r1, f1) (r2, f2) =
+    match String.compare r1 r2 with
+    | 0 -> File_key.compare f1 f2
+    | n -> n
+end)
+
 module FilenameMap = Utils_js.FilenameMap
+module LocSet = Utils_js.LocSet
 
 module Reqs = struct
-  type impl = File_key.t * string * string * File_key.t
-  type dep_impl = Context.t * string * string * File_key.t
-  type unchecked = string * Loc.t * File_key.t
-  type res = string * Loc.t * string * File_key.t
-  type decl = string * Loc.t * Modulename.t * File_key.t
+  type impl = LocSet.t
+  type dep_impl = Context.sig_t * LocSet.t
+  type unchecked = LocSet.t
+  type res = LocSet.t
+  type decl = LocSet.t * Modulename.t
   type t = {
-    impls: impl list;
-    dep_impls: dep_impl list;
-    unchecked: unchecked list;
-    res: res list;
-    decls: decl list;
+    impls: impl RequireMap.t;
+    dep_impls: dep_impl RequireMap.t;
+    unchecked: unchecked RequireMap.t;
+    res: res RequireMap.t;
+    decls: decl RequireMap.t;
   }
 
   let empty = {
-    impls = [];
-    dep_impls = [];
-    unchecked = [];
-    res = [];
-    decls = [];
+    impls = RequireMap.empty;
+    dep_impls = RequireMap.empty;
+    unchecked = RequireMap.empty;
+    res = RequireMap.empty;
+    decls = RequireMap.empty;
   }
 
-  let add_impl impl reqs =
-    { reqs with impls = impl::reqs.impls }
+  let add_impl require requirer require_locs reqs =
+    let impls = RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.impls in
+    { reqs with impls }
 
-  let add_dep_impl dep_impl reqs =
-    { reqs with dep_impls = dep_impl::reqs.dep_impls }
+  let add_dep_impl =
+    let combine (from_cx, locs1) (_, locs2) = from_cx, LocSet.union locs1 locs2 in
+    fun require requirer (from_cx, require_locs) reqs ->
+      let dep_impls =
+        RequireMap.add ~combine (require, requirer) (from_cx, require_locs) reqs.dep_impls
+      in
+      { reqs with dep_impls }
 
-  let add_unchecked unchecked reqs =
-    { reqs with unchecked = unchecked::reqs.unchecked }
+  let add_unchecked require requirer require_locs reqs =
+    let unchecked =
+      RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.unchecked
+    in
+    { reqs with unchecked }
 
-  let add_res res reqs =
-    { reqs with res = res::reqs.res }
+  let add_res require requirer require_locs reqs =
+    let res = RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.res in
+    { reqs with res }
 
-  let add_decl decl reqs =
-    { reqs with decls = decl::reqs.decls }
+  let add_decl =
+    let combine (locs1, modulename) (locs2, _) = LocSet.union locs1 locs2, modulename in
+    fun require requirer (require_locs, modulename) reqs ->
+    let decls = RequireMap.add ~combine (require, requirer) (require_locs, modulename) reqs.decls in
+    { reqs with decls }
 end
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
-  let from_t = Flow_js.lookup_module master_cx Files.lib_module_ref in
-  let to_t = Flow_js.lookup_module cx_to Files.lib_module_ref in
+  let from_t = Context.find_module_sig master_cx Files.lib_module_ref in
+  let to_t = Context.find_module cx_to Files.lib_module_ref in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
-  let from_t = Flow_js.lookup_module cx_from m in
-  let to_t = Context.find_require cx_to r in
+let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
+  let from_t = Context.find_module_sig cx_from m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Create the export of a resource file on the fly and connect it to its import
    in cxs_to. This happens in some arbitrary cx, so cx_to should have already
    been copied to cx. *)
-let explicit_res_require_strict cx (r, loc, f, cx_to) =
+let explicit_res_require_strict cx (loc, f, cx_to) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -72,7 +96,7 @@ let explicit_res_require_strict cx (r, loc, f, cx_to) =
      unchecked files: we create the export (`any`) on the fly instead of writing
      / reading it to / from the context of each unchecked file. *)
   let from_t = Import_export.mk_resource_module_t cx loc f in
-  let to_t = Context.find_require cx_to r in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect a export of a declared module to its import in cxs_to. This happens
@@ -91,7 +115,7 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
     (Type.Strict reason) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect exports of an unchecked module to its import in cx_to. Note that we
@@ -105,16 +129,16 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   let m_name = Reason.internal_module_name m in
   let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
-    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
+    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t), None)) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
   let add_error ~loc ~null_loc kind falsy_loc =
     let msg = Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc } in
-    Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) msg
+    Flow_error.error_of_msg ~trace_reasons:[] ~source_file:(Context.file cx) msg
     |> Context.add_error cx
   in
 
@@ -142,33 +166,45 @@ let detect_sketchy_null_checks cx =
 
   Utils_js.LocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
+let detect_test_prop_misses cx =
+  let misses = Context.test_prop_get_never_hit cx in
+  List.iter (fun (name, reasons, use_op) ->
+    Flow_js.add_output cx (Flow_error.EPropNotFound (name, reasons, use_op))
+  ) misses
+
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
-  let local_metadata = metadata.local_metadata in
+  let metadata =
+    let jsx = match Docblock.jsx docblock_info with
+    | Some (Docblock.Jsx_pragma (expr, jsx_expr)) -> Options.Jsx_pragma (expr, jsx_expr)
+    | Some Docblock.Csx_pragma -> Options.Jsx_csx
+    | None -> Options.Jsx_react
+    in
+    { metadata with jsx }
+  in
 
-  let local_metadata = { local_metadata with jsx = Docblock.jsx docblock_info } in
-
-  let local_metadata = match Docblock.flow docblock_info with
-  | None -> local_metadata
-  | Some Docblock.OptIn -> { local_metadata with checked = true; }
-  | Some Docblock.OptInStrict -> { local_metadata with checked = true; strict = true; }
-  | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
+  let metadata = match Docblock.flow docblock_info with
+  | None -> metadata
+  | Some Docblock.OptIn -> { metadata with checked = true; }
+  | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true; }
+  | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true; }
+  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
      currently no scenarios where we'd change checked = true to false. in the
      future, there may be a case where checked defaults to true (but is not
      forced to be true ala --all), but for now we do *not* want to force
      checked = false here. *)
-  | Some Docblock.OptOut -> local_metadata
+  | Some Docblock.OptOut -> metadata
   in
 
-  let local_metadata = match Docblock.preventMunge docblock_info with
-  | Some value -> { local_metadata with munge_underscores = not value; }
-  | None -> local_metadata
+  let metadata = match Docblock.preventMunge docblock_info with
+  | Some value -> { metadata with munge_underscores = not value; }
+  | None -> metadata
   in
 
-  { metadata with local_metadata }
+  metadata
 
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
@@ -205,95 +241,110 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 *)
 let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
   ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
-  component reqs dep_cxs master_cx =
+  component reqs dep_cxs (master_cx: Context.sig_t) =
 
-  let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
-    let ast = get_ast_unsafe filename in
+  let sig_cx = Context.make_sig () in
+  let need_merge_master_cx = ref true in
+
+  let init_gc_state = if do_gc then Some (Gc_js.init ~master_cx) else None in
+
+  let rev_cxs, impl_cxs, _ = Nel.fold_left (fun (cxs, impl_cxs, gc_state) filename ->
+    (* create cx *)
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
+    let module_ref = Files.module_ref filename in
+    let cx = Context.make sig_cx metadata filename module_ref in
+
+    (* create builtins *)
+    if !need_merge_master_cx then (
+      need_merge_master_cx := false;
+      Flow_js.mk_builtins cx;
+      Context.merge_into sig_cx master_cx;
+      implicit_require_strict cx master_cx cx
+    );
+
+    (* local inference *)
+    let ast = get_ast_unsafe filename in
     let lint_severities =
-      if metadata.Context.local_metadata.Context.strict
+      if metadata.Context.strict || metadata.Context.strict_local
       then StrictModeSettings.fold
         (fun lint_kind lint_severities ->
           LintSettings.set_value lint_kind (Severity.Err, None) lint_severities
         ) strict_mode lint_severities
       else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
-    let module_ref = Files.module_ref filename in
-    let cx = Flow_js.fresh_context metadata filename module_ref in
-    Context.merge_into cx master_cx;
-    implicit_require_strict cx master_cx cx;
     Type_inference_js.infer_ast cx filename ast
       ~lint_severities ~file_sig;
-    if do_gc then Gc_js.do_gc ~master_cx cx;
-    cx::cxs, FilenameMap.add filename cx impl_cxs
-  ) ([], FilenameMap.empty) component in
+
+    let gc_state = Option.map gc_state Gc_js.(fun gc_state ->
+      let gc_state = mark cx gc_state in
+      sweep ~master_cx cx gc_state;
+      gc_state
+    ) in
+
+    cx::cxs, FilenameMap.add filename cx impl_cxs, gc_state
+  ) ([], FilenameMap.empty, init_gc_state) component in
   let cxs = List.rev rev_cxs in
 
   let cx, other_cxs = List.hd cxs, List.tl cxs in
 
   Flow_js.Cache.clear();
 
-  dep_cxs |> List.iter (Context.merge_into cx);
-  other_cxs |> List.iter (Context.merge_into cx);
+  dep_cxs |> List.iter (Context.merge_into sig_cx);
 
   let open Reqs in
 
-  reqs.impls |> List.iter (fun (fn_from, m, r, fn_to) ->
-    let cx_from = FilenameMap.find_unsafe fn_from impl_cxs in
+  reqs.impls
+  |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to);
-    Context.add_module cx m (Context.find_module cx_from m)
+    LocSet.iter (fun loc ->
+      explicit_impl_require_strict cx (sig_cx, m, loc, cx_to);
+    ) locs;
   );
 
-  reqs.dep_impls |> List.iter (fun (cx_from, m, r, fn_to) ->
+  reqs.dep_impls
+  |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to)
+    LocSet.iter (fun loc ->
+      explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
+    ) locs
   );
 
-  reqs.res |> List.iter (fun (r, loc, f, fn_to) ->
+  reqs.res
+  |> RequireMap.iter (fun (f, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_res_require_strict cx (r, loc, f, cx_to)
+    LocSet.iter (fun loc ->
+      explicit_res_require_strict cx (loc, f, cx_to)
+    ) locs
   );
 
-  reqs.decls |> List.iter (fun (m, loc, resolved_m, fn_to) ->
+  reqs.decls
+  |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    LocSet.iter (fun loc ->
+      explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    ) locs
   );
 
-  reqs.unchecked |> List.iter (fun (m, loc, fn_to) ->
+  reqs.unchecked
+  |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_unchecked_require_strict cx (m, loc, cx_to)
+    LocSet.iter (fun loc ->
+      explicit_unchecked_require_strict cx (m, loc, cx_to)
+    ) locs
   );
 
+  (* Post-merge errors.
+   *
+   * At this point, all dependencies have been merged and the component has been
+   * linked together. Any constraints should have already been evaluated, which
+   * means we can complain about things that either haven't happened yet, or
+   * which require complete knowledge of tvar bounds.
+   *)
   detect_sketchy_null_checks cx;
+  detect_test_prop_misses cx;
 
-  cx
-
-(* Given a sig context, it makes sense to clear the parts that are shared with
-   the master sig context. Why? The master sig context, which contains global
-   declarations, is an implicit dependency for every file, and so will be
-   "merged in" anyway, thus making those shared parts redundant to carry around
-   in other sig contexts. This saves a lot of shared memory as well as
-   deserialization time. *)
-let clear_master_shared cx master_cx =
-  Context.set_graph cx (Context.graph cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.graph master_cx))));
-  Context.set_property_maps cx (Context.property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
-    (Type.Properties.Map.mem id (Context.property_maps master_cx))));
-  Context.set_envs cx (Context.envs cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.envs master_cx))));
-  Context.set_evaluated cx (Context.evaluated cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.evaluated master_cx))))
-
-let merge_lib_file cx master_cx =
-  Context.merge_into master_cx cx;
-  implicit_require_strict master_cx master_cx cx;
-
-  let errs = Context.errors cx in
-  Context.remove_all_errors cx;
-
-  errs, Context.error_suppressions cx, Context.severity_cover cx
+  cx, other_cxs
 
 let merge_tvar =
   let open Type in
@@ -369,7 +420,6 @@ module ContextOptimizer = struct
     reduced_graph : node IMap.t;
     reduced_property_maps : Properties.map;
     reduced_export_maps : Exports.map;
-    reduced_envs : Context.env IMap.t;
     reduced_evaluated : Type.t IMap.t;
   }
 
@@ -378,7 +428,6 @@ module ContextOptimizer = struct
     reduced_graph = IMap.empty;
     reduced_property_maps = Properties.Map.empty;
     reduced_export_maps = Exports.Map.empty;
-    reduced_envs = IMap.empty;
     reduced_evaluated = IMap.empty;
   }
 
@@ -395,7 +444,6 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
-    val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_opaque_ids = IMap.empty
@@ -403,12 +451,12 @@ module ContextOptimizer = struct
 
     method reduce cx quotient module_ref =
       let { reduced_module_map; _ } = quotient in
-      let export = Flow_js.lookup_module cx module_ref in
+      let export = Context.find_module cx module_ref in
       let reduced_module_map = SMap.add module_ref export reduced_module_map in
       self#type_ cx Neutral { quotient with reduced_module_map } export
 
     method! tvar cx pole quotient r id =
-      let root_id, _ = Flow_js.find_constraints cx id in
+      let root_id, _ = Context.find_constraints cx id in
       if id == root_id then
         let { reduced_graph; _ } = quotient in
         if IMap.mem id reduced_graph then
@@ -434,16 +482,13 @@ module ContextOptimizer = struct
       let { reduced_property_maps; _ } = quotient in
       if (Properties.Map.mem id reduced_property_maps)
       then
-        let stable_id = Properties.Map.find_unsafe id stable_propmap_ids in
-        SigHash.add_int sig_hash stable_id;
+        let () = SigHash.add_int sig_hash (id :> int) in
         quotient
       else
         let pmap = Context.find_props cx id in
-        SigHash.add_props_map sig_hash pmap;
+        let () = SigHash.add_props_map sig_hash pmap in
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
-        let stable_id = self#fresh_stable_id in
-        stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
         super#props cx pole { quotient with reduced_property_maps } id
 
     method! exports cx pole quotient id =
@@ -472,15 +517,6 @@ module ContextOptimizer = struct
           let quotient = self#type_ cx pole quotient t in
           let reduced_evaluated = IMap.add id t reduced_evaluated in
           super#eval_id cx pole { quotient with reduced_evaluated } id
-
-    method! fun_type cx pole quotient funtype =
-      let id = funtype.closure_t in
-      if id = 0 then super#fun_type cx pole quotient funtype
-      else
-        let { reduced_envs; _ } = quotient in
-        let closure = IMap.find_unsafe id (Context.envs cx) in
-        let reduced_envs = IMap.add id closure reduced_envs in
-        super#fun_type cx pole { quotient with reduced_envs } funtype
 
     method! dict_type cx pole quotient dicttype =
       SigHash.add_polarity sig_hash dicttype.dict_polarity;
@@ -556,7 +592,6 @@ module ContextOptimizer = struct
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_export_maps cx quotient.reduced_export_maps;
-    Context.set_envs cx quotient.reduced_envs;
     Context.set_evaluated cx quotient.reduced_evaluated;
     Context.set_type_graph cx (
       Graph_explorer.new_graph

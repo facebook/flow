@@ -21,6 +21,7 @@ module type OBJECT = sig
   val _initializer : env -> Loc.t * Loc.t Ast.Expression.Object.t * pattern_errors
   val class_declaration : env -> Loc.t Ast.Expression.t list -> Loc.t Ast.Statement.t
   val class_expression : env -> Loc.t Ast.Expression.t
+  val class_implements : env -> Loc.t Ast.Class.Implements.t list -> Loc.t Ast.Class.Implements.t list
   val decorator_list : env -> Loc.t Ast.Expression.t list
 end
 
@@ -87,7 +88,7 @@ module Object
     (* It's not clear how type params on getters & setters would make sense
      * in Flow's type system. Since this is a Flow syntax extension, we might
      * as well disallow it until we need it *)
-    let typeParameters = None in
+    let tparams = None in
     let params = Declaration.function_params ~await:false ~yield:false env in
     begin match is_getter, params with
     | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
@@ -98,7 +99,7 @@ module Object
     | true, _ -> error_at env (key_loc, Error.GetterArity)
     | false, _ -> error_at env (key_loc, Error.SetterArity)
     end;
-    let returnType = Type.annotation_opt env in
+    let return = Type.annotation_opt env in
     let _, body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple None params;
@@ -115,8 +116,8 @@ module Object
       async;
       predicate = None; (* setters/getter are not predicates *)
       expression;
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     }) in
     key, value
 
@@ -138,7 +139,7 @@ module Object
           argument;
         })), errs
       end else begin
-        let async = match Peek.token ~i:1 env with
+        let async = match Peek.ith_token ~i:1 env with
           | T_ASSIGN (* { async = true } (destructuring) *)
           | T_COLON (* { async: true } *)
           | T_LESS_THAN (* { async<T>() {} } *)
@@ -181,21 +182,17 @@ module Object
     and get env start_loc =
       let key, (end_loc, fn) = getter_or_setter env true in
       let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, { Property.
+      Ast.Expression.Object.(Property (loc, Property.Get {
         key;
-        value = Property.Get (end_loc, fn);
-        _method = false;
-        shorthand = false;
+        value = (end_loc, fn);
       }))
 
     and set env start_loc =
       let key, (end_loc, fn) = getter_or_setter env false in
       let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, { Property.
+      Ast.Expression.Object.(Property (loc, Property.Set {
         key;
-        value = Property.Set (end_loc, fn);
-        _method = false;
-        shorthand = false;
+        value = (end_loc, fn);
       }))
 
     (* #prod-PropertyDefinition *)
@@ -231,7 +228,7 @@ module Object
         (* #sec-function-definitions-static-semantics-early-errors *)
         let env = env |> with_allow_super Super_prop in
 
-        let typeParameters = Type.type_parameter_declaration env in
+        let tparams = Type.type_parameter_declaration env in
         let params =
           let yield, await = match async, generator with
           | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
@@ -241,7 +238,7 @@ module Object
           in
           Declaration.function_params ~await ~yield env
         in
-        let returnType = Type.annotation_opt env in
+        let return = Type.annotation_opt env in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
@@ -251,7 +248,7 @@ module Object
           | Function.BodyExpression (loc, _) -> loc, true
         in
         let loc = Loc.btwn start_loc end_loc in
-        let value = loc, Ast.Expression.(Function Function.({
+        loc, Function.({
           id = None;
           params;
           body;
@@ -260,10 +257,9 @@ module Object
           (* TODO: add support for object method predicates *)
           predicate = None;
           expression;
-          returnType;
-          typeParameters;
-        })) in
-        value
+          return;
+          tparams;
+        })
       in
 
       (* PropertyName `:` AssignmentExpression *)
@@ -275,19 +271,11 @@ module Object
       (* #prod-CoverInitializedName *)
       let parse_assignment_pattern ~key env =
         let open Ast.Expression.Object in
-
-        let left = match key with
-        | Property.Literal (loc, lit) -> Some (loc, Ast.Expression.Literal lit)
-        | Property.Identifier id -> Some (fst id, Ast.Expression.Identifier id)
-        | Property.PrivateName _ -> None
-        | Property.Computed _ -> None
-        in
-
-        match left with
-        | Some left ->
+        match key with
+        | Property.Identifier id ->
           let assignment_loc = Peek.loc env in
           Expect.token env T_ASSIGN;
-          let left = Parse.pattern_from_expr env left in
+          let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
           let right = Parse.assignment env in
           let loc = Loc.btwn (fst left) (fst right) in
           (loc, Ast.Expression.(Assignment Assignment.({
@@ -298,67 +286,100 @@ module Object
             if_expr = [assignment_loc, Parse_error.UnexpectedToken "="];
             if_patt = [];
           }
-        | None ->
+
+        | Property.Literal _
+        | Property.PrivateName _
+        | Property.Computed _ ->
           parse_value env
       in
 
       let parse_init ~key ~async ~generator env =
         if async || generator then
           (* the `async` and `*` modifiers are only valid on methods *)
-          parse_method env ~async ~generator, false, true, Pattern_cover.empty_errors
+          let value = parse_method env ~async ~generator in
+          let prop = Method { key; value } in
+          prop, Pattern_cover.empty_errors
         else match Peek.token env with
         | T_RCURLY
         | T_COMMA ->
-          parse_shorthand env key, true, false, Pattern_cover.empty_errors
+          let value = parse_shorthand env key in
+          let prop = Init { key; value; shorthand = true } in
+          prop, Pattern_cover.empty_errors
         | T_LESS_THAN
         | T_LPAREN ->
-          parse_method env ~async ~generator, false, true, Pattern_cover.empty_errors
+          let value = parse_method env ~async ~generator in
+          let prop = Method { key; value } in
+          prop, Pattern_cover.empty_errors
         | T_ASSIGN ->
           let value, errs = parse_assignment_pattern ~key env in
-          value, true, false, errs
+          let prop = Init { key; value; shorthand = true } in
+          prop, errs
         | _ ->
           let value, errs = parse_value env in
-          value, false, false, errs
+          let prop = Init { key; value; shorthand = false } in
+          prop, errs
       in
       fun env start_loc key async generator ->
-        let end_loc, (value, shorthand, _method, errs) = with_loc (
+        let end_loc, (prop, errs) = with_loc (
           parse_init ~key ~async ~generator
         ) env in
-        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, {
-          key;
-          value = Init value;
-          _method;
-          shorthand;
-        }), errs
+        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, prop), errs
 
-    and properties env (props, errs) =
+    and properties env ~rest_trailing_comma (props, errs) =
       match Peek.token env with
       | T_EOF
-      | T_RCURLY -> List.rev props, Pattern_cover.rev_errors errs
+      | T_RCURLY ->
+        let errs = match rest_trailing_comma with
+        | Some loc ->
+          { errs with if_patt = (loc, Parse_error.TrailingCommaAfterRestElement)::errs.if_patt }
+        | None -> errs in
+        List.rev props, Pattern_cover.rev_errors errs
       | _ ->
           let prop, new_errs = property env in
+          let rest_trailing_comma = match prop with
+          | Ast.Expression.Object.SpreadProperty _ when Peek.token env = T_COMMA ->
+            Some (Peek.loc env)
+          | _ -> None in
           if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
           let errs = Pattern_cover.rev_append_errors new_errs errs in
-          properties env (prop::props, errs)
+          properties env ~rest_trailing_comma (prop::props, errs)
 
     in fun env ->
       let loc, (expr, errs) = with_loc (fun env ->
         Expect.token env T_LCURLY;
-        let props, errs = properties env ([], Pattern_cover.empty_errors) in
+        let props, errs =
+          properties env ~rest_trailing_comma:None ([], Pattern_cover.empty_errors) in
         Expect.token env T_RCURLY;
         { Ast.Expression.Object.properties = props; }, errs
       ) env in
       loc, expr, errs
 
+  let rec class_implements env acc =
+    let id = Type.type_identifier env in
+    let targs = Type.type_parameter_instantiation env in
+    let loc = match targs with
+    | None -> fst id
+    | Some (loc, _) -> Loc.btwn (fst id) loc in
+    let implement = loc, Ast.Class.Implements.({
+      id;
+      targs;
+    }) in
+    let acc = implement::acc in
+    match Peek.token env with
+    | T_COMMA ->
+        Expect.token env T_COMMA;
+        class_implements env acc
+    | _ -> List.rev acc
+
   let rec _class env =
-    let superClass, superTypeParameters =
+    let super, super_targs =
       if Peek.token env = T_EXTENDS
       then begin
         Expect.token env T_EXTENDS;
-        let superClass =
+        let super =
           Expression.left_hand_side (env |> with_allow_yield false) in
-        let superTypeParameters = Type.type_parameter_instantiation env in
-        Some superClass, superTypeParameters
+        let super_targs = Type.type_parameter_instantiation env in
+        Some super, super_targs
       end else None, None in
     let implements =
       if Peek.token env = T_IMPLEMENTS
@@ -369,24 +390,7 @@ module Object
         class_implements env []
       end else [] in
     let body = class_body env in
-    body, superClass, superTypeParameters, implements
-
-  and class_implements env acc =
-    let id = Type.type_identifier env in
-    let typeParameters = Type.type_parameter_instantiation env in
-    let loc = match typeParameters with
-    | None -> fst id
-    | Some (loc, _) -> Loc.btwn (fst id) loc in
-    let implement = loc, Ast.Class.Implements.({
-      id;
-      typeParameters;
-    }) in
-    let acc = implement::acc in
-    match Peek.token env with
-    | T_COMMA ->
-        Expect.token env T_COMMA;
-        class_implements env acc
-    | _ -> List.rev acc
+    body, super, super_targs, implements
 
   and class_body =
     let rec elements env seen_constructor private_names acc =
@@ -483,8 +487,8 @@ module Object
       | T_ASSIGN
       | T_SEMICOLON when not async && not generator ->
         (* Class property with annotation *)
-        let end_loc, (typeAnnotation, value) = with_loc (fun env ->
-          let typeAnnotation = Type.annotation_opt env in
+        let end_loc, (annot, value) = with_loc (fun env ->
+          let annot = Type.annotation_opt env in
           let options = parse_options env in
           let value =
             if Peek.token env = T_ASSIGN then (
@@ -501,7 +505,7 @@ module Object
           else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
             error_unexpected env
           end;
-          typeAnnotation, value
+          annot, value
         ) env in
         let loc = Loc.btwn start_loc end_loc in
         begin match key with
@@ -509,14 +513,14 @@ module Object
           Ast.Class.(Body.PrivateField (loc, PrivateField.({
             key = private_name;
             value;
-            typeAnnotation;
+            annot;
             static;
             variance;
           })))
         | _ -> Ast.Class.(Body.Property (loc, Property.({
             key;
             value;
-            typeAnnotation;
+            annot;
             static;
             variance;
           }))) end
@@ -540,7 +544,7 @@ module Object
             env |> with_allow_super Super_prop
         in
         let func_loc = Peek.loc env in
-        let typeParameters = Type.type_parameter_declaration env in
+        let tparams = Type.type_parameter_declaration env in
         let params =
           let yield, await = match async, generator with
           | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
@@ -550,7 +554,7 @@ module Object
           in
           Declaration.function_params ~await ~yield env
         in
-        let returnType = Type.annotation_opt env in
+        let return = Type.annotation_opt env in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
@@ -569,8 +573,8 @@ module Object
           (* TODO: add support for method predicates *)
           predicate = None;
           expression;
-          returnType;
-          typeParameters;
+          return;
+          tparams;
         }) in
         Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
           key;
@@ -584,12 +588,12 @@ module Object
       let start_loc = Peek.loc env in
       let decorators = decorator_list env in
       let static =
-        Peek.token ~i:1 env <> T_LPAREN &&
-        Peek.token ~i:1 env <> T_LESS_THAN &&
+        Peek.ith_token ~i:1 env <> T_LPAREN &&
+        Peek.ith_token ~i:1 env <> T_LESS_THAN &&
         Expect.maybe env T_STATIC in
       let async =
-        Peek.token ~i:1 env <> T_LPAREN &&
-        Peek.token ~i:1 env <> T_COLON &&
+        Peek.ith_token ~i:1 env <> T_LPAREN &&
+        Peek.ith_token ~i:1 env <> T_COLON &&
         Declaration.async env in
       let generator = Declaration.generator env in
       let variance = Declaration.variance env async generator in
@@ -638,15 +642,15 @@ module Object
       | true, false -> None
       | _ -> Some(Parse.identifier tmp_env)
     ) in
-    let typeParameters = Type.type_parameter_declaration_with_defaults env in
-    let body, superClass, superTypeParameters, implements = _class env in
+    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let body, super, super_targs, implements = _class env in
     let loc = Loc.btwn start_loc (fst body) in
     loc, Ast.Statement.(ClassDeclaration Class.({
       id;
       body;
-      superClass;
-      typeParameters;
-      superTypeParameters;
+      tparams;
+      super;
+      super_targs;
       implements;
       classDecorators=decorators;
     }))
@@ -656,21 +660,21 @@ module Object
     let env = env |> with_strict true in
     let decorators = decorator_list env in
     Expect.token env T_CLASS;
-    let id, typeParameters = match Peek.token env with
+    let id, tparams = match Peek.token env with
       | T_EXTENDS
       | T_LESS_THAN
       | T_LCURLY -> None, None
       | _ ->
           let id = Some (Parse.identifier env) in
-          let typeParameters = Type.type_parameter_declaration_with_defaults env in
-          id, typeParameters in
-    let body, superClass, superTypeParameters, implements = _class env in
+          let tparams = Type.type_parameter_declaration_with_defaults env in
+          id, tparams in
+    let body, super, super_targs, implements = _class env in
     Ast.Expression.Class { Class.
       id;
       body;
-      superClass;
-      typeParameters;
-      superTypeParameters;
+      tparams;
+      super;
+      super_targs;
       implements;
       classDecorators=decorators;
     }

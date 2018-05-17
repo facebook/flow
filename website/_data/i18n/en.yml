@@ -200,6 +200,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/lang/width-subtyping/":
   title: "Width Subtyping"
   description: ""
+"/docs/lang/lazy-modes/":
+  title: "Lazy Modes"
+  description: "Explanation of Flow's lazy mode"
 "/docs/libdefs/":
   title: "Library Definitions"
   description: "Typing third-party libraries"
@@ -371,6 +374,10 @@ docs_additional_reading: "Additional Reading"
   title: "Lint Rule Reference"
   description: "More information"
 
+"/docs/strict/":
+  title: "Flow Strict"
+  description: "Enable stricter type checking on a file-by-file basis"
+
 "/try/":
   title: "Try Flow"
   description: "Interactive Flow REPL"
@@ -430,3 +437,7 @@ guides:
     title: "Linting"
     description: >
       Learn how to configure Flow's linter to find potentially harmful code.
+  strict:
+    title: "Flow Strict"
+    description: >
+      Learn how to enable stricter type checking on a file-by-file basis.

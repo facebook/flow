@@ -55,11 +55,12 @@ module Entry = struct
 
   and let_binding_kind =
     | LetVarBinding
-    | LetConstlikeVarBinding
+    | ConstlikeLetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
+    | ConstlikeParamBinding
 
   and var_binding_kind =
     | VarBinding
@@ -70,11 +71,12 @@ module Entry = struct
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
   | Let LetVarBinding -> "let"
-  | Let LetConstlikeVarBinding -> "let"
+  | Let ConstlikeLetVarBinding -> "let"
   | Let ClassNameBinding -> "class"
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
   | Let ParamBinding -> "param"
+  | Let ConstlikeParamBinding -> "param"
   | Var VarBinding -> "var"
   | Var ConstlikeVarBinding -> "var"
 
@@ -197,7 +199,9 @@ module Entry = struct
       entry
     | Value { kind = Var ConstlikeVarBinding; _ } ->
       entry
-    | Value { kind = Let LetConstlikeVarBinding; _ } ->
+    | Value { kind = Let ConstlikeLetVarBinding; _ } ->
+      entry
+    | Value { kind = Let ConstlikeParamBinding; _ } ->
       entry
     | Value v ->
       if Reason.is_internal_name name
@@ -270,6 +274,7 @@ type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
+  mutable tparam_entries: Loc.t SMap.t;  (* used to populate the type tables *)
   mutable refis: refi_binding Key_map.t;
 }
 
@@ -278,6 +283,7 @@ let fresh_impl kind = {
   id = mk_id ();
   kind;
   entries = SMap.empty;
+  tparam_entries = SMap.empty;
   refis = Key_map.empty;
 }
 
@@ -291,8 +297,8 @@ let fresh_lex () = fresh_impl LexScope
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
  *)
-let clone { id; kind; entries; refis } =
-  { id; kind; entries; refis }
+let clone { id; kind; entries; tparam_entries; refis } =
+  { id; kind; entries; tparam_entries; refis }
 
 (* use passed f to iterate over all scope entries *)
 let iter_entries f scope =
@@ -305,6 +311,9 @@ let update_entries f scope =
 (* add entry to scope *)
 let add_entry name entry scope =
   scope.entries <- SMap.add name entry scope.entries
+
+let add_tparam_entry name entry scope =
+  scope.tparam_entries <- SMap.add name entry scope.tparam_entries
 
 (* remove entry from scope *)
 let remove_entry name scope =

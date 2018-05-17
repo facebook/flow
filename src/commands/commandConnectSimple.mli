@@ -5,14 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type busy_reason =
+  | Too_many_clients
+  | Not_responding
+  | Fail_on_init
+
 type error =
   | Build_id_mismatch
-  | Server_busy
-  | Server_gcollecting
-  | Server_initializing
+  | Server_busy of busy_reason
   | Server_missing
-  | Server_rechecking
+  | Server_socket_missing
 
 val server_exists : tmp_dir:string -> Path.t -> bool
 
-val connect_once : tmp_dir:string -> Path.t -> (Timeout.in_channel * out_channel, error) result
+val connect_once :
+  client_type: SocketHandshake.client_type ->
+  tmp_dir:string ->
+  Path.t ->
+  (Timeout.in_channel * out_channel, error) result
+
+val busy_reason_to_string : busy_reason -> string
+
+val error_to_string : error -> string

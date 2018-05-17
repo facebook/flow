@@ -1,6 +1,33 @@
-Error: test.js:3
-  3: import type { T } from './import';
-                   ^ untyped-type-import: Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `./import`?
+Error ----------------------------------------------------------------------------------------------------- test.js:3:15
+
+Importing a type from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./import`? (`untyped-type-import`)
+
+   3| import type { T } from './import'; // Error: untyped-type-import
+                    ^
 
 
-Found 1 error
+Error ----------------------------------------------------------------------------------------------------- test.js:4:15
+
+Dependencies of a `@flow strict` module must also be `@flow strict`! (`nonstrict-import`)
+
+   4| import type { S } from './nonstrict_export'; // Error: nonstrict-import
+                    ^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+Cannot reassign constant `x` [1].
+
+   test.js:9:3
+   9|   x = 1; // Error: cannot reassign constant parameter
+        ^
+
+References:
+   test.js:8:12
+   8| function f(x) {
+                 ^ [1]
+
+
+
+Found 3 errors

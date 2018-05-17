@@ -33,7 +33,7 @@ val map: ('a * Loc.t option -> 'a * Loc.t option) -> 'a t -> 'a t
 
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
-val default_severities: severity t
+val empty_severities: severity t
 (* True iff get_state returns Warn or Err, false otherwise *)
 val is_enabled: lint_kind -> severity t -> bool
 (* Always the logical opposite of is_enabled *)

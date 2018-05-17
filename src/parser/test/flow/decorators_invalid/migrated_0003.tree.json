@@ -34,9 +34,12 @@
           "exact":false,
           "properties":[],
           "indexers":[],
-          "callProperties":[]
+          "callProperties":[],
+          "internalSlots":[]
         },
-        "extends":[]
+        "extends":[],
+        "implements":[],
+        "mixins":[]
       },
       "specifiers":[],
       "source":null

@@ -732,4 +732,18 @@ let tests = "ssa_builder" >::: [
         mk_write (1, 90) (1, 91);
       ]
     );
+  "JSX" >:: mk_ssa_builder_test
+    "class Foo {}; <Foo></Foo>; <Foo/>"
+    LocMap.(
+      empty |>
+      add (mk_loc (1, 15) (1, 18)) [
+        mk_write (1, 6) (1, 9);
+      ] |>
+      add (mk_loc (1, 21) (1, 24)) [
+        mk_write (1, 6) (1, 9);
+      ] |>
+      add (mk_loc (1, 28) (1, 31)) [
+        mk_write (1, 6) (1, 9);
+      ]
+    );
 ]

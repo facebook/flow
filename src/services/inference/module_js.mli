@@ -8,8 +8,6 @@
 open Utils_js
 
 type resolved_requires = {
-  required: Modulename.Set.t;      (* required module names *)
-  require_loc: Loc.t SMap.t;  (* statement locations *)
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
 }
@@ -44,7 +42,7 @@ type resolution_acc = {
 val imported_module:
   options: Options.t ->
   node_modules_containers: SSet.t ->
-  File_key.t -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
+  File_key.t -> Loc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t
@@ -71,36 +69,39 @@ val checked_file: (File_key.t -> bool) Expensive.t
    returns the set of modules added
 *)
 val introduce_files:
-  Worker.t list option ->
+  MultiWorkerLwt.worker list option ->
   options: Options.t ->
   File_key.t list ->
   (File_key.t * Docblock.t) list ->
-    (Modulename.t * File_key.t option) list
+    (Modulename.t * File_key.t option) list Lwt.t
 
 (* remove module records being tracked for given files;
    returns the set of modules removed
 *)
 val clear_files:
-  Worker.t list option ->
+  MultiWorkerLwt.worker list option ->
   options:Options.t ->
   FilenameSet.t ->
-    (Modulename.t * File_key.t option) list
+    (Modulename.t * File_key.t option) list Lwt.t
 
 (* repick providers for old and new modules *)
 val commit_modules:
-  Worker.t list option ->
+  MultiWorkerLwt.worker list option ->
   options: Options.t ->
   File_key.t list ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)
-    File_key.t list *                   (* providers *)
+    (File_key.t list *                   (* providers *)
     Modulename.Set.t *                  (* changed modules *)
-    error list FilenameMap.t            (* filenames to error sets *)
+    error list FilenameMap.t) Lwt.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires:
-  (options:Options.t ->
-   node_modules_containers: SSet.t ->
-   File_key.t -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
+val add_parsed_resolved_requires: (
+  options:Options.t ->
+  node_modules_containers: SSet.t ->
+  File_key.t ->
+  Errors.ErrorSet.t
+) Expensive.t
+
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 

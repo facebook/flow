@@ -5,4 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val do_gc: master_cx:Context.t -> Context.t -> unit
+type state
+
+val init: master_cx:Context.sig_t -> state
+
+val mark: Context.t -> state -> state
+
+val sweep: master_cx:Context.sig_t -> Context.t -> state -> unit

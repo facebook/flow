@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('local exports override remote exports', [
@@ -16,13 +16,18 @@ export default suite(({addFile, addFiles, addCode}) => [
       (C: string);
     `).noNewErrors(),
 
-    addCode('(C: number);').newErrors(`
-      test.js:8
-        8: (C: number);
-            ^ string. This type is incompatible with
-        8: (C: number);
-               ^^^^^^ number
-    `),
+    addCode('(C: number);').newErrors(
+                             `
+                               test.js:8
+                                 8: (C: number);
+                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
+                                 References:
+                                   3: export const C = "asdf";
+                                                       ^^^^^^ [1]. See: local_override1.js:3
+                                   8: (C: number);
+                                          ^^^^^^ [2]
+                             `,
+                           ),
   ]),
 
   test('local exports override remote exports regardless of export order', [
@@ -34,12 +39,17 @@ export default suite(({addFile, addFiles, addCode}) => [
       (C: string);
     `).noNewErrors(),
 
-    addCode('(C: number);').newErrors(`
-      test.js:8
-        8: (C: number);
-            ^ string. This type is incompatible with
-        8: (C: number);
-               ^^^^^^ number
-    `),
+    addCode('(C: number);').newErrors(
+                             `
+                               test.js:8
+                                 8: (C: number);
+                                     ^ Cannot cast \`C\` to number because string [1] is incompatible with number [2].
+                                 References:
+                                   4: export const C = "asdf";
+                                                       ^^^^^^ [1]. See: local_override2.js:4
+                                   8: (C: number);
+                                          ^^^^^^ [2]
+                             `,
+                           ),
   ]),
 ]);

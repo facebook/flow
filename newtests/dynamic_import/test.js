@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('returns a promise of the ModuleNamespaceObject', [
@@ -23,31 +23,41 @@ export default suite(({addFile, addFiles, addCode}) => [
         (esmodule.pi: string);
         esmodule.default;
       }
-    `).newErrors(`
-      test.js:13
-       13:         (esmodule.pi: string);
-                    ^^^^^^^^^^^ number. This type is incompatible with
-       13:         (esmodule.pi: string);
-                                 ^^^^^^ string
-      test.js:14
-       14:         esmodule.default;
-                            ^^^^^^^ property ${'`'}default${'`'}. Property not found in
-       14:         esmodule.default;
-                   ^^^^^^^^ exports of "./esmodule"
-    `),
+    `).newErrors(
+        `
+          test.js:13
+           13:         (esmodule.pi: string);
+                        ^^^^^^^^^^^ Cannot cast \`esmodule.pi\` to string because number [1] is incompatible with string [2].
+            References:
+              3: export const pi = 3.14;
+                                   ^^^^ [1]. See: esmodule.js:3
+             13:         (esmodule.pi: string);
+                                       ^^^^^^ [2]
+
+          test.js:14
+           14:         esmodule.default;
+                                ^^^^^^^ Cannot get \`esmodule.default\` because property \`default\` is missing in module \`./esmodule\` [1].
+            References:
+             12:         const esmodule = await import('./esmodule');
+                                                ^^^^^^^^^^^^^^^^^^^^ [1]
+        `,
+      ),
 
     addCode(`
       async function h() {
         const esmodule = import('./esmodule');
         (esmodule.pi: string);
       }
-    `).newErrors(`
-      test.js:21
-       21:         (esmodule.pi: string);
-                             ^^ property ${'`'}pi${'`'}. Property not found in
-       21:         (esmodule.pi: string);
-                    ^^^^^^^^ Promise
-    `),
+    `).newErrors(
+        `
+          test.js:21
+           21:         (esmodule.pi: string);
+                                 ^^ Cannot get \`esmodule.pi\` because property \`pi\` is missing in \`Promise\` [1].
+            References:
+             20:         const esmodule = import('./esmodule');
+                                          ^^^^^^^^^^^^^^^^^^^^ [1]
+        `,
+      ),
   ]),
 
   test('properly converts CJS modules to ModuleNamespaceObjects', [
@@ -67,17 +77,26 @@ export default suite(({addFile, addFiles, addCode}) => [
         (cjsmodule.pi: string);
         (cjsmodule.default: number);
       }
-    `).newErrors(`
-      test.js:14
-       14:         (cjsmodule.pi: string);
-                    ^^^^^^^^^^^^ number. This type is incompatible with
-       14:         (cjsmodule.pi: string);
-                                  ^^^^^^ string
-      test.js:15
-       15:         (cjsmodule.default: number);
-                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-       15:         (cjsmodule.default: number);
-                                       ^^^^^^ number
-    `),
+    `).newErrors(
+        `
+          test.js:14
+           14:         (cjsmodule.pi: string);
+                        ^^^^^^^^^^^^ Cannot cast \`cjsmodule.pi\` to string because number [1] is incompatible with string [2].
+            References:
+              4:   pi: 3.14
+                       ^^^^ [1]. See: cjsmodule.js:4
+             14:         (cjsmodule.pi: string);
+                                        ^^^^^^ [2]
+
+          test.js:15
+           15:         (cjsmodule.default: number);
+                        ^^^^^^^^^^^^^^^^^ Cannot cast \`cjsmodule.default\` to number because object literal [1] is incompatible with number [2].
+            References:
+              3: module.exports = {
+                                  ^ [1]. See: cjsmodule.js:3
+             15:         (cjsmodule.default: number);
+                                             ^^^^^^ [2]
+        `,
+      ),
   ]),
 ]);

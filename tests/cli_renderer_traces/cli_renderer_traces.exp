@@ -1,0 +1,215 @@
+Error ------------------------------------------------------------------------------------------------ code_frame.js:2:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
+
+   code_frame.js:2:2
+   2| ({p: 42}: {p: empty});
+       ^^^^^^^
+
+References:
+   code_frame.js:2:6
+   2| ({p: 42}: {p: empty});
+           ^^ [1]
+   code_frame.js:2:15
+   2| ({p: 42}: {p: empty});
+                    ^^^^^ [2]
+
+Trace:
+* path 1:
+  2: ({p: 42}: {p: empty});
+          ^^ NumT [number]
+  2: ({p: 42}: {p: empty});
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ------------------------------------------------------------------------------------------------ code_frame.js:4:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
+
+   code_frame.js:4:2
+   4| ({p: 42}: {p: empty});
+       ^^^^^^^
+
+References:
+   code_frame.js:4:6
+   4| ({p: 42}: {p: empty});
+           ^^ [1]
+   code_frame.js:4:15
+   4| ({p: 42}: {p: empty});
+                    ^^^^^ [2]
+
+Trace:
+* path 1:
+  4: ({p: 42}: {p: empty});
+          ^^ NumT [number]
+  4: ({p: 42}: {p: empty});
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ------------------------------------------------------------------------------------------------ code_frame.js:6:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
+
+   code_frame.js:6:2
+       v
+   6| ({
+   7|   p: 42,
+   8| }: {
+      ^
+
+References:
+   code_frame.js:7:6
+   7|   p: 42,
+           ^^ [1]
+   code_frame.js:9:6
+   9|   p: empty,
+           ^^^^^ [2]
+
+Trace:
+* path 1:
+  7:   p: 42,
+          ^^ NumT [number]
+  9:   p: empty,
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ----------------------------------------------------------------------------------------------- code_frame.js:12:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
+
+   code_frame.js:12:2
+   12| ({p: 42}: {p: empty});
+        ^^^^^^^
+
+References:
+   code_frame.js:12:6
+   12| ({p: 42}: {p: empty});
+            ^^ [1]
+   code_frame.js:12:15
+   12| ({p: 42}: {p: empty});
+                     ^^^^^ [2]
+
+Trace:
+* path 1:
+ 12: ({p: 42}: {p: empty});
+          ^^ NumT [number]
+ 12: ({p: 42}: {p: empty});
+                   ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `p`.
+
+   test.js:6:2
+       v
+   6| ({
+   7|   p: 42, // Error: number ~> empty
+   8| }: {
+      ^
+
+References:
+   test.js:7:6
+   7|   p: 42, // Error: number ~> empty
+           ^^ [1]
+   test.js:9:6
+   9|   p: empty,
+           ^^^^^ [2]
+
+Trace:
+* path 1:
+  7:   p: 42, // Error: number ~> empty
+          ^^ NumT [number]
+  9:   p: empty,
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `a`.
+
+   test.js:12:2
+        v
+   12| ({
+   13|   a: 1, // Error: number ~> empty
+   14|   b: 2, // Error: number ~> empty
+   15|   c: 3, // Error: number ~> empty
+   16| }: {
+       ^
+
+References:
+   test.js:13:6
+   13|   a: 1, // Error: number ~> empty
+            ^ [1]
+   test.js:17:6
+   17|   a: empty,
+            ^^^^^ [2]
+
+Trace:
+* path 1:
+ 13:   a: 1, // Error: number ~> empty
+          ^ NumT [number]
+ 17:   a: empty,
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `b`.
+
+   test.js:12:2
+        v
+   12| ({
+   13|   a: 1, // Error: number ~> empty
+   14|   b: 2, // Error: number ~> empty
+   15|   c: 3, // Error: number ~> empty
+   16| }: {
+       ^
+
+References:
+   test.js:14:6
+   14|   b: 2, // Error: number ~> empty
+            ^ [1]
+   test.js:18:6
+   18|   b: empty,
+            ^^^^^ [2]
+
+Trace:
+* path 1:
+ 14:   b: 2, // Error: number ~> empty
+          ^ NumT [number]
+ 18:   b: empty,
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+
+Cannot cast object literal to object type because number [1] is incompatible with empty [2] in property `c`.
+
+   test.js:12:2
+        v
+   12| ({
+   13|   a: 1, // Error: number ~> empty
+   14|   b: 2, // Error: number ~> empty
+   15|   c: 3, // Error: number ~> empty
+   16| }: {
+       ^
+
+References:
+   test.js:15:6
+   15|   c: 3, // Error: number ~> empty
+            ^ [1]
+   test.js:19:6
+   19|   c: empty,
+            ^^^^^ [2]
+
+Trace:
+* path 1:
+ 15:   c: 3, // Error: number ~> empty
+          ^ NumT [number]
+ 19:   c: empty,
+          ^^^^^ ~> UseT(PropertyCompatibility, EmptyT) [empty] (from [not shown])
+
+
+
+Found 8 errors

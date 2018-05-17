@@ -1,6 +1,16 @@
-Error: test.js.es6:6
-  6:   return x * 10;
-              ^ string. The operand of an arithmetic operation must be a number.
+Error ------------------------------------------------------------------------------------------------- test.js.es6:6:10
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   test.js.es6:6:10
+   6|   return x * 10;
+               ^
+
+References:
+   test.js.es6:9:5
+   9| foo('Hello, world!');
+          ^^^^^^^^^^^^^^^ [1]
+
 
 
 Found 1 error

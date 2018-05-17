@@ -80,3 +80,28 @@ magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
 magicTrick('Magic'); // Error: 'Magic' is not a value.
 magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
                                   // not a value.
+
+// same as Suite above, but uses Object.freeze instead of needing an
+// annotation.
+const FrozenSuite = Object.freeze({
+  DIAMONDS: 'Diamonds',
+  CLUBS: 'Clubs',
+  HEARTS: 'Hearts',
+  SPADES: 'Spades',
+});
+type FrozenSuiteEnum = $Values<typeof FrozenSuite>
+('Diamonds': FrozenSuiteEnum); // ok
+(DIAMONDS: FrozenSuiteEnum); // ok
+('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
+('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
+(('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
+
+
+const Numbers = Object.freeze({
+  foo: -1,
+  bar: 2,
+});
+type NumbersEnum = $Values<typeof Numbers>
+(-1: NumbersEnum); // ok
+(2: NumbersEnum); // ok
+(1: NumbersEnum); // error, NumbersEnum = -1 | 2

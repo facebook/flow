@@ -17,13 +17,7 @@ open Utils_js
 
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
-(** TODO [perf] Make resolved_requires tighter.
-    (1) required and resolved_modules have a lot of redundancy; required is the
-    value set of resolved_modules.
-
-    (2) require_loc, too? Indexed by required.
-
-    Also, for info:
+(** TODO [perf] Make resolved_requires tighter. For info:
     (1) checked? We know that requires and phantom dependents for unchecked
     files are empty.
 
@@ -31,8 +25,6 @@ open Utils_js
     that's probably guessable.
 **)
 type resolved_requires = {
-  required: Modulename.Set.t; (* required module names *)
-  require_loc: Loc.t SMap.t; (* statement locations *)
   resolved_modules: Modulename.t SMap.t; (* map from module references in file
                                             to module names they resolve to *)
   phantom_dependents: SSet.t; (* set of paths that were looked up but not found
@@ -131,6 +123,7 @@ module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Name"
+  let use_sqlite_fallback () = false
 end)
 
 let get_file = Expensive.wrap NameHeap.get
@@ -141,6 +134,7 @@ module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
   type t = resolved_requires
   let prefix = Prefix.make()
   let description = "ResolvedRequires"
+  let use_sqlite_fallback () = false
 end)
 
 let get_resolved_requires = Expensive.wrap ResolvedRequiresHeap.get
@@ -153,6 +147,7 @@ module InfoHeap = SharedMem_js.WithCache (File_key) (struct
   type t = info
   let prefix = Prefix.make()
   let description = "Info"
+  let use_sqlite_fallback () = false
 end)
 
 let get_info = Expensive.wrap InfoHeap.get
@@ -165,6 +160,7 @@ module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
     type t = Package_json.t
     let prefix = Prefix.make()
     let description = "Package"
+    let use_sqlite_fallback () = false
   end)
 
 (* shared heap for package.json directories by package name *)
@@ -172,6 +168,7 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     type t = string
     let prefix = Prefix.make()
     let description = "ReversePackage"
+    let use_sqlite_fallback () = false
   end)
 
 let add_package filename ast =
@@ -213,7 +210,7 @@ module type MODULE_SYSTEM = sig
   val imported_module:
     options: Options.t ->
     SSet.t ->
-    File_key.t -> Loc.t ->
+    File_key.t -> Loc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
     string -> Modulename.t
 
@@ -378,7 +375,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ~options loc ?resolution_acc root_path rel_path =
+  let resolve_relative ~options (loc, _) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path
@@ -537,7 +534,7 @@ module Haste: MODULE_SYSTEM = struct
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name::rest ->
-        ReversePackageHeap.get package_name |> opt_map (fun package ->
+        ReversePackageHeap.get package_name |> Option.map ~f:(fun package ->
           Files.construct_path package rest
         )
 
@@ -622,16 +619,17 @@ let imported_module ~options ~node_modules_containers file loc ?resolution_acc r
   let module M = (val (get_module_system options)) in
   M.imported_module ~options node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options node_modules_containers f require_loc =
+let imported_modules ~options node_modules_containers file require_loc =
   (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
      resolution_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
   let resolution_acc = { paths = SSet.empty; errors = [] } in
-  let set, map = SMap.fold (fun r loc (set, map) ->
-    let resolved_r = imported_module ~options ~node_modules_containers f loc ~resolution_acc r in
-    Modulename.Set.add resolved_r set, SMap.add r resolved_r map
-  ) require_loc (Modulename.Set.empty, SMap.empty) in
-  set, map, resolution_acc
+  let resolved_modules = SMap.fold (fun mref loc acc ->
+    let m = imported_module file loc mref
+      ~options ~node_modules_containers ~resolution_acc in
+    SMap.add mref m acc
+  ) require_loc  SMap.empty in
+  resolved_modules, resolution_acc
 
 let choose_provider ~options m files errmap =
   let module M = (val (get_module_system options)) in
@@ -675,28 +673,22 @@ let checked_file ~audit f =
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
 let resolved_requires_of ~options node_modules_containers f require_loc =
-  let required, resolved_modules, { paths; errors } =
+  let resolved_modules, { paths; errors } =
     imported_modules ~options node_modules_containers f require_loc in
-  let require_loc = SMap.fold
-    (fun r loc require_loc ->
-      let resolved_r = SMap.find_unsafe r resolved_modules in
-      SMap.add (Modulename.to_string resolved_r) loc require_loc)
-    require_loc SMap.empty in
   errors, {
-    required;
-    require_loc;
     resolved_modules;
     phantom_dependents = paths;
   }
 
-let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file require_loc =
+let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
+  let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
   add_resolved_requires ~audit file resolved_requires;
   List.fold_left (fun acc msg ->
     Errors.ErrorSet.add (Flow_error.error_of_msg
-    ~trace_reasons:[] ~op:(Flow_error.Ops.peek ())
-    ~source_file:file msg) acc) Errors.ErrorSet.empty errors
+      ~trace_reasons:[] ~source_file:file msg) acc) Errors.ErrorSet.empty errors
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -871,10 +863,10 @@ let commit_modules workers ~options new_or_changed dirty_modules =
   (* update NameHeap *)
   if not (Modulename.Set.is_empty remove) then begin
     NameHeap.remove_batch remove;
-    SharedMem_js.collect options `gentle;
+    SharedMem_js.collect `gentle;
   end;
 
-  MultiWorker.call
+  let%lwt () = MultiWorkerLwt.call
     workers
     ~job: (fun () replace ->
       List.iter (fun (m, f) ->
@@ -883,13 +875,14 @@ let commit_modules workers ~options new_or_changed dirty_modules =
     )
     ~neutral: ()
     ~merge: (fun () () -> ())
-    ~next: (MultiWorker.next workers replace);
-
+    ~next: (MultiWorkerLwt.next workers replace)
+  in
   if debug then prerr_endlinef "*** done committing modules ***";
-  providers, changed_modules, errmap
+  Lwt.return (providers, changed_modules, errmap)
 
 let remove_batch_resolved_requires files =
-  ResolvedRequiresHeap.remove_batch files
+  ResolvedRequiresHeap.remove_batch files;
+  SharedMem_js.collect `gentle
 
 let get_files ~audit filename module_name =
   (module_name, get_file ~audit module_name)::
@@ -948,7 +941,7 @@ let calc_old_modules ~options old_file_module_assoc =
   old_modules
 
 let clear_files workers ~options new_or_changed_or_deleted =
-  let old_file_module_assoc = MultiWorker.call workers
+  let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun acc file ->
       match get_info ~audit:Expensive.ok file with
       | Some info ->
@@ -959,14 +952,14 @@ let clear_files workers ~options new_or_changed_or_deleted =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers (FilenameSet.elements new_or_changed_or_deleted)) in
-
+    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
+  in
   (* clear files *)
   InfoHeap.remove_batch new_or_changed_or_deleted;
   ResolvedRequiresHeap.remove_batch new_or_changed_or_deleted;
-  SharedMem_js.collect options `gentle;
+  SharedMem_js.collect `gentle;
 
-  calc_old_modules ~options old_file_module_assoc
+  Lwt.return (calc_old_modules ~options old_file_module_assoc)
 
 (* Before and after inference, we add per-file module info to the shared heap
    from worker processes. Note that we wait to choose providers until inference
@@ -1028,7 +1021,7 @@ let calc_new_modules ~options file_module_assoc =
 
 let introduce_files workers ~options parsed unparsed =
   (* add tracking modules for unparsed files *)
-  let unparsed_file_module_assoc = MultiWorker.call workers
+  let%lwt unparsed_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
       let m = add_unparsed_info ~audit:Expensive.ok
         ~options filename docblock in
@@ -1037,10 +1030,10 @@ let introduce_files workers ~options parsed unparsed =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers unparsed) in
-
+    ~next: (MultiWorkerLwt.next workers unparsed)
+  in
   (* create info for parsed files *)
-  let parsed_file_module_assoc = MultiWorker.call workers
+  let%lwt parsed_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun file_module_assoc filename ->
       let docblock = Parsing_service_js.get_docblock_unsafe filename in
       let m = add_parsed_info ~audit:Expensive.ok
@@ -1050,9 +1043,9 @@ let introduce_files workers ~options parsed unparsed =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers parsed) in
-
+    ~next: (MultiWorkerLwt.next workers parsed)
+  in
   let new_file_module_assoc =
     List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
 
-  calc_new_modules ~options new_file_module_assoc
+  Lwt.return (calc_new_modules ~options new_file_module_assoc)

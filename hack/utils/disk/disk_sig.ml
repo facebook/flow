@@ -17,6 +17,8 @@ module type S = sig
   val getcwd : unit -> string
   val chdir : string -> unit
   val mkdir : string -> int -> unit
+  (** Return the names of all files present in the given directory. *)
+  val readdir : string -> string array
   (** Rename from old path to new path. *)
   val rename : string -> string -> unit
 end

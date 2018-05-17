@@ -44,7 +44,7 @@
 /*flowlint-line sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
 
 
-//Comments Both Redundant with Themselves and Earleir Settings (Should only show one kind of error.)
+//Comments Both Redundant with Themselves and Earlier Settings (Should only show one kind of error.)
 
 /*Clearing the settings; not an error.*/ //flowlint sketchy-null:error
 //flowlint sketchy-null:error, sketchy-null:error

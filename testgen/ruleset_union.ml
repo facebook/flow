@@ -10,7 +10,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -47,6 +46,7 @@ class ruleset_union = object(self)
                                    value = Init (_, t);
                                    optional = _;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) -> Hashtbl.add tbl name t
           | _ -> ()) T.Object.(o.properties);
@@ -78,7 +78,7 @@ class ruleset_union = object(self)
       | T.Function ft ->
         let ft_param = T.Function.(ft.params) |> snd in
         let params = T.Function.Params.(ft_param.params) |> List.hd |> snd in
-        T.Function.Param.(params.typeAnnotation)
+        T.Function.Param.(params.annot)
       | _ -> failwith "This has to a function type" in
 
     (* parameter *)
@@ -95,8 +95,8 @@ class ruleset_union = object(self)
 
     let ret_type = T.Function.(match func_type with
         | T.Function {params = _;
-                      returnType = (_, rt);
-                      typeParameters =_} -> rt
+                      return = (_, rt);
+                      tparams =_} -> rt
         | _ -> failwith "This has to be a function type") in
     let new_env =
       self#add_binding
@@ -147,5 +147,5 @@ end
 class ruleset_random_union = object
   inherit ruleset_union
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 5) > 0) then raise Engine.Backtrack
+    if (not b) && ((Random.int 5) > 0) then raise Engine.Backtrack
 end

@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('Requiring a .css file', [
@@ -20,7 +20,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import './foo'
-                      ^^^^^^^ ./foo. Required module not found
+                      ^^^^^^^ Cannot resolve module \`./foo\`.
         `,
       ),
   ]),
@@ -33,9 +33,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ Flow assumes requiring a .css file returns an Object. This type is incompatible with
-            5: (css: string)
-                     ^^^^^^ string
+                ^^^ Cannot cast \`css\` to string because object type [1] is incompatible with string [2].
+            References:
+              3: const css = require('./foo.css');
+                                     ^^^^^^^^^^^ [1]
+              5: (css: string)
+                       ^^^^^^ [2]
         `,
       ),
   ]),
@@ -62,7 +65,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: import './bar'
-                      ^^^^^^^ ./bar. Required module not found
+                      ^^^^^^^ Cannot resolve module \`./bar\`.
         `,
       ),
   ]),
@@ -75,9 +78,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (png: number)
-                ^^^ string. This type is incompatible with
-            5: (png: number)
-                     ^^^^^^ number
+                ^^^ Cannot cast \`png\` to number because string [1] is incompatible with number [2].
+            References:
+              3: const png = require('./bar.png');
+                                     ^^^^^^^^^^^ [1]
+              5: (png: number)
+                       ^^^^^^ [2]
         `,
       ),
   ]),
@@ -90,9 +96,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ boolean. This type is incompatible with
-            5: (css: string)
-                     ^^^^^^ string
+                ^^^ Cannot cast \`css\` to string because boolean [1] is incompatible with string [2].
+            References:
+              2: declare module.exports: boolean;
+                                         ^^^^^^^ [1]. See: cssMock.js:2
+              5: (css: string)
+                       ^^^^^^ [2]
         `,
       ),
   ]).flowConfig('_flowconfig_with_module_name_mapper'),

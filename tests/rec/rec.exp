@@ -1,76 +1,236 @@
-Error: issue-598.js:7
-  7: function bar(y: F<number>): F<string> { return y; }
-                                                    ^ type application of polymorphic type: F. This type is incompatible with the expected return type of
-  7: function bar(y: F<number>): F<string> { return y; }
-                                 ^^^^^^^^^ type application of polymorphic type: F
-  Type argument `A` is incompatible:
-      7: function bar(y: F<number>): F<string> { return y; }
-                           ^^^^^^ number. This type is incompatible with
-      7: function bar(y: F<number>): F<string> { return y; }
-                                       ^^^^^^ string
+Error ----------------------------------------------------------------------------------------------- issue-4070.js:6:17
 
-Error: issue-598.js:7
-  7: function bar(y: F<number>): F<string> { return y; }
-                                                    ^ type application of polymorphic type: F. This type is incompatible with the expected return type of
-  7: function bar(y: F<number>): F<string> { return y; }
-                                 ^^^^^^^^^ type application of polymorphic type: F
-  Type argument `A` is incompatible:
-      7: function bar(y: F<number>): F<string> { return y; }
-                                       ^^^^^^ string. This type is incompatible with
-      7: function bar(y: F<number>): F<string> { return y; }
-                           ^^^^^^ number
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
 
-Error: test.js:6
-  6: (p.x: string); // error
-      ^^^ number. This type is incompatible with
-  6: (p.x: string); // error
-           ^^^^^^ string
+   issue-4070.js:6:17
+     6| ys.set('a', [...y]);
+                        ^
 
-Error: test.js:9
-  9: (pstar: number); // error, but limit potentially unbounded number of errors!
-      ^^^^^ P. This type is incompatible with
-  9: (pstar: number); // error, but limit potentially unbounded number of errors!
-             ^^^^^^ number
-
-Error: test.js:13
- 13: (pstar.x: string); // error
-      ^^^^^^^ number. This type is incompatible with
- 13: (pstar.x: string); // error
-               ^^^^^^ string
-
-Error: test.js:16
- 16: (pstar.x: string); // error
-      ^^^^^^^ P. This type is incompatible with
- 16: (pstar.x: string); // error
-               ^^^^^^ string
-
-Error: test2.js:30
- 30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                ^^^^^^ number. This type is incompatible with
- 30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                            ^^^^^^ string
-
-Error: test2.js:30
- 30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                            ^^^^^^ string. This type is incompatible with
- 30: ((new C: C<number>): D<string>) // error: number ~/~ string
-                ^^^^^^ number
-
-Error: test3.js:13
- 13:   return x; // terminate despite expanding types, error
-              ^ function type. This type is incompatible with the expected return type of
- 12: function bar(x: P<number>): () => P<number> {
-                                 ^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
-     10: type P<X> = () => Q<P<X>>;
-                           ^^^^^^^ object type. This type is incompatible with
-     12: function bar(x: P<number>): () => P<number> {
-                                           ^^^^^^^^^ function type
-      Callable property is incompatible:
-         12: function bar(x: P<number>): () => P<number> {
-                                               ^^^^^^^^^ function type. Callable signature not found in
-         10: type P<X> = () => Q<P<X>>;
-                               ^^^^^^^ object type
+References:
+   <BUILTINS>/core.js:532:22
+   532|     get(key: K): V | void;
+                             ^^^^ [1]
+   <BUILTINS>/core.js:487:11
+   487| interface $Iterable<+Yield,+Return,-Next> {
+                  ^^^^^^^^^ [2]
 
 
-Found 9 errors
+Error ----------------------------------------------------------------------------------------------- issue-4070.js:7:17
+
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+
+   issue-4070.js:7:17
+     7| ys.set('a', [...y]);
+                        ^
+
+References:
+   <BUILTINS>/core.js:532:22
+   532|     get(key: K): V | void;
+                             ^^^^ [1]
+   <BUILTINS>/core.js:487:11
+   487| interface $Iterable<+Yield,+Return,-Next> {
+                  ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-4070.js:8:17
+
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+
+   issue-4070.js:8:17
+     8| ys.set('a', [...y]);
+                        ^
+
+References:
+   <BUILTINS>/core.js:532:22
+   532|     get(key: K): V | void;
+                             ^^^^ [1]
+   <BUILTINS>/core.js:487:11
+   487| interface $Iterable<+Yield,+Return,-Next> {
+                  ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-4070.js:9:17
+
+Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
+
+   issue-4070.js:9:17
+     9| ys.set('a', [...y]);
+                        ^
+
+References:
+   <BUILTINS>/core.js:532:22
+   532|     get(key: K): V | void;
+                             ^^^^ [1]
+   <BUILTINS>/core.js:487:11
+   487| interface $Iterable<+Yield,+Return,-Next> {
+                  ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ issue-598.js:7:48
+
+Cannot return `y` because number [1] is incompatible with string [2] in type argument `A` [3].
+
+   issue-598.js:7:48
+   7| function bar(y: F<number>): F<string> { return y; }
+                                                     ^
+
+References:
+   issue-598.js:7:19
+   7| function bar(y: F<number>): F<string> { return y; }
+                        ^^^^^^ [1]
+   issue-598.js:7:31
+   7| function bar(y: F<number>): F<string> { return y; }
+                                    ^^^^^^ [2]
+   issue-598.js:3:8
+   3| type F<A> = { foo<B>(x: A): F<B> }
+             ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
+
+Cannot return function because:
+ - property `e` is missing in `B` [1] but exists in `A` [2] in the first argument.
+ - property `e` is missing in `C` [1] but exists in `A` [2] in the first argument.
+ - property `k` is missing in `A` [1] but exists in `B` [3] in the first argument.
+ - property `k` is missing in `C` [1] but exists in `B` [3] in the first argument.
+ - property `v` is missing in `A` [1] but exists in `B` [3] in the first argument.
+ - property `v` is missing in `C` [1] but exists in `B` [3] in the first argument.
+ - string literal `a` [4] is incompatible with string literal `b` [5] in property `kind` of the first argument.
+ - string literal `a` [4] is incompatible with string literal `c` [6] in property `kind` of the first argument.
+ - string literal `b` [5] is incompatible with string literal `a` [4] in property `kind` of the first argument.
+ - string literal `b` [5] is incompatible with string literal `c` [6] in property `kind` of the first argument.
+ - string literal `c` [6] is incompatible with string literal `a` [4] in property `kind` of the first argument.
+ - string literal `c` [6] is incompatible with string literal `b` [5] in property `kind` of the first argument.
+
+   issue6155.js:15:12
+   15|     return (type) => cases[type.kind](type);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:9:9
+    9|     a: (A) => R,
+               ^ [2]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [3]
+   issue6155.js:3:17
+    3| type A = {kind: 'a', e: Type};
+                       ^^^ [4]
+   issue6155.js:4:17
+    4| type B = {kind: 'b', k: Type, v: Type};
+                       ^^^ [5]
+   issue6155.js:5:17
+    5| type C = {kind: 'c'};
+                       ^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:2
+
+Cannot cast `p.x` to string because number [1] is incompatible with string [2].
+
+   test.js:6:2
+   6| (p.x: string); // error
+       ^^^
+
+References:
+   test.js:5:10
+   5| var p: P<number> = new P;
+               ^^^^^^ [1]
+   test.js:6:7
+   6| (p.x: string); // error
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:2
+
+Cannot cast `pstar` to number because `P` [1] is incompatible with number [2].
+
+   test.js:9:2
+   9| (pstar: number); // error, but limit potentially unbounded number of errors!
+       ^^^^^
+
+References:
+   test.js:8:12
+   8| var pstar: Pstar<number> = 0; // OK
+                 ^^^^^^^^^^^^^ [1]
+   test.js:9:9
+   9| (pstar: number); // error, but limit potentially unbounded number of errors!
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+
+Cannot cast `pstar.x` to string because number [1] is incompatible with string [2].
+
+   test.js:13:2
+   13| (pstar.x: string); // error
+        ^^^^^^^
+
+References:
+   test.js:5:10
+    5| var p: P<number> = new P;
+                ^^^^^^ [1]
+   test.js:13:11
+   13| (pstar.x: string); // error
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:2
+
+Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2].
+
+   test.js:16:2
+   16| (pstar.x: string); // error
+        ^^^^^^^
+
+References:
+   test.js:15:19
+   15| pstar = (new P: P<P<number>>); // OK
+                         ^^^^^^^^^ [1]
+   test.js:16:11
+   16| (pstar.x: string); // error
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:30:3
+
+Cannot cast `new C()` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
+
+   test2.js:30:3
+   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+         ^^^^^^^^^^^^^^^^
+
+References:
+   test2.js:30:12
+   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+                  ^^^^^^ [1]
+   test2.js:30:24
+   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+                              ^^^^^^ [2]
+   test2.js:27:9
+   27| class D<X> { }
+               ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test3.js:13:10
+
+Cannot return `x` because a callable signature is missing in `Q` [1] but exists in `P` [2] in the return value.
+
+   test3.js:13:10
+   13|   return x; // terminate despite expanding types, error
+                ^
+
+References:
+   test3.js:10:19
+   10| type P<X> = () => Q<P<X>>;
+                         ^^^^^^^ [1]
+   test3.js:12:35
+   12| function bar(x: P<number>): () => P<number> {
+                                         ^^^^^^^^^ [2]
+
+
+
+Found 23 errors

@@ -19,3 +19,7 @@ let mk_with_proto cx reason
 
 let mk cx reason =
   mk_with_proto cx reason (ObjProtoT reason)
+
+and sealed_in_op reason_op = function
+  | Sealed -> true
+  | UnsealedInFile source -> source <> (Loc.source (Reason.loc_of_reason reason_op))

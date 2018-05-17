@@ -2,9 +2,8 @@
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -12,6 +11,7 @@ module Types = struct
 
   exception Timeout
   exception Watchman_error of string
+  exception Subscription_canceled_by_watchman
 
 
   type subscribe_mode =
@@ -30,7 +30,6 @@ module Types = struct
     subscribe_mode: subscribe_mode option;
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
-    sync_directory: string;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     root: Path.t;
@@ -94,13 +93,15 @@ module type S = sig
   val get_changes_synchronously: timeout:int ->
     watchman_instance -> watchman_instance * SSet.t
 
+  val get_fd: watchman_instance -> Unix.file_descr option
+
   (** Expose some things for testing. *)
   module Testing : sig
     val test_env : env
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :
-      env -> Hh_json.json -> env * pushed_changes
+      env -> Hh_json.json option -> env * pushed_changes
   end
 
   module Mocking : sig

@@ -7,9 +7,7 @@
 
 open Utils_js
 
-type element =
-| Skip of File_key.t
-| Component of File_key.t list
+type element = Component of File_key.t Nel.t
 
 type 'a merge_result = (File_key.t * 'a) list
 
@@ -19,18 +17,18 @@ val make :
   (* leader map *)
   File_key.t FilenameMap.t ->
   (* component map *)
-  File_key.t list FilenameMap.t ->
+  File_key.t Nel.t FilenameMap.t ->
   (* recheck_leader_map *)
   bool FilenameMap.t ->
   unit ->
-  element list MultiWorker.bucket
+  element list Bucket.bucket
 
 val join :
   (* intermediate result callback *)
   ('a merge_result Lazy.t -> unit) ->
-  (* merged, unchanged *)
-  'a merge_result * File_key.t list ->
-  (* accumulators *)
-  'a merge_result * File_key.t list ->
+  (* merged *)
+  'a merge_result ->
+  (* accumulator *)
+  'a merge_result ->
   (* accumulated results *)
-  'a merge_result * File_key.t list
+  'a merge_result

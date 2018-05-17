@@ -2,7 +2,7 @@
 layout: guide
 ---
 
-Objects are used many different ways in JavaScript. There's a number of
+Objects can be used in many different ways in JavaScript. There are a number of
 different ways to type them in order to support all the different use cases.
 
 ## Object type syntax <a class="toc" id="toc-object-type-syntax" href="#toc-object-type-syntax"></a>
@@ -172,7 +172,7 @@ var val1: boolean = obj.prop; // Error!
 var val2: string  = obj.prop; // Works!
 ```
 
-As Flow gets smarter and smarter, there should be fewer of these scenarios.
+As Flow gets smarter and smarter, there should be fewer instances of these scenarios.
 
 ##### Unknown property lookup on unsealed objects is unsafe <a class="toc" id="toc-unknown-property-lookup-on-unsealed-objects-is-unsafe" href="#toc-unknown-property-lookup-on-unsealed-objects-is-unsafe"></a>
 
@@ -233,7 +233,7 @@ var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
 
 Newer versions of the JavaScript standard include a `Map` class, but it is
 still very common to use objects as maps as well. In this use case, an object
-will likely have properties added to it and retrieved throughout its life.
+will likely have properties added to it and retrieved throughout its lifecycle.
 Furthermore, the property keys may not even be known statically, so writing out
 a type annotation would not be possible.
 
@@ -285,4 +285,31 @@ function add(id: number, name: string) {
   obj[id] = name;
   obj.size++;
 }
+```
+
+### `Object` Type <a class="toc" id="toc-object-type" href="#toc-object-type"></a>
+
+Sometimes it is useful to write types that accept arbitrary objects, for
+those you should write `{}` like this:
+
+```js
+function method(obj: {}) {
+  // ...
+}
+```
+
+However, if you need to opt-out of the type checker, and don't want to go all
+the way to `any`, you can instead use `Object`. **`Object` is unsafe and
+should be avoided.**
+
+For example, the following code will not report any errors:
+
+```js
+function method(obj: Object) {
+  obj.foo = 42;               // Works.
+  let bar: boolean = obj.bar; // Works.
+  obj.baz.bat.bam.bop;        // Works.
+}
+
+method({ baz: 3.14, bar: "hello" });
 ```

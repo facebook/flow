@@ -4,7 +4,7 @@
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('forwards type but not value exports', [
@@ -15,23 +15,46 @@ export default suite(({addFile, addFiles, addCode}) => [
       import type {aType} from "./forward_only";
       ("asdf": aType);
     `).noNewErrors(),
-    addCode('(42: aType)').newErrors(`
-      test.js:8
-        8: (42: aType)
-            ^^ number. This type is incompatible with
-        8: (42: aType)
-                ^^^^^ string
-    `),
-    addCode('import type {nope} from "./forward_only";').newErrors(`
-      test.js:10
-        10: import type {nope} from "./forward_only";
-                         ^^^^ Named import from module ${'`'}./forward_only${'`'}. This module has no named export called ${'`'}nope${'`'}.
-    `),
-    addCode('import {aNum} from "./forward_only";').newErrors(`
-      test.js:12
-        12: import {aNum} from "./forward_only";
-                        ^^^^ Named import from module ${'`'}./forward_only${'`'}. This module has no named export called ${'`'}aNum${'`'}.
-    `),
+    addCode('(42: aType)').newErrors(
+                            `
+                              test.js:8
+                                8: (42: aType)
+                                    ^^ Cannot cast \`42\` to \`aType\` because number [1] is incompatible with string [2].
+                                References:
+                                  8: (42: aType)
+                                      ^^ [1]
+                                  8: (42: aType)
+                                          ^^^^^ [2]
+                            `,
+                          ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    addCode('import type {nope} from "./forward_only";').newErrors(
+                                                          `
+                                                            test.js:10
+                                                             10: import type {nope} from "./forward_only";
+                                                                              ^^^^ Cannot import \`nope\` because there is no \`nope\` export in \`./forward_only\`.
+                                                          `,
+                                                        ),
+    addCode('import {aNum} from "./forward_only";').newErrors(
+                                                     `
+                                                       test.js:12
+                                                        12: import {aNum} from "./forward_only";
+                                                                    ^^^^ Cannot import \`aNum\` because there is no \`aNum\` export in \`./forward_only\`.
+                                                     `,
+                                                   ),
   ]),
 
   test('forwards types alongside existing type exports', [
@@ -45,11 +68,13 @@ export default suite(({addFile, addFiles, addCode}) => [
         middleString,
       } from "./forward_with_exports";
     `).noNewErrors(),
-    addCode('import {aNum} from "./forward_with_exports";').newErrors(`
-      test.js:11
-        11: import {aNum} from "./forward_with_exports";
-                    ^^^^ Named import from module ${'`'}./forward_with_exports${'`'}. This module has no named export called ${'`'}aNum${'`'}.
-    `),
+    addCode('import {aNum} from "./forward_with_exports";').newErrors(
+                                                             `
+                                                               test.js:11
+                                                                11: import {aNum} from "./forward_with_exports";
+                                                                            ^^^^ Cannot import \`aNum\` because there is no \`aNum\` export in \`./forward_with_exports\`.
+                                                             `,
+                                                           ),
   ]),
 
   test('local exports override remote exports', [
@@ -61,13 +86,18 @@ export default suite(({addFile, addFiles, addCode}) => [
       (42: aType);
     `).noNewErrors(),
 
-    addCode('("asdf": aType);').newErrors(`
-      test.js:8
-        8: ("asdf": aType);
-            ^^^^^^ string. This type is incompatible with
-        8: ("asdf": aType);
-                    ^^^^^ number
-    `),
+    addCode('("asdf": aType);').newErrors(
+                                 `
+                                   test.js:8
+                                     8: ("asdf": aType);
+                                         ^^^^^^ Cannot cast \`"asdf"\` to \`aType\` because string [1] is incompatible with number [2].
+                                     References:
+                                       8: ("asdf": aType);
+                                           ^^^^^^ [1]
+                                       8: ("asdf": aType);
+                                                   ^^^^^ [2]
+                                 `,
+                               ),
   ]),
 
   test('local exports override remote exports regardless of export order', [
@@ -79,12 +109,17 @@ export default suite(({addFile, addFiles, addCode}) => [
       (42: aType);
     `).noNewErrors(),
 
-    addCode('("asdf": aType);').newErrors(`
-      test.js:8
-        8: ("asdf": aType);
-            ^^^^^^ string. This type is incompatible with
-        8: ("asdf": aType);
-                    ^^^^^ number
-    `),
+    addCode('("asdf": aType);').newErrors(
+                                 `
+                                   test.js:8
+                                     8: ("asdf": aType);
+                                         ^^^^^^ Cannot cast \`"asdf"\` to \`aType\` because string [1] is incompatible with number [2].
+                                     References:
+                                       8: ("asdf": aType);
+                                           ^^^^^^ [1]
+                                       8: ("asdf": aType);
+                                                   ^^^^^ [2]
+                                 `,
+                               ),
   ]),
 ]);

@@ -1,127 +1,214 @@
-Error: error_continues.js:3
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-            ^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                          ^^^^^^^^^^^^^ exact type: object type
+Error ------------------------------------------------------------------------------------------- error_continues.js:3:3
 
-Error: error_continues.js:3
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-            ^^^^^^^^^^^ object type. This type is incompatible with
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                          ^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                    ^^^^^^ number. This type is incompatible with
-      3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                                   ^^^^^^ string
+Cannot cast `any` to object type because:
+ - inexact object type [1] is incompatible with exact object type [2].
+ - number [3] is incompatible with string [4] in property `p`.
 
-Error: error_continues.js:3
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-            ^^^^^^^^^^^ object type. This type is incompatible with
-  3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                          ^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                                   ^^^^^^ string. This type is incompatible with
-      3: ((any: {p: number}): {|p: string|}); // We should get two errors here!
-                    ^^^^^^ number
+   error_continues.js:3:3
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+        ^^^^^^^^^^^^^^^^
 
-Error: exact_basics.js:49
- 49: takesExactlyPerson(subtypeOfPerson); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 49: takesExactlyPerson(subtypeOfPerson); // error
-                        ^^^^^^^^^^^^^^^ property `first`. Property not found in
- 43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ object type
+References:
+   error_continues.js:3:8
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+             ^^^^^^^^^^^ [1]
+   error_continues.js:3:22
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+                           ^^^^^^^^^^^^^ [2]
+   error_continues.js:3:12
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+                 ^^^^^^ [3]
+   error_continues.js:3:27
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+                                ^^^^^^ [4]
 
-Error: exact_basics.js:61
- 61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
-                        ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
- 43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ exact type: object type
 
-Error: exact_basics.js:71
- 71: takesExactlyPerson(returnsExactlyPerson2()); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 71: takesExactlyPerson(returnsExactlyPerson2()); // error
-                        ^^^^^^^^^^^^^^^^^^^^^^^ property `first`. Property not found in
- 43: declare function takesExactlyPerson(person: ExactPerson): void;
-                                                 ^^^^^^^^^^^ object type
+Error -------------------------------------------------------------------------------------------- exact_basics.js:49:20
 
-Error: exact_basics.js:85
- 85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                           ^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
- 76: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                     ^^^^^^^ object type
-  Property `first` is incompatible:
-     76: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                         ^^^^^^^ property `first`. Property not found in
-     85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                               ^^^^^^^^^^^^^^^^^^^^^^ object type
+Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person` because property `first` is missing in
+`ExactPerson` [1] but exists in object literal [2].
 
-Error: exact_basics.js:94
- 94: takesPersonPred(returnsExactlyPersonPred()); // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: PersonPred. Unsupported exact type
- 94: takesPersonPred(returnsExactlyPersonPred()); // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+   exact_basics.js:49:20
+   49| takesExactlyPerson(subtypeOfPerson); // error
+                          ^^^^^^^^^^^^^^^
 
-Error: prop_test.js:28
- 28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
-                 ^^^^^ property `state`. Property not found in
- 28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
-              ^^ object type
+References:
+   exact_basics.js:43:45
+   43| declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [1]
+   exact_basics.js:41:23
+   41| var subtypeOfPerson = { salutation: "Mr", first: "Bob", last: "Dobalina" };
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
-Error: unsealed.js:14
- 14: f(o); // error: o incompatible with exact type
-       ^ object literal. This type is incompatible with the expected param type of
-  4: function f(o: {p: string} | $Exact<{}>): string {
-                   ^^^^^^^^^^^^^^^^^^^^^^^^ union: object type | exact type: object type
-  Member 1:
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ object type
-  Error:
-   14: f(o); // error: o incompatible with exact type
-         ^ object literal. This type is incompatible with
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ object type
-    Property `p` is incompatible:
-        4: function f(o: {p: string} | $Exact<{}>): string {
-                         ^^^^^^^^^^^ property `p`. Property not found in
-       14: f(o); // error: o incompatible with exact type
-             ^ object literal
-  Member 2:
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                                   ^^^^^^^^^^ exact type: object type
-  Error:
-   14: f(o); // error: o incompatible with exact type
-         ^ object literal. Inexact type is incompatible with exact type
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                                   ^^^^^^^^^^ exact type: object type
 
-Error: unsealed2.js:9
-  9:   g(x);
-       ^^^^ function call
- 15:     return x.q;
-                ^^^ string. This type is incompatible with the expected return type of
- 13: function f(_): number {
-                    ^^^^^^ number
+Error -------------------------------------------------------------------------------------------- exact_basics.js:61:20
 
-Error: use_ops.js:2
-  2: var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
-                                   ^ object type. This type is incompatible with
-  2: var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
-            ^^^^^^^^^^^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      1: declare var a: { p: { q: null } };
-                             ^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
-      2: var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
-                     ^^^^^^^^^^^^^ exact type: object type
+Cannot call `takesExactlyPerson` with `returnsSubtypeOfPerson()` bound to `person` because inexact `Person` [1] is
+incompatible with exact `ExactPerson` [2].
 
-Error: use_ops.js:6
-  6: f(o); // error: inexact arg incompatible with exact param (error should indicate exactness issue)
-       ^ object type. Inexact type is incompatible with exact type
-  4: function f(o: {| p: null |}) {}
-                   ^^^^^^^^^^^^^ exact type: object type
+   exact_basics.js:61:20
+   61| takesExactlyPerson(returnsSubtypeOfPerson());  // error
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exact_basics.js:54:44
+   54| declare function returnsSubtypeOfPerson(): Person;
+                                                  ^^^^^^ [1]
+   exact_basics.js:43:45
+   43| declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- exact_basics.js:71:20
+
+Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to `person` because property `first` is missing in
+`ExactPerson` [1] but exists in `ExactPerson2` [2].
+
+   exact_basics.js:71:20
+   71| takesExactlyPerson(returnsExactlyPerson2()); // error
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exact_basics.js:43:45
+   43| declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [1]
+   exact_basics.js:68:43
+   68| declare function returnsExactlyPerson2(): ExactPerson2;
+                                                 ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- exact_basics.js:85:23
+
+Cannot call `takesSubtypeOfPerson2` with `returnsExactlyPerson()` bound to `person2` because property `first` is missing
+in `ExactPerson` [1] but exists in `Person2` [2].
+
+   exact_basics.js:85:23
+   85| takesSubtypeOfPerson2(returnsExactlyPerson()); // error
+                             ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exact_basics.js:55:42
+   55| declare function returnsExactlyPerson(): ExactPerson;
+                                                ^^^^^^^^^^^ [1]
+   exact_basics.js:76:49
+   76| declare function takesSubtypeOfPerson2(person2: Person2): void;
+                                                       ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- exact_basics.js:94:17
+
+Cannot create exact type from `PersonPred` [1].
+
+   exact_basics.js:94:17
+   94| takesPersonPred(returnsExactlyPersonPred()); // error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exact_basics.js:91:53
+   91| declare function returnsExactlyPersonPred(): $Exact<PersonPred>;
+                                                           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ prop_test.js:12:7
+
+Property `xxx` is missing in `Person` [1].
+
+   prop_test.js:12:7
+   12|   if (p.xxx) {     // Error - xxx doesn't exist in the exact type
+             ^^^^^
+
+References:
+   prop_test.js:11:36
+   11| function prop_test_exact(p: $Exact<Person>): string {
+                                          ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- prop_test.js:28:10
+
+Cannot get `pc.state` because property `state` is missing in `Person` [1].
+
+   prop_test.js:28:10
+   28|   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
+                ^^^^^^^^
+
+References:
+   prop_test.js:24:43
+   24| function prop_test_exact_union(pc: $Exact<Person> | $Exact<Address>): string {
+                                                 ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- unsealed.js:14:3
+
+Cannot call `f` with `o` bound to `o` because:
+ - Either property `p` is missing in object literal [1] but exists in object type [2].
+ - Or inexact object literal [1] is incompatible with exact object type [3].
+
+   unsealed.js:14:3
+   14| f(o); // error: o incompatible with exact type
+         ^
+
+References:
+   unsealed.js:12:9
+   12| var o = {};
+               ^^ [1]
+   unsealed.js:4:15
+    4| function f(o: {p: string} | $Exact<{}>): string {
+                     ^^^^^^^^^^^ [2]
+   unsealed.js:4:29
+    4| function f(o: {p: string} | $Exact<{}>): string {
+                                   ^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- unsealed2.js:15:12
+
+Cannot return `x.q` because string [1] is incompatible with number [2].
+
+   unsealed2.js:15:12
+   15|     return x.q;
+                  ^^^
+
+References:
+   unsealed2.js:23:9
+   23|   x.q = "not a number";
+               ^^^^^^^^^^^^^^ [1]
+   unsealed2.js:13:16
+   13| function f(_): number {
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- use_ops.js:2:31
+
+Cannot assign `a` to `b` because inexact object type [1] is incompatible with exact object type [2] in property `p`.
+
+   use_ops.js:2:31
+   2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
+                                    ^
+
+References:
+   use_ops.js:1:21
+   1| declare var a: { p: { q: null } };
+                          ^^^^^^^^^^^ [1]
+   use_ops.js:2:13
+   2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
+                  ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- use_ops.js:6:3
+
+Cannot call `f` with `o` bound to `o` because inexact object type [1] is incompatible with exact object type [2].
+
+   use_ops.js:6:3
+   6| f(o); // error: inexact arg incompatible with exact param (error should indicate exactness issue)
+        ^
+
+References:
+   use_ops.js:5:16
+   5| declare var o: { p: null };
+                     ^^^^^^^^^^^ [1]
+   use_ops.js:4:15
+   4| function f(o: {| p: null |}) {}
+                    ^^^^^^^^^^^^^ [2]
+
 
 
 Found 13 errors

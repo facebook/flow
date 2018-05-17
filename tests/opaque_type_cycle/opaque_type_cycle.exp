@@ -1,32 +1,87 @@
-Error: test2.js:4
-  4:     return x; // Error: number ~> ID
-                ^ number. This type is incompatible with the expected return type of
-  3: export function hide(x: number) : ID {
-                                       ^^ ID
+Error ---------------------------------------------------------------------------------------------------- test2.js:4:12
 
-Error: test2.js:8
-  8:     return show(x); // Error: number ~> ID
-                ^^^^^^^ number. This type is incompatible with the expected return type of
-  7: function bad(x: ID) : ID {
-                           ^^ ID
+Cannot return `x` because number [1] is incompatible with `ID` [2].
 
-Error: test2.js:12
- 12:     return opaquify(x); // Error: ID ~> number
-                ^^^^^^^^^^^ ID. This type is incompatible with the expected return type of
- 11: function bad2(x: number): number {
-                               ^^^^^^ number
+   test2.js:4:12
+   4|     return x; // Error: number ~> ID
+                 ^
 
-Error: test3.js:5
-  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                  ^ number. This type is incompatible with
-  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                     ^^^^^^^^ num
+References:
+   test2.js:3:25
+   3| export function hide(x: number) : ID {
+                              ^^^^^^ [1]
+   test2.js:3:35
+   3| export function hide(x: number) : ID {
+                                        ^^ [2]
 
-Error: test3.js:5
-  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                                                        ^ number. This type is incompatible with the expected return type of
-  5: export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
-                                      ^^^^^^^^ num
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:8:12
+
+Cannot return `show(...)` because number [1] is incompatible with `ID` [2].
+
+   test2.js:8:12
+   8|     return show(x); // Error: number ~> ID
+                 ^^^^^^^
+
+References:
+   test1.js:4:31
+   4| export function show(x: ID) : number {
+                                    ^^^^^^ [1]
+   test2.js:7:23
+   7| function bad(x: ID) : ID {
+                            ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test2.js:12:12
+
+Cannot return `opaquify(...)` because `ID` [1] is incompatible with number [2].
+
+   test2.js:12:12
+   12|     return opaquify(x); // Error: ID ~> number
+                  ^^^^^^^^^^^
+
+References:
+   test1.js:8:39
+    8| export function opaquify(x: number) : ID {
+                                             ^^ [1]
+   test2.js:11:27
+   11| function bad2(x: number): number {
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test3.js:5:46
+
+Cannot cast `x` to `typeof y` because number [1] is incompatible with `num` [2].
+
+   test3.js:5:46
+   5| export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                   ^
+
+References:
+   test3.js:5:25
+   5| export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                              ^^^^^^ [1]
+   cycle.js:4:15
+   4| export var y: num = 3;
+                    ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test3.js:5:68
+
+Cannot return `x` because number [1] is incompatible with `num` [2].
+
+   test3.js:5:68
+   5| export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                                                                         ^
+
+References:
+   test3.js:5:25
+   5| export function test(x: number): typeof(y) {(x: typeof(y)); return x;}
+                              ^^^^^^ [1]
+   cycle.js:4:15
+   4| export var y: num = 3;
+                    ^^^ [2]
+
 
 
 Found 5 errors

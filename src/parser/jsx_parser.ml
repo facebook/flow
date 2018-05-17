@@ -24,10 +24,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
       argument;
     })
 
-  let expression_container env =
-    Eat.push_lex_mode env Lex_mode.NORMAL;
-    let start_loc = Peek.loc env in
-    Expect.token env T_LCURLY;
+  let expression_container' env start_loc =
     let expression = if Peek.token env = T_RCURLY
       then
         let empty_loc = Loc.btwn_exclusive start_loc (Peek.loc env) in
@@ -39,6 +36,28 @@ module JSX (Parse: Parser_common.PARSER) = struct
     Loc.btwn start_loc end_loc, JSX.ExpressionContainer.({
       expression;
     })
+
+  let expression_container env =
+    Eat.push_lex_mode env Lex_mode.NORMAL;
+    let start_loc = Peek.loc env in
+    Expect.token env T_LCURLY;
+    expression_container' env start_loc
+
+  let expression_container_or_spread_child env =
+    Eat.push_lex_mode env Lex_mode.NORMAL;
+    let start_loc = Peek.loc env in
+    Expect.token env T_LCURLY;
+      match Peek.token env with
+        | T_ELLIPSIS ->
+            Expect.token env T_ELLIPSIS;
+            let expr = Parse.assignment env in
+            let end_loc = Peek.loc env in
+            Expect.token env T_RCURLY;
+            Eat.pop_lex_mode env;
+            Loc.btwn start_loc end_loc, JSX.SpreadChild expr
+        | _ ->
+          let expression_container = expression_container' env start_loc in
+          fst expression_container, JSX.ExpressionContainer (snd expression_container)
 
   let identifier env =
     let loc = Peek.loc env in
@@ -195,12 +214,9 @@ module JSX (Parse: Parser_common.PARSER) = struct
       | ChildElement of (Loc.t * Loc.t JSX.element)
       | ChildFragment of (Loc.t * Loc.t JSX.fragment)
 
-
     let rec child env =
       match Peek.token env with
-      | T_LCURLY ->
-          let expression_container = expression_container env in
-          fst expression_container, JSX.ExpressionContainer (snd expression_container)
+      | T_LCURLY -> expression_container_or_spread_child env
       | T_JSX_TEXT (loc, value, raw) as token ->
           Expect.token env token;
           loc, JSX.Text { JSX.Text.value; raw; }

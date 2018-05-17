@@ -15,11 +15,11 @@ module Utils = Utils_js
 (* Driver *)
 (**********)
 
-let force_annotations cx require_loc_map =
+let force_annotations cx =
   let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
-  Flow_js.enforce_strict cx id (SMap.keys require_loc_map)
+  Flow_js.enforce_strict cx id
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
@@ -35,8 +35,7 @@ let infer_core cx statements =
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
     Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow))
   | exc ->
-    let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    Flow_js.add_output cx FlowError.(EInternal (loc, UncaughtException exc))
+    raise exc
 
 (* There's a .flowconfig option to specify suppress_comments regexes. Any
  * comments that match those regexes will suppress any errors on the next line
@@ -175,7 +174,7 @@ let scan_for_lint_suppressions =
 
   let add_error cx (loc, kind) =
     let err = FlowError.ELintSetting (loc, kind) in
-    FlowError.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) err
+    FlowError.error_of_msg ~trace_reasons:[] ~source_file:(Context.file cx) err
     |> Context.add_error cx
   in
 
@@ -289,9 +288,9 @@ let scan_for_lint_suppressions =
           (* Check for overwritten arguments *)
           let used_locs = LintSettings.fold
             (fun _ (_, loc) loc_set -> match loc with
-              | Some loc -> Loc.LocSet.add loc loc_set
+              | Some loc -> Utils.LocSet.add loc loc_set
               | None -> loc_set)
-            new_running_settings Loc.LocSet.empty
+            new_running_settings Utils.LocSet.empty
           in
           let arg_locs = List.map
             (function
@@ -301,7 +300,7 @@ let scan_for_lint_suppressions =
           in
           List.iter (function
             | Some arg_loc ->
-              if not (Loc.LocSet.mem arg_loc used_locs) then begin
+              if not (Utils.LocSet.mem arg_loc used_locs) then begin
                 error_encountered := true;
                 add_error cx (arg_loc, LintSettings.Overwritten_argument)
               end
@@ -315,7 +314,7 @@ let scan_for_lint_suppressions =
           if not !error_encountered then
             List.fold_left (
               fun suppression_locs -> function
-                | (_, (Severity.Off, loc))::_ -> Loc.LocSet.add loc suppression_locs
+                | (_, (Severity.Off, loc))::_ -> Utils.LocSet.add loc suppression_locs
                 | _ -> suppression_locs
               ) suppression_locs settings_list
           else suppression_locs
@@ -337,36 +336,65 @@ let scan_for_lint_suppressions =
   fun cx base_settings comments ->
     let severity_cover_builder = ExactCover.new_builder (Context.file cx) base_settings in
     let severity_cover_builder, _, suppression_locs = List.fold_left
-      (process_comment cx) (severity_cover_builder, base_settings, Loc.LocSet.empty) comments
+      (process_comment cx) (severity_cover_builder, base_settings, Utils.LocSet.empty) comments
     in
     let severity_cover = ExactCover.bake severity_cover_builder in
-    Context.set_severity_cover cx severity_cover;
-    Context.set_unused_lint_suppressions cx suppression_locs
+    Context.add_severity_cover cx severity_cover;
+    Context.add_unused_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx base_settings comments =
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx base_settings comments
 
+let add_require_tvars =
+  let add cx desc loc =
+    let reason = Reason.mk_reason desc loc in
+    let t = Tvar.mk cx reason in
+    Context.add_require cx loc t
+  in
+  let add_decl cx m_name desc loc =
+    (* TODO: Imports within `declare module`s can only reference other `declare
+       module`s (for now). This won't fly forever so at some point we'll need to
+       move `declare module` storage into the modulemap just like normal modules
+       and merge them as such. *)
+    let reason = Reason.mk_reason desc loc in
+    let t = Flow_js.get_builtin cx m_name reason in
+    Context.add_require cx loc t
+  in
+  fun cx file_sig ->
+    let open File_sig in
+    SMap.iter (fun mref locs ->
+      let desc = Reason.RCustom mref in
+      Nel.iter (add cx desc) locs
+    ) (require_loc_map file_sig.module_sig);
+    SMap.iter (fun _ (_, module_sig) ->
+      SMap.iter (fun mref locs ->
+        let m_name = Reason.internal_module_name mref in
+        let desc = Reason.RCustom mref in
+        Nel.iter (add_decl cx m_name desc) locs
+      ) (require_loc_map module_sig)
+    ) file_sig.declare_modules
+
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities ~file_sig cx filename ast =
+  assert (Context.is_checked cx);
+
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
 
+  add_require_tvars cx file_sig;
+
   let module_ref = Context.module_ref cx in
 
-  let dep_mapper = new Dep_mapper.mapper in
-  let _ = dep_mapper#program ast in
-  let _ = Context.set_dep_map cx dep_mapper#dep_map in
-  let _ = Context.set_use_def_map cx dep_mapper#use_def_map in
-
-  let checked = Context.is_checked cx in
+  begin
+    try Context.set_use_def cx @@ Ssa_builder.program_with_scope ast
+    with _ -> ()
+  end;
 
   let reason_exports_module =
-    let desc = Reason.RCustom (
-      Utils.spf "exports of file `%s`" module_ref
-    ) in
+    let desc = Reason.RModule module_ref in
     Reason.locationless_reason desc
   in
 
@@ -398,45 +426,37 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   let file_loc = Loc.({ none with source = Some filename }) in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
-  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-
   let initial_module_t = ImpExp.module_t_of_cx cx in
-  if checked then (
-    SMap.iter (Import_export.add_require_tvar cx) require_loc_map;
+  let init_exports = Obj_type.mk cx reason in
+  ImpExp.set_module_exports cx file_loc init_exports;
 
-    let init_exports = Obj_type.mk cx reason in
-    ImpExp.set_module_exports cx file_loc init_exports;
+  (* infer *)
+  Flow_js.flow_t cx (init_exports, local_exports_var);
+  infer_core cx statements;
 
-    (* infer *)
-    Flow_js.flow_t cx (init_exports, local_exports_var);
-    infer_core cx statements;
+  scan_for_suppressions cx lint_severities comments;
 
-    scan_for_suppressions cx lint_severities comments;
+  let module_t = Context.(
+    match Context.module_kind cx with
+    (* CommonJS with a clobbered module.exports *)
+    | CommonJSModule(Some(loc)) ->
+      let module_exports_t = ImpExp.get_module_exports cx file_loc in
+      let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
+      ImpExp.mk_commonjs_module_t cx reason_exports_module
+        reason module_exports_t
 
-    let module_t = Context.(
-      match Context.module_kind cx with
-      (* CommonJS with a clobbered module.exports *)
-      | CommonJSModule(Some(loc)) ->
-        let module_exports_t = ImpExp.get_module_exports cx file_loc in
-        let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
-        ImpExp.mk_commonjs_module_t cx reason_exports_module
-          reason module_exports_t
+    (* CommonJS with a mutated 'exports' object *)
+    | CommonJSModule(None) ->
+      ImpExp.mk_commonjs_module_t cx reason_exports_module
+        reason local_exports_var
 
-      (* CommonJS with a mutated 'exports' object *)
-      | CommonJSModule(None) ->
-        ImpExp.mk_commonjs_module_t cx reason_exports_module
-          reason local_exports_var
-
-      (* Uses standard ES module exports *)
-      | ESModule -> ImpExp.mk_module_t cx reason_exports_module
-    ) in
-    Flow_js.flow_t cx (module_t, initial_module_t)
-  ) else (
-    Flow_js.unify cx initial_module_t Type.Locationless.AnyT.t
-  );
+    (* Uses standard ES module exports *)
+    | ESModule -> ImpExp.mk_module_t cx reason_exports_module
+  ) in
+  Flow_js.flow_t cx (module_t, initial_module_t);
 
   (* insist that whatever type flows into exports is fully annotated *)
-  force_annotations cx require_loc_map;
+  force_annotations cx;
 
   ()
 
@@ -446,19 +466,14 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
+let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let _, statements, comments = ast in
   Flow_js.Cache.clear();
-
-  let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
 
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
-    let open File_sig in
-    let file_sig = program ~ast in
-    let require_loc_map = require_loc_map file_sig.module_sig in
-    SMap.iter (Import_export.add_require_tvar cx) require_loc_map
+    add_require_tvars cx file_sig
   in
 
   let module_scope = Scope.fresh () in
@@ -471,4 +486,4 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
     Flow_js.set_builtin cx name (actual_type entry)
   ));
 
-  cx, SMap.keys Scope.(module_scope.entries)
+  SMap.keys Scope.(module_scope.entries)

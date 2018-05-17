@@ -2,13 +2,26 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
-open Core
-open Ide_api_types
+open Hh_core
+
+type position = {
+  line : int; (* 1-based *)
+  column : int; (* 1-based *)
+}
+
+type range = {
+  st : position;
+  ed : position;
+}
+
+type text_edit = {
+  range : range option;
+  text : string;
+}
 
 (* UTF-8 encoding character lengths.
  *
@@ -78,8 +91,7 @@ let get_offset (content : string) (position : position) : int =
 (* It is okay to ask for the position of the offset of the end of the file.   *)
 (* In case of multi-byte characters, if you give an offset inside a character,*)
 (* it still gives the position immediately after.                             *)
-let offset_to_position (content: string) (offset: int)
-  : Ide_api_types.position =
+let offset_to_position (content: string) (offset: int) : position =
   let rec helper ~(line: int) ~(column: int) ~(index: int) =
     if index >= offset then
       {line; column;}
@@ -114,20 +126,21 @@ let print_edit b edit =
   in
   Printf.bprintf b "range = %s\n text = \n%s\n" range edit.text
 
-let edit_file content (edits: text_edit list) =
+let edit_file content (edits: text_edit list) : (string, string * Utils.callstack) result =
   try
     Ok (List.fold ~init:content ~f:apply_edit edits)
   with e ->
+    let stack = Printexc.get_backtrace () in
     let b = Buffer.create 1024 in
     Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
     Printf.bprintf b "Original content:\n%s\n" content;
     Printf.bprintf b "Edits:\n";
     List.iter edits ~f:(print_edit b);
-    Error (Buffer.contents b)
+    Error (Buffer.contents b, Utils.Callstack stack)
 
 let edit_file_unsafe fc edits =
   match edit_file fc edits with
   | Ok r -> r
-  | Error e ->
+  | Error (e, _stack) ->
       Printf.eprintf "%s" e;
       failwith e

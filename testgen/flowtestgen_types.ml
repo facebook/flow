@@ -12,7 +12,6 @@ module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
 module Config = Flowtestgen_config;;
-module FRandom = Utils.FRandom;;
 
 (* Set for types *)
 module TypeSet' = Set.Make(
@@ -61,7 +60,7 @@ let mk_obj_type (props : (string * T.t') list) : T.t' =
       let key = E.Object.Property.(Identifier (Loc.none, p)) in
       let value = T.Object.Property.(Init (Loc.none, t)) in
       let open T.Object.Property in
-      let variance = match FRandom.rint 3 with
+      let variance = match Random.int 3 with
         | 0 -> None
         | 1 -> Some (Loc.none, Ast.Variance.Plus)
         | _ -> Some (Loc.none, Ast.Variance.Minus) in
@@ -71,7 +70,7 @@ let mk_obj_type (props : (string * T.t') list) : T.t' =
                            static = false;
                            _method = false;
                            variance})) props in
-  T.Object {exact = FRandom.rbool ();
+  T.Object {exact = Random.bool ();
             properties = plist}
 
 let mk_tuple_type (tlist : T.t' list) : T.t' =
@@ -103,7 +102,7 @@ let rec mk_literal_expr (t : T.t') : Code.t' =
     {expr = E.Literal lit; expr_deps = []}
   | T.Union (t1, t2, rest) ->
     let all_types = (t1 :: t2 :: rest) |> (List.map snd) in
-    let t = FRandom.rchoice (Array.of_list all_types) in
+    let t = Utils.random_choice (Array.of_list all_types) in
     mk_literal_expr t
   | T.Object obj_t -> mk_obj_literal_expr obj_t
   | T.StringLiteral lit ->
@@ -147,7 +146,7 @@ and mk_obj_literal_expr (t : T.Object.t) : Code.t' =
                                  variance = _}) -> (k, o, mk_literal_expr ptype)
         | _ -> failwith "Unsupported property") T.Object.(t.properties)
     (* Randomly remove some optional properties *)
-    |> List.filter (fun (_, o, _) -> not o || (FRandom.rbool ()))
+    |> List.filter (fun (_, o, _) -> not o || (Random.bool ()))
     |> List.map (fun (key, _, expr_t) ->
        let open E.Object.Property in
        E.Object.Property (Loc.none, {key;
@@ -156,23 +155,3 @@ and mk_obj_literal_expr (t : T.Object.t) : Code.t' =
                                      shorthand = false})) in
   E.Object.({expr = E.Object {properties = prop_init_list};
              expr_deps = []})
-
-(* A function returning random types *)
-let random_type : (unit -> T.t') = fun () ->
-  let open TypeSet in
-  let supported_types = (TypeSet.union literal_types primitive_types) in
-  match FRandom.int 3 with
-  | 0 -> choose FRandom.rchoice supported_types
-  (* For tuple type, we just use literal types. If we use an arbitrary
-     type, we will need a function to check subtyping which is really
-     complicated and difficult. *)
-  | 1 -> mk_tuple_type [T.StringLiteral T.StringLiteral.({value = "strlit";
-                                                          raw = "\"strlit\"";});
-                        T.NumberLiteral T.NumberLiteral.({value = 2.2;
-                                                          raw = "2.2";});
-                        T.BooleanLiteral T.BooleanLiteral.({value = true;
-                                                            raw = "true";})];
-  | _ ->
-    mk_obj_type [(Utils.mk_prop (), choose FRandom.rchoice supported_types);
-                 (Utils.mk_prop (), choose FRandom.rchoice supported_types);
-                 (Utils.mk_prop (), choose FRandom.rchoice supported_types)]

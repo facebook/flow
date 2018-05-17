@@ -8,6 +8,7 @@
 open Constraint
 open Type
 
+module LocMap = Utils_js.LocMap
 module P = Type.Polarity
 
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
@@ -76,8 +77,10 @@ end = struct
   let exclude id x = IMap.add id Neutral x
 end
 
+type state = Marked.t
+
 let gc = object (self)
-  inherit [Marked.t] Type_visitor.t as super
+  inherit [state] Type_visitor.t as super
 
   val depth = ref 0;
 
@@ -98,7 +101,7 @@ let gc = object (self)
     match Marked.add id pole marked with
     | None -> marked
     | Some (pole, marked) ->
-      let root_id, constraints = Flow_js.find_constraints cx id in
+      let root_id, constraints = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx pole marked r root_id
       else
@@ -133,7 +136,7 @@ let gc = object (self)
     match Marked.add id pole marked with
     | None -> marked
     | Some (pole, marked) ->
-      let root_id, constraints = Flow_js.find_constraints cx id in
+      let root_id, constraints = Context.find_constraints cx id in
       if id != root_id then
         self#tvar_bounds cx pole marked root_id
       else
@@ -159,7 +162,7 @@ end
 
 (* Keep a reachable type variable around. *)
 let live cx marked p id =
-  let constraints = Flow_js.find_graph cx id in
+  let constraints = Context.find_graph cx id in
   match constraints with
   | Resolved _ -> ()
   | Unresolved bounds ->
@@ -187,29 +190,28 @@ let live cx marked p id =
 let die cx id =
   Context.remove_tvar cx id
 
-(* Prune the graph given a GC state contained marked type variables. *)
-let cleanup ~master_cx cx marked =
-  let graph = Context.graph cx in
-  let master_graph = Context.graph master_cx in
+let init ~master_cx =
+  Marked.empty
+  (* Exclude tvars from the master cx. Adding these ids to the marked set
+   * prevents the visitor from walking their bounds. *)
+  |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph_sig master_cx)
+
+let mark cx state =
+  state
+  (* Mark tvars reachable from imports. *)
+  |> LocMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
+  (* Mark tvars reachable from exports. *)
+  |> SMap.fold (fun _ t acc -> gc#type_ cx Positive acc t) (Context.module_map cx)
+
+let sweep ~master_cx cx state =
+  let master_graph = Context.graph_sig master_cx in
+  (* Collect unmarked tvars from the graph. *)
   IMap.iter (fun id _ ->
     (* Don't collect tvars from the master cx, which are explicitly excluded
      * from GC. Because the master cx is part of every cx, we can simply remove
      * all parts of the master from any cx. This is done separately in merge. *)
     if IMap.mem id master_graph then () else
-    match Marked.get id marked with
+    match Marked.get id state with
     | None -> die cx id
-    | Some p -> live cx marked p id
-  ) graph
-
-(* Main entry point for graph pruning. *)
-let do_gc ~master_cx cx =
-  Marked.empty
-  (* Exclude tvars from the master cx. Adding these ids to the marked set
-   * prevents the visitor from walking their bounds. *)
-  |> IMap.fold (fun id _ acc -> Marked.exclude id acc) (Context.graph master_cx)
-  (* Mark tvars reachable from imports. *)
-  |> SMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
-  (* Mark tvars reachable from exports. *)
-  |> SMap.fold (fun _ t acc -> gc#type_ cx Positive acc t) (Context.module_map cx)
-  (* Collect unmarked tvars from the graph. *)
-  |> cleanup ~master_cx cx
+    | Some p -> live cx state p id
+  ) (Context.graph cx)

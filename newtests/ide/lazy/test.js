@@ -4,22 +4,99 @@
  */
 
 
-import {suite, test} from '../../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({
   addCode, addFile, addFiles, removeFile, ideStart, ideNotification, flowCmd
 }) => [
-  test('Opening and closing single file with no dependents or dependencies', [
-    ideStart()
+  test('Opening and closing ignored file', [
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      ),
+
+    addFile('ignored.js')
+      .waitAndVerifyNoIDEMessagesSinceStartOfStep(500)
+      .noNewErrors()
+      .because('The IDE has not opened ignored.js yet'),
+
+    ideNotification('didOpen', 'ignored.js')
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        50000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('The file is ignored'),
+
+    ideNotification('didClose', 'ignored.js')
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        50000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('Closing the file does not trigger recheck, just sends errors'),
+
+    flowCmd(['status', '--strip-root'])
+      .stdout(
+        `
+          No errors!
+
+          The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+        `,
+      )
+      .because('Still no errors'),
+  ]).lazy('ide'),
+
+  test('Opening and closing single file with no dependents or dependencies', [
+    ideStart({mode:'legacy'})
+      .ideNotification('subscribeToDiagnostics')
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -29,8 +106,8 @@ export default suite(({
       ),
 
     addCode('var x: string = 123')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -45,24 +122,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -74,8 +134,8 @@ export default suite(({
       .because('The IDE has not opened test.js yet'),
 
     ideNotification('didOpen', 'test.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -86,15 +146,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -115,40 +248,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -166,15 +265,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -195,40 +367,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -242,23 +380,96 @@ export default suite(({
       .because('Opening the file triggers a recheck which sees the error'),
 
     ideNotification('didClose', 'test.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 32
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "test.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 20
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 26
+                              }
+                            },
+                            "path": "test.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "test.js",
@@ -279,40 +490,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "test.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 20
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 26
-                          }
-                        },
-                        "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -328,14 +505,25 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: test.js:3
-            3: var x: string = 123
-                               ^^^ number. This type is incompatible with
-            3: var x: string = 123
-                      ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------------- test.js:3:17
+
+          Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+
+             test.js:3:17
+             3| var x: string = 123
+                                ^^^ [1]
+
+          References:
+             test.js:3:8
+             3| var x: string = 123
+                       ^^^^^^ [2]
+
 
 
           Found 1 error
+
+          The Flow server is currently in IDE lazy mode and is only checking 1/1 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -346,9 +534,12 @@ export default suite(({
         `
           test.js:5
             5: var anotherError: bool = 123
-                                        ^^^ number. This type is incompatible with
-            5: var anotherError: bool = 123
-                                 ^^^^ boolean
+                                        ^^^ Cannot assign \`123\` to \`anotherError\` because number [1] is incompatible with boolean [2].
+            References:
+              5: var anotherError: bool = 123
+                                          ^^^ [1]
+              5: var anotherError: bool = 123
+                                   ^^^^ [2]
         `,
       )
       .because('Changes are still noticed'),
@@ -356,16 +547,17 @@ export default suite(({
 
   // Somewhat similar to tests/quick-start-add-dependency
   test('New dependent', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -374,8 +566,8 @@ export default suite(({
         ],
       ),
     addFiles('focused.js', 'dependency.js', 'otherDependent.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -390,24 +582,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -417,8 +592,8 @@ export default suite(({
       )
       .because('Nothing is open, so we just get the recheck start and end'),
     ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -429,15 +604,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 31,
+                                "offset": 51
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 33,
+                                "offset": 54
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 31,
+                            "end": 33
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 22,
+                                "offset": 42
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 27,
+                                "offset": 48
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 22,
+                            "end": 27
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var dependencyError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `dependencyError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "dependency.js",
@@ -458,40 +706,6 @@ export default suite(({
                         "endline": 3,
                         "start": 31,
                         "end": 33
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var dependencyError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "dependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 22,
-                            "offset": 42
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 27,
-                            "offset": 48
-                          }
-                        },
-                        "path": "dependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 22,
-                        "end": 27
                       }
                     ]
                   }
@@ -505,15 +719,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 28,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 30,
+                                "offset": 70
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 28,
+                            "end": 30
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 24,
+                                "offset": 64
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 19,
+                            "end": 24
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var focusedError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `focusedError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focused.js",
@@ -534,40 +821,6 @@ export default suite(({
                         "endline": 3,
                         "start": 28,
                         "end": 30
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var focusedError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focused.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 19,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 24,
-                            "offset": 64
-                          }
-                        },
-                        "path": "focused.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 19,
-                        "end": 24
                       }
                     ]
                   }
@@ -585,15 +838,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 31,
+                                "offset": 51
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 33,
+                                "offset": 54
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 31,
+                            "end": 33
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var dependencyError: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "dependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 22,
+                                "offset": 42
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 27,
+                                "offset": 48
+                              }
+                            },
+                            "path": "dependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 22,
+                            "end": 27
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var dependencyError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `dependencyError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "dependency.js",
@@ -614,40 +940,6 @@ export default suite(({
                         "endline": 3,
                         "start": 31,
                         "end": 33
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var dependencyError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "dependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 22,
-                            "offset": 42
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 27,
-                            "offset": 48
-                          }
-                        },
-                        "path": "dependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 22,
-                        "end": 27
                       }
                     ]
                   },
@@ -655,10 +947,82 @@ export default suite(({
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 28,
+                                "offset": 67
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 30,
+                                "offset": 70
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 28,
+                            "end": 30
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var focusedError: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focused.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 58
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 24,
+                                "offset": 64
+                              }
+                            },
+                            "path": "focused.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 19,
+                            "end": 24
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var focusedError: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `focusedError` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focused.js",
@@ -679,40 +1043,6 @@ export default suite(({
                         "endline": 3,
                         "start": 28,
                         "end": 30
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var focusedError: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focused.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 19,
-                            "offset": 58
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 24,
-                            "offset": 64
-                          }
-                        },
-                        "path": "focused.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 19,
-                        "end": 24
                       }
                     ]
                   }
@@ -729,20 +1059,39 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ).because('There are two errors now'),
@@ -752,9 +1101,12 @@ export default suite(({
         `
           dependent.js:3
             3: var dependentError: string = 123;
-                                            ^^^ number. This type is incompatible with
-            3: var dependentError: string = 123;
-                                   ^^^^^^ string
+                                            ^^^ Cannot assign \`123\` to \`dependentError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependentError: string = 123;
+                                              ^^^ [1]
+              3: var dependentError: string = 123;
+                                     ^^^^^^ [2]
         `,
       )
       .because('Adding a new dependency will correctly recheck that dependency'),
@@ -763,17 +1115,18 @@ export default suite(({
 
   // Based on tests/quick-start
   test('@flow and @noflow pragmas', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'errors.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -792,6 +1145,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -800,8 +1154,8 @@ export default suite(({
         ],
       ),
     addFile('errorsWithFlowPragma.js', 'errors.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -812,15 +1166,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 17,
+                                "offset": 25
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 19,
+                                "offset": 28
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 16
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 13,
+                                "offset": 22
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "errors.js",
@@ -841,40 +1268,6 @@ export default suite(({
                         "endline": 2,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -892,95 +1285,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
-                    "message": [
+                    "extra": [
                       {
-                        "context": "var x: string = 123;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 17,
-                            "offset": 25
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 19,
-                            "offset": 28
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
                           }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 17,
-                        "end": 19
+                        ]
                       },
                       {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 17,
+                                "offset": 25
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 19,
+                                "offset": 28
+                              }
+                            },
+                            "path": "errors.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
                       },
                       {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "errors.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 16
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 13,
+                                "offset": 22
+                              }
+                            },
+                            "path": "errors.js",
                             "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
+                            "endline": 2,
+                            "start": 8,
+                            "end": 13
                           }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
+                        ]
                       }
-                    ]
-                  }
-                ],
-                "passed": false
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "errors.js",
@@ -1001,120 +1387,6 @@ export default suite(({
                         "endline": 2,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
-                      }
-                    ]
-                  }
-                ],
-                "passed": false
-              }
-            ]
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [
-                  {
-                    "kind": "infer",
-                    "level": "error",
-                    "suppressions": [],
-                    "message": [
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "number",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 17,
-                            "offset": 25
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 19,
-                            "offset": 28
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 17,
-                        "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "errors.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 2,
-                            "column": 8,
-                            "offset": 16
-                          },
-                          "end": {
-                            "line": 2,
-                            "column": 13,
-                            "offset": 22
-                          }
-                        },
-                        "path": "errors.js",
-                        "line": 2,
-                        "endline": 2,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1129,16 +1401,19 @@ export default suite(({
         `
           errors.js:2
             2: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            2: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              2: var x: string = 123;
+                                 ^^^ [1]
+              2: var x: string = 123;
+                        ^^^^^^ [2]
         `,
       )
       .because('File is open and has @flow so we should get the error'),
     addFile('errorsWithNoFlowPragma.js', 'errors.js')
       .flowCmd(['status', '--strip-root'])
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1153,24 +1428,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1182,6 +1440,9 @@ export default suite(({
         `
           No errors!
 
+          The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       )
       .because('File is open but has @noflow so we should no errors'),
@@ -1190,9 +1451,12 @@ export default suite(({
         `
           errors.js:2
             2: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            2: var x: string = 123;
-                      ^^^^^^ string
+                               ^^^ Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+            References:
+              2: var x: string = 123;
+                                 ^^^ [1]
+              2: var x: string = 123;
+                        ^^^^^^ [2]
         `,
       )
       .because('Reverting back to @flow should show the error again'),
@@ -1200,16 +1464,17 @@ export default suite(({
 
   // Based on tests/quick-start-add-dependency-on-cycle
   test('Open file cyclic dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1218,8 +1483,8 @@ export default suite(({
         ],
       ),
     addFiles('cycleA.js', 'cycleB.js', 'focusedWithCyclicDependency.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1234,24 +1499,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
-          {
-            "method": "startRecheck",
-            "params": []
-          },
-          {
-            "method": "endRecheck",
-            "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1260,8 +1508,8 @@ export default suite(({
         ],
       ),
     ideNotification('didOpen', 'focusedWithCyclicDependency.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "startRecheck",
@@ -1272,15 +1520,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 41
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 35
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focusedWithCyclicDependency.js",
@@ -1301,40 +1622,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focusedWithCyclicDependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 29
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 35
-                          }
-                        },
-                        "path": "focusedWithCyclicDependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1352,15 +1639,88 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [
                   {
                     "kind": "infer",
                     "level": "error",
                     "suppressions": [],
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": null,
+                            "descr": "References:",
+                            "type": "Blame",
+                            "path": "",
+                            "line": 0,
+                            "endline": 0,
+                            "start": 1,
+                            "end": 0
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[1]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 17,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 19,
+                                "offset": 41
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 17,
+                            "end": 19
+                          }
+                        ]
+                      },
+                      {
+                        "message": [
+                          {
+                            "context": "var x: string = 123;",
+                            "descr": "[2]",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "focusedWithCyclicDependency.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 3,
+                                "column": 8,
+                                "offset": 29
+                              },
+                              "end": {
+                                "line": 3,
+                                "column": 13,
+                                "offset": 35
+                              }
+                            },
+                            "path": "focusedWithCyclicDependency.js",
+                            "line": 3,
+                            "endline": 3,
+                            "start": 8,
+                            "end": 13
+                          }
+                        ]
+                      }
+                    ],
                     "message": [
                       {
                         "context": "var x: string = 123;",
-                        "descr": "number",
+                        "descr": "Cannot assign `123` to `x` because number [1] is incompatible with string [2].",
                         "type": "Blame",
                         "loc": {
                           "source": "focusedWithCyclicDependency.js",
@@ -1381,40 +1741,6 @@ export default suite(({
                         "endline": 3,
                         "start": 17,
                         "end": 19
-                      },
-                      {
-                        "context": null,
-                        "descr": "This type is incompatible with",
-                        "type": "Comment",
-                        "path": "",
-                        "line": 0,
-                        "endline": 0,
-                        "start": 1,
-                        "end": 0
-                      },
-                      {
-                        "context": "var x: string = 123;",
-                        "descr": "string",
-                        "type": "Blame",
-                        "loc": {
-                          "source": "focusedWithCyclicDependency.js",
-                          "type": "SourceFile",
-                          "start": {
-                            "line": 3,
-                            "column": 8,
-                            "offset": 29
-                          },
-                          "end": {
-                            "line": 3,
-                            "column": 13,
-                            "offset": 35
-                          }
-                        },
-                        "path": "focusedWithCyclicDependency.js",
-                        "line": 3,
-                        "endline": 3,
-                        "start": 8,
-                        "end": 13
                       }
                     ]
                   }
@@ -1428,14 +1754,25 @@ export default suite(({
       flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: focusedWithCyclicDependency.js:3
-            3: var x: string = 123;
-                               ^^^ number. This type is incompatible with
-            3: var x: string = 123;
-                      ^^^^^^ string
+          Error ------------------------------------------------------------------------------ focusedWithCyclicDependency.js:3:17
+
+          Cannot assign \`123\` to \`x\` because number [1] is incompatible with string [2].
+
+             focusedWithCyclicDependency.js:3:17
+             3| var x: string = 123;
+                                ^^^ [1]
+
+          References:
+             focusedWithCyclicDependency.js:3:8
+             3| var x: string = 123;
+                       ^^^^^^ [2]
+
 
 
           Found 1 error
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1444,16 +1781,17 @@ export default suite(({
 
   // Based on tests/quick-start-check-contents
   test('check-contents should pull in dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1467,17 +1805,29 @@ export default suite(({
         `
           No errors!
 
+          The Flow server is currently in IDE lazy mode and is only checking 0/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
+
         `,
       )
       .because('No files are open yet'),
     flowCmd(['check-contents', 'focused.js'], 'focused.js')
       .stdout(
         `
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with
+          string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 1 error
@@ -1488,14 +1838,25 @@ export default suite(({
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
+
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
 
 
           Found 1 error
+
+          The Flow server is currently in IDE lazy mode and is only checking 1/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1506,17 +1867,18 @@ export default suite(({
 
   // Based on tests/quick-start-delete-dependency
   test('Delete dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1535,6 +1897,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1546,20 +1909,39 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1568,18 +1950,33 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: focused.js:1
-            1: import dependency from './dependency';
-                                      ^^^^^^^^^^^^^^ ./dependency. Required module not found
+          Error -------------------------------------------------------------------------------------------------- focused.js:1:24
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot resolve module \`./dependency\`.
+
+             1| import dependency from './dependency';
+                                       ^^^^^^^^^^^^^^
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 1/3 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1588,20 +1985,39 @@ export default suite(({
     .flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1609,17 +2025,18 @@ export default suite(({
   ]).lazy('ide'),
 
   test('Open a dependency', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1638,6 +2055,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1650,45 +2068,78 @@ export default suite(({
         `
           dependency.js:3
             3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+                                             ^^^ Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+            References:
+              3: var dependencyError: string = 123;
+                                               ^^^ [1]
+              3: var dependencyError: string = 123;
+                                      ^^^^^^ [2]
 
           focused.js:3
             3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+                                          ^^^ Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+            References:
+              3: var focusedError: string = 123;
+                                            ^^^ [1]
+              3: var focusedError: string = 123;
+                                   ^^^^^^ [2]
         `,
       )
       .because('Other dependent is a dependent of a dependency, so is not checked'),
     ideNotification('didOpen', 'dependency.js')
-      // Unfortunately ideNewMessagesWithTimeout doesn't work here since the
+      // Unfortunately ideMessagesSinceStartOfStep doesn't work here since the
       // order of the streamed errors isn't fixed :(
       .sleep(500),
     flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
-          Error: otherDependent.js:3
-            3: var otherDependentError: string = 123;
-                                                 ^^^ number. This type is incompatible with
-            3: var otherDependentError: string = 123;
-                                        ^^^^^^ string
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
+
+          Error ------------------------------------------------------------------------------------------- otherDependent.js:3:35
+
+          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible with string [2].
+
+             otherDependent.js:3:35
+             3| var otherDependentError: string = 123;
+                                                  ^^^ [1]
+
+          References:
+             otherDependent.js:3:26
+             3| var otherDependentError: string = 123;
+                                         ^^^^^^ [2]
+
 
 
           Found 3 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 3/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1696,17 +2147,18 @@ export default suite(({
   ]).lazy('ide'),
 
   test('Remove and restore an open file', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1725,6 +2177,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1736,20 +2189,39 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ),
@@ -1758,20 +2230,39 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       )
@@ -1779,17 +2270,18 @@ export default suite(({
   ]).lazy('ide'),
 
   test('flow force-recheck --focus', [
-    ideStart()
+    ideStart({mode:'legacy'})
       .ideNotification('subscribeToDiagnostics')
       .ideNotification('didOpen', 'focused.js')
-      .ideNewMessagesWithTimeout(
-        5000,
+      .waitAndVerifyAllIDEMessagesContentSinceStartOfStep(
+        10000,
         [
           {
             "method": "diagnosticsNotification",
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1808,6 +2300,7 @@ export default suite(({
             "params": [
               {
                 "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "jsonVersion": "1",
                 "errors": [],
                 "passed": true
               }
@@ -1819,20 +2312,39 @@ export default suite(({
       .flowCmd(['status', '--strip-root'])
       .stdout(
         `
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
+
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
 
 
           Found 2 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 2/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ).because("otherDependent's errors are ignored due to lazy mode"),
@@ -1841,26 +2353,53 @@ export default suite(({
       .stdout(
         `
 
-          Error: dependency.js:3
-            3: var dependencyError: string = 123;
-                                             ^^^ number. This type is incompatible with
-            3: var dependencyError: string = 123;
-                                    ^^^^^^ string
+          Error ----------------------------------------------------------------------------------------------- dependency.js:3:31
 
-          Error: focused.js:3
-            3: var focusedError: string = 123;
-                                          ^^^ number. This type is incompatible with
-            3: var focusedError: string = 123;
-                                 ^^^^^^ string
+          Cannot assign \`123\` to \`dependencyError\` because number [1] is incompatible with string [2].
 
-          Error: otherDependent.js:3
-            3: var otherDependentError: string = 123;
-                                                 ^^^ number. This type is incompatible with
-            3: var otherDependentError: string = 123;
-                                        ^^^^^^ string
+             dependency.js:3:31
+             3| var dependencyError: string = 123;
+                                              ^^^ [1]
+
+          References:
+             dependency.js:3:22
+             3| var dependencyError: string = 123;
+                                     ^^^^^^ [2]
+
+
+          Error -------------------------------------------------------------------------------------------------- focused.js:3:28
+
+          Cannot assign \`123\` to \`focusedError\` because number [1] is incompatible with string [2].
+
+             focused.js:3:28
+             3| var focusedError: string = 123;
+                                           ^^^ [1]
+
+          References:
+             focused.js:3:19
+             3| var focusedError: string = 123;
+                                  ^^^^^^ [2]
+
+
+          Error ------------------------------------------------------------------------------------------- otherDependent.js:3:35
+
+          Cannot assign \`123\` to \`otherDependentError\` because number [1] is incompatible with string [2].
+
+             otherDependent.js:3:35
+             3| var otherDependentError: string = 123;
+                                                  ^^^ [1]
+
+          References:
+             otherDependent.js:3:26
+             3| var otherDependentError: string = 123;
+                                         ^^^^^^ [2]
+
 
 
           Found 3 errors
+
+          The Flow server is currently in IDE lazy mode and is only checking 3/4 files.
+          To learn more, visit flow.org/en/docs/lang/lazy-modes
 
         `,
       ).because('force-recheck --focus promotes dependency to focused, so we see the error in otherDependent'),

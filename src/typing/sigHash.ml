@@ -117,6 +117,7 @@ type hash =
   | EqH
   | AndH
   | OrH
+  | NullishCoalesceH
   | NotH
   | SpecializeH
   | ThisSpecializeH
@@ -157,9 +158,11 @@ type hash =
   | ChoiceKitUseH
   | IntersectionPreprocessKitH
   | DebugPrintH
+  | DebugSleepH
   | SentinelPropTestH
   | IdxUnwrapH
   | IdxUnMaybeifyH
+  | OptionalChainH
   | CallLatentPredH
   | CallOpenPredH
   | SubstOnPredH
@@ -167,6 +170,7 @@ type hash =
   | ResolveSpreadH
   | CondH
   | ExtendsUseH
+  | ToStringH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -266,6 +270,7 @@ let hash_of_use_ctor = Type.(function
   | EqT _ -> EqH
   | AndT _ -> AndH
   | OrT _ -> OrH
+  | NullishCoalesceT _ -> NullishCoalesceH
   | NotT _ -> NotH
   | SpecializeT _ -> SpecializeH
   | ThisSpecializeT _ -> ThisSpecializeH
@@ -306,9 +311,11 @@ let hash_of_use_ctor = Type.(function
   | ChoiceKitUseT _ -> ChoiceKitUseH
   | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
   | DebugPrintT _ -> DebugPrintH
+  | DebugSleepT _ -> DebugSleepH
   | SentinelPropTestT _ -> SentinelPropTestH
   | IdxUnwrap _ -> IdxUnwrapH
   | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
+  | OptionalChainT _ -> OptionalChainH
   | CallLatentPredT _ -> CallLatentPredH
   | CallOpenPredT _ -> CallOpenPredH
   | SubstOnPredT _ -> SubstOnPredH
@@ -316,6 +323,7 @@ let hash_of_use_ctor = Type.(function
   | ResolveSpreadT _ -> ResolveSpreadH
   | CondT _ -> CondH
   | ExtendsUseT _ -> ExtendsUseH
+  | ToStringT _ -> ToStringH
 )
 
 let add = Xx.update
@@ -357,14 +365,36 @@ let add_type state t =
 let add_use state use =
   add_int state (hash_of_use_ctor use)
 
+let add_file_key state = File_key.(function
+  | LibFile f ->
+    add_int state 0; add state f
+  | SourceFile f ->
+    add_int state 1; add state f
+  | JsonFile f ->
+    add_int state 2; add state f
+  | ResourceFile f ->
+    add_int state 3; add state f
+  | Builtins ->
+    add_int state 4
+)
+
+let add_loc state loc =
+  let open Loc in
+  add_option state add_file_key loc.source;
+  add_int state loc.start.line;
+  add_int state loc.start.column;
+  add_int state loc._end.line;
+  add_int state loc._end.column
+
 let add_reason state r =
-  (* TODO: don't marshal, just directly hash the interesting bits *)
-  add state (Marshal.to_string r)
+  let open Reason in
+  add_loc state (loc_of_reason r);
+  add_loc state (def_loc_of_reason r)
 
 let add_polarity = add_int
 
 let add_prop state = Type.(function
-  | Field (_, polarity) ->
+  | Field (_, _, polarity) ->
     add_int state 0;
     add_int state polarity
   | Get _ -> add_int state 1

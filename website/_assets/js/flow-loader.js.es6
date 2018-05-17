@@ -54,9 +54,13 @@ export function load(version) {
     `/static/${version}/flowlib/node.js`,
     `/static/${version}/flowlib/react.js`,
     `/static/${version}/flowlib/streams.js`,
+  ] : majorVersion <= 71 ? [
+    `/static/${version}/flowlib/core.js`,
+    `/static/${version}/flowlib/react.js`,
   ] : [
     `/static/${version}/flowlib/core.js`,
     `/static/${version}/flowlib/react.js`,
+    `/static/${version}/flowlib/intl.js`,
   ];
   const flowLoader = new Promise(function(resolve) {
     requirejs([`/static/${version}/flow.js`], resolve);

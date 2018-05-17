@@ -45,7 +45,7 @@ let path_patt =
   let star2 = Str.regexp_string "**" in
   let qmark = Str.regexp_string "?" in
   fun path ->
-    let str = Path.to_string path 
+    let str = Path.to_string path
       |> Sys_utils.normalize_filename_dir_sep in
     (* because we accept both * and **, convert in 2 steps *)
     let results = Str.full_split star2 str in

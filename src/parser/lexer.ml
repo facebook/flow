@@ -11,26 +11,50 @@ open Lex_env
 
 let lexeme = Sedlexing.Utf8.lexeme
 
-let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '_' | '$']
+let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '$']
+let id_letter = [%sedlex.regexp? letter | '_']
 let digit = [%sedlex.regexp? '0'..'9']
+let digit_non_zero = [%sedlex.regexp? '1'..'9']
 let decintlit = [%sedlex.regexp? '0' | ('1'..'9', Star digit)] (* DecimalIntegerLiteral *)
 let alphanumeric = [%sedlex.regexp? digit | letter]
 let word = [%sedlex.regexp? letter, Star alphanumeric]
 
 let hex_digit = [%sedlex.regexp? digit | 'a'..'f' | 'A'..'F']
-let non_hex_letter = [%sedlex.regexp? 'g'..'z' | 'G'..'Z' | '_' | '$']
+let non_hex_letter = [%sedlex.regexp? 'g'..'z' | 'G'..'Z' | '$']
+
+let bin_digit = [%sedlex.regexp? '0' | '1']
+let oct_digit = [%sedlex.regexp? '0'..'7']
+
+(* This regex could be simplified to (digit Star (digit OR '_' digit))
+ * That makes the underscore and failure cases faster, and the base case take x2-3 the steps
+ * As the codebase contains more base cases than underscored or errors, prefer this version *)
+let underscored_bin = [%sedlex.regexp?
+  Plus bin_digit | (bin_digit, Star (bin_digit | ('_', bin_digit)))
+]
+let underscored_oct = [%sedlex.regexp?
+  Plus oct_digit | (oct_digit, Star (oct_digit | ('_', oct_digit)))
+]
+let underscored_hex = [%sedlex.regexp?
+  Plus hex_digit | (hex_digit, Star (hex_digit | ('_', hex_digit)))
+]
+let underscored_digit = [%sedlex.regexp?
+  Plus digit | (digit_non_zero, Star (digit | ('_', digit)))
+]
+let underscored_decimal = [%sedlex.regexp?
+  Plus digit | (digit, Star (digit | ('_', digit)))
+]
 
 (* Different ways you can write a number *)
-let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), Plus ('0' | '1')]
-let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), Plus ('0'..'7')]
-let legacyoctnumber = [%sedlex.regexp? '0', Plus ('0'..'7')]
-let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), Plus hex_digit]
+let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), underscored_bin]
+let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), underscored_oct]
+let legacyoctnumber = [%sedlex.regexp? '0', underscored_oct]
+let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), underscored_hex]
 let scinumber = [%sedlex.regexp?
-  ((decintlit, Opt ('.', Star digit)) | ('.', Plus digit)),
-  ('e' | 'E'), Opt ('-' | '+'), Plus digit
+  ((decintlit, Opt ('.', Opt underscored_decimal)) | ('.', underscored_decimal)),
+  ('e' | 'E'), Opt ('-' | '+'), underscored_digit
 ]
-let wholenumber = [%sedlex.regexp? Plus digit, Opt '.']
-let floatnumber = [%sedlex.regexp? Star digit, '.', Plus digit]
+let wholenumber = [%sedlex.regexp? underscored_digit, Opt '.']
+let floatnumber = [%sedlex.regexp? Opt underscored_digit, '.', underscored_decimal]
 
 (* 2-8 alphanumeric characters. I could match them directly, but this leads to
  * ~5k more lines of generated lexer
@@ -821,6 +845,16 @@ let token (env: Lex_env.t) lexbuf : result =
   | ";" -> Token (env, T_SEMICOLON)
   | "," -> Token (env, T_COMMA)
   | ":" -> Token (env, T_COLON)
+
+  | "?.", digit ->
+    Sedlexing.rollback lexbuf;
+    begin match%sedlex lexbuf with
+    | "?" -> Token (env, T_PLING)
+    | _ -> failwith "expected ?"
+    end
+
+  | "?." -> Token (env, T_PLING_PERIOD)
+  | "??" -> Token (env, T_PLING_PLING)
   | "?" -> Token (env, T_PLING)
   | "&&" -> Token (env, T_AND)
   | "||" -> Token (env, T_OR)
@@ -924,7 +958,7 @@ let rec regexp_body env buf lexbuf =
     Buffer.add_string buf s;
     regexp_body env buf lexbuf
 
-  | '/', Plus letter ->
+  | '/', Plus id_letter ->
     let flags =
       let str = lexeme lexbuf in
       String.sub str 1 (String.length str - 1)
@@ -1616,7 +1650,9 @@ let type_token env lexbuf =
   | "bool" -> Token (env, (T_BOOLEAN_TYPE BOOL))
   | "boolean" -> Token (env, (T_BOOLEAN_TYPE BOOLEAN))
   | "empty" -> Token (env, T_EMPTY_TYPE)
+  | "extends" -> Token (env, T_EXTENDS)
   | "false" -> Token (env, T_FALSE)
+  | "interface" -> Token (env, T_INTERFACE)
   | "mixed" -> Token (env, T_MIXED_TYPE)
   | "null" -> Token (env, T_NULL)
   | "number" -> Token (env, T_NUMBER_TYPE)
