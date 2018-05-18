@@ -692,11 +692,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3496:1
+   <BUILTINS>/dom.js:3497:1
          v--------------------------------
-   3496| typeof NodeFilter.FILTER_ACCEPT |
-   3497| typeof NodeFilter.FILTER_REJECT |
-   3498| typeof NodeFilter.FILTER_SKIP;
+   3497| typeof NodeFilter.FILTER_ACCEPT |
+   3498| typeof NodeFilter.FILTER_REJECT |
+   3499| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -713,11 +713,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3496:1
+   <BUILTINS>/dom.js:3497:1
          v--------------------------------
-   3496| typeof NodeFilter.FILTER_ACCEPT |
-   3497| typeof NodeFilter.FILTER_REJECT |
-   3498| typeof NodeFilter.FILTER_SKIP;
+   3497| typeof NodeFilter.FILTER_ACCEPT |
+   3498| typeof NodeFilter.FILTER_REJECT |
+   3499| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -776,11 +776,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3496:1
+   <BUILTINS>/dom.js:3497:1
          v--------------------------------
-   3496| typeof NodeFilter.FILTER_ACCEPT |
-   3497| typeof NodeFilter.FILTER_REJECT |
-   3498| typeof NodeFilter.FILTER_SKIP;
+   3497| typeof NodeFilter.FILTER_ACCEPT |
+   3498| typeof NodeFilter.FILTER_REJECT |
+   3499| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -797,11 +797,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3496:1
+   <BUILTINS>/dom.js:3497:1
          v--------------------------------
-   3496| typeof NodeFilter.FILTER_ACCEPT |
-   3497| typeof NodeFilter.FILTER_REJECT |
-   3498| typeof NodeFilter.FILTER_SKIP;
+   3497| typeof NodeFilter.FILTER_ACCEPT |
+   3498| typeof NodeFilter.FILTER_REJECT |
+   3499| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
