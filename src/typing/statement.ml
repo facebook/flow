@@ -1800,7 +1800,7 @@ and statement cx = Ast.Statement.(
     let specifiers = match specifiers with
       | Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers) ->
         named_specifiers |> List.map (function { ImportDeclaration.local; remote; kind;} ->
-          let remote_name = ident_name remote in
+          let (remote_name_loc, remote_name) = remote in
           let (loc, local_name) = (
             match local with
             | Some local ->
@@ -1813,14 +1813,14 @@ and statement cx = Ast.Statement.(
               mk_reason (RNamedImportedType module_name) (fst remote)
             in
             if Type_inference_hooks_js.dispatch_member_hook
-              cx remote_name loc module_t
+              cx remote_name remote_name_loc module_t
             then AnyT.why import_reason
             else
               let import_kind = type_kind_of_kind (Option.value ~default:importKind kind) in
               get_imported_t import_reason import_kind remote_name local_name
           in
           let id_info = local_name, imported_t, Type_table.Import (remote_name, module_t) in
-          Env.add_type_table_info cx loc id_info;
+          Env.add_type_table_info cx remote_name_loc id_info;
           (loc, local_name, imported_t, kind)
         )
 
