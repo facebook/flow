@@ -57,6 +57,10 @@ let assert_singleton_nel nel =
 let assert_substring_equal ~ctxt expected source loc =
   assert_equal ~ctxt expected (substring_loc source loc)
 
+let assert_substrings_equal ~ctxt expected_remote expected_local source {remote_loc; local_loc} =
+  assert_substring_equal ~ctxt expected_remote source remote_loc;
+  assert_substring_equal ~ctxt expected_local source local_loc
+
 let tests = "require" >::: [
   "cjs_require" >:: begin fun ctxt ->
     let source = "const Foo = require('foo')" in
@@ -262,7 +266,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "default"
       |> assert_singleton_smap ~ctxt "Foo"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "Foo" source
+      |> assert_substrings_equal ~ctxt "Foo" "Foo" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -275,7 +279,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -288,7 +292,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "B"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "B" source
+      |> assert_substrings_equal ~ctxt "A" "B" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -301,7 +305,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -314,7 +318,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -339,7 +343,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "default"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -352,7 +356,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -365,7 +369,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "B"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "B" source
+      |> assert_substrings_equal ~ctxt "A" "B" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -378,7 +382,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "default"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -391,7 +395,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "A" source
+      |> assert_substrings_equal ~ctxt "A" "A" source
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -404,7 +408,7 @@ let tests = "require" >::: [
       |> assert_singleton_smap ~ctxt "A"
       |> assert_singleton_smap ~ctxt "B"
       |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "B" source
+      |> assert_substrings_equal ~ctxt "A" "B" source
     | _ -> assert_failure "Unexpected requires"
   end;
 

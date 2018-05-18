@@ -32,6 +32,7 @@ let find_related_symbol_from_require loc = function
           SMap.values local_name_map
           |> List.map (Nel.to_list)
           |> List.concat
+          |> List.map (fun {local_loc;_} -> local_loc)
         in
         if List.mem loc locs then Some loc else None
     end

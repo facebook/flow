@@ -31,12 +31,17 @@ and require =
   | Import0 of ident
   | Import of {
     source: ident;
-    named: Loc.t Nel.t SMap.t SMap.t;
+    named: imported_locs Nel.t SMap.t SMap.t;
     ns: Loc.t Nel.t SMap.t;
-    types: Loc.t Nel.t SMap.t SMap.t;
-    typesof: Loc.t Nel.t SMap.t SMap.t;
+    types: imported_locs Nel.t SMap.t SMap.t;
+    typesof: imported_locs Nel.t SMap.t SMap.t;
     typesof_ns: Loc.t Nel.t SMap.t;
   }
+
+and imported_locs = {
+  remote_loc: Loc.t;
+  local_loc: Loc.t;
+}
 
 and require_bindings =
   | BindIdent of ident
@@ -445,7 +450,7 @@ class requires_calculator ~ast = object(this)
         ref := SMap.add local locs !ref ~combine:Nel.rev_append
       in
       Option.iter ~f:(fun (loc, local) ->
-        add_named "default" local loc (ref_of_kind importKind)
+        add_named "default" local {remote_loc=loc; local_loc=loc} (ref_of_kind importKind)
       ) default;
       Option.iter ~f:(function
         | ImportNamespaceSpecifier (loc, (_, local)) ->
@@ -456,9 +461,9 @@ class requires_calculator ~ast = object(this)
         | ImportNamedSpecifiers named_specifiers ->
           List.iter (function {local; remote; kind} ->
             let importKind = match kind with Some k -> k | None -> importKind in
-            let loc, local_name = match local with Some x -> x | None -> remote in
-            let _, remote_name = remote in
-            add_named remote_name local_name loc (ref_of_kind importKind)
+            let local_loc, local_name = match local with Some x -> x | None -> remote in
+            let remote_loc, remote_name = remote in
+            add_named remote_name local_name {remote_loc; local_loc} (ref_of_kind importKind)
           ) named_specifiers
       ) specifiers;
       Import {

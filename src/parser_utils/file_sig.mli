@@ -67,13 +67,13 @@ and require =
 
     (* map from remote name to local names of value imports
      * source: import {A, B as C} from "foo";
-     * result: {A:{A:{[loc]}}, B:{C:{[loc]}}}
+     * result: {A:{A:{[ImportedLocs {_}]}}, B:{C:{[ImportedLocs {_}]}}}
      *
      * Multiple locations for a given (remoteName, localName) pair are not typical, but they can
      * occur e.g. with the code `import {foo, foo} from 'bar';`. This code would cause an error
      * later because of the duplicate local name, but we should handle it here since it does parse.
      *)
-    named: Loc.t Nel.t SMap.t SMap.t;
+    named: imported_locs Nel.t SMap.t SMap.t;
 
     (* map from local name to location of namespace imports
      * source: import * as X from "foo";
@@ -83,20 +83,25 @@ and require =
     (* map from remote name to local names of type imports
      * source: import type {A, B as C} from "foo";
      * source: import {type A, type B as C} from "foo";
-     * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
-    types: Loc.t Nel.t SMap.t SMap.t;
+     * result: {A:{A:{[ImportedLocs {_}]}}, B:{C:{[ImportedLocs {_}]}}} *)
+    types: imported_locs Nel.t SMap.t SMap.t;
 
     (* map from remote name to local names of typeof imports
      * source: import typeof {A, B as C} from "foo";
      * source: import {typeof A, typeof B as C} from "foo";
-     * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
-    typesof: Loc.t Nel.t SMap.t SMap.t;
+     * result: {A:{A:{[ImportedLocs {_}]}}, B:{C:{[ImportedLocs {_}]}}} *)
+    typesof: imported_locs Nel.t SMap.t SMap.t;
 
     (* map from local name to location of namespace typeof imports
      * source: import typeof * as X from "foo";
      * result: {X:[loc]} *)
     typesof_ns: Loc.t Nel.t SMap.t;
   }
+
+and imported_locs = {
+  remote_loc: Loc.t;
+  local_loc: Loc.t;
+}
 
 and require_bindings =
   (* source: const bar = require('./foo');

@@ -58,7 +58,8 @@ let get_imported_locations (query: import_query) file_key (dep_file_key: File_ke
         | None -> acc
         | Some local_name_to_locs ->
           SMap.fold (fun _ locs acc ->
-            List.rev_append (Nel.to_list locs) acc
+            let local_name_locs = Nel.to_list locs |> List.map (fun {local_loc;_} -> local_loc) in
+            List.rev_append local_name_locs acc
           ) local_name_to_locs acc
         end
       | _ -> acc
