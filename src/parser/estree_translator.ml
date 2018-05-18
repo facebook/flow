@@ -1179,7 +1179,7 @@ end with type t = Impl.t) = struct
   )
 
   and interface_type (loc, i) = Type.Interface.(
-    node "InterfaceType" loc [
+    node "InterfaceTypeAnnotation" loc [
       "extends", array_of_list interface_extends i.extends;
       "body", object_type i.body;
     ]

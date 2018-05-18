@@ -39,7 +39,7 @@
       },
       "typeParameters":null,
       "right":{
-        "type":"InterfaceType",
+        "type":"InterfaceTypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":32}},
         "range":[9,32],
         "extends":[],
@@ -94,7 +94,7 @@
       },
       "typeParameters":null,
       "right":{
-        "type":"InterfaceType",
+        "type":"InterfaceTypeAnnotation",
         "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":42}},
         "range":[42,75],
         "extends":[
@@ -173,7 +173,7 @@
             "loc":{"source":null,"start":{"line":4,"column":12},"end":{"line":5,"column":0}},
             "range":[89,105],
             "typeAnnotation":{
-              "type":"InterfaceType",
+              "type":"InterfaceTypeAnnotation",
               "loc":{"source":null,"start":{"line":4,"column":14},"end":{"line":5,"column":0}},
               "range":[91,105],
               "extends":[],
