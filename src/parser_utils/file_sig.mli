@@ -67,7 +67,12 @@ and require =
 
     (* map from remote name to local names of value imports
      * source: import {A, B as C} from "foo";
-     * result: {A:{A:{[loc]}}, B:{C:{[loc]}}} *)
+     * result: {A:{A:{[loc]}}, B:{C:{[loc]}}}
+     *
+     * Multiple locations for a given (remoteName, localName) pair are not typical, but they can
+     * occur e.g. with the code `import {foo, foo} from 'bar';`. This code would cause an error
+     * later because of the duplicate local name, but we should handle it here since it does parse.
+     *)
     named: Loc.t Nel.t SMap.t SMap.t;
 
     (* map from local name to location of namespace imports
