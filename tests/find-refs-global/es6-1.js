@@ -23,3 +23,5 @@ export class Foo {
 new Foo().bar();
 
 new Bar();
+
+export const baz = 1;

@@ -2,8 +2,62 @@
 . ../assert.sh
 FLOW=$1
 
-echo "simple ES6 exports/imports:"
+echo "ES6 named export:"
+# export function foo() {
+#                 ^
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 3 17
+
+echo "Local use of an ES6 named export:"
+# foo();
+# ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 9 1
+
+echo "ES6 named import:"
+# import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
+#              ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 3 14
+
+echo "Use of ES6 named import:"
+# foo();
+# ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 6 1
+
+echo "Use of ES6 named import through import *:"
+# all.foo();
+#     ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 22 5
+
+echo "Local name of an aliased ES6 named import:"
+# import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
+#                                  ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 3 34
+
+echo "Remote name of an aliased ES6 named import:"
+# import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
+#                        ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 3 24
+
+echo "Local use of an aliased ES6 named import:"
+# localBaz;
+#      ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 24 6
+
+echo "Second local name of an aliased ES6 named import:"
+# For some reason this is allowed
+# import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
+#                                                  ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 3 50
+
+echo "Second remote name of an aliased ES6 named import:"
+# For some reason this is allowed
+# import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
+#                                          ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 3 42
+
+echo "Local use of the second name of an aliased ES6 named import:"
+# otherBaz;
+#      ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 25 6
 
 echo "ES6 default export:"
 # export default class Bar {}
@@ -21,7 +75,7 @@ echo "ES6 default export from a use in the file where it is defined:"
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 25 5
 
 echo "ES6 default import:"
-# import Bar, {foo, Foo} from './es6-1';
+# import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
 #        ^
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 3 8
 

@@ -1,6 +1,6 @@
 /* @flow */
 
-import Bar, {foo, Foo} from './es6-1';
+import Bar, {foo, Foo, baz as localBaz, baz as otherBaz} from './es6-1';
 import * as all from './es6-1';
 
 foo();
@@ -18,3 +18,8 @@ x.bar();
 
 new Bar();
 new all.default();
+
+all.foo();
+
+localBaz;
+otherBaz;
