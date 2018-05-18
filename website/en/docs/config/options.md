@@ -156,6 +156,10 @@ start lexing a file to see if it has `@flow` or `@noflow` in it. This option
 lets you configure how much of the file Flow lexes before it decides there is
 no relevant docblock.
 
+- Neither `@flow` nor `@noflow` - Parse this file with Flow syntax disallowed and do not typecheck it.
+- @flow - Parse this file with Flow syntax allowed and typecheck it.
+- @noflow - Parse this file with Flow syntax allowed and do not typecheck it. This is meant as an escape hatch to suppress Flow in a file without having to delete all the Flow-specific syntax.
+
 The default value of `max_header_tokens` is 10.
 
 #### `module.file_ext` _`(string)`_ <a class="toc" id="toc-module-file-ext-string" href="#toc-module-file-ext-string"></a>
