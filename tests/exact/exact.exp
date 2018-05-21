@@ -1,3 +1,41 @@
+Error ---------------------------------------------------------------------------------------------------- call.js:22:13
+
+Cannot assign object literal to `c1` because property `f` is missing in object type [1] but exists in object
+literal [2].
+
+   call.js:22:13
+                   v
+   22| let c1: C = {
+   23|   f: '', // Should cause an error
+   24|   d: null,
+   25| };
+       ^ [2]
+
+References:
+   call.js:22:9
+   22| let c1: C = {
+               ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:26:21
+
+Cannot assign object literal to `c2` because property `f` is missing in object type [1] but exists in object
+literal [2].
+
+   call.js:26:21
+                           v
+   26| let c2: $Exact<C> = {
+   27|   f: '',
+   28|   d: null,
+   29| };
+       ^ [2]
+
+References:
+   call.js:26:16
+   26| let c2: $Exact<C> = {
+                      ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- error_continues.js:3:3
 
 Cannot cast `any` to object type because:
@@ -109,6 +147,39 @@ References:
                                                            ^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- objmap.js:11:32
+
+Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
+`a`.
+
+   objmap.js:11:32
+   11| const doesError: MappedThing = {a: 3};
+                                      ^^^^^^
+
+References:
+   objmap.js:11:36
+   11| const doesError: MappedThing = {a: 3};
+                                          ^ [1]
+   objmap.js:5:47
+    5| type MappedThing = $ObjMap<ExactThing, (1) => 2>;
+                                                     ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objmap.js:14:35
+
+Cannot assign object literal to `shouldntWork` because property `b` is missing in object type [1] but exists in object
+literal [2].
+
+   objmap.js:14:35
+   14| const shouldntWork: MappedThing = {a: 2, b: 1};
+                                         ^^^^^^^^^^^^ [2]
+
+References:
+   objmap.js:14:21
+   14| const shouldntWork: MappedThing = {a: 2, b: 1};
+                           ^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ prop_test.js:12:7
 
 Property `xxx` is missing in `Person` [1].
@@ -211,4 +282,4 @@ References:
 
 
 
-Found 13 errors
+Found 17 errors
