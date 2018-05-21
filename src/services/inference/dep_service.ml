@@ -233,20 +233,30 @@ let file_dependencies ~audit file = Module_js.(
   ) require_loc FilenameSet.empty
 )
 
-let calc_partial_dependency_graph workers files =
-  MultiWorkerLwt.call
+(* Calculates the dependency graph as a map from files to their dependencies.
+ * Dependencies not in parsed are ignored. *)
+let calc_partial_dependency_graph workers files ~parsed =
+  let%lwt dependency_graph = MultiWorkerLwt.call
     workers
     ~job: (List.fold_left (fun dependency_graph file ->
       FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
-    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files))
-
-let calc_dependency_graph workers files =
-  let%lwt result = calc_partial_dependency_graph workers files in
-  FilenameMap.map (FilenameSet.filter (fun f -> FilenameSet.mem f files)) result
+    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files)) in
+  FilenameMap.map (FilenameSet.inter parsed) dependency_graph
   |> Lwt.return
+
+let calc_dependency_graph workers ~parsed =
+  calc_partial_dependency_graph workers parsed ~parsed
+
+(* Returns a copy of the dependency graph with only those file -> dependency edges where file and
+   dependency are in files *)
+let filter_dependency_graph dependency_graph files =
+  FilenameSet.fold (fun f ->
+    let fs = FilenameMap.find_unsafe f dependency_graph |> FilenameSet.inter files in
+    FilenameMap.add f fs
+  ) files FilenameMap.empty
 
 let rec closure graph =
   FilenameSet.fold (fun file acc ->

@@ -17,13 +17,19 @@ val dependent_files:
 
 val calc_dependency_graph:
   MultiWorkerLwt.worker list option -> (* workers *)
-  FilenameSet.t -> (* files *)
+  parsed:FilenameSet.t ->
   FilenameSet.t FilenameMap.t Lwt.t
 
 val calc_partial_dependency_graph:
   MultiWorkerLwt.worker list option -> (* workers *)
   FilenameSet.t -> (* files *)
+  parsed:FilenameSet.t ->
   FilenameSet.t FilenameMap.t Lwt.t
+
+val filter_dependency_graph:
+  FilenameSet.t FilenameMap.t -> (* dependency graph *)
+  FilenameSet.t -> (* files *)
+  FilenameSet.t FilenameMap.t
 
 val calc_all_dependencies:
   FilenameSet.t FilenameMap.t -> (* dependency graph *)

@@ -16,7 +16,7 @@ val init:
 val calc_deps:
   options:Options.t ->
   profiling:Profiling_js.running ->
-  workers:MultiWorkerLwt.worker list option ->
+  dependency_graph:FilenameSet.t FilenameMap.t ->
   FilenameSet.t ->
   (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
 
