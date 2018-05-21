@@ -163,7 +163,7 @@ let parse_formattingOptions (json: json option)
   : DocumentFormatting.formattingOptions =
   { DocumentFormatting.
     tabSize = Jget.int_d json "tabSize" 2;
-    insertSpaces = Jget.bool_d json "insertSpaces" false;
+    insertSpaces = Jget.bool_d json "insertSpaces" true;
   }
 
 let print_symbolInformation (info: SymbolInformation.t) : json =
