@@ -30,11 +30,11 @@ module Make
     (* number of nodes visited *)
     mutable visit_count: int;
     (* visit ordering *)
-    mutable indices: int NMap.t;
+    indices: (N.t, int) Hashtbl.t;
     (* nodes in a strongly connected component *)
     mutable stack: N.t list;
     (* back edges to earliest visited nodes *)
-    mutable lowlinks: int NMap.t;
+    lowlinks: (N.t, int) Hashtbl.t;
     (* components *)
     mutable components: N.t Nel.t list;
   }
@@ -43,9 +43,9 @@ module Make
     unexplored_edges = graph;
     not_yet_visited = roots;
     visit_count = 0;
-    indices = NMap.empty;
+    indices = Hashtbl.create 0;
     stack = [];
-    lowlinks = NMap.empty;
+    lowlinks = Hashtbl.create 0;
     components = [];
   }
 
@@ -55,7 +55,7 @@ module Make
     state.visit_count <- i + 1;
 
     (* visit m *)
-    state.indices <- NMap.add m i state.indices;
+    Hashtbl.replace state.indices m i;
     state.not_yet_visited <- NSet.remove m state.not_yet_visited;
     state.unexplored_edges <- NMap.remove m state.unexplored_edges;
 
@@ -73,7 +73,7 @@ module Make
           strongconnect state r rs_;
 
           (* update lowlink with that of r *)
-          let lowlink_r = NMap.find_unsafe r state.lowlinks in
+          let lowlink_r = Hashtbl.find state.lowlinks r in
           lowlink := min !lowlink lowlink_r
 
       | None ->
@@ -81,11 +81,11 @@ module Make
             (** either back edge, or cross edge where strongly connected component
                 is not yet complete **)
             (* update lowlink with index of r *)
-            let index_r = NMap.find_unsafe r state.indices in
+            let index_r = Hashtbl.find state.indices r in
             lowlink := min !lowlink index_r
     );
 
-    state.lowlinks <- NMap.add m !lowlink state.lowlinks;
+    Hashtbl.replace state.lowlinks m !lowlink;
     if (!lowlink = i) then
       (* strongly connected component *)
       let c = component state m in
