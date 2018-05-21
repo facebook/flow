@@ -277,8 +277,9 @@ let typecheck
   ~infer_input
   ~dependency_graph
   ~all_dependent_files
-  ~make_merge_input
-  ~persistent_connections =
+  ~direct_dependent_files
+  ~persistent_connections
+  ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
   (* The infer_input passed into typecheck basically tells us what the caller wants to typecheck.
@@ -287,10 +288,9 @@ let typecheck
    * and add them to infer_input, unless they're already checked and in unchanged_checked
    *
    * Note that we do not want to add all_dependent_files to infer_input directly! We only want to
-   * pass the dependencies, and let make_merge_input add dependent files as needed. This is
-   * important for recheck optimizations. In make_merge_input, we create the recheck map which
-   * indicates whether a given file needs to be rechecked. Dependent files only need to be rechecked
-   * if their dependencies change.
+   * pass the dependencies, and later add dependent files as needed. This is important for recheck
+   * optimizations. We create the recheck map which indicates whether a given file needs to be
+   * rechecked. Dependent files only need to be rechecked if their dependencies change.
    *)
   let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
@@ -375,12 +375,24 @@ let typecheck
           ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
       ))
   in
+  let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
+  let roots = CheckedSet.add ~dependents:direct_dependent_files infer_input in
+  let recheck_map =
+    (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
+       files in to_merge may or may not be rechecked. *)
+    CheckedSet.fold (fun recheck_map file ->
+      FilenameMap.add file (CheckedSet.mem file roots) recheck_map
+    ) FilenameMap.empty to_merge
+  in
 
-  (* call supplied function to calculate closure of modules to merge *)
-  let%lwt to_merge, recheck_map =
-    with_timer_lwt ~options "MakeMergeInput" profiling (fun () ->
-      Lwt.return (make_merge_input infer_input)
-    ) in
+  let%lwt () = match prep_merge with
+    | None -> Lwt.return_unit
+    | Some callback ->
+      (* call supplied function to calculate closure of modules to merge *)
+      with_timer_lwt ~options "MakeMergeInput" profiling (fun () ->
+        Lwt.return (callback to_merge)
+      )
+  in
 
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
@@ -473,19 +485,15 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
   else begin
     let errors = !env.ServerEnv.errors in
     let all_dependent_files = FilenameSet.empty in
+    let direct_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let dependency_graph = !env.ServerEnv.dependency_graph in
     let%lwt checked, errors = typecheck
       ~options ~profiling ~workers ~errors
       ~unchanged_checked ~infer_input
-      ~dependency_graph ~all_dependent_files
+      ~dependency_graph ~all_dependent_files ~direct_dependent_files
       ~persistent_connections
-      ~make_merge_input:(fun inferred ->
-        let recheck_map = CheckedSet.fold (fun map f ->
-          FilenameMap.add f true map
-        ) FilenameMap.empty inferred in
-        inferred, recheck_map
-      )
+      ~prep_merge:None
     in
 
     (* During a normal initialization or recheck, we update the env with the errors and
@@ -1027,8 +1035,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
     ~infer_input
     ~dependency_graph
     ~all_dependent_files
+    ~direct_dependent_files
     ~persistent_connections:(Some env.ServerEnv.connections)
-    ~make_merge_input:(fun inferred ->
+    ~prep_merge:(Some (fun to_merge ->
       (* need to merge the closure of inferred files and their deps *)
 
       let n = FilenameSet.cardinal all_dependent_files in
@@ -1047,21 +1056,13 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
-      let to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in
+      (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
       Context_cache.oldify_merge_batch (CheckedSet.all to_merge);
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect `gentle;
 
-      (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
-         files in to_merge may or may not be rechecked. *)
-      let roots = CheckedSet.add ~dependents:direct_dependent_files inferred in
-      let recheck_map = to_merge |> CheckedSet.fold (
-        fun recheck_map file ->
-          FilenameMap.add file (CheckedSet.mem file roots) recheck_map
-      ) FilenameMap.empty in
-
-      to_merge, recheck_map
-    )
+      ()
+    ))
   in
 
   (* NOTE: unused fields are left in their initial empty state *)
@@ -1170,10 +1171,6 @@ let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_gra
     ~infer_input
     ~dependency_graph
     ~all_dependent_files:FilenameSet.empty
+    ~direct_dependent_files:FilenameSet.empty
     ~persistent_connections:None
-    ~make_merge_input:(fun inferred ->
-      let recheck_map = CheckedSet.fold (fun map f ->
-        FilenameMap.add f true map
-      ) FilenameMap.empty inferred in
-      inferred, recheck_map
-    )
+    ~prep_merge:None
