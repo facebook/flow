@@ -32,6 +32,7 @@ module Make
     indices: (N.t, int) Hashtbl.t;
     (* nodes in a strongly connected component *)
     mutable stack: N.t list;
+    mem_stack: (N.t, bool) Hashtbl.t;
     (* back edges to earliest visited nodes *)
     lowlinks: (N.t, int) Hashtbl.t;
     (* components *)
@@ -44,6 +45,7 @@ module Make
     visit_count = 0;
     indices = Hashtbl.create 0;
     stack = [];
+    mem_stack = Hashtbl.create 0;
     lowlinks = Hashtbl.create 0;
     components = [];
   }
@@ -59,6 +61,7 @@ module Make
 
     (* push on stack *)
     state.stack <- m :: state.stack;
+    Hashtbl.replace state.mem_stack m true;
 
     (* initialize lowlink *)
     let lowlink = ref i in
@@ -67,7 +70,7 @@ module Make
     rs |> NSet.iter (fun r ->
       if Hashtbl.mem state.indices r
       then begin
-        if (List.mem r state.stack) then
+        if (Hashtbl.find state.mem_stack r) then
           (** either back edge, or cross edge where strongly connected component
               is not yet complete **)
           (* update lowlink with index of r *)
@@ -96,6 +99,7 @@ module Make
     (* pop stack until m is found *)
     let m_ = List.hd state.stack in
     state.stack <- List.tl state.stack;
+    Hashtbl.replace state.mem_stack m_ false;
     if (m = m_) then []
     else m_ :: (component state m)
 
