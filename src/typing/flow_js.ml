@@ -3425,9 +3425,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (DefT (r, ObjT exactobj), u)
 
     (* exactify incoming UB object type, flow to LB *)
-    | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, DefT (rl, ObjT obj_l))) ->
+    | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, (DefT (rl, ObjT obj_l) as l))) ->
       (* check for extra props in LB, then forward to standard obj ~> obj *)
-      let xl = { obj_l with flags = { obj_l.flags with exact = true } } in
       let ru = repos_reason (loc_of_reason reason_op) ru in
       let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
       iter_real_props cx obj_l.props_tmap (fun ~is_sentinel prop_name _ ->
@@ -3445,7 +3444,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let err = FlowError.EPropNotFound (Some prop_name, (rl, ru), use_op) in
           add_output cx ~trace err
       );
-      rec_flow cx trace (DefT (rl, ObjT xl), UseT (use_op, DefT (ru, ObjT xu)))
+      rec_flow cx trace (l, UseT (use_op, DefT (ru, ObjT xu)))
 
     | DefT (_, AnyT), MakeExactT (reason_op, k) ->
       continue cx trace (AnyT.why reason_op) k
