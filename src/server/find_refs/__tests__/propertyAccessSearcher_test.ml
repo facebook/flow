@@ -43,6 +43,12 @@ let tests = "SymbolKind" >::: [
   "export_default_negative" >:: begin fun ctxt ->
     run ctxt false "bar" "export default bar"
   end;
+  "import_default_positive" >:: begin fun ctxt ->
+    run ctxt true "default" "import bar from 'baz'"
+  end;
+  "import_default_negative" >:: begin fun ctxt ->
+    run ctxt false "bar" "import bar from 'baz'"
+  end;
   "class_method" >:: begin fun ctxt ->
     run ctxt true "bar" "class Foo { bar(): void {} }"
   end;

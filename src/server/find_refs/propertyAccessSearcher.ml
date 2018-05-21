@@ -37,6 +37,13 @@ class property_access_searcher name = object(this)
       this#set_acc true
     end;
     super#export_default_declaration loc decl
+  method! import_declaration loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+    let open Ast.Statement.ImportDeclaration in
+    let { default; _ } = decl in
+    if Option.is_some default && name = "default" then begin
+      this#set_acc true
+    end;
+    super#import_declaration loc decl
 end
 
 (* Returns true iff the given AST contains an access to a property with the given name *)
