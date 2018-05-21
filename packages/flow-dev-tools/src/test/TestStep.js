@@ -558,6 +558,16 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  flowCmdOnly: (args: Array<string>) => TestStepFirstStage = args => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      const [code, stdout, stderr] = await builder.flowCmd(args);
+      env.reportExitCode(code);
+      env.reportStdout(stdout);
+      env.reportStderr(stderr);
+    });
+    return ret;
+  };
+
   dontMindServerDeath: () => TestStepFirstStage = () => {
     const ret = this._cloneWithAction(async (builder, env) => {});
     ret._allowServerToDie = true;
