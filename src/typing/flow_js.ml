@@ -3425,25 +3425,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (DefT (r, ObjT exactobj), u)
 
     (* exactify incoming UB object type, flow to LB *)
-    | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, (DefT (rl, ObjT obj_l) as l))) ->
-      (* check for extra props in LB, then forward to standard obj ~> obj *)
+    | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, l)) ->
+      (* forward to standard obj ~> obj *)
       let ru = repos_reason (loc_of_reason reason_op) ru in
       let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
-      iter_real_props cx obj_l.props_tmap (fun ~is_sentinel prop_name _ ->
-        if not (Context.has_prop cx obj_u.props_tmap prop_name)
-        then
-          let use_op = Frame (PropertyCompatibility {
-            prop = Some prop_name;
-            (* Lower and upper are reversed in this case since the lower object
-             * is the one requiring the prop. *)
-            lower = ru;
-            upper = rl;
-            is_sentinel;
-          }, use_op) in
-          let rl = replace_reason_const (RProperty (Some prop_name)) rl in
-          let err = FlowError.EPropNotFound (Some prop_name, (rl, ru), use_op) in
-          add_output cx ~trace err
-      );
       rec_flow cx trace (l, UseT (use_op, DefT (ru, ObjT xu)))
 
     | DefT (_, AnyT), MakeExactT (reason_op, k) ->
@@ -6531,6 +6516,26 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         (Field (None, lv, lpolarity), Field (None, uv, upolarity))
     | _ -> ());
 
+  if rflags.exact && rflags.sealed = Sealed && not (is_literal_object_reason ureason)
+  then (
+    iter_real_props cx lflds (fun ~is_sentinel s _ ->
+      if not (Context.has_prop cx uflds s)
+      then (
+        let use_op = Frame (PropertyCompatibility {
+          prop = Some s;
+          (* Lower and upper are reversed in this case since the lower object
+           * is the one requiring the prop. *)
+          lower = ureason;
+          upper = lreason;
+          is_sentinel;
+        }, use_op) in
+        let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
+        let err = FlowError.EPropNotFound (Some s, (reason_prop, ureason), use_op) in
+        add_output cx ~trace err
+      )
+    )
+  );
+
   (* Properties in u must either exist in l, or match l's indexer. *)
   iter_real_props cx uflds (fun ~is_sentinel s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
@@ -6613,27 +6618,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
 
   (* Any properties in l but not u must match indexer *)
   (match udict with
-  | None ->
-    if rflags.exact && rflags.sealed = Sealed && not (is_literal_object_reason ureason)
-    then (
-      iter_real_props cx lflds (fun ~is_sentinel s _ ->
-        if not (Context.has_prop cx uflds s)
-        then (
-          let use_op = Frame (PropertyCompatibility {
-            prop = Some s;
-            (* Lower and upper are reversed in this case since the lower object
-             * is the one requiring the prop. *)
-            lower = ureason;
-            upper = lreason;
-            is_sentinel;
-          }, use_op) in
-          let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
-          let err = FlowError.EPropNotFound (Some s, (reason_prop, ureason), use_op) in
-          add_output cx ~trace err
-        )
-      )
-    )
-
+  | None -> ()
   | Some { key; value; dict_polarity; _ } ->
     iter_real_props cx lflds (fun ~is_sentinel s lp ->
       if not (Context.has_prop cx uflds s)
