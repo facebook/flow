@@ -220,10 +220,10 @@ let error_set_of_merge_error file msg =
   let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
   Errors.ErrorSet.singleton error
 
-let calc_deps ~options ~profiling ~dependency_graph to_merge =
+let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
   with_timer_lwt ~options "CalcDeps" profiling (fun () ->
     let dependency_graph = Dep_service.filter_dependency_graph dependency_graph to_merge in
-    let components = Sort_js.topsort ~roots:to_merge dependency_graph in
+    let components = List.filter (Nel.exists (fun f -> FilenameSet.mem f to_merge)) components in
     if Options.should_profile options then Sort_js.log components;
     let component_map = List.fold_left (fun component_map component ->
       let file = Nel.hd component in
@@ -292,29 +292,30 @@ let typecheck
    * indicates whether a given file needs to be rechecked. Dependent files only need to be rechecked
    * if their dependencies change.
    *)
-  let%lwt infer_input =
+  let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let roots = CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files infer_input) in
+    let preliminary_to_merge = CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files infer_input) in
     (* So we want to prune our dependencies to only the dependencies which changed. However,
      * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
      * check both of them. So we need to calculate components before we can prune *)
-    let%lwt dependencies = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
-      (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
-       * cycles *)
-      let components = Sort_js.topsort ~roots dependency_graph in
-      List.fold_left (fun dependencies component ->
-        if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
-        (* If at least one member of the component is not unchanged, then keep the component *)
-        then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
-        (* If every element is unchanged, drop the component *)
-        else dependencies
-      ) FilenameSet.empty components
-      |> Lwt.return
-    ) in
-
-    Lwt.return (CheckedSet.add ~dependencies infer_input)
-  in
+    (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
+     * cycles *)
+    let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
+    let dependencies = List.fold_left (fun dependencies component ->
+      if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
+      (* If at least one member of the component is not unchanged, then keep the component *)
+      then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
+      (* If every element is unchanged, drop the component *)
+      else dependencies
+    ) FilenameSet.empty components in
+    Lwt.return (CheckedSet.add ~dependencies infer_input, components)
+  ) in
+  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with infer_input +
+     all_dependent_files (which is = to_merge later) on dependency_graph, we would get exactly the
+     same components. Later, we will filter dependency_graph to just to_merge, and correspondingly
+     filter components as well. This will work out because every component is either entirely inside
+     to_merge or entirely outside. *)
 
   let%lwt send_errors_over_connection =
     match persistent_connections with
@@ -391,7 +392,7 @@ let typecheck
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let%lwt dependency_graph, component_map =
-    calc_deps ~options ~profiling ~dependency_graph (CheckedSet.all to_merge) in
+    calc_deps ~options ~profiling ~dependency_graph ~components (CheckedSet.all to_merge) in
 
   Hh_logger.info "Merging";
   let%lwt merge_errors, suppressions, severity_cover_set = try%lwt

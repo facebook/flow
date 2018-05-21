@@ -17,6 +17,7 @@ val calc_deps:
   options:Options.t ->
   profiling:Profiling_js.running ->
   dependency_graph:FilenameSet.t FilenameMap.t ->
+  components:File_key.t Nel.t list ->
   FilenameSet.t ->
   (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
 
