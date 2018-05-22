@@ -1,3 +1,27 @@
+### 0.73.0
+
+Likely to cause new Flow errors:
+
+New Features:
+* Inline interface types (`var foo: interface { x: string } = bar;`). Will be particularly useful in the future when we revamp object types
+
+Notable bug fixes:
+* `flow find-refs` threw an exception when used with an unchecked file. Now it treats the file as if it were checked, like other single-file commands do
+* `flow type-at-pos` now returns the class name for `declare class` declarations.
+
+Misc:
+* Added `.mjs` to the list of extensions that Flow reads by default
+* Perf improvements to calculating the dependency graph during recheck. Should help recheck perf on large repositories.
+* `flow find-refs --multi-hop` now parallelizes the work and is much faster
+* Support using `flow find-refs` and `flow get-def` with destructuring patterns as a starting location
+* Support using `flow find-refs` with `default` (as in `export default ...`) as a starting location
+* Bunch of small fixes where `flow find-refs` would miss certain locations
+* Tweaked the location returned for `flow get-def` when used for default and named imports
+* Lots of libdef updates. Thanks for the PRs!
+
+Parser:
+* Inline interface type support
+
 ### 0.72.0
 
 Likely to cause new Flow errors:
