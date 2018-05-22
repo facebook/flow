@@ -16,3 +16,4 @@ val init :
 val wait_until_ready : t -> unit Lwt.t
 val pid : t -> int
 val get_changes : t -> SSet.t Lwt.t
+val stop : t -> unit

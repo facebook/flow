@@ -36,10 +36,6 @@ type jsx_mode =
    *)
   | Jsx_csx
 
-type file_watcher =
-| NoFileWatcher
-| DFind
-
 type t = {
   opt_all : bool;
   opt_debug : bool;
@@ -75,7 +71,6 @@ type t = {
   opt_suppress_types : SSet.t;
   opt_temp_dir: string;
   opt_traces : int;
-  opt_file_watcher: file_watcher;
   opt_verbose : Verbose.t option;
   opt_weak : bool;
   opt_max_header_tokens: int;
@@ -122,7 +117,6 @@ let should_strip_root opts = opts.opt_strip_root
 let suppress_comments opts = opts.opt_suppress_comments
 let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
-let use_file_watcher opts = opts.opt_file_watcher <> NoFileWatcher
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
 

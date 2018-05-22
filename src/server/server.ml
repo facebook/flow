@@ -6,7 +6,6 @@
  *)
 
 open ServerEnv
-open Utils_js
 
 let sample_init_memory profiling =
   let open SharedMem_js in
@@ -78,117 +77,108 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
   Lwt.return env
 
-let get_watch_paths options =
-  Files.watched_paths (Options.file_options options)
-
-let listen_for_messages, get_next_message =
-  let message_stream, push_new_message = Lwt_stream.create () in
+let listen_for_messages, get_next_workload, update_env, get_files_to_recheck, wait_for_anything =
+  (* Workloads are client requests which we processes FIFO *)
+  let workload_stream, push_new_workload = Lwt_stream.create () in
+  (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
+   * but are quick to handle *)
+  let env_update_stream, push_new_env_update = Lwt_stream.create () in
+  (* Files which have changed *)
+  let recheck_stream, push_files_to_recheck = Lwt_stream.create () in
 
   (* This is a thread that just keeps looping in the background. It reads messages from the
    * monitor process and adds them to a stream *)
   let module ListenLoop = LwtLoop.Make (struct
-    type acc = unit
-    let main () =
+    type acc = genv
+
+    let handle_message genv = function
+    | MonitorProt.Request (request_id, command) ->
+      push_new_workload (Some (fun env -> CommandHandler.handle_ephemeral genv env (request_id, command)))
+    | MonitorProt.PersistentConnectionRequest (client_id, request) ->
+      push_new_workload (Some (fun env -> CommandHandler.handle_persistent genv env client_id request))
+    | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
+      push_new_env_update (Some (fun env -> { env with
+        connections = Persistent_connection.add_client env.connections client_id logging_context lsp
+      }))
+    | MonitorProt.DeadPersistentConnection client_id ->
+      push_new_env_update (Some (fun env -> { env with
+        connections = Persistent_connection.remove_client env.connections client_id
+      }))
+    | MonitorProt.FileWatcherNotification changed_files ->
+      push_files_to_recheck (Some changed_files)
+
+    let main genv =
       let%lwt message = MonitorRPC.read () in
-      push_new_message (Some message);
-      Lwt.return_unit
-    let catch () exn = raise exn
+      handle_message genv message;
+      Lwt.return genv
+
+    external reraise : exn -> 'a = "%reraise"
+
+    let catch _ exn = reraise exn
   end)
   in
 
   let listen_for_messages = ListenLoop.run
   in
 
-  (* This function will return the next message from the monitor process, with a 1 second timeout
-   * if there are no messages *)
-  let get_next_message () =
-    (* A thread that returns None after 1 second *)
-    let timeout =
-      let%lwt () = Lwt_unix.sleep 1.0 in
-      Lwt.return None
-    in
-    (* A thread that returns the next message when it's available *)
-    let get_message =
-      let%lwt message = Lwt_stream.next message_stream in
-      Lwt.return (Some message)
-    in
-    (* Pick the first thread that completes and cancel the other *)
-    Lwt.pick [ timeout; get_message ]
+  let get_next_workload () =
+    match Lwt_stream.get_available_up_to 1 workload_stream with
+    | [ workload ] -> Some workload
+    | [] -> None
+    | _ -> failwith "Unreachable"
   in
 
-  listen_for_messages, get_next_message
-
-let exit_due_to_dfind_dying ~genv e =
-  let root = Options.root genv.options in
-  let tmp_dir = Options.temp_dir genv.options in
-  let dfind_logs = Sys_utils.cat_no_fail (Server_files_js.dfind_log_file ~tmp_dir root) in
-  let logs_len = String.length dfind_logs in
-  (* Let's limit how much of the log we stick in the exit message *)
-  let max_len = 2000 in
-  let dfind_logs = if logs_len > max_len
-    then String.sub dfind_logs (logs_len - max_len) max_len
-    else dfind_logs in
-  let msg = spf
-    "dfind died (got exception: %s)\ndfind logs:\n%s"
-    (Printexc.to_string e)
-    dfind_logs in
-  FlowExitStatus.(exit Dfind_died ~msg)
-
-(* When a rebase occurs, dfind takes a while to give us the full list of
- * updates, and it often comes in batches. To get an accurate measurement
- * of rebase time, we use the heuristic that any changes that come in
- * right after one rechecking round finishes to be part of the same
- * rebase, and we don't log the recheck_end event until the update list
- * is no longer getting populated. *)
-let rec recheck_loop ~dfind genv env =
-  let%lwt raw_updates =
-    if Options.use_file_watcher genv.options
-    then
-      try%lwt DfindLibLwt.get_changes dfind
-      with
-      | Sys_error msg as e when msg = "Broken pipe" -> exit_due_to_dfind_dying ~genv e
-      | End_of_file as e -> exit_due_to_dfind_dying ~genv e
-    else Lwt.return SSet.empty
+  let update_env env =
+    Lwt_stream.get_available env_update_stream
+    |> List.fold_left (fun env f -> f env) env
   in
+
+  let get_files_to_recheck () =
+    Lwt_stream.get_available recheck_stream
+    |> List.fold_left SSet.union SSet.empty
+  in
+
+  (* Block until any stream receives something *)
+  let wait_for_anything () =
+    let%lwt _ = Lwt.pick [
+      Lwt_stream.is_empty workload_stream;
+      Lwt_stream.is_empty env_update_stream;
+      Lwt_stream.is_empty recheck_stream;
+    ] in
+    Lwt.return_unit
+  in
+
+  listen_for_messages, get_next_workload, update_env, get_files_to_recheck, wait_for_anything
+
+let rec recheck_and_update_env_loop genv env =
+  let env = update_env env in
+  let raw_updates = get_files_to_recheck () in
   if SSet.is_empty raw_updates then Lwt.return env else begin
     let updates = Rechecker.process_updates genv env raw_updates in
     let%lwt _profiling, env = Rechecker.recheck genv env updates in
-    recheck_loop ~dfind genv env
+    recheck_and_update_env_loop genv env
   end
 
-let process_message genv env request =
-  ServerPeriodical.stamp_connection ();
-  match request with
-  | MonitorProt.Request (request_id, command) ->
-    CommandHandler.handle_ephemeral genv env (request_id, command)
-  | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
-    Lwt.return
-      { env with
-        connections = Persistent_connection.add_client env.connections client_id logging_context lsp
-      }
-  | MonitorProt.PersistentConnectionRequest (client_id, request) ->
-    CommandHandler.handle_persistent genv env client_id request
-  | MonitorProt.DeadPersistentConnection client_id ->
-    Lwt.return
-      { env with connections = Persistent_connection.remove_client env.connections client_id }
-
-let rec serve ~dfind ~genv ~env =
+let rec serve ~genv ~env =
   ServerPeriodical.call_before_sleeping ();
 
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
-  let%lwt message = get_next_message () in
+  (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
+  let%lwt () = wait_for_anything () in
 
-  let%lwt env = recheck_loop ~dfind genv env in
+  (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
+  let%lwt env = recheck_and_update_env_loop genv env in
 
-  let%lwt env = Option.value_map message
+  (* Run a workload (if there is one) *)
+  let%lwt env = Option.value_map (get_next_workload ())
     ~default:(Lwt.return env)
-    ~f:(process_message genv env) in
+    ~f:(fun workload -> workload env) in
 
   (* Flush the logs asynchronously *)
   Lwt.async EventLoggerLwt.flush;
 
-  serve ~dfind ~genv ~env
+  serve ~genv ~env
 
 (* This code is only executed when the options --check is NOT present *)
 let with_init_lock init_fun =
@@ -199,18 +189,6 @@ let with_init_lock init_fun =
   let t' = Unix.gettimeofday () in
   Hh_logger.info "Took %f seconds to initialize." (t' -. t);
   Lwt.return env
-
-let init_dfind options =
-  let tmp_dir = Options.temp_dir options in
-  let root = Options.root options in
-  let in_fd = Daemon.null_fd () in
-  let log_file = Server_files_js.dfind_log_file ~tmp_dir root in
-  let log_fd = Daemon.fd_of_path log_file in
-  let fds = (in_fd, log_fd, log_fd) in
-  let watch_paths = get_watch_paths options in
-  Hh_logger.info "Watching paths: \n%s" (String.concat "\n" (List.map (fun p -> spf "\t%s" (Path.to_string p)) watch_paths));
-  DfindLibLwt.init fds ("flow_server_events", watch_paths)
-
 
 (* The main entry point of the daemon
 * the only trick to understand here, is that env.modified is the set
@@ -234,23 +212,20 @@ let run ~monitor_channels ~shared_mem_config options =
   let genv, program_init =
     create_program_init ~shared_mem_config ~focus_targets:None options in
 
-  let dfind = init_dfind options in
-
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
-    let listening_thread = listen_for_messages () in
+    let listening_thread = listen_for_messages genv in
 
     let%lwt env = with_init_lock (fun () ->
       ServerPeriodical.init ();
       let%lwt env = program_init () in
-      let%lwt () = DfindLibLwt.wait_until_ready dfind in
       Lwt.return env
     ) in
 
     (* Run both these threads. If either of them fail, return immediately *)
     LwtUtils.iter_all [
       listening_thread;
-      serve ~dfind ~genv ~env
+      serve ~genv ~env
     ]
   in
   LwtInit.run_lwt initial_lwt_thread

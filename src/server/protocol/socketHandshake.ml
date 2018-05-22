@@ -35,4 +35,4 @@ type monitor_to_client =
   | Too_many_clients
   (* The server is still initializing. Sent to lsp clients or clients which used
    * --retry-if-init false *)
-  | Still_initializing of ServerStatus.status
+  | Still_initializing of (ServerStatus.status * FileWatcherStatus.status)

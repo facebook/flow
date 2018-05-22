@@ -40,6 +40,21 @@ type command =
 | Notify_dead_persistent_connection of {
     client_id: PersistentProt.client_id;
   }
+| Notify_file_changes
+
+(* A wrapper for Pervasives.exit which gives other threads a second to handle their business
+ * before the monitor exits *)
+let exit ~msg exit_status =
+  Logger.info "Monitor is exiting (%s)" msg;
+  Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
+  Lwt_condition.broadcast ExitSignal.signal ();
+
+  (* Protect this thread from getting canceled *)
+  Lwt.protected (
+    let%lwt () = Lwt_unix.sleep 1.0 in
+    FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
+    Pervasives.exit (FlowExitStatus.error_code exit_status)
+  )
 
 (* The long-lived stream of requests *)
 (* This is unbounded, because otherwise lspCommand might deadlock. *)
@@ -55,9 +70,12 @@ module ServerInstance : sig
 end = struct
   type t = {
     pid: int;
+    watcher: FileWatcher.watcher;
     connection: ServerConnection.t;
     command_loop: unit Lwt.t;
+    file_watcher_loop: unit Lwt.t;
     on_exit_thread: unit Lwt.t;
+    file_watcher_exit_thread: unit Lwt.t;
   }
 
   let handle_response ~msg ~connection:_ =
@@ -103,40 +121,110 @@ end = struct
       | Some connection -> PersistentConnection.write ~msg:response connection);
       Lwt.return_unit
 
+  let has_changed_files, get_and_clear_changed_files =
+    let acc = ref SSet.empty in
+
+    let fetch watcher =
+      let%lwt files = watcher#get_changed_files () in
+      if not (SSet.is_empty files)
+      then begin
+        let count = SSet.cardinal files in
+        Logger.info "File watcher reported %d file%s changed" count (if count = 1 then "" else "s")
+      end;
+      acc := SSet.union !acc files;
+      Lwt.return_unit
+    in
+
+    (* Queries dfind for any new file system events and then returns whether or not we've
+     * accumulated any file system events *)
+    let has_changed_files watcher =
+      let%lwt () = fetch watcher in
+      Lwt.return (not (SSet.is_empty !acc))
+    in
+
+    (* Queries dfind for any new file system events and then returns all the accumulated file
+     * system events. This call will clear the accumulator *)
+    let get_and_clear_changed_files watcher =
+      let%lwt () = fetch watcher in
+      let ret = !acc in
+      acc := SSet.empty;
+      Lwt.return ret
+    in
+
+    has_changed_files, get_and_clear_changed_files
+
   module CommandLoop = LwtLoop.Make (struct
-    type acc = ServerConnection.t
+    type acc = (FileWatcher.watcher * ServerConnection.t)
 
-    let send_request ~msg conn =
-      ServerConnection.write ~msg conn;
-      Lwt.return conn
+    let send_request ~msg conn = ServerConnection.write ~msg conn
 
-    let main conn =
+    (* In order to try and avoid races between the file system and a command (like `flow status`),
+     * we check for file system notification before sending a request to the server *)
+    let send_file_watcher_notification watcher conn =
+      let%lwt files = get_and_clear_changed_files watcher in
+      if not (SSet.is_empty files)
+      then send_request ~msg:(MonitorProt.FileWatcherNotification files) conn;
+      Lwt.return_unit
+
+    let main (watcher, conn) =
       let%lwt command = Lwt_stream.next command_stream in
-      match command with
+      let%lwt () = begin match command with
       | Write_ephemeral_request { request; client; } ->
         if not (EphemeralConnection.is_closed client)
         then begin
+          let%lwt () = send_file_watcher_notification watcher conn in
           let%lwt request_id = RequestMap.add ~request ~client in
           Logger.debug "Writing '%s' to the server connection" request_id;
-          send_request ~msg:(MonitorProt.Request (request_id, request)) conn
+          send_request ~msg:(MonitorProt.Request (request_id, request)) conn;
+          Lwt.return_unit
         end else begin
           Logger.debug "Skipping request from a dead ephemeral connection";
-          Lwt.return conn
+          Lwt.return_unit
         end
       | Write_persistent_request { client_id; request; } ->
+        let%lwt () = send_file_watcher_notification watcher conn in
         let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
-        send_request ~msg conn
+        send_request ~msg conn;
+        Lwt.return_unit
       | Notify_new_persistent_connection { client_id; logging_context; lsp; } ->
         let msg = MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) in
-        send_request ~msg conn
+        send_request ~msg conn;
+        Lwt.return_unit
       | Notify_dead_persistent_connection { client_id; } ->
         let () = PersistentConnectionMap.remove ~client_id in
         let msg = MonitorProt.DeadPersistentConnection client_id in
-        send_request ~msg conn
+        send_request ~msg conn;
+        Lwt.return_unit
+      | Notify_file_changes ->
+        send_file_watcher_notification watcher conn
+      end in
+      Lwt.return (watcher, conn)
 
     let catch _ exn =
       Logger.fatal ~exn "Uncaught exception in Server command loop";
       raise exn
+  end)
+
+  module FileWatcherLoop = LwtLoop.Make (struct
+    type acc = FileWatcher.watcher
+
+    (* Poll for file changes every second *)
+    let main watcher =
+      let%lwt should_notify = has_changed_files watcher in
+      if should_notify
+      then push_to_command_stream (Some Notify_file_changes);
+      let%lwt () = Lwt_unix.sleep 1.0 in
+      Lwt.return watcher
+
+    let catch watcher exn =
+      match exn with
+      | FileWatcher.FileWatcherDied exn ->
+        let msg = spf "File watcher (%s) died" watcher#name in
+        Logger.fatal ~exn "%s" msg;
+        exit ~msg FlowExitStatus.Dfind_died
+      | _ ->
+        Logger.fatal ~exn "Uncaught exception in Server file watcher loop";
+        raise exn
   end)
 
   let cleanup_on_exit ~connection =
@@ -144,9 +232,41 @@ end = struct
 
   let cleanup t =
     Lwt.cancel t.command_loop;
+    Lwt.cancel t.file_watcher_loop;
+    Lwt.cancel t.file_watcher_exit_thread;
     Lwt.cancel t.on_exit_thread;
-    ServerConnection.close_immediately t.connection
+    (* Lwt.join will run these threads in parallel and only return when EVERY thread has returned
+     * or failed *)
+    Lwt.join [
+      t.watcher#stop ();
+      ServerConnection.close_immediately t.connection;
+    ]
 
+  let handle_file_watcher_exit watcher status =
+    (* TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
+     * We could probably just restart it. For dfind, we'd also need to start a new server, but for
+     * watchman we probably could just start a new watchman daemon and use the clockspec *)
+    begin match status with
+    | Unix.WEXITED exit_status ->
+      let exit_type =
+        try Some (FlowExitStatus.error_type exit_status)
+        with Not_found -> None in
+      let exit_status_string =
+        Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type in
+      Logger.error "File watcher (%s) exited with code %s (%d)"
+        watcher#name
+        exit_status_string
+        exit_status
+    | Unix.WSIGNALED signal ->
+      Logger.error "File watcher (%s) was killed with %s signal"
+        watcher#name
+        (PrintSignal.string_of_signal signal)
+    | Unix.WSTOPPED signal ->
+      Logger.error "File watcher (%s) was stopped with %s signal"
+        watcher#name
+        (PrintSignal.string_of_signal signal)
+    end;
+    exit ~msg:(spf "File watcher (%s) died" watcher#name) FlowExitStatus.Dfind_died
   let server_num = ref 0
 
   (* Spawn a brand new Flow server *)
@@ -157,8 +277,18 @@ end = struct
       server_options;
       server_log_file=log_file;
       argv;
+      file_watcher;
       _;
     } = monitor_options in
+
+    let%lwt () = StatusStream.reset file_watcher in
+
+    let watcher = match file_watcher with
+    | FileWatcherStatus.NoFileWatcher ->
+      new FileWatcher.dummy
+    | FileWatcherStatus.DFind ->
+      new FileWatcher.dfind (Files.watched_paths (Options.file_options server_options))
+    in
     let handle = Server.daemonize
       ~log_file ~shared_mem_config ~argv server_options in
     let (ic, oc) = handle.Daemon.channels in
@@ -205,8 +335,6 @@ end = struct
     in
     start ();
 
-    let command_loop = CommandLoop.run ~cancel_condition:ExitSignal.signal connection in
-
     (* Close the connection to the server when we're about to exit *)
     let on_exit_thread =
       try%lwt
@@ -219,24 +347,35 @@ end = struct
         raise exn
     in
 
-    Lwt.return { pid = handle.Daemon.pid; connection; command_loop; on_exit_thread }
+    (* This may block for quite awhile. No messages will be sent to the server process until the
+     * file watcher is up and running *)
+    Logger.debug "Initializing file watcher (%s)" watcher#name;
+    let%lwt () = watcher#init () in
+    Logger.debug "File watcher (%s) ready!" watcher#name;
+    let file_watcher_exit_thread =
+      let%lwt status = watcher#waitpid () in handle_file_watcher_exit watcher status
+    in
+    StatusStream.file_watcher_ready ();
+
+    let command_loop = CommandLoop.run ~cancel_condition:ExitSignal.signal (watcher, connection) in
+    let file_watcher_loop =
+      if file_watcher = FileWatcherStatus.NoFileWatcher
+      then Lwt.return_unit (* Don't even bother *)
+      else FileWatcherLoop.run ~cancel_condition:ExitSignal.signal watcher
+    in
+
+    Lwt.return {
+      pid = handle.Daemon.pid;
+      watcher;
+      connection;
+      command_loop;
+      file_watcher_loop;
+      on_exit_thread;
+      file_watcher_exit_thread;
+    }
 
   let pid_of t = t.pid
 end
-
-(* A wrapper for Pervasives.exit which gives other threads a second to handle their business
- * before the monitor exits *)
-let exit ~msg exit_status =
-  Logger.info "Monitor is exiting (%s)" msg;
-  Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
-  Lwt_condition.broadcast ExitSignal.signal ();
-
-  (* Protect this thread from getting canceled *)
-  Lwt.protected (
-    let%lwt () = Lwt_unix.sleep 1.0 in
-    FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
-    Pervasives.exit (FlowExitStatus.error_code exit_status)
-  )
 
 (* A loop who's job is to start a server and then wait for it to die *)
 module KeepAliveLoop = LwtLoop.Make (struct
@@ -305,30 +444,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
      *)
     signal = Sys.sigsegv
 
-  (* Basically a `waitpid [ WUNTRACED ] pid` (WUNTRACED means also return on stopped processes) *)
-  let blocking_waitpid =
-    let reasonable_impl pid = Lwt_unix.waitpid [Unix.WUNTRACED] pid
-    in
-
-    (* Lwt_unix.waitpid without WNOHANG doesn't work on Windows. As a workaround, we can call the
-     * WNOHANG version every .5 seconds. https://github.com/ocsigen/lwt/issues/494 *)
-    let rec damn_it_windows_impl pid_to_wait_for =
-      let%lwt (pid_ret, status) = Lwt_unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] pid_to_wait_for in
-      if pid_ret = 0
-      then
-        (* Still hasn't exited. Let's wait .5s and try again *)
-        let%lwt () = Lwt_unix.sleep 0.5 in
-        damn_it_windows_impl pid_to_wait_for
-      else
-        (* Ok, process has exited or died or something. *)
-        Lwt.return (pid_ret, status)
-    in
-
-    if Sys.win32 then damn_it_windows_impl else reasonable_impl
-
   let wait_for_server_to_die monitor_options server =
     let pid = ServerInstance.pid_of server in
-    let%lwt (_, status) = blocking_waitpid pid in
+    let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
     let%lwt () = ServerInstance.cleanup server in
     if Sys.unix && try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false
     then FlowEventLogger.murdered_by_oom_killer ();

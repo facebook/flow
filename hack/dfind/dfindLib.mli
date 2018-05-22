@@ -16,6 +16,7 @@ val init :
 val wait_until_ready : t -> unit
 val pid : t -> int
 val get_changes : ?timeout:Timeout.t -> t -> SSet.t
+val stop : t -> unit
 
 module type MARSHAL_TOOLS = sig
   type 'a result
@@ -45,4 +46,5 @@ module DFindLibFunctor :  functor (Marshal_tools: MARSHAL_TOOLS) -> sig
   val wait_until_ready : t -> unit Marshal_tools.result
   val pid : t -> int
   val get_changes : ?timeout:Timeout.t -> t -> SSet.t Marshal_tools.result
+  val stop: t -> unit
 end

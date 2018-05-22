@@ -23,6 +23,7 @@ let spec = { CommandSpec.
       |> from_flag
       |> log_file_flags
       |> no_restart_flag
+      |> file_watcher_flag
       |> anon "root" (optional string)
     );
   usage = Printf.sprintf
@@ -34,7 +35,7 @@ let spec = { CommandSpec.
 }
 
 let main lazy_mode options_flags shm_flags ignore_version from
-  server_log_file monitor_log_file no_restart path_opt () =
+  server_log_file monitor_log_file no_restart file_watcher path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -61,14 +62,16 @@ let main lazy_mode options_flags shm_flags ignore_version from
     |> Path.to_string
   in
 
-  let monitor_options = FlowServerMonitorOptions.make
-    ~log_file:monitor_log_file
-    ~autostop:false
-    ~no_restart
-    ~server_log_file
-    ~server_options:options
-    ~shared_mem_config
-    ~argv:Sys.argv in
+  let monitor_options = FlowServerMonitorOptions.({
+    log_file = monitor_log_file;
+    autostop = false;
+    no_restart;
+    server_log_file;
+    server_options = options;
+    shared_mem_config;
+    argv = Sys.argv;
+    file_watcher;
+  }) in
 
   FlowServerMonitor.start monitor_options
 

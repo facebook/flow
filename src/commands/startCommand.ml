@@ -27,6 +27,7 @@ let spec = { CommandSpec.
       |> ignore_version_flag
       |> from_flag
       |> no_restart_flag
+      |> file_watcher_flag
       |> anon "root" (optional string)
     );
   usage = Printf.sprintf
@@ -40,7 +41,7 @@ let spec = { CommandSpec.
 
 let main
     options_flags json pretty server_log_file monitor_log_file wait lazy_mode
-    autostop shm_flags ignore_version from no_restart path_opt () =
+    autostop shm_flags ignore_version from no_restart file_watcher path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -88,14 +89,16 @@ let main
   (* A quiet `flow start` doesn't imply a quiet `flow server` *)
   let server_options = { options with Options.opt_quiet = false } in
 
-  let monitor_options = FlowServerMonitorOptions.make
-    ~log_file:monitor_log_file
-    ~autostop
-    ~no_restart
-    ~server_log_file
-    ~server_options
-    ~shared_mem_config
-    ~argv:Sys.argv in
+  let monitor_options = FlowServerMonitorOptions.({
+    log_file = monitor_log_file;
+    autostop;
+    no_restart;
+    server_log_file;
+    server_options;
+    shared_mem_config;
+    argv = Sys.argv;
+    file_watcher;
+  }) in
 
   FlowServerMonitor.daemonize ~wait ~on_spawn monitor_options
 

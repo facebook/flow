@@ -24,16 +24,6 @@ type t = {
   shared_mem_config: SharedMem_js.config;
   (* The argv of the process which created the server monitor *)
   argv: string array;
-}
-
-let make
-  ~log_file ~autostop ~no_restart ~server_log_file ~server_options ~shared_mem_config ~argv
-  = {
-  log_file;
-  autostop;
-  no_restart;
-  server_log_file;
-  server_options;
-  shared_mem_config;
-  argv;
+  (* What to use for file watching *)
+  file_watcher: FileWatcherStatus.file_watcher;
 }

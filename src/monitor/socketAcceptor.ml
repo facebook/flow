@@ -159,11 +159,13 @@ let perform_handshake_and_get_client_type ~client_fd =
       in
       failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
     else if is_lsp && not (StatusStream.ever_been_free ()) then
-      let status = StatusStream.get_status () in
+      let (server_status, watcher_status) = StatusStream.get_status () in
       let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble
-        client_fd (SocketHandshake.Still_initializing status)
+        client_fd (SocketHandshake.Still_initializing (server_status, watcher_status))
       in
-      failwith (ServerStatus.string_of_status status)
+      if ServerStatus.is_free server_status
+      then failwith (FileWatcherStatus.string_of_status watcher_status)
+      else failwith (ServerStatus.string_of_status server_status)
     else begin
       match client_type with
       | SocketHandshake.Ephemeral {fail_on_init=true} when not (StatusStream.ever_been_free ()) ->

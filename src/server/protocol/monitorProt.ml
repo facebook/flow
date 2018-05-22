@@ -24,6 +24,8 @@ type monitor_to_server_message =
 | PersistentConnectionRequest of PersistentProt.client_id * PersistentProt.request
 (* A notification that a persistent socket connection is dead *)
 | DeadPersistentConnection of PersistentProt.client_id
+(* The file watcher has noticed changes *)
+| FileWatcherNotification of SSet.t
 
 (* These are the messages that the server sends to the monitor *)
 type server_to_monitor_message =
@@ -43,4 +45,4 @@ type monitor_to_client_message =
 (* The server threw an exception while processing the request *)
 | ServerException of string
 (* The server is currently busy. Please wait for a response *)
-| Please_hold of ServerStatus.status
+| Please_hold of (ServerStatus.status * FileWatcherStatus.status)
