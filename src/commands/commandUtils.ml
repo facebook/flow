@@ -968,6 +968,17 @@ let rec connect_and_make_request =
     flush oc
   in
 
+  let eprintf_with_spinner msg =
+    if Unix.isatty Unix.stderr
+    then begin
+      if Tty.spinner_used () then Tty.print_clear_line stderr;
+      Printf.eprintf "%s: %s%!" msg (Tty.spinner())
+    end else
+      Printf.eprintf "%s\n%!" msg
+  in
+
+  let eprintf_with_spinner fmt = Printf.ksprintf eprintf_with_spinner fmt in
+
   (* Waits for a response over the socket. If the connection dies, this will throw an exception *)
   let rec wait_for_response ?timeout ~quiet ~root (ic: Timeout.in_channel) =
     let use_emoji = Tty.supports_emoji () &&
@@ -1000,13 +1011,7 @@ let rec connect_and_make_request =
       in
 
       Option.iter status_string (fun status_string ->
-        if not quiet then begin
-          if Tty.spinner_used () then Tty.print_clear_line stderr;
-          Printf.eprintf
-            "Please wait. %s: %s%!"
-            status_string
-            (Tty.spinner())
-        end
+        if not quiet then eprintf_with_spinner "Please wait. %s" status_string
       );
 
       wait_for_response ?timeout ~quiet ~root ic
@@ -1034,9 +1039,10 @@ let rec connect_and_make_request =
     send_command ?timeout oc request;
     try wait_for_response ?timeout ~quiet ~root ic
     with End_of_file ->
-      if not quiet then begin
-        Printf.eprintf
-          "Lost connection to the flow server (%d %s remaining)\n%!"
+      if not quiet
+      then begin
+        eprintf_with_spinner
+          "Lost connection to the flow server (%d %s remaining)%!"
           retries
           (if retries = 1 then "retry" else "retries")
       end;
