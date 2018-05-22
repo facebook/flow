@@ -106,6 +106,21 @@ let listen_for_messages, get_next_workload, update_env, get_files_to_recheck, wa
       }))
     | MonitorProt.FileWatcherNotification changed_files ->
       push_files_to_recheck (Some changed_files)
+    | MonitorProt.PleaseDie please_die_reason ->
+      (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the
+       * middle of a job this will lead to some log spew. We probably should send SIGTERM to each
+       * worker and set up a signal handler to kill the fork and exit gracefully. Might also want
+       * to use the SharedMem.cancel thingy *)
+      Hh_logger.info "Killing the worker processes";
+      WorkerController.killall ();
+      let msg = match please_die_reason with
+      | MonitorProt.MonitorExiting (monitor_exit_status, monitor_msg) ->
+        Utils.spf
+          "Monitor is exiting with status %s (%s)"
+          (FlowExitStatus.to_string monitor_exit_status)
+          monitor_msg
+      in
+      FlowExitStatus.(exit ~msg Killed_by_monitor)
 
     let main genv =
       let%lwt message = MonitorRPC.read () in

@@ -52,7 +52,7 @@ let create_ephemeral_connection ~client_fd ~close =
   in
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
-    let%lwt () = Lwt_condition.wait ExitSignal.signal in
+    let%lwt _ = Lwt_condition.wait ExitSignal.signal in
     EphemeralConnection.flush_and_close conn
   in
 
@@ -98,7 +98,7 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
   in
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
-    let%lwt () = Lwt_condition.wait ExitSignal.signal in
+    let%lwt _ = Lwt_condition.wait ExitSignal.signal in
     PersistentConnection.flush_and_close conn
   in
 

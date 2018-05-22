@@ -12,5 +12,5 @@ module type LOOP = sig
 end
 
 module Make: functor (Loop: LOOP) -> sig
-  val run: ?cancel_condition:unit Lwt_condition.t -> Loop.acc -> unit Lwt.t
+  val run: ?cancel_condition:'a Lwt_condition.t -> Loop.acc -> unit Lwt.t
 end

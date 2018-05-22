@@ -49,6 +49,8 @@ type t =
   | Missing_flowlib
   (* Flow monitor had been instructed to exit when there were no more clients *)
   | Autostop
+  (* Server exited because the monitor asked it to *)
+  | Killed_by_monitor
 
   (* The hack code might throw this *)
   | Socket_error
@@ -93,6 +95,7 @@ let error_code = function
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Path_is_not_a_file -> 17
   | Autostop -> 18
+  | Killed_by_monitor -> 19
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -125,6 +128,7 @@ let error_type = function
   | 16 -> Flowconfig_changed
   | 17 -> Path_is_not_a_file
   | 18 -> Autostop
+  | 19 -> Killed_by_monitor
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -173,6 +177,7 @@ let to_string = function
   | No_input -> "No_input"
   | Flowconfig_changed -> "Flowconfig_changed"
   | Autostop -> "Autostop"
+  | Killed_by_monitor -> "Killed_by_monitor"
 
 exception Exit_with of t
 

@@ -13,6 +13,9 @@ module PersistentProt = Persistent_connection_prot
  * to which request a given response is replying *)
 type request_id = string
 
+type please_die_reason =
+| MonitorExiting of (FlowExitStatus.t * string)
+
 (* These are the messages that the monitor sends to the server *)
 type monitor_to_server_message =
 (* A request from an ephemeral socket connection. It expects a response *)
@@ -26,6 +29,8 @@ type monitor_to_server_message =
 | DeadPersistentConnection of PersistentProt.client_id
 (* The file watcher has noticed changes *)
 | FileWatcherNotification of SSet.t
+(* Monitor wants to kill the server but first asks nicely for the server to honorably kill itself *)
+| PleaseDie of please_die_reason
 
 (* These are the messages that the server sends to the monitor *)
 type server_to_monitor_message =

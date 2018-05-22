@@ -23,6 +23,7 @@ type t =
   | Server_start_failed of Unix.process_status
   | Missing_flowlib
   | Autostop
+  | Killed_by_monitor
   | Socket_error
   | Dfind_died
   | Dfind_unresponsive

@@ -20,7 +20,7 @@ module type LOOP = sig
 end
 
 module Make (Loop: LOOP): sig
-  val run: ?cancel_condition:unit Lwt_condition.t -> Loop.acc -> unit Lwt.t
+  val run: ?cancel_condition:'a Lwt_condition.t -> Loop.acc -> unit Lwt.t
 end = struct
   let catch acc exn =
     match exn with
@@ -48,7 +48,7 @@ end = struct
        * condition wait *)
       Lwt.async (fun () -> Lwt.pick [
         (try%lwt thread with Lwt.Canceled -> Lwt.return_unit);
-        Lwt_condition.wait condition;
+        (let%lwt _ = Lwt_condition.wait condition in Lwt.return_unit);
       ])
     end;
 

@@ -259,7 +259,7 @@ let spawn
   if stdin <> Unix.stdin then close_if_open stdin;
   if stdout <> Unix.stdout then close_if_open stdout;
   if stderr <> Unix.stderr && stderr <> stdout then close_if_open stderr;
-  
+
   PidLog.log
     ~reason:(Entry.name_of_entry entry)
     ~no_fail:true
