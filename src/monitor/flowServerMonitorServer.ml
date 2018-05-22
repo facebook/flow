@@ -56,6 +56,28 @@ let exit ~msg exit_status =
     Pervasives.exit (FlowExitStatus.error_code exit_status)
   )
 
+(* Exit after 7 days of no requests *)
+module Doomsday: sig
+  val start_clock: unit -> unit Lwt.t
+  val postpone: unit -> unit
+end = struct
+  let seven_days_in_secs = 3600. *. 24. *. 7.
+
+  let time_in_seven_days () =
+    Unix.time () +. seven_days_in_secs
+
+  let doomsday_time = ref (time_in_seven_days ())
+
+  let postpone () =
+    doomsday_time := time_in_seven_days ()
+
+  let rec start_clock () =
+    let time_til_doomsday = !doomsday_time -. (Unix.time ()) in
+    if time_til_doomsday <= 0.
+    then exit ~msg:"Exiting server. Last used >7 days ago" FlowExitStatus.Unused_server
+    else let%lwt () = Lwt_unix.sleep time_til_doomsday in start_clock ()
+end
+
 (* The long-lived stream of requests *)
 (* This is unbounded, because otherwise lspCommand might deadlock. *)
 let command_stream, push_to_command_stream = Lwt_stream.create ()
@@ -170,6 +192,7 @@ end = struct
       let%lwt command = Lwt_stream.next command_stream in
       let%lwt () = begin match command with
       | Write_ephemeral_request { request; client; } ->
+        Doomsday.postpone ();
         if not (EphemeralConnection.is_closed client)
         then begin
           let%lwt () = send_file_watcher_notification watcher conn in
@@ -182,6 +205,7 @@ end = struct
           Lwt.return_unit
         end
       | Write_persistent_request { client_id; request; } ->
+        Doomsday.postpone ();
         let%lwt () = send_file_watcher_notification watcher conn in
         let msg = MonitorProt.PersistentConnectionRequest (client_id, request) in
         send_request ~msg conn;
@@ -529,7 +553,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
     raise exn
 end)
 
-let start monitor_options = KeepAliveLoop.run ~cancel_condition:ExitSignal.signal monitor_options
+let start monitor_options =
+  Lwt.async Doomsday.start_clock;
+  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal monitor_options
 
 let send_request ~client ~request =
   Logger.debug

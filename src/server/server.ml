@@ -160,7 +160,9 @@ let rec recheck_and_update_env_loop genv env =
   end
 
 let rec serve ~genv ~env =
-  ServerPeriodical.call_before_sleeping ();
+  Hh_logger.debug "Starting aggressive shared mem GC";
+  SharedMem_js.collect `aggressive;
+  Hh_logger.debug "Finished aggressive shared mem GC";
 
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
@@ -179,16 +181,6 @@ let rec serve ~genv ~env =
   Lwt.async EventLoggerLwt.flush;
 
   serve ~genv ~env
-
-(* This code is only executed when the options --check is NOT present *)
-let with_init_lock init_fun =
-  let t = Unix.gettimeofday () in
-  Hh_logger.info "Initializing Server (This might take some time)";
-  let%lwt _profiling, env = init_fun () in
-  Hh_logger.info "Server is READY";
-  let t' = Unix.gettimeofday () in
-  Hh_logger.info "Took %f seconds to initialize." (t' -. t);
-  Lwt.return env
 
 (* The main entry point of the daemon
 * the only trick to understand here, is that env.modified is the set
@@ -216,11 +208,16 @@ let run ~monitor_channels ~shared_mem_config options =
     (* Read messages from the server monitor and add them to a stream as they come in *)
     let listening_thread = listen_for_messages genv in
 
-    let%lwt env = with_init_lock (fun () ->
-      ServerPeriodical.init ();
-      let%lwt env = program_init () in
+    (* Initialize *)
+    let%lwt env =
+      let t = Unix.gettimeofday () in
+      Hh_logger.info "Initializing Server (This might take some time)";
+      let%lwt _profiling, env = program_init () in
+      Hh_logger.info "Server is READY";
+      let t' = Unix.gettimeofday () in
+      Hh_logger.info "Took %f seconds to initialize." (t' -. t);
       Lwt.return env
-    ) in
+    in
 
     (* Run both these threads. If either of them fail, return immediately *)
     LwtUtils.iter_all [
