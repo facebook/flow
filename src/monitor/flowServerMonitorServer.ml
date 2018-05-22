@@ -44,17 +44,27 @@ type command =
 
 (* A wrapper for Pervasives.exit which gives other threads a second to handle their business
  * before the monitor exits *)
+let exiting = ref false
 let exit ~msg exit_status =
-  Logger.info "Monitor is exiting (%s)" msg;
-  Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
-  Lwt_condition.broadcast ExitSignal.signal (exit_status, msg);
+  if !exiting
+  then
+    (* We're already exiting, so there's nothing to do. But no one expects `exit` to return, so
+     * let's just wait forever *)
+    let waiter, _ = Lwt.wait () in
+    waiter
+  else begin
+    exiting := true;
+    Logger.info "Monitor is exiting (%s)" msg;
+    Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
+    Lwt_condition.broadcast ExitSignal.signal (exit_status, msg);
 
-  (* Protect this thread from getting canceled *)
-  Lwt.protected (
-    let%lwt () = Lwt_unix.sleep 1.0 in
-    FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
-    Pervasives.exit (FlowExitStatus.error_code exit_status)
-  )
+    (* Protect this thread from getting canceled *)
+    Lwt.protected (
+      let%lwt () = Lwt_unix.sleep 1.0 in
+      FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
+      Pervasives.exit (FlowExitStatus.error_code exit_status)
+    )
+  end
 
 (* Exit after 7 days of no requests *)
 module Doomsday: sig
@@ -605,8 +615,34 @@ module KeepAliveLoop = LwtLoop.Make (struct
     raise exn
 end)
 
+let setup_signal_handlers =
+  let signals = [
+    Sys.sigint; (* Interrupt - ctrl-c *)
+    Sys.sigterm; (* Termination - like a nicer sigkill giving you a chance to cleanup *)
+    Sys.sighup; (* Hang up - the terminal went away *)
+    Sys.sigquit; (* Dump core - Kind of a meaner sigterm *)
+  ]
+  in
+
+  let handle_signal signal =
+    Lwt.async (fun () -> exit
+      ~msg:(spf "Received %s signal" (PrintSignal.string_of_signal signal))
+      FlowExitStatus.Interrupted
+    )
+  in
+
+  let set_signal s =
+    try
+      Sys_utils.set_signal s (Sys.Signal_handle handle_signal)
+    with exn ->
+      Logger.error ~exn "Failed to install signal handler for %s" (PrintSignal.string_of_signal s)
+  in
+
+  fun () -> List.iter set_signal signals
+
 let start monitor_options =
   Lwt.async Doomsday.start_clock;
+  setup_signal_handlers ();
   KeepAliveLoop.run ~cancel_condition:ExitSignal.signal monitor_options
 
 let send_request ~client ~request =
