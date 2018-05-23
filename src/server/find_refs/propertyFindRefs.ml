@@ -534,9 +534,9 @@ let focus_and_check_filename_set genv env files =
  * - Note that this can return locations outside of the given file.
 *)
 let find_related_defs_in_file options name file =
-  let get_loc_pair_if_relevant cx (t1, t2) =
+  let get_single_def_info_pair_if_relevant cx (t1, t2) =
     map2 (extract_def_loc cx t1 name) (extract_def_loc cx t2 name) ~f:begin fun x y -> match x, y with
-    | FoundObject loc1, FoundObject loc2 -> Some (loc1, loc2)
+    | FoundObject loc1, FoundObject loc2 -> Some (Object loc1, Object loc2)
     | _ -> None
     end
   in
@@ -551,9 +551,9 @@ let find_related_defs_in_file options name file =
   in
   unset_hooks ();
   cx_result >>= fun cx ->
-  let results: (((Loc.t * Loc.t) option) list, string) result =
+  let results: (((single_def_info * single_def_info) option) list, string) result =
     !related_objects
-    |> List.map (get_loc_pair_if_relevant cx)
+    |> List.map (get_single_def_info_pair_if_relevant cx)
     |> Result.all
   in
   results >>| ListUtils.cat_maybes
@@ -564,9 +564,9 @@ let find_related_defs_in_file options name file =
 let find_related_defs
     genv
     env
-    (def_locs: Loc.t Nel.t)
+    (def_info: def_info)
     (name: string)
-    : (Loc.t Nel.t, string) result Lwt.t =
+    : (def_info, string) result Lwt.t =
   (* Outline:
    * - Create a disjoint set for definition locations
    * - Seed it with every given def_loc
@@ -581,10 +581,10 @@ let find_related_defs
    *   - Iterate until we reach a fixed point
    *)
   let {options; workers} = genv in
-  let related_defs = UnionFind.of_list (Nel.to_list def_locs) in
+  let related_defs = UnionFind.of_list (Nel.to_list def_info) in
   let process_files file_set =
     let node_modules_containers = !Files.node_modules_containers in
-    let%lwt result: ((Loc.t * Loc.t) list, string) result list Lwt.t =
+    let%lwt result: ((single_def_info * single_def_info) list, string) result list Lwt.t =
       MultiWorkerLwt.call workers
         ~job: begin fun _acc files ->
           Files.node_modules_containers := node_modules_containers;
@@ -594,12 +594,12 @@ let find_related_defs
         ~neutral: []
         ~next: (MultiWorkerLwt.next workers (FilenameSet.elements file_set))
     in
-    Result.all result %>>| fun (pairs: (Loc.t * Loc.t) list list) ->
+    Result.all result %>>| fun (pairs: (single_def_info * single_def_info) list list) ->
     List.iter (List.iter (fun (x, y) -> UnionFind.union related_defs x y)) pairs;
     Lwt.return_unit
   in
-  let get_unchecked_roots current_defs checked_files =
-    files_of_locs current_defs >>| fun roots ->
+  let get_unchecked_roots current_def_info checked_files =
+    current_def_info |> all_locs_of_def_info |> files_of_locs >>| fun roots ->
     FilenameSet.diff roots checked_files
   in
   let get_files_to_check unchecked_roots checked_files =
@@ -611,10 +611,10 @@ let find_related_defs
         unchecked_roots
     )
   in
-  let rec loop current_defs checked_files =
-    get_unchecked_roots current_defs checked_files %>>= fun unchecked_roots ->
+  let rec loop current_def_info checked_files =
+    get_unchecked_roots current_def_info checked_files %>>= fun unchecked_roots ->
     if FilenameSet.is_empty unchecked_roots then
-      Lwt.return (Ok current_defs)
+      Lwt.return (Ok current_def_info)
     else begin
       let%lwt result = focus_and_check_filename_set genv env unchecked_roots in
       result %>>= fun () ->
@@ -623,16 +623,16 @@ let find_related_defs
       let%lwt check_result = process_files files_to_check in
       check_result %>>= fun () ->
       let checked_files = FilenameSet.union checked_files files_to_check in
-      let current_defs =
-        let updated_def_locs = UnionFind.members related_defs (Nel.hd current_defs) in
-        Nel.of_list updated_def_locs
+      let current_def_info =
+        let updated_def_info = UnionFind.members related_defs (Nel.hd current_def_info) in
+        Nel.of_list updated_def_info
         |> Result.of_option ~error:"Unexpected empty list"
       in
-      current_defs %>>= fun current_defs ->
-      loop current_defs checked_files
+      current_def_info %>>= fun current_def_info ->
+      loop current_def_info checked_files
     end
   in
-  loop def_locs FilenameSet.empty
+  loop def_info FilenameSet.empty
 
 let def_info_of_typecheck_results cx props_access_info =
   let def_info_of_class_member_locs locs =
@@ -697,22 +697,7 @@ let get_def_info genv env profiling file_key content loc: ((def_info * string) o
 let find_refs_global genv env multi_hop def_info name =
   let%lwt def_info =
     if multi_hop then
-      let object_defs =
-        Nel.fold_left begin fun acc elt -> match acc, elt with
-        (* For now, don't try to run multi-hop find-refs on classes *)
-        | _, Class _ -> None
-        | None, Object loc -> Some (Nel.one loc)
-        (* Order doesn't matter *)
-        | Some lst, Object loc -> Some (Nel.cons loc lst)
-        end None def_info
-      in
-      match object_defs with
-      | None -> Lwt.return (Ok def_info)
-      | Some locs ->
-        let%lwt locs = find_related_defs genv env locs name in
-        locs %>>= fun locs ->
-        let updated_def_info = locs |> Nel.map (fun loc -> Object loc) in
-        Lwt.return (Ok updated_def_info)
+      find_related_defs genv env def_info name
     else
       Lwt.return (Ok def_info)
   in
