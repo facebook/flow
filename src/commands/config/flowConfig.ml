@@ -313,6 +313,8 @@ type config = {
   ignores: string list;
   (* files that should be treated as untyped *)
   untyped: string list;
+  (* files that should have errors silenced *)
+  silence: string list;
   (* non-root include paths *)
   includes: string list;
   (* library paths. no wildcards *)
@@ -338,6 +340,9 @@ end = struct
 
   let untyped o untyped =
     List.iter (fun ex -> (fprintf o "%s\n" ex)) untyped
+
+  let silence o silence =
+    List.iter (fun ex -> (fprintf o "%s\n" ex)) silence
 
   let includes o includes =
     List.iter (fun inc -> (fprintf o "%s\n" inc)) includes
@@ -400,6 +405,7 @@ end = struct
     ignores o config.ignores;
     fprintf o "\n";
     section_if_nonempty o "untyped" untyped config.untyped;
+    section_if_nonempty o "silence" silence config.silence;
     section_header o "include";
     includes o config.includes;
     fprintf o "\n";
@@ -419,6 +425,7 @@ end
 let empty_config = {
   ignores = [];
   untyped = [];
+  silence = [];
   includes = [];
   libs = [];
   lint_severities = LintSettings.empty_severities;
@@ -471,6 +478,10 @@ let parse_ignores config lines =
 let parse_untyped config lines =
   let untyped = trim_lines lines in
   { config with untyped; }
+
+let parse_silence config lines =
+  let silence = trim_lines lines in
+  { config with silence; }
 
 let parse_options config lines =
   let open Opts in
@@ -948,6 +959,7 @@ let parse_section config ((section_ln, section), lines) =
   | "ignore", _ -> parse_ignores config lines
   | "libs", _ -> parse_libs config lines
   | "lints", _ -> parse_lints config lines
+  | "silence", _ -> parse_silence config lines
   | "strict", _ -> parse_strict config lines
   | "options", _ -> parse_options config lines
   | "untyped", _ -> parse_untyped config lines
@@ -986,15 +998,17 @@ let read filename =
   } in
   parse config lines
 
-let init ~ignores ~untyped ~includes ~libs ~options ~lints =
+let init ~ignores ~untyped ~silence ~includes ~libs ~options ~lints =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let untyped_lines = List.map (fun s -> (1, s)) untyped in
+  let silence_lines = List.map (fun s -> (1, s)) silence in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
   let lint_lines = List.map (fun s -> (1, s)) lints in
   let config = parse_ignores empty_config ignores_lines in
   let config = parse_untyped config untyped_lines in
+  let config = parse_silence config silence_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
@@ -1025,6 +1039,8 @@ let restore (filename, config) = cache := Some (filename, config)
 let ignores config = config.ignores
 (* files that should be treated as untyped *)
 let untyped config = config.untyped
+(* files that should have errors silenced *)
+let silence config = config.silence
 (* non-root include paths *)
 let includes config = config.includes
 (* library paths. no wildcards *)
