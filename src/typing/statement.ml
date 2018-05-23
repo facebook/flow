@@ -1722,7 +1722,7 @@ and statement cx = Ast.Statement.(
         ~default:None export_info specifiers source exportKind
 
   | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration }) ->
-      Type_inference_hooks_js.dispatch_export_default_hook default;
+      Type_inference_hooks_js.dispatch_export_named_hook "default" default;
       let export_info = match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
           let decl = nameify_default_export_decl decl in
