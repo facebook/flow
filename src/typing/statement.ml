@@ -1687,15 +1687,16 @@ and statement cx = Ast.Statement.(
               "only exist for default exports!"
             )
           | _, FunctionDeclaration {Ast.Function.id = Some (id_loc, name); _} ->
+            Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
             [(spf "function %s() {}" name, id_loc, name, None)]
           | _, ClassDeclaration {Ast.Class.id = None; _} ->
             failwith (
               "Parser Error: Immediate exports of nameless classes can " ^
               "only exist for default exports"
             )
-          | _, ClassDeclaration {Ast.Class.id = Some ident; _} ->
-            let name = ident_name ident in
-            [(spf "class %s {}" name, (fst ident), name, None)]
+          | _, ClassDeclaration {Ast.Class.id = Some (id_loc, name); _} ->
+            Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
+            [(spf "class %s {}" name, id_loc, name, None)]
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
             let decl_to_bindings accum (_, decl) =
               let id = snd decl.VariableDeclaration.Declarator.id in
@@ -1703,6 +1704,7 @@ and statement cx = Ast.Statement.(
             in
             let bound_names = List.fold_left decl_to_bindings [] declarations in
             bound_names |> List.map (fun (loc, name) ->
+              Type_inference_hooks_js.dispatch_export_named_hook name loc;
               (spf "var %s" name, loc, name, None)
             )
           | _, TypeAlias {TypeAlias.id; _} ->
