@@ -218,9 +218,7 @@ let unset_hooks () =
   Type_inference_hooks_js.reset_hooks ()
 
 type single_def_info =
-  (* Superclass implementations are also included. The list is ordered such that subclass
-   * implementations are first and superclass implementations are last. *)
-  | Class of Loc.t Nel.t
+  | Class of Loc.t
   (* An object was found. *)
   | Object of Loc.t
 
@@ -229,14 +227,13 @@ type single_def_info =
  * particular order. *)
 type def_info = single_def_info Nel.t
 
-let all_locs_of_single_def_info = function
-  | Class locs -> locs
-  | Object loc -> Nel.one loc
+let loc_of_single_def_info = function
+  | Class loc -> loc
+  | Object loc -> loc
 
 let all_locs_of_def_info def_info =
   def_info
-  |> Nel.map all_locs_of_single_def_info
-  |> Nel.concat
+  |> Nel.map loc_of_single_def_info
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -258,7 +255,7 @@ let debug_string_of_locs locs =
 (* Disable the unused value warning -- we want to keep this around for debugging *)
 [@@@warning "-32"]
 let debug_string_of_single_def_info = function
-  | Class locs -> spf "Class (%s)" (debug_string_of_locs locs)
+  | Class loc -> spf "Class (%s)" (Loc.to_string loc)
   | Object loc -> spf "Object (%s)" (Loc.to_string loc)
 
 let debug_string_of_def_info def_info =
@@ -358,12 +355,11 @@ let type_matches_locs cx ty def_info name =
     | FoundClass ty_def_locs ->
       def_info |> Nel.exists begin function
         | Object _ -> false
-        | Class def_locs ->
+        | Class loc ->
           (* Only take the first extracted def loc -- that is, the one for the actual definition
            * and not overridden implementations, and compare it to the list of def locs we are
            * interested in *)
-          let loc = Nel.hd ty_def_locs in
-          Nel.mem loc def_locs
+          loc = Nel.hd ty_def_locs
       end
     | FoundObject loc ->
       def_info |> Nel.exists begin function
@@ -639,10 +635,16 @@ let find_related_defs
   loop def_locs FilenameSet.empty
 
 let def_info_of_typecheck_results cx props_access_info =
-  let single_def_info_of_type name ty =
+  let def_info_of_class_member_locs locs =
+    (* We want to include the immediate implementation as well as all superclass implementations.
+     * If we wanted a mode where superclass implementations were not included, for example, we
+     * could choose to take only the first extracted location. *)
+    Nel.map (fun loc -> Class loc) locs
+  in
+  let def_info_of_type name ty =
     extract_def_loc cx ty name >>| function
-      | FoundClass locs -> Some (Class locs)
-      | FoundObject loc -> Some (Object loc)
+      | FoundClass locs -> Some (def_info_of_class_member_locs locs)
+      | FoundObject loc -> Some (Nel.one (Object loc))
       | NoDefFound
       | UnsupportedType
       | AnyType -> None
@@ -655,20 +657,21 @@ let def_info_of_typecheck_results cx props_access_info =
         (* We get the type of the class back here, so we need to extract the type of an instance *)
         extract_instancet cx ty >>= fun ty ->
         begin extract_def_loc_resolved cx ty name >>= function
-          | FoundClass locs -> Ok (Some (Nel.one (Class locs), name))
+          | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
           | FoundObject _ -> Error "Expected to extract class def info from a class"
           | _ -> Error "Unexpectedly failed to extract definition from known type"
         end
     | Some (Use (ty, name)) ->
-        single_def_info_of_type name ty
-        >>| Option.map ~f:(fun single_def_info -> (Nel.one single_def_info, name))
+        def_info_of_type name ty
+        >>| Option.map ~f:(fun def_info -> (def_info, name))
     | Some (Use_in_literal (types, name)) ->
-        let def_info =
-          Nel.map (single_def_info_of_type name) types
+        let def_infos_result =
+          Nel.map (def_info_of_type name) types
           |> Nel.result_all
         in
-        def_info >>| fun def_info ->
-        Nel.cat_maybes def_info
+        def_infos_result >>| fun def_infos ->
+        Nel.cat_maybes def_infos
+        |> Option.map ~f:(Nel.concat)
         |> Option.map ~f:(fun def_info -> (def_info, name))
 
 let get_def_info genv env profiling file_key content loc: ((def_info * string) option, string) result Lwt.t =
