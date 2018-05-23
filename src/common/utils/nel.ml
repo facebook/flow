@@ -80,3 +80,15 @@ let result_all = function
     | Error _ as err -> err
     end
   | Error _ as err, _ -> err
+
+let cat_maybes nel =
+  let rev_result =
+    fold_left begin fun acc elt -> match acc, elt with
+    | _, None -> acc
+    | None, Some x -> Some (one x)
+    | Some lst, Some x -> Some (cons x lst)
+    end None nel
+  in
+  match rev_result with
+  | None -> None
+  | Some lst -> Some (rev lst)

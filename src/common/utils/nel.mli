@@ -25,4 +25,6 @@ val length: 'a t -> int
 val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val hd: 'a t -> 'a
 val nth: 'a t -> int -> 'a
+
 val result_all: ('a, 'b) result t -> ('a t, 'b) result
+val cat_maybes: 'a option t -> 'a t option

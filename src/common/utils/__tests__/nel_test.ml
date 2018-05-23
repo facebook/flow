@@ -7,6 +7,11 @@
 
 open OUnit2
 
+(* Unsafe *)
+let of_list lst = match Nel.of_list lst with
+  | Some nel -> nel
+  | None -> raise Not_found
+
 let assert_identical ~ctxt x y =
   assert_equal ~ctxt (x == y) true
 
@@ -85,5 +90,11 @@ let tests = "nel" >::: [
     assert_equal ~ctxt (Nel.nth lst 0) 6;
     assert_equal ~ctxt (Nel.nth lst 1) 4;
     assert_equal ~ctxt (Nel.nth lst 2) 2
+  end;
+
+  "cat_maybes" >:: begin fun ctxt ->
+    assert_equal ~ctxt (Nel.cat_maybes (of_list [None])) None;
+    assert_equal ~ctxt (Nel.cat_maybes (of_list [Some 1; None])) (Some (of_list [1]));
+    assert_equal ~ctxt (Nel.cat_maybes (of_list [Some 0; None; Some 1])) (Some (of_list [0; 1]))
   end;
 ]
