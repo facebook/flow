@@ -39,10 +39,22 @@ class property_access_searcher name = object(this)
     super#export_default_declaration loc decl
   method! import_declaration loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
-    let { default; _ } = decl in
+    let { default; specifiers; _ } = decl in
     if Option.is_some default && name = "default" then begin
       this#set_acc true
     end;
+    let handle_specifier = function
+      (* `import * as ...`
+       * No action needed since any references to actual exports will appear later as normal
+       * property references. *)
+      | ImportNamespaceSpecifier _ -> ()
+      | ImportNamedSpecifiers named_specifiers ->
+        named_specifiers |> List.iter begin fun {remote=(_, remote_name); _} ->
+          if remote_name = name then
+            this#set_acc true
+        end
+    in
+    Option.iter specifiers ~f:handle_specifier;
     super#import_declaration loc decl
 end
 

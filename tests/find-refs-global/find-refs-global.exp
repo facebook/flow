@@ -80,6 +80,12 @@ ES6 named import:
     {
       "source":"es6-2.js",
       "type":"SourceFile",
+      "start":{"line":6,"column":1,"offset":119},
+      "end":{"line":6,"column":3,"offset":122}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
       "start":{"line":22,"column":5,"offset":279},
       "end":{"line":22,"column":7,"offset":282}
     }
@@ -91,6 +97,12 @@ Use of ES6 named import:
   "name":"foo",
   "locs":[
     {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":17,"offset":29},
+      "end":{"line":3,"column":19,"offset":32}
+    },
+    {
       "source":"es6-2.js",
       "type":"SourceFile",
       "start":{"line":3,"column":14,"offset":26},
@@ -101,6 +113,12 @@ Use of ES6 named import:
       "type":"SourceFile",
       "start":{"line":6,"column":1,"offset":119},
       "end":{"line":6,"column":3,"offset":122}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":22,"column":5,"offset":279},
+      "end":{"line":22,"column":7,"offset":282}
     }
   ]
 }
@@ -124,6 +142,12 @@ Use of ES6 named import through import *:
     {
       "source":"es6-2.js",
       "type":"SourceFile",
+      "start":{"line":6,"column":1,"offset":119},
+      "end":{"line":6,"column":3,"offset":122}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
       "start":{"line":22,"column":5,"offset":279},
       "end":{"line":22,"column":7,"offset":282}
     }
@@ -132,8 +156,20 @@ Use of ES6 named import through import *:
 Local name of an aliased ES6 named import:
 {
   "kind":"symbol-found",
-  "name":"localBaz",
+  "name":"baz",
   "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":27,"column":14,"offset":302},
+      "end":{"line":27,"column":16,"offset":305}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":24,"offset":36},
+      "end":{"line":3,"column":26,"offset":39}
+    },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
@@ -143,8 +179,26 @@ Local name of an aliased ES6 named import:
     {
       "source":"es6-2.js",
       "type":"SourceFile",
+      "start":{"line":3,"column":41,"offset":53},
+      "end":{"line":3,"column":43,"offset":56}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":48,"offset":60},
+      "end":{"line":3,"column":55,"offset":68}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
       "start":{"line":24,"column":1,"offset":287},
       "end":{"line":24,"column":8,"offset":295}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":25,"column":1,"offset":297},
+      "end":{"line":25,"column":8,"offset":305}
     }
   ]
 }
@@ -158,14 +212,13 @@ Remote name of an aliased ES6 named import:
       "type":"SourceFile",
       "start":{"line":27,"column":14,"offset":302},
       "end":{"line":27,"column":16,"offset":305}
-    }
-  ]
-}
-Local use of an aliased ES6 named import:
-{
-  "kind":"symbol-found",
-  "name":"localBaz",
-  "locs":[
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":24,"offset":36},
+      "end":{"line":3,"column":26,"offset":39}
+    },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
@@ -175,21 +228,118 @@ Local use of an aliased ES6 named import:
     {
       "source":"es6-2.js",
       "type":"SourceFile",
+      "start":{"line":3,"column":41,"offset":53},
+      "end":{"line":3,"column":43,"offset":56}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":48,"offset":60},
+      "end":{"line":3,"column":55,"offset":68}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
       "start":{"line":24,"column":1,"offset":287},
       "end":{"line":24,"column":8,"offset":295}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":25,"column":1,"offset":297},
+      "end":{"line":25,"column":8,"offset":305}
+    }
+  ]
+}
+Local use of an aliased ES6 named import:
+{
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":27,"column":14,"offset":302},
+      "end":{"line":27,"column":16,"offset":305}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":24,"offset":36},
+      "end":{"line":3,"column":26,"offset":39}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":31,"offset":43},
+      "end":{"line":3,"column":38,"offset":51}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":41,"offset":53},
+      "end":{"line":3,"column":43,"offset":56}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":48,"offset":60},
+      "end":{"line":3,"column":55,"offset":68}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":24,"column":1,"offset":287},
+      "end":{"line":24,"column":8,"offset":295}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":25,"column":1,"offset":297},
+      "end":{"line":25,"column":8,"offset":305}
     }
   ]
 }
 Second local name of an aliased ES6 named import:
 {
   "kind":"symbol-found",
-  "name":"otherBaz",
+  "name":"baz",
   "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":27,"column":14,"offset":302},
+      "end":{"line":27,"column":16,"offset":305}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":24,"offset":36},
+      "end":{"line":3,"column":26,"offset":39}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":31,"offset":43},
+      "end":{"line":3,"column":38,"offset":51}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":41,"offset":53},
+      "end":{"line":3,"column":43,"offset":56}
+    },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
       "start":{"line":3,"column":48,"offset":60},
       "end":{"line":3,"column":55,"offset":68}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":24,"column":1,"offset":287},
+      "end":{"line":24,"column":8,"offset":295}
     },
     {
       "source":"es6-2.js",
@@ -209,19 +359,85 @@ Second remote name of an aliased ES6 named import:
       "type":"SourceFile",
       "start":{"line":27,"column":14,"offset":302},
       "end":{"line":27,"column":16,"offset":305}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":24,"offset":36},
+      "end":{"line":3,"column":26,"offset":39}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":31,"offset":43},
+      "end":{"line":3,"column":38,"offset":51}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":41,"offset":53},
+      "end":{"line":3,"column":43,"offset":56}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":48,"offset":60},
+      "end":{"line":3,"column":55,"offset":68}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":24,"column":1,"offset":287},
+      "end":{"line":24,"column":8,"offset":295}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":25,"column":1,"offset":297},
+      "end":{"line":25,"column":8,"offset":305}
     }
   ]
 }
 Local use of the second name of an aliased ES6 named import:
 {
   "kind":"symbol-found",
-  "name":"otherBaz",
+  "name":"baz",
   "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":27,"column":14,"offset":302},
+      "end":{"line":27,"column":16,"offset":305}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":24,"offset":36},
+      "end":{"line":3,"column":26,"offset":39}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":31,"offset":43},
+      "end":{"line":3,"column":38,"offset":51}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":41,"offset":53},
+      "end":{"line":3,"column":43,"offset":56}
+    },
     {
       "source":"es6-2.js",
       "type":"SourceFile",
       "start":{"line":3,"column":48,"offset":60},
       "end":{"line":3,"column":55,"offset":68}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":24,"column":1,"offset":287},
+      "end":{"line":24,"column":8,"offset":295}
     },
     {
       "source":"es6-2.js",

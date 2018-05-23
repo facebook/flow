@@ -25,16 +25,20 @@ let find_related_symbol_from_module_kind loc = function
 
 let find_related_symbol_from_require loc = function
   | Import {named; _} ->
-    begin match SMap.get "default" named with
-      | None -> None
-      | Some local_name_map ->
-        let locs =
-          SMap.values local_name_map
-          |> List.map (Nel.to_list)
-          |> List.concat
-          |> List.map (fun {local_loc;_} -> local_loc)
-        in
-        if List.mem loc locs then Some loc else None
+    let loc_records (* list of {remote_loc, local_loc} *) =
+      SMap.fold begin fun _ local_name_to_locs acc ->
+        SMap.fold begin fun _ locs acc ->
+          List.rev_append (Nel.to_list locs) acc
+        end local_name_to_locs acc
+      end named []
+    in
+    loc_records |> ListUtils.first_some_map begin fun {remote_loc; local_loc} ->
+      if loc = remote_loc then
+        Some local_loc
+      else if loc = local_loc then
+        Some remote_loc
+      else
+        None
     end
   | Require {bindings=Some bindings; _} ->
     begin match bindings with
