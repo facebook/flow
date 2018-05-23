@@ -27,6 +27,8 @@ let require_pattern_nop _ = ()
 
 let obj_to_obj_nop _ _ _ = ()
 
+let instance_to_obj_nop _ _ _ = ()
+
 let export_named_nop _ _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
@@ -123,6 +125,13 @@ type hook_state_t = {
         Type.t (* ObjT 2 *) ->
         unit);
 
+  (* Called when InstanceT ~> ObjT *)
+  instance_to_obj_hook:
+      (Context.t ->
+        Type.t (* InstanceT *) ->
+        Type.t (* ObjT *) ->
+        unit);
+
   (* Dispatched with "default" for default exports *)
   export_named_hook: string (* name *) -> Loc.t -> unit;
 }
@@ -139,6 +148,7 @@ let nop_hook_state = {
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
   obj_to_obj_hook = obj_to_obj_nop;
+  instance_to_obj_hook = instance_to_obj_nop;
   export_named_hook = export_named_nop;
 }
 
@@ -176,6 +186,9 @@ let set_require_pattern_hook hook =
 
 let set_obj_to_obj_hook hook =
   hook_state := { !hook_state with obj_to_obj_hook = hook }
+
+let set_instance_to_obj_hook hook =
+  hook_state := { !hook_state with instance_to_obj_hook = hook }
 
 let set_export_named_hook hook =
   hook_state := { !hook_state with export_named_hook = hook }
@@ -215,6 +228,9 @@ let dispatch_require_pattern_hook loc =
 
 let dispatch_obj_to_obj_hook cx t1 t2 =
   !hook_state.obj_to_obj_hook cx t1 t2
+
+let dispatch_instance_to_obj_hook cx t1 t2 =
+  !hook_state.instance_to_obj_hook cx t1 t2
 
 let dispatch_export_named_hook loc =
   !hook_state.export_named_hook loc

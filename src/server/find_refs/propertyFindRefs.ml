@@ -534,16 +534,22 @@ let focus_and_check_filename_set genv env files =
  * - Note that this can return locations outside of the given file.
 *)
 let find_related_defs_in_file options name file =
-  let get_single_def_info_pair_if_relevant cx (t1, t2) =
+  let get_single_def_info_pairs_if_relevant cx (t1, t2) =
     map2 (extract_def_loc cx t1 name) (extract_def_loc cx t2 name) ~f:begin fun x y -> match x, y with
-    | FoundObject loc1, FoundObject loc2 -> Some (Object loc1, Object loc2)
-    | _ -> None
+    | FoundObject loc1, FoundObject loc2 -> [Object loc1, Object loc2]
+    | FoundClass class_locs, FoundObject obj_loc ->
+      class_locs
+      |> Nel.to_list
+      |> List.map (fun class_loc -> (Class class_loc, Object obj_loc))
+    | _ -> []
     end
   in
-  let related_objects: (Type.t * Type.t) list ref = ref [] in
-  Type_inference_hooks_js.set_obj_to_obj_hook begin fun _cx t1 t2 ->
-    related_objects := (t1, t2)::!related_objects
-  end;
+  let related_types: (Type.t * Type.t) list ref = ref [] in
+  let hook _cx t1 t2 =
+    related_types := (t1, t2)::!related_types
+  in
+  Type_inference_hooks_js.set_obj_to_obj_hook hook;
+  Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
     get_ast_result file >>| fun (ast, file_sig, docblock) ->
     Merge_service.merge_contents_context_without_ensure_checked_dependencies
@@ -551,12 +557,12 @@ let find_related_defs_in_file options name file =
   in
   unset_hooks ();
   cx_result >>= fun cx ->
-  let results: (((single_def_info * single_def_info) option) list, string) result =
-    !related_objects
-    |> List.map (get_single_def_info_pair_if_relevant cx)
+  let results: (((single_def_info * single_def_info) list) list, string) result =
+    !related_types
+    |> List.map (get_single_def_info_pairs_if_relevant cx)
     |> Result.all
   in
-  results >>| ListUtils.cat_maybes
+  results >>| List.concat
 
 (* Returns all locations which are considered related to the given definition locations. Definition
  * locations are considered related if they refer to a property with the same name, and their

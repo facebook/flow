@@ -4229,9 +4229,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (lreason, InstanceT (_, super, _, {
         fields_tmap = lflds;
         methods_tmap = lmethods; _ })),
-      UseT (use_op, DefT (ureason, ObjT {
+      UseT (use_op, (DefT (ureason, ObjT {
         props_tmap = uflds;
-        proto_t = uproto; _ })) ->
+        proto_t = uproto; _ }) as u_deft)) ->
+      Type_inference_hooks_js.dispatch_instance_to_obj_hook cx l u_deft;
 
       let lflds =
         let fields_tmap = Context.find_props cx lflds in
