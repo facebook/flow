@@ -217,19 +217,26 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
 let unset_hooks () =
   Type_inference_hooks_js.reset_hooks ()
 
-type def_info =
+type single_def_info =
   (* Superclass implementations are also included. The list is ordered such that subclass
    * implementations are first and superclass implementations are last. *)
   | Class of Loc.t Nel.t
-  (* An object was found. If there are multiple relevant definition locations
-   * (e.g. the request was issued on an object literal which is associated
-   * with multiple types) then there will be multiple locations in no
-   * particular order. *)
-  | Object of Loc.t Nel.t
+  (* An object was found. *)
+  | Object of Loc.t
 
-let all_locs_of_def_info = function
-  | Class locs
-  | Object locs -> locs
+(* If there are multiple relevant definition locations (e.g. the request was issued on an object
+ * literal which is associated with multiple types) then there will be multiple locations in no
+ * particular order. *)
+type def_info = single_def_info Nel.t
+
+let all_locs_of_single_def_info = function
+  | Class locs -> locs
+  | Object loc -> Nel.one loc
+
+let all_locs_of_def_info def_info =
+  def_info
+  |> Nel.map all_locs_of_single_def_info
+  |> Nel.concat
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -250,9 +257,16 @@ let debug_string_of_locs locs =
 
 (* Disable the unused value warning -- we want to keep this around for debugging *)
 [@@@warning "-32"]
-let debug_string_of_def_info = function
+let debug_string_of_single_def_info = function
   | Class locs -> spf "Class (%s)" (debug_string_of_locs locs)
-  | Object locs -> spf "Object (%s)" (debug_string_of_locs locs)
+  | Object loc -> spf "Object (%s)" (Loc.to_string loc)
+
+let debug_string_of_def_info def_info =
+  def_info
+  |> Nel.map debug_string_of_single_def_info
+  |> Nel.to_list
+  |> String.concat ", "
+  |> spf "[%s]"
 
 let debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
@@ -342,7 +356,7 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
 let type_matches_locs cx ty def_info name =
   extract_def_loc cx ty name >>| function
     | FoundClass ty_def_locs ->
-      begin match def_info with
+      def_info |> Nel.exists begin function
         | Object _ -> false
         | Class def_locs ->
           (* Only take the first extracted def loc -- that is, the one for the actual definition
@@ -352,9 +366,9 @@ let type_matches_locs cx ty def_info name =
           Nel.mem loc def_locs
       end
     | FoundObject loc ->
-      begin match def_info with
+      def_info |> Nel.exists begin function
       | Class _ -> false
-      | Object def_locs -> Nel.mem loc def_locs
+      | Object def_loc -> loc = def_loc
       end
     (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
      * are references or not. For now we'll leave them out. *)
@@ -625,10 +639,10 @@ let find_related_defs
   loop def_locs FilenameSet.empty
 
 let def_info_of_typecheck_results cx props_access_info =
-  let def_info_of_type name ty =
+  let single_def_info_of_type name ty =
     extract_def_loc cx ty name >>| function
-      | FoundClass locs -> Some (Class locs, name)
-      | FoundObject loc -> Some (Object (Nel.one loc), name)
+      | FoundClass locs -> Some (Class locs)
+      | FoundObject loc -> Some (Object loc)
       | NoDefFound
       | UnsupportedType
       | AnyType -> None
@@ -636,40 +650,26 @@ let def_info_of_typecheck_results cx props_access_info =
   match props_access_info with
     | None -> Ok None
     | Some (Obj_def (loc, name)) ->
-        Ok (Some (Object (Nel.one loc), name))
+        Ok (Some (Nel.one (Object loc), name))
     | Some (Class_def (ty, name)) ->
         (* We get the type of the class back here, so we need to extract the type of an instance *)
         extract_instancet cx ty >>= fun ty ->
         begin extract_def_loc_resolved cx ty name >>= function
-          | FoundClass locs -> Ok (Some (Class locs, name))
+          | FoundClass locs -> Ok (Some (Nel.one (Class locs), name))
           | FoundObject _ -> Error "Expected to extract class def info from a class"
           | _ -> Error "Unexpectedly failed to extract definition from known type"
         end
     | Some (Use (ty, name)) ->
-        def_info_of_type name ty
+        single_def_info_of_type name ty
+        >>| Option.map ~f:(fun single_def_info -> (Nel.one single_def_info, name))
     | Some (Use_in_literal (types, name)) ->
-        let def_info_result =
-          let def_infos =
-            Nel.map (def_info_of_type name) types
-            |> Nel.result_all
-          in
-          let def_locs: (Loc.t Nel.t option Nel.t, string) result =
-            def_infos >>= fun def_infos ->
-            Nel.map begin function
-              | None -> Ok None
-              | Some (Object locs, _) -> Ok (Some locs)
-              | Some (Class _, _) -> Error "Expected object literals to only flow into object types"
-            end def_infos
-            |> Nel.result_all
-          in
-          def_locs >>| Nel.fold_left begin fun acc elt -> match acc, elt with
-            | None, None -> None
-            | Some locs, None
-            | None, Some locs -> Some locs
-            | Some locs, Some new_locs -> Some (Nel.rev_append new_locs locs)
-          end None
+        let def_info =
+          Nel.map (single_def_info_of_type name) types
+          |> Nel.result_all
         in
-        def_info_result >>| Option.map ~f:(fun locs -> Object locs, name)
+        def_info >>| fun def_info ->
+        Nel.cat_maybes def_info
+        |> Option.map ~f:(fun def_info -> (def_info, name))
 
 let get_def_info genv env profiling file_key content loc: ((def_info * string) option, string) result Lwt.t =
   let {options; workers} = genv in
@@ -694,11 +694,22 @@ let get_def_info genv env profiling file_key content loc: ((def_info * string) o
 let find_refs_global genv env multi_hop def_info name =
   let%lwt def_info =
     if multi_hop then
-      match def_info with
-        | Class _ -> Lwt.return (Ok def_info)
-        | Object locs ->
-            let%lwt locs = find_related_defs genv env locs name in
-            locs %>>= fun locs -> Lwt.return (Ok (Object locs))
+      let object_defs =
+        Nel.fold_left begin fun acc elt -> match acc, elt with
+        (* For now, don't try to run multi-hop find-refs on classes *)
+        | _, Class _ -> None
+        | None, Object loc -> Some (Nel.one loc)
+        (* Order doesn't matter *)
+        | Some lst, Object loc -> Some (Nel.cons loc lst)
+        end None def_info
+      in
+      match object_defs with
+      | None -> Lwt.return (Ok def_info)
+      | Some locs ->
+        let%lwt locs = find_related_defs genv env locs name in
+        locs %>>= fun locs ->
+        let updated_def_info = locs |> Nel.map (fun loc -> Object loc) in
+        Lwt.return (Ok updated_def_info)
     else
       Lwt.return (Ok def_info)
   in
