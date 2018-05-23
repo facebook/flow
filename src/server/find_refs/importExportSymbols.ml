@@ -15,6 +15,13 @@ let find_related_symbol_from_export loc = function
       Some default_loc
     else
       None
+  | ExportNamed {loc=remote_name_loc; local; _} ->
+    begin match local with
+    | Some (local_loc, _) when loc = remote_name_loc -> Some local_loc
+    | Some (local_loc, _) when loc = local_loc -> Some remote_name_loc
+    | None when loc = remote_name_loc -> Some remote_name_loc
+    | _ -> None
+    end
   | _ -> None
 
 let find_related_symbol_from_module_kind loc = function

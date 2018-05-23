@@ -37,6 +37,23 @@ class property_access_searcher name = object(this)
       this#set_acc true
     end;
     super#export_default_declaration loc decl
+  method! export_named_declaration loc (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
+    let open Ast.Statement.ExportNamedDeclaration in
+    let { declaration; _ } = decl in
+    let open Ast.Statement in
+    begin match declaration with
+    | Some (_, FunctionDeclaration { Ast.Function.id = Some (_, exported_name); _ })
+    | Some (_, ClassDeclaration { Ast.Class.id = Some (_, exported_name); _ }) ->
+      if exported_name = name then
+        this#set_acc true
+    | Some (_, VariableDeclaration { VariableDeclaration.declarations = decls; _ }) ->
+      Ast_utils.bindings_of_variable_declarations decls
+      |> List.iter (fun (_, exported_name) -> if exported_name = name then this#set_acc true)
+    | _ -> ()
+    (* TODO add type exports when find-refs supports them *)
+    end;
+    (* TODO specifiers *)
+    super#export_named_declaration loc decl
   method! import_declaration loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { default; specifiers; _ } = decl in
