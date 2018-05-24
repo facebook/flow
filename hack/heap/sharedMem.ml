@@ -296,7 +296,6 @@ external open_file_info_db : unit -> unit = "open_file_info_db"
 
 let init_done () =
   hh_init_done ();
-  if hh_log_level() > 0 then Measure.print_stats ();
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
