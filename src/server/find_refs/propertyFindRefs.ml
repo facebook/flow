@@ -590,7 +590,7 @@ let find_related_defs
   let related_defs = UnionFind.of_list (Nel.to_list def_info) in
   let process_files file_set =
     let node_modules_containers = !Files.node_modules_containers in
-    let%lwt result: ((single_def_info * single_def_info) list, string) result list Lwt.t =
+    let%lwt (result: ((single_def_info * single_def_info) list, string) result list) =
       MultiWorkerLwt.call workers
         ~job: begin fun _acc files ->
           Files.node_modules_containers := node_modules_containers;
