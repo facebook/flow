@@ -1642,7 +1642,10 @@ and jsx_children loc children =
         | None -> child_n
         (* If the current child and the previous child line positions are offset match
            this via forcing a newline *)
-        | Some last_line when loc.start.line > last_line -> prepend_newline child_n
+        | Some last_line when loc.start.line > last_line ->
+          (* TODO: Remove the `~always:true` hack, this forces newlines to exist
+                   when using the compact printer *)
+          prepend_newline ~always:true child_n
         (* Must be on the same line as the previous child *)
         | Some _ -> child_n
         in

@@ -1256,7 +1256,7 @@ let tests = "js_layout_generator" >::: [
           sequence ~break:Layout.Break_if_pretty [
             fused [
               loc ~loc:b_loc (loc (fused [atom "<"; id "B"; pretty_space; atom "/>"]));
-              sequence ~break:Layout.Break_if_pretty ~inline:(false, true) ~indent:0 [
+              sequence ~break:Layout.Break_always ~inline:(false, true) ~indent:0 [
                 loc ~loc:c_loc (loc (fused [atom "<"; id "C"; pretty_space; atom "/>"]));
               ]
             ]
@@ -1268,7 +1268,7 @@ let tests = "js_layout_generator" >::: [
           "<A\n  a=\"" ^ String.make 80 'a' ^ "\">\n  <B />\n  <C />\n</A>"
         ) ast;
         assert_expression ~ctxt (
-          "<A a=\"" ^ String.make 80 'a' ^ "\"><B/><C/></A>"
+          "<A a=\"" ^ String.make 80 'a' ^ "\"><B/>\n<C/></A>"
         ) ast;
       end;
 
