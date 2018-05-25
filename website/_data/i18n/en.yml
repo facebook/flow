@@ -309,6 +309,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/react/hoc/":
   title: "Higher-order Components"
   description: "Learn how to use Flow to type React higher-order components"
+"/docs/react/context/":
+  title: "Context"
+  description: "Learn how to use Flow with the React context API"
 "/docs/react/redux/":
   title: "Redux"
   description: "Learn how to use Flow with Redux"
