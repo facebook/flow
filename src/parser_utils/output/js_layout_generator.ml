@@ -57,11 +57,12 @@ let statement_with_test name test body = fuse [
     body;
   ]
 
-let append_newline ~always node =
+let append_newline ?(always=false) node =
   let break = if always then Break_always else Break_if_pretty in
   Sequence ({ break; inline=(true, false); indent=0; }, [node])
-let prepend_newline node =
-  Sequence ({ break=Break_if_pretty; inline=(false, true); indent=0; }, [node])
+let prepend_newline ?(always=false) node =
+  let break = if always then Break_always else Break_if_pretty in
+  Sequence ({ break; inline=(false, true); indent=0; }, [node])
 
 let option f = function
   | Some v -> f v
@@ -833,8 +834,8 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
         SourceLocation (loc, template_literal template)
       ]
     | E.TemplateLiteral template -> template_literal template
-    | E.JSXElement el -> jsx_element el
-    | E.JSXFragment fr -> jsx_fragment fr
+    | E.JSXElement el -> jsx_element loc el
+    | E.JSXFragment fr -> jsx_fragment loc fr
     | E.TypeCast { E.TypeCast.expression=expr; annot } ->
       wrap_in_parens (fuse [
         expression expr;
@@ -1485,8 +1486,7 @@ and object_property property =
   | O.SpreadProperty (loc, { O.SpreadProperty.argument }) ->
     SourceLocation (loc, fuse [Atom "..."; expression argument])
 
-and jsx_element { Ast.JSX.openingElement; closingElement; children } =
-  let processed_children = deoptionalize (List.map jsx_child children) in
+and jsx_element loc { Ast.JSX.openingElement; closingElement; children } =
   fuse [
     begin match openingElement with
     | (_, { Ast.JSX.Opening.selfClosing=false; _ }) ->
@@ -1494,22 +1494,17 @@ and jsx_element { Ast.JSX.openingElement; closingElement; children } =
     | (_, { Ast.JSX.Opening.selfClosing=true; _ }) ->
       jsx_self_closing openingElement;
     end;
-    if List.length processed_children > 0 then
-      Sequence ({ seq with break=Break_if_needed }, processed_children)
-    else Empty;
+    jsx_children loc children;
     begin match closingElement with
     | Some closing -> jsx_closing closing
     | _ -> Empty
     end;
   ]
 
-and jsx_fragment { Ast.JSX.frag_openingElement; frag_closingElement; frag_children } =
-  let processed_children = deoptionalize (List.map jsx_child frag_children) in
+and jsx_fragment loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_children } =
   fuse [
     jsx_fragment_opening frag_openingElement;
-    if List.length processed_children > 0 then
-      Sequence ({ seq with break=Break_if_needed }, processed_children)
-    else Empty;
+    jsx_children loc frag_children;
     begin match frag_closingElement with
     | Some closing -> jsx_closing_fragment closing
     | _ -> Empty
@@ -1632,20 +1627,48 @@ and jsx_closing_fragment loc =
     Atom "</>";
   ])
 
+and jsx_children loc children =
+  let open Loc in
+  let processed_children = deoptionalize (List.map jsx_child children) in
+  (* Check for empty children *)
+  if List.length processed_children <= 0 then Empty
+  (* If start and end lines don't match check inner breaks *)
+  else if loc._end.line > loc.start.line then begin
+    let children_n, _ = List.fold_left
+      (fun (children_n, last_line) (loc, child) ->
+        let child_n = SourceLocation (loc, child) in
+        let formatted_child_n = match last_line with
+        (* First child, newlines will always be forced via the `fuse_vertically` below *)
+        | None -> child_n
+        (* If the current child and the previous child line positions are offset match
+           this via forcing a newline *)
+        | Some last_line when loc.start.line > last_line -> prepend_newline child_n
+        (* Must be on the same line as the previous child *)
+        | Some _ -> child_n
+        in
+        formatted_child_n::children_n, Some loc._end.line
+      )
+      ([], None)
+      processed_children
+    in
+    fuse_vertically ~indent:2 [fuse (List.rev children_n)]
+  (* Single line *)
+  end else fuse (List.map (fun (loc, child) -> SourceLocation (loc, child)) processed_children)
+
 and jsx_child (loc, child) =
   match child with
-  | Ast.JSX.Element elem -> Some (SourceLocation (loc, jsx_element elem))
-  | Ast.JSX.Fragment frag -> Some (SourceLocation (loc, jsx_fragment frag))
+  | Ast.JSX.Element elem -> Some (loc, jsx_element loc elem)
+  | Ast.JSX.Fragment frag -> Some (loc, jsx_fragment loc frag)
   | Ast.JSX.ExpressionContainer express ->
-    Some (SourceLocation (loc, jsx_expression_container express))
-  | Ast.JSX.SpreadChild expr -> Some (SourceLocation (loc, fuse [
-    Atom "{...";
-    expression expr;
-    Atom "}"
-  ]))
+    Some (loc, jsx_expression_container express)
+  | Ast.JSX.SpreadChild expr -> Some (loc, fuse [
+      Atom "{...";
+      expression expr;
+      Atom "}"
+    ])
   | Ast.JSX.Text { Ast.JSX.Text.raw; _ } ->
     begin match Utils_jsx.trim_jsx_text loc raw with
-    | Some (loc, txt) -> Some (SourceLocation (loc, Atom txt))
+    | Some (loc, txt) -> Some (loc, Atom txt)
     | None -> None
     end
 

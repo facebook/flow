@@ -112,8 +112,8 @@ module JSXs = struct
       children;
     }
 
-  let child_element ?selfclosing ?attrs ?children name =
-    Loc.none, Element (element ?selfclosing ?attrs ?children name)
+  let child_element ?(loc=Loc.none) ?selfclosing ?attrs ?children name =
+    loc, Element (element ?selfclosing ?attrs ?children name)
 end
 
 module Statements = struct
@@ -303,8 +303,8 @@ module Expressions = struct
   let spread expr =
     Spread (Loc.none, { SpreadElement.argument = expr })
 
-  let jsx_element elem =
-    Loc.none, JSXElement elem
+  let jsx_element ?(loc=Loc.none) elem =
+    loc, JSXElement elem
 
   let true_ () =
     literal (Literals.bool true)
