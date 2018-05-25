@@ -302,7 +302,7 @@ docs_additional_reading: "Additional Reading"
   description: "The types and best practices for typing React event handlers with Flow"
 "/docs/react/refs/":
   title: "ref functions"
-  description: "How to use typed Flow's typed React ref functions"
+  description: "How to use Flow's typed React ref functions"
 "/docs/react/children/":
   title: "Children"
   description: "Learn how to use Flow to strictly type the children of your React components"
