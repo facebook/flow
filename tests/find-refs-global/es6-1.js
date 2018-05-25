@@ -24,4 +24,4 @@ new Foo().bar();
 
 new Bar();
 
-export const baz = 1;
+export const baz = 1, qux = 2;

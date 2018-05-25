@@ -59,6 +59,9 @@ echo "Local use of the second name of an aliased ES6 named import:"
 #      ^
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 25 6
 
+echo "Named ES6 export created as part of a single declaration with multiple names:"
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 27 24
+
 echo "ES6 default export:"
 # export default class Bar {}
 #           ^

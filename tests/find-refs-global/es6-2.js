@@ -23,3 +23,6 @@ all.foo();
 
 localBaz;
 otherBaz;
+
+import {qux} from './es6-1';
+qux;

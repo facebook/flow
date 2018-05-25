@@ -477,6 +477,31 @@ Local use of the second name of an aliased ES6 named import:
     }
   ]
 }
+Named ES6 export created as part of a single declaration with multiple names:
+{
+  "kind":"symbol-found",
+  "name":"qux",
+  "locs":[
+    {
+      "source":"es6-1.js",
+      "type":"SourceFile",
+      "start":{"line":27,"column":23,"offset":311},
+      "end":{"line":27,"column":25,"offset":314}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":27,"column":9,"offset":316},
+      "end":{"line":27,"column":11,"offset":319}
+    },
+    {
+      "source":"es6-2.js",
+      "type":"SourceFile",
+      "start":{"line":28,"column":1,"offset":337},
+      "end":{"line":28,"column":3,"offset":340}
+    }
+  ]
+}
 ES6 default export:
 {
   "kind":"symbol-found",
