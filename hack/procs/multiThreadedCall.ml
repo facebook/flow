@@ -78,24 +78,25 @@ let multi_threaded_call
     (* 'handles' represents pendings jobs. *)
     (* 'acc' are the accumulated results. *)
     match workers with
-    | [] when handles = [] -> unpack_result acc, []
-    | [] ->
+    | None when handles = [] -> unpack_result acc, []
+    | None (* No more jobs to start *)
+    | Some [] ->
         (* No worker available: wait for some workers to finish. *)
         collect [] handles acc
-    | worker :: workers ->
+    | Some (worker :: workers) ->
         (* At least one worker is available... *)
         match next () with
         | Bucket.Wait -> collect (worker :: workers) handles acc
         | Bucket.Done ->
             (* ... but no more job to be distributed, let's collect results. *)
-            dispatch [] handles acc
+            dispatch None handles acc
         | Bucket.Job bucket ->
             (* ... send a job to the worker.*)
             let handle =
               WorkerController.call worker
                 (fun xl -> job neutral xl)
                 bucket in
-            dispatch workers (handle :: handles) acc
+            dispatch (Some workers) (handle :: handles) acc
   and collect workers handles acc =
     let { WorkerController.readys; waiters; ready_fds } =
       WorkerController.select handles (handler_fds acc) in
@@ -123,8 +124,8 @@ let multi_threaded_call
     | acc, Some unfinished -> unpack_result acc, unfinished
     | acc, None ->
       (* And continue.. *)
-      dispatch workers waiters acc in
-  dispatch workers [] (neutral, interrupt.env, interrupt.handlers interrupt.env)
+      dispatch (Some workers) waiters acc in
+  dispatch (Some workers) [] (neutral, interrupt.env, interrupt.handlers interrupt.env)
 
 let call workers job merge neutral next =
   let (res, ()), unfinished =
