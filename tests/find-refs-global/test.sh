@@ -89,6 +89,21 @@ echo "Use of ES6 default import imported through import *"
 #          ^
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 20 10
 
+echo "ES6 default export of an async function:"
+# export default async function foo() { foo(); }
+#                                ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultAsync.js 8 32
+
+echo "ES6 default export of an arbitrary expression:"
+# export default (1, function foo() { foo(); });
+#         ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultExpr.js 5 9
+
+echo "Function expression exported via export default:"
+# export default (1, function foo() { foo(); });
+#                              ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultExpr.js 5 30
+
 echo
 
 echo "shadowing an export:"

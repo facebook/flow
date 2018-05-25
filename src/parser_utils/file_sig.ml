@@ -485,6 +485,8 @@ class requires_calculator ~ast = object(this)
     let local =  match declaration with
     | Declaration (_, FunctionDeclaration { Ast.Function.id; _ }) -> id
     | Declaration (_, ClassDeclaration { Ast.Class.id; _ }) -> id
+    (* There's some ambiguity about the name Expression. This satisfies the compiler. *)
+    | ExportDefaultDeclaration.Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
     | _ -> None
     in
     let export = ExportDefault { default_loc; local } in

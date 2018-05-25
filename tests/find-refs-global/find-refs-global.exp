@@ -735,6 +735,87 @@ Use of ES6 default import imported through import *
     }
   ]
 }
+ES6 default export of an async function:
+{
+  "kind":"symbol-found",
+  "name":"default",
+  "locs":[
+    {
+      "source":"exportDefaultAsync.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":8,"offset":307},
+      "end":{"line":8,"column":14,"offset":314}
+    },
+    {
+      "source":"exportDefaultAsync.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":31,"offset":330},
+      "end":{"line":8,"column":33,"offset":333}
+    },
+    {
+      "source":"exportDefaultAsync.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":39,"offset":338},
+      "end":{"line":8,"column":41,"offset":341}
+    },
+    {
+      "source":"exportDefaultExpr.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":8,"offset":17},
+      "end":{"line":3,"column":10,"offset":20}
+    },
+    {
+      "source":"exportDefaultExpr.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":1,"offset":218},
+      "end":{"line":9,"column":3,"offset":221}
+    }
+  ]
+}
+ES6 default export of an arbitrary expression:
+{
+  "kind":"symbol-found",
+  "name":"default",
+  "locs":[
+    {
+      "source":"exportDefaultAsync.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":8,"offset":17},
+      "end":{"line":3,"column":10,"offset":20}
+    },
+    {
+      "source":"exportDefaultAsync.js",
+      "type":"SourceFile",
+      "start":{"line":11,"column":1,"offset":383},
+      "end":{"line":11,"column":3,"offset":386}
+    },
+    {
+      "source":"exportDefaultExpr.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":8,"offset":58},
+      "end":{"line":5,"column":14,"offset":65}
+    }
+  ]
+}
+Function expression exported via export default:
+{
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"exportDefaultExpr.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":29,"offset":79},
+      "end":{"line":5,"column":31,"offset":82}
+    },
+    {
+      "source":"exportDefaultExpr.js",
+      "type":"SourceFile",
+      "start":{"line":5,"column":37,"offset":87},
+      "end":{"line":5,"column":39,"offset":90}
+    }
+  ]
+}
 
 shadowing an export:
 {
