@@ -439,6 +439,8 @@ static size_t* workers_should_exit = NULL;
 
 static size_t* allow_removes = NULL;
 
+static size_t* allow_dependency_table_reads = NULL;
+
 /* This should only be used before forking */
 static uintptr_t early_counter = 1;
 
@@ -1094,9 +1096,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(size_t));
   allow_removes = (size_t*)(mem + 8*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  allow_dependency_table_reads = (size_t*)(mem + 9*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 9*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 10*CACHE_LINE_SIZE + (int)sizeof(int));
 
   /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
    * page_size - it should be since page_size is quite big for a string
@@ -1157,6 +1162,7 @@ static void init_shared_globals(size_t config_log_level) {
   *workers_should_exit = 0;
   *wasted_heap_size = 0;
   *allow_removes = 1;
+  *allow_dependency_table_reads = 1;
 
   // Initialize top heap pointers
   *heap = heap_init;
@@ -1338,6 +1344,10 @@ void assert_allow_hashtable_writes_by_current_process(void) {
   assert(allow_hashtable_writes_by_current_process);
 }
 
+void assert_allow_dependency_table_reads(void) {
+  assert(*allow_dependency_table_reads);
+}
+
 /*****************************************************************************/
 
 CAMLprim value hh_stop_workers(void) {
@@ -1355,14 +1365,27 @@ CAMLprim value hh_resume_workers(void) {
 }
 
 CAMLprim value hh_allow_removes(value val) {
-  CAMLparam0();
+  CAMLparam1(val);
   *allow_removes = Bool_val(val);
   CAMLreturn(Val_unit);
 }
 
 CAMLprim value hh_allow_hashtable_writes_by_current_process(value val) {
-  CAMLparam0();
+  CAMLparam1(val);
   allow_hashtable_writes_by_current_process = Bool_val(val);
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value hh_allow_dependency_table_reads(value val) {
+  CAMLparam1(val);
+  int prev = *allow_dependency_table_reads;
+  *allow_dependency_table_reads = Bool_val(val);
+  CAMLreturn(Val_bool(prev));
+}
+
+CAMLprim value hh_assert_allow_dependency_table_reads (void) {
+  CAMLparam0();
+  assert_allow_dependency_table_reads();
   CAMLreturn(Val_unit);
 }
 
