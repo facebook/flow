@@ -31,6 +31,14 @@ let no_interrupt env = {
  * an already ongoing multi_threaded_call job. *)
 let call_id = ref 0
 
+(* Exceptions from parallel jobs are in general not recoverable - the workers
+ * are dead and we don't respawn them. The only reason someone should catch
+ * them is to log and exit. There are unfortunately callers that ignore them and
+ * keep going. If such caller happens to be an inner job, we want to re-raise
+ * the exception for outer job too instead of making it fail due to random
+ * undefined state issue *)
+let nested_exception: exn option ref = ref None
+
 let multi_threaded_call
   (type a) (type b) (type c) (type d)
   workers
@@ -41,6 +49,23 @@ let multi_threaded_call
   (interrupt: d interrupt_config) =
 
   incr call_id;
+  let call_id = !call_id in
+
+  (* Split workers into those that are free, and those that are still doing
+   * previous jobs. *)
+  let workers, handles = List.fold workers
+    ~init:([], [])
+    ~f:begin fun (workers, handles) worker ->
+      (* Note than now some handles have mismatched types. We need to remember
+       * to check their get_call_id against this multi_threaded_call call_id
+       * before trusting the types. *)
+      match WorkerController.get_handle_UNSAFE worker with
+      | None -> worker::workers, handles
+      | Some handle -> workers, handle::handles
+    end
+  in
+
+  let is_current h = (call_id = (WorkerController.get_call_id h)) in
 
   (* merge accumulator, leaving environment and interrupt handlers untouched *)
   let merge x (y1, y2, y3) = merge x y1, y2, y3 in
@@ -67,6 +92,8 @@ let multi_threaded_call
         if decision = Cancel || not @@ List.mem ready_fds fd
           then env, decision, handlers else
         let env, decision = handler env in
+        (* Re-raise the exception even if handler have caught and ignored it *)
+        Option.iter !nested_exception ~f:(fun x -> raise x);
         (* running a handler could have changed the handlers,
          * so need to regenerate them based on new environment *)
         let handlers = interrupt.handlers env in
@@ -86,7 +113,9 @@ let multi_threaded_call
     (* 'handles' represents pendings jobs. *)
     (* 'acc' are the accumulated results. *)
     match workers with
-    | None when handles = [] -> unpack_result acc, []
+    | None when (not @@ List.exists handles ~f:is_current) ->
+      (* No more handles at this recursion level *)
+        unpack_result acc, []
     | None (* No more jobs to start *)
     | Some [] ->
         (* No worker available: wait for some workers to finish. *)
@@ -101,7 +130,7 @@ let multi_threaded_call
         | Bucket.Job bucket ->
             (* ... send a job to the worker.*)
             let handle =
-              WorkerController.call worker
+              WorkerController.call ~call_id worker
                 (fun xl -> job neutral xl)
                 bucket in
             dispatch (Some workers) (handle :: handles) acc
@@ -116,7 +145,10 @@ let multi_threaded_call
       List.fold_left
         ~f:begin fun (acc, failures) h ->
            try
-             let acc = merge (WorkerController.get_result h) acc in
+             let res = WorkerController.get_result h in
+             (* Results for handles from other calls are cached by get_result
+              * and will be retrieved later, so we ignore them here *)
+             let acc = if is_current h then merge res acc else acc in
              acc, failures
            with
            | WorkerController.Worker_failed (_, failure) ->
@@ -133,7 +165,12 @@ let multi_threaded_call
     | acc, None ->
       (* And continue.. *)
       dispatch (Some workers) waiters acc in
-  dispatch (Some workers) [] (neutral, interrupt.env, interrupt.handlers interrupt.env)
+  try
+    let () = nested_exception := None in
+    dispatch (Some workers) handles (neutral, interrupt.env, interrupt.handlers interrupt.env)
+  with e ->
+    nested_exception := Some e;
+    raise e
 
 let call workers job merge neutral next =
   let (res, ()), unfinished =
@@ -143,6 +180,10 @@ let call workers job merge neutral next =
 
 let call_with_interrupt workers job merge neutral next interrupt =
   SharedMem.allow_removes false;
+  (* Interrupting of nested jobs is not implemented *)
+  assert (List.for_all workers
+    ~f:(fun x -> Option.is_none @@ WorkerController.get_handle_UNSAFE x)
+  );
   let (res, interrupt_env), unfinished =
     multi_threaded_call workers job merge neutral next interrupt in
   SharedMem.allow_removes true;

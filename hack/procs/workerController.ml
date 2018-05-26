@@ -123,7 +123,7 @@ and ('a, 'b) delayed = ('a * int) * 'b worker_handle
 
 and 'b worker_handle =
   | Processing of 'b slave
-  | Cached of 'b
+  | Cached of 'b * worker
   | Canceled
   | Failed of exn
 
@@ -417,14 +417,14 @@ let with_worker_exn (handle : ('a, 'b) handle) slave f =
 
 let get_result d =
   match snd !d with
-  | Cached x -> x
+  | Cached (x, _) -> x
   | Failed exn -> raise exn
   | Canceled -> raise End_of_file
   | Processing s ->
     with_worker_exn d s begin fun () ->
       let res = s.result () in
       mark_free s.worker;
-      d := fst !d, Cached res;
+      d := fst !d, Cached (res, s.worker);
       res
     end
 
@@ -470,7 +470,7 @@ let select ds additional_fds =
 let get_worker h =
   match snd !h with
   | Processing {worker; _} -> worker
-  | Cached _
+  | Cached (_, worker) -> worker
   | Canceled
   | Failed _ -> invalid_arg "Worker.get_worker"
 
