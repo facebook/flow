@@ -36,6 +36,13 @@ exception Worker_failed_to_send_job of send_job_failure
 
 (* The type of a worker visible to the outside world *)
 type worker
+(*****************************************************************************)
+(* The handle is what we get back when we start a job. It's a "future"
+ * (sometimes called a "promise"). The scheduler uses the handle to retrieve
+ * the result of the job when the task is done (cf multiWorker.ml).
+ *)
+(*****************************************************************************)
+type ('a, 'b) handle
 (* An empty type *)
 type void
 (* Get the worker's id *)
@@ -54,14 +61,6 @@ val close: worker -> (void, Worker.request) Daemon.handle -> unit
 val wrap_request: worker -> ('x -> 'b) -> 'x -> Worker.request
 
 type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
-
-(*****************************************************************************)
-(* The handle is what we get back when we start a job. It's a "future"
- * (sometimes called a "promise"). The scheduler uses the handle to retrieve
- * the result of the job when the task is done (cf multiWorker.ml).
- *)
-(*****************************************************************************)
-type ('a, 'b) handle
 
 type 'a entry
 val register_entry_point:

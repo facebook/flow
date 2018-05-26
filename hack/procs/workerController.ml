@@ -105,32 +105,6 @@ type worker = {
   spawn: unit -> (void, request) Daemon.handle;
 }
 
-let worker_id w = w.id
-
-(* Has the worker been killed *)
-let is_killed w = w.killed
-
-(* Mark the worker as busy. Throw if it is already busy *)
-let mark_busy w =
-  if w.busy then raise Worker_busy;
-  w.busy <- true
-
-(* Mark the worker as free *)
-let mark_free w = w.busy <- false
-
-(* If the worker isn't prespawned, spawn the worker *)
-let spawn w = match w.prespawned with
-| None -> w.spawn ()
-| Some handle -> handle
-
-(* If the worker isn't prespawned, close the worker *)
-let close w h = if w.prespawned = None then Daemon.close h
-
-(* If there is a call_wrapper, apply it and create the Request *)
-let wrap_request w f x = match w.call_wrapper with
-  | Some { wrap } -> Request (fun { send } -> send (wrap f x))
-  | None -> Request (fun { send } -> send (f x))
-
 (*****************************************************************************
  * The handle is what we get back when we start a job. It's a "future"
  * (sometimes called a "promise"). The scheduler uses the handle to retrieve
@@ -138,7 +112,7 @@ let wrap_request w f x = match w.call_wrapper with
  *
  *****************************************************************************)
 
-type ('a, 'b) handle = ('a, 'b) delayed ref
+and ('a, 'b) handle = ('a, 'b) delayed ref
 
 and ('a, 'b) delayed = 'a * 'b worker_handle
 
@@ -169,6 +143,32 @@ and 'a slave = {
   wait_for_cancel: unit -> unit;
 
 }
+
+let worker_id w = w.id
+
+(* Has the worker been killed *)
+let is_killed w = w.killed
+
+(* Mark the worker as busy. Throw if it is already busy *)
+let mark_busy w =
+  if w.busy then raise Worker_busy;
+  w.busy <- true
+
+(* Mark the worker as free *)
+let mark_free w = w.busy <- false
+
+(* If the worker isn't prespawned, spawn the worker *)
+let spawn w = match w.prespawned with
+| None -> w.spawn ()
+| Some handle -> handle
+
+(* If the worker isn't prespawned, close the worker *)
+let close w h = if w.prespawned = None then Daemon.close h
+
+(* If there is a call_wrapper, apply it and create the Request *)
+let wrap_request w f x = match w.call_wrapper with
+  | Some { wrap } -> Request (fun { send } -> send (wrap f x))
+  | None -> Request (fun { send } -> send (f x))
 
 type 'a entry_state = 'a * Gc.control * SharedMem.handle
 type 'a entry = ('a entry_state * (Unix.file_descr option), request, void) Daemon.entry
