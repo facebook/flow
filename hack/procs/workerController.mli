@@ -51,6 +51,10 @@ val worker_id: worker -> int
 val is_killed: worker -> bool
 (* Mark the worker as busy. Throw if it is already busy *)
 val mark_busy: worker -> unit
+(* If the worker is busy, what is it doing. Note that calling this is not
+ * type safe: 'a and 'b are free type variables, and they depend on what is the
+ * job being executed by worker. *)
+val get_handle_UNSAFE: worker -> ('a, 'b) handle option
 (* Mark the worker as free *)
 val mark_free: worker -> unit
 (* If the worker isn't prespawned, spawn the worker *)
@@ -78,7 +82,10 @@ val make:
     worker list
 
 (* Call in a sub-process (CAREFUL, GLOBALS ARE COPIED) *)
-val call: worker -> ('a -> 'b) -> 'a -> ('a, 'b) handle
+val call: ?call_id:int -> worker -> ('a -> 'b) -> 'a -> ('a, 'b) handle
+
+(* See MultiThreadedCall.call_id *)
+val get_call_id: ('a, 'b) handle -> int
 
 (* Retrieves the job that the worker is currently processing *)
 val get_job: ('a, 'b) handle -> 'a

@@ -25,6 +25,12 @@ let no_interrupt env = {
   env;
 }
 
+(* Integer that increases with every invocation of multi_threaded_call, used to
+ * distinguish worker handles that belong to current job vs those that are still
+ * processing some other job (in cases when multi_threaded_call is called during
+ * an already ongoing multi_threaded_call job. *)
+let call_id = ref 0
+
 let multi_threaded_call
   (type a) (type b) (type c) (type d)
   workers
@@ -33,6 +39,8 @@ let multi_threaded_call
   (neutral: c)
   (next: a Bucket.next)
   (interrupt: d interrupt_config) =
+
+  incr call_id;
 
   (* merge accumulator, leaving environment and interrupt handlers untouched *)
   let merge x (y1, y2, y3) = merge x y1, y2, y3 in

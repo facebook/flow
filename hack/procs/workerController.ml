@@ -98,6 +98,9 @@ type worker = {
   (* Sanity check: is the worker currently busy ? *)
   mutable busy: bool;
 
+  (* If the worker is currently busy, handle of the job it's execuing *)
+  mutable handle: 'a 'b. ('a, 'b) handle option;
+
   (* On Unix, a reference to the 'prespawned' worker. *)
   prespawned: (void, request) Daemon.handle option;
 
@@ -114,7 +117,9 @@ type worker = {
 
 and ('a, 'b) handle = ('a, 'b) delayed ref
 
-and ('a, 'b) delayed = 'a * 'b worker_handle
+(* Integer represents job the handle belongs to.
+ * See MultiThreadedCall.call_id. *)
+and ('a, 'b) delayed = ('a * int) * 'b worker_handle
 
 and 'b worker_handle =
   | Processing of 'b slave
@@ -154,8 +159,12 @@ let mark_busy w =
   if w.busy then raise Worker_busy;
   w.busy <- true
 
+let get_handle_UNSAFE w = w.handle
+
 (* Mark the worker as free *)
-let mark_free w = w.busy <- false
+let mark_free w =
+  w.busy <- false;
+  w.handle <- None
 
 (* If the worker isn't prespawned, spawn the worker *)
 let spawn w = match w.prespawned with
@@ -204,6 +213,7 @@ let make_one ?call_wrapper controller_fd spawn id =
     controller_fd;
     id;
     busy = false;
+    handle = None;
     killed = false;
     prespawned;
     spawn }
@@ -261,7 +271,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
  *
  **************************************************************************)
 
-let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
+let call ?(call_id=0) w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
 
@@ -378,7 +388,9 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
     end
   in
   (* And returned the 'handle'. *)
-  ref (x, Processing slave)
+  let handle = ref ((x, call_id), Processing slave) in
+  w.handle <- Obj.magic (Some handle);
+  handle
 
 
 (**************************************************************************
@@ -390,7 +402,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
 let with_worker_exn (handle : ('a, 'b) handle) slave f =
   try f () with
   | Worker_failed (pid, status) as exn ->
-    slave.worker.busy <- false;
+    mark_free slave.worker;
     handle := fst !handle, Failed exn;
     begin match status with
     | Worker_quit (Unix.WSIGNALED -7) ->
@@ -399,7 +411,7 @@ let with_worker_exn (handle : ('a, 'b) handle) slave f =
       raise exn
     end
   | exn ->
-    slave.worker.busy <- false;
+    mark_free slave.worker;
     handle := fst !handle, Failed exn;
     raise exn
 
@@ -411,7 +423,7 @@ let get_result d =
   | Processing s ->
     with_worker_exn d s begin fun () ->
       let res = s.result () in
-      s.worker.busy <- false;
+      mark_free s.worker;
       d := fst !d, Cached res;
       res
     end
@@ -462,7 +474,9 @@ let get_worker h =
   | Canceled
   | Failed _ -> invalid_arg "Worker.get_worker"
 
-let get_job h = fst !h
+let get_job h = fst (fst !h)
+
+let get_call_id h = snd (fst !h)
 
 (**************************************************************************
  * Worker termination
@@ -482,7 +496,7 @@ let wait_for_cancel d =
   | Processing s ->
     with_worker_exn d s begin fun () ->
       s.wait_for_cancel ();
-      s.worker.busy <- false;
+      mark_free s.worker;
       d := fst !d, Canceled
     end
   | _ -> ()
