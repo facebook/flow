@@ -9,5 +9,8 @@ module Ident = struct
 end
 
 let collect effort =
-  MonitorRPC.status_update ~event:ServerStatus.GC_start;
-  SharedMem.collect effort
+  if SharedMem.should_collect effort
+  then begin
+    MonitorRPC.status_update ~event:ServerStatus.GC_start;
+    SharedMem.collect effort
+  end
