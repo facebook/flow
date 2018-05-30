@@ -39,6 +39,7 @@ type jsx_mode =
 type t = {
   opt_all : bool;
   opt_debug : bool;
+  opt_max_literal_length: int;
   opt_enable_const_params: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
@@ -79,6 +80,7 @@ type t = {
 }
 
 let all opts = opts.opt_all
+let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
