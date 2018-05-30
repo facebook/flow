@@ -680,7 +680,7 @@ let report_lsp_error_if_necessary
     let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
     let message = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
     let notification = NotificationMessage
-      (LogMessageNotification {type_=MessageType.ErrorMessage; message;}) in
+      (TelemetryNotification {type_=MessageType.ErrorMessage; message;}) in
     lsp_writer notification
   | _ ->
     ()

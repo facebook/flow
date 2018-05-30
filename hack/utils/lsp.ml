@@ -897,6 +897,7 @@ type lsp_request =
   | DocumentOnTypeFormattingRequest of DocumentOnTypeFormatting.params
   | ShowMessageRequestRequest of ShowMessageRequest.params
   | RageRequest
+  | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
   | InitializeResult of Initialize.result
@@ -926,10 +927,12 @@ type lsp_notification =
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
   | LogMessageNotification of LogMessage.params
+  | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
   | ProgressNotification of Progress.params
   | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
+  | UnknownNotification of string * Hh_json.json option
 
 type lsp_message =
   | RequestMessage of lsp_id * lsp_request

@@ -7,7 +7,24 @@
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
-  ({ideStartAndConnect, ideRequestAndWaitUntilResponse, addFile}) => [
+  ({
+    ideStartAndConnect,
+    ideRequest,
+    ideNotification,
+    ideRequestAndWaitUntilResponse,
+    addFile,
+  }) => [
+    test('invalid_method', [
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
+        ['foobar{not implemented}'],
+        [],
+      ),
+      ideNotification('barfoo', {})
+        .waitUntilIDEMessage(2000, 'barfoo')
+        .verifyAllIDEMessagesInStep(['telemetry/event{not implemented}'], []),
+    ]),
+
     test('textDocument/definition', [
       addFile('definition.js'),
       ideStartAndConnect(),

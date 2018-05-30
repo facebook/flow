@@ -943,6 +943,7 @@ let request_name_to_string (request: lsp_request) : string =
   | DocumentRangeFormattingRequest _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingRequest _ -> "textDocument/onTypeFormatting"
   | RageRequest -> "telemetry/rage"
+  | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result: lsp_result) : string =
   match result with
@@ -973,11 +974,13 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | DidCloseNotification _ -> "textDocument/didClose"
   | DidSaveNotification _ -> "textDocument/didSave"
   | DidChangeNotification _ -> "textDocument/didChange"
+  | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
   | ProgressNotification _ -> "window/progress"
   | ActionRequiredNotification _ -> "window/actionRequired"
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
+  | UnknownNotification (method_, _params) -> method_
 
 let message_to_string (message: lsp_message) : string =
   match message with
@@ -1011,7 +1014,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   | "telemetry/rage" -> RageRequest
   | "completionItem/resolve"
   | "window/showMessageRequest"
-  | _ -> raise (Error.Parse ("Don't know how to parse LSP request " ^ method_))
+  | _ -> UnknownRequest (method_, params)
 
 let parse_lsp_notification (method_: string) (params: json option) : lsp_notification =
   match method_ with
@@ -1027,7 +1030,7 @@ let parse_lsp_notification (method_: string) (params: json option) : lsp_notific
   | "window/progress"
   | "window/actionRequired"
   | "telemetry/connectionStatus"
-  | _ -> raise (Error.Parse ("Don't know how to parse LSP notification " ^ method_))
+  | _ -> UnknownNotification (method_, params)
 
 let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   let method_ = request_name_to_string request in
@@ -1048,7 +1051,8 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | DocumentFormattingRequest _
   | DocumentRangeFormattingRequest _
   | DocumentOnTypeFormattingRequest _
-  | RageRequest ->
+  | RageRequest
+  | UnknownRequest _ ->
     raise (Error.Parse ("Don't know how to parse LSP response " ^ method_))
 
 (* parse_lsp: non-jsonrpc inputs - will raise an exception                    *)
@@ -1093,7 +1097,8 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     | DocumentFormattingRequest _
     | DocumentRangeFormattingRequest _
     | DocumentOnTypeFormattingRequest _
-    | RageRequest ->
+    | RageRequest
+    | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
   JSON_Object [
@@ -1144,6 +1149,7 @@ let print_lsp_notification (notification: lsp_notification) : json =
   let params = match notification with
     | CancelRequestNotification r -> print_cancelRequest r
     | PublishDiagnosticsNotification r -> print_diagnostics r
+    | TelemetryNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | LogMessageNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | ShowMessageNotification r -> print_showMessage r.ShowMessage.type_ r.ShowMessage.message
     | ProgressNotification r -> print_progress r.Progress.id r.Progress.label
@@ -1154,7 +1160,8 @@ let print_lsp_notification (notification: lsp_notification) : json =
     | DidOpenNotification _
     | DidCloseNotification _
     | DidSaveNotification _
-    | DidChangeNotification _ ->
+    | DidChangeNotification _
+    | UnknownNotification _ ->
       failwith ("Don't know how to print notification " ^ method_)
   in
   JSON_Object [
