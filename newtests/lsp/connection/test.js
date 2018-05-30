@@ -49,12 +49,15 @@ export default suite(
           [
             'initialize',
             'window/logMessage{Starting Flow server}',
-            'window/showMessageRequest{"id":1,Connecting}',
+            'window/showMessageRequest{"id":1,Flow: connecting}',
             '$/cancelRequest{"id":1}',
             'window/progress{null}',
             'telemetry/connectionStatus{true}',
           ],
-          ['window/progress{Connecting}'],
+          [
+            'window/progress{Server starting}',
+            'window/progress{Server is initializing}',
+          ],
         ),
       ideRequest('shutdown')
         .waitUntilIDEMessage(3000, 'shutdown')
@@ -86,7 +89,7 @@ export default suite(
             // before the monitor has also shut down (in which case it
             // will display "connecting...") or after (in which cast it won't)
             'window/actionRequired{null}',
-            'window/showMessageRequest{Connecting}',
+            'window/showMessageRequest{Flow: connecting}',
             'window/progress',
             '$/cancelRequest',
           ],
@@ -120,7 +123,7 @@ export default suite(
             'window/actionRequired{stopped}',
           ],
           [
-            'window/showMessageRequest{Connecting}',
+            'window/showMessageRequest{Flow: connecting}',
             'window/progress',
             '$/cancelRequest',
           ],
@@ -137,7 +140,7 @@ export default suite(
             'telemetry/connectionStatus{true}',
           ],
           [
-            'window/showMessageRequest{Connecting}',
+            'window/showMessageRequest{Flow: connecting}',
             'window/progress',
             '$/cancelRequest',
           ],

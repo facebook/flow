@@ -102,6 +102,7 @@ and disconnected_env = {
   d_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   d_autostart: bool;
   d_start_time: float;
+  d_server_status: (ServerStatus.status * FileWatcherStatus.status) option;
   d_dialog_stopped_ok: bool; (* if the user has already dismissed it, don't reshow *)
   d_dialog_stopped: ShowMessageRequest.t; (* "Flow server is stopped. [Restart]" *)
   d_actionRequired_stopped: ActionRequired.t; (* "Flow server is stopped." *)
@@ -365,17 +366,21 @@ let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env)
       let handle_error (_e, _stack) state = clear_flag state in
       let handle_result _r state = clear_flag state in
       let handle = (ShowMessageHandler handle_result, handle_error) in
-      showMessageRequest handle MessageType.InfoMessage  "Connecting to Flow server" [] env.d_ienv
+      showMessageRequest handle MessageType.InfoMessage  "Flow: connecting to server" [] env.d_ienv
     end in
 
-  let time = Unix.gettimeofday () in
-  let delay = int_of_float (time -. env.d_start_time) in
-  let reason_str = match reason with
-    | CommandConnectSimple.Server_missing -> "starting"
-    | CommandConnectSimple.Server_socket_missing -> "starting?"
-    | CommandConnectSimple.Server_busy _ -> "busy"
-    | CommandConnectSimple.Build_id_mismatch -> "wrong version" in
-  let msg = Printf.sprintf "Connecting to Flow server... %s [%i seconds]" reason_str delay in
+  let msg = match reason, env.d_server_status with
+    | CommandConnectSimple.Server_missing, _ -> "Flow: Server starting"
+    | CommandConnectSimple.Server_socket_missing, _ -> "Flow: Server starting?"
+    | CommandConnectSimple.Build_id_mismatch, _ -> "Flow: Server is wrong version"
+    | CommandConnectSimple.Server_busy (CommandConnectSimple.Too_many_clients), _ ->
+      "Flow: Server busy"
+    | CommandConnectSimple.Server_busy _, None -> "Flow: Server busy"
+    | CommandConnectSimple.Server_busy _, Some (server_status, watcher_status) ->
+      if not (ServerStatus.is_free server_status) then
+        "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status)
+      else
+        "Flow: " ^ (FileWatcherStatus.string_of_status watcher_status) in
   let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params
     to_stdout env.d_progress_connecting (Some msg)
 
@@ -510,9 +515,9 @@ let try_connect (env: disconnected_env) : state =
     let new_state = show_connected env.d_start_time new_env in
     new_state
 
+  (* Server_missing means the lock file is absent, because the server isn't running *)
   | Error (CommandConnectSimple.Server_missing as reason) ->
-    (* Server_missing means the lock file is absent, because the server isn't running *)
-    let new_env = { env with d_autostart = false; } in
+    let new_env = { env with d_autostart = false; d_server_status = None; } in
     if env.d_autostart then
       let start_result = CommandConnect.start_flow_server start_env in
       match start_result with
@@ -521,36 +526,44 @@ let try_connect (env: disconnected_env) : state =
     else
       show_disconnected None None new_env
 
+  (* Server_socket_missing means the server is present but lacks its sock *)
+  (* file. There's a tiny race possibility that the server has created a  *)
+  (* lock but not yet created a sock file. More likely is that the server *)
+  (* is an old version of the server which doesn't even create the right  *)
+  (* sock file. We'll kill the server now so we can start a new one next. *)
+  (* And if it was in that race? bad luck... *)
   | Error (CommandConnectSimple.Server_socket_missing as reason) ->
-    (* Server_socket_missing means the server is present but lacks its sock *)
-    (* file. There's a tiny race possibility that the server has created a  *)
-    (* lock but not yet created a sock file. More likely is that the server *)
-    (* is an old version of the server which doesn't even create the right  *)
-    (* sock file. We'll kill the server now so we can start a new one next. *)
-    (* And if it was in that race? bad luck... *)
     begin try
       let tmp_dir = start_env.CommandConnect.tmp_dir in
       let root = start_env.CommandConnect.root in
       CommandMeanKill.mean_kill ~tmp_dir root;
-      show_connecting reason env
+      show_connecting reason { env with d_server_status = None; }
     with CommandMeanKill.FailedToKill _ ->
       let msg = "An old version of the Flow server is running. Please stop it." in
-      show_disconnected None (Some msg) env
+      show_disconnected None (Some msg) { env with d_server_status = None; }
     end
 
+  (* Build_id_mismatch is because the server version was different from client *)
+  (* and the server terminates immediately after telling us this - so we'll    *)
+  (* just keep trying to connect, and the next time we'll start a new server.  *)
+  (* We don't have any useful server status out of this one...                 *)
   | Error (CommandConnectSimple.Build_id_mismatch as reason) ->
-    (* Build_id_mismatch is because the server version was different from client *)
-    (* and the server terminates immediately after telling us this - so we'll    *)
-    (* just keep trying to connect, and the next time we'll start a new server.  *)
-    show_connecting reason env
+    show_connecting reason { env with d_server_status = None; }
 
-  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Fail_on_init) as reason)
-  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients) as reason)
-  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding) as reason) ->
-    (* These are all cases where the right version of the server is running but *)
-    (* it's not speaking to us just now. So we'll keep trying until it's ready. *)
-    show_connecting reason env
+  (* While the server is busy initializing, sometimes we get Server_busy.Fail_on_init *)
+  (* with a server-status telling us how far it is through init. And sometimes we get *)
+  (* just ServerStatus.Not_responding if the server was just too busy to give us a    *)
+  (* status update. These are cases where the right version of the server is running  *)
+  (* but it's not speaking to us just now. So we'll keep trying until it's ready.     *)
+  | Error ((CommandConnectSimple.Server_busy (CommandConnectSimple.Fail_on_init st)) as reason) ->
+    show_connecting reason { env with d_server_status = Some st; }
 
+  (* The following codes mean the right version of the server is running so   *)
+  (* we'll retry. They provide no information about the d_server_status of    *)
+  (* the server, so we'll leave it as it was before.                          *)
+  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding) as reason)
+  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients) as reason) ->
+    show_connecting reason env
 
 let close_conn (env: connected_env) : unit =
   try Timeout.shutdown_connection env.c_conn.ic with _ -> ();
@@ -893,6 +906,7 @@ begin
       d_ienv;
       d_autostart = true;
       d_start_time =  Unix.gettimeofday ();
+      d_server_status = None;
       d_dialog_stopped_ok = true;
       d_dialog_stopped = ShowMessageRequest.None;
       d_actionRequired_stopped = ActionRequired.None;
@@ -1115,6 +1129,7 @@ and main_handle_error
       d_ienv;
       d_autostart;
       d_start_time =  Unix.time ();
+      d_server_status = None;
       d_dialog_stopped_ok = true;
       d_dialog_stopped = ShowMessageRequest.None;
       d_actionRequired_stopped = ActionRequired.None;

@@ -10,7 +10,7 @@ module Server_files = Server_files_js
 type busy_reason =
 | Too_many_clients
 | Not_responding
-| Fail_on_init
+| Fail_on_init of (ServerStatus.status * FileWatcherStatus.status)
 
 type error =
   | Build_id_mismatch
@@ -138,8 +138,8 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
     Ok ()
   | ({server_intent = Server_will_hangup; _}, Some Server_has_too_many_clients) ->
     Error (Server_busy Too_many_clients)
-  | ({server_intent = Server_will_hangup; _}, Some (Server_still_initializing _)) ->
-    Error (Server_busy Fail_on_init)
+  | ({server_intent = Server_will_hangup; _}, Some (Server_still_initializing status)) ->
+    Error (Server_busy (Fail_on_init status))
   | ({server_intent = Server_will_hangup; _}, None) ->
     if client1.client_build_id <> server1.server_build_id then
       Error Build_id_mismatch
@@ -184,7 +184,10 @@ let busy_reason_to_string (busy_reason: busy_reason) : string =
   match busy_reason with
   | Too_many_clients -> "Too_many_clients"
   | Not_responding -> "Not_responding"
-  | Fail_on_init -> "Fail_on_init"
+  | Fail_on_init (server_status, watcher_status) ->
+    "Fail_on_init("
+    ^ "server_status=" ^ (ServerStatus.string_of_status server_status) ^ ","
+    ^ "watcher_status=" ^ (FileWatcherStatus.string_of_status watcher_status) ^ ")"
 
 let error_to_string (error: error) : string =
   match error with
