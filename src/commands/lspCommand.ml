@@ -417,10 +417,10 @@ let show_disconnected
   let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params to_stdout
     env.d_progress_connecting None in
 
-  let full_msg = match code, msg with
-    | Some code, Some msg -> Printf.sprintf "Flow server is stopped - %s [%s]"
-        msg (FlowExitStatus.to_string code)
-    | _ -> "Flow server is stopped."
+  let msg = Option.value msg ~default:"Flow: server is stopped" in
+  let full_msg = match code with
+    | Some code -> Printf.sprintf "%s [%s]" msg (FlowExitStatus.to_string code)
+    | None -> msg
   in
 
   let (d_dialog_stopped, d_ienv) = match env.d_dialog_stopped with
@@ -483,7 +483,7 @@ let try_connect (env: disconnected_env) : state =
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
     is_stop_request = false;
-    server_should_exit_if_version_mismatch = true;
+    server_should_exit_if_version_mismatch = env.d_autostart; (* only exit if we'll restart it *)
     server_should_hangup_if_still_initializing = true; }, {
     client_type = Persistent {
       logging_context = FlowEventLogger.get_context ();
@@ -555,9 +555,15 @@ let try_connect (env: disconnected_env) : state =
     end
 
   (* Build_id_mismatch is because the server version was different from client *)
+  (* If we didn't ask the server to exit on mismatch, then we're stuck.        *)
+  | Error (CommandConnectSimple.Build_id_mismatch as _reason) when not env.d_autostart ->
+    let msg = "Flow: the running server is the wrong version" in
+    show_disconnected None (Some msg) { env with d_server_status = None; }
+
+  (* If we did ask the server to terminate upon version mismatch, then we'll   *)
+  (* just keep trying to connect, and next time we'll start a new server.      *)
   (* and the server terminates immediately after telling us this - so we'll    *)
   (* just keep trying to connect, and the next time we'll start a new server.  *)
-  (* We don't have any useful server status out of this one...                 *)
   | Error (CommandConnectSimple.Build_id_mismatch as reason) ->
     show_connecting reason { env with d_server_status = None; }
 
