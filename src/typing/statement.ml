@@ -3348,7 +3348,6 @@ and subscript =
         begin match opt_state with
         | NonOptional ->
           let tobj = expression cx _object in
-          (* TODO: fishythefish - support hooks in optional chains *)
           let lhs_t = if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
           then AnyT.at ploc
           else begin match Refinement.get cx (loc, e) loc with
@@ -3358,15 +3357,20 @@ and subscript =
           end in
           lhs_t, acc, lhs_t, tobj
         | NewChain ->
-          let tout = Tvar.mk cx expr_reason in
-          let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let lhs_t = expression cx _object in
+          let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
+            then AnyT.at ploc else Tvar.mk cx expr_reason in
+          let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           lhs_t, ref (loc, opt_use, tout) :: acc, tout, lhs_t
         | ContinueChain ->
-          let tout = Tvar.mk cx expr_reason in
+          let tout = AnyT.at ploc in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
-          let lhs_t, chain, tobj = build_chain ~is_cond cx _object
-            (ref (loc, opt_use, tout) :: acc) in
+          let step = ref (loc, opt_use, tout) in
+          let lhs_t, chain, tobj = build_chain ~is_cond cx _object (step :: acc) in
+          let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj)
+            then tout
+            else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
+          in
           lhs_t, chain, tout, tobj
         end
         |> begin fun (lhs_t, chain, tout, tobj) ->
@@ -3389,21 +3393,26 @@ and subscript =
             | Some t -> t
             | None ->
               let tobj = expression cx _object in
-              (* TODO: fishythefish - support hooks in optional chains *)
               if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
               then AnyT.at ploc
               else get_private_field cx expr_reason ~use_op tobj name
           ) in
           lhs_t, acc, lhs_t
         | NewChain ->
-          let tout = Tvar.mk cx expr_reason in
-          let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           let lhs_t = expression cx _object in
+          let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
+            then AnyT.at ploc else Tvar.mk cx expr_reason in
+          let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           lhs_t, ref (loc, opt_use, tout) :: acc, tout
         | ContinueChain ->
-          let tout = Tvar.mk cx expr_reason in
+          let tout = AnyT.at ploc in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
-          let lhs_t, chain, _ = build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
+          let step = ref (loc, opt_use, tout) in
+          let lhs_t, chain, tobj = build_chain ~is_cond cx _object (step :: acc) in
+          let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj)
+            then tout
+            else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
+          in
           lhs_t, chain, tout
         end
         |> begin fun (lhs_t, chain, t) ->

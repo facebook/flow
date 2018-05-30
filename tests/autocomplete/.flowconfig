@@ -6,3 +6,4 @@
 
 [options]
 no_flowlib=false
+esproposal.optional_chaining=enable

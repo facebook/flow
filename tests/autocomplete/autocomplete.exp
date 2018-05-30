@@ -2062,3 +2062,31 @@ class.js = {
     }
   ]
 }
+optional_chaining_new.js = {
+  "result":[
+    {
+      "name":"bar",
+      "type":"number",
+      "func_details":null,
+      "path":"optional_chaining_new.js",
+      "line":4,
+      "endline":4,
+      "start":8,
+      "end":13
+    }
+  ]
+}
+optional_chaining_continue.js = {
+  "result":[
+    {
+      "name":"baz",
+      "type":"number",
+      "func_details":null,
+      "path":"optional_chaining_continue.js",
+      "line":8,
+      "endline":8,
+      "start":8,
+      "end":13
+    }
+  ]
+}
