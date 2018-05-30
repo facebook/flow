@@ -77,18 +77,27 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
   Lwt.return env
 
-let listen_for_messages, get_next_workload, update_env, get_files_to_recheck, wait_for_anything =
+module Monitor : sig
+  type workload = env -> env Lwt.t
+  val listen_for_messages: genv -> unit Lwt.t
+  val wait_for_anything: genv -> env -> unit Lwt.t
+  val get_next_workload: unit -> workload option
+  val update_env: env -> env
+  val get_updates_for_recheck: genv -> env -> Utils_js.FilenameSet.t
+end = struct
+  type workload = env -> env Lwt.t
+
   (* Workloads are client requests which we processes FIFO *)
-  let workload_stream, push_new_workload = Lwt_stream.create () in
+  let workload_stream, push_new_workload = Lwt_stream.create ()
   (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
    * but are quick to handle *)
-  let env_update_stream, push_new_env_update = Lwt_stream.create () in
+  let env_update_stream, push_new_env_update = Lwt_stream.create ()
   (* Files which have changed *)
-  let recheck_stream, push_files_to_recheck = Lwt_stream.create () in
+  let recheck_stream, push_files_to_recheck = Lwt_stream.create ()
 
   (* This is a thread that just keeps looping in the background. It reads messages from the
    * monitor process and adds them to a stream *)
-  let module ListenLoop = LwtLoop.Make (struct
+  module ListenLoop = LwtLoop.Make (struct
     type acc = genv
 
     let handle_message genv = function
@@ -131,45 +140,55 @@ let listen_for_messages, get_next_workload, update_env, get_files_to_recheck, wa
 
     let catch _ exn = reraise exn
   end)
-  in
 
-  let listen_for_messages = ListenLoop.run
-  in
+  let listen_for_messages genv = ListenLoop.run genv
 
   let get_next_workload () =
     match Lwt_stream.get_available_up_to 1 workload_stream with
     | [ workload ] -> Some workload
     | [] -> None
     | _ -> failwith "Unreachable"
-  in
 
   let update_env env =
     Lwt_stream.get_available env_update_stream
     |> List.fold_left (fun env f -> f env) env
-  in
 
-  let get_files_to_recheck () =
-    Lwt_stream.get_available recheck_stream
-    |> List.fold_left SSet.union SSet.empty
-  in
+  let recheck_acc = ref Utils_js.FilenameSet.empty
+  let recheck_fetch genv env =
+    recheck_acc :=
+      Lwt_stream.get_available recheck_stream (* Get all the files which have changed *)
+      |> List.fold_left SSet.union SSet.empty (* Flatten the set *)
+      |> Rechecker.process_updates genv env (* Process the changes *)
+      |> Utils_js.FilenameSet.union (!recheck_acc) (* Union them with the acc *)
+  let get_updates_for_recheck genv env =
+    recheck_fetch genv env;
+    let files = !recheck_acc in
+    recheck_acc := Utils_js.FilenameSet.empty;
+    files
+  let rec wait_for_updates_for_recheck genv env =
+    let%lwt _ = Lwt_stream.is_empty recheck_stream in
+    recheck_fetch genv env;
+    if Utils_js.FilenameSet.is_empty !recheck_acc
+    then wait_for_updates_for_recheck genv env
+    else Lwt.return_unit
 
   (* Block until any stream receives something *)
-  let wait_for_anything () =
-    let%lwt _ = Lwt.pick [
-      Lwt_stream.is_empty workload_stream;
-      Lwt_stream.is_empty env_update_stream;
-      Lwt_stream.is_empty recheck_stream;
+  let wait_for_anything genv env =
+    let%lwt () = Lwt.pick [
+      (let%lwt _ = Lwt_stream.is_empty workload_stream in Lwt.return_unit);
+      (let%lwt _ = Lwt_stream.is_empty env_update_stream in Lwt.return_unit);
+      (let%lwt _ = Lwt_stream.is_empty recheck_stream in Lwt.return_unit);
+      wait_for_updates_for_recheck genv env;
     ] in
     Lwt.return_unit
-  in
-
-  listen_for_messages, get_next_workload, update_env, get_files_to_recheck, wait_for_anything
+end
 
 let rec recheck_and_update_env_loop genv env =
-  let env = update_env env in
-  let raw_updates = get_files_to_recheck () in
-  if SSet.is_empty raw_updates then Lwt.return env else begin
-    let updates = Rechecker.process_updates genv env raw_updates in
+  let env = Monitor.update_env env in
+  let updates = Monitor.get_updates_for_recheck genv env in
+  if Utils_js.FilenameSet.is_empty updates
+  then Lwt.return env
+  else begin
     let%lwt _profiling, env = Rechecker.recheck genv env updates in
     recheck_and_update_env_loop genv env
   end
@@ -182,13 +201,13 @@ let rec serve ~genv ~env =
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
   (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
-  let%lwt () = wait_for_anything () in
+  let%lwt () = Monitor.wait_for_anything genv env in
 
   (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
   let%lwt env = recheck_and_update_env_loop genv env in
 
   (* Run a workload (if there is one) *)
-  let%lwt env = Option.value_map (get_next_workload ())
+  let%lwt env = Option.value_map (Monitor.get_next_workload ())
     ~default:(Lwt.return env)
     ~f:(fun workload -> workload env) in
 
@@ -221,7 +240,7 @@ let run ~monitor_channels ~shared_mem_config options =
 
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
-    let listening_thread = listen_for_messages genv in
+    let listening_thread = Monitor.listen_for_messages genv in
 
     (* Initialize *)
     let%lwt env =
