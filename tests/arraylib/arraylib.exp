@@ -131,6 +131,28 @@ References:
                                         ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- array_lib.js:63:48
+
+Cannot assign `Array.of(...)` to `incompatibleTypeNotOkay` because:
+ - number [1] is incompatible with string [2] in array element.
+ - number [3] is incompatible with string [2] in array element.
+
+   array_lib.js:63:48
+   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                                      ^^^^^^^^^^^^^^
+
+References:
+   array_lib.js:63:57
+   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                                               ^ [1]
+   array_lib.js:63:38
+   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                            ^^^^^^ [2]
+   array_lib.js:63:60
+   63|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+                                                                  ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- length.js:7:1
 
 Cannot assign `6` to `r.length` because property `length` is not writable.
@@ -148,4 +170,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable.
 
 
 
-Found 12 errors
+Found 14 errors
