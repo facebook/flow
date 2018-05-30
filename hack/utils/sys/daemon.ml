@@ -109,7 +109,7 @@ end = struct
         ~mode:[Open_binary]
         ~temp_dir:Sys_utils.temp_dir_name
         "daemon_param" ".bin" in
-    output_value oc data;
+    Marshal.to_channel oc data [Marshal.Closures];
     close_out oc;
     Unix.putenv "HH_SERVER_DAEMON_PARAM" file
 
