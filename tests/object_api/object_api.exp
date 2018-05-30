@@ -61,6 +61,50 @@ References:
            ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- object_entries.js:5:2
+
+Cannot cast `Object.entries(...)` to array type because:
+ - string [1] is incompatible with number [2] in array element.
+ - string [3] is incompatible with number [2] in array element.
+
+   object_entries.js:5:2
+   5| (Object.entries(a): Array<[string, number]>); // error
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   object_entries.js:3:20
+   3| const a = { first: 'test', second: 'thing' };
+                         ^^^^^^ [1]
+   object_entries.js:5:36
+   5| (Object.entries(a): Array<[string, number]>); // error
+                                         ^^^^^^ [2]
+   object_entries.js:3:36
+   3| const a = { first: 'test', second: 'thing' };
+                                         ^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- object_entries.js:9:2
+
+Cannot cast `Object.entries(...)` to array type because:
+ - number [1] is incompatible with string [2] in array element.
+ - boolean [3] is incompatible with string [2] in array element.
+
+   object_entries.js:9:2
+   9| (Object.entries(b): Array<[string, string]>); // error
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   object_entries.js:7:20
+   7| const b = { first: 1, second: true, third: 'test' };
+                         ^ [1]
+   object_entries.js:9:36
+   9| (Object.entries(b): Array<[string, string]>); // error
+                                         ^^^^^^ [2]
+   object_entries.js:7:31
+   7| const b = { first: 1, second: true, third: 'test' };
+                                    ^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- object_keys.js:5:2
 
 Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
@@ -220,8 +264,8 @@ Cannot assign `x.toString` to `xToString` because function type [1] is incompati
                                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:67:5
-   67|     toString(): string;
+   <BUILTINS>/core.js:70:5
+   70|     toString(): string;
            ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:38:17
    38| var xToString : number = x.toString; // error
@@ -237,8 +281,8 @@ Cannot assign `x.toString` to `xToString2` because string [1] is incompatible wi
                                        ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:67:17
-   67|     toString(): string;
+   <BUILTINS>/core.js:70:17
+   70|     toString(): string;
                        ^^^^^^ [1]
    object_prototype.js:39:24
    39| var xToString2 : () => number = x.toString; // error
@@ -254,8 +298,8 @@ Cannot assign `y.toString` to `yToString` because function type [1] is incompati
                                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:67:5
-   67|     toString(): string;
+   <BUILTINS>/core.js:70:5
+   70|     toString(): string;
            ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:43:17
    43| var yToString : number = y.toString; // error
@@ -285,8 +329,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is i
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:145:22
-   145|     toString(radix?: number): string;
+   <BUILTINS>/core.js:148:22
+   148|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -299,8 +343,8 @@ Cannot call `123.toString` with `null` bound to `radix` because null [1] is inco
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:145:22
-   145|     toString(radix?: number): string;
+   <BUILTINS>/core.js:148:22
+   148|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -321,8 +365,8 @@ Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] 
                                       ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:63:5
-   63|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:66:5
+   66|     hasOwnProperty(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:71:23
    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
@@ -339,8 +383,8 @@ value.
                                                          ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:63:32
-   63|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:66:32
+   66|     hasOwnProperty(prop: any): boolean;
                                       ^^^^^^^ [1]
    object_prototype.js:72:42
    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -356,8 +400,8 @@ Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] 
                                       ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:63:5
-   63|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:66:5
+   66|     hasOwnProperty(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:76:23
    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -382,8 +426,8 @@ number [2].
                                             ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:65:5
-   65|     propertyIsEnumerable(prop: any): boolean;
+   <BUILTINS>/core.js:68:5
+   68|     propertyIsEnumerable(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:96:29
    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
@@ -400,8 +444,8 @@ in the return value.
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:65:38
-   65|     propertyIsEnumerable(prop: any): boolean;
+   <BUILTINS>/core.js:68:38
+   68|     propertyIsEnumerable(prop: any): boolean;
                                             ^^^^^^^ [1]
    object_prototype.js:97:48
    97| var xPropertyIsEnumerable2 : (prop: string) => number =
@@ -418,8 +462,8 @@ number [2].
                                              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:65:5
-    65|     propertyIsEnumerable(prop: any): boolean;
+   <BUILTINS>/core.js:68:5
+    68|     propertyIsEnumerable(prop: any): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:102:29
    102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -443,8 +487,8 @@ Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:396:5
-   396|     valueOf(): number;
+   <BUILTINS>/core.js:399:5
+   399|     valueOf(): number;
             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
    122| var xValueOf : number = x.valueOf; // error
@@ -460,8 +504,8 @@ Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:68:5
-    68|     valueOf(): Object;
+   <BUILTINS>/core.js:71:5
+    71|     valueOf(): Object;
             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
@@ -485,8 +529,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:392:5
-   392|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:395:5
+   395|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
    150| var xToLocaleString : number = x.toLocaleString; // error
@@ -503,8 +547,8 @@ value.
                                               ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:392:93
-   392|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:395:93
+   395|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                     ^^^^^^ [1]
    object_prototype.js:151:30
    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -520,12 +564,68 @@ Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:66:5
-    66|     toLocaleString(): string;
+   <BUILTINS>/core.js:69:5
+    69|     toLocaleString(): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:155:23
    155| var yToLocaleString : number = y.toLocaleString; // error
                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_values.js:9:2
+
+Cannot cast `Object.values(...)` to array type because string [1] is incompatible with number [2] in array element.
+
+   object_values.js:9:2
+   9| (Object.values(b): Array<number>); // error
+       ^^^^^^^^^^^^^^^^
+
+References:
+   object_values.js:7:40
+   7| const b = { first: 1, second: 2, last: 'different' };
+                                             ^^^^^^^^^^^ [1]
+   object_values.js:9:26
+   9| (Object.values(b): Array<number>); // error
+                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:19:2
+
+Cannot cast `Object.values(...)` to array type because:
+ - string [1] is incompatible with number [2] in array element.
+ - string [3] is incompatible with number [2] in array element.
+
+   object_values.js:19:2
+   19| (Object.values(d): Array<number>); // error
+        ^^^^^^^^^^^^^^^^
+
+References:
+   object_values.js:15:11
+   15| d.first = 'test';
+                 ^^^^^^ [1]
+   object_values.js:19:26
+   19| (Object.values(d): Array<number>); // error
+                                ^^^^^^ [2]
+   object_values.js:16:12
+   16| d.second = 'another test';
+                  ^^^^^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- object_values.js:23:2
+
+Cannot cast `Object.values(...)` to array type because boolean [1] is incompatible with string [2] in array element.
+
+   object_values.js:23:2
+   23| (Object.values(d): Array<string>); // error
+        ^^^^^^^^^^^^^^^^
+
+References:
+   object_values.js:21:15
+   21| d.something = true;
+                     ^^^^ [1]
+   object_values.js:23:26
+   23| (Object.values(d): Array<string>); // error
+                                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:3:2
@@ -537,8 +637,8 @@ Cannot cast `o1_proto.toString` to empty because function type [1] is incompatib
         ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:67:5
-   67|     toString(): string;
+   <BUILTINS>/core.js:70:5
+   70|     toString(): string;
            ^^^^^^^^^^^^^^^^^^ [1]
    proto.js:3:21
     3| (o1_proto.toString: empty); // error: function ~> empty
@@ -591,4 +691,4 @@ References:
 
 
 
-Found 39 errors
+Found 47 errors
