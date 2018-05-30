@@ -241,20 +241,20 @@ let showMessageRequest
   let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
   let i_outstanding_local_handlers = IdMap.add id handler ienv.i_outstanding_local_handlers in
   let ienv = { ienv with i_outstanding_local_requests; i_outstanding_local_handlers; } in
-  (ShowMessageRequest.Some { id; }, ienv)
+  (ShowMessageRequest.Present { id; }, ienv)
 
 (* This function merely posts a $/cancelRequest notification; the client   *)
 (* will respond asynchronously, maybe with RequestCancelled response, or   *)
 (* maybe with a real respoonse.                                            *)
 let dismiss_showMessageRequest (dialog: ShowMessageRequest.t) : ShowMessageRequest.t =
   begin match dialog with
-    | ShowMessageRequest.None -> ()
-    | ShowMessageRequest.Some { id; _ } ->
+    | ShowMessageRequest.Absent -> ()
+    | ShowMessageRequest.Present { id; _ } ->
       let notification = CancelRequestNotification { CancelRequest.id; } in
       let json = Lsp_fmt.print_lsp (NotificationMessage notification) in
       to_stdout json
   end;
-  ShowMessageRequest.None
+  ShowMessageRequest.Absent
 
 
 let send_to_server (env: connected_env) (request: Persistent_connection_prot.request) : unit =
@@ -342,7 +342,7 @@ let show_connected (start_time: float) (env: connected_env) : state =
     let msg = Printf.sprintf "Flow server is now ready, after %i seconds." seconds in
     let clear_flag state = match state with
       | Connected cenv ->
-        Connected { cenv with c_dialog_connected = ShowMessageRequest.None; }
+        Connected { cenv with c_dialog_connected = ShowMessageRequest.Absent; }
       | _ -> state in
     let handle_error (_e, _stack) state = clear_flag state in
     let handle_result _r state = clear_flag state in
@@ -361,13 +361,13 @@ let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env)
     Lsp_helpers.log_info to_stdout "Starting Flow server";
 
   let (d_dialog_connecting, d_ienv) = match env.d_dialog_connecting with
-    | ShowMessageRequest.Some _ -> env.d_dialog_connecting, env.d_ienv
-    | ShowMessageRequest.None when not env.d_dialog_connecting_can_show ->
+    | ShowMessageRequest.Present _ -> env.d_dialog_connecting, env.d_ienv
+    | ShowMessageRequest.Absent when not env.d_dialog_connecting_can_show ->
       env.d_dialog_connecting, env.d_ienv
-    | ShowMessageRequest.None -> begin
+    | ShowMessageRequest.Absent -> begin
       let clear_flag state = match state with
         | Disconnected e -> Disconnected { e with
-            d_dialog_connecting = ShowMessageRequest.None;
+            d_dialog_connecting = ShowMessageRequest.Absent;
             d_dialog_connecting_can_show = false;
           }
         | _ -> state in
@@ -424,24 +424,24 @@ let show_disconnected
   in
 
   let (d_dialog_stopped, d_ienv) = match env.d_dialog_stopped with
-    | ShowMessageRequest.Some _ -> env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.None when not env.d_dialog_stopped_can_show ->
+    | ShowMessageRequest.Present _ -> env.d_dialog_stopped, env.d_ienv
+    | ShowMessageRequest.Absent when not env.d_dialog_stopped_can_show ->
       env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.None -> begin
+    | ShowMessageRequest.Absent -> begin
       let handle_error (_e, _stack) state = match state with
-        | Disconnected e -> Disconnected { e with d_dialog_stopped = ShowMessageRequest.None; }
+        | Disconnected e -> Disconnected { e with d_dialog_stopped = ShowMessageRequest.Absent; }
         | _ -> state in
       let handle_result result state = match state, result with
         | Disconnected e, Some { ShowMessageRequest.title = "Restart"; } ->
           (* on the next tick, try_connect will invoke start_flow_server... *)
           Disconnected { e with
-            d_dialog_stopped = ShowMessageRequest.None;
+            d_dialog_stopped = ShowMessageRequest.Absent;
             d_autostart = true;
           }
         | Disconnected e, _ ->
           (* on subsequent ticks, try_connect won't display errors and won't autostart... *)
           Disconnected { e with
-            d_dialog_stopped = ShowMessageRequest.None;
+            d_dialog_stopped = ShowMessageRequest.Absent;
             d_dialog_stopped_can_show = false;
           }
         | _ ->
@@ -504,10 +504,10 @@ let try_connect (env: disconnected_env) : state =
       c_conn = { ic; oc; };
       c_server_status = (ServerStatus.initial_status, None);
       c_about_to_exit_code = None;
-      c_dialog_connected = ShowMessageRequest.None;
+      c_dialog_connected = ShowMessageRequest.Absent;
       c_is_rechecking = false;
       c_diagnostics = SMap.empty;
-      c_recheck_progress = Progress.None;
+      c_recheck_progress = Progress.Absent;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
       c_outstanding_progress = ISet.empty;
       c_outstanding_action = ISet.empty;
@@ -956,12 +956,12 @@ begin
       d_autostart = true;
       d_start_time =  Unix.gettimeofday ();
       d_server_status = None;
-      d_dialog_stopped = ShowMessageRequest.None;
+      d_dialog_stopped = ShowMessageRequest.Absent;
       d_dialog_stopped_can_show = true;
-      d_actionRequired_stopped = ActionRequired.None;
-      d_dialog_connecting = ShowMessageRequest.None;
+      d_actionRequired_stopped = ActionRequired.Absent;
+      d_dialog_connecting = ShowMessageRequest.Absent;
       d_dialog_connecting_can_show = true;
-      d_progress_connecting = Progress.None;
+      d_progress_connecting = Progress.Absent;
       d_editor_open_files = SMap.empty;
     } in
     try_connect env
@@ -1169,12 +1169,12 @@ and main_handle_error
       d_autostart;
       d_start_time =  Unix.time ();
       d_server_status = None;
-      d_dialog_stopped = ShowMessageRequest.None;
+      d_dialog_stopped = ShowMessageRequest.Absent;
       d_dialog_stopped_can_show = true;
-      d_actionRequired_stopped = ActionRequired.None;
-      d_dialog_connecting = ShowMessageRequest.None;
+      d_actionRequired_stopped = ActionRequired.Absent;
+      d_dialog_connecting = ShowMessageRequest.Absent;
       d_dialog_connecting_can_show = true;
-      d_progress_connecting = Progress.None;
+      d_progress_connecting = Progress.Absent;
       d_editor_open_files = Option.value (get_editor_open_files state) ~default:SMap.empty;
     }
     in

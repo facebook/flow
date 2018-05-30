@@ -791,7 +791,7 @@ end
 
 (* ShowMessage request, method="window/showMessageRequest" *)
 module ShowMessageRequest = struct
-  type t = Some of {id: lsp_id;} | None
+  type t = Present of {id: lsp_id;} | Absent
 
   and params = showMessageRequestParams
 
@@ -811,7 +811,7 @@ end
 
 (* Progress notification, method="window/progress" *)
 module Progress = struct
-  type t = Some of {id: int; label: string;} | None
+  type t = Present of {id: int; label: string;} | Absent
 
   and params = progressParams
 
@@ -828,7 +828,7 @@ end
 
 (* ActionRequired notification, method="window/actionRequired" *)
 module ActionRequired = struct
-  type t = Some of {id: int; label: string;} | None
+  type t = Present of {id: int; label: string;} | Absent
 
   and params = actionRequiredParams
 

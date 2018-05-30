@@ -139,27 +139,27 @@ let notify_progress_raw
     (label: string option)
   : 'a * Progress.t =
   match id, label with
-  | Progress.None, Some label ->
+  | Progress.Absent, Some label ->
     if supports_progress p then
       let () = incr progress_and_actionRequired_counter in
       let id = !progress_and_actionRequired_counter in
       let msg = { Progress.id; label = Some label; } in
       let state = writer state msg in
-      (state, Progress.Some { id; label; })
+      (state, Progress.Present { id; label; })
     else
-      (state, Progress.None)
-  | Progress.Some { id; label; }, Some new_label when label = new_label ->
-    (state, Progress.Some { id; label; })
-  | Progress.Some { id; _ }, Some label ->
+      (state, Progress.Absent)
+  | Progress.Present { id; label; }, Some new_label when label = new_label ->
+    (state, Progress.Present { id; label; })
+  | Progress.Present { id; _ }, Some label ->
     let msg = { Progress.id; label = Some label; } in
     let state = writer state msg in
-    (state, Progress.Some { id; label; })
-  | Progress.Some { id; _ }, None ->
+    (state, Progress.Present { id; label; })
+  | Progress.Present { id; _ }, None ->
     let msg = { Progress.id; label = None; } in
     let state = writer state msg in
-    (state, Progress.None)
-  | Progress.None, None ->
-    (state, Progress.None)
+    (state, Progress.Absent)
+  | Progress.Absent, None ->
+    (state, Progress.Absent)
 
 let notify_progress
     (p: Lsp.Initialize.params)
@@ -181,22 +181,22 @@ let notify_actionRequired
     (label: string option)
   : ActionRequired.t =
   match id, label with
-  | ActionRequired.None, Some label ->
+  | ActionRequired.Absent, Some label ->
     if supports_actionRequired p then
       let () = incr progress_and_actionRequired_counter in
       let id = !progress_and_actionRequired_counter in
       let () = print_actionRequired id (Some label)
         |> Jsonrpc.notify writer "window/actionRequired" in
-      ActionRequired.Some { id; label; }
+      ActionRequired.Present { id; label; }
     else
-      ActionRequired.None
-  | ActionRequired.Some { id; label; }, Some new_label when label = new_label ->
-    ActionRequired.Some { id; label; }
-  | ActionRequired.Some { id; _ }, Some label ->
+      ActionRequired.Absent
+  | ActionRequired.Present { id; label; }, Some new_label when label = new_label ->
+    ActionRequired.Present { id; label; }
+  | ActionRequired.Present { id; _ }, Some label ->
     print_actionRequired id (Some label) |> Jsonrpc.notify writer "window/actionRequired";
-    ActionRequired.Some { id; label; }
-  | ActionRequired.Some { id; _ }, None ->
+    ActionRequired.Present { id; label; }
+  | ActionRequired.Present { id; _ }, None ->
     print_actionRequired id None |> Jsonrpc.notify writer "window/actionRequired";
-    ActionRequired.None
-  | ActionRequired.None, None ->
-    ActionRequired.None
+    ActionRequired.Absent
+  | ActionRequired.Absent, None ->
+    ActionRequired.Absent
