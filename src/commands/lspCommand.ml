@@ -103,10 +103,11 @@ and disconnected_env = {
   d_autostart: bool;
   d_start_time: float;
   d_server_status: (ServerStatus.status * FileWatcherStatus.status) option;
-  d_dialog_stopped_ok: bool; (* if the user has already dismissed it, don't reshow *)
   d_dialog_stopped: ShowMessageRequest.t; (* "Flow server is stopped. [Restart]" *)
+  d_dialog_stopped_can_show: bool; (* if the user has already dismissed it, don't reshow *)
   d_actionRequired_stopped: ActionRequired.t; (* "Flow server is stopped." *)
   d_dialog_connecting: ShowMessageRequest.t; (* "Connecting to Flow server." *)
+  d_dialog_connecting_can_show: bool; (* if the user has already dismissed it, don't reshow *)
   d_progress_connecting: Progress.t; (* e.g. "Connecting... busy/initializing [53s]" *)
 }
 
@@ -361,9 +362,14 @@ let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env)
 
   let (d_dialog_connecting, d_ienv) = match env.d_dialog_connecting with
     | ShowMessageRequest.Some _ -> env.d_dialog_connecting, env.d_ienv
+    | ShowMessageRequest.None when not env.d_dialog_connecting_can_show ->
+      env.d_dialog_connecting, env.d_ienv
     | ShowMessageRequest.None -> begin
       let clear_flag state = match state with
-        | Disconnected e -> Disconnected { e with d_dialog_connecting = ShowMessageRequest.None; }
+        | Disconnected e -> Disconnected { e with
+            d_dialog_connecting = ShowMessageRequest.None;
+            d_dialog_connecting_can_show = false;
+          }
         | _ -> state in
       let handle_error (_e, _stack) state = clear_flag state in
       let handle_result _r state = clear_flag state in
@@ -419,7 +425,8 @@ let show_disconnected
 
   let (d_dialog_stopped, d_ienv) = match env.d_dialog_stopped with
     | ShowMessageRequest.Some _ -> env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.None when not env.d_dialog_stopped_ok -> env.d_dialog_stopped, env.d_ienv
+    | ShowMessageRequest.None when not env.d_dialog_stopped_can_show ->
+      env.d_dialog_stopped, env.d_ienv
     | ShowMessageRequest.None -> begin
       let handle_error (_e, _stack) state = match state with
         | Disconnected e -> Disconnected { e with d_dialog_stopped = ShowMessageRequest.None; }
@@ -435,7 +442,7 @@ let show_disconnected
           (* on subsequent ticks, try_connect won't display errors and won't autostart... *)
           Disconnected { e with
             d_dialog_stopped = ShowMessageRequest.None;
-            d_dialog_stopped_ok = false;
+            d_dialog_stopped_can_show = false;
           }
         | _ ->
           state in
@@ -934,10 +941,11 @@ begin
       d_autostart = true;
       d_start_time =  Unix.gettimeofday ();
       d_server_status = None;
-      d_dialog_stopped_ok = true;
       d_dialog_stopped = ShowMessageRequest.None;
+      d_dialog_stopped_can_show = true;
       d_actionRequired_stopped = ActionRequired.None;
       d_dialog_connecting = ShowMessageRequest.None;
+      d_dialog_connecting_can_show = true;
       d_progress_connecting = Progress.None;
       d_editor_open_files = SMap.empty;
     } in
@@ -1146,10 +1154,11 @@ and main_handle_error
       d_autostart;
       d_start_time =  Unix.time ();
       d_server_status = None;
-      d_dialog_stopped_ok = true;
       d_dialog_stopped = ShowMessageRequest.None;
+      d_dialog_stopped_can_show = true;
       d_actionRequired_stopped = ActionRequired.None;
       d_dialog_connecting = ShowMessageRequest.None;
+      d_dialog_connecting_can_show = true;
       d_progress_connecting = Progress.None;
       d_editor_open_files = Option.value (get_editor_open_files state) ~default:SMap.empty;
     }
