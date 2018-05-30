@@ -320,14 +320,16 @@ let merge_runner ~job ~intermediate_result_callback ~options ~workers
   ) component_map in
 
   let start_time = Unix.gettimeofday () in
+  let {Merge_stream.next; merge;} = Merge_stream.make
+    ~dependency_graph ~leader_map ~component_map ~recheck_leader_map ~intermediate_result_callback
+  in
   (* returns parallel lists of filenames, error sets, and suppression sets *)
   let%lwt ret = MultiWorkerLwt.call
     workers
     ~job: (merge_strict_job ~options ~job)
     ~neutral: []
-    ~merge: (Merge_stream.join intermediate_result_callback)
-    ~next: (Merge_stream.make
-              dependency_graph leader_map component_map recheck_leader_map)
+    ~merge
+    ~next
   in
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
