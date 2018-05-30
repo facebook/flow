@@ -506,6 +506,7 @@ let try_connect (env: disconnected_env) : state =
     new_state
 
   | Error (CommandConnectSimple.Server_missing as reason) ->
+    (* Server_missing means the lock file is absent, because the server isn't running *)
     let new_env = { env with d_autostart = false; } in
     if env.d_autostart then
       let start_result = CommandConnect.start_flow_server start_env in
@@ -515,11 +516,34 @@ let try_connect (env: disconnected_env) : state =
     else
       show_disconnected None None new_env
 
-  | Error (CommandConnectSimple.Build_id_mismatch as reason)
-  | Error (CommandConnectSimple.Server_socket_missing as reason)
+  | Error (CommandConnectSimple.Server_socket_missing as reason) ->
+    (* Server_socket_missing means the server is present but lacks its sock *)
+    (* file. There's a tiny race possibility that the server has created a  *)
+    (* lock but not yet created a sock file. More likely is that the server *)
+    (* is an old version of the server which doesn't even create the right  *)
+    (* sock file. We'll kill the server now so we can start a new one next. *)
+    (* And if it was in that race? bad luck... *)
+    begin try
+      let tmp_dir = start_env.CommandConnect.tmp_dir in
+      let root = start_env.CommandConnect.root in
+      CommandMeanKill.mean_kill ~tmp_dir root;
+      show_connecting reason env
+    with CommandMeanKill.FailedToKill _ ->
+      let msg = "An old version of the Flow server is running. Please stop it." in
+      show_disconnected None (Some msg) env
+    end
+
+  | Error (CommandConnectSimple.Build_id_mismatch as reason) ->
+    (* Build_id_mismatch is because the server version was different from client *)
+    (* and the server terminates immediately after telling us this - so we'll    *)
+    (* just keep trying to connect, and the next time we'll start a new server.  *)
+    show_connecting reason env
+
   | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Fail_on_init) as reason)
   | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients) as reason)
   | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding) as reason) ->
+    (* These are all cases where the right version of the server is running but *)
+    (* it's not speaking to us just now. So we'll keep trying until it's ready. *)
     show_connecting reason env
 
 

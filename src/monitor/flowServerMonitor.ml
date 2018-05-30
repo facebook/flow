@@ -99,8 +99,10 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
    *)
   let monitor_socket_fd =
     Socket.init_unix_socket (Server_files_js.socket_file ~tmp_dir root) in
-  let legacy_socket_fd =
-    Socket.init_unix_socket (Server_files_js.legacy_socket_file ~tmp_dir root) in
+  let legacy2_socket_fd =
+    Socket.init_unix_socket (Server_files_js.legacy2_socket_file ~tmp_dir root) in
+  let legacy1_socket_fd =
+    Socket.init_unix_socket (Server_files_js.legacy1_socket_file ~tmp_dir root) in
 
   (************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************)
 
@@ -144,7 +146,12 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     );
     Lwt.async (fun () ->
       SocketAcceptor.run_legacy (
-        Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy_socket_fd
+        Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd
+      )
+    );
+    Lwt.async (fun () ->
+      SocketAcceptor.run_legacy (
+        Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd
       )
     );
 
