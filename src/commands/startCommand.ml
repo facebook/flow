@@ -21,8 +21,7 @@ let spec = { CommandSpec.
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
       |> lazy_flags
-      |> flag "--autostop" no_arg
-          ~doc:"" (* empty to omit it from --help *)
+      |> autostop_flag
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
@@ -89,7 +88,7 @@ let main
   (* A quiet `flow start` doesn't imply a quiet `flow server` *)
   let server_options = { options with Options.opt_quiet = false } in
 
-  let monitor_options = FlowServerMonitorOptions.({
+  let monitor_options = { FlowServerMonitorOptions.
     log_file = monitor_log_file;
     autostop;
     no_restart;
@@ -98,7 +97,7 @@ let main
     shared_mem_config;
     argv = Sys.argv;
     file_watcher;
-  }) in
+  } in
 
   FlowServerMonitor.daemonize ~wait ~on_spawn monitor_options
 

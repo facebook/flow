@@ -30,6 +30,8 @@ let spec = {
     empty
     |> temp_dir_flag
     |> shm_flags
+    |> lazy_flags
+    |> autostop_flag
     |> from_flag
   )
 }
@@ -478,7 +480,6 @@ let try_connect (env: disconnected_env) : state =
     lsp_exit_bad ()
   end;
   let start_env = CommandUtils.make_env env.d_ienv.i_connect_params env.d_ienv.i_root in
-  let start_env = { start_env with CommandConnect.autostop = true; } in
 
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
@@ -888,6 +889,8 @@ let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
 let rec main
     (temp_dir: string option)
     (shm_flags: CommandUtils.shared_mem_params)
+    (lazy_mode: Options.lazy_mode option)
+    (autostop: bool)
     (from: string option)
     ((): unit)
   : unit =
@@ -898,6 +901,8 @@ let rec main
     timeout = None;
     no_auto_start = false;
     temp_dir;
+    autostop;
+    lazy_mode;
     shm_flags;
     ignore_version = false;
     quiet = false;

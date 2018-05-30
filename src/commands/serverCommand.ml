@@ -62,7 +62,7 @@ let main lazy_mode options_flags shm_flags ignore_version from
     |> Path.to_string
   in
 
-  let monitor_options = FlowServerMonitorOptions.({
+  let monitor_options = { FlowServerMonitorOptions.
     log_file = monitor_log_file;
     autostop = false;
     no_restart;
@@ -71,7 +71,7 @@ let main lazy_mode options_flags shm_flags ignore_version from
     shared_mem_config;
     argv = Sys.argv;
     file_watcher;
-  }) in
+  } in
 
   FlowServerMonitor.start monitor_options
 

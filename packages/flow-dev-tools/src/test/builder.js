@@ -392,9 +392,9 @@ export class TestBuilder {
     const primaryArg = mode === 'lsp' ? 'lsp' : 'ide';
     const args =
       mode === 'lsp'
-        ? [primaryArg]
+        ? ['lsp', '--autostop', '--lazy-mode', 'ide']
         : [
-            primaryArg,
+            'ide',
             '--protocol',
             'very-unstable',
             '--no-auto-start',

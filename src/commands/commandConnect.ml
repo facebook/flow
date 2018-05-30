@@ -12,6 +12,7 @@ type env = {
   autostart : bool;
   retries : int;
   expiry : float option;
+  lazy_mode : Options.lazy_mode option;
   autostop : bool;
   tmp_dir : string;
   shm_dirs : string list option;
@@ -40,6 +41,7 @@ let flag name value arr =
 let start_flow_server env =
   let {
     tmp_dir;
+    lazy_mode;
     autostop;
     shm_dirs;
     shm_min_avail;
@@ -61,6 +63,8 @@ let start_flow_server env =
   |> arg_map "--sharedmemory-minimum-available" ~f:string_of_int shm_min_avail
   |> arg_map "--sharedmemory-log-level" ~f:string_of_int shm_log_level
   |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs
+  |> arg_map "--lazy-mode" lazy_mode
+       ~f:(function Options.LAZY_MODE_FILESYSTEM -> "fs" | Options.LAZY_MODE_IDE -> "ide")
   |> arg "--temp-dir" (Some tmp_dir)
   |> arg "--from" FlowEventLogger.((get_context ()).from)
   |> flag "--ignore-version" ignore_version

@@ -287,6 +287,12 @@ let path_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Specify (fake) path to file when reading data from stdin"
 )
 
+let autostop_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--autostop" no_arg
+      ~doc:"" (* empty to omit it from --help *)
+)
+
 let verbose_flags =
   let collector main verbose indent depth =
     let opt_verbose =
@@ -541,6 +547,8 @@ type command_params = {
   retry_if_init      : bool;
   timeout            : int option;
   no_auto_start      : bool;
+  autostop           : bool;
+  lazy_mode          : Options.lazy_mode option;
   temp_dir           : string option;
   shm_flags          : shared_mem_params;
   ignore_version     : bool;
@@ -574,6 +582,8 @@ let collect_server_flags
     timeout = timeout;
     no_auto_start = no_auto_start;
     temp_dir;
+    autostop = false;
+    lazy_mode = None;
     shm_flags;
     ignore_version;
     quiet;
@@ -856,9 +866,10 @@ let make_env server_flags root =
   { CommandConnect.
     root;
     autostart = not server_flags.no_auto_start;
+    lazy_mode = server_flags.lazy_mode;
     retries;
     expiry;
-    autostop = false;
+    autostop = server_flags.autostop;
     tmp_dir;
     shm_dirs;
     shm_min_avail = server_flags.shm_flags.shm_min_avail;
