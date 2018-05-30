@@ -933,6 +933,15 @@ begin
       i_outstanding_requests_from_server = WrappedMap.empty;
       i_isConnected = false;
     } in
+    (* If the version in .flowconfig is simply incompatible with our current *)
+    (* binary then it doesn't even make sense for us to start up. And future *)
+    (* attempts by the client to launch us will fail as well. Clients which  *)
+    (* receive the following response are expected to shut down their LSP.   *)
+    let required_version = get_current_version i_root in
+    begin match CommandUtils.check_version required_version with
+      | Ok () -> ()
+      | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
+    end;
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;

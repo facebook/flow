@@ -353,18 +353,25 @@ let log_file_flags =
         ~env:"FLOW_MONITOR_LOG_FILE"
   )
 
-let assert_version flowconfig =
-  match FlowConfig.required_version flowconfig with
-  | None -> ()
+let check_version required_version =
+  match required_version with
+  | None -> Ok ()
   | Some version_constraint ->
-    if not (Semver.satisfies version_constraint Flow_version.version)
-    then
+    if Semver.satisfies version_constraint Flow_version.version then
+      Ok ()
+    else
       let msg = Utils_js.spf
         "Wrong version of Flow. The config specifies version %s but this is version %s"
         version_constraint
         Flow_version.version
       in
-      FlowExitStatus.(exit ~msg Invalid_flowconfig)
+      Error msg
+
+let assert_version flowconfig =
+  let required_version = FlowConfig.required_version flowconfig in
+  match (check_version required_version) with
+  | Ok () -> ()
+  | Error msg -> FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
 type flowconfig_params = {
   ignores: string list;
