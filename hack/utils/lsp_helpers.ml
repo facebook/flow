@@ -131,31 +131,48 @@ let notify_connectionStatus
 (* No-op, for convenience: id=None, message=None, and you get back None     *)
 (* messages. To start a new progress notifier, put id=None and message=Some *)
 
+let notify_progress_raw
+    (state: 'a)
+    (p: Lsp.Initialize.params)
+    (writer: 'a -> Progress.params -> 'a)
+    (id: Progress.t)
+    (label: string option)
+  : 'a * Progress.t =
+  match id, label with
+  | Progress.None, Some label ->
+    if supports_progress p then
+      let () = incr progress_and_actionRequired_counter in
+      let id = !progress_and_actionRequired_counter in
+      let msg = { Progress.id; label = Some label; } in
+      let state = writer state msg in
+      (state, Progress.Some { id; label; })
+    else
+      (state, Progress.None)
+  | Progress.Some { id; label; }, Some new_label when label = new_label ->
+    (state, Progress.Some { id; label; })
+  | Progress.Some { id; _ }, Some label ->
+    let msg = { Progress.id; label = Some label; } in
+    let state = writer state msg in
+    (state, Progress.Some { id; label; })
+  | Progress.Some { id; _ }, None ->
+    let msg = { Progress.id; label = None; } in
+    let state = writer state msg in
+    (state, Progress.None)
+  | Progress.None, None ->
+    (state, Progress.None)
+
 let notify_progress
     (p: Lsp.Initialize.params)
     (writer: Jsonrpc.writer)
     (id: Progress.t)
     (label: string option)
   : Progress.t =
-  match id, label with
-  | Progress.None, Some label ->
-    if supports_progress p then
-      let () = incr progress_and_actionRequired_counter in
-      let id = !progress_and_actionRequired_counter in
-      let () = print_progress id (Some label) |> Jsonrpc.notify writer "window/progress" in
-      Progress.Some { id; label; }
-    else
-      Progress.None
-  | Progress.Some { id; label; }, Some new_label when label = new_label ->
-    Progress.Some { id; label; }
-  | Progress.Some { id; _ }, Some label ->
-    print_progress id (Some label) |> Jsonrpc.notify writer "window/progress";
-    Progress.Some { id; label; }
-  | Progress.Some { id; _ }, None ->
-    print_progress id None |> Jsonrpc.notify writer "window/progress";
-    Progress.None
-  | Progress.None, None ->
-    Progress.None
+  let writer_wrapper () params =
+    let json = print_progress params.Progress.id params.Progress.label in
+    Jsonrpc.notify writer "window/progress" json in
+  let ((), id) = notify_progress_raw () p writer_wrapper id label
+  in
+  id
 
 let notify_actionRequired
     (p: Lsp.Initialize.params)

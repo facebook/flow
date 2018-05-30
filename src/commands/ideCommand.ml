@@ -85,6 +85,7 @@ module HumanReadable: ClientProtocol = struct
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
         ^ (string_of_int warn_count) ^ " warnings")
     | Prot.ServerExit _code -> () (* ignored here; used in lspCommand *)
+    | Prot.Please_hold _status -> () (* ignored here; used in lspCommand *)
     | Prot.LspFromServer _ -> failwith "no lspFromServer to ideCommand"
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
@@ -127,6 +128,7 @@ module VeryUnstable: ClientProtocol = struct
     | Prot.Errors {errors; warnings} ->
       print_errors ~strip_root ~json_version errors warnings
     | Prot.ServerExit _code -> () (* ignored here, but used in lspCommand *)
+    | Prot.Please_hold _status -> () (* ignored here, but used in lspCommand *)
     | Prot.LspFromServer _ -> failwith "no lspFromServer to ideCommand"
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
@@ -240,6 +242,7 @@ end = struct
       | Errors _, _
       | ServerExit _, _
       | LspFromServer _, _
+      | Please_hold _, _
       | StartRecheck, _
       | EndRecheck, _ ->
           t

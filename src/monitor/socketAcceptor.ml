@@ -22,22 +22,40 @@ let handle_persistent_message ~client_id ~msg ~connection:_ =
   Logger.debug "Persistent connection #%d received a message!" client_id;
   Lwt.return (Server.send_persistent_request ~client_id ~request:msg)
 
-(* A loop that sends the Server's busy status to a waiting ephemeral connection every 0.5 seconds *)
-module StatusLoop = LwtLoop.Make (struct
-  type acc = EphemeralConnection.t
+module type STATUS_WRITER = sig
+  type t
+  val write : ServerStatus.status * FileWatcherStatus.status -> t -> unit
+end
+
+
+(* A loop that sends the Server's busy status to a waiting connection every 0.5 seconds *)
+module StatusLoop (Writer: STATUS_WRITER) = LwtLoop.Make (struct
+  type acc = Writer.t
 
   let main conn =
     let%lwt status = StatusStream.wait_for_signficant_status ~timeout:0.5 in
-    EphemeralConnection.write ~msg:(MonitorProt.Please_hold status) conn;
+    Writer.write status conn;
     Lwt.return conn
 
   let catch _ exn =
     begin match exn with
     (* The connection closed its write stream, likely it is closed or closing *)
     | Lwt_stream.Closed -> ()
-    | exn -> Logger.error ~exn "StatusLoop threw and exception"
+    | exn -> Logger.error ~exn "StatusLoop threw an exception"
     end;
     Lwt.return_unit
+end)
+
+module EphemeralStatusLoop = StatusLoop (struct
+  type t = EphemeralConnection.t
+  let write status conn =
+    EphemeralConnection.write ~msg:(MonitorProt.Please_hold status) conn
+end)
+
+module PersistentStatusLoop = StatusLoop (struct
+  type t = PersistentConnection.t
+  let write status conn =
+    PersistentConnection.write ~msg:(Persistent_connection_prot.Please_hold status) conn
 end)
 
 let create_ephemeral_connection ~client_fd ~close =
@@ -66,7 +84,7 @@ let create_ephemeral_connection ~client_fd ~close =
   EphemeralConnection.write ~msg:(MonitorProt.Please_hold (StatusStream.get_status ())) conn;
 
   (* Start sending the status to the ephemeral connection *)
-  Lwt.async (fun () -> StatusLoop.run ~cancel_condition:ExitSignal.signal conn);
+  Lwt.async (fun () -> EphemeralStatusLoop.run ~cancel_condition:ExitSignal.signal conn);
 
   Lwt.return_unit
 
@@ -109,6 +127,9 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
   Lwt.async (fun () ->
     PersistentConnectionMap.add ~client_id ~client:conn;
     start ();
+    PersistentConnection.write
+      ~msg:(Persistent_connection_prot.Please_hold (StatusStream.get_status ())) conn;
+    let%lwt () = PersistentStatusLoop.run ~cancel_condition:ExitSignal.signal conn in
     Lwt.return_unit
   );
 

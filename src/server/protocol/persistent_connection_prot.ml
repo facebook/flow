@@ -39,6 +39,7 @@ type response =
   | DidCloseAck
   | ServerExit of FlowExitStatus.t (* only used for the subset of exists which client handles *)
   | LspFromServer of Lsp.lsp_message (* requests, notifications, responses to client *)
+  | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
 
 let string_of_response = function
 | Errors _ -> "errors"
@@ -49,3 +50,6 @@ let string_of_response = function
 | DidCloseAck -> "didCloseAck"
 | ServerExit code -> "serverExit_" ^ (FlowExitStatus.to_string code)
 | LspFromServer _ -> "lspFromServer"
+| Please_hold (server_status, watcher_status) -> Printf.sprintf "pleaseHold_server=%s_watcher=%s"
+    (ServerStatus.string_of_status server_status)
+    (FileWatcherStatus.string_of_status watcher_status)

@@ -107,18 +107,20 @@ and disconnected_env = {
   d_dialog_stopped: ShowMessageRequest.t; (* "Flow server is stopped. [Restart]" *)
   d_actionRequired_stopped: ActionRequired.t; (* "Flow server is stopped." *)
   d_dialog_connecting: ShowMessageRequest.t; (* "Connecting to Flow server." *)
-  d_progress_connecting: Progress.t; (* "Connecting... busy/initializing [53s]" *)
+  d_progress_connecting: Progress.t; (* e.g. "Connecting... busy/initializing [53s]" *)
 }
 
 and connected_env = {
   c_ienv: initialized_env;
   c_conn: server_conn;
+  c_server_status: ServerStatus.status * (FileWatcherStatus.status option);
   c_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   c_about_to_exit_code: FlowExitStatus.t option;
   c_dialog_connected: ShowMessageRequest.t; (* "Connected to Flow server" *)
   (* stateful handling of Errors messages from server... *)
   c_is_rechecking: bool;
   c_diagnostics: PublishDiagnostics.diagnostic list SMap.t;
+  c_recheck_progress: Progress.t; (* e.g. "Rechecking merging 5/20 files" *)
   (* if server gets disconnected, we will tidy up these things... *)
   c_outstanding_requests_to_server: Lsp.IdSet.t;
   c_outstanding_progress: ISet.t; (* we'll send progress(null) *)
@@ -493,10 +495,12 @@ let try_connect (env: disconnected_env) : state =
     let new_env = {
       c_ienv = { env.d_ienv with i_server_id; };
       c_conn = { ic; oc; };
+      c_server_status = (ServerStatus.initial_status, None);
       c_about_to_exit_code = None;
       c_dialog_connected = ShowMessageRequest.None;
       c_is_rechecking = false;
       c_diagnostics = SMap.empty;
+      c_recheck_progress = Progress.None;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
       c_outstanding_progress = ISet.empty;
       c_outstanding_action = ISet.empty;
@@ -826,6 +830,29 @@ let do_replacement_diagnostics
   state
 
 
+let show_recheck_progress (cenv: connected_env) : state =
+  (* TODO: this functionality should be moved inside flow server... *)
+  let writer state params =
+    let msg = NotificationMessage (ProgressNotification params) in
+    let state = track_from_server state msg in
+    to_stdout (Lsp_fmt.print_lsp msg);
+    state
+  in
+  let label = match cenv.c_is_rechecking, cenv.c_server_status with
+    | true, (server_status, _) when not (ServerStatus.is_free server_status) ->
+      Some ("Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status))
+    | true, _ -> Some "Flow: Server is rechecking..."
+    | false, _ -> None in
+  let state = Connected cenv in
+
+  let (state, c_recheck_progress) = Lsp_helpers.notify_progress_raw state
+    cenv.c_ienv.i_initialize_params writer cenv.c_recheck_progress label in
+
+  let state = match state with
+    | Connected cenv -> Connected { cenv with c_recheck_progress; }
+    | _ -> failwith "notify_progress shouldn't be changing state so much" in
+  state
+
 let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
   (* to know how to parse a response, we must provide the corresponding request *)
   let outstanding (id: lsp_id) : lsp_request =
@@ -1046,26 +1073,15 @@ begin
       do_replacement_diagnostics cenv all
 
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
-    let state = Connected {cenv with c_is_rechecking = true;} in
-    if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
-      let msg = NotificationMessage
-        (ProgressNotification { Lsp.Progress.id = 1; label = Some "Flow rechecking..."; }) in
-      let state = track_from_server state msg in
-      to_stdout (Lsp_fmt.print_lsp msg);
-      state
-    else
-      state
+    show_recheck_progress { cenv with c_is_rechecking = true; }
 
   | Connected cenv, Server_message Persistent_connection_prot.EndRecheck ->
-    let state = Connected {cenv with c_is_rechecking = false;} in
-    if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
-      let msg = NotificationMessage
-        (ProgressNotification { Lsp.Progress.id = 1; label = None; }) in
-      let state = track_from_server state msg in
-      to_stdout (Lsp_fmt.print_lsp msg);
-      state
-    else
-      state
+    show_recheck_progress { cenv with c_is_rechecking = false; }
+
+  | Connected cenv, Server_message (Persistent_connection_prot.Please_hold status) ->
+    let (server_status, watcher_status) = status in
+    let c_server_status = (server_status, Some watcher_status) in
+    show_recheck_progress { cenv with c_server_status; }
 
   | _, Server_message _ ->
     failwith (Printf.sprintf "Unexpected %s in state %s"
