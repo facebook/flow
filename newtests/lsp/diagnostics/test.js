@@ -38,11 +38,11 @@ export default suite(
       addFile('witherrors2.js')
         .waitUntilIDEMessage(
           9000,
-          'textDocument/publishDiagnostics{Cannot cost}',
+          'textDocument/publishDiagnostics{is not an instance type}',
         )
         .verifyAllIDEMessagesInStep(
           [
-            'textDocument/publishDiagnostics{"Cannot cast `b` to `A` because  number [1] is incompatible with  string [2] in property `x.y.z`."}',
+            'textDocument/publishDiagnostics{"`H` [1] is not an instance type.","message":"[1] `H`"}',
           ],
           ['window/progress', 'textDocument/publishDiagnostics'],
         ),

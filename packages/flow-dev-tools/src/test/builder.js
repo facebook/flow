@@ -1003,7 +1003,7 @@ export default class Builder {
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
   // message was M. And doesMethodMatch(actual, 'M{C1,C2,...}') judges also
   // whether the strings C1, C2, ... were all found in the JSON representation
-  // of the actual message (up to whitespace).
+  // of the actual message.
   static doesMessageMatch(actual: IDEMessage, expected: string): boolean {
     const iOpenBrace = expected.indexOf('{');
     const iCloseBrace = expected.lastIndexOf('}');
@@ -1015,9 +1015,8 @@ export default class Builder {
       }
       const expectedContents = expected
         .substring(iOpenBrace + 1, iCloseBrace)
-        .replace(/\s/g, '')
         .split(',');
-      const json = JSON.stringify(actual).replace(/\s/g, '');
+      const json = JSON.stringify(actual);
       for (const expectedContent of expectedContents) {
         if (!json.includes(expectedContent)) {
           return false;

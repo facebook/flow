@@ -3032,7 +3032,7 @@ module Lsp_output = struct
     let (message, relatedLocations) = List.fold_left f ("", []) features in
     {
       loc;
-      message;
+      message = String.trim message;
       code = string_of_kind kind;
       relatedLocations = List.rev relatedLocations;
     }
