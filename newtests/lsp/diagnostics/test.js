@@ -7,7 +7,12 @@
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(
-  ({ideStartAndConnect, ideRequestAndWaitUntilResponse, addFile}) => [
+  ({
+    ideStartAndConnect,
+    ideRequestAndWaitUntilResponse,
+    addFile,
+    modifyFile,
+  }) => [
     test('textDocument/publishDiagnostics #1', [
       ideStartAndConnect(),
       addFile('witherrors1.js')
@@ -44,6 +49,30 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"`H` [1] is not an instance type.","message":"[1] `H`"}',
           ],
+          ['window/progress', 'textDocument/publishDiagnostics'],
+        ),
+    ]),
+
+    test('textDocument/publishDiagnostics clears errors', [
+      ideStartAndConnect(),
+      addFile('witherrors1.js')
+        .waitUntilIDEMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllIDEMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
+          ],
+          ['window/progress', 'textDocument/publishDiagnostics'],
+        ),
+      modifyFile('witherrors1.js', 'return 23;', 'return "";')
+        .waitUntilIDEMessage(
+          9000,
+          'textDocument/publishDiagnostics{"diagnostics":[]}',
+        )
+        .verifyAllIDEMessagesInStep(
+          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           ['window/progress', 'textDocument/publishDiagnostics'],
         ),
     ]),

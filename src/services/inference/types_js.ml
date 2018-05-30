@@ -465,7 +465,12 @@ let typecheck
   Lwt.return (checked, { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set })
 
 (* When checking contents, ensure that dependencies are checked. Might have more
-   general utility. *)
+   general utility.
+   TODO(ljw) CARE! This function calls "typecheck" which may emit errors over the
+   persistent connection. It's reasonable that anything which checks new files
+   should be able to emit errors, even places like propertyFindRefs.get_def_info
+   that invoke this function. But it looks like this codepath fails to emit
+   StartRecheck and EndRecheck messages. *)
 let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requires =
   let infer_input = Modulename.Set.fold (fun m acc ->
     match Module_js.get_file m ~audit:Expensive.warn with

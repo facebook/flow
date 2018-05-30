@@ -115,6 +115,9 @@ and connected_env = {
   c_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   c_about_to_exit_code: FlowExitStatus.t option;
   c_dialog_connected: ShowMessageRequest.t; (* "Connected to Flow server" *)
+  (* stateful handling of Errors messages from server... *)
+  c_is_rechecking: bool;
+  c_diagnostics: PublishDiagnostics.diagnostic list SMap.t;
   (* if server gets disconnected, we will tidy up these things... *)
   c_outstanding_requests_to_server: Lsp.IdSet.t;
   c_outstanding_progress: ISet.t; (* we'll send progress(null) *)
@@ -487,6 +490,8 @@ let try_connect (env: disconnected_env) : state =
       c_conn = { ic; oc; };
       c_about_to_exit_code = None;
       c_dialog_connected = ShowMessageRequest.None;
+      c_is_rechecking = false;
+      c_diagnostics = SMap.empty;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
       c_outstanding_progress = ISet.empty;
       c_outstanding_action = ISet.empty;
@@ -752,6 +757,60 @@ let dismiss_tracks (state: state) : state =
   | _ -> state
 
 
+(******************************************************************************)
+(* Diagnostics                                                                *)
+(* These should really be handle inside the flow server so it sends out       *)
+(* LSP publishDiagnostics notifications and we track them in the normal way.  *)
+(* But while the flow server has to handle legacy clients as well as LSP      *)
+(* clients, we don't want to make the flow server code too complex, so we're  *)
+(* handling them here for now.                                                *)
+(******************************************************************************)
+
+(* print_diagnostics: just pushes the set of diagnostis for this uri to the client *)
+let print_diagnostics
+    (uri: string)
+    (diagnostics: PublishDiagnostics.diagnostic list)
+    (state: state)
+  : state =
+  let msg = NotificationMessage
+    (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
+  let state = track_from_server state msg in
+  to_stdout (Lsp_fmt.print_lsp msg);
+  state
+
+let do_additional_diagnostics
+    (cenv: connected_env)
+    (diagnostics: PublishDiagnostics.diagnostic list SMap.t)
+  : state =
+  (* Merge the additional diagnostics into cenv *)
+  let uris = SMap.bindings diagnostics |> List.map ~f:fst |> SSet.of_list in
+  let combine _uri existing additions = Some (existing @ additions) in
+  let c_diagnostics = SMap.union ~combine cenv.c_diagnostics diagnostics in
+  let state = Connected { cenv with c_diagnostics; } in
+
+  (* Send publishDiagnostics for all files touched by the additions. *)
+  let to_send = SMap.filter (fun uri _ -> SSet.mem uri uris) c_diagnostics in
+  let state = SMap.fold print_diagnostics to_send state
+  in
+  state
+
+
+let do_replacement_diagnostics
+    (cenv: connected_env)
+    (c_diagnostics: PublishDiagnostics.diagnostic list SMap.t)
+  : state =
+  let state = Connected { cenv with c_diagnostics; } in
+
+  (* Send publishDiagnostics for all files that no longer have diagnostics *)
+  let old_uris = SMap.bindings cenv.c_diagnostics |> List.map ~f:fst |> SSet.of_list in
+  let new_uris = SMap.bindings c_diagnostics |> List.map ~f:fst |> SSet.of_list in
+  let now_empty_uris = SSet.diff old_uris new_uris in
+  let state = SSet.fold (fun uri state -> print_diagnostics uri [] state) now_empty_uris state in
+
+  (* Send publishDiagnostics for all files that have diagnostics *)
+  let state = SMap.fold print_diagnostics c_diagnostics state
+  in
+  state
 
 
 let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
@@ -927,6 +986,16 @@ begin
     state
 
   | Connected cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
+    (* A note about the errors reported by this server message:               *)
+    (* While a recheck is in progress, between StartRecheck and EndRecheck,   *)
+    (* the server will periodically send errors+warnings. These are additive  *)
+    (* to the errors which have previously been reported. Once the recheck    *)
+    (* has finished then the server will send a new exhaustive set of errors. *)
+    (* At this opportunity we should erase all errors not in this set.        *)
+    (* This differs considerably from the semantics of LSP publishDiagnostics *)
+    (* which says "whenever you send publishDiagnostics for a file, that      *)
+    (* now contains the complete truth for that file."                        *)
+
     (* I hope that flow won't produce errors with an empty path. But such errors are *)
     (* fatal to Nuclide, so if it does, then we'll at least use a fall-back path.    *)
     let default_uri = cenv.c_ienv.i_root |> Path.to_string |> File_url.create in
@@ -952,23 +1021,18 @@ begin
       } in
       SMap.add ~combine:List.append uri [diagnostic] all
     in
-    (* print: just pushes the set of diagnostis for this uri to the client *)
-    let print uri diagnostics state =
-      let msg = NotificationMessage
-        (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
-      let state = track_from_server state msg in
-      to_stdout (Lsp_fmt.print_lsp msg);
-      state
-    in
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
     let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
-    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all in
-    (* Next, for each uri, send its list of diagnostics to the client *)
-    let state = SMap.fold print all state in
-    state
+    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
+    in
+    if cenv.c_is_rechecking then
+      do_additional_diagnostics cenv all
+    else
+      do_replacement_diagnostics cenv all
 
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
+    let state = Connected {cenv with c_is_rechecking = true;} in
     if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
       let msg = NotificationMessage
         (ProgressNotification { Lsp.Progress.id = 1; label = Some "Flow rechecking..."; }) in
@@ -979,6 +1043,7 @@ begin
       state
 
   | Connected cenv, Server_message Persistent_connection_prot.EndRecheck ->
+    let state = Connected {cenv with c_is_rechecking = false;} in
     if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
       let msg = NotificationMessage
         (ProgressNotification { Lsp.Progress.id = 1; label = None; }) in
