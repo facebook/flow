@@ -19,7 +19,7 @@ type error =
 val server_exists : tmp_dir:string -> Path.t -> bool
 
 val connect_once :
-  client_type: SocketHandshake.client_type ->
+  client_handshake: (SocketHandshake.client_handshake) ->
   tmp_dir:string ->
   Path.t ->
   (Timeout.in_channel * out_channel, error) result

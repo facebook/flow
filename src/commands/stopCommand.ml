@@ -43,11 +43,16 @@ let main temp_dir from quiet root () =
   in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
   FlowEventLogger.set_from from;
-  if not quiet then prerr_endlinef
-    "Trying to connect to server for `%s`"
-    (Path.to_string root);
+  if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
+  let client_handshake = SocketHandshake.({
+    client_build_id = build_revision;
+    is_stop_request = true;
+    server_should_hangup_if_still_initializing = false;
+    server_should_exit_if_version_mismatch = true; }, {
+    client_type = Ephemeral;
+  }) in
   CommandConnectSimple.(
-    match connect_once ~client_type:SocketHandshake.StabbityStabStab ~tmp_dir root with
+    match connect_once ~client_handshake ~tmp_dir root with
     | Ok _ ->
         begin try
           if not quiet then prerr_endlinef

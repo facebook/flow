@@ -463,10 +463,18 @@ let try_connect (env: disconnected_env) : state =
   let start_env = CommandUtils.make_env env.d_ienv.i_connect_params env.d_ienv.i_root in
   let start_env = { start_env with CommandConnect.autostop = true; } in
 
-  let client_type = SocketHandshake.PersistentLsp
-    (FlowEventLogger.get_context (), env.d_ienv.i_initialize_params) in
+  let client_handshake = SocketHandshake.({
+    client_build_id = build_revision;
+    is_stop_request = false;
+    server_should_exit_if_version_mismatch = true;
+    server_should_hangup_if_still_initializing = true; }, {
+    client_type = Persistent {
+      logging_context = FlowEventLogger.get_context ();
+      lsp = Some env.d_ienv.i_initialize_params;
+    };
+  }) in
   let conn = CommandConnectSimple.connect_once
-    ~client_type ~tmp_dir:start_env.CommandConnect.tmp_dir start_env.CommandConnect.root in
+    ~client_handshake ~tmp_dir:start_env.CommandConnect.tmp_dir start_env.CommandConnect.root in
 
   match conn with
   | Ok (ic, oc) ->

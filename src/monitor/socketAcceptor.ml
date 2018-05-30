@@ -114,73 +114,6 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
 
   Lwt.return ()
 
-(* Well...I mean this is a pretty descriptive function name. It performs the handshake and then
- * returns the client type *)
-let perform_handshake_and_get_client_type ~client_fd =
-  (* Read the build id *)
-  let%lwt {SocketHandshake.client_build_id; client_type} =
-    Marshal_tools_lwt.from_fd_with_preamble client_fd
-  in
-  let is_lsp = match client_type with
-    | SocketHandshake.PersistentLsp _ -> true
-    | _ -> false in
-  (* If the build id doesn't match, send an error and exit
-   *
-   * Note: glevi hates this behavior. In the future, glevi plans to instead have the client
-   * exec the correct binary and the server survives *)
-  if client_build_id <> SocketHandshake.build_revision then begin
-    let handshake = SocketHandshake.(Build_id_mismatch {
-      server_build_id = build_revision;
-      server_bin = Sys.executable_name;
-    }) in
-    let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble client_fd handshake in
-    FlowEventLogger.out_of_date ();
-    let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
-    Logger.fatal "%s" msg;
-    FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
-  end else begin
-    (* We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
-     * So we can't have an unlimited number of clients. So if the new fd is too large, let's
-     * reject it. Never reject a kill handshake, though. *)
-
-    (* TODO (glevi): Figure out whether this check is needed for Windows *)
-    let fd_as_int: int =
-      if Sys.unix
-      then client_fd |> Lwt_unix.unix_file_descr |> Obj.magic
-      else -1
-    in
-    let too_many_clients = Sys.unix && (
-      client_type <> SocketHandshake.StabbityStabStab && fd_as_int > 500
-    ) in
-    if too_many_clients
-    then
-      let%lwt _size =
-        Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Too_many_clients
-      in
-      failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
-    else if is_lsp && not (StatusStream.ever_been_free ()) then
-      let (server_status, watcher_status) = StatusStream.get_status () in
-      let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble
-        client_fd (SocketHandshake.Still_initializing (server_status, watcher_status))
-      in
-      if ServerStatus.is_free server_status
-      then failwith (FileWatcherStatus.string_of_status watcher_status)
-      else failwith (ServerStatus.string_of_status server_status)
-    else begin
-      match client_type with
-      | SocketHandshake.Ephemeral {fail_on_init=true} when not (StatusStream.ever_been_free ()) ->
-        let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble
-          client_fd (SocketHandshake.Still_initializing (StatusStream.get_status ()))
-        in
-        failwith "Client used --retry-on-init false, and the server is still initializing"
-      | _ ->
-        (* Nothing else has gone wrong with the handshake. Send Ok and return the client_type *)
-        let%lwt _ =
-          Marshal_tools_lwt.to_fd_with_preamble client_fd SocketHandshake.Connection_ok
-        in
-        Lwt.return client_type
-    end
-  end
 
 let close client_fd () =
   (* Close the client_fd, regardless of whether or not we were able to shutdown the connection.
@@ -202,6 +135,92 @@ let close client_fd () =
   (* Already closed *)
   | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
   | exn -> Lwt.return (Logger.error ~exn "Failed to close socket client fd")
+
+(* Well...I mean this is a pretty descriptive function name. It performs the handshake and then
+ * returns the client's side of the handshake *)
+let perform_handshake_and_get_client_handshake ~client_fd =
+  let open SocketHandshake in
+  let server_build_id = build_revision in
+  let server_bin = Sys.executable_name in
+
+  (* handshake step 1: client sends handshake *)
+  let%lwt (wire: client_handshake_wire) = Marshal_tools_lwt.from_fd_with_preamble client_fd in
+  let client1 = try fst wire |> Hh_json.json_of_string |> json_to__client_to_monitor_1
+  with exn ->
+    Logger.error ~exn "Failed to parse JSON section of handshake: %s" (fst wire);
+    default_client_to_monitor_1 in
+  let client2 = if client1.client_build_id <> server_build_id then None
+    else Some (Marshal.from_string (snd wire) 0 : client_to_monitor_2) in
+
+  (* handshake step 2: server sends back handshake *)
+  let respond server_intent server2 =
+    assert (server2 = None || client1.client_build_id = server_build_id);
+    (* the client will trust our invariant that server2=Some means the client *)
+    (* can certainly deserialize server2. *)
+    let server1 = { server_build_id; server_bin; server_intent; } in
+    let wire : server_handshake_wire = (
+      server1 |> monitor_to_client_1__to_json |> Hh_json.json_to_string,
+      Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 [])
+    ) in
+    let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble client_fd wire in
+    Lwt.return_unit
+  in
+
+  let fd_as_int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
+
+  (* Stop request *)
+  if client1.is_stop_request then begin
+    let%lwt () = respond Server_will_exit None in
+    let%lwt () = close client_fd () in
+    Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error;
+
+  (* Binary version mismatch *)
+  end else if client1.client_build_id <> build_revision then begin
+    if client1.server_should_exit_if_version_mismatch then begin
+      let%lwt () = respond Server_will_exit None in
+      let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
+      FlowEventLogger.out_of_date ();
+      Logger.fatal "%s" msg;
+      FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
+    end else begin
+      let%lwt () = respond Server_will_hangup None in
+      failwith "Build mismatch, so rejecting attempted connection"
+    end
+
+  (* Too many clients *)
+  end else if Sys.unix && fd_as_int > 500 then begin
+    (* We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
+     * So we can't have an unlimited number of clients. So if the new fd is too large, let's
+     * reject it.
+     * TODO(glevi): Figure out whether this check is needed for Windows *)
+    let%lwt () = respond Server_will_hangup (Some Server_has_too_many_clients) in
+    failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
+
+  (* Server still initializing *)
+  end else if not (StatusStream.ever_been_free ()) then begin
+    let client2 = Option.value_exn client2 in
+    let status = StatusStream.get_status () in
+    if client1.server_should_hangup_if_still_initializing then begin
+      let%lwt () = respond Server_will_hangup (Some (Server_still_initializing status)) in
+      (* In the case of Ephemeral, CommandConnect will use that response to display *)
+      (* a message to the user about "--retry-if-init false and still initializing" *)
+      (* In the case of Persistent, lspCommand will retry a second later. *)
+      (* The message we failwith here solely goes to the logs, not the user. *)
+      let (server_status, watchman_status) = status in
+      failwith ("Server still initializing -> hangup."
+        ^ " server_status=" ^ (ServerStatus.string_of_status server_status)
+        ^ " watchman_status=" ^ (FileWatcherStatus.string_of_status watchman_status))
+    end else begin
+      let%lwt () = respond Server_will_continue (Some (Server_still_initializing status)) in
+      Lwt.return (client1, client2)
+    end
+
+  (* Success *)
+  end else begin
+    let client2 = Option.value_exn client2 in
+    let%lwt () = respond Server_will_continue (Some Server_ready) in
+    Lwt.return (client1, client2)
+  end
 
 let catch close exn =
   (* We catch all exceptions, since one bad connection shouldn't kill the whole monitor *)
@@ -257,18 +276,12 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         Lwt.return_unit
     in
     try%lwt
-      let%lwt client_type = perform_handshake_and_get_client_type ~client_fd in
-      match client_type with
-      | SocketHandshake.Ephemeral _ ->
+      let%lwt (_client1, client2) = perform_handshake_and_get_client_handshake ~client_fd in
+      match client2.SocketHandshake.client_type with
+      | SocketHandshake.Ephemeral ->
         create_ephemeral_connection ~client_fd ~close
-      | SocketHandshake.Persistent logging_context ->
-        create_persistent_connection ~client_fd ~close ~logging_context ~lsp:None
-      | SocketHandshake.PersistentLsp (logging_context, params) ->
-        create_persistent_connection ~client_fd ~close ~logging_context ~lsp:(Some params)
-      | SocketHandshake.StabbityStabStab ->
-        (* Ow my face *)
-        let%lwt () = close_without_autostop () in
-        Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error
+      | SocketHandshake.Persistent {logging_context; lsp} ->
+        create_persistent_connection ~client_fd ~close ~logging_context ~lsp
     with exn ->  catch close_without_autostop exn
       (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
       (* from 1 connections to 0 connections then it might stop the server. *)

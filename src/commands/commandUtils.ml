@@ -864,10 +864,10 @@ let make_env server_flags root =
     quiet = server_flags.quiet;
   }
 
-let connect ~client_type server_flags root =
+let connect ~client_handshake server_flags root =
   let env = make_env server_flags root
   in
-  CommandConnect.connect ~client_type env
+  CommandConnect.connect ~client_handshake env
 
 let rec search_for_root config start recursion_limit : Path.t option =
   if start = Path.parent start then None (* Reach fs root, nothing to do. *)
@@ -1033,9 +1033,16 @@ let rec connect_and_make_request =
     then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
 
     let quiet = server_flags.quiet in
-    let client_type = SocketHandshake.Ephemeral { fail_on_init = not server_flags.retry_if_init } in
+    let client_handshake = ({ SocketHandshake.
+      client_build_id = SocketHandshake.build_revision;
+      is_stop_request = false;
+      server_should_hangup_if_still_initializing = not server_flags.retry_if_init;
+      server_should_exit_if_version_mismatch = true;
+    }, { SocketHandshake.
+      client_type = SocketHandshake.Ephemeral;
+    }) in
     (* connect handles timeouts itself *)
-    let ic, oc = connect ~client_type server_flags root in
+    let ic, oc = connect ~client_handshake server_flags root in
     send_command ?timeout oc request;
     try wait_for_response ?timeout ~quiet ~root ic
     with End_of_file ->

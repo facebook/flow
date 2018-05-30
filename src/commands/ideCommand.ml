@@ -361,9 +361,15 @@ let main option_values root from protocol strip_root json_version () =
   FlowEventLogger.set_from from;
   let root = CommandUtils.guess_root root in
   let strip_root = if strip_root then Some root else None in
-  let client_type = SocketHandshake.Persistent (FlowEventLogger.get_context ()) in
+  let client_handshake = SocketHandshake.({
+    client_build_id = build_revision;
+    is_stop_request = false;
+    server_should_hangup_if_still_initializing = false;
+    server_should_exit_if_version_mismatch = true; }, {
+    client_type = Persistent { logging_context = FlowEventLogger.get_context (); lsp = None; };
+  }) in
   Printf.eprintf "Connecting to server...\n%!";
-  let ic, oc = connect ~client_type option_values root in
+  let ic, oc = connect ~client_handshake option_values root in
   Printf.eprintf "Connected to server\n%!";
   let buffered_stdin = stdin |> Unix.descr_of_in_channel |> Buffered_line_reader.create in
   let ic_fd = Timeout.descr_of_in_channel ic in
