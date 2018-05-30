@@ -38,8 +38,8 @@ and 'a t = {
   name : string;
   full_name : string;
   id : string option;
-  pos : 'a Pos.pos;
-  span : 'a Pos.pos;
+  pos : 'a Pos.pos; (* covers the span of just the identifier *)
+  span : 'a Pos.pos; (* covers the span of the entire construct, including children *)
   modifiers : modifier list;
   children : 'a t list option;
   params : 'a t list option;
