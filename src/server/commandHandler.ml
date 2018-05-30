@@ -564,6 +564,9 @@ let handle_persistent_unsafe genv env client profiling msg
         Lwt.return (Error (env, reason, stack))
     end
 
+  | Persistent_connection_prot.LspToServer (NotificationMessage (DidSaveNotification _params)) ->
+    Lwt.return (Ok (env, None))
+
   | Persistent_connection_prot.DidClose filenames ->
     Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
     did_close genv env client filenames

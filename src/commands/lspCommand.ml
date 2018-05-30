@@ -278,7 +278,7 @@ let do_initialize () : Initialize.result =
         want_change = IncrementalSync;
         want_willSave = false;
         want_willSaveWaitUntil = false;
-        want_didSave = Some { includeText = true }
+        want_didSave = None;
       };
       hoverProvider = true;
       completionProvider = Some {
