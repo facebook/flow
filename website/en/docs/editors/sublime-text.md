@@ -15,3 +15,7 @@ layout: guide
 ### SublimeLinter-flow <a class="toc" id="toc-sublimelinter-flow" href="#toc-sublimelinter-flow"></a>
 
 You may also wish to install a popular SublimeLinter plugin for Flow like [SublimeLinter-flow](https://packagecontrol.io/packages/SublimeLinter-flow).
+
+### JavaScript Enhancements <a class="toc" id="toc-javascript-enhancements" href="#toc-javascript-enhancements"></a>
+
+You could also install [JavaScript Enhancements](https://packagecontrol.io/packages/JavaScript%20Enhancements) plugin for Sublime Text 3. Using Flow under the hood, it offers smart javascript autocomplete, real-time errors, code refactoring and, also, a lot of features about creating, developing and managing javascript projects (such as React, Cordova, etc.).
