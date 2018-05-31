@@ -120,6 +120,8 @@ class ['a] t = object(self)
   | InternalT (ReposUpperT (_, t)) ->
     self#type_ cx pole acc t
 
+  | InternalT (OptionalChainVoidT _) -> acc
+
   method def_type cx pole acc = function
   | AnyT
   | NumT _

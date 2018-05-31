@@ -2003,7 +2003,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EUnnecessaryOptionalChain (loc, lhs_reason) ->
     mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryOptionalChain) loc [
       text "This use of optional chaining ("; code "?."; text ") is unnecessary because ";
-      ref lhs_reason; text " cannot be null or undefined."
+      ref lhs_reason; text " cannot be nullish or because an earlier "; code "?.";
+      text " will short-circuit the nullish case.";
     ]
 
   | EInexactSpread (reason, reason_op) ->

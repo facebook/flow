@@ -310,6 +310,7 @@ let rec gen_type t env = Type.(
   | DefT (_, TypeT t) -> gen_type t env
   | DefT (_, UnionT union) -> gen_union_list union env
   | DefT (_, VoidT) -> add_str "void" env
+  | InternalT (OptionalChainVoidT _) -> add_str "void" env
 
   (**
    * These types can't be expressed in code well so we fail back to `mixed`.

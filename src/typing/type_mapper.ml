@@ -164,6 +164,7 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else InternalT (ReposUpperT (r, t''))
+      | InternalT (OptionalChainVoidT _) -> t
 
   method tvar _cx _map_cx _r id = id
 

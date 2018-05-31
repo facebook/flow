@@ -2926,7 +2926,7 @@ optional_chaining.js:16:11 = {
   "end":13
 }
 optional_chaining.js:16:16 = {
-  "type":"Bar | void",
+  "type":"void | Bar",
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -2941,7 +2941,7 @@ optional_chaining.js:16:16 = {
   "end":18
 }
 optional_chaining.js:16:20 = {
-  "type":"Baz | void",
+  "type":"void | Baz",
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",

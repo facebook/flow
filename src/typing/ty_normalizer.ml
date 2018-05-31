@@ -1217,6 +1217,7 @@ end = struct
     | ExtendsT _
     | ReposUpperT _ ->
       terr ~kind:BadInternalT (Some t)
+    | OptionalChainVoidT r -> type__ ~env (DefT (r, VoidT));
 
   and param_bound ~env = function
     | T.DefT (_, T.MixedT _) -> return None

@@ -274,6 +274,7 @@ module rec TypeTerm : sig
        function *)
     | IdxWrapper of reason * t
     | ReposUpperT of reason * t
+    | OptionalChainVoidT of reason
 
   and internal_use_op =
     | CopyEnv
@@ -2070,6 +2071,7 @@ end = struct
     | MatchingPropT (reason, _, _) -> reason
     | OpaqueT (reason, _) -> reason
     | OpenPredT (reason, _, _, _) -> reason
+    | InternalT (OptionalChainVoidT reason) -> reason
     | ReposT (reason, _) -> reason
     | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
     | ShapeT (t) -> reason_of_t t
@@ -2218,6 +2220,7 @@ end = struct
     | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
     | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
     | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
+    | InternalT (OptionalChainVoidT reason) -> InternalT (OptionalChainVoidT (f reason))
     | ReposT (reason, t) -> ReposT (f reason, t)
     | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
     | ShapeT t -> ShapeT (mod_reason_of_t f t)
@@ -2911,6 +2914,7 @@ let string_of_ctor = function
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
+  | InternalT (OptionalChainVoidT _) -> "OptionalChainVoidT"
   | ReposT _ -> "ReposT"
   | InternalT (ReposUpperT _) -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"

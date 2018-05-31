@@ -1031,6 +1031,8 @@ module ResolvableTypeJob = struct
     | InternalT (ReposUpperT (_, t)) ->
       collect_of_type ?log_unresolved cx reason acc t
 
+    | InternalT (OptionalChainVoidT _) -> acc
+
     | DefT (_, NumT _)
     | DefT (_, StrT _)
     | DefT (_, BoolT _)
@@ -2371,7 +2373,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (r, (NullT | VoidT)), OptionalChainT (r', lhs_reason, chain) ->
       Context.mark_optional_chain cx (loc_of_reason r') lhs_reason ~useful:true;
-      Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (DefT (r, VoidT), t_out)) chain;
+      Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (InternalT (OptionalChainVoidT r), t_out)) chain;
+
+    | InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, chain) ->
+      Context.mark_optional_chain cx (loc_of_reason r') lhs_reason ~useful:false;
+      Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (l, t_out)) chain;
 
     | _, OptionalChainT (r', lhs_reason, chain) when (
         match l with
@@ -2390,6 +2396,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (t_out', t_out);
         lhs_t := t_out';
       ) chain;
+
+    | InternalT (OptionalChainVoidT r), u ->
+      rec_flow cx trace (DefT (r, VoidT), u);
 
     (***************)
     (* maybe types *)
@@ -7306,6 +7315,8 @@ and check_polarity cx ?trace polarity = function
   | ExistsT _
     -> ()
 
+  | InternalT (OptionalChainVoidT _) -> ()
+
   | DefT (_, OptionalT t)
   | ExactT (_, t)
   | DefT (_, MaybeT t)
@@ -11752,7 +11763,8 @@ end = struct
   let rec extract_type cx this_t = match this_t with
     | DefT (_, MaybeT ty) ->
         extract_type cx ty
-    | DefT (_, (NullT | VoidT)) ->
+    | DefT (_, (NullT | VoidT))
+    | InternalT (OptionalChainVoidT _) ->
         FailureNullishType
     | DefT (_, AnyT) ->
         FailureAnyType
