@@ -12,15 +12,15 @@ Once you have Babel setup, install `babel-preset-flow` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```sh
-yarn add --dev babel-preset-flow
+yarn add --dev @babel/preset-flow
 # or
-npm install --save-dev babel-preset-flow
+npm install --save-dev @babel/preset-flow
 ```
 
 Then add `flow` to your Babel presets config.
 
 ```json
 {
-  "presets": ["flow"]
+  "presets": ["@babel/flow"]
 }
 ```
