@@ -172,6 +172,9 @@ val test_prop_hit: t -> Constraint.ident -> unit
 val test_prop_miss: t -> Constraint.ident -> string option -> (Reason.t * Reason.t) -> Type.use_op -> unit
 val test_prop_get_never_hit: t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
 
+val mark_optional_chain: t -> Loc.t -> Reason.t -> useful:bool -> unit
+val unnecessary_optional_chains: t -> (Loc.t * Reason.t) list
+
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 val has_prop: t -> Type.Properties.id -> string -> bool

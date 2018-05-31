@@ -37,6 +37,21 @@ References:
                      ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- computed_properties.js:13:2
+
+This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:13:2
+   13| (x2?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:13:2
+   13| (x2?.["foo"]: empty);
+        ^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
 
 Cannot cast `y1?.["bar"]?.["foo"]` to empty because:
@@ -61,6 +76,21 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
 
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
+
 Cannot cast `y2?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
 
    computed_properties.js:16:2
@@ -74,6 +104,21 @@ References:
    computed_properties.js:16:24
    16| (y2?.["bar"]?.["foo"]: empty);
                               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2?.["bar"]` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
@@ -100,6 +145,21 @@ References:
    computed_properties.js:3:16
     3| type X = {foo: number};
                       ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:18:2
+   18| (y2?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:18:2
+   18| (y2?.["baz"]?.["foo"]: empty);
+        ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
@@ -144,6 +204,21 @@ References:
    computed_properties.js:3:16
     3| type X = {foo: number};
                       ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:21:2
+   21| (y2?.["bar"]["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:21:2
+   21| (y2?.["bar"]["foo"]: empty);
+        ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
@@ -197,6 +272,21 @@ References:
    computed_properties.js:4:24
     4| type Y = {bar: X, baz: ?X};
                               ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:23:2
+   23| (y2?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:23:2
+   23| (y2?.["baz"]["foo"]: empty);
+        ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
@@ -261,6 +351,21 @@ References:
                             ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
+
+This use of optional chaining (`?.`) is unnecessary because `y1["bar"]` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:25:2
+   25| (y1["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:25:2
+   25| (y1["bar"]?.["foo"]: empty);
+        ^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- computed_properties.js:26:2
 
 Cannot cast `y2["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
@@ -276,6 +381,21 @@ References:
    computed_properties.js:26:22
    26| (y2["bar"]?.["foo"]: empty);
                             ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:26:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2["bar"]` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:26:2
+   26| (y2["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:26:2
+   26| (y2["bar"]?.["foo"]: empty);
+        ^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
@@ -384,6 +504,21 @@ References:
                               ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- computed_properties.js:31:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:31:3
+   31| ((y2?.["bar"])["foo"]: empty);
+         ^^^^^^^^^^^
+
+References:
+   computed_properties.js:31:3
+   31| ((y2?.["bar"])["foo"]: empty);
+         ^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
 
 Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
@@ -451,6 +586,21 @@ References:
                               ^^ [1]
 
 
+Error -------------------------------------------------------------------------------------- computed_properties.js:33:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   computed_properties.js:33:3
+   33| ((y2?.["baz"])["foo"]: empty);
+         ^^^^^^^^^^^
+
+References:
+   computed_properties.js:33:3
+   33| ((y2?.["baz"])["foo"]: empty);
+         ^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
 
 Cannot cast `x1?.()` to empty because:
@@ -488,6 +638,50 @@ References:
    function_calls.js:9:10
    9| (x2?.(): empty)
                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_calls.js:9:2
+
+This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   function_calls.js:9:2
+   9| (x2?.(): empty)
+       ^^^^^^
+
+References:
+   function_calls.js:9:2
+   9| (x2?.(): empty)
+       ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ lhs_types.js:12:2
+
+This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   lhs_types.js:12:2
+   12| (x?.foo: ?number); // no error, lint
+        ^^^^^^
+
+References:
+   lhs_types.js:12:2
+   12| (x?.foo: ?number); // no error, lint
+        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ lhs_types.js:13:2
+
+Cannot get `mixed?.foo` because property `foo` is missing in mixed [1].
+
+   lhs_types.js:13:2
+   13| (mixed?.foo: ?number); // error, no lint
+        ^^^^^^^^^^
+
+References:
+   lhs_types.js:6:20
+    6| declare var mixed: mixed;
+                          ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
@@ -673,6 +867,21 @@ References:
                        ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
+
+This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   private_properties.js:6:6
+   6|     (this?.#foo: empty);
+           ^^^^^^^^^^
+
+References:
+   private_properties.js:6:6
+   6|     (this?.#foo: empty);
+           ^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- private_properties.js:14:6
 
 Cannot cast `this?.#bar` to empty because `X` [1] is incompatible with empty [2].
@@ -688,6 +897,21 @@ References:
    private_properties.js:14:18
    14|     (this?.#bar: empty);
                         ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:14:6
+
+This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   private_properties.js:14:6
+   14|     (this?.#bar: empty);
+            ^^^^^^^^^^
+
+References:
+   private_properties.js:14:6
+   14|     (this?.#bar: empty);
+            ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:6
@@ -710,6 +934,21 @@ References:
    private_properties.js:12:10
    12|   #baz: ?X
                 ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:15:6
+
+This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   private_properties.js:15:6
+   15|     (this?.#baz: empty);
+            ^^^^^^^^^^
+
+References:
+   private_properties.js:15:6
+   15|     (this?.#baz: empty);
+            ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:2
@@ -751,6 +990,21 @@ References:
                  ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- static_members.js:13:2
+
+This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:13:2
+   13| (x2?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:13:2
+   13| (x2?.foo: empty);
+        ^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- static_members.js:15:2
 
 Cannot cast `y1?.bar?.foo` to empty because:
@@ -775,6 +1029,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:16:2
 
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:16:2
+
 Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empty [2].
 
    static_members.js:16:2
@@ -788,6 +1057,21 @@ References:
    static_members.js:16:16
    16| (y2?.bar?.foo: empty);
                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:16:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2?.bar` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:2
@@ -814,6 +1098,21 @@ References:
    static_members.js:3:16
     3| type X = {foo: number};
                       ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:18:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:18:2
+   18| (y2?.baz?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:18:2
+   18| (y2?.baz?.foo: empty);
+        ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:2
@@ -858,6 +1157,21 @@ References:
    static_members.js:3:16
     3| type X = {foo: number};
                       ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:21:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:21:2
+   21| (y2?.bar.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:21:2
+   21| (y2?.bar.foo: empty);
+        ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:21:2
@@ -911,6 +1225,21 @@ References:
    static_members.js:4:24
     4| type Y = {bar: X, baz: ?X};
                               ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:23:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:23:2
+   23| (y2?.baz.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:23:2
+   23| (y2?.baz.foo: empty);
+        ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:23:2
@@ -975,6 +1304,21 @@ References:
                      ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- static_members.js:25:2
+
+This use of optional chaining (`?.`) is unnecessary because `y1.bar` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:25:2
+   25| (y1.bar?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:25:2
+   25| (y1.bar?.foo: empty);
+        ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- static_members.js:26:2
 
 Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty [2].
@@ -990,6 +1334,21 @@ References:
    static_members.js:26:15
    26| (y2.bar?.foo: empty);
                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:26:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2.bar` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:26:2
+   26| (y2.bar?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:26:2
+   26| (y2.bar?.foo: empty);
+        ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:2
@@ -1098,6 +1457,21 @@ References:
                        ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- static_members.js:31:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:31:3
+   31| ((y2?.bar).foo: empty);
+         ^^^^^^^
+
+References:
+   static_members.js:31:3
+   31| ((y2?.bar).foo: empty);
+         ^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- static_members.js:32:2
 
 Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2].
@@ -1165,5 +1539,20 @@ References:
                               ^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- static_members.js:33:3
 
-Found 93 errors
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be null or undefined.
+(`unnecessary-optional-chain`)
+
+   static_members.js:33:3
+   33| ((y2?.baz).foo: empty);
+         ^^^^^^^
+
+References:
+   static_members.js:33:3
+   33| ((y2?.baz).foo: empty);
+         ^^ [1]
+
+
+
+Found 119 errors

@@ -788,7 +788,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out
     ]
 
-  | OptionalChainT (_, uses) -> [
+  | OptionalChainT (_, _, uses) -> [
       "chain", JSON_Array (Nel.to_list @@ Nel.map (fun (use, tout) ->
         _json_of_use_t json_cx (apply_opt_use use tout)
       ) uses);
@@ -2769,6 +2769,8 @@ let dump_flow_error =
         spf "EExperimentalOptionalChaining (%s)" (string_of_loc loc)
     | EOptionalChainingMethods loc ->
         spf "EOptionalChainingMethods (%s)" (string_of_loc loc)
+    | EUnnecessaryOptionalChain (loc, _) ->
+        spf "EUnnecessaryOptionalChain (%s)" (string_of_loc loc)
     | EInexactSpread (reason, reason_op) ->
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)

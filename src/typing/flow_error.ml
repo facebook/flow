@@ -162,6 +162,7 @@ type error_message =
   | EInvalidPrototype of reason
   | EExperimentalOptionalChaining of Loc.t
   | EOptionalChainingMethods of Loc.t
+  | EUnnecessaryOptionalChain of Loc.t * reason
   | EInexactSpread of reason * reason
 
 and binding_error =
@@ -381,6 +382,7 @@ let util_use_op_of_msg nope util = function
 | EInvalidPrototype (_)
 | EExperimentalOptionalChaining _
 | EOptionalChainingMethods _
+| EUnnecessaryOptionalChain _
 | EInexactSpread _
   -> nope
 
@@ -1996,6 +1998,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EOptionalChainingMethods loc ->
     mk_error ~trace_infos ~kind:ParseError loc [
       text "Flow does not yet support method or property calls in optional chains."
+    ]
+
+  | EUnnecessaryOptionalChain (loc, lhs_reason) ->
+    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryOptionalChain) loc [
+      text "This use of optional chaining ("; code "?."; text ") is unnecessary because ";
+      ref lhs_reason; text " cannot be null or undefined."
     ]
 
   | EInexactSpread (reason, reason_op) ->

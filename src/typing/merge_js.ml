@@ -172,6 +172,11 @@ let detect_test_prop_misses cx =
     Flow_js.add_output cx (Flow_error.EPropNotFound (name, reasons, use_op))
   ) misses
 
+let detect_unnecessary_optional_chains cx =
+  List.iter (fun (loc, lhs_reason) ->
+    Flow_js.add_output cx (Flow_error.EUnnecessaryOptionalChain (loc, lhs_reason))
+  ) (Context.unnecessary_optional_chains cx)
+
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
@@ -343,6 +348,7 @@ let merge_component_strict ~metadata ~lint_severities ~strict_mode ~file_sigs
    *)
   detect_sketchy_null_checks cx;
   detect_test_prop_misses cx;
+  detect_unnecessary_optional_chains cx;
 
   cx, other_cxs
 

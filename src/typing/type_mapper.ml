@@ -824,13 +824,13 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else IdxUnMaybeifyT (r, t'')
-    | OptionalChainT (r, uses) ->
+    | OptionalChainT (r, lhs_r, uses) ->
         let uses' = Nel.map (fun (use, tout) ->
           self#opt_use_type cx map_cx use,
           self#type_ cx map_cx tout
         ) uses in
         if uses' == uses then t
-        else OptionalChainT (r, uses')
+        else OptionalChainT (r, lhs_r, uses')
     | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

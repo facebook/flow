@@ -2978,7 +2978,7 @@ and subscript =
               Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
           AnyT.at loc
       ) in
-      lhs_t, acc, lhs_t
+      ex, lhs_t, acc, lhs_t
 
     | Call {
         Call.callee = _, Identifier (_, "requireLazy");
@@ -3044,7 +3044,7 @@ and subscript =
             Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
           AnyT.at loc
       ) in
-      lhs_t, acc, lhs_t
+      ex, lhs_t, acc, lhs_t
 
     | Call {
         Call.callee = (callee_loc, Member {
@@ -3059,7 +3059,7 @@ and subscript =
         let lhs_t =
           static_method_call_Object cx loc callee_loc prop_loc expr obj_t name targs arguments
         in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Call {
         Call.callee = (callee_loc, Member {
@@ -3098,7 +3098,7 @@ and subscript =
               funtype, Some prop_t)
           )
         ) in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Call {
         Call.callee = (lookup_loc, Member { Member.
@@ -3136,7 +3136,7 @@ and subscript =
             Flow.flow cx (ot,
               CallElemT (reason_call, reason_lookup, elem_t, funtype))
           )) in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Call {
         Call.callee = (ploc, Super) as callee;
@@ -3168,7 +3168,7 @@ and subscript =
           }) in
           Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None))
         ) in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     (******************************************)
     (* See ~/www/static_upstream/core/ *)
@@ -3217,7 +3217,7 @@ and subscript =
           });
         );
         let lhs_t = VoidT.at loc in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Call { Call.callee; targs; arguments } ->
         begin match callee with
@@ -3239,25 +3239,25 @@ and subscript =
           let f = expression cx callee in
           let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
           let lhs_t = func_call cx reason ~use_op f targts argts in
-          lhs_t, acc, lhs_t
+          ex, lhs_t, acc, lhs_t
         | NewChain ->
           let lhs_t = expression cx callee in
           let reason = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
           let tout = Tvar.mk cx reason in
           let opt_use = func_call_opt_use reason ~use_op targts argts in
-          lhs_t, ref (loc, opt_use, tout) :: acc, tout
+          callee, lhs_t, ref (loc, opt_use, tout) :: acc, tout
         | ContinueChain ->
           (* Hacky reason handling *)
           let reason = mk_reason ROptionalChain loc in
           let tout = Tvar.mk cx reason in
           let opt_use = func_call_opt_use reason ~use_op targts argts in
           let step = ref (loc, opt_use, tout) in
-          let lhs_t, chain, f = build_chain ~is_cond cx callee (step :: acc) in
-          let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
+          let lhs, lhs_t, chain, f = build_chain ~is_cond cx callee (step :: acc) in
+          let reason = replace_reason_const (RFunctionCall (desc_of_t f)) reason in
           let tout = mod_reason_of_t (Fn.const reason) tout in
           let opt_use = mod_reason_of_opt_use_t (Fn.const reason) opt_use in
           step := (loc, opt_use, tout);
-          lhs_t, chain, tout
+          lhs, lhs_t, chain, tout
         end
 
     | Member {
@@ -3280,15 +3280,15 @@ and subscript =
               Flow.flow cx (tobj, use)
             )
           ) in
-          lhs_t, acc, lhs_t
+          ex, lhs_t, acc, lhs_t
         | NewChain ->
           let tout = Tvar.mk cx reason in
           let lhs_t = expression cx _object in
-          lhs_t, ref (loc, opt_use, tout) :: acc, tout
+          _object, lhs_t, ref (loc, opt_use, tout) :: acc, tout
         | ContinueChain ->
           let tout = Tvar.mk cx reason in
-          let lhs_t, chain, _ = build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
-          lhs_t, chain, tout
+          let lhs, lhs_t, chain, _ = build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
+          lhs, lhs_t, chain, tout
         end
 
     | Member {
@@ -3296,7 +3296,7 @@ and subscript =
         property = Member.PropertyIdentifier (_, "exports");
         _
       } -> let lhs_t = get_module_exports cx loc in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Member {
         Member._object =
@@ -3306,7 +3306,7 @@ and subscript =
       } ->
         let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
         let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Member {
         Member._object = super_loc, Super;
@@ -3335,7 +3335,7 @@ and subscript =
           Env.add_type_table_info cx ploc id_info;
           t
         end in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
 
     | Member {
         Member._object;
@@ -3355,28 +3355,28 @@ and subscript =
           | None ->
             get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
           end in
-          lhs_t, acc, lhs_t, tobj
+          ex, lhs_t, acc, lhs_t, tobj
         | NewChain ->
           let lhs_t = expression cx _object in
           let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
             then AnyT.at ploc else Tvar.mk cx expr_reason in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
-          lhs_t, ref (loc, opt_use, tout) :: acc, tout, lhs_t
+          _object, lhs_t, ref (loc, opt_use, tout) :: acc, tout, lhs_t
         | ContinueChain ->
           let tout = AnyT.at ploc in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let step = ref (loc, opt_use, tout) in
-          let lhs_t, chain, tobj = build_chain ~is_cond cx _object (step :: acc) in
+          let lhs, lhs_t, chain, tobj = build_chain ~is_cond cx _object (step :: acc) in
           let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj)
             then tout
             else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
           in
-          lhs_t, chain, tout, tobj
+          lhs, lhs_t, chain, tout, tobj
         end
-        |> begin fun (lhs_t, chain, tout, tobj) ->
+        |> begin fun (lhs, lhs_t, chain, tout, tobj) ->
           let id_info = name, tout, Type_table.PropertyAccess tobj in
           Env.add_type_table_info cx ploc id_info;
-          lhs_t, chain, tout
+          lhs, lhs_t, chain, tout
         end
 
     | Member {
@@ -3397,37 +3397,37 @@ and subscript =
               then AnyT.at ploc
               else get_private_field cx expr_reason ~use_op tobj name
           ) in
-          lhs_t, acc, lhs_t
+          ex, lhs_t, acc, lhs_t
         | NewChain ->
           let lhs_t = expression cx _object in
           let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
             then AnyT.at ploc else Tvar.mk cx expr_reason in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
-          lhs_t, ref (loc, opt_use, tout) :: acc, tout
+          _object, lhs_t, ref (loc, opt_use, tout) :: acc, tout
         | ContinueChain ->
           let tout = AnyT.at ploc in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           let step = ref (loc, opt_use, tout) in
-          let lhs_t, chain, tobj = build_chain ~is_cond cx _object (step :: acc) in
+          let lhs, lhs_t, chain, tobj = build_chain ~is_cond cx _object (step :: acc) in
           let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj)
             then tout
             else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
           in
-          lhs_t, chain, tout
+          lhs, lhs_t, chain, tout
         end
-        |> begin fun (lhs_t, chain, t) ->
+        |> begin fun (lhs, lhs_t, chain, t) ->
           (* TODO use PropertyAccess *)
           let id_info = name, t, Type_table.Other in
           Env.add_type_table_info cx ploc id_info;
-          lhs_t, chain, t
+          lhs, lhs_t, chain, t
         end
     | _ ->
         let lhs_t = expression cx ex in
-        lhs_t, acc, lhs_t
+        ex, lhs_t, acc, lhs_t
     in
 
   fun ~is_cond cx ex ->
-    let lhs_t, chain, tout = build_chain ~is_cond cx ex [] in
+    let lhs, lhs_t, chain, tout = build_chain ~is_cond cx ex [] in
     begin match chain with
     | [] -> ()
     | hd :: tl ->
@@ -3438,7 +3438,8 @@ and subscript =
         use, t
       ) (hd, tl) in
       let reason = mk_reason ROptionalChain hd_loc in
-      Flow.flow cx (lhs_t, OptionalChainT (reason, chain));
+      let lhs_reason = mk_expression_reason lhs in
+      Flow.flow cx (lhs_t, OptionalChainT (reason, lhs_reason, chain));
     end;
     tout
 

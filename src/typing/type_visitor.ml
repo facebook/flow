@@ -550,7 +550,7 @@ class ['a] t = object(self)
   | IdxUnMaybeifyT (_, tout) ->
     self#type_ cx pole_TODO acc tout
 
-  | OptionalChainT (_, uses) ->
+  | OptionalChainT (_, _, uses) ->
     Nel.fold_left (fun acc (use, tout) ->
       self#use_type_ cx acc (apply_opt_use use tout)
     ) acc uses

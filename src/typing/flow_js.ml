@@ -2369,14 +2369,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* optional chaining *)
     (*********************)
 
-    | DefT (r, (NullT | VoidT)), OptionalChainT (_, chain) ->
+    | DefT (r, (NullT | VoidT)), OptionalChainT (r', lhs_reason, chain) ->
+      Context.mark_optional_chain cx (loc_of_reason r') lhs_reason ~useful:true;
       Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (DefT (r, VoidT), t_out)) chain;
 
-    | _, OptionalChainT (_, chain) when (
+    | _, OptionalChainT (r', lhs_reason, chain) when (
         match l with
         | DefT (_, (MaybeT _ | OptionalT _ | UnionT _ | IntersectionT _)) -> false
         | _ -> true
       ) ->
+      Context.mark_optional_chain cx (loc_of_reason r') lhs_reason ~useful:(
+        match l with
+        | DefT (_, (MixedT _ | AnyT | AnyObjT | AnyFunT)) -> true
+        | _ -> false
+      );
       let lhs_t = ref l in
       Nel.iter (fun (opt_use, t_out) ->
         let t_out' = Tvar.mk cx (reason_of_t t_out) in
