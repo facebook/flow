@@ -86,6 +86,13 @@ type server_conn = {
   oc: out_channel;
 }
 
+type show_message_t =
+  | Never_shown
+  | Shown of lsp_id option * ShowMessageRequest.showMessageRequestParams
+    (* Shown (Some id, params) -- means it is currently shown *)
+    (* Shown (None, params) - means it was shown but user dismissed it *)
+
+
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
   i_connect_params: command_params;
@@ -97,20 +104,14 @@ type initialized_env = {
   i_outstanding_local_requests: lsp_request IdMap.t;
   i_outstanding_requests_from_server: Lsp.lsp_request WrappedMap.t;
   i_isConnected: bool; (* what we've told the client about our connection status *)
+  i_status: show_message_t;
 }
 
 and disconnected_env = {
   d_ienv: initialized_env;
   d_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   d_autostart: bool;
-  d_start_time: float;
   d_server_status: (ServerStatus.status * FileWatcherStatus.status) option;
-  d_dialog_stopped: ShowMessageRequest.t; (* "Flow server is stopped. [Restart]" *)
-  d_dialog_stopped_can_show: bool; (* if the user has already dismissed it, don't reshow *)
-  d_actionRequired_stopped: ActionRequired.t; (* "Flow server is stopped." *)
-  d_dialog_connecting: ShowMessageRequest.t; (* "Connecting to Flow server." *)
-  d_dialog_connecting_can_show: bool; (* if the user has already dismissed it, don't reshow *)
-  d_progress_connecting: Progress.t; (* e.g. "Connecting... busy/initializing [53s]" *)
 }
 
 and connected_env = {
@@ -119,15 +120,12 @@ and connected_env = {
   c_server_status: ServerStatus.status * (FileWatcherStatus.status option);
   c_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   c_about_to_exit_code: FlowExitStatus.t option;
-  c_dialog_connected: ShowMessageRequest.t; (* "Connected to Flow server" *)
-  (* stateful handling of Errors messages from server... *)
+  (* stateful handling of Errors+status from server... *)
   c_is_rechecking: bool;
+  c_lazy_stats: ServerProt.Response.lazy_stats option;
   c_diagnostics: PublishDiagnostics.diagnostic list SMap.t;
-  c_recheck_progress: Progress.t; (* e.g. "Rechecking merging 5/20 files" *)
   (* if server gets disconnected, we will tidy up these things... *)
   c_outstanding_requests_to_server: Lsp.IdSet.t;
-  c_outstanding_progress: ISet.t; (* we'll send progress(null) *)
-  c_outstanding_action: ISet.t; (* we'll send action(null) *)
   c_outstanding_diagnostics: SSet.t; (* we'll send publishDiagnostics([]) *)
 }
 
@@ -227,36 +225,83 @@ let get_next_event
       if fds = [] then Tick
       else get_next_event_from_client client parser
 
-
-let showMessageRequest
-    (handler: state lsp_handler)
+let show_status
+    ?(titles = [])
+    ?(handler = fun _title state -> state)
     (type_: MessageType.t)
     (message: string)
-    (titles: string list)
     (ienv: initialized_env)
-  : (ShowMessageRequest.t * initialized_env) =
-  let id = NumberId (Jsonrpc.get_next_request_id ()) in
+  : initialized_env =
+  let open ShowMessageRequest in
+  let open MessageType in
+  let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
   let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title; }) in
-  let request = ShowMessageRequestRequest { ShowMessageRequest.type_; message;  actions; } in
-  let json = Lsp_fmt.print_lsp (RequestMessage (id, request)) in
-  to_stdout json;
-  let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
-  let i_outstanding_local_handlers = IdMap.add id handler ienv.i_outstanding_local_handlers in
-  let ienv = { ienv with i_outstanding_local_requests; i_outstanding_local_handlers; } in
-  (ShowMessageRequest.Present { id; }, ienv)
+  let params = { ShowMessageRequest.type_; message;  actions; } in
 
-(* This function merely posts a $/cancelRequest notification; the client   *)
-(* will respond asynchronously, maybe with RequestCancelled response, or   *)
-(* maybe with a real respoonse.                                            *)
-let dismiss_showMessageRequest (dialog: ShowMessageRequest.t) : ShowMessageRequest.t =
-  begin match dialog with
-    | ShowMessageRequest.Absent -> ()
-    | ShowMessageRequest.Present { id; _ } ->
+  (* What should we display/hide? It's a tricky question... *)
+  let will_dismiss_old, will_show_new = match use_status, ienv.i_status, params with
+    (* If the new status is identical to the old, then no-op *)
+    | _, Shown (_, existingParams), params when existingParams = params -> false, false
+    (* If the client supports status reporting, then we'll blindly send everything *)
+    | true, _, _ -> false, true
+    (* If the client only supports dialog boxes, then we'll be very limited:  *)
+    (* only every display failures; and if there was already an error up even *)
+    (* a different one then leave it undisturbed. *)
+    | false, Shown (_, {type_ = ErrorMessage; _}), {type_ = ErrorMessage; _} -> false, false
+    | false, Shown (id, _), {type_ = ErrorMessage; _} -> Option.is_some id, true
+    | false, Shown (id, _), _ -> Option.is_some id, false
+    | false, Never_shown, {type_ = ErrorMessage; _} -> false, true
+    | false, Never_shown, _ -> false, false in
+
+  (* dismiss the old one *)
+  let ienv = match will_dismiss_old, ienv.i_status with
+    | true, Shown (id, existingParams) ->
+      let id = Option.value_exn id in
       let notification = CancelRequestNotification { CancelRequest.id; } in
       let json = Lsp_fmt.print_lsp (NotificationMessage notification) in
-      to_stdout json
-  end;
-  ShowMessageRequest.Absent
+      to_stdout json;
+      { ienv with i_status = Shown (None, existingParams); }
+    | _, _ -> ienv in
+
+  (* show the new one *)
+  if not will_show_new then
+    ienv
+  else begin
+    let id = NumberId (Jsonrpc.get_next_request_id ()) in
+    let request = if use_status
+      then ShowStatusRequest params else ShowMessageRequestRequest params in
+    let json = Lsp_fmt.print_lsp (RequestMessage (id, request)) in
+    to_stdout json;
+
+    let mark_ienv_shown future_ienv =
+      match future_ienv.i_status with
+      | Shown (Some future_id, future_params) when future_id = id ->
+        { future_ienv with i_status = Shown (None, future_params); }
+      | _ -> future_ienv in
+    let mark_state_shown state =
+      match state with
+      | Connected cenv -> Connected { cenv with c_ienv = mark_ienv_shown cenv.c_ienv; }
+      | Disconnected denv -> Disconnected { denv with d_ienv = mark_ienv_shown denv.d_ienv; }
+      | _ -> state in
+    let handle_error _e state =
+      mark_state_shown state in
+    let handle_result (r: ShowMessageRequest.result) state =
+      let state = mark_state_shown state in
+      match r with
+      | Some {ShowMessageRequest.title} -> handler title state
+      | None -> state in
+    let handle_result = if use_status
+      then (ShowStatusHandler handle_result) else (ShowMessageHandler handle_result) in
+    let handlers = (handle_result, handle_error) in
+    let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
+    let i_outstanding_local_handlers = IdMap.add id handlers ienv.i_outstanding_local_handlers
+    in
+    { ienv with
+      i_status = Shown (Some id, params);
+      i_outstanding_local_requests;
+      i_outstanding_local_handlers;
+    }
+  end
 
 
 let send_to_server (env: connected_env) (request: Persistent_connection_prot.request) : unit =
@@ -311,73 +356,21 @@ let do_initialize () : Initialize.result =
   }
 
 
-let dismiss_ui (state: state) : state =
-  match state with
-  | Pre_init _ -> state
-  | Post_shutdown -> state
-  | Disconnected env ->
-    let d_dialog_stopped = dismiss_showMessageRequest env.d_dialog_stopped in
-    let d_actionRequired_stopped = Lsp_helpers.notify_actionRequired env.d_ienv.i_initialize_params
-      to_stdout env.d_actionRequired_stopped None in
-    let d_dialog_connecting = dismiss_showMessageRequest env.d_dialog_connecting in
-    let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params
-      to_stdout env.d_progress_connecting None in
-    Disconnected { env with
-      d_dialog_stopped; d_actionRequired_stopped; d_dialog_connecting; d_progress_connecting;
-    }
-  | Connected env ->
-    let c_dialog_connected = dismiss_showMessageRequest env.c_dialog_connected in
-    Connected { env with c_dialog_connected; }
-
-
-let show_connected (start_time: float) (env: connected_env) : state =
+let show_connected (env: connected_env) : state =
   (* report that we're connected to telemetry/connectionStatus *)
   let i_isConnected = Lsp_helpers.notify_connectionStatus env.c_ienv.i_initialize_params
     to_stdout env.c_ienv.i_isConnected true in
   let env = { env with c_ienv = { env.c_ienv with i_isConnected; }; } in
-  (* show a notification if necessary *)
-  let time = Unix.gettimeofday () in
-  if (time -. start_time <= 30.0) then
-    Connected env
-  else
-    let seconds = int_of_float (time -. start_time) in
-    let msg = Printf.sprintf "Flow server is now ready, after %i seconds." seconds in
-    let clear_flag state = match state with
-      | Connected cenv ->
-        Connected { cenv with c_dialog_connected = ShowMessageRequest.Absent; }
-      | _ -> state in
-    let handle_error (_e, _stack) state = clear_flag state in
-    let handle_result _r state = clear_flag state in
-    let handle = (ShowMessageHandler handle_result, handle_error) in
-    let (c_dialog_connected, c_ienv) = showMessageRequest handle
-      MessageType.InfoMessage msg [] env.c_ienv in
-    Connected { env with c_ienv; c_dialog_connected; }
+  (* show green status *)
+  let msg = "Flow server is now ready" in
+  let c_ienv = show_status MessageType.InfoMessage msg env.c_ienv
+  in
+  Connected { env with c_ienv; }
 
 
 let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env) : state =
-  let d_dialog_stopped = dismiss_showMessageRequest env.d_dialog_stopped in
-  let d_actionRequired_stopped = Lsp_helpers.notify_actionRequired env.d_ienv.i_initialize_params
-    to_stdout env.d_actionRequired_stopped None in
-
   if reason = CommandConnectSimple.Server_missing then
     Lsp_helpers.log_info to_stdout "Starting Flow server";
-
-  let (d_dialog_connecting, d_ienv) = match env.d_dialog_connecting with
-    | ShowMessageRequest.Present _ -> env.d_dialog_connecting, env.d_ienv
-    | ShowMessageRequest.Absent when not env.d_dialog_connecting_can_show ->
-      env.d_dialog_connecting, env.d_ienv
-    | ShowMessageRequest.Absent -> begin
-      let clear_flag state = match state with
-        | Disconnected e -> Disconnected { e with
-            d_dialog_connecting = ShowMessageRequest.Absent;
-            d_dialog_connecting_can_show = false;
-          }
-        | _ -> state in
-      let handle_error (_e, _stack) state = clear_flag state in
-      let handle_result _r state = clear_flag state in
-      let handle = (ShowMessageHandler handle_result, handle_error) in
-      showMessageRequest handle MessageType.InfoMessage  "Flow: connecting to server" [] env.d_ienv
-    end in
 
   let msg = match reason, env.d_server_status with
     | CommandConnectSimple.Server_missing, _ -> "Flow: Server starting"
@@ -390,18 +383,10 @@ let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env)
       if not (ServerStatus.is_free server_status) then
         "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status)
       else
-        "Flow: " ^ (FileWatcherStatus.string_of_status watcher_status) in
-  let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params
-    to_stdout env.d_progress_connecting (Some msg)
+        "Flow: " ^ (FileWatcherStatus.string_of_status watcher_status)
 
   in
-  Disconnected { env with
-    d_ienv;
-    d_dialog_stopped;
-    d_actionRequired_stopped;
-    d_dialog_connecting;
-    d_progress_connecting;
-  }
+  Disconnected { env with d_ienv = show_status MessageType.WarningMessage msg env.d_ienv; }
 
 
 let show_disconnected
@@ -414,54 +399,17 @@ let show_disconnected
     to_stdout env.d_ienv.i_isConnected false in
   let env = { env with d_ienv = { env.d_ienv with i_isConnected; }; } in
 
-  (* update dialogs/progress as necessary *)
-  let d_dialog_connecting = dismiss_showMessageRequest env.d_dialog_connecting in
-  let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params to_stdout
-    env.d_progress_connecting None in
-
+  (* show red status *)
   let msg = Option.value msg ~default:"Flow: server is stopped" in
-  let full_msg = match code with
+  let msg = match code with
     | Some code -> Printf.sprintf "%s [%s]" msg (FlowExitStatus.to_string code)
-    | None -> msg
-  in
-
-  let (d_dialog_stopped, d_ienv) = match env.d_dialog_stopped with
-    | ShowMessageRequest.Present _ -> env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.Absent when not env.d_dialog_stopped_can_show ->
-      env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.Absent -> begin
-      let handle_error (_e, _stack) state = match state with
-        | Disconnected e -> Disconnected { e with d_dialog_stopped = ShowMessageRequest.Absent; }
-        | _ -> state in
-      let handle_result result state = match state, result with
-        | Disconnected e, Some { ShowMessageRequest.title = "Restart"; } ->
-          (* on the next tick, try_connect will invoke start_flow_server... *)
-          Disconnected { e with
-            d_dialog_stopped = ShowMessageRequest.Absent;
-            d_autostart = true;
-          }
-        | Disconnected e, _ ->
-          (* on subsequent ticks, try_connect won't display errors and won't autostart... *)
-          Disconnected { e with
-            d_dialog_stopped = ShowMessageRequest.Absent;
-            d_dialog_stopped_can_show = false;
-          }
-        | _ ->
-          state in
-      let handle = (ShowMessageHandler handle_result, handle_error) in
-      showMessageRequest handle MessageType.ErrorMessage full_msg ["Restart"] env.d_ienv
-      end in
-
-  let d_actionRequired_stopped = Lsp_helpers.notify_actionRequired env.d_ienv.i_initialize_params
-    to_stdout env.d_actionRequired_stopped (Some full_msg)
-
+    | None -> msg in
+  let handler r state = match state, r with
+    | Disconnected e, "Restart" -> Disconnected { e with d_autostart = true; }
+    | _ -> state
   in
   Disconnected { env with
-    d_ienv;
-    d_dialog_stopped;
-    d_actionRequired_stopped;
-    d_dialog_connecting;
-    d_progress_connecting;
+    d_ienv = show_status ~handler ~titles:["Restart"] MessageType.ErrorMessage msg env.d_ienv;
   }
 
 
@@ -505,13 +453,10 @@ let try_connect (env: disconnected_env) : state =
       c_conn = { ic; oc; };
       c_server_status = (ServerStatus.initial_status, None);
       c_about_to_exit_code = None;
-      c_dialog_connected = ShowMessageRequest.Absent;
       c_is_rechecking = false;
+      c_lazy_stats = None;
       c_diagnostics = SMap.empty;
-      c_recheck_progress = Progress.Absent;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
-      c_outstanding_progress = ISet.empty;
-      c_outstanding_action = ISet.empty;
       c_outstanding_diagnostics = SSet.empty;
       c_editor_open_files = env.d_editor_open_files;
     } in
@@ -523,8 +468,7 @@ let try_connect (env: disconnected_env) : state =
       |> List.map ~f:make_open_message in
     List.iter open_messages ~f:(send_lsp_to_server new_env);
     (* close the old UI and bring up the new *)
-    let _state = dismiss_ui (Disconnected env) in
-    let new_state = show_connected env.d_start_time new_env in
+    let new_state = show_connected new_env in
     new_state
 
   (* Server_missing means the lock file is absent, because the server isn't running *)
@@ -586,15 +530,6 @@ let try_connect (env: disconnected_env) : state =
 let close_conn (env: connected_env) : unit =
   try Timeout.shutdown_connection env.c_conn.ic with _ -> ();
   try Timeout.close_in_noerr env.c_conn.ic with _ -> ()
-
-
-let dismiss_connected_dialog_if_necessary (state: state) (event: event) : state =
-  match state, event with
-  | Connected env, Client_message (Lsp.RequestMessage _)
-  | Connected env, Client_message (Lsp.NotificationMessage _) ->
-    let c_dialog_connected = dismiss_showMessageRequest env.c_dialog_connected in
-    Connected { env with c_dialog_connected; }
-  | _ -> state
 
 
 (************************************************************************)
@@ -709,31 +644,14 @@ let track_from_server (state: state) (c: Lsp.lsp_message) : state =
       WrappedMap.add wrapped params env.c_ienv.i_outstanding_requests_from_server;
     } in
     Connected { env with c_ienv; }
-  (* server->client publishDiagnostics *)
+  (* server->client publishDiagnostics: save up all URIs with non-empty diagnostics *)
   | Connected env, NotificationMessage (PublishDiagnosticsNotification params) ->
-    (* publishDiagnostics: save up all URIs with non-empty diagnostics *)
     let uri = params.PublishDiagnostics.uri in
     let published = params.PublishDiagnostics.diagnostics in
     let c_outstanding_diagnostics = match published with
       | [] -> SSet.remove uri env.c_outstanding_diagnostics
       | _ -> SSet.add uri env.c_outstanding_diagnostics in
     Connected { env with c_outstanding_diagnostics }
-  (* server->client progress *)
-  | Connected env, NotificationMessage (ProgressNotification params) ->
-    let id = params.Progress.id in
-    let label = params.Progress.label in
-    let c_outstanding_progress = match label with
-      | None -> ISet.remove id env.c_outstanding_progress
-      | Some _ -> ISet.add id env.c_outstanding_progress in
-    Connected { env with c_outstanding_progress }
-  (* server->client actionRequired *)
-  | Connected env, NotificationMessage (ActionRequiredNotification params) ->
-    let id = params.ActionRequired.id in
-    let label = params.ActionRequired.label in
-    let c_outstanding_action = match label with
-      | None -> ISet.remove id env.c_outstanding_action
-      | Some _ -> ISet.add id env.c_outstanding_action in
-    Connected { env with c_outstanding_action }
   | _, _ -> state
 
 let dismiss_tracks (state: state) : state =
@@ -755,16 +673,6 @@ let dismiss_tracks (state: state) : state =
     else
       ()
   in
-  let close_progress (id: int) : unit =
-    let notification = ProgressNotification { Progress.id; label = None; } in
-    let json = Lsp_fmt.print_lsp_notification notification in
-    to_stdout json
-  in
-  let close_actionRequired (id: int) : unit =
-    let notification = ActionRequiredNotification { ActionRequired.id; label = None; } in
-    let json = Lsp_fmt.print_lsp_notification notification in
-    to_stdout json
-  in
   let clear_diagnostics (uri: string) : unit =
     let notification = PublishDiagnosticsNotification {
       PublishDiagnostics.uri; diagnostics = []; } in
@@ -776,13 +684,9 @@ let dismiss_tracks (state: state) : state =
     WrappedMap.iter (cancel_request_from_server env.c_ienv.i_server_id)
        env.c_ienv.i_outstanding_requests_from_server;
     IdSet.iter decline_request_to_server env.c_outstanding_requests_to_server;
-    ISet.iter close_progress env.c_outstanding_progress;
-    ISet.iter close_actionRequired env.c_outstanding_action;
     SSet.iter clear_diagnostics env.c_outstanding_diagnostics;
     Connected { env with
       c_outstanding_requests_to_server = IdSet.empty;
-      c_outstanding_progress = ISet.empty;
-      c_outstanding_action = ISet.empty;
       c_outstanding_diagnostics = SSet.empty;
     }
   | _ -> state
@@ -845,27 +749,23 @@ let do_replacement_diagnostics
 
 
 let show_recheck_progress (cenv: connected_env) : state =
-  (* TODO: this functionality should be moved inside flow server... *)
-  let writer state params =
-    let msg = NotificationMessage (ProgressNotification params) in
-    let state = track_from_server state msg in
-    to_stdout (Lsp_fmt.print_lsp msg);
-    state
+  let type_, msg = match cenv.c_is_rechecking, cenv.c_server_status, cenv.c_lazy_stats with
+    | true, (server_status, _), _ when not (ServerStatus.is_free server_status) ->
+      let msg = "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status) in
+      MessageType.WarningMessage, msg
+    | true, _, _ ->
+      MessageType.WarningMessage, "Flow: Server is rechecking..."
+    | false, _, Some {ServerProt.Response.lazy_mode=Some mode; checked_files; total_files}
+      when checked_files < total_files ->
+      let msg = Printf.sprintf
+        "Flow: done recheck. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
+        Options.(match mode with LAZY_MODE_FILESYSTEM -> "fs" | LAZY_MODE_IDE -> "ide")
+        checked_files total_files "https://flow.org/en/docs/lang/lazy-modes/" in
+      MessageType.InfoMessage, msg
+    | false, _, _ ->
+      MessageType.InfoMessage, "Flow: done recheck"
   in
-  let label = match cenv.c_is_rechecking, cenv.c_server_status with
-    | true, (server_status, _) when not (ServerStatus.is_free server_status) ->
-      Some ("Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status))
-    | true, _ -> Some "Flow: Server is rechecking..."
-    | false, _ -> None in
-  let state = Connected cenv in
-
-  let (state, c_recheck_progress) = Lsp_helpers.notify_progress_raw state
-    cenv.c_ienv.i_initialize_params writer cenv.c_recheck_progress label in
-
-  let state = match state with
-    | Connected cenv -> Connected { cenv with c_recheck_progress; }
-    | _ -> failwith "notify_progress shouldn't be changing state so much" in
-  state
+  Connected { cenv with c_ienv = show_status type_ msg cenv.c_ienv }
 
 let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
   (* to know how to parse a response, we must provide the corresponding request *)
@@ -919,10 +819,7 @@ and main_handle (client: Jsonrpc.queue) (state: state) : state =
   try
     let event = get_next_event state client (parse_json state) in
     try
-      let state2 = dismiss_connected_dialog_if_necessary state event in
-      try
-        main_handle_unsafe state2 event
-      with e -> main_handle_error e (Printexc.get_backtrace ()) state2 (Some event)
+      main_handle_unsafe state event
     with e -> main_handle_error e (Printexc.get_backtrace ()) state (Some event)
   with e -> main_handle_error e (Printexc.get_backtrace ()) state None
 
@@ -943,6 +840,7 @@ begin
       i_outstanding_local_handlers = IdMap.empty;
       i_outstanding_requests_from_server = WrappedMap.empty;
       i_isConnected = false;
+      i_status = Never_shown;
     } in
     (* If the version in .flowconfig is simply incompatible with our current *)
     (* binary then it doesn't even make sense for us to start up. And future *)
@@ -959,14 +857,7 @@ begin
     let env = {
       d_ienv;
       d_autostart = true;
-      d_start_time =  Unix.gettimeofday ();
       d_server_status = None;
-      d_dialog_stopped = ShowMessageRequest.Absent;
-      d_dialog_stopped_can_show = true;
-      d_actionRequired_stopped = ActionRequired.Absent;
-      d_dialog_connecting = ShowMessageRequest.Absent;
-      d_dialog_connecting_can_show = true;
-      d_progress_connecting = Progress.Absent;
       d_editor_open_files = SMap.empty;
     } in
     try_connect env
@@ -976,7 +867,6 @@ begin
     let response = ResponseMessage (id, ShutdownResult) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
-    let _state = dismiss_ui state in
     Post_shutdown
 
   | _, Client_message (NotificationMessage ExitNotification) ->
@@ -1005,6 +895,7 @@ begin
       in
       match result, handle with
       | ShowMessageRequestResult result, ShowMessageHandler handle -> handle result state
+      | ShowStatusResult result, ShowStatusHandler handle -> handle result state
       | ErrorResult (e, msg), _ -> handle_error (e, msg) state
       | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_to_string c))
     with Not_found ->
@@ -1101,10 +992,10 @@ begin
       do_replacement_diagnostics cenv all
 
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
-    show_recheck_progress { cenv with c_is_rechecking = true; }
+    show_recheck_progress { cenv with c_is_rechecking = true; c_lazy_stats = None; }
 
-  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck _ ->
-    show_recheck_progress { cenv with c_is_rechecking = false; }
+  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck lazy_stats ->
+    show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats; }
 
   | Connected cenv, Server_message (Persistent_connection_prot.Please_hold status) ->
     let (server_status, watcher_status) = status in
@@ -1172,18 +1063,11 @@ and main_handle_error
     let env = {
       d_ienv;
       d_autostart;
-      d_start_time =  Unix.time ();
       d_server_status = None;
-      d_dialog_stopped = ShowMessageRequest.Absent;
-      d_dialog_stopped_can_show = true;
-      d_actionRequired_stopped = ActionRequired.Absent;
-      d_dialog_connecting = ShowMessageRequest.Absent;
-      d_dialog_connecting_can_show = true;
-      d_progress_connecting = Progress.Absent;
       d_editor_open_files = Option.value (get_editor_open_files state) ~default:SMap.empty;
     }
     in
-    let _state = state |> dismiss_ui |> dismiss_tracks in
+    let _state = state |> dismiss_tracks in
     let state = Disconnected env in
     state
     end

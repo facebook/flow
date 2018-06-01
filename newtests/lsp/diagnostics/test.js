@@ -34,7 +34,7 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
-          ['window/progress', 'textDocument/publishDiagnostics'],
+          ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
     ]),
 
@@ -49,7 +49,7 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"`H` [1] is not an instance type.","message":"[1] `H`"}',
           ],
-          ['window/progress', 'textDocument/publishDiagnostics'],
+          ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
     ]),
 
@@ -64,7 +64,7 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
-          ['window/progress', 'textDocument/publishDiagnostics'],
+          ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
       modifyFile('witherrors1.js', 'return 23;', 'return "";')
         .waitUntilIDEMessage(
@@ -73,7 +73,7 @@ export default suite(
         )
         .verifyAllIDEMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
-          ['window/progress', 'textDocument/publishDiagnostics'],
+          ['window/showStatus', 'textDocument/publishDiagnostics'],
         ),
     ]),
   ],

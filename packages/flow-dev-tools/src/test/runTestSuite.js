@@ -143,6 +143,7 @@ export default (async function(
           throw new Error(format('Expected a TestStep, instead got', step));
         }
         printStatus('RUN');
+        await testBuilder.log('\nSTEP %d', i + 1);
 
         if (step.needsFlowServer()) {
           // No-op if one is already running
@@ -160,7 +161,6 @@ export default (async function(
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
 
-        await testBuilder.log('\nSTEP %d', i + 1);
         await step.performActions(testBuilder, envWrite);
 
         let oldErrors = flowErrors;

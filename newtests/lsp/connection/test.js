@@ -24,19 +24,19 @@ export default suite(
     test('Warm flow starts up, and server remains running after shutdown', [
       ideStart({mode: 'lsp', needsFlowServer: true}),
       ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus')
+        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
         .verifyAllIDEMessagesInStep(
           ['initialize', 'telemetry/connectionStatus{true}'],
-          [],
+          ['window/showStatus'],
         ),
       ideRequest('shutdown')
-        .waitUntilIDEMessage(3000, 'shutdown')
+        .waitUntilIDEMessage(20000, 'shutdown')
         .verifyAllIDEMessagesInStep(
           ['shutdown'],
-          ['telemetry/connectionStatus'],
+          ['telemetry/connectionStatus', 'window/showStatus'],
         ),
       ideNotification('exit')
-        .waitUntilIDEStatus(3000, 'stopped')
+        .waitUntilIDEStatus(20000, 'stopped')
         .verifyIDEStatus('stopped')
         .verifyServerStatus('running'),
     ]),
@@ -44,29 +44,24 @@ export default suite(
     test('Cold flow starts up with progress, and shuts down', [
       ideStart({mode: 'lsp', needsFlowServer: false}),
       ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(30000, 'telemetry/connectionStatus')
+        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
         .verifyAllIDEMessagesInStep(
           [
             'initialize',
             'window/logMessage{Starting Flow server}',
-            'window/showMessageRequest{"id":1,Flow: connecting}',
-            '$/cancelRequest{"id":1}',
-            'window/progress{null}',
             'telemetry/connectionStatus{true}',
           ],
-          // ignore "Flow: Server starting" and "busy" and "initializing" and
-          // maybe other progress messages that aren't the focus of this test
-          ['window/progress{Flow: Server}'],
+          ['window/showStatus'],
         ),
       ideRequest('shutdown')
-        .waitUntilIDEMessage(3000, 'shutdown')
+        .waitUntilIDEMessage(20000, 'shutdown')
         .verifyAllIDEMessagesInStep(
           ['shutdown'],
-          ['telemetry/connectionStatus'],
+          ['window/showStatus', 'telemetry/connectionStatus'],
         ),
       ideNotification('exit')
-        .waitUntilIDEStatus(3000, 'stopped')
-        .waitUntilServerStatus(3000, 'stopped')
+        .waitUntilIDEStatus(20000, 'stopped')
+        .waitUntilServerStatus(20000, 'stopped')
         .verifyIDEStatus('stopped')
         .verifyServerStatus('stopped'),
     ]),
@@ -74,84 +69,61 @@ export default suite(
     test('Termination in-flight, and external restart', [
       ideStartAndConnect(),
       flowCmd(['stop'])
-        .waitUntilServerStatus(3000, 'stopped')
-        .waitUntilIDEMessage(3000, 'window/actionRequired')
+        .waitUntilServerStatus(20000, 'stopped')
+        .waitUntilIDEMessage(20000, 'window/showStatus{stopped}')
         .verifyAllIDEMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{End_of_file}',
-            'window/showMessageRequest{stopped}',
-            'window/actionRequired{stopped}',
+            'window/showStatus{stopped}',
           ],
           [
             // After the EOF, lsp's reconnection attempt might occur
             // before the monitor has also shut down (in which case it
             // will display "connecting...") or after (in which cast it won't)
-            'window/actionRequired{null}',
-            'window/showMessageRequest{Flow: connecting}',
-            'window/progress',
+            'window/showStatus',
             '$/cancelRequest',
           ],
         ),
       startFlowServer()
-        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus')
+        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
         // it really can take a while for flow to be ready to connect
         .verifyAllIDEMessagesInStep(
           ['telemetry/connectionStatus{true}'],
-          [
-            // The "Connecting" dialog might or might not appear, depending
-            // on how quickly it reconnects
-            'window/actionRequired{null}',
-            'window/showMessageRequest{Connecting}',
-            'window/progress',
-            '$/cancelRequest', // remove "Connecting" dialog
-          ],
+          ['window/showStatus'],
         ),
     ]),
 
     test('Termination in-flight, and internal restart', [
       ideStartAndConnect(),
       flowCmd(['stop'])
-        .waitUntilServerStatus(3000, 'stopped')
-        .waitUntilIDEMessage(3000, 'window/actionRequired')
+        .waitUntilServerStatus(20000, 'stopped')
+        .waitUntilIDEMessage(20000, 'window/showStatus{stopped}')
         .verifyAllIDEMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
             'telemetry/event{End_of_file}',
-            'window/showMessageRequest{stopped}',
-            'window/actionRequired{stopped}',
+            'window/showStatus{stopped}',
           ],
-          [
-            'window/showMessageRequest{Flow: connecting}',
-            'window/progress',
-            '$/cancelRequest',
-          ],
+          ['window/showStatus', '$/cancelRequest'],
         ),
       ideResponse('mostRecent', {title: 'Restart'})
-        // .waitUntilServerStatus(20000, 'running') -- commented out because
+        // .waitUntilServerStatus(60000, 'running') -- commented out because
         // the method currently only waits for servers that the test infrastructure
         // launched; not ones that lspCommand launched.
-        .waitUntilIDEMessage(10000, 'telemetry/connectionStatus')
+        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
         .verifyAllIDEMessagesInStep(
-          [
-            'window/actionRequired{null}',
-            'window/logMessage{Starting}',
-            'telemetry/connectionStatus{true}',
-          ],
-          [
-            'window/showMessageRequest{Flow: connecting}',
-            'window/progress',
-            '$/cancelRequest',
-          ],
+          ['window/logMessage{Starting}', 'telemetry/connectionStatus{true}'],
+          ['window/showStatus', '$/cancelRequest'],
         ),
     ]),
 
     test('Restarts a lost server in response to flowconfig benign change', [
       ideStartAndConnect(),
       modifyFile('.flowconfig', '#placeholder', '#replaced')
-        .waitUntilIDEMessage(3000, 'telemetry/connectionStatus{false}')
+        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{false}')
         .dontMindServerDeath()
-        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{true}')
+        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus{true}')
         .verifyAllIDEMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
@@ -159,15 +131,15 @@ export default suite(
             'window/logMessage{Starting}',
             'telemetry/connectionStatus{true}',
           ],
-          ['window/showMessageRequest', 'window/progress', '$/cancelRequest'],
+          ['window/showStatus', '$/cancelRequest'],
         ),
     ]),
 
     test('Terminates in response to flowconfig version change', [
       ideStartAndConnect(),
       modifyFile('.flowconfig', '>0.60.0', '>0.61.0')
-        .waitUntilServerStatus(6000, 'stopped')
-        .waitUntilIDEStatus(6000, 'stopped')
+        .waitUntilServerStatus(20000, 'stopped')
+        .waitUntilIDEStatus(20000, 'stopped')
         .verifyAllIDEMessagesInStep(
           [
             'telemetry/connectionStatus{false}',
@@ -201,29 +173,21 @@ jones();
           [],
         ),
       flowCmd(['stop'])
-        .waitUntilServerStatus(3000, 'stopped')
-        .waitUntilIDEMessage(3000, 'telemetry/connectionStatus{false}')
+        .waitUntilServerStatus(20000, 'stopped')
+        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{false}')
         .verifyAllIDEMessagesInStep(
           ['telemetry/connectionStatus{false}'],
           [
             'telemetry/event{End_of_file}',
-            'window/showMessageRequest',
-            'window/actionRequired',
-            'window/progress',
+            'window/showStatus',
             '$/cancelRequest',
           ],
         ),
       startFlowServer()
-        .waitUntilIDEMessage(20000, 'telemetry/connectionStatus')
+        .waitUntilIDEMessage(60000, 'telemetry/connectionStatus')
         .verifyAllIDEMessagesInStep(
           ['telemetry/connectionStatus{true}'],
-          [
-            'window/actionRequired{null}',
-            'window/showMessageRequest',
-            'window/actionRequired',
-            'window/progress',
-            '$/cancelRequest',
-          ],
+          ['window/showStatus', '$/cancelRequest'],
         ),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},

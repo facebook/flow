@@ -260,6 +260,7 @@ export class TestBuilder {
       args.map(arg => format('"%s"', arg)).join(' '),
       stdinFile == null ? '' : format('< %s', stdinFile),
     );
+    await this.log('# %s', cmd);
     const [err, stdout, stderr] = await execManual(cmd, {cwd: this.dir});
     const code = err == null ? 0 : err.code;
 
@@ -306,27 +307,25 @@ export class TestBuilder {
     }
     const lazyMode =
       this.lazyMode === null ? [] : ['--lazy-mode', this.lazyMode];
-    const serverProcess = spawn(
-      this.bin,
-      [
-        'server',
-        '--strip-root',
-        '--debug',
-        '--temp-dir',
-        this.tmpDir,
-        '--no-auto-restart',
-        '--file-watcher',
-        'none',
-      ]
-        .concat(lazyMode)
-        .concat([this.dir]),
-      {
-        // Useful for debugging flow server
-        // stdio: ["pipe", "pipe", process.stderr],
-        cwd: this.dir,
-        env: {...process.env, OCAMLRUNPARAM: 'b'},
-      },
-    );
+    const args = [
+      'server',
+      '--strip-root',
+      '--debug',
+      '--temp-dir',
+      this.tmpDir,
+      '--no-auto-restart',
+      '--file-watcher',
+      'none',
+    ]
+      .concat(lazyMode)
+      .concat([this.dir]);
+    await this.log('# %s %s', this.bin, args.join(' '));
+    const serverProcess = spawn(this.bin, args, {
+      // Useful for debugging flow server
+      // stdio: ["pipe", "pipe", process.stderr],
+      cwd: this.dir,
+      env: {...process.env, OCAMLRUNPARAM: 'b'},
+    });
     this.server = serverProcess;
     this.serverEmitter.emit('server');
 

@@ -405,23 +405,16 @@ let print_showMessage (type_: MessageType.t) (message: string) : json =
 (** window/showMessage request                                         **)
 (************************************************************************)
 
-let print_showMessageRequest
-    (type_: MessageType.t)
-    (message: string)
-    (titles: string list)
-  : json =
-  let open ShowMessageRequest in
-  let print_action (action: messageActionItem) : json =
+let print_showMessageRequest (r: ShowMessageRequest.showMessageRequestParams) : json =
+  let print_action (action: ShowMessageRequest.messageActionItem) : json =
     JSON_Object [
-      "title", JSON_String action.title;
+      "title", JSON_String action.ShowMessageRequest.title;
     ]
   in
-  let actions = List.map titles ~f:(fun title -> { title; }) in
-  let r = { type_; message; actions; } in
-  JSON_Object [
-    "type", print_messageType r.type_;
-    "message", JSON_String r.message;
-    "actions", JSON_Array (List.map r.actions ~f:print_action);
+  Jprint.object_opt [
+    "type", Some (print_messageType r.ShowMessageRequest.type_);
+    "message", Some (JSON_String r.ShowMessageRequest.message);
+    "actions", Some (JSON_Array (List.map r.ShowMessageRequest.actions ~f:print_action));
   ]
 
 let parse_result_showMessageRequest (result: json option) : ShowMessageRequest.result =
@@ -791,6 +784,7 @@ let parse_initialize (params: json option) : Initialize.params =
     }
   and parse_window json =
     {
+      status = Jget.obj_opt json "status" |> Option.is_some;
       progress = Jget.obj_opt json "progress" |> Option.is_some;
       actionRequired = Jget.obj_opt json "actionRequired" |> Option.is_some;
     }
@@ -928,6 +922,7 @@ let parse_error (error: json) : exn =
 let request_name_to_string (request: lsp_request) : string =
   match request with
   | ShowMessageRequestRequest _ -> "window/showMessageRequest"
+  | ShowStatusRequest _ -> "window/showStatus"
   | InitializeRequest _ -> "initialize"
   | ShutdownRequest -> "shutdown"
   | HoverRequest _ -> "textDocument/hover"
@@ -948,6 +943,7 @@ let request_name_to_string (request: lsp_request) : string =
 let result_name_to_string (result: lsp_result) : string =
   match result with
   | ShowMessageRequestResult _ -> "window/showMessageRequest"
+  | ShowStatusResult _ -> "window/showStatus"
   | InitializeResult _ -> "initialize"
   | ShutdownResult -> "shutdown"
   | HoverResult _ -> "textDocument/hover"
@@ -1014,6 +1010,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   | "telemetry/rage" -> RageRequest
   | "completionItem/resolve"
   | "window/showMessageRequest"
+  | "window/showStatus"
   | _ -> UnknownRequest (method_, params)
 
 let parse_lsp_notification (method_: string) (params: json option) : lsp_notification =
@@ -1037,6 +1034,8 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   match request with
   | ShowMessageRequestRequest _ ->
     ShowMessageRequestResult (parse_result_showMessageRequest (Some result))
+  | ShowStatusRequest _ ->
+    ShowStatusResult (parse_result_showMessageRequest (Some result))
   | InitializeRequest _
   | ShutdownRequest
   | HoverRequest _
@@ -1079,10 +1078,8 @@ let parse_lsp (json: json) (outstanding: lsp_id -> lsp_request) : lsp_message =
 let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
   let method_ = request_name_to_string request in
   let params = match request with
-    | ShowMessageRequestRequest r ->
-      let open ShowMessageRequest in
-      let titles = List.map r.actions ~f:(fun action -> action.title) in
-      print_showMessageRequest r.type_ r.message titles
+    | ShowMessageRequestRequest r -> print_showMessageRequest r
+    | ShowStatusRequest r -> print_showMessageRequest r  (* uses same type as ShowMessageRequest *)
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
@@ -1126,6 +1123,7 @@ let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
     | ShowMessageRequestResult _
+    | ShowStatusResult _
     | CompletionItemResolveResult _ ->
       failwith ("Don't know how to print result " ^ method_)
     | ErrorResult (e, stack) -> print_error e stack

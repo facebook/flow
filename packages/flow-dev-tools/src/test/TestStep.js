@@ -304,7 +304,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         hover: {},
         definition: {},
       },
-      window: {progress: {}, actionRequired: {}},
+      window: {status: {}, progress: {}, actionRequired: {}},
       telemetry: {connectionStatus: {}},
     },
     trace: 'verbose',
@@ -336,7 +336,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   ideStartAndConnect: (?number) => TestStepSecondStage = timeoutMsOpt => {
     const assertLoc = searchStackForTestAssertion();
-    const timeoutMs = timeoutMsOpt || 20000;
+    const timeoutMs = timeoutMsOpt || 60000;
 
     const expected = 'telemetry/connectionStatus{true}';
     const ret = this._cloneWithAction(async (builder, env) => {

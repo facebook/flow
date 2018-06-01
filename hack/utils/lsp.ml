@@ -295,6 +295,7 @@ module Initialize = struct
   }
 
   and windowClientCapabilities = {
+    status: bool;  (* Nuclide-specific: client supports window/showStatusRequest *)
     progress: bool;  (* Nuclide-specific: client supports window/progress *)
     actionRequired: bool;  (* Nuclide-specific: client supports window/actionRequired *)
   }
@@ -809,6 +810,13 @@ module ShowMessageRequest = struct
 end
 
 
+(* ShowStatus request, method="window/showStatus" *)
+module ShowStatus = struct
+  type params = ShowMessageRequest.showMessageRequestParams
+  type result = ShowMessageRequest.messageActionItem option
+end
+
+
 (* Progress notification, method="window/progress" *)
 module Progress = struct
   type t = Present of {id: int; label: string;} | Absent
@@ -896,6 +904,7 @@ type lsp_request =
   | DocumentRangeFormattingRequest of DocumentRangeFormatting.params
   | DocumentOnTypeFormattingRequest of DocumentOnTypeFormatting.params
   | ShowMessageRequestRequest of ShowMessageRequest.params
+  | ShowStatusRequest of ShowStatus.params
   | RageRequest
   | UnknownRequest of string * Hh_json.json option
 
@@ -915,6 +924,7 @@ type lsp_result =
   | DocumentRangeFormattingResult of DocumentRangeFormatting.result
   | DocumentOnTypeFormattingResult of DocumentOnTypeFormatting.result
   | ShowMessageRequestResult of ShowMessageRequest.result
+  | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
   | ErrorResult of exn * string
 
@@ -945,6 +955,7 @@ and 'a lsp_error_handler = (exn * string) -> 'a -> 'a
 
 and 'a lsp_result_handler =
   | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
+  | ShowStatusHandler of (ShowStatus.result -> 'a -> 'a)
 
 module IdKey = struct
   type t = lsp_id

@@ -79,6 +79,10 @@ let supports_actionRequired (p: Lsp.Initialize.params) : bool =
   let open Lsp.Initialize in
   p.client_capabilities.window.actionRequired
 
+let supports_status (p: Lsp.Initialize.params) : bool =
+  let open Lsp.Initialize in
+  p.client_capabilities.window.status
+
 let supports_snippets (p: Lsp.Initialize.params) : bool =
   let open Lsp.Initialize in
   p.client_capabilities.textDocument.completion.completionItem.snippetSupport
