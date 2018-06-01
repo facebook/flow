@@ -24,11 +24,7 @@ let convert_errors ~errors ~warnings =
 
 let get_status genv env client_root =
   let server_root = Options.root genv.options in
-  let lazy_stats = { ServerProt.Response.
-    lazy_mode = Options.lazy_mode genv.options;
-    checked_files = CheckedSet.all env.checked_files |> Utils_js.FilenameSet.cardinal;
-    total_files = Utils_js.FilenameSet.cardinal env.files;
-  } in
+  let lazy_stats = Rechecker.get_lazy_stats genv env in
   let status_response =
     if server_root <> client_root then begin
       ServerProt.Response.DIRECTORY_MISMATCH {

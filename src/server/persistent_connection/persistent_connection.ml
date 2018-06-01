@@ -77,8 +77,8 @@ let send_single_lsp message client =
 let send_single_start_recheck client =
   send_message (Prot.StartRecheck) client
 
-let send_single_end_recheck client =
-  send_message (Prot.EndRecheck) client
+let send_single_end_recheck ~lazy_stats client  =
+  send_message (Prot.EndRecheck lazy_stats) client
 
 let add_client clients client_id logging_context lsp =
   let new_client =
@@ -132,10 +132,10 @@ let send_start_recheck clients =
     |> get_subscribed_clients
     |> List.iter send_single_start_recheck
 
-let send_end_recheck clients =
+let send_end_recheck ~lazy_stats clients =
   clients
     |> get_subscribed_clients
-    |> List.iter send_single_end_recheck
+    |> List.iter (send_single_end_recheck ~lazy_stats)
 
 let rec modify_item lst item f = match lst with
   | [] -> raise Not_found

@@ -18,3 +18,5 @@ val recheck:
   ?force_focus:bool ->
   Utils_js.FilenameSet.t ->
   (Profiling_js.finished option * ServerEnv.env) Lwt.t
+
+val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats

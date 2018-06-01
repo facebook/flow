@@ -124,3 +124,9 @@ let weak_by_default opts = opts.opt_weak
 
 let lint_severities opts = opts.opt_lint_severities
 let strict_mode opts = opts.opt_strict_mode
+
+
+let lazy_mode_to_string lazy_mode =
+  match lazy_mode with
+  | LAZY_MODE_FILESYSTEM -> "fs"
+  | LAZY_MODE_IDE -> "ide"

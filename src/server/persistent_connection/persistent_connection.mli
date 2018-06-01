@@ -33,7 +33,7 @@ val send_lsp:
 val send_start_recheck:
   t -> unit
 val send_end_recheck:
-  t -> unit
+  lazy_stats:ServerProt.Response.lazy_stats -> t -> unit
 
 (* Send a message to just one client *)
 val send_message: Prot.response -> single_client -> unit

@@ -1103,7 +1103,7 @@ begin
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
     show_recheck_progress { cenv with c_is_rechecking = true; }
 
-  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck ->
+  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck _ ->
     show_recheck_progress { cenv with c_is_rechecking = false; }
 
   | Connected cenv, Server_message (Persistent_connection_prot.Please_hold status) ->

@@ -8,6 +8,13 @@
 open ServerEnv
 open Utils_js
 
+let get_lazy_stats genv env =
+  { ServerProt.Response.
+    lazy_mode = Options.lazy_mode genv.options;
+    checked_files = CheckedSet.all env.checked_files |> Utils_js.FilenameSet.cardinal;
+    total_files = Utils_js.FilenameSet.cardinal env.files;
+  }
+
 (* filter a set of updates coming from dfind and return
    a FilenameSet. updates may be coming in from
    the root, or an include path. *)
@@ -138,7 +145,8 @@ let recheck genv env ?(force_focus=false) updates =
 
     let%lwt profiling, env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
 
-    Persistent_connection.send_end_recheck env.connections;
+    let lazy_stats = get_lazy_stats genv env in
+    Persistent_connection.send_end_recheck ~lazy_stats env.connections;
     let calc_errors_and_warnings () =
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
       errors, warnings

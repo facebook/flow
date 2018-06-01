@@ -33,7 +33,7 @@ let denorm_string_of_request = function
 type response =
   | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
   | StartRecheck
-  | EndRecheck
+  | EndRecheck of ServerProt.Response.lazy_stats
   | AutocompleteResult of (ServerProt.Response.autocomplete_response * (* request id *) int)
   | DidOpenAck
   | DidCloseAck
@@ -44,7 +44,7 @@ type response =
 let string_of_response = function
 | Errors _ -> "errors"
 | StartRecheck -> "startRecheck"
-| EndRecheck -> "endRecheck"
+| EndRecheck _ -> "endRecheck"
 | AutocompleteResult _ -> "autocompleteResult"
 | DidOpenAck -> "didOpenAck"
 | DidCloseAck -> "didCloseAck"

@@ -88,7 +88,7 @@ module HumanReadable: ClientProtocol = struct
     | Prot.Please_hold _status -> () (* ignored here; used in lspCommand *)
     | Prot.LspFromServer _ -> failwith "no lspFromServer to ideCommand"
     | Prot.StartRecheck -> print_endline "Start recheck"
-    | Prot.EndRecheck -> print_endline "End recheck"
+    | Prot.EndRecheck _ -> print_endline "End recheck"
     | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
     | Prot.DidOpenAck -> print_endline "Received file open ack"
     | Prot.DidCloseAck -> print_endline "Received file close ack"
@@ -131,7 +131,7 @@ module VeryUnstable: ClientProtocol = struct
     | Prot.Please_hold _status -> () (* ignored here, but used in lspCommand *)
     | Prot.LspFromServer _ -> failwith "no lspFromServer to ideCommand"
     | Prot.StartRecheck -> print_start_recheck ()
-    | Prot.EndRecheck -> print_end_recheck ()
+    | Prot.EndRecheck _ -> print_end_recheck ()
     | Prot.AutocompleteResult (result, id) -> print_autocomplete ~strip_root result id
     (* No need to send the client anything; these acks are to prevent deadlocks
      * involving the buffers between the ide command and the flow server *)
@@ -244,7 +244,7 @@ end = struct
       | LspFromServer _, _
       | Please_hold _, _
       | StartRecheck, _
-      | EndRecheck, _ ->
+      | EndRecheck _, _ ->
           t
       | AutocompleteResult (_, response_id), Some (Autocomplete (_, request_id)) ->
           if response_id <> request_id then begin
