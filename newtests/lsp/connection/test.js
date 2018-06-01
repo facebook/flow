@@ -54,10 +54,9 @@ export default suite(
             'window/progress{null}',
             'telemetry/connectionStatus{true}',
           ],
-          [
-            'window/progress{Server starting}',
-            'window/progress{Server is initializing}',
-          ],
+          // ignore "Flow: Server starting" and "busy" and "initializing" and
+          // maybe other progress messages that aren't the focus of this test
+          ['window/progress{Flow: Server}'],
         ),
       ideRequest('shutdown')
         .waitUntilIDEMessage(3000, 'shutdown')
