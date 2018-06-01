@@ -477,7 +477,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         actuals.join(','),
         assertLoc,
         reason,
-        "'what required message arrived'",
+        'messages',
         suggestion,
       );
     });
