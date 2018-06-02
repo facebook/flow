@@ -471,12 +471,20 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) ((loc, stmt): Loc.t
         block b;
         (match handler with
         | Some (loc, { S.Try.CatchClause.param; body }) ->
-          SourceLocation (loc, fuse [
-            pretty_space;
-            statement_with_test "catch"
-              (pattern ~ctxt:normal_context param)
-              (block body)
-          ])
+          SourceLocation (loc, match param with
+            | Some p -> fuse [
+                pretty_space;
+                statement_with_test "catch"
+                  (pattern ~ctxt:normal_context p)
+                  (block body)
+              ]
+            | None -> fuse [
+              pretty_space;
+              Atom "catch";
+              pretty_space;
+              block body;
+            ]
+          )
         | None -> Empty);
         match finalizer with
         | Some b ->

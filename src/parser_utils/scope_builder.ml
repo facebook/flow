@@ -212,9 +212,13 @@ class scope_builder = object(this)
     let { param; body = _ } = clause in
 
     (* hoisting *)
-    let lexical_hoist = new lexical_hoister in
-    let bindings = lexical_hoist#eval lexical_hoist#catch_clause_pattern param in
-    this#with_bindings ~lexical:true bindings super#catch_clause clause
+    let lexical_bindings = match param with
+      | Some p ->
+        let lexical_hoist = new lexical_hoister in
+        lexical_hoist#eval lexical_hoist#catch_clause_pattern p
+      | None -> Bindings.empty
+      in
+    this#with_bindings ~lexical:true lexical_bindings super#catch_clause clause
 
   (* helper for function params and body *)
   method private lambda params body =

@@ -238,7 +238,8 @@ class mapper = object(this)
   method catch_clause (clause: Loc.t Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
-    let param' = this#catch_clause_pattern param in
+
+    let param' = Option.map param ~f:this#catch_clause_pattern in
     let body' = map_loc this#block body in
     if param == param' && body == body' then clause
     else { param = param'; body = body' }

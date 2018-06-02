@@ -134,6 +134,54 @@ References:
                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- optional-catch-binding.js:19:20
+
+Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
+
+   optional-catch-binding.js:19:20
+   19|     var y:number = x; // error
+                          ^
+
+References:
+   optional-catch-binding.js:17:9
+   17|     var x:number = 0;
+               ^ [1]
+   optional-catch-binding.js:19:11
+   19|     var y:number = x; // error
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- optional-catch-binding.js:27:20
+
+Cannot assign `'string'` to `y` because string [1] is incompatible with number [2].
+
+   optional-catch-binding.js:27:20
+   27|     var y:number = 'string'; // error
+                          ^^^^^^^^ [1]
+
+References:
+   optional-catch-binding.js:27:11
+   27|     var y:number = 'string'; // error
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- optional-catch-binding.js:36:20
+
+Cannot assign `x` to `y` because number [1] is incompatible with string [2].
+
+   optional-catch-binding.js:36:20
+   36|     var y:string = x; // error
+                          ^
+
+References:
+   optional-catch-binding.js:33:10
+   33|   var x: number = 0;
+                ^^^^^^ [1]
+   optional-catch-binding.js:36:11
+   36|     var y:string = x; // error
+                 ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- return.js:28:3
 
 Unreachable code.
@@ -187,4 +235,4 @@ Unreachable code.
 
 
 
-Found 13 errors
+Found 16 errors

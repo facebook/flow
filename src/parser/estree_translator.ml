@@ -592,7 +592,7 @@ end with type t = Impl.t) = struct
 
   and catch (loc, c) = Statement.Try.CatchClause.(
     node "CatchClause" loc [
-      "param", pattern c.param;
+      "param", option pattern c.param;
       "body", block c.body;
     ]
   )

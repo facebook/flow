@@ -388,9 +388,15 @@ module Statement
     | T_CATCH ->
         let catch = with_loc (fun env ->
           Expect.token env T_CATCH;
-          Expect.token env T_LPAREN;
-          let param = Parse.pattern env Error.StrictCatchVariable in
-          Expect.token env T_RPAREN;
+          let param = if Peek.token env = T_LPAREN
+          then begin
+            Expect.token env T_LPAREN;
+            let p = Some (Parse.pattern env Error.StrictCatchVariable) in
+            Expect.token env T_RPAREN;
+            p
+          end else
+            None
+          in
           let body = Parse.block_body env in
           { Ast.Statement.Try.CatchClause.
             param;

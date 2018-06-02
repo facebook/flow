@@ -458,36 +458,46 @@ and statement cx = Ast.Statement.(
     Env.init_var ~has_anno:false cx ~use_op name t loc
   in
 
+  let check cx b = Abnormal.catch_control_flow_exception(fun () ->
+    toplevel_decls cx b.Block.body;
+    toplevels cx b.Block.body) in
+
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
     Ast.Pattern.(match param with
-      | loc, Identifier {
-          Identifier.name = (_, name); annot = None; _;
-        } ->
-          let r = mk_reason (RCustom "catch") loc in
-          let t = Tvar.mk cx r in
+      | Some p -> (match p with
+        | loc, Identifier {
+            Identifier.name = (_, name); annot = None; _;
+          } ->
+            let r = mk_reason (RCustom "catch") loc in
+            let t = Tvar.mk cx r in
 
-          Env.add_type_table cx loc t;
+            Env.add_type_table cx loc t;
 
-          (match Env.in_lex_scope cx (fun () ->
-            Scope.(Env.bind_implicit_let
-              ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
+            (match Env.in_lex_scope cx (fun () ->
+              Scope.(Env.bind_implicit_let
+                ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
 
-            Abnormal.catch_control_flow_exception (fun () ->
-              toplevel_decls cx b.Block.body;
-              toplevels cx b.Block.body
+               check cx b
+            ) with
+            | Some exn -> Abnormal.throw_control_flow_exception exn
+            | None -> ()
             )
-          ) with
-          | Some exn -> Abnormal.throw_control_flow_exception exn
-          | None -> ()
-          )
 
-      | loc, Identifier _ ->
-          Flow.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation))
+        | loc, Identifier _ ->
+            Flow.add_output cx
+              Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation))
 
-      | loc, _ ->
-          Flow.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration))
+        | loc, _ ->
+            Flow.add_output cx
+              Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration))
+      )
+      | None ->
+        (match Env.in_lex_scope cx (fun () ->
+          check cx b
+        ) with
+        | Some exn -> Abnormal.throw_control_flow_exception exn
+        | None -> ()
+        )
     )
   in
 

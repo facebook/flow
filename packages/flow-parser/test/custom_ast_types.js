@@ -253,3 +253,11 @@ def('OptionalCallExpression')
 
 def('LogicalExpression')
   .field('operator', or("||", "&&", "??"));
+
+def("CatchClause")
+    .bases("Node")
+    .build("param", "guard", "body")
+    // https://github.com/tc39/proposal-optional-catch-binding
+    .field("param", or(def("Pattern"), null), defaults["null"])
+    .field("guard", or(def("Expression"), null), defaults["null"])
+    .field("body", def("BlockStatement"));

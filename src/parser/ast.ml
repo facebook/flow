@@ -311,7 +311,7 @@ and Statement : sig
     module CatchClause : sig
       type 'M t = 'M * 'M t'
       and 'M t' = {
-        param: 'M Pattern.t;
+        param: 'M Pattern.t option;
         body: 'M * 'M Block.t;
       }
     end
