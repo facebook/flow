@@ -582,7 +582,7 @@ let handle_persistent_unsafe genv env client profiling msg
     begin match result with
       | Ok loc ->
         let default_uri = params.textDocument.TextDocumentIdentifier.uri in
-        let location = Flow_lsp_conversions.loc_to_lsp ~default_uri loc in
+        let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
         lsp_writer (ResponseMessage (id, DefinitionResult [location]));
         Lwt.return (Ok (!env, json_data))
       | Error reason ->
@@ -603,7 +603,7 @@ let handle_persistent_unsafe genv env client profiling msg
         (* loc may be the 'none' location; content may be None. *)
         (* If both are none then we'll return null; otherwise we'll return a hover *)
         let default_uri = params.textDocument.TextDocumentIdentifier.uri in
-        let location = Flow_lsp_conversions.loc_to_lsp ~default_uri loc in
+        let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
         let range = if loc = Loc.none then None else Some location.Lsp.Location.range in
         let contents = match content with
           | None -> [MarkedString "?"]
@@ -672,6 +672,39 @@ let handle_persistent_unsafe genv env client profiling msg
       | Ok (None) ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         let r = DocumentHighlightResult [] in
+        lsp_writer (ResponseMessage (id, r));
+        Lwt.return (Ok (!env, json_data))
+      | Error reason ->
+        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+    end
+
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
+    let env = ref env in
+    let loc = FindReferences.(params.loc) in
+    let _includeDeclaration = FindReferences.(params.context.includeDeclaration) in
+    (* TODO: respect includeDeclaration *)
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
+    let global, multi_hop = true, false in
+    let%lwt result, json_data =
+      find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
+    in
+    begin match result with
+      | Ok (Some (_name, locs)) ->
+        let lsp_locs = Core_list.fold locs ~init:(Ok []) ~f:(fun acc loc ->
+          let location = Flow_lsp_conversions.loc_to_lsp loc in
+          Core_result.combine location acc ~ok:List.cons ~err:(fun e _ -> e)) in
+        begin match lsp_locs with
+        | Ok lsp_locs ->
+          lsp_writer (ResponseMessage (id, FindReferencesResult lsp_locs));
+          Lwt.return (Ok (!env, json_data))
+        | Error e ->
+          let stack = Printexc.get_backtrace () in
+          Lwt.return (Error (!env, e, Utils.Callstack stack))
+        end
+      | Ok (None) ->
+        (* e.g. if it was requested on a place that's not even an identifier *)
+        let r = FindReferencesResult [] in
         lsp_writer (ResponseMessage (id, r));
         Lwt.return (Ok (!env, json_data))
       | Error reason ->

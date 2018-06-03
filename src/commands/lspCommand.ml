@@ -335,7 +335,7 @@ let do_initialize () : Initialize.result =
       };
       signatureHelpProvider = None;
       definitionProvider = true;
-      referencesProvider = false;
+      referencesProvider = true;
       documentHighlightProvider = true;
       documentSymbolProvider = false;
       workspaceSymbolProvider = false;
@@ -966,10 +966,10 @@ begin
         (all: PublishDiagnostics.diagnostic list SMap.t)
       : PublishDiagnostics.diagnostic list SMap.t =
       let error = Errors.Lsp_output.lsp_of_error error in
-      let location = Flow_lsp_conversions.loc_to_lsp error.Errors.Lsp_output.loc ~default_uri in
+      let location = Flow_lsp_conversions.loc_to_lsp_with_default error.Errors.Lsp_output.loc ~default_uri in
       let uri = location.Lsp.Location.uri in
       let related_to_lsp (loc, relatedMessage) =
-        let relatedLocation = Flow_lsp_conversions.loc_to_lsp loc ~default_uri in
+        let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in
         { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
       let diagnostic = { Lsp.PublishDiagnostics.
         range = location.Lsp.Location.range;

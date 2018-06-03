@@ -46,14 +46,12 @@ let flow_completion_to_lsp
     data = None;
   }
 
-let file_key_to_uri (file_key_opt: File_key.t option) ~(default_uri: string): string =
-  match file_key_opt with
-  | None -> default_uri
-  | Some file_key -> begin
-    match File_key.to_path file_key with
-    | Error _ -> default_uri
-    | Ok path -> File_url.create path
-    end
+let file_key_to_uri (file_key_opt: File_key.t option): (string, string) result =
+  let (>>|) = Core_result.(>>|) in
+  let (>>=) = Core_result.(>>=) in
+  Core_result.of_option file_key_opt ~error:"File_key is None"
+    >>= File_key.to_path
+    >>| File_url.create
 
 let loc_to_lsp_range (loc: Loc.t): Lsp.range =
   { Lsp.
@@ -61,11 +59,16 @@ let loc_to_lsp_range (loc: Loc.t): Lsp.range =
     end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column; };
   }
 
-let loc_to_lsp (loc: Loc.t) ~(default_uri: string): Lsp.Location.t =
-  { Lsp.Location.
-    uri = file_key_to_uri loc.Loc.source ~default_uri;
-    range = loc_to_lsp_range loc;
-  }
+let loc_to_lsp (loc: Loc.t): (Lsp.Location.t, string) result =
+  let (>>|) = Core_result.(>>|) in
+  file_key_to_uri loc.Loc.source >>| fun uri -> { Lsp.Location.uri; range = loc_to_lsp_range loc; }
+
+let loc_to_lsp_with_default (loc: Loc.t) ~(default_uri: string): Lsp.Location.t =
+  let uri = match file_key_to_uri loc.Loc.source with
+    | Ok uri -> uri
+    | Error _ -> default_uri
+  in
+  { Lsp.Location.uri; range = loc_to_lsp_range loc; }
 
 let lsp_position_to_flow (position: Lsp.position): int * int =
   let open Lsp in
@@ -79,6 +82,9 @@ let lsp_DocumentIdentifier_to_flow
     ~(client: Persistent_connection.single_client)
   : File_input.t =
   let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
+  (* ~, . and .. have no meaning in file urls so we don't canonicalize them *)
+  (* but symlinks must be canonicalized before being used in flow: *)
+  let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
   let file = Persistent_connection.get_file client fn
   in
   file

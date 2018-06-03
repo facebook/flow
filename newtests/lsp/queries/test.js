@@ -105,5 +105,17 @@ export default suite(
         position: {line: 6, character: 100}, // off the right edge of the text
       }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
     ]),
+
+    test('textDocument/references', [
+      addFiles('references.js', 'references2.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/references', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        position: {line: 9, character: 17}, // on an identifier
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/references{line":3,"line":5,"line":9}'],
+        [],
+      ),
+    ]),
   ],
 );

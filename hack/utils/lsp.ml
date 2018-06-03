@@ -642,11 +642,8 @@ module FindReferences = struct
 
   and result = Location.t list
 
-  (* Following structure is an extension of TextDocumentPositionParams.t *)
-  (* but we don't have nice inherantice in OCaml so we duplicate fields *)
   and referenceParams = {
-    textDocument: TextDocumentIdentifier.t;  (* the text document *)
-    position: position;  (* the position inside the text document *)
+    loc: TextDocumentPositionParams.t; (* wire: loc's members are part of referenceParams *)
     context: referenceContext;
   }
 

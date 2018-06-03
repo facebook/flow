@@ -592,12 +592,9 @@ let print_documentSymbol (r: DocumentSymbol.result) : json =
 (************************************************************************)
 
 let parse_findReferences (params: json option) : FindReferences.params =
-  let open TextDocumentPositionParams in
-  let as_positionParams = parse_textDocumentPositionParams params in
   let context = Jget.obj_opt params "context" in
   { FindReferences.
-    textDocument = as_positionParams.textDocument;
-    position = as_positionParams.position;
+    loc = parse_textDocumentPositionParams params;
     context =
       { FindReferences.
         includeDeclaration = Jget.bool_d context "includeDeclaration" true;
