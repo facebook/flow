@@ -55,14 +55,16 @@ let file_key_to_uri (file_key_opt: File_key.t option) ~(default_uri: string): st
     | Ok path -> File_url.create path
     end
 
+let loc_to_lsp_range (loc: Loc.t): Lsp.range =
+  { Lsp.
+    start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
+    end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column; };
+  }
+
 let loc_to_lsp (loc: Loc.t) ~(default_uri: string): Lsp.Location.t =
-  let line = loc.Loc.start.Loc.line - 1 in
   { Lsp.Location.
     uri = file_key_to_uri loc.Loc.source ~default_uri;
-    range = { Lsp.
-      start = { Lsp.line; character=loc.Loc.start.Loc.column; };
-      end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column; };
-    };
+    range = loc_to_lsp_range loc;
   }
 
 let lsp_position_to_flow (position: Lsp.position): int * int =

@@ -652,6 +652,33 @@ let handle_persistent_unsafe genv env client profiling msg
         end
     end
 
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
+    let env = ref env in
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
+    let global, multi_hop = false, false in (* multi_hop implies global *)
+    let%lwt result, json_data =
+      find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
+    in
+    begin match result with
+      | Ok (Some (_name, locs)) ->
+        (* All the locs are implicitly in the same file, because global=false. *)
+        let loc_to_highlight loc = { DocumentHighlight.
+          range = Flow_lsp_conversions.loc_to_lsp_range loc;
+          kind = Some DocumentHighlight.Text;
+        } in
+        let r = DocumentHighlightResult (List.map loc_to_highlight locs) in
+        lsp_writer (ResponseMessage (id, r));
+        Lwt.return (Ok (!env, json_data))
+      | Ok (None) ->
+        (* e.g. if it was requested on a place that's not even an identifier *)
+        let r = DocumentHighlightResult [] in
+        lsp_writer (ResponseMessage (id, r));
+        Lwt.return (Ok (!env, json_data))
+      | Error reason ->
+        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+    end
+
   | Persistent_connection_prot.LspToServer unhandled ->
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_to_string unhandled) in

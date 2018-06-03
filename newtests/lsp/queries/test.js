@@ -9,10 +9,10 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 export default suite(
   ({
     ideStartAndConnect,
-    ideRequest,
     ideNotification,
     ideRequestAndWaitUntilResponse,
     addFile,
+    addFiles,
   }) => [
     test('invalid_method', [
       ideStartAndConnect(),
@@ -80,6 +80,30 @@ export default suite(
         ],
         [],
       ),
+    ]),
+
+    test('textDocument/documentHighlight', [
+      addFiles('references.js', 'references2.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        position: {line: 9, character: 17}, // on an identifier
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/documentHighlight{"line":3,"line":9}'],
+        [],
+      ),
+      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        position: {line: 9, character: 1}, // on a keyword
+      }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
+      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        position: {line: 6, character: 0}, // on whitespace
+      }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
+      ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        position: {line: 6, character: 100}, // off the right edge of the text
+      }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
     ]),
   ],
 );
