@@ -173,7 +173,7 @@ module SymbolInformation = struct
   type t = {
     name: string;
     kind: symbolKind;
-    location: Location.t;  (* the location of the symbol token itself *)
+    location: Location.t;  (* the span of the symbol including its contents *)
     containerName: string option;  (* the symbol containing this symbol *)
   }
 

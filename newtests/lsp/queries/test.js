@@ -117,5 +117,18 @@ export default suite(
         [],
       ),
     ]),
+
+    test('textDocument/documentSymbol', [
+      addFiles('outline.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/documentSymbol', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/outline.js'},
+      }).verifyAllIDEMessagesInStep(
+        [
+          'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
+        ],
+        [],
+      ),
+    ]),
   ],
 );

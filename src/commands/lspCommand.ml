@@ -337,7 +337,7 @@ let do_initialize () : Initialize.result =
       definitionProvider = true;
       referencesProvider = true;
       documentHighlightProvider = true;
-      documentSymbolProvider = false;
+      documentSymbolProvider = true;
       workspaceSymbolProvider = false;
       codeActionProvider = false;
       codeLensProvider = None;
@@ -767,6 +767,40 @@ let show_recheck_progress (cenv: connected_env) : state =
   in
   Connected { cenv with c_ienv = show_status type_ msg cenv.c_ienv }
 
+
+let lsp_DocumentIdentifier_to_flow
+    (textDocument: Lsp.TextDocumentIdentifier.t)
+    ~(state: state)
+  : File_input.t =
+  let uri = textDocument.TextDocumentIdentifier.uri in
+  let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
+  let editor_open_files = get_editor_open_files state in
+  let doc = Option.bind editor_open_files (SMap.get uri) in
+  match doc with
+  | None -> File_input.FileName fn
+  | Some doc -> File_input.FileContent (Some fn, doc.TextDocumentItem.text)
+
+let do_documentSymbol (state: state) (params: DocumentSymbol.params) : DocumentSymbol.result =
+  let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
+  let file = lsp_DocumentIdentifier_to_flow ~state params.DocumentSymbol.textDocument in
+  let content = File_input.content_of_file_input_unsafe file in
+  let filename_opt = File_input.path_of_file_input file in
+  let filekey = Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
+  let parse_options = Some Parser_env.({
+    esproposal_class_instance_fields = true;
+    esproposal_class_static_fields = true;
+    esproposal_decorators = true;
+    esproposal_export_star_as = true;
+    esproposal_optional_chaining = true;
+    esproposal_nullish_coalescing = true;
+    types = true;
+    use_strict = false;
+  }) in
+  let (program, _errors) =
+    Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
+  in
+  Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri program
+
 let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
   (* to know how to parse a response, we must provide the corresponding request *)
   let outstanding (id: lsp_id) : lsp_request =
@@ -908,6 +942,16 @@ begin
       | _ ->
         failwith (Printf.sprintf "Response %s has missing handler" (message_to_string c))
     end
+
+  | _, Client_message (RequestMessage (id, DocumentSymbolRequest params)) ->
+    (* documentSymbols is handled in the client, not the server, since it's *)
+    (* purely syntax-driven and we'd like it to work even if the server is  *)
+    (* busy or disconnected *)
+    let result = do_documentSymbol state params in
+    let response = ResponseMessage (id, DocumentSymbolResult result) in
+    let json = Lsp_fmt.print_lsp response in
+    to_stdout json;
+    state
 
   | Connected cenv, Client_message c ->
     let state = track_to_server state c in
