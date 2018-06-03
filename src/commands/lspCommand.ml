@@ -350,7 +350,7 @@ let do_initialize () : Initialize.result =
       renameProvider = false;
       documentLinkProvider = None;
       executeCommandProvider = None;
-      typeCoverageProvider = false;
+      typeCoverageProvider = true;
       rageProvider = false;
     }
   }

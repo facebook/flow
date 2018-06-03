@@ -643,14 +643,15 @@ let parse_typeCoverage (params: json option)
 let print_typeCoverage (r: TypeCoverage.result) : json =
   let open TypeCoverage in
   let print_uncov (uncov: uncoveredRange) : json =
-    JSON_Object [
-      "range", print_range uncov.range;
-      "message", string_ uncov.message;
+    Jprint.object_opt [
+      "range", Some (print_range uncov.range);
+      "message", Option.map uncov.message ~f:string_;
     ]
   in
   JSON_Object [
     "coveredPercent", int_ r.coveredPercent;
-    "uncoveredRanges", JSON_Array (List.map r.uncoveredRanges ~f:print_uncov)
+    "uncoveredRanges", JSON_Array (List.map r.uncoveredRanges ~f:print_uncov);
+    "defaultMessage", JSON_String r.defaultMessage;
   ]
 
 (************************************************************************)

@@ -130,5 +130,16 @@ export default suite(
         [],
       ),
     ]),
+
+    test('textDocument/typeCoverage', [
+      addFiles('coverage.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage.js'},
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
+        [],
+      ),
+    ]),
   ],
 );

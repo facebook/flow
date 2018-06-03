@@ -679,6 +679,7 @@ module TypeCoverage = struct
   and result = {
     coveredPercent: int;
     uncoveredRanges: uncoveredRange list;
+    defaultMessage: string;
   }
 
   and typeCoverageParams = {
@@ -687,7 +688,7 @@ module TypeCoverage = struct
 
   and uncoveredRange = {
     range: range;
-    message: string;
+    message: string option;
   }
 end
 

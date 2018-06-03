@@ -361,7 +361,8 @@ let handle_ephemeral_unsafe
           ) |> respond;
           Lwt.return None
       | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
-          let%lwt result, json_data = find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
+          let%lwt result, json_data =
+            find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
           ServerProt.Response.FIND_REFS result |> respond;
           Lwt.return json_data
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
@@ -674,6 +675,55 @@ let handle_persistent_unsafe genv env client profiling msg
         let r = DocumentHighlightResult [] in
         lsp_writer (ResponseMessage (id, r));
         Lwt.return (Ok (!env, json_data))
+      | Error reason ->
+        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+    end
+
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
+    let env = ref env in
+    let textDocument = params.TypeCoverage.textDocument in
+    let file = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow ~client textDocument in
+    let force = false in (* force=true would make it produce coverage for non-flow JS files *)
+    let%lwt result = coverage ~options ~workers ~env ~profiling ~force file
+    in
+    begin match result with
+      | Ok (all_locs) ->
+        (* Figure out the percentages *)
+        let accum_coverage (covered, total) (_loc, is_covered) =
+          (covered + if is_covered then 1 else 0), total + 1 in
+        let covered, total = Core_list.fold all_locs ~init:(0,0) ~f:accum_coverage in
+        let coveredPercent = if total = 0 then 100 else 100 * covered / total in
+        (* Figure out each individual uncovered span *)
+        let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, is_covered) ->
+          if is_covered then None else Some loc) in
+        (* Imagine a tree of uncovered spans based on range inclusion. *)
+        (* This sorted list is a pre-order flattening of that tree. *)
+        let sorted = Core_list.sort uncovereds ~cmp:(fun a b -> Pervasives.compare
+          (a.Loc.start.Loc.offset, a.Loc._end.Loc.offset)
+          (b.Loc.start.Loc.offset, b.Loc._end.Loc.offset)) in
+        (* We can use that sorted list to remove any span which contains another, so *)
+        (* the user only sees actionable reports of the smallest causes of untypedness. *)
+        (* The algorithm: accept a range if its immediate successor isn't contained by it. *)
+        let f (candidate, acc) loc =
+          if Loc.contains candidate loc then (loc, acc) else (loc, candidate :: acc) in
+        let singles = match sorted with
+          | [] -> []
+          | (first::_) ->
+            let (final_candidate, singles) = Core_list.fold sorted ~init:(first,[]) ~f in
+            final_candidate :: singles in
+        (* Convert to LSP *)
+        let loc_to_lsp loc =
+          { TypeCoverage.range=Flow_lsp_conversions.loc_to_lsp_range loc; message=None; } in
+        let uncoveredRanges = Core_list.map singles ~f:loc_to_lsp in
+        (* Send the results! *)
+        let r = TypeCoverageResult { TypeCoverage.
+          coveredPercent;
+          uncoveredRanges;
+          defaultMessage = "Un-type checked code. Consider adding type annotations.";
+        } in
+        lsp_writer (ResponseMessage (id, r));
+        Lwt.return (Ok (!env, None))
       | Error reason ->
         let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
         Lwt.return (Error (!env, reason, Utils.Callstack stack))
