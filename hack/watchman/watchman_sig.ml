@@ -32,6 +32,7 @@ module Types = struct
     init_timeout: int;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
+    debug_logging: bool;
     root: Path.t;
   }
 

@@ -27,6 +27,7 @@ module Testing_common = struct
     subscribe_mode = Some Defer_changes;
     init_timeout = 0;
     expression_terms = [];
+    debug_logging = false;
     root = Path.dummy_path;
   }
 end
@@ -55,8 +56,6 @@ module Watchman_actual = struct
   (** Throw this exception when we know there is something to read from
    * the watchman channel, but reading took too long. *)
   exception Read_payload_too_long
-
-  let debug = false
 
   (** This number is totally arbitrary. Just need some cap. *)
   let max_reinit_attempts = 8
@@ -273,8 +272,8 @@ module Watchman_actual = struct
        end else ()
      with Not_found -> ())
 
-  let sanitize_watchman_response output =
-    if debug then Printf.eprintf "Watchman response: %s\n%!" output;
+  let sanitize_watchman_response ~debug_logging output =
+    if debug_logging then Printf.eprintf "Watchman response: %s\n%!" output;
     let response =
       try Hh_json.json_of_string output
       with e ->
@@ -284,9 +283,9 @@ module Watchman_actual = struct
     assert_no_error response;
     response
 
-  let send_request oc json =
+  let send_request ~debug_logging oc json =
     let json_str = Hh_json.(json_to_string json) in
-    if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
+    if debug_logging then Printf.eprintf "Watchman request: %s\n%!" json_str ;
     output_string oc json_str;
     output_string oc "\n";
     flush oc
@@ -323,13 +322,13 @@ module Watchman_actual = struct
 
   (** Execute the given json command on the provided watchman connection.
    * If none is provided, one will be opened and closed for you. *)
-  let rec exec ?conn ?(timeout=120.0) json =
+  let rec exec ~(debug_logging:bool) ?conn ?(timeout=120.0) json =
     match conn with
     | None ->
-      with_watchman_conn ~timeout (fun conn -> exec ~conn ~timeout json)
+      with_watchman_conn ~timeout (fun conn -> exec ~debug_logging ~conn ~timeout json)
     | Some (reader, oc) -> begin
-      send_request oc json;
-      sanitize_watchman_response (read_with_timeout timeout reader)
+      send_request ~debug_logging oc json;
+      sanitize_watchman_response ~debug_logging (read_with_timeout timeout reader)
     end
 
   (****************************************************************************)
@@ -362,28 +361,29 @@ module Watchman_actual = struct
       |> project_bool
 
   let re_init ?prior_clockspec
-    { init_timeout; subscribe_mode; expression_terms; root } =
+    { init_timeout; subscribe_mode; expression_terms; debug_logging; root } =
     with_crash_record_opt root "init" @@ fun () ->
     let root_s = Path.to_string root in
     let conn = open_watchman_connection ~timeout:(float_of_int init_timeout) in
-    let capabilities = exec ~conn
+    let capabilities = exec ~debug_logging ~conn
       (capability_check ~optional:[ flush_subscriptions_cmd ]
       ["relative_root"]) in
     assert_no_error capabilities;
     let supports_flush = has_capability flush_subscriptions_cmd capabilities in
     (** Disable subscribe if Watchman flush feature isn't supported. *)
     let subscribe_mode = if supports_flush then subscribe_mode else None in
-    let response = exec ~conn (watch_project root_s) in
+    let response = exec ~debug_logging ~conn (watch_project root_s) in
     let watch_root = J.get_string_val "watch" response in
     let relative_path = J.get_string_val "relative_path" ~default:""
       response in
     let clockspec = match prior_clockspec with
       | Some s -> s
-      | None -> exec ~conn (clock watch_root) |> J.get_string_val "clock"
+      | None -> exec ~debug_logging ~conn (clock watch_root) |> J.get_string_val "clock"
     in
     let env = {
       settings = {
         init_timeout;
+        debug_logging;
         subscribe_mode;
         expression_terms;
         root;
@@ -396,7 +396,7 @@ module Watchman_actual = struct
     match subscribe_mode with
     | None -> env
     | Some subscribe_mode ->
-      (ignore @@ exec ~conn:env.socket (subscribe subscribe_mode env));
+      (ignore @@ exec ~debug_logging ~conn:env.socket (subscribe subscribe_mode env));
       env
 
   let init settings = re_init settings
@@ -420,7 +420,7 @@ module Watchman_actual = struct
           raise Read_payload_too_long
         end
       in
-      Some (sanitize_watchman_response output)
+      Some (sanitize_watchman_response ~debug_logging:env.settings.debug_logging output)
 
   let extract_file_names env json =
     let files = try J.get_array_val "files" json with
@@ -531,7 +531,7 @@ module Watchman_actual = struct
    * Watchman to generate and push down the channel. *)
   let get_all_files env =
     try with_crash_record_exn env.settings.root "get_all_files"  @@ fun () ->
-      let response = exec (all_query env) in
+      let response = exec ~debug_logging:env.settings.debug_logging (all_query env) in
       env.clockspec <- J.get_string_val "clock" response;
       extract_file_names env response with
       | _ ->
@@ -595,7 +595,12 @@ module Watchman_actual = struct
         env, Watchman_pushed result
       else
         let env, result = transform_synchronous_get_changes_response
-          env (exec ~conn:env.socket ?timeout (since_query env)) in
+          env (exec
+            ~debug_logging:env.settings.debug_logging
+            ~conn:env.socket
+            ?timeout
+            (since_query env))
+        in
         env, Watchman_synchronous result
 
   let get_fd instance = match instance with
@@ -653,14 +658,14 @@ module Watchman_actual = struct
         if env.settings.subscribe_mode = None
         then
           let env, files = transform_synchronous_get_changes_response
-            env (exec ~conn:env.socket
+            env (exec ~debug_logging:env.settings.debug_logging ~conn:env.socket
               ~timeout:(float_of_int timeout) (since_query env))
           in
           env, Watchman_synchronous files
         else
           let request = flush_request ~timeout env.watch_root in
           let _, oc = env.socket in
-          let () = send_request oc request in
+          let () = send_request ~debug_logging:env.settings.debug_logging oc request in
           let deadline = Unix.time () +. (float_of_int timeout) in
           let env, files = poll_until_sync ~deadline env in
           env, Watchman_synchronous files
