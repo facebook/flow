@@ -152,9 +152,18 @@ let init config =
 
 external stop_workers : unit -> unit = "hh_stop_workers"
 external resume_workers : unit -> unit = "hh_resume_workers"
+external set_can_worker_stop : bool -> unit = "hh_set_can_worker_stop"
 
 let on_worker_cancelled = ref (fun () -> ())
 let set_on_worker_cancelled f = on_worker_cancelled := f
+
+let with_no_cancellations f =
+  Utils.try_finally
+  ~f:begin fun () ->
+    set_can_worker_stop false;
+    f ()
+  end
+  ~finally:(fun () -> set_can_worker_stop true)
 
 let with_worker_exit f =
   try f () with

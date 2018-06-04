@@ -452,6 +452,7 @@ static pid_t* master_pid = NULL;
 static pid_t my_pid = 0;
 
 static size_t allow_hashtable_writes_by_current_process = 1;
+static size_t worker_can_exit = 1;
 
 static char *db_filename = NULL;
 static char *hashtable_db_filename = NULL;
@@ -1364,6 +1365,12 @@ CAMLprim value hh_resume_workers(void) {
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value hh_set_can_worker_stop(value val) {
+  CAMLparam1(val);
+  worker_can_exit = Bool_val(val);
+  CAMLreturn(Val_unit);
+}
+
 CAMLprim value hh_allow_removes(value val) {
   CAMLparam1(val);
   *allow_removes = Bool_val(val);
@@ -1390,7 +1397,7 @@ CAMLprim value hh_assert_allow_dependency_table_reads (void) {
 }
 
 void check_should_exit(void) {
-  if(*workers_should_exit) {
+  if(worker_can_exit && *workers_should_exit) {
     static value *exn = NULL;
     if (!exn) exn = caml_named_value("worker_should_exit");
     caml_raise_constant(*exn);
