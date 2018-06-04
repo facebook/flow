@@ -59,6 +59,7 @@ val max_workers: config -> int
 val merge_timeout: config -> int option
 val module_file_exts: config -> SSet.t
 val module_name_mappers: config -> (Str.regexp * string) list
+val module_resolver: config -> Path.t option
 val module_resource_exts: config -> SSet.t
 val module_system: config -> Options.module_system
 val modules_are_use_strict: config -> bool

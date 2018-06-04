@@ -69,14 +69,20 @@ let process_updates genv env updates =
       | Some ast -> Module_js.package_incompatible filename_str ast
   in
 
-  (* Die if a package.json changed in an incompatible way *)
-  let incompatible_packages = SSet.filter (fun f ->
-    (String_utils.string_starts_with f sroot ||
-      Files.is_included file_options f)
+  let is_incompatible_package_json f = (
+      String_utils.string_starts_with f sroot ||
+      Files.is_included file_options f
+    )
     && (Filename.basename f) = "package.json"
     && want f
     && is_incompatible f
+  in
+
+  (* Die if a package.json changed in an incompatible way *)
+  let incompatible_packages = SSet.filter (fun f ->
+    is_incompatible_package_json f
   ) updates in
+
   if not (SSet.is_empty incompatible_packages)
   then begin
     Hh_logger.fatal "Status: Error";
@@ -85,6 +91,16 @@ let process_updates genv env updates =
       "Packages changed in an incompatible way. Exiting.\n%!";
     FlowExitStatus.(exit Server_out_of_date)
   end;
+
+  Option.iter (Options.module_resolver options) ~f:(fun module_resolver ->
+    let str_module_resolver = Path.to_string module_resolver in
+    if SSet.mem str_module_resolver updates then begin
+      let msg = Printf.sprintf "Module resolver %s changed in an incompatible way. Exiting.\n%!"
+        str_module_resolver in
+      Hh_logger.fatal "%s" msg;
+      FlowExitStatus.(exit ~msg Server_out_of_date)
+    end;
+  );
 
   let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
   let is_changed_lib filename =

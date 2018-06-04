@@ -795,6 +795,15 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     | timeout -> timeout) |> Option.map ~f:float_of_int
   in
 
+  let expand_project_root_token path root =
+    let str_root = Path.to_string root
+      |> Sys_utils.normalize_filename_dir_sep in
+    Path.to_string path
+      |> Str.split_delim Files.project_root_token
+      |> String.concat str_root
+      |> Path.make
+  in
+
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_lazy_mode = lazy_mode;
@@ -810,6 +819,8 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_profile = options_flags.profile;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;
+    opt_module_resolver = Option.value_map (FlowConfig.module_resolver flowconfig) ~default:None ~f:(fun module_resolver ->
+      Some (expand_project_root_token module_resolver root));
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_temp_dir = temp_dir;
