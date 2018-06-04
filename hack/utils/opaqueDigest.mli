@@ -12,4 +12,4 @@ val input : Pervasives.in_channel -> t
 val to_hex : t -> string
 val from_hex : string -> t
 val to_raw_contents : t -> string
-val from_raw_contents : string -> t
+val from_raw_contents : string -> t option
