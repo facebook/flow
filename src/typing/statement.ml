@@ -2587,10 +2587,11 @@ and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e
     )
 
   | New {
-      New.callee = _, Identifier (_, "Array");
+      New.callee = _, Identifier (loc_array, "Array");
       targs;
       arguments
     } -> (
+      ignore (identifier cx "Array" loc_array);
       let targts = Option.map targs (fun (_, args) ->
         List.map (Anno.convert cx SMap.empty) args
       ) in

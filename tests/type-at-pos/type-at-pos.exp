@@ -208,6 +208,21 @@ array.js:23:4 = {
   "start":3,
   "end":5
 }
+new-array.js:3:15 = {
+  "type":"class Array<T>",
+  "reasons":[],
+  "loc":{
+    "source":"new-array.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":13,"offset":22},
+    "end":{"line":3,"column":17,"offset":27}
+  },
+  "path":"new-array.js",
+  "line":3,
+  "endline":3,
+  "start":13,
+  "end":17
+}
 class-0.js:3:7 = {
   "type":"class A",
   "reasons":[],
