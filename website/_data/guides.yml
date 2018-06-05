@@ -111,6 +111,7 @@
     - path: "/docs/react/refs/"
     - path: "/docs/react/children/"
     - path: "/docs/react/hoc/"
+    - path: "/docs/react/context/"
     - path: "/docs/react/redux/"
     - path: "/docs/react/types/"
 
