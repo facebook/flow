@@ -338,6 +338,31 @@ let print_signatureHelp (r: SignatureHelp.result) : json =
     ]
 
 
+
+(************************************************************************)
+(** textDocument/rename Request                                        **)
+(************************************************************************)
+
+let parse_documentRename (params: json option) : Rename.params =
+  let open Rename in
+  {
+    textDocument = Jget.obj_exn params "textDocument"
+                   |> parse_textDocumentIdentifier;
+    position = Jget.obj_exn params "position" |> parse_position;
+    newName = Jget.string_exn params "newName";
+  }
+
+let print_documentRename (r: Rename.result) : json =
+  let open WorkspaceEdit in
+  let print_workspace_edit_changes (uri, text_edits) =
+      uri, JSON_Array (List.map ~f:print_textEdit text_edits)
+  in
+  JSON_Object [
+    "changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes);
+  ]
+
+
+
 (************************************************************************)
 (** textDocument/publishDiagnostics notification                       **)
 (************************************************************************)

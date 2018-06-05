@@ -123,11 +123,11 @@ module TextDocumentEdit = struct
 end
 
 (* A workspace edit represents changes to many resources managed in the
-   workspace. A workspace edit now consists of an array of TextDocumentEdits
-   each describing a change to a single text document. *)
+   workspace. A workspace edit consists of a mapping from a URI to an
+   array of TextEdits to be applied to the document with that URI. *)
 module WorkspaceEdit = struct
   type t = {
-    changes: TextDocumentEdit.t list;  (* holds changes to existing docs *)
+    changes: TextEdit.t list SMap.t;  (* holds changes to existing docs *)
   }
 end
 
@@ -762,6 +762,19 @@ module SignatureHelp = struct
   and parameter_information = {
     parinfo_label: string;
     parinfo_documentation: string option;
+  }
+end
+
+(* Workspace Rename request, method="textDocument/rename" *)
+module Rename = struct
+  type params = renameParams
+
+  and result = WorkspaceEdit.t
+
+  and renameParams = {
+    textDocument: TextDocumentIdentifier.t;
+    position: position;
+    newName: string;
   }
 end
 
