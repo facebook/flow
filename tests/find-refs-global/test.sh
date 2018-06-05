@@ -124,25 +124,82 @@ echo "class method that overrides a superclass implementation:"
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root extendsFoo.js 7 3
 
 echo "local exported as CJS property:"
+# const a = 5;
+#       ^
+# module.exports.foo = a;
+#
+# We expect this to return only references to the local. Users can find-refs on `foo` for global
+# results.
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-1.js 2 7
 
 echo "CJS property exporting local:"
+# module.exports.foo = a;
+#                ^
+#
+# This should return downstream refrences to `foo`, plus related locals in the special case where
+# the result of a `require` is immediately destructured.
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-1.js 3 16
 
 echo "CJS property exporting literal:"
+# module.exports.foo2 = 0;
+#                ^
+#
+# This should behave the same as the previous case since we no longer associate locals with their
+# exports.
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-1.js 4 16
 
 echo "local exported in CJS object:"
+# const b = 4;
+#       ^
+# module.exports = {bar: b, bar2: 42, bar3};
+#
+# This should return only the local uses of `b`.
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-2.js 2 7
 
 echo "CJS object exporting local:"
+# module.exports = {bar: b, bar2: 42, bar3};
+#                   ^
+#
+# This should return downstream references to the exported value `bar` as well as their associated
+# locals in some special cases.
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-2.js 4 19
 
 echo "CJS object exporting literal:"
+# Same as above
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-2.js 4 27
 
 echo "CJS object exporting shorthand:"
+# Same as above
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-2.js 4 37
 
 echo "CJS ident exports/imports:"
+# const baz = {c: 0};
+#       ^
+# module.exports = baz;
+#
+# Should include references only to the local, since we no longer want to associate local variables
+# with their exports.
+# TODO make this behave as described
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-3.js 2 7
+
+echo "CJS default exports:"
+# module.exports = baz;
+#           ^
+# Should include downstream `require` calls which evaluate to this module, as well as the locals
+# that they are bound to in some specific cases.
+# TODO make this behave as described
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-3.js 3 11
+
+echo "CJS default imports:"
+# const baz = require('./cjs-3');
+#             ^
+# Should have the same results as above
+# TODO make this behave as described
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-4.js 4 13
+
+echo "CJS default imports bound to a local:"
+# const baz = require('./cjs-3');
+#       ^
+# Should have the same results as above
+# TODO make this behave as described
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-4.js 4 7

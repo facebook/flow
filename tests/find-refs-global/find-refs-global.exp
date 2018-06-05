@@ -1167,3 +1167,26 @@ CJS ident exports/imports:
     }
   ]
 }
+CJS default exports:
+{"kind":"no-symbol-found"}
+CJS default imports:
+{"kind":"no-symbol-found"}
+CJS default imports bound to a local:
+{
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":7,"offset":104},
+      "end":{"line":4,"column":9,"offset":107}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":1,"offset":156},
+      "end":{"line":10,"column":3,"offset":159}
+    }
+  ]
+}
