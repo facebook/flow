@@ -187,7 +187,6 @@ echo "CJS default exports:"
 #           ^
 # Should include downstream `require` calls which evaluate to this module, as well as the locals
 # that they are bound to in some specific cases.
-# TODO make this behave as described
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-3.js 3 11
 
 echo "CJS default imports:"

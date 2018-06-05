@@ -806,7 +806,16 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
         end else acc
       | _ -> acc
       end (Ok None) file_sig.module_sig.requires
-      (* TODO check for matching exports *)
+    in
+    let export_loc = export_loc >>| function
+    | Some _ as x -> x
+    | None ->
+      let open File_sig in
+      match file_sig.module_sig.module_kind with
+      | CommonJS { mod_exp_loc=Some mod_exp_loc; _ } ->
+        if Loc.contains mod_exp_loc loc then Some mod_exp_loc
+        else None
+      | _ -> None
     in
     Result.map export_loc ~f:(Option.map ~f:(fun x -> CJSExport x))
   in
