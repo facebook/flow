@@ -16,15 +16,6 @@ let sort_and_dedup =
     end
   end
 
-(* Checks if the symbol we are interested in is introduced as part of an export or an import. If so,
- * use the canonical definition for that export or import so that global find-refs for that symbol
- * is triggered. The original starting location will be added back later. *)
-let get_import_or_export_location ast file_sig loc =
-  let local_refs = VariableFindRefs.local_find_refs ast loc in
-  Option.bind local_refs begin fun (_, _, def_loc) ->
-    ImportExportSymbols.find_related_symbol file_sig def_loc
-  end
-
 let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
@@ -33,17 +24,28 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   | Error err -> Lwt.return (Error err, None)
   | Ok content ->
     let%lwt result =
-      let%lwt refs =
-        FindRefsUtils.compute_ast_result file_key content %>>= fun (ast, file_sig, _) ->
-        let loc =
-          get_import_or_export_location ast file_sig loc
-          |> Option.value ~default:loc
-        in
-        PropertyFindRefs.find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop
+      FindRefsUtils.compute_ast_result file_key content %>>= fun (ast, file_sig, _) ->
+      let property_find_refs start_loc =
+        PropertyFindRefs.find_refs genv env ~profiling ~content file_key start_loc ~global ~multi_hop
       in
-      refs %>>= function
-        | Some _ as result -> Lwt.return (Ok result)
-        | None -> VariableFindRefs.find_refs genv env file_key ~content loc ~global
+      (* Start by running local variable find references *)
+      match VariableFindRefs.local_find_refs ast loc with
+      (* Got nothing from local variable find-refs, try object property find-refs *)
+      | None -> property_find_refs loc
+      | Some (name, local_refs, local_def_loc) ->
+        (* We got something from local variable find-refs -- now let's check if it's an exported
+         * symbol *)
+        let start_loc = match ImportExportSymbols.find_related_symbol file_sig local_def_loc with
+        (* It's a local variable but it's not related to an export/import. However, let's try
+         * property find-refs anyway in case the local is used as an object property shorthand. *)
+        | None -> loc
+        | Some related_loc -> related_loc
+        in
+        let%lwt refs = property_find_refs start_loc in
+        refs %>>| fun refs ->
+        (* If property find-refs returned nothing (for example if we are importing from an untyped
+         * module), then fall back on the local refs we computed earlier. *)
+        Lwt.return @@ Some (Option.value ~default:(name, local_refs, None) refs)
     in
     let json_data = match result with
       | Ok (Some (_, _, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]

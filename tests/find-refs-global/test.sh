@@ -179,7 +179,6 @@ echo "CJS ident exports/imports:"
 #
 # Should include references only to the local, since we no longer want to associate local variables
 # with their exports.
-# TODO make this behave as described
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-3.js 2 7
 
 echo "CJS default exports:"
