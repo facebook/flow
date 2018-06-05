@@ -1170,7 +1170,24 @@ CJS ident exports/imports:
 CJS default exports:
 {"kind":"no-symbol-found"}
 CJS default imports:
-{"kind":"no-symbol-found"}
+{
+  "kind":"symbol-found",
+  "name":"module.exports",
+  "locs":[
+    {
+      "source":"cjs-3.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":1,"offset":29},
+      "end":{"line":3,"column":14,"offset":43}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":13,"offset":110},
+      "end":{"line":4,"column":30,"offset":128}
+    }
+  ]
+}
 CJS default imports bound to a local:
 {
   "kind":"symbol-found",

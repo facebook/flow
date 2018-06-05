@@ -229,9 +229,11 @@ type property_def_info = single_def_info Nel.t
 
 type def_info =
   | Property of property_def_info * string (* name *)
+  | CJSExport of Loc.t
 
 let display_name_of_def_info = function
   | Property (_, name) -> name
+  | CJSExport _ -> "module.exports"
 
 let loc_of_single_def_info = function
   | Class loc -> loc
@@ -243,6 +245,7 @@ let all_locs_of_property_def_info def_info =
 
 let all_locs_of_def_info = function
   | Property (def_info, _) -> all_locs_of_property_def_info def_info
+  | CJSExport loc -> Nel.one loc
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -277,6 +280,8 @@ let debug_string_of_property_def_info def_info =
 let debug_string_of_def_info = function
   | Property (def_info, name) ->
     spf "Property (%s, %s)" (debug_string_of_property_def_info def_info) name
+  | CJSExport loc ->
+    spf "CJSExport (%s)" (Loc.to_string loc)
 
 let debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
@@ -383,6 +388,16 @@ let type_matches_locs cx ty prop_def_info name =
      * are references or not. For now we'll leave them out. *)
     | NoDefFound | UnsupportedType | AnyType -> false
 
+(* Takes the file key where the module reference appeared, as well as the module reference, and
+ * returns the file name for the module that the module reference refers to. *)
+let file_key_of_module_ref file_key module_ref =
+  let resolved = Module_js.find_resolved_module
+    ~audit:Expensive.warn
+    file_key
+    module_ref
+  in
+  Module_js.get_file ~audit:Expensive.warn resolved
+
 let filter_prop_refs cx potential_refs file_key local_defs prop_def_info name =
   potential_refs |>
     LocMap.bindings |>
@@ -456,9 +471,34 @@ let property_find_refs_in_file options ast_info file_key def_info name =
     end
   end
 
+let export_find_refs_in_file ast_info file_key def_loc =
+  let open File_sig in
+  let (_, file_sig, _) = ast_info in
+  let is_relevant module_ref =
+    Loc.source def_loc = file_key_of_module_ref file_key module_ref
+  in
+  let locs = List.fold_left begin fun acc require ->
+    match require with
+    | Require { source = (_, module_ref); require_loc; _ } ->
+      if is_relevant module_ref then
+        require_loc::acc
+      else
+        acc
+    | _ -> acc
+  end [] file_sig.module_sig.requires in
+  let locs =
+    if Loc.source def_loc = Some file_key then
+      def_loc::locs
+    else
+      locs
+  in
+  Ok locs
+
 let find_refs_in_file options ast_info file_key = function
   | Property (def_info, name) ->
     property_find_refs_in_file options ast_info file_key def_info name
+  | CJSExport loc ->
+    export_find_refs_in_file ast_info file_key loc
 
 let find_refs_in_multiple_files genv all_deps def_info =
   let {options; workers} = genv in
@@ -720,24 +760,53 @@ let add_literal_properties literal_key_info def_info =
 let get_def_info genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
   let {options; workers} = genv in
   let props_access_info = ref (Ok None) in
-  let%lwt result =
-    compute_ast_result file_key content
-    %>>| fun (ast, file_sig, info) ->
-      let info = Docblock.set_flow_mode_for_ide_command info in
-      let literal_key_info: (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
-      set_def_loc_hook props_access_info literal_key_info loc;
-      let%lwt cx = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
-        let ensure_checked =
-          Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
-        Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
-      ) in
-      Lwt.return (cx, literal_key_info)
+  compute_ast_result file_key content
+  %>>= fun (ast, file_sig, info) ->
+  let info = Docblock.set_flow_mode_for_ide_command info in
+  let literal_key_info: (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
+  let%lwt cx =
+    set_def_loc_hook props_access_info literal_key_info loc;
+    let%lwt cx = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
+      let ensure_checked =
+        Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
+      Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+    ) in
+    Lwt.return cx
   in
   unset_hooks ();
-  result %>>= fun (cx, literal_key_info) ->
   !props_access_info %>>= fun props_access_info ->
-  def_info_of_typecheck_results cx props_access_info %>>= fun def_info ->
-  Lwt.return @@ add_literal_properties literal_key_info def_info
+  let def_info = def_info_of_typecheck_results cx props_access_info in
+  let def_info = def_info >>= add_literal_properties literal_key_info in
+  let def_info = def_info >>= function
+  | Some _ as def_info -> Ok def_info
+  | None ->
+    (* Check if we are on a CJS import/export. These cases are not covered above since the type
+     * system hooks don't quite get us what we want. *)
+    let export_loc =
+      let open File_sig in
+      List.fold_left begin fun acc -> function
+      | Require { source = (_, module_ref); require_loc; _ } ->
+        if Loc.contains require_loc loc then begin match acc with
+        | Error _ -> acc
+        | Ok (Some _) -> Error "Did not expect multiple requires to match one location"
+        | Ok None ->
+          let external_file_sig =
+            let filename = file_key_of_module_ref file_key module_ref in
+            Option.bind filename Parsing_service_js.get_file_sig
+          in
+          Result.return @@ Option.bind external_file_sig begin fun external_file_sig ->
+            match external_file_sig.module_sig.module_kind with
+            | CommonJS { mod_exp_loc=Some loc; _ } -> Some loc
+            | _ -> None
+          end
+        end else acc
+      | _ -> acc
+      end (Ok None) file_sig.module_sig.requires
+      (* TODO check for matching exports *)
+    in
+    Result.map export_loc ~f:(Option.map ~f:(fun x -> CJSExport x))
+  in
+  Lwt.return @@ def_info
 
 let find_refs_global genv env multi_hop def_info =
   let%lwt def_info =
@@ -746,6 +815,7 @@ let find_refs_global genv env multi_hop def_info =
       | Property (property_def_info, name) ->
         let%lwt result = find_related_defs genv env property_def_info name in
         result %>>| fun x -> Lwt.return @@ Property (x, name)
+      | CJSExport _ -> Lwt.return (Ok def_info)
     else
       Lwt.return (Ok def_info)
   in
