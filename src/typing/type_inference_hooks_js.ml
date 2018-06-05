@@ -90,7 +90,10 @@ type hook_state_t = {
 
   import_hook:
       (Context.t ->
-       (Loc.t * string) -> Loc.t ->
+       (* Location of the string identifiying the imported module, and the contents of that string. *)
+       (Loc.t * string) ->
+       (* Location of the entire import statement/require call *)
+       Loc.t ->
        unit);
 
   jsx_hook:
