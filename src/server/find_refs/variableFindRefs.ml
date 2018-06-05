@@ -91,9 +91,9 @@ let local_find_refs_with_exports file_key ~content loc =
   | Some (name, refs, _def_loc) -> Some (name, refs)
   | None ->
     begin match file_sig.module_sig.module_kind with
-    | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) }
+    | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)); _ }
       when Loc.contains id_loc loc -> Some (id_name, [id_loc])
-    | CommonJS { exports = Some (CJSExportProps props) } ->
+    | CommonJS { exports = Some (CJSExportProps props); _ } ->
       let props = SMap.filter (fun _ (CJSExport prop) -> Loc.contains prop.loc loc) props in
       begin match SMap.choose props with
       | Some (prop_name, CJSExport prop) -> Some (prop_name, [prop.loc])
@@ -158,14 +158,14 @@ let find_refs genv env file_key ~content loc ~global =
             else
               Lwt.return (Ok (Some (name, refs, None))) in
           begin match file_sig.module_sig.module_kind with
-            | CommonJS { exports = None } -> Lwt.return (Ok (Some (name, refs, None)))
-            | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)) } ->
+            | CommonJS { exports = None; _ } -> Lwt.return (Ok (Some (name, refs, None)))
+            | CommonJS { exports = Some (CJSExportIdent (id_loc, id_name)); _ } ->
               if id_name = name
               then find_exported_loc id_loc CJSIdent
               else Lwt.return (Ok (Some (name, refs, None)))
-            | CommonJS { exports = Some CJSExportOther } ->
+            | CommonJS { exports = Some CJSExportOther; _ } ->
               Lwt.return (Ok (Some (name, refs, None)))
-            | CommonJS { exports = Some (CJSExportProps props) } ->
+            | CommonJS { exports = Some (CJSExportProps props); _ } ->
               begin match SMap.get name props with
                 | None -> Lwt.return (Ok (Some (name, refs, None)))
                 | Some (CJSExport { loc; _ }) -> find_exported_loc loc (Symbol name)

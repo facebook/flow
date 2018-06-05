@@ -118,6 +118,7 @@ and module_kind =
   (* The CJS interface is still experimental.
    * DO NOT use this for typechecking. *)
   | CommonJS of {
+    mod_exp_loc: Loc.t option;
     exports: cjs_exports option;
   }
   | ES of {

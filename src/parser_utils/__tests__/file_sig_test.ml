@@ -35,7 +35,7 @@ let assert_es ?assert_named ?assert_star = function
     assert_failure "Unexpected module kind"
 
 let assert_cjs ?assert_exports = function
-  | CommonJS { exports } ->
+  | CommonJS { exports; _ } ->
     call_opt exports assert_exports;
   | ES _ ->
     assert_failure "Unexpected module kind"

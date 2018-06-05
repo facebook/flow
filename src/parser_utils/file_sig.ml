@@ -49,6 +49,7 @@ and require_bindings =
 
 and module_kind =
   | CommonJS of {
+    mod_exp_loc: Loc.t option;
     exports: cjs_exports option;
   }
   | ES of {
@@ -102,7 +103,7 @@ type error =
 
 let empty_module_sig = {
   requires = [];
-  module_kind = CommonJS { exports = None };
+  module_kind = CommonJS { exports = None; mod_exp_loc = None };
   type_exports_named = SMap.empty;
   type_exports_star = SMap.empty;
 }
@@ -243,8 +244,8 @@ let add_type_exports named star msig =
 
 let add_es_exports loc named star msig =
   let result = match msig.module_kind with
-  | CommonJS { exports = Some _ } -> Error (IndeterminateModuleType loc)
-  | CommonJS { exports = None } -> Ok (SMap.empty, SMap.empty)
+  | CommonJS { exports = Some _; _ } -> Error (IndeterminateModuleType loc)
+  | CommonJS { exports = None; _ } -> Ok (SMap.empty, SMap.empty)
   | ES { named; star } -> Ok (named, star)
   in
   match result with
@@ -261,9 +262,10 @@ let add_es_exports loc named star msig =
 
 let assert_cjs ~update_exports mod_exp_loc msig =
   match msig.module_kind with
-  | CommonJS { exports } ->
+  | CommonJS { exports; mod_exp_loc=original_mod_exp_loc } ->
     let exports = Some (update_exports @@ Option.value exports ~default:(CJSExportProps SMap.empty)) in
-    let module_kind = CommonJS { exports } in
+    let mod_exp_loc = Option.first_some original_mod_exp_loc (Some mod_exp_loc) in
+    let module_kind = CommonJS { exports; mod_exp_loc } in
     Ok { msig with module_kind }
   | ES _ -> Error (IndeterminateModuleType mod_exp_loc)
 
