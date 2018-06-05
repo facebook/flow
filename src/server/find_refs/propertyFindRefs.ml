@@ -225,15 +225,24 @@ type single_def_info =
 (* If there are multiple relevant definition locations (e.g. the request was issued on an object
  * literal which is associated with multiple types) then there will be multiple locations in no
  * particular order. *)
-type def_info = single_def_info Nel.t
+type property_def_info = single_def_info Nel.t
+
+type def_info =
+  | Property of property_def_info * string (* name *)
+
+let display_name_of_def_info = function
+  | Property (_, name) -> name
 
 let loc_of_single_def_info = function
   | Class loc -> loc
   | Object loc -> loc
 
-let all_locs_of_def_info def_info =
+let all_locs_of_property_def_info def_info =
   def_info
   |> Nel.map loc_of_single_def_info
+
+let all_locs_of_def_info = function
+  | Property (def_info, _) -> all_locs_of_property_def_info def_info
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -258,12 +267,16 @@ let debug_string_of_single_def_info = function
   | Class loc -> spf "Class (%s)" (Loc.to_string loc)
   | Object loc -> spf "Object (%s)" (Loc.to_string loc)
 
-let debug_string_of_def_info def_info =
+let debug_string_of_property_def_info def_info =
   def_info
   |> Nel.map debug_string_of_single_def_info
   |> Nel.to_list
   |> String.concat ", "
   |> spf "[%s]"
+
+let debug_string_of_def_info = function
+  | Property (def_info, name) ->
+    spf "Property (%s, %s)" (debug_string_of_property_def_info def_info) name
 
 let debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
@@ -350,10 +363,10 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
         Ok AnyType
 
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
-let type_matches_locs cx ty def_info name =
+let type_matches_locs cx ty prop_def_info name =
   extract_def_loc cx ty name >>| function
     | FoundClass ty_def_locs ->
-      def_info |> Nel.exists begin function
+      prop_def_info |> Nel.exists begin function
         | Object _ -> false
         | Class loc ->
           (* Only take the first extracted def loc -- that is, the one for the actual definition
@@ -362,7 +375,7 @@ let type_matches_locs cx ty def_info name =
           loc = Nel.hd ty_def_locs
       end
     | FoundObject loc ->
-      def_info |> Nel.exists begin function
+      prop_def_info |> Nel.exists begin function
       | Class _ -> false
       | Object def_loc -> loc = def_loc
       end
@@ -370,14 +383,14 @@ let type_matches_locs cx ty def_info name =
      * are references or not. For now we'll leave them out. *)
     | NoDefFound | UnsupportedType | AnyType -> false
 
-let filter_refs cx potential_refs file_key local_defs def_locs name =
+let filter_prop_refs cx potential_refs file_key local_defs prop_def_info name =
   potential_refs |>
     LocMap.bindings |>
     (* The location where a shadow prop is introduced is considered both a definition and a use.
      * Make sure we include it only once despite that. *)
     List.filter (fun (loc, _) -> not (List.mem loc local_defs)) |>
     List.map begin fun (ref_loc, ty) ->
-      type_matches_locs cx ty def_locs name
+      type_matches_locs cx ty prop_def_info name
       >>| function
       | true -> Some ref_loc
       | false -> None
@@ -392,13 +405,13 @@ let filter_refs cx potential_refs file_key local_defs def_locs name =
     >>|
     List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
 
-let find_refs_in_file options ast_info file_key def_info name =
+let property_find_refs_in_file options ast_info file_key def_info name =
   let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
   let potential_matching_literals: (Loc.t * Type.t) list ref = ref [] in
   let (ast, file_sig, info) = ast_info in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let local_defs =
-    Nel.to_list (all_locs_of_def_info def_info)
+    Nel.to_list (all_locs_of_property_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
   in
   let has_symbol = PropertyAccessSearcher.search name ast in
@@ -427,7 +440,7 @@ let find_refs_in_file options ast_info file_key def_info name =
     in
     literal_prop_refs_result
     >>= begin fun literal_prop_refs_result ->
-      filter_refs cx !potential_refs file_key local_defs def_info name
+      filter_prop_refs cx !potential_refs file_key local_defs def_info name
       >>| (@) local_defs
       >>| (@) literal_prop_refs_result
     end
@@ -443,7 +456,11 @@ let find_refs_in_file options ast_info file_key def_info name =
     end
   end
 
-let find_refs_in_multiple_files genv all_deps def_info name =
+let find_refs_in_file options ast_info file_key = function
+  | Property (def_info, name) ->
+    property_find_refs_in_file options ast_info file_key def_info name
+
+let find_refs_in_multiple_files genv all_deps def_info =
   let {options; workers} = genv in
   let dep_list: File_key.t list = FilenameSet.elements all_deps in
   let node_modules_containers = !Files.node_modules_containers in
@@ -453,7 +470,7 @@ let find_refs_in_multiple_files genv all_deps def_info name =
       Files.node_modules_containers := node_modules_containers;
       deps |> List.map begin fun dep ->
         get_ast_result dep >>= fun ast_info ->
-        find_refs_in_file options ast_info dep def_info name
+        find_refs_in_file options ast_info dep def_info
       end
     end
     ~merge: (fun refs acc -> List.rev_append refs acc)
@@ -570,9 +587,9 @@ let find_related_defs_in_file options name file =
 let find_related_defs
     genv
     env
-    (def_info: def_info)
+    (def_info: property_def_info)
     (name: string)
-    : (def_info, string) result Lwt.t =
+    : (property_def_info, string) result Lwt.t =
   (* Outline:
    * - Create a disjoint set for definition locations
    * - Seed it with every given def_loc
@@ -605,7 +622,7 @@ let find_related_defs
     Lwt.return_unit
   in
   let get_unchecked_roots current_def_info checked_files =
-    current_def_info |> all_locs_of_def_info |> files_of_locs >>| fun roots ->
+    current_def_info |> all_locs_of_property_def_info |> files_of_locs >>| fun roots ->
     FilenameSet.diff roots checked_files
   in
   let get_files_to_check unchecked_roots checked_files =
@@ -688,7 +705,7 @@ let add_literal_properties literal_key_info def_info =
    * list and add additional complexity just for the sake of this one case.
    * (b) We would have to add a type inference hook, which we are trying to
    * avoid. *)
-  match def_info, literal_key_info with
+  let def_info = match def_info, literal_key_info with
   | None, None -> Ok None
   | Some _, None -> Ok def_info
   | None, Some (_, loc, name) -> Ok (Some (Nel.one (Object loc), name))
@@ -697,8 +714,10 @@ let add_literal_properties literal_key_info def_info =
       Error "Unexpected name mismatch"
     else
       Ok (Some (Nel.cons (Object loc) defs, name1))
+  in
+  Result.map def_info ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
-let get_def_info genv env profiling file_key content loc: ((def_info * string) option, string) result Lwt.t =
+let get_def_info genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
   let {options; workers} = genv in
   let props_access_info = ref (Ok None) in
   let%lwt result =
@@ -720,10 +739,13 @@ let get_def_info genv env profiling file_key content loc: ((def_info * string) o
   def_info_of_typecheck_results cx props_access_info %>>= fun def_info ->
   Lwt.return @@ add_literal_properties literal_key_info def_info
 
-let find_refs_global genv env multi_hop def_info name =
+let find_refs_global genv env multi_hop def_info =
   let%lwt def_info =
     if multi_hop then
-      find_related_defs genv env def_info name
+      match def_info with
+      | Property (property_def_info, name) ->
+        let%lwt result = find_related_defs genv env property_def_info name in
+        result %>>| fun x -> Lwt.return @@ Property (x, name)
     else
       Lwt.return (Ok def_info)
   in
@@ -746,22 +768,22 @@ let find_refs_global genv env multi_hop def_info name =
   Hh_logger.info
     "find-refs: searching %d dependent modules for references"
     dependent_file_count;
-  let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info name in
+  let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info in
   refs %>>| fun refs ->
-  Lwt.return @@ Some (name, refs, Some dependent_file_count)
+  Lwt.return @@ Some (display_name_of_def_info def_info, refs, Some dependent_file_count)
 
-let find_refs_local genv file_key content def_info name =
+let find_refs_local genv file_key content def_info =
   compute_ast_result file_key content >>= fun ast_info ->
-  find_refs_in_file genv.options ast_info file_key def_info name >>= fun refs ->
-  Ok (Some (name, refs, None))
+  find_refs_in_file genv.options ast_info file_key def_info >>= fun refs ->
+  Ok (Some (display_name_of_def_info def_info, refs, None))
 
 let find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop =
   let%lwt def_info = get_def_info genv env profiling file_key content loc in
   def_info %>>= fun def_info_opt ->
   match def_info_opt with
     | None -> Lwt.return (Ok None)
-    | Some (def_info, name) ->
+    | Some def_info ->
         if global || multi_hop then
-          find_refs_global genv env multi_hop def_info name
+          find_refs_global genv env multi_hop def_info
         else
-          Lwt.return @@ find_refs_local genv file_key content def_info name
+          Lwt.return @@ find_refs_local genv file_key content def_info
