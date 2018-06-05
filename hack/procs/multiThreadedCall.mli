@@ -18,6 +18,9 @@
  * Still-in-progress workers are left to their own accord. *)
 exception Coalesced_failures of (WorkerController.worker_failure list)
 
+val coalesced_failures_to_string:
+  WorkerController.worker_failure list -> string
+
 type interrupt_result = Cancel | Continue
 
 type 'env interrupt_handler = 'env -> 'env * interrupt_result

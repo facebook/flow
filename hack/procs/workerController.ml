@@ -47,15 +47,24 @@ type send_job_failure =
 
 exception Worker_failed_to_send_job of send_job_failure
 
-let failure_to_string f =
-  let status_string = function
-    | Unix.WEXITED i -> Printf.sprintf "WEXITED %d" i
-    | Unix.WSIGNALED i -> Printf.sprintf "WSIGNALED %d" i
-    | Unix.WSTOPPED i -> Printf.sprintf "WSTOPPED %d" i
-  in
-  match f with
+let status_string = function
+  | Unix.WEXITED i -> Printf.sprintf "WEXITED %d" i
+  | Unix.WSIGNALED i -> Printf.sprintf "WSIGNALED %d" i
+  | Unix.WSTOPPED i -> Printf.sprintf "WSTOPPED %d" i
+
+let failure_to_string f = match f with
   | Worker_oomed -> "Worker_oomed"
   | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
+
+let () = Printexc.register_printer @@ function
+  | Worker_failed_to_send_job Other_send_job_failure exn ->
+    Some (Printf.sprintf "Other_send_job_failure: %s" (Printexc.to_string exn))
+  | Worker_failed_to_send_job Worker_already_exited status ->
+    Some (Printf.sprintf "Worker_already_exited: %s" (status_string status))
+  | Worker_failed (id, failure) ->
+    Some (Printf.sprintf "Worker_failed (process_id = %d): %s" id
+      (failure_to_string failure))
+  | _ -> None
 
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32

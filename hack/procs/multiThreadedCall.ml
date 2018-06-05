@@ -11,6 +11,15 @@ open Hh_core
 
 exception Coalesced_failures of (WorkerController.worker_failure list)
 
+let coalesced_failures_to_string failures =
+  let failure_strings =
+    List.map failures ~f:WorkerController.failure_to_string in
+  Printf.sprintf "Coalesced_failures[%s]" (String.concat ", " failure_strings)
+
+let () = Printexc.register_printer @@ function
+  | Coalesced_failures failures -> Some (coalesced_failures_to_string failures)
+  | _ -> None
+
 type interrupt_result = Cancel | Continue
 
 type 'env interrupt_handler = 'env -> 'env * interrupt_result
