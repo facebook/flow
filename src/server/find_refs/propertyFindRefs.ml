@@ -459,16 +459,6 @@ let property_find_refs_in_file options ast_info file_key def_info name =
       >>| (@) local_defs
       >>| (@) literal_prop_refs_result
     end
-    >>| begin fun refs ->
-      let related_bindings = ImportExportSymbols.find_related_symbols file_sig refs in
-      List.fold_left begin fun acc loc ->
-        let new_refs =
-          VariableFindRefs.local_find_refs ast loc
-          |> Option.value_map ~default:[] ~f:(fun (_, refs, _) -> refs)
-        in
-        List.rev_append new_refs acc
-      end refs related_bindings
-    end
   end
 
 let export_find_refs_in_file ast_info file_key def_loc =
@@ -494,11 +484,25 @@ let export_find_refs_in_file ast_info file_key def_loc =
   in
   Ok locs
 
-let find_refs_in_file options ast_info file_key = function
+let add_related_bindings ast_info refs =
+  let (ast, file_sig, _) = ast_info in
+  let related_bindings = ImportExportSymbols.find_related_symbols file_sig refs in
+  List.fold_left begin fun acc loc ->
+    let new_refs =
+      VariableFindRefs.local_find_refs ast loc
+      |> Option.value_map ~default:[] ~f:(fun (_, refs, _) -> refs)
+    in
+    List.rev_append new_refs acc
+  end refs related_bindings
+
+let find_refs_in_file options ast_info file_key def_info =
+  let refs = match def_info with
   | Property (def_info, name) ->
     property_find_refs_in_file options ast_info file_key def_info name
   | CJSExport loc ->
     export_find_refs_in_file ast_info file_key loc
+  in
+  refs >>| add_related_bindings ast_info
 
 let find_refs_in_multiple_files genv all_deps def_info =
   let {options; workers} = genv in

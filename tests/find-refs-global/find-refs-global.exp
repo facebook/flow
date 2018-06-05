@@ -1183,21 +1183,45 @@ CJS default imports:
     {
       "source":"cjs-4.js",
       "type":"SourceFile",
+      "start":{"line":4,"column":7,"offset":104},
+      "end":{"line":4,"column":9,"offset":107}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
       "start":{"line":4,"column":13,"offset":110},
       "end":{"line":4,"column":30,"offset":128}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":1,"offset":156},
+      "end":{"line":10,"column":3,"offset":159}
     }
   ]
 }
 CJS default imports bound to a local:
 {
   "kind":"symbol-found",
-  "name":"baz",
+  "name":"module.exports",
   "locs":[
+    {
+      "source":"cjs-3.js",
+      "type":"SourceFile",
+      "start":{"line":3,"column":1,"offset":29},
+      "end":{"line":3,"column":14,"offset":43}
+    },
     {
       "source":"cjs-4.js",
       "type":"SourceFile",
       "start":{"line":4,"column":7,"offset":104},
       "end":{"line":4,"column":9,"offset":107}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":13,"offset":110},
+      "end":{"line":4,"column":30,"offset":128}
     },
     {
       "source":"cjs-4.js",

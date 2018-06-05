@@ -194,12 +194,10 @@ echo "CJS default imports:"
 # const baz = require('./cjs-3');
 #             ^
 # Should have the same results as above
-# TODO make this behave as described
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-4.js 4 13
 
 echo "CJS default imports bound to a local:"
 # const baz = require('./cjs-3');
 #       ^
 # Should have the same results as above
-# TODO make this behave as described
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root cjs-4.js 4 7

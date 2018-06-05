@@ -7,6 +7,11 @@
 
 open File_sig
 
+let if_one_return_other x a b =
+  if x = a then Some b
+  else if x = b then Some a
+  else None
+
 let find_related_symbol_from_export loc = function
   | ExportDefault {default_loc; local=Some(local, _)} ->
     if loc = default_loc then
@@ -47,9 +52,9 @@ let find_related_symbol_from_require loc = function
       else
         None
     end
-  | Require {bindings=Some bindings; _} ->
+  | Require {bindings=Some bindings; require_loc; _} ->
     begin match bindings with
-    | BindIdent _ -> None
+    | BindIdent (id_loc, _) -> if_one_return_other loc require_loc id_loc
     | BindNamed map ->
       SMap.values map
       |> ListUtils.first_some_map begin fun (local_loc, (remote_loc, _)) ->
