@@ -421,7 +421,8 @@ module PublishDiagnostics = struct
     code: diagnosticCode;  (* the diagnostic's code. *)
     source: string option;  (* human-readable string, eg. typescript/lint *)
     message: string;  (* the diagnostic's message *)
-    relatedLocations: relatedLocation list;
+    relatedInformation: diagnosticRelatedInformation list;
+    relatedLocations: relatedLocation list; (* legacy FB extension *)
   }
 
   and diagnosticCode =
@@ -435,10 +436,13 @@ module PublishDiagnostics = struct
     | Information (* 3 *)
     | Hint (* 4 *)
 
-  and relatedLocation = {
+  and diagnosticRelatedInformation = {
     relatedLocation: Location.t;  (* wire: just "location" *)
     relatedMessage: string;  (* wire: just "message" *)
   }
+
+  (* legacy FB extension *)
+  and relatedLocation = diagnosticRelatedInformation
 end
 
 (* DidOpenTextDocument notification, method="textDocument/didOpen" *)

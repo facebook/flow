@@ -1015,13 +1015,17 @@ begin
       let related_to_lsp (loc, relatedMessage) =
         let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in
         { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
+      let relatedInformation =
+        List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
+      in
       let diagnostic = { Lsp.PublishDiagnostics.
         range = location.Lsp.Location.range;
         severity;
         code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
         source = Some "Flow";
         message = error.Errors.Lsp_output.message;
-        relatedLocations = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp;
+        relatedInformation;
+        relatedLocations = relatedInformation; (* legacy fb extension *)
       } in
       SMap.add ~combine:List.append uri [diagnostic] all
     in

@@ -392,6 +392,8 @@ let print_diagnostics (r: PublishDiagnostics.params) : json =
       "code", print_diagnosticCode diagnostic.code;
       "source", Option.map diagnostic.source string_;
       "message", Some (JSON_String diagnostic.message);
+      "relatedInformation",
+        Some (JSON_Array (List.map diagnostic.relatedInformation ~f:print_related));
       "relatedLocations", Some (JSON_Array (List.map diagnostic.relatedLocations ~f:print_related));
     ]
   in
