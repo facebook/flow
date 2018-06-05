@@ -125,5 +125,5 @@ class YourClass {
 
 // $ExpectError
 let test1: typeof MyClass = YourClass; // Error!
-let test1: typeof MyClass = MyClass;   // Works!
+let test2: typeof MyClass = MyClass;   // Works!
 ```
