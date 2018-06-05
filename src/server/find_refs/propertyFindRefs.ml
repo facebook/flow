@@ -48,22 +48,22 @@ class ['acc] object_key_visitor ~init = object(this)
 end
 
 module ObjectKeyAtLoc : sig
-  (* Given a location, returns Some (enclosing_literal_loc, name) if the given location points to
-   * an object literal key. The location returned is the location for the entire enclosing object
-   * literal. This is because later, we need to figure out which types are related to this object
-   * literal which is easier to do when we have the location of the actual object literal than if
-   * we only had the location of a single key. *)
-  val get: Loc.t Ast.program -> Loc.t -> (Loc.t * string) option
+  (* Given a location, returns Some (enclosing_literal_loc, prop_loc, name) if the given location
+   * points to an object literal key. The first location returned is the location for the entire
+   * enclosing object literal. This is because later, we need to figure out which types are related
+   * to this object literal which is easier to do when we have the location of the actual object
+   * literal than if we only had the location of a single key. *)
+  val get: Loc.t Ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
 end = struct
   class object_key_finder target_loc = object(this)
-    inherit [(Loc.t * string) option] object_key_visitor ~init:None
+    inherit [(Loc.t * Loc.t * string) option] object_key_visitor ~init:None
     method! private visit_object_key
         (literal_loc: Loc.t)
         (key: Loc.t Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object in
       match key with
       | Property.Identifier (prop_loc, name) when Loc.contains prop_loc target_loc ->
-        this#set_acc (Some (literal_loc, name))
+        this#set_acc (Some (literal_loc, prop_loc, name))
       | _ -> ()
   end
 
@@ -168,7 +168,7 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
   in
   let obj_to_obj_hook _ctxt obj1 obj2 =
     match get_object_literal_loc obj1, literal_key_info with
-    | Some loc, Some (target_loc, name) when loc = target_loc ->
+    | Some loc, Some (target_loc, _, name) when loc = target_loc ->
       let open Type in
       begin match obj2 with
       | DefT (_, ObjT _) ->
@@ -680,25 +680,45 @@ let def_info_of_typecheck_results cx props_access_info =
         |> Option.map ~f:(Nel.concat)
         |> Option.map ~f:(fun def_info -> (def_info, name))
 
+let add_literal_properties literal_key_info def_info =
+  (* If we happen to be on an object property, include the location of that
+   * property as a def loc. We don't want to do that above because:
+   * (a) We could also encounter a `Use_in_literal` if this object literal flows
+   * into another object type. This would force us to make props_access_info a
+   * list and add additional complexity just for the sake of this one case.
+   * (b) We would have to add a type inference hook, which we are trying to
+   * avoid. *)
+  match def_info, literal_key_info with
+  | None, None -> Ok None
+  | Some _, None -> Ok def_info
+  | None, Some (_, loc, name) -> Ok (Some (Nel.one (Object loc), name))
+  | Some (defs, name1), Some (_, loc, name2) ->
+    if name1 <> name2 then
+      Error "Unexpected name mismatch"
+    else
+      Ok (Some (Nel.cons (Object loc) defs, name1))
+
 let get_def_info genv env profiling file_key content loc: ((def_info * string) option, string) result Lwt.t =
   let {options; workers} = genv in
   let props_access_info = ref (Ok None) in
-  let%lwt cx_result =
+  let%lwt result =
     compute_ast_result file_key content
     %>>| fun (ast, file_sig, info) ->
       let info = Docblock.set_flow_mode_for_ide_command info in
-      let literal_key_info: (Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
+      let literal_key_info: (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
       set_def_loc_hook props_access_info literal_key_info loc;
-      Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
+      let%lwt cx = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
         let ensure_checked =
           Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
         Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
-      )
+      ) in
+      Lwt.return (cx, literal_key_info)
   in
   unset_hooks ();
-  cx_result %>>= fun cx ->
+  result %>>= fun (cx, literal_key_info) ->
   !props_access_info %>>= fun props_access_info ->
-  Lwt.return @@ def_info_of_typecheck_results cx props_access_info
+  def_info_of_typecheck_results cx props_access_info %>>= fun def_info ->
+  Lwt.return @@ add_literal_properties literal_key_info def_info
 
 let find_refs_global genv env multi_hop def_info name =
   let%lwt def_info =

@@ -1069,6 +1069,12 @@ CJS object exporting local:
     {
       "source":"cjs-4.js",
       "type":"SourceFile",
+      "start":{"line":3,"column":8,"offset":56},
+      "end":{"line":3,"column":10,"offset":59}
+    },
+    {
+      "source":"cjs-4.js",
+      "type":"SourceFile",
       "start":{"line":3,"column":13,"offset":61},
       "end":{"line":3,"column":13,"offset":62}
     },
@@ -1110,12 +1116,6 @@ CJS object exporting shorthand:
   "kind":"symbol-found",
   "name":"bar3",
   "locs":[
-    {
-      "source":"cjs-2.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":7,"offset":28},
-      "end":{"line":3,"column":10,"offset":32}
-    },
     {
       "source":"cjs-2.js",
       "type":"SourceFile",

@@ -351,8 +351,8 @@ Destructuring:
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":36,"column":7,"offset":445},
-      "end":{"line":36,"column":7,"offset":446}
+      "start":{"line":37,"column":7,"offset":476},
+      "end":{"line":37,"column":7,"offset":477}
     },
     {
       "source":"locals.js",
@@ -957,7 +957,30 @@ Property access on an object without an annotation: {
     }
   ]
 }
-Property definition on an object without an annotation: {"kind":"no-symbol-found"}
+Property definition on an object without an annotation: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":12,"offset":142},
+      "end":{"line":14,"column":14,"offset":145}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":15,"column":3,"offset":154},
+      "end":{"line":15,"column":5,"offset":157}
+    },
+    {
+      "source":"objects.js",
+      "type":"SourceFile",
+      "start":{"line":16,"column":3,"offset":161},
+      "end":{"line":16,"column":5,"offset":164}
+    }
+  ]
+}
 Introduction of a shadow property via a write: {
   "kind":"symbol-found",
   "name":"bar",
