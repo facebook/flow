@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1698:13
-   1698|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:1701:13
+   1701|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1698:24
-   1698|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:1701:24
+   1701|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -135,8 +135,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2626:43
-   2626|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2629:43
+   2629|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -149,8 +149,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2626:43
-   2626|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2629:43
+   2629|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -166,8 +166,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:2964:45
-   2964|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:2967:45
+   2967|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -183,8 +183,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:2965:78
-   2965|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:2968:78
+   2968|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -197,8 +197,8 @@ Cannot get `form.action` because property `action` is missing in null [1].
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3018:27
-   3018|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3021:27
+   3021|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -211,8 +211,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3033:44
-   3033|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3036:44
+   3036|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -225,8 +225,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3034:48
-   3034|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3037:48
+   3037|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -692,11 +692,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3497:1
+   <BUILTINS>/dom.js:3500:1
          v--------------------------------
-   3497| typeof NodeFilter.FILTER_ACCEPT |
-   3498| typeof NodeFilter.FILTER_REJECT |
-   3499| typeof NodeFilter.FILTER_SKIP;
+   3500| typeof NodeFilter.FILTER_ACCEPT |
+   3501| typeof NodeFilter.FILTER_REJECT |
+   3502| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -713,11 +713,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3497:1
+   <BUILTINS>/dom.js:3500:1
          v--------------------------------
-   3497| typeof NodeFilter.FILTER_ACCEPT |
-   3498| typeof NodeFilter.FILTER_REJECT |
-   3499| typeof NodeFilter.FILTER_SKIP;
+   3500| typeof NodeFilter.FILTER_ACCEPT |
+   3501| typeof NodeFilter.FILTER_REJECT |
+   3502| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -776,11 +776,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3497:1
+   <BUILTINS>/dom.js:3500:1
          v--------------------------------
-   3497| typeof NodeFilter.FILTER_ACCEPT |
-   3498| typeof NodeFilter.FILTER_REJECT |
-   3499| typeof NodeFilter.FILTER_SKIP;
+   3500| typeof NodeFilter.FILTER_ACCEPT |
+   3501| typeof NodeFilter.FILTER_REJECT |
+   3502| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -797,11 +797,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3497:1
+   <BUILTINS>/dom.js:3500:1
          v--------------------------------
-   3497| typeof NodeFilter.FILTER_ACCEPT |
-   3498| typeof NodeFilter.FILTER_REJECT |
-   3499| typeof NodeFilter.FILTER_SKIP;
+   3500| typeof NodeFilter.FILTER_ACCEPT |
+   3501| typeof NodeFilter.FILTER_REJECT |
+   3502| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
