@@ -24,3 +24,6 @@ type msg =
   | Server_not_alive_dormant of string
   (** Server process died. Connect another client to start another one. *)
   | Server_died of exit_status
+  (** Server died from a config change, and the Monitor didn't automatically
+   * start a new one because a version change in the config file. *)
+  | Server_died_config_change

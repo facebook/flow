@@ -105,6 +105,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     (** How many times have we tried to relaunch it? *)
     retries: int;
     max_purgatory_clients: int;
+    (** Version of this running server, as specified in the config file. *)
+    current_version: string option;
     (** After sending a Server_not_alive_dormant during Prehandoff,
      * clients are put here waiting for a server to come alive, at
      * which point they get pushed through the rest of prehandoff and
@@ -186,8 +188,23 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let kill_signal_time = Unix.gettimeofday () in
     wait_for_server_exit_with_check env.server kill_signal_time
 
-  let restart_server ?target_mini_state env exit_status =
-    kill_server_and_wait_for_exit env;
+  (** Reads current hhconfig contents from disk and returns true if the
+   * version specified in there matches our currently running version. *)
+  let is_config_version_matching env =
+    let filename = Relative_path.from_root Config_file.file_path_relative_to_repo_root in
+    let contents = Sys_utils.cat (Relative_path.to_absolute filename) in
+    let config = Config_file.parse_contents contents in
+    let new_version = SMap.get "version" config in
+    match env.current_version, new_version with
+    | None, None -> true
+    | None, Some _
+    | Some _, None ->
+      false
+    | Some cv, Some nv ->
+      String.equal cv nv
+
+  (** Actually starts a new server. *)
+  let start_new_server ?target_mini_state env exit_status =
     let informant_managed = Informant.is_managing env.informant in
     let new_server = start_server ?target_mini_state
       ~informant_managed env.server_start_options exit_status in
@@ -195,6 +212,33 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server = new_server;
       retries = env.retries + 1;
     }
+
+  (** Kill the server (if it's running) and restart it - maybe. Obeying the rules
+   * of state transitions. See docs on the ServerProcess.server_process ADT for
+   * state transitions.  *)
+  let kill_and_maybe_restart_server ?target_mini_state env exit_status =
+    kill_server_and_wait_for_exit env;
+    let version_matches = is_config_version_matching env in
+    match env.server, version_matches with
+    | Died_config_changed, _ ->
+      (** Now we can start a new instance safely.
+       * See diagram on ServerProcess.server_process docs. *)
+      start_new_server ?target_mini_state env exit_status
+    | Not_yet_started, false
+    | Alive _, false
+    | Informant_killed, false
+    | Died_unexpectedly _, false ->
+      (** Can't start server instance. State goes to Died_config_changed
+       * See diagram on ServerProcess.server_process docs. *)
+      Hh_logger.log "Avoiding starting a new server because version in config no longer matches.";
+      { env with server = Died_config_changed }
+    | Not_yet_started, true
+    | Alive _, true
+    | Informant_killed, true
+    | Died_unexpectedly _, true ->
+      (** Start new server instance because config matches.
+       * See diagram on ServerProcess.server_process docs. *)
+      start_new_server ?target_mini_state env exit_status
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -210,7 +254,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       Marshal_tools.from_fd_with_preamble client_fd in
     match cmd with
     | MonitorRpc.HANDOFF_TO_SERVER handoff_options ->
-      client_prehandoff env handoff_options client_fd
+      client_prehandoff ~is_purgatory_client:false env handoff_options client_fd
     | MonitorRpc.SHUT_DOWN ->
       Hh_logger.log "Got shutdown RPC. Shutting down.";
       let kill_signal_time = Unix.gettimeofday () in
@@ -277,7 +321,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   (** Send (possibly empty) sequences of messages before handing off to
    * server. *)
-  and client_prehandoff env handoff_options client_fd =
+  and client_prehandoff ~is_purgatory_client env handoff_options client_fd =
     let module PH = Prehandoff in
     match env.server with
     | Alive server ->
@@ -298,13 +342,33 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
       (** Next client to connect starts a new server. *)
       Exit_status.exit Exit_status.No_error
+    | Died_config_changed ->
+      if not is_purgatory_client then
+        let env = kill_and_maybe_restart_server env None in
+        (** Assert that the restart succeeded, and then push prehandoff through again. *)
+        begin match env.server with
+        | Alive _ ->
+          (** Server restarted. We want to re-run prehandoff, which will
+           * actually do the prehandoff this time. *)
+          client_prehandoff ~is_purgatory_client env handoff_options client_fd
+        | Died_unexpectedly _
+        | Died_config_changed
+        | Not_yet_started
+        | Informant_killed ->
+          Hh_logger.log ("Unreachable state. Server should be alive after trying a restart" ^^
+            " from Died_config_changed state");
+          failwith "Failed starting server transitioning off Died_config_changed state"
+        end
+      else
+        (msg_to_channel client_fd PH.Server_died_config_change;
+        env)
     | Not_yet_started
     | Informant_killed ->
       let env =
         if handoff_options.MonitorRpc.force_dormant_start then begin
           msg_to_channel client_fd (PH.Server_not_alive_dormant
             "Warning - starting a server by force-dormant-start option...");
-          restart_server env None
+          kill_and_maybe_restart_server env None
         end else begin
           msg_to_channel client_fd (PH.Server_not_alive_dormant
             "Server killed by informant. Waiting for next server...");
@@ -345,7 +409,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     Queue.transfer env.purgatory_clients clients;
     let env = Queue.fold begin
       fun env (handoff_options, client_fd) ->
-        try client_prehandoff env handoff_options client_fd with
+        try client_prehandoff ~is_purgatory_client:true env handoff_options client_fd with
         | Unix.Unix_error(Unix.EPIPE, _, _)
         | Unix.Unix_error(Unix.EBADF, _, _) ->
           Hh_logger.log "Purgatory client disconnected. Dropping.";
@@ -357,9 +421,15 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     match env.server, Queue.length env.purgatory_clients with
     | Alive _, 0 ->
       env
+    | Died_config_changed, _ ->
+      (** These clients are waiting for a server to be started. But this Monitor
+       * is waiting for a new client to connect (which confirms to us that we
+       * are running the correct version of the Monitor). So let them know
+       * that they might want to do something. *)
+      push_purgatory_clients env
     | Alive _, _ ->
       push_purgatory_clients env
-    | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _ ->
+    | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _->
       env
 
   (** Kill command from client is handled by server server, so the monitor
@@ -392,10 +462,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       | Not_yet_started ->
         None, Informant_sig.Server_not_yet_started
       | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
+      | Died_config_changed
       | Informant_killed ->
         None, Informant_sig.Server_dead in
     env, exit_status, server_state
-
 
   let update_status env monitor_config =
      let env, exit_status, server_state = update_status_ env monitor_config in
@@ -425,27 +495,27 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
        && (env.retries < max_watchman_retries) then begin
        Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
          (env.retries + 1);
-       restart_server env exit_status
+       kill_and_maybe_restart_server env exit_status
      end
      else match informant_report with
      | Informant_sig.Restart_server target_mini_state ->
        Hh_logger.log "Informant directed server restart. Restarting server.";
        HackEventLogger.informant_induced_restart ();
-       restart_server ?target_mini_state env exit_status
+       kill_and_maybe_restart_server ?target_mini_state env exit_status
      | Informant_sig.Move_along ->
        if is_config_changed then begin
          Hh_logger.log "hh_server died from hh config change. Restarting";
-         restart_server env exit_status
+         kill_and_maybe_restart_server env exit_status
        end else if is_file_heap_stale then begin
          Hh_logger.log
           "Several large rebases caused FileHeap to be stale. Restarting";
-         restart_server env exit_status
+         kill_and_maybe_restart_server env exit_status
       end else if is_sql_assertion_failure
       && (env.retries < max_sql_retries) then begin
         Hh_logger.log
           "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
           (env.retries + 1);
-        restart_server env exit_status
+        kill_and_maybe_restart_server env exit_status
       end
        else
          env
@@ -513,7 +583,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let env = check_and_run_loop_ env monitor_config socket in
     env, monitor_config, socket
 
-  let start_monitor ~waiting_client ~max_purgatory_clients
+  let start_monitor ?current_version ~waiting_client ~max_purgatory_clients
     server_start_options informant_init_env
     monitor_config =
     let socket = Socket.init_unix_socket monitor_config.socket_file in
@@ -547,6 +617,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let env = {
       informant;
       max_purgatory_clients;
+      current_version;
       purgatory_clients = Queue.create ();
       server = server_process;
       server_start_options;
@@ -555,10 +626,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     } in
     env, monitor_config, socket
 
-  let start_monitoring ~waiting_client ~max_purgatory_clients
+  let start_monitoring ?current_version ~waiting_client ~max_purgatory_clients
     server_start_options informant_init_env
     monitor_config =
-    let env, monitor_config, socket = start_monitor ~waiting_client ~max_purgatory_clients
+    let env, monitor_config, socket = start_monitor
+      ?current_version ~waiting_client ~max_purgatory_clients
       server_start_options informant_init_env monitor_config in
     check_and_run_loop env monitor_config socket
 end

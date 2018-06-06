@@ -106,6 +106,10 @@ let rec consume_prehandoff_messages ic oc =
     Printf.eprintf "Waiting for a server to be started...%s\n%!"
       ClientMessages.waiting_for_server_to_be_started_doc;
     consume_prehandoff_messages ic oc
+  | PH.Server_died_config_change ->
+    Printf.eprintf ("Last server exited due to config change. Please re-run client" ^^
+      " to force discovery of the correct version of the client.");
+    Error Server_died
   | PH.Server_died {PH.status; PH.was_oom} ->
     (match was_oom, status with
     | true, _ ->
@@ -116,6 +120,8 @@ let rec consume_prehandoff_messages ic oc =
       Printf.eprintf "Last server killed by signal: %d.\n%!" signal
     | false, Unix.WSTOPPED signal ->
       Printf.eprintf "Last server stopped by signal: %d.\n%!" signal);
+    (** Monitor will exit now that it has provided a client with a reason
+     * for the last server dying. Wait for the Monitor to exit. *)
     wait_on_server_restart ic;
     Error Server_died
 
