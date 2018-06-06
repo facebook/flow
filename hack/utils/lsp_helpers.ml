@@ -32,26 +32,35 @@ let lsp_textDocumentIdentifier_to_filename
   let open Lsp.TextDocumentIdentifier in
   lsp_uri_to_path identifier.uri
 
+let lsp_position_to_fc (pos: Lsp.position) : File_content.position =
+  { File_content.
+    line = pos.Lsp.line + 1;  (* LSP is 0-based; File_content is 1-based. *)
+    column = pos.Lsp.character + 1;
+  }
+
+let lsp_range_to_fc (range: Lsp.range) : File_content.range =
+  { File_content.
+    st = lsp_position_to_fc range.Lsp.start;
+    ed = lsp_position_to_fc range.Lsp.end_;
+  }
+
+let lsp_edit_to_fc (edit: Lsp.DidChange.textDocumentContentChangeEvent) : File_content.text_edit =
+  { File_content.
+    range = Option.map edit.DidChange.range ~f:lsp_range_to_fc;
+    text = edit.DidChange.text;
+  }
+
 let apply_changes (text: string) (contentChanges: DidChange.textDocumentContentChangeEvent list)
   : (string, string * Utils.callstack) result =
-  let lsp_position_to_fc (pos: Lsp.position) : File_content.position =
-    { File_content.
-      line = pos.Lsp.line + 1;  (* LSP is 0-based; File_content is 1-based. *)
-      column = pos.Lsp.character + 1;
-    } in
-  let lsp_range_to_fc (range: Lsp.range) : File_content.range =
-    { File_content.
-      st = lsp_position_to_fc range.Lsp.start;
-      ed = lsp_position_to_fc range.Lsp.end_;
-    } in
-  let lsp_edit_to_fc (edit: Lsp.DidChange.textDocumentContentChangeEvent) : File_content.text_edit =
-    { File_content.
-      range = Option.map edit.DidChange.range ~f:lsp_range_to_fc;
-      text = edit.DidChange.text;
-    } in
   let edits = List.map lsp_edit_to_fc contentChanges
   in
   File_content.edit_file text edits
+
+let get_char_from_lsp_position (content: string) (position: Lsp.position)
+  : char =
+    let fc_position = lsp_position_to_fc position in
+    let open File_content in
+    get_char content (get_offset content fc_position)
 
 let apply_changes_unsafe text (contentChanges: DidChange.textDocumentContentChangeEvent list)
   : string =
