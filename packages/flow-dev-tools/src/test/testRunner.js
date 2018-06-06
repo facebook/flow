@@ -221,7 +221,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   }
   if (args.maxErroredTestsPct != null) {
     const numTests = Object.keys(suites).length;
-    maxErroredTests = Math.floor(numTests * args.maxErroredTestsPct / 100);
+    maxErroredTests = Math.floor((numTests * args.maxErroredTestsPct) / 100);
   }
   if (maxErroredTests > 0) {
     process.stderr.write(
