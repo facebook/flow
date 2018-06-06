@@ -11,12 +11,17 @@ external get_build_revision : unit -> string = "hh_get_build_revision"
 external get_build_commit_time : unit -> int = "hh_get_build_commit_time"
 external get_build_commit_time_string : unit -> string =
   "hh_get_build_commit_time_string"
+external get_build_major : unit -> int = "hh_get_build_major"
+external get_build_minor : unit -> int = "hh_get_build_minor"
 
 let build_revision = get_build_revision ()
 
 let build_id_ohai = build_revision ^ " " ^ get_build_commit_time_string ()
 
 let build_commit_time = get_build_commit_time ()
+
+let build_major_version = get_build_major ()
+let build_minor_version = get_build_minor ()
 
 (* Monotonically increasing identifier that can be used when we introduce
  * backward incompatible changes in hh_client commands, and to signal
