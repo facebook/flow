@@ -149,40 +149,6 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
-  (** Kill command from client is handled by server server, so the monitor
-   * needs to check liveness of the server process to know whether
-   * to stop itself. *)
-  let update_status_ (env: env) monitor_config =
-    let env = match env.server with
-      | Alive process ->
-        let pid, proc_stat = SC.wait_pid process in
-        (match pid, proc_stat with
-          | 0, _ ->
-            (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
-            env
-          | _, _ ->
-            (* "pid<>0" means the pid has died or received a stop signal *)
-            let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
-            let was_oom = match proc_stat with
-            | Unix.WEXITED code when code = oom_code -> true
-            | _ -> Sys_utils.check_dmesg_for_oom process.pid "hh_server" in
-            SC.on_server_exit monitor_config;
-            ServerProcessTools.check_exit_status proc_stat process monitor_config;
-            { env with server = Died_unexpectedly (proc_stat, was_oom) })
-      | _ -> env
-    in
-    let exit_status, server_state = match env.server with
-      | Alive _ ->
-        None, Informant_sig.Server_alive
-      | Died_unexpectedly ((Unix.WEXITED c), _) ->
-        Some c, Informant_sig.Server_dead
-      | Not_yet_started ->
-        None, Informant_sig.Server_not_yet_started
-      | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
-      | Informant_killed ->
-        None, Informant_sig.Server_dead in
-    env, exit_status, server_state
-
   let start_server ?target_mini_state ~informant_managed options exit_status =
     let server_process = SC.start_server
       ?target_mini_state
@@ -229,59 +195,6 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server = new_server;
       retries = env.retries + 1;
     }
-
-  let update_status env monitor_config =
-     let env, exit_status, server_state = update_status_ env monitor_config in
-     let informant_report = Informant.report env.informant server_state in
-     let is_watchman_fresh_instance = match exit_status with
-       | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
-       | _ -> false in
-     let is_watchman_failed = match exit_status with
-       | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
-       | _ -> false in
-     let is_config_changed = match exit_status with
-       | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
-       | _ -> false in
-     let is_file_heap_stale = match exit_status with
-       | Some c when c = Exit_status.(exit_code File_heap_stale) -> true
-       | _ -> false in
-     let is_sql_assertion_failure = match exit_status with
-       | Some c
-          when c = Exit_status.(exit_code Sql_assertion_failure) ||
-               c = Exit_status.(exit_code Sql_cantopen) ||
-               c = Exit_status.(exit_code Sql_corrupt) ||
-               c = Exit_status.(exit_code Sql_misuse) -> true
-       | _ -> false in
-     let max_watchman_retries = 3 in
-     let max_sql_retries = 3 in
-     if (is_watchman_failed || is_watchman_fresh_instance)
-       && (env.retries < max_watchman_retries) then begin
-       Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
-         (env.retries + 1);
-       restart_server env exit_status
-     end
-     else match informant_report with
-     | Informant_sig.Restart_server target_mini_state ->
-       Hh_logger.log "Informant directed server restart. Restarting server.";
-       HackEventLogger.informant_induced_restart ();
-       restart_server ?target_mini_state env exit_status
-     | Informant_sig.Move_along ->
-       if is_config_changed then begin
-         Hh_logger.log "hh_server died from hh config change. Restarting";
-         restart_server env exit_status
-       end else if is_file_heap_stale then begin
-         Hh_logger.log
-          "Several large rebases caused FileHeap to be stale. Restarting";
-         restart_server env exit_status
-      end else if is_sql_assertion_failure
-      && (env.retries < max_sql_retries) then begin
-        Hh_logger.log
-          "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
-          (env.retries + 1);
-        restart_server env exit_status
-      end
-       else
-         env
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -448,6 +361,94 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       push_purgatory_clients env
     | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _ ->
       env
+
+  (** Kill command from client is handled by server server, so the monitor
+   * needs to check liveness of the server process to know whether
+   * to stop itself. *)
+  let update_status_ (env: env) monitor_config =
+    let env = match env.server with
+      | Alive process ->
+        let pid, proc_stat = SC.wait_pid process in
+        (match pid, proc_stat with
+          | 0, _ ->
+            (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
+            env
+          | _, _ ->
+            (* "pid<>0" means the pid has died or received a stop signal *)
+            let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
+            let was_oom = match proc_stat with
+            | Unix.WEXITED code when code = oom_code -> true
+            | _ -> Sys_utils.check_dmesg_for_oom process.pid "hh_server" in
+            SC.on_server_exit monitor_config;
+            ServerProcessTools.check_exit_status proc_stat process monitor_config;
+            { env with server = Died_unexpectedly (proc_stat, was_oom) })
+      | _ -> env
+    in
+    let exit_status, server_state = match env.server with
+      | Alive _ ->
+        None, Informant_sig.Server_alive
+      | Died_unexpectedly ((Unix.WEXITED c), _) ->
+        Some c, Informant_sig.Server_dead
+      | Not_yet_started ->
+        None, Informant_sig.Server_not_yet_started
+      | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
+      | Informant_killed ->
+        None, Informant_sig.Server_dead in
+    env, exit_status, server_state
+
+
+  let update_status env monitor_config =
+     let env, exit_status, server_state = update_status_ env monitor_config in
+     let informant_report = Informant.report env.informant server_state in
+     let is_watchman_fresh_instance = match exit_status with
+       | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
+       | _ -> false in
+     let is_watchman_failed = match exit_status with
+       | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
+       | _ -> false in
+     let is_config_changed = match exit_status with
+       | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
+       | _ -> false in
+     let is_file_heap_stale = match exit_status with
+       | Some c when c = Exit_status.(exit_code File_heap_stale) -> true
+       | _ -> false in
+     let is_sql_assertion_failure = match exit_status with
+       | Some c
+          when c = Exit_status.(exit_code Sql_assertion_failure) ||
+               c = Exit_status.(exit_code Sql_cantopen) ||
+               c = Exit_status.(exit_code Sql_corrupt) ||
+               c = Exit_status.(exit_code Sql_misuse) -> true
+       | _ -> false in
+     let max_watchman_retries = 3 in
+     let max_sql_retries = 3 in
+     if (is_watchman_failed || is_watchman_fresh_instance)
+       && (env.retries < max_watchman_retries) then begin
+       Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
+         (env.retries + 1);
+       restart_server env exit_status
+     end
+     else match informant_report with
+     | Informant_sig.Restart_server target_mini_state ->
+       Hh_logger.log "Informant directed server restart. Restarting server.";
+       HackEventLogger.informant_induced_restart ();
+       restart_server ?target_mini_state env exit_status
+     | Informant_sig.Move_along ->
+       if is_config_changed then begin
+         Hh_logger.log "hh_server died from hh config change. Restarting";
+         restart_server env exit_status
+       end else if is_file_heap_stale then begin
+         Hh_logger.log
+          "Several large rebases caused FileHeap to be stale. Restarting";
+         restart_server env exit_status
+      end else if is_sql_assertion_failure
+      && (env.retries < max_sql_retries) then begin
+        Hh_logger.log
+          "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
+          (env.retries + 1);
+        restart_server env exit_status
+      end
+       else
+         env
 
   let rec check_and_run_loop ?(consecutive_throws=0) env monitor_config
       (socket: Unix.file_descr) =
