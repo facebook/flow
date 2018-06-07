@@ -1,3 +1,38 @@
+### 0.74.0
+
+Likely to cause new Flow errors:
+
+* Flow now performs exactness checks that were previously skipped in some cases (e.g when `$ObjMap` is used on an exact type).
+
+New Features:
+
+* Significant progress towards supporting the LSP (Language Server Protocol) natively.
+* Allow custom module resolvers (experimental, only works with the haste resolver system).
+* Flow lints for unnecessary optional chaining.
+
+Notable bug fixes:
+
+* Allow autocomplete to work with optional chaining.
+* Only report status as GCing when actually GCing.
+
+Misc:
+
+* Improve the args used when launching child processes to give more information about the process when you run `ps`.
+* Add a `max_literal_length` option to `.flowconfig` which replaces a magic constant.
+* Multi-hop (indirect) `find-refs` now supports class instances.
+* Revamp `find-refs` on ES6 named exports to improve reliability.
+* Allow internal slot properties to be optional.
+* Improve shutdown of the server monitor process.
+* Try to gracefully stop server process when monitor exits.
+* Print server status updates on new lines when Flow is not called from a tty.
+* Add additional properties to the `react-dom/server` libdef.
+* Add 'as' property to the HTMLLinkElement libdef.
+* Add a libdef for the Asynchronous Clipboard API.
+* Update libdef for `Clients.matchAll` to return an `Array` rather than an `Iterator`.
+
+Parser:
+* Rename InterfaceType to InterfaceTypeAnnotation.
+
 ### 0.73.0
 
 Likely to cause new Flow errors:
