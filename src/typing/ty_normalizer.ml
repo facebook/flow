@@ -853,10 +853,11 @@ end = struct
     | Some (x, _, t) -> type__ ~env t >>| fun t -> Some (x,t)
     | _ -> return None
 
-  and obj_ty ~env {T.flags = {T.exact; _}; props_tmap; dict_t; _} =
+  and obj_ty ~env {T.flags = {T.exact; T.frozen; _}; props_tmap; dict_t; _} =
     let obj_exact = exact in
+    let obj_frozen = frozen in
     obj_props ~env props_tmap dict_t >>| fun obj_props ->
-    {Ty.obj_exact; obj_props}
+    {Ty.obj_exact; obj_frozen; obj_props}
 
   and obj_props ~env id dict =
     let dispatch (x, p) =

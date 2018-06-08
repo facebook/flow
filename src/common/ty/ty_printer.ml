@@ -242,7 +242,7 @@ let type_ ?(size=5000) t =
         type_function ~depth ~sep:(Atom ":") func
       ]
 
-  and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props } =
+  and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props; obj_frozen = _ } =
     let s_exact = if obj_exact then Atom "|" else Empty in
     list
       ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])

@@ -88,7 +88,7 @@ and dump_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
     (dump_t ~depth dict_key)
     (dump_t ~depth dict_value)
 
-and dump_obj ~depth { obj_exact; obj_props } =
+and dump_obj ~depth { obj_exact; obj_props; obj_frozen = _ } =
   if obj_exact
     then spf "{|%s|}" (dump_list (dump_prop ~depth) obj_props)
     else spf "{%s}"   (dump_list (dump_prop ~depth) obj_props)
@@ -238,8 +238,9 @@ let json_of_t ~strip_root =
         "literal", JSON_Bool b
       ]
     | Fun f -> json_of_fun_t f
-    | Obj { obj_exact; obj_props } -> [
+    | Obj { obj_exact; obj_props; obj_frozen } -> [
         "exact", JSON_Bool obj_exact;
+        "frozen", JSON_Bool obj_frozen;
         "props", JSON_Array (List.map json_of_prop obj_props);
       ]
     | Arr t -> [

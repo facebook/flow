@@ -51,6 +51,7 @@ and fun_t = {
 
 and obj_t = {
   obj_exact: bool;
+  obj_frozen: bool;
   obj_props: prop list;
 }
 

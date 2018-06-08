@@ -62,9 +62,9 @@ module Make(M: Monoid.S)(E: Env) = struct
     method private fun_param env (s, t, f) =
       self#type_ env t >>| fun t -> (s, t, f)
 
-    method private obj_t env { obj_exact; obj_props } =
+    method private obj_t env { obj_exact; obj_props; obj_frozen } =
       mapM (self#prop_t env) obj_props >>| fun obj_props ->
-      { obj_exact; obj_props }
+      { obj_exact; obj_props; obj_frozen }
 
     method private prop_t env = function
       | NamedProp (n, p) -> self#named_prop_t env p >>| fun p -> NamedProp (n,p)
