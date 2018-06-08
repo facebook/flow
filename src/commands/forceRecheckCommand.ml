@@ -48,10 +48,11 @@ let force_recheck (args:args) server_flags =
   let files = List.map get_path_of_file args.files in
   let request = ServerProt.Request.FORCE_RECHECK {files; focus=args.focus; profile=args.profile} in
 
-  let profiling = begin match connect_and_make_request server_flags args.root request with
-  | ServerProt.Response.FORCE_RECHECK profiling -> profiling
+  let log, profiling = begin match connect_and_make_request server_flags args.root request with
+  | ServerProt.Response.FORCE_RECHECK (s,profiling) -> s,profiling
   | response -> failwith_bad_response ~request ~response
   end in
+  Printf.eprintf "#force_recheck log=-->%s<--\n\n\n" log;
 
   (* Print profiling info *)
   begin
@@ -88,7 +89,10 @@ let main server_flags json pretty root from profile focus input_file files () =
   | _ -> ()
   end;
 
+  let f1 = Option.value files ~default:["None"] in
+  Printf.eprintf "*** force-recheck file=%s\n" (String.concat "," f1);
   let files = get_filenames_from_input ~allow_imaginary:true input_file files in
+  Printf.eprintf "*** force-recheck from_input=%s\n" (String.concat "," files);
 
   let root = guess_root (
     match root, files with
