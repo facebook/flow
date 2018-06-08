@@ -34,9 +34,12 @@ let assert_es ?assert_named ?assert_star = function
   | CommonJS _ ->
     assert_failure "Unexpected module kind"
 
-let assert_cjs ?assert_exports = function
-  | CommonJS { exports; _ } ->
-    call_opt exports assert_exports;
+let assert_cjs ?assert_export_loc = function
+  | CommonJS { mod_exp_loc } ->
+    let offsets =
+      Option.map mod_exp_loc ~f:Loc.(fun { start={offset=a;_}; _end={offset=b;_}; _} -> (a, b))
+    in
+    call_opt offsets assert_export_loc
   | ES _ ->
     assert_failure "Unexpected module kind"
 
@@ -426,126 +429,68 @@ let tests = "require" >::: [
 
   "cjs_default" >:: begin fun ctxt ->
     let {module_sig = {module_kind; _}; _} = visit "" in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt None)
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt None)
   end;
 
   "cjs_clobber" >:: begin fun ctxt ->
     let source = "module.exports = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (Some CJSExportOther))
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_clobber_rebound" >:: begin fun ctxt ->
     let source = "var module = {}; module.exports = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (None))
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports_named_rebound" >:: begin fun ctxt ->
     let source = "var module = {}; module.exports.bar = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (None))
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports_named_rebound2" >:: begin fun ctxt ->
     let source = "var exports = {}; exports.bar = 0" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (None))
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (None))
   end;
 
   "cjs_exports" >:: begin fun ctxt ->
     let source = "exports = {foo: bar}; exports.baz = qux;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(function
-      | Some (CJSExportProps map) ->
-        assert_equal ~ctxt 1 (SMap.cardinal map);
-        assert_equal ~ctxt false (SMap.mem "foo" map);
-        let baz_loc, qux_loc = match SMap.find_unsafe "baz" map with
-        | CJSExport { loc; local = Some (loc', "qux") } -> loc, loc'
-        | _ -> assert_failure "Unexpected export"
-        in
-        assert_substring_equal ~ctxt "baz" source baz_loc;
-        assert_substring_equal ~ctxt "qux" source qux_loc;
-      | _ -> assert_failure "Unexpected export"
-    )
+    (* TODO report an export loc here *)
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (22, 29)))
   end;
 
   "cjs_export_named" >:: begin fun ctxt ->
     let source = "module.exports.foo = 0; module.exports.bar = baz;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(function
-      | Some (CJSExportProps map) ->
-        assert_equal ~ctxt 2 (SMap.cardinal map);
-        let foo_loc = match SMap.find_unsafe "foo" map with
-        | CJSExport { loc; local = None } -> loc
-        | _ -> assert_failure "Unexpected export"
-        in
-        let bar_loc, baz_loc = match SMap.find_unsafe "bar" map with
-        | CJSExport { loc; local = Some (loc', "baz") } -> loc, loc'
-        | _ -> assert_failure "Unexpected export"
-        in
-        assert_substring_equal ~ctxt "foo" source foo_loc;
-        assert_substring_equal ~ctxt "bar" source bar_loc;
-        assert_substring_equal ~ctxt "baz" source baz_loc;
-      | _ -> assert_failure "Unexpected export"
-    )
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_object" >:: begin fun ctxt ->
     let source = "module.exports = {foo: bar, baz: 0, qux};" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(function
-      | Some (CJSExportProps map) ->
-        assert_equal ~ctxt 3 (SMap.cardinal map);
-        let foo_loc, bar_loc = match SMap.find_unsafe "foo" map with
-        | CJSExport { loc; local = Some (loc', "bar") } -> loc, loc'
-        | _ -> assert_failure "Unexpected export"
-        in
-        let baz_loc = match SMap.find_unsafe "baz" map with
-        | CJSExport { loc; local = None } -> loc
-        | _ -> assert_failure "Unexpected export"
-        in
-        let qux_loc, qux_loc' = match SMap.find_unsafe "qux" map with
-        | CJSExport { loc; local = Some (loc', "qux") } -> loc, loc'
-        | _ -> assert_failure "Unexpected export"
-        in
-        assert_substring_equal ~ctxt "foo" source foo_loc;
-        assert_substring_equal ~ctxt "bar" source bar_loc;
-        assert_substring_equal ~ctxt "baz" source baz_loc;
-        assert_substring_equal ~ctxt "qux" source qux_loc;
-        assert_substring_equal ~ctxt "qux" source qux_loc';
-      | _ -> assert_failure "Unexpected export"
-    )
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_ident" >:: begin fun ctxt ->
     let source = "module.exports = foo;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(function
-      | Some (CJSExportIdent (foo_loc, "foo")) ->
-        assert_substring_equal ~ctxt "foo" source foo_loc
-      | _ -> assert_failure "Unexpected export"
-    )
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_ident_then_props" >:: begin fun ctxt ->
     let source = "module.exports = foo; module.exports.bar = baz;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(function
-      | Some (CJSExportIdent (foo_loc, "foo")) ->
-        assert_substring_equal ~ctxt "foo" source foo_loc
-      | _ -> assert_failure "Unexpected export"
-    )
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "cjs_export_props_then_ident" >:: begin fun ctxt ->
     let source = "module.exports.foo = bar; module.exports = baz;" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(function
-      | Some (CJSExportIdent (baz_loc, "baz")) ->
-        assert_substring_equal ~ctxt "baz" source baz_loc
-      | _ -> assert_failure "Unexpected export"
-    )
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
   end;
 
   "export_named_type" >:: begin fun ctxt ->
@@ -730,7 +675,8 @@ let tests = "require" >::: [
   "declare_module.exports" >:: begin fun ctxt ->
     let source = "declare module.exports: ty" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (Some (CJSExportProps SMap.empty)))
+    (* TODO use just the `module.exports` location *)
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26)))
   end;
 
   "declare_export_default" >:: begin fun ctxt ->
@@ -865,7 +811,7 @@ let tests = "require" >::: [
       SMap.find_unsafe "foo" modules in
     assert_substring_equal ~ctxt source source loc;
     assert_equal ~ctxt 0 (List.length requires);
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt None);
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt None);
     assert_equal ~ctxt 0 (SMap.cardinal type_exports_named);
     assert_equal ~ctxt 0 (SMap.cardinal type_exports_star);
   end;
@@ -946,7 +892,8 @@ let tests = "require" >::: [
     let {declare_modules; _} = visit source in
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
-    assert_cjs module_kind ~assert_exports:(assert_equal ~ctxt (Some (CJSExportProps SMap.empty)))
+    (* TODO use o0nly the location of `module.exports` *)
+    assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47)))
   end;
 
   "err_indeterminate_clobber_after_export" >:: begin fun ctxt ->

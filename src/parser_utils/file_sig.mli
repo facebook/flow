@@ -115,31 +115,14 @@ and require_bindings =
 (* All modules are assumed to be CommonJS to start with, but if we see an ES
  * module-style export, we switch to ES. *)
 and module_kind =
-  (* The CJS interface is still experimental.
-   * DO NOT use this for typechecking. *)
   | CommonJS of {
     mod_exp_loc: Loc.t option;
-    exports: cjs_exports option;
   }
   | ES of {
     (* map from exported name to export data *)
     named: export SMap.t;
     (* map from module reference to location of `export *` *)
     star: export_star SMap.t;
-  }
-
-and cjs_exports =
-  | CJSExportIdent of ident
-    (* map from exported name to export data *)
-  | CJSExportProps of cjs_export SMap.t
-  | CJSExportOther
-
-and cjs_export =
-  | CJSExport of {
-    (* location of exported name *)
-    loc: Loc.t;
-    (* may have local name *)
-    local: ident option;
   }
 
 and export =
