@@ -367,11 +367,11 @@ let handle_ephemeral_unsafe
           Lwt.return json_data
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
           (* If we're not profiling the recheck, then respond immediately *)
-          if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
+          if not profile then respond (ServerProt.Response.FORCE_RECHECK ("not-profiling", None));
           let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
           let%lwt profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
           env := new_env;
-          if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
+          if profile then respond (ServerProt.Response.FORCE_RECHECK ("done", profiling));
           Lwt.return None
       | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
           let options = { options with Options.

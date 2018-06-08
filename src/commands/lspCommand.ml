@@ -886,6 +886,8 @@ begin
       | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
+    let config_path = Server_files_js.config_file i_root in
+    Lsp_helpers.telemetry_log to_stdout ("config_path=" ^ config_path);
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = {
