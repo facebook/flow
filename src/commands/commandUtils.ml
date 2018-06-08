@@ -1055,6 +1055,7 @@ let rec connect_and_make_request =
   in
 
   fun ?timeout ?retries server_flags root request ->
+    Memlog.log "connect_and_make_request.1";
     let retries = match retries with
     | None -> server_flags.retries
     | Some retries -> retries in
@@ -1072,10 +1073,17 @@ let rec connect_and_make_request =
       client_type = SocketHandshake.Ephemeral;
     }) in
     (* connect handles timeouts itself *)
+    Memlog.log "connect_and_make_request.2";
     let ic, oc = connect ~client_handshake server_flags root in
+    Memlog.log "connect_and_make_request.3";
     send_command ?timeout oc request;
-    try wait_for_response ?timeout ~quiet ~root ic
+    Memlog.log "connect_and_make_request.4";
+    try
+      let r = wait_for_response ?timeout ~quiet ~root ic in
+      Memlog.log "connect_and_make_request.5";
+      r
     with End_of_file ->
+      Memlog.log "connect_and_make_request.6";
       if not quiet
       then begin
         eprintf_with_spinner

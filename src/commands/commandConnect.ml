@@ -126,6 +126,7 @@ let consume_retry retries =
  * function handles retries, timeouts, displaying messages during
  * initialization, etc *)
 let rec connect ~client_handshake env retries start_time =
+  Memlog.log "connect.1";
   if retries.retries_remaining < 0
   then
     FlowExitStatus.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries);
@@ -136,13 +137,18 @@ let rec connect ~client_handshake env retries start_time =
   if has_timed_out
   then FlowExitStatus.(exit ~msg:"\nTimeout exceeded, exiting" Out_of_time);
   let retries = { retries with last_connect_time = Unix.gettimeofday () } in
+  Memlog.log "connect.2";
   let conn = CCS.connect_once ~client_handshake ~tmp_dir:env.tmp_dir env.root in
+  Memlog.log "connect.3";
 
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   let retries = reset_retries_if_necessary retries conn in
   match conn with
-  | Ok (ic, oc) -> (ic, oc)
+  | Ok (ic, oc) ->
+      Memlog.log "connect.4";
+      (ic, oc)
   | Error CCS.Server_missing ->
+      Memlog.log "connect.5";
       handle_missing_server ~client_handshake env retries start_time
   | Error CCS.Server_busy busy_reason ->
       let busy_reason = match busy_reason with
@@ -150,6 +156,7 @@ let rec connect ~client_handshake env retries start_time =
       | CCS.Not_responding -> "is not responding"
       | CCS.Fail_on_init _ -> "is still initializing and the client used --retry-if-init false"
       in
+      Memlog.log ("connect.6 " ^ busy_reason);
       if not env.quiet then Printf.eprintf
         "The flow server %s (%d %s remaining): %s%!"
         busy_reason
@@ -158,6 +165,7 @@ let rec connect ~client_handshake env retries start_time =
         (Tty.spinner());
       connect ~client_handshake env (consume_retry retries) start_time
   | Error CCS.Build_id_mismatch ->
+      Memlog.log "connect.7";
       let msg = "The flow server's version didn't match the client's, so it exited." in
       if env.autostart
       then
@@ -176,6 +184,7 @@ let rec connect ~client_handshake env retries start_time =
         let msg = "\n"^msg in
         FlowExitStatus.(exit ~msg Build_id_mismatch)
   | Error CCS.Server_socket_missing ->
+      Memlog.log "connect.7";
       begin try
         if not env.quiet then Utils_js.prerr_endlinef
           "Attempting to kill server for `%s`"
