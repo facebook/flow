@@ -14,18 +14,12 @@ let if_one_return_other x a b =
 
 let find_related_symbol_from_export loc = function
   | ExportDefault {default_loc; local=Some(local, _)} ->
-    if loc = default_loc then
-      Some local
-    else if loc = local then
-      Some default_loc
-    else
-      None
+    if_one_return_other loc default_loc local
   | ExportNamed {loc=remote_name_loc; local; _} ->
     begin match local with
-    | Some (local_loc, _) when loc = remote_name_loc -> Some local_loc
-    | Some (local_loc, _) when loc = local_loc -> Some remote_name_loc
+    | Some (local_loc, _) -> if_one_return_other loc remote_name_loc local_loc
     | None when loc = remote_name_loc -> Some remote_name_loc
-    | _ -> None
+    | None -> None
     end
   | _ -> None
 
@@ -45,12 +39,7 @@ let find_related_symbol_from_require loc = function
       end named []
     in
     loc_records |> ListUtils.first_some_map begin fun {remote_loc; local_loc} ->
-      if loc = remote_loc then
-        Some local_loc
-      else if loc = local_loc then
-        Some remote_loc
-      else
-        None
+      if_one_return_other loc remote_loc local_loc
     end
   | Require {bindings=Some bindings; require_loc; _} ->
     begin match bindings with
