@@ -70,6 +70,7 @@ type t =
   | Sql_corrupt
   | Sql_misuse
   | Uncaught_exception
+  | Decl_not_found
 
 exception Exit_with of t
 
@@ -131,7 +132,7 @@ let exit_code = function
   | Sql_cantopen ->                 214
   | Sql_corrupt ->                  215
   | Sql_misuse ->                   216
-
+  | Decl_not_found ->               217
 
 let exit t =
   let ec = exit_code t in
@@ -195,6 +196,7 @@ let to_string = function
   | Sql_corrupt -> "Sql_corrupt"
   | Sql_misuse -> "Sql_misuse"
   | Uncaught_exception -> "Uncaught_exception"
+  | Decl_not_found -> "Decl_not_found"
 
 
 let unpack = function
