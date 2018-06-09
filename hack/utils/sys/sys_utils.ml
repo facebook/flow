@@ -138,6 +138,29 @@ let rec collect_paths path_predicate path =
   else
     Utils.singleton_if (path_predicate path) path
 
+(**
+ * Sometimes the user wants to pass a list of paths on the command-line.
+ * However, we have enough files in the codebase that sometimes that list
+ * exceeds the maximum number of arguments that can be passed on the
+ * command-line. To work around this, we can use the convention that some Unix
+ * tools use: a `@` before a path name represents a file that should be read
+ * to get the necessary information (in this case, containing a list of files,
+ * one per line).
+ *)
+let parse_path_list (paths: string list): string list =
+  List.concat_map paths ~f:(fun path ->
+    if String_utils.string_starts_with path "@"
+    then
+      let path = String_utils.lstrip path "@" in
+      cat path |> split_lines
+    else
+      [path]
+) |> List.map ~f:(fun path ->
+  match realpath path with
+  | Some path -> path
+  | None -> failwith (Printf.sprintf "Invalid path: %s" path)
+)
+
 let rm_dir_tree = Disk.rm_dir_tree
 
 let restart () =
