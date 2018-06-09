@@ -42,11 +42,11 @@ let call_id = ref 0
 
 (* Exceptions from parallel jobs are in general not recoverable - the workers
  * are dead and we don't respawn them. The only reason someone should catch
- * them is to log and exit. There are unfortunately callers that ignore them and
- * keep going. If such caller happens to be an inner job, we want to re-raise
- * the exception for outer job too instead of making it fail due to random
- * undefined state issue *)
+ * them is to log and exit. Setting on_exception handler allows you to do it
+ * before any caller has a chance to catch the exception and attempt to handle
+ * it. *)
 let nested_exception: exn option ref = ref None
+let on_exception_ref = ref (fun e -> nested_exception := Some e)
 
 let multi_threaded_call
   (type a) (type b) (type c) (type d)
@@ -178,7 +178,7 @@ let multi_threaded_call
     let () = nested_exception := None in
     dispatch (Some workers) handles (neutral, interrupt.env, interrupt.handlers interrupt.env)
   with e ->
-    nested_exception := Some e;
+    !on_exception_ref e;
     raise e
 
 let call workers job merge neutral next =
@@ -197,3 +197,5 @@ let call_with_interrupt workers job merge neutral next interrupt =
     multi_threaded_call workers job merge neutral next interrupt in
   SharedMem.allow_removes true;
   res, interrupt_env, unfinished
+
+let on_exception f = on_exception_ref := f

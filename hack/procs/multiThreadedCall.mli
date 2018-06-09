@@ -48,3 +48,5 @@ val call_with_interrupt :
   'a Bucket.next ->
   'd interrupt_config ->
   'c * 'd * 'a list
+
+val on_exception : (exn -> unit) -> unit
