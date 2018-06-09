@@ -188,10 +188,13 @@ let get_editor_open_files (state: state) : Lsp.TextDocumentItem.t SMap.t option 
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   try
-    Server_message (Marshal_tools.from_fd_with_preamble fd)
+    let r = Server_message (Marshal_tools.from_fd_with_preamble fd) in
+    Memlog.log ("LspCommand.get_next_event_from_server " ^ (string_of_event r));
+    r
   with e ->
     let message = Printexc.to_string e in
     let stack = Printexc.get_backtrace () in
+    Memlog.log ("LspCommand.get_next_event_from_server.error " ^ message);
     raise (Server_fatal_connection_exception { Marshal_tools.message; stack; })
 
 let get_next_event_from_client
@@ -200,9 +203,22 @@ let get_next_event_from_client
   : event =
   let message = Jsonrpc.get_message client in
   match message with
-  | `Message c -> Client_message (parser c)
-  | `Fatal_exception edata -> raise (Client_fatal_connection_exception edata)
-  | `Recoverable_exception edata -> raise (Client_recoverable_connection_exception edata)
+  | `Message c ->
+    Memlog.log ("LspCommand.get_next_event_from_client "
+      ^ (Hh_json.json_to_string c.Jsonrpc.json));
+    Client_message (parser c)
+  | `Fatal_exception edata ->
+    Memlog.log ("LspCommand.get_next_event_from_client.fatal_error "
+      ^ edata.Marshal_tools.message);
+    raise (Client_fatal_connection_exception edata)
+  | `Recoverable_exception edata ->
+    Memlog.log ("LspCommand.get_next_event_from_client.recoverable_error "
+      ^ edata.Marshal_tools.message);
+    raise (Client_recoverable_connection_exception edata)
+
+let get_next_event_from_tick () : event =
+  Memlog.log "LspCommand.get_next_event_from_tick";
+  Tick
 
 let get_next_event
     (state: state)
@@ -217,12 +233,12 @@ let get_next_event
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
       let fds, _, _ = Unix.select [server_fd; client_fd] [] [] 1.0 in
-      if fds = [] then Tick
+      if fds = [] then get_next_event_from_tick ()
       else if List.mem fds server_fd then get_next_event_from_server server_fd
       else get_next_event_from_client client parser
     | _ ->
       let fds, _, _ = Unix.select [client_fd] [] [] 1.0 in
-      if fds = [] then Tick
+      if fds = [] then get_next_event_from_tick ()
       else get_next_event_from_client client parser
 
 let show_status
@@ -886,6 +902,7 @@ begin
       | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
+    Memlog.set_root i_root;
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = {
