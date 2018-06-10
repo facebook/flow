@@ -62,8 +62,11 @@ module UpdateLoop = LwtLoop.Make (struct
 
     check_if_free t;
 
-    if ServerStatus.is_significant_transition old_status new_status
-    then broadcast_significant_transition t;
+    if ServerStatus.is_significant_transition old_status new_status then begin
+      Memlog.log ("StatusStream.process_update.1 "
+        ^ (ServerStatus.string_of_status new_status));
+      broadcast_significant_transition t;
+    end;
 
     Lwt.return t
 

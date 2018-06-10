@@ -36,7 +36,7 @@ let init ~focus_targets genv =
   let workers = genv.ServerEnv.workers in
   let options = genv.ServerEnv.options in
 
-  MonitorRPC.status_update ~event:ServerStatus.Init_start;
+  MonitorRPC.status_update ~event:(ServerStatus.Init_start "server.init");
 
   let should_print_summary = Options.should_profile options in
   let%lwt env = Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
@@ -237,6 +237,7 @@ let run ~monitor_channels ~shared_mem_config options =
   MonitorRPC.init ~channels:monitor_channels;
   let genv, program_init =
     create_program_init ~shared_mem_config ~focus_targets:None options in
+  Memlog.set_root genv.ServerEnv.options.Options.opt_root;
 
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
