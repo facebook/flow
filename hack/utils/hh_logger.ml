@@ -7,6 +7,8 @@
  *
  *)
 
+let acc_r = ref ""
+
 let timestamp_string () =
   let open Unix in
   let tm = localtime (time ()) in
@@ -79,6 +81,14 @@ end = struct
     | Info -> 2
     | Debug -> 1
 
+  let level_to_string = function
+    | Off -> "Off"
+    | Fatal -> "Fatal"
+    | Error -> "Error"
+    | Warn -> "Warning"
+    | Info -> "Info"
+    | Debug -> "Debug"
+
   let min_level_ref = ref Info
   let min_level () = !min_level_ref
   let set_min_level level = min_level_ref := level
@@ -87,6 +97,15 @@ end = struct
     int_of_level level >= int_of_level !min_level_ref
 
   let log level ?exn fmt =
+    let print_acc (message: string) : unit =
+      let s = Printf.sprintf "[%s]%s:%s%s"
+        (timestamp_string ())
+        (level_to_string level)
+        message
+        (match exn with | None -> "" | Some e -> " - EXN " ^ (Printexc.to_string e))
+        in
+      acc_r := !acc_r ^ s ^ "\n" in
+    Printf.ksprintf print_acc fmt;
     if passes_min_level level
     then print_with_newline ?exn fmt
     else Printf.ifprintf () fmt
