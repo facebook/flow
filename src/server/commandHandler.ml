@@ -319,7 +319,8 @@ let handle_ephemeral_unsafe
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
   Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
-  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+  MonitorRPC.status_update
+    ~event:ServerStatus.(Handling_request_start (ServerProt.Request.to_string command));
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
     Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
@@ -367,11 +368,16 @@ let handle_ephemeral_unsafe
           Lwt.return json_data
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
           (* If we're not profiling the recheck, then respond immediately *)
-          if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
+          Memlog.log (Printf.sprintf "commandHandler.FORCE_RECHECK.1 profile=%B" profile);
+          (* if not profile then respond (ServerProt.Response.FORCE_RECHECK None); *)
           let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
+          Memlog.log "commandHandler.FORCE_RECHECK.2";
           let%lwt profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
+          Memlog.log "commandHandler.FORCE_RECHECK.3";
           env := new_env;
-          if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
+          let%lwt () = Lwt_unix.sleep 15.0 in
+          (* if profile then *) respond (ServerProt.Response.FORCE_RECHECK profiling);
+          Memlog.log "commandHandler.FORCE_RECHECK.4";
           Lwt.return None
       | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
           let options = { options with Options.
@@ -799,7 +805,8 @@ let handle_persistent
     (msg: Persistent_connection_prot.request)
   : ServerEnv.env Lwt.t =
   Hh_logger.debug "Persistent request: %s" (Persistent_connection_prot.string_of_request msg);
-  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+  MonitorRPC.status_update
+    ~event:(ServerStatus.Handling_request_start (Persistent_connection_prot.string_of_request msg));
 
   let client = Persistent_connection.get_client env.connections client_id in
   let client_context = Persistent_connection.get_logging_context client in

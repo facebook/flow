@@ -42,8 +42,8 @@ let spec = {
 (************************************************************************)
 
 (* LSP exit codes are specified at https://microsoft.github.io/language-server-protocol/specification#exit *)
-let lsp_exit_ok () = exit 0
-let lsp_exit_bad () = exit 1
+let lsp_exit_ok () = Memlog.flush (); exit 0
+let lsp_exit_bad () = Memlog.flush (); exit 1
 
 
 (* Given an ID that came from the server, we have to wrap it when we pass it *)
@@ -188,10 +188,13 @@ let get_editor_open_files (state: state) : Lsp.TextDocumentItem.t SMap.t option 
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   try
-    Server_message (Marshal_tools.from_fd_with_preamble fd)
+    let r = Server_message (Marshal_tools.from_fd_with_preamble fd) in
+    Memlog.log ("LspCommand.get_next_event_from_server " ^ (string_of_event r));
+    r
   with e ->
     let message = Printexc.to_string e in
     let stack = Printexc.get_backtrace () in
+    Memlog.log ("LspCommand.get_next_event_from_server.error " ^ message);
     raise (Server_fatal_connection_exception { Marshal_tools.message; stack; })
 
 let get_next_event_from_client
@@ -200,9 +203,22 @@ let get_next_event_from_client
   : event =
   let message = Jsonrpc.get_message client in
   match message with
-  | `Message c -> Client_message (parser c)
-  | `Fatal_exception edata -> raise (Client_fatal_connection_exception edata)
-  | `Recoverable_exception edata -> raise (Client_recoverable_connection_exception edata)
+  | `Message c ->
+    Memlog.log ("LspCommand.get_next_event_from_client "
+      ^ (Hh_json.json_to_string c.Jsonrpc.json));
+    Client_message (parser c)
+  | `Fatal_exception edata ->
+    Memlog.log ("LspCommand.get_next_event_from_client.fatal_error "
+      ^ edata.Marshal_tools.message);
+    raise (Client_fatal_connection_exception edata)
+  | `Recoverable_exception edata ->
+    Memlog.log ("LspCommand.get_next_event_from_client.recoverable_error "
+      ^ edata.Marshal_tools.message);
+    raise (Client_recoverable_connection_exception edata)
+
+let get_next_event_from_tick () : event =
+  Memlog.log "LspCommand.get_next_event_from_tick";
+  Tick
 
 let get_next_event
     (state: state)
@@ -216,13 +232,15 @@ let get_next_event
     match state with
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
+      Memlog.log "LspCommand.get_next_event[server_fd;client_fd;1.0]";
       let fds, _, _ = Unix.select [server_fd; client_fd] [] [] 1.0 in
-      if fds = [] then Tick
+      if fds = [] then get_next_event_from_tick ()
       else if List.mem fds server_fd then get_next_event_from_server server_fd
       else get_next_event_from_client client parser
     | _ ->
+      Memlog.log "LspCommand.get_next_event[client_fd;1.0]";
       let fds, _, _ = Unix.select [client_fd] [] [] 1.0 in
-      if fds = [] then Tick
+      if fds = [] then get_next_event_from_tick ()
       else get_next_event_from_client client parser
 
 let show_status
@@ -828,6 +846,7 @@ let rec main
     (from: string option)
     ((): unit)
   : unit =
+  Memlog.flush ();
   let connect_params = {
     from = Option.value from ~default:"";
     retries = 0;
@@ -886,6 +905,7 @@ begin
       | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
+    Memlog.set_root i_root;
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = {
@@ -1115,6 +1135,7 @@ and main_handle_error
       d_editor_open_files = Option.value (get_editor_open_files state) ~default:SMap.empty;
     }
     in
+    Memlog.flush ();
     let _state = state |> dismiss_tracks in
     let state = Disconnected env in
     state
@@ -1143,6 +1164,7 @@ and main_handle_error
       | _ ->
         Lsp_helpers.telemetry_error to_stdout text
     end;
+    Memlog.flush ();
     state
 
 
