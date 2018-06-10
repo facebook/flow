@@ -326,12 +326,32 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
           } catch (e) {
             logContents = e.message != null ? e.message : String(e);
           }
+          let memlog = '';
+          try {
+            memlog = await readFile(
+              join(
+                builder.baseDirForSuite(suiteName),
+                String(testNum + 1),
+                'ljw.log',
+              ),
+            );
+          } catch (e) {
+            memlog = e.message != null ? e.message : String(e);
+          }
           await write(
             process.stdout,
-            colors.grey.bold('%s %s') + '\n' + colors.grey('%s') + '\n',
+            colors.grey.bold('%s %s') +
+              '\n' +
+              colors.grey('%s') +
+              '\n\n' +
+              colors.blue.bold('MEMLOG') +
+              '\n' +
+              colors.grey('%s') +
+              '\n',
             logCommand,
             logFile,
             logContents,
+            memlog,
           );
         }
       }
