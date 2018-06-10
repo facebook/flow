@@ -82,46 +82,76 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     conn.push_to_stream (Some command)
 
   let close_stream conn =
-    try conn.push_to_stream None
-    with Lwt_stream.Closed -> ()
+    Memlog.log "Connection.close_stream.1";
+    try
+      conn.push_to_stream None;
+      Memlog.log "Connection.close_stream.2"
+    with Lwt_stream.Closed ->
+      Memlog.log "Connection.close_stream.3"
 
   let write ~msg conn =
     send_command conn (Write msg)
 
   let write_and_close ~msg conn =
+    Memlog.log "Connection.write_and_close.1";
     send_command conn (WriteAndClose msg);
-    close_stream conn
+    Memlog.log "Connection.write_and_close.2";
+    close_stream conn;
+    Memlog.log "Connection.write_and_close.3"
 
   (* Doesn't actually close the file descriptors, but does stop all the loops and streams *)
   let stop_everything conn =
+    Memlog.log "Connection.stop_everything.1";
     close_stream conn;
+    Memlog.log "Connection.stop_everything.2";
     Lwt.cancel conn.read_thread;
-    Lwt.cancel conn.command_thread
+    Memlog.log "Connection.stop_everything.3";
+    Lwt.cancel conn.command_thread;
+    Memlog.log "Connection.stop_everything.4"
 
   let close_immediately conn =
+    Memlog.log "Connection.close_immediately.1";
     stop_everything conn;
-    conn.close ()
+    Memlog.log "Connection.close_immediately.2";
+    let%lwt () = conn.close () in
+    Memlog.log "Connection.close_immediately.3";
+    Lwt.return_unit
 
   let handle_command conn = function
   | Write msg ->
     let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in Lwt.return_unit
   | WriteAndClose msg ->
+    Memlog.log "Connection.handle_command.WriteAndClose.1";
     Lwt.cancel conn.command_thread;
+    Memlog.log "Connection.handle_command.WriteAndClose.2";
     let%lwt _size = Marshal_tools_lwt.to_fd_with_preamble conn.out_fd msg in
-    close_immediately conn
+    Memlog.log "Connection.handle_command.WriteAndClose.3";
+    let%lwt () = close_immediately conn in
+    Memlog.log "Connection.handle_command.WriteAndClose.4";
+    Lwt.return_unit
 
   (* Write everything available in the stream and then close the connection *)
   let flush_and_close conn =
+    Memlog.log "Connection.flush_and_close.1";
     stop_everything conn;
+    Memlog.log "Connection.flush_and_close.2";
     close_stream conn;
+    Memlog.log "Connection.flush_and_close.3";
     let%lwt () =
       Lwt_list.iter_s (handle_command conn) (Lwt_stream.get_available conn.command_stream)
     in
-    conn.close ()
+    Memlog.log "Connection.flush_and_close.4";
+    let%lwt () = conn.close () in
+    Memlog.log "Connection.flush_and_close.5";
+    Lwt.return_unit
+
 
   let is_closed conn = Lwt_stream.is_closed conn.command_stream
 
-  let wait_for_closed conn = conn.wait_for_closed_thread
+  let wait_for_closed conn =
+    let%lwt () = conn.wait_for_closed_thread in
+    Memlog.log "Connection.wait_for_closed.2";
+    Lwt.return_unit
 
   module CommandLoop = LwtLoop.Make (struct
     type acc = t
@@ -134,14 +164,21 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
     let catch conn exn =
       match exn with
       (* The command stream has been closed. This means the command loop should gracefully exit *)
-      | Lwt_stream.Empty ->
+      | Lwt_stream.Empty as exn ->
+        Memlog.log ("Connection.CommandLoop.catch.1 "
+          ^ (Printexc.to_string exn));
         Lwt.return_unit
       | exn -> begin
+        Memlog.log ("Connection.CommandLoop.catch.2 unhandled "
+          ^ (Printexc.to_string exn));
         Logger.error
           ~exn
           "Closing connection '%s' due to uncaught exception in command loop"
           conn.name;
-        close_immediately conn
+        Memlog.log "Connection.CommandLoop.catch.2b";
+        let%lwt () = close_immediately conn in
+        Memlog.log "Connection.CommandLoop.catch.2c";
+        Lwt.return_unit
       end
   end)
 
@@ -157,11 +194,16 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
       Lwt.return connection
 
     let catch connection exn =
+      Memlog.log ("Connection.ReadLoop.catch.1 "
+        ^ (Printexc.to_string exn));
       Logger.error
         ~exn
         "Closing connection '%s' due to uncaught exception in read loop"
         connection.name;
-      close_immediately connection
+      Memlog.log "Connection.ReadLoop.catch.1b";
+      let%lwt () = close_immediately connection in
+      Memlog.log "Connection.ReadLoop.catch.1c";
+      Lwt.return_unit
   end)
 
   let create ~name ~in_fd ~out_fd ~close ~on_read =
@@ -172,8 +214,11 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
       let wakeup () = try Lwt.wakeup wakener () with Invalid_argument _ -> () in
       (* On close, wake wait_for_closed_thread *)
       let close () =
+        Memlog.log "Connection.close.1";
         let%lwt () = close () in
+        Memlog.log "Connection.close.2";
         wakeup ();
+        Memlog.log "Connection.close.3";
         Lwt.return_unit
       in
       wait_for_closed_thread, close
