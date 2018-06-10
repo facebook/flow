@@ -81,6 +81,7 @@ module CheckCommand = struct
       () =
 
     let root = CommandUtils.guess_root path_opt in
+    Memlog.set_root root;
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
