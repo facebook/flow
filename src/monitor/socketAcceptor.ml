@@ -139,17 +139,7 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
 let close client_fd () =
   (* Close the client_fd, regardless of whether or not we were able to shutdown the connection.
    * This prevents fd leaks *)
-  Logger.debug "Shutting down and closing a socket client fd";
-  begin
-    (* To be perfectly honest, it's not clear whether the SHUTDOWN_ALL is really needed. I mean,
-     * shutdown is useful to shutdown one direction of the socket, but if you're about to close
-     * it, does shutting down first actually make any difference? *)
-    try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL)
-    with
-    (* Already closed *)
-    | Unix.Unix_error (Unix.EBADF, _, _) -> ()
-    | exn -> Logger.error ~exn "Failed to shutdown socket client"
-  end;
+  Logger.debug "Closing a socket client fd";
   try%lwt
     Lwt_unix.close client_fd
   with
