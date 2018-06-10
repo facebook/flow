@@ -117,7 +117,12 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    PersistentConnection.flush_and_close conn
+    Memlog.suspend ();
+    Memlog.log "SocketAcceptor.close_on_exit.1 - about to flush&close";
+    let%lwt () = PersistentConnection.flush_and_close conn in
+    Memlog.log "SocketAcceptor.close_on_exit.2 - done flush&close";
+    Memlog.resume ();
+    Lwt.return_unit
   in
 
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
@@ -136,26 +141,41 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
   Lwt.return ()
 
 
-let close client_fd () =
+let close kind client_fd () =
   (* Close the client_fd, regardless of whether or not we were able to shutdown the connection.
    * This prevents fd leaks *)
+  Memlog.log ("SocketAcceptor.close.1 " ^ kind);
   Logger.debug "Shutting down and closing a socket client fd";
   begin
     (* To be perfectly honest, it's not clear whether the SHUTDOWN_ALL is really needed. I mean,
      * shutdown is useful to shutdown one direction of the socket, but if you're about to close
      * it, does shutting down first actually make any difference? *)
-    try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL)
+    try
+      Lwt_unix.(shutdown client_fd SHUTDOWN_ALL);
+      Memlog.log "SocketAcceptor.close.2";
     with
     (* Already closed *)
-    | Unix.Unix_error (Unix.EBADF, _, _) -> ()
-    | exn -> Logger.error ~exn "Failed to shutdown socket client"
+    | (Unix.Unix_error (Unix.EBADF, _, _)) as exn ->
+      Memlog.log ("SocketAcceptor.close.3 EBADF "
+        ^ (Printexc.to_string exn))
+    | exn ->
+      Memlog.log ("SocketAcceptor.close.4 EXCEPTION "
+        ^ (Printexc.to_string exn));
+      Logger.error ~exn "Failed to shutdown socket client"
   end;
+  Memlog.log "SocketAcceptor.close.5";
   try%lwt
     Lwt_unix.close client_fd
   with
   (* Already closed *)
-  | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
-  | exn -> Lwt.return (Logger.error ~exn "Failed to close socket client fd")
+  | (Unix.Unix_error (Unix.EBADF, _, _)) as exn ->
+    Memlog.log ("SocketAcceptor.close.6 EBADF "
+      ^ (Printexc.to_string exn));
+    Lwt.return_unit
+  | exn ->
+    Memlog.log ("SocketAcceptor.close.7 EXCEPTION "
+      ^ (Printexc.to_string exn));
+    Lwt.return (Logger.error ~exn "Failed to close socket client fd")
 
 (* Well...I mean this is a pretty descriptive function name. It performs the handshake and then
  * returns the client's side of the handshake *)
@@ -192,7 +212,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
   (* Stop request *)
   if client1.is_stop_request then begin
     let%lwt () = respond Server_will_exit None in
-    let%lwt () = close client_fd () in
+    let%lwt () = close "stop_request" client_fd () in
     Server.exit ~msg:"Killed by `flow stop`. Exiting." FlowExitStatus.No_error;
 
   (* Binary version mismatch *)
@@ -286,24 +306,34 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
   let name = "socket connection"
 
   let create_socket_connection ~autostop (client_fd, _) =
-    let close_without_autostop = close client_fd in
-    let close () =
-      let%lwt () = close_without_autostop () in
+    let close_without_autostop kind () =
+      Memlog.log ("SocketAcceptor.create_socket_connection.close_without_autostop.1 " ^ kind);
+      let%lwt () = close kind client_fd () in
+      Memlog.log "SocketAcceptor.create_socket_connection.close_without_autostop.2";
+      Lwt.return_unit in
+    let close kind () =
+      Memlog.log ("SocketAcceptor.create_socket_connection.close.1 " ^ kind);
+      let%lwt () = close_without_autostop "socketAcceptor" () in
       let num_persistent = PersistentConnectionMap.cardinal () in
       let num_ephemeral = RequestMap.cardinal () in
-      if autostop && num_persistent = 0 && num_ephemeral = 0 then
-        Server.exit FlowExitStatus.Autostop ~msg:"Autostop"
-      else
+      if autostop && num_persistent = 0 && num_ephemeral = 0 then begin
+        Memlog.log "SocketAcceptor.create_socket_connection.close.2 autostop";
+        let%lwt () = Server.exit FlowExitStatus.Autostop ~msg:"Autostop" in
+        Memlog.log "SocketAcceptor.create_socket_connection.close.3";
         Lwt.return_unit
+      end else begin
+        Memlog.log "SocketAcceptor.create_socket_connection.close.4";
+        Lwt.return_unit
+      end
     in
     try%lwt
       let%lwt (_client1, client2) = perform_handshake_and_get_client_handshake ~client_fd in
       match client2.SocketHandshake.client_type with
       | SocketHandshake.Ephemeral ->
-        create_ephemeral_connection ~client_fd ~close
+        create_ephemeral_connection ~client_fd ~close:(close "ephemeral")
       | SocketHandshake.Persistent {logging_context; lsp} ->
-        create_persistent_connection ~client_fd ~close ~logging_context ~lsp
-    with exn ->  catch close_without_autostop exn
+        create_persistent_connection ~client_fd ~close:(close "persistent") ~logging_context ~lsp
+    with exn ->  catch (close_without_autostop "socketAcceptorExn") exn
       (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
       (* from 1 connections to 0 connections then it might stop the server. *)
       (* But this catch clause is fired when an attempt to connect has      *)
@@ -317,7 +347,7 @@ let run monitor_socket_fd ~autostop =
 module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
   let name = "legacy socket connection"
   let create_socket_connection ~autostop:_ (client_fd, _) =
-    let close = close client_fd in
+    let close = close "legacy" client_fd in
     try%lwt
       let%lwt () = close () in
       FlowEventLogger.out_of_date ();

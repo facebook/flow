@@ -68,6 +68,7 @@ let register_entry_point
       FlowEventLogger.init_flow_command ~version:Flow_version.version;
 
       let root = Options.root options in
+      Memlog.set_root root;
       let tmp_dir = Options.temp_dir options in
 
       (* Create the pid log and record all the processes that already exist *)
@@ -82,6 +83,7 @@ let register_entry_point
 let daemonize ~log_file ~shared_mem_config ~argv ~options main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
+  Memlog.set_root root;
   let tmp_dir = Options.temp_dir options in
   let lock = Server_files.lock_file ~tmp_dir root in
   if not (Lock.check lock)

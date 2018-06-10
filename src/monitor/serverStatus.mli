@@ -12,14 +12,14 @@ type progress = {
 
 type event =
 | Ready
-| Init_start
+| Init_start of string
 | Parsing_progress of progress
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
 | Finishing_up
-| Recheck_start
-| Handling_request_start
+| Recheck_start of string
+| Handling_request_start of string
 | GC_start
 | Collating_errors_start
 
