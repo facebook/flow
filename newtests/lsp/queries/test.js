@@ -29,7 +29,7 @@ export default suite(
       addFile('definition.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/definition.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
         position: {line: 6, character: 1},
       }).verifyAllIDEMessagesInStep(
         [
@@ -43,27 +43,27 @@ export default suite(
       addFile('hover.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 6, character: 1}, // over a function use
       }).verifyAllIDEMessagesInStep(['textDocument/hover{() => number}'], []),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 3, character: 1}, // over whitespace
       }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 2, character: 1}, // over a keyword
       }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 0, character: 1}, // over a comment
       }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 6, character: 100}, // past the end of a line
       }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/hover.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 100, character: 0}, // past the end of the file
       }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
     ]),
@@ -72,7 +72,7 @@ export default suite(
       addFile('completion.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/completion.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
         position: {line: 10, character: 15}, // statement position
       }).verifyAllIDEMessagesInStep(
         [
@@ -86,22 +86,22 @@ export default suite(
       addFiles('references.js', 'references2.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 17}, // on an identifier
       }).verifyAllIDEMessagesInStep(
         ['textDocument/documentHighlight{"line":3,"line":9}'],
         [],
       ),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 1}, // on a keyword
       }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 6, character: 0}, // on whitespace
       }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 6, character: 100}, // off the right edge of the text
       }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
     ]),
@@ -110,7 +110,7 @@ export default suite(
       addFiles('references.js', 'references2.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/references.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 17}, // on an identifier
       }).verifyAllIDEMessagesInStep(
         ['textDocument/references{line":3,"line":5,"line":9}'],
@@ -122,7 +122,7 @@ export default suite(
       addFiles('outline.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/documentSymbol', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/outline.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>outline.js'},
       }).verifyAllIDEMessagesInStep(
         [
           'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
@@ -135,7 +135,7 @@ export default suite(
       addFiles('coverage.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
         [],

@@ -17,7 +17,7 @@ export default suite(
       ideStartAndConnect(),
       ideNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/open.js',
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -28,14 +28,17 @@ jones();
         },
       }).verifyAllIDEMessagesInStep([''], []),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{open.js,line":2}'],
         [],
       ),
       ideNotification('textDocument/didChange', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js', version: 2},
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js',
+          version: 2,
+        },
         contentChanges: [
           {
             text: `// @flow
@@ -47,17 +50,17 @@ wilbur();
         ],
       }).verifyAllIDEMessagesInStep([''], []),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{open.js,"line":1}'],
         [],
       ),
       ideNotification('textDocument/didClose', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
       }).verifyAllIDEMessagesInStep([''], []),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{No such file or directory}'],
