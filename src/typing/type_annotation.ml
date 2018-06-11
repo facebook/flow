@@ -862,13 +862,26 @@ let rec convert cx tparams_map = Ast.Type.(function
       add_dict loc i o, ts, spread
     | Object.Property (loc, p) ->
       add_prop loc p o, ts, spread
-    | Object.InternalSlot (loc, { Object.InternalSlot.id = (_, name); _ }) ->
-      Flow.add_output cx FlowError.(
-        EUnsupportedSyntax (loc, UnsupportedInternalSlot {
-          name;
-          static = false;
-        }));
-      o, ts, spread
+    | Object.InternalSlot (loc, slot) ->
+      let { Object.InternalSlot.
+        id = (_, name);
+        value;
+        static=_; (* object props are never static *)
+        optional;
+        _method=_;
+      } = slot in
+      if name = "call" then
+        let t = convert cx tparams_map value in
+        let t = if optional then Type.optional t else t in
+        add_call t o, ts, spread
+      else (
+        Flow.add_output cx FlowError.(
+          EUnsupportedSyntax (loc, UnsupportedInternalSlot {
+            name;
+            static = false;
+          }));
+        o, ts, spread
+      )
     | Object.SpreadProperty (_, { Object.SpreadProperty.argument }) ->
       let ts = match o with
       | None -> ts
@@ -1192,13 +1205,26 @@ and add_interface_properties cx tparams_map properties s =
 
       )
 
-    | InternalSlot (loc, { InternalSlot.id = (_, name); static; _ }) ->
-      Flow.add_output cx Flow_error.(
-        EUnsupportedSyntax (loc, UnsupportedInternalSlot {
-          name;
-          static;
-        }));
-      x
+    | InternalSlot (loc, slot) ->
+      let { InternalSlot.
+        id = (_, name);
+        value;
+        optional;
+        static;
+        _method=_;
+      } = slot in
+      if name = "call" then
+        let t = convert cx tparams_map value in
+        let t = if optional then Type.optional t else t in
+        append_call ~static t x
+      else (
+        Flow.add_output cx Flow_error.(
+          EUnsupportedSyntax (loc, UnsupportedInternalSlot {
+            name;
+            static;
+          }));
+        x
+      )
 
     | SpreadProperty (loc, _) ->
       Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
