@@ -23,7 +23,8 @@ type signature = {
   methods: (Loc.t option * Func_sig.t) Nel.t SMap.t;
   getters: (Loc.t option * Func_sig.t) SMap.t;
   setters: (Loc.t option * Func_sig.t) SMap.t;
-  calls: Func_sig.t list;
+  calls: Type.t list;
+  call_deprecated: Type.t option;
 }
 
 type t = {
@@ -64,6 +65,7 @@ let empty id reason tparams tparams_map super =
     getters = SMap.empty;
     setters = SMap.empty;
     calls = [];
+    call_deprecated = None;
   } in
   let structural, super, ssuper, implements =
     let open Type in
@@ -201,10 +203,21 @@ let append_method ~static name loc fsig x =
     setters = SMap.remove name s.setters;
   }) x
 
-let append_call ~static fsig = map_sig ~static (fun s -> {
-  s with
-  calls = fsig :: s.calls
-})
+let append_call ~static t = map_sig ~static (fun s ->
+  (* Note that $call properties always override the call property syntax.
+     As before, if both are present, the $call property is used and the call
+     property is ignored. *)
+  match s.call_deprecated with
+  | None -> { s with calls = t :: s.calls }
+  | Some _ -> s
+)
+
+let add_call_deprecated ~static t = map_sig ~static (fun s ->
+  (* Note that $call properties always override the call property syntax.
+     As before, if both are present, the $call property is used and the call
+     property is ignored. *)
+  { s with call_deprecated = Some t; calls = [] }
+)
 
 let add_getter ~static name loc fsig x =
   let flat = static || x.structural in
@@ -252,7 +265,8 @@ let subst_sig cx map s =
     methods = SMap.map (Nel.map subst_func_sig) s.methods;
     getters = SMap.map (subst_func_sig) s.getters;
     setters = SMap.map (subst_func_sig) s.setters;
-    calls = List.map (Func_sig.subst cx map) s.calls;
+    calls = List.map (Flow.subst cx map) s.calls;
+    call_deprecated = Option.map ~f:(Flow.subst cx map) s.call_deprecated;
   }
 
 let generate_tests cx f x =
@@ -351,33 +365,24 @@ let elements cx ~tparams_map ?constructor s =
     SMap.add name (to_field fld) acc
   ) s.proto_fields methods in
 
-  let call = match List.rev_map (Func_sig.methodtype cx) s.calls with
-  | [] -> None
-  | [t] -> Some t
-  | t0::t1::ts ->
-    let open Type in
-    let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
-    Some t
-  in
-
   (* Previously, call properties were stored in the props map under the key
      $call. Unfortunately, this made it possible to specify call properties
      using this syntax in interfaces, declared classes, and even normal classes.
 
-     Soon, I will deprecate this syntax, but for now the previous behavior is
-     (partially) preserved. A field-like, covariant or invariant field property
-     named $call is special-cased to be a call property. Everything else is left
-     as a normal named property.
-
      Note that $call properties always override the call property syntax
      As before, if both are present, the $call property is used and the call
      property is ignored. *)
-
-  let fields, call = Type.(match SMap.get "$call" fields with
-  | Some (Field (_, t, (Positive | Neutral))) ->
-    SMap.remove "$call" fields, Some t
-  | _ -> fields, call
-  ) in
+  let call = match s.call_deprecated with
+  | Some t -> Some t
+  | None ->
+    match List.rev s.calls with
+    | [] -> None
+    | [t] -> Some t
+    | t0::t1::ts ->
+      let open Type in
+      let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
+      Some t
+  in
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)

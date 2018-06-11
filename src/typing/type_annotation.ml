@@ -674,9 +674,13 @@ let rec convert cx tparams_map = Ast.Type.(function
     | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
     | _ -> false
   ) properties in
-  let mk_object ~exact (call_props, dict, props_map, proto) =
+  let mk_object ~exact (call_props, dict, props_map, proto, call_deprecated) =
     let call = match List.rev call_props with
-      | [] -> None
+      | [] ->
+        (* Note that call properties using the call property syntax always override
+           $call properties. Previously, if both were present, the $call property
+           was ignored, but is now left as a named property. *)
+        call_deprecated
       | [t] -> Some t
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
@@ -688,11 +692,6 @@ let rec convert cx tparams_map = Ast.Type.(function
        $call. Unfortunately, this made it possible to specify call properties
        using this syntax in object types, and some libraries adopted this
        syntax.
-
-       Soon, I will deprecate this syntax, but for now the previous behavior is
-       (partially) preserved. A field-like, covariant or invariant property
-       named $call is special-cased to be a call property. Everything else is
-       left as a normal named property.
 
        Note that call properties using the call property syntax always override
        $call properties. Previously, if both were present, the $call property
@@ -731,7 +730,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     DefT (mk_reason reason_desc loc,
       ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
-  let property loc prop props proto =
+  let property loc prop props proto call_deprecated =
     match prop with
     | { Object.Property.
         key; value = Object.Property.Init value; optional; variance; _method;
@@ -739,6 +738,19 @@ let rec convert cx tparams_map = Ast.Type.(function
         proto = _; (* ditto proto props *)
       } ->
       begin match key with
+      (* Previously, call properties were stored in the props map under the key
+         $call. Unfortunately, this made it possible to specify call properties
+         using this syntax in object types, and some libraries adopted this
+         syntax.
+
+         Note that call properties using the call property syntax always override
+         $call properties. Previously, if both were present, the $call property
+         was ignored, but is now left as a named property. *)
+      | Ast.Expression.Object.Property.Identifier (loc, "$call") ->
+          Flow.add_output cx Flow_error.(EDeprecatedCallSyntax loc);
+          let t = convert cx tparams_map value in
+          let t = if optional then Type.optional t else t in
+          props, proto, Some t
       | Ast.Expression.Object.Property.Literal
           (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
       | Ast.Expression.Object.Property.Identifier (loc, name) ->
@@ -750,7 +762,8 @@ let rec convert cx tparams_map = Ast.Type.(function
             let proto = Tvar.mk_where cx reason (fun tout ->
               Flow.flow cx (t, ObjTestProtoT (reason, tout))
             ) in
-            props, Some (Flow.mk_typeof_annotation cx reason proto)
+            let proto = Some (Flow.mk_typeof_annotation cx reason proto) in
+            props, proto, call_deprecated
           else
             let t = if optional then Type.optional t else t in
             let key_loc = match key with
@@ -763,13 +776,13 @@ let rec convert cx tparams_map = Ast.Type.(function
             Env.add_type_table_info cx ~tparams_map key_loc id_info;
             let polarity = if _method then Positive else polarity variance in
             let props = SMap.add name (Field (Some loc, t, polarity)) props in
-            props, proto
+            props, proto, call_deprecated
       | Ast.Expression.Object.Property.Literal (loc, _)
       | Ast.Expression.Object.Property.PrivateName (loc, _)
       | Ast.Expression.Object.Property.Computed (loc, _)
           ->
         Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
-        props, proto
+        props, proto, call_deprecated
       end
 
     (* unsafe getter property *)
@@ -783,7 +796,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let id_info = name, return_t, Type_table.Other in
       Env.add_type_table_info cx ~tparams_map id_loc id_info;
       let props = Properties.add_getter name (Some id_loc) return_t props in
-      props, proto
+      props, proto, call_deprecated
 
     (* unsafe setter property *)
     | { Object.Property.
@@ -796,7 +809,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let id_info = name, param_t, Type_table.Other in
       Env.add_type_table_info cx ~tparams_map id_loc id_info;
       let props = Properties.add_setter name (Some id_loc) param_t props in
-      props, proto
+      props, proto, call_deprecated
 
 
     | { Object.Property.
@@ -805,11 +818,15 @@ let rec convert cx tparams_map = Ast.Type.(function
       } ->
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-      props, proto
+      props, proto, call_deprecated
   in
   let add_call c = function
-    | None -> Some ([c], None, SMap.empty, None)
-    | Some (cs, d, pmap, proto) -> Some (c::cs, d, pmap, proto)
+    | None -> Some ([c], None, SMap.empty, None, None)
+    | Some (cs, d, pmap, proto, _) ->
+      (* Note that call properties using the call property syntax always override
+         $call properties. Previously, if both were present, the $call property
+         was ignored, but is now left as a named property. *)
+      Some (c::cs, d, pmap, proto, None)
   in
   let make_dict { Object.Indexer.id; key; value; variance; _ } =
     Some { Type.
@@ -820,20 +837,21 @@ let rec convert cx tparams_map = Ast.Type.(function
     }
   in
   let add_dict loc indexer = function
-    | None -> Some ([], make_dict indexer, SMap.empty, None)
-    | Some (cs, None, pmap, proto) -> Some (cs, make_dict indexer, pmap, proto)
-    | Some (_, Some _, _, _) as o ->
+    | None -> Some ([], make_dict indexer, SMap.empty, None, None)
+    | Some (cs, None, pmap, proto, call_deprecated) ->
+      Some (cs, make_dict indexer, pmap, proto, call_deprecated)
+    | Some (_, Some _, _, _, _) as o ->
       Flow.add_output cx
         FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));
       o
   in
   let add_prop loc p = function
     | None ->
-      let pmap, proto = property loc p SMap.empty None in
-      Some ([], None, pmap, proto)
-    | Some (cs, d, pmap, proto) ->
-      let pmap, proto = property loc p pmap proto in
-      Some (cs, d, pmap, proto)
+      let pmap, proto, call_deprecated = property loc p SMap.empty None None in
+      Some ([], None, pmap, proto, call_deprecated)
+    | Some (cs, d, pmap, proto, call_deprecated) ->
+      let pmap, proto, call_deprecated = property loc p pmap proto call_deprecated in
+      Some (cs, d, pmap, proto, call_deprecated)
   in
   let o, ts, spread = List.fold_left (
     fun (o, ts, spread) -> function
@@ -865,7 +883,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   in
   (match ts with
   | [] ->
-    let t = mk_object ~exact ([], None, SMap.empty, None) in
+    let t = mk_object ~exact ([], None, SMap.empty, None, None) in
     if exact
     then ExactT (mk_reason (RExactType reason_desc) loc, t)
     else t
@@ -1098,9 +1116,9 @@ and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
 and add_interface_properties cx tparams_map properties s =
   let open Class_sig in
   List.fold_left Ast.Type.Object.(fun x -> function
-    | CallProperty (loc, { CallProperty.value = (_, func); static }) ->
-      let fsig = mk_func_sig cx tparams_map loc func in
-      append_call ~static fsig x
+    | CallProperty (loc, { CallProperty.value = (_, ft); static }) ->
+      let t = convert cx tparams_map (loc, Ast.Type.Function ft) in
+      append_call ~static t x
     | Indexer (loc, { Indexer.static; _ }) when mem_field ~static "$key" x ->
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, MultipleIndexers));
@@ -1122,6 +1140,21 @@ and add_interface_properties cx tparams_map properties s =
       | _, Property.Computed (loc, _), _ ->
           Flow.add_output cx (Flow_error.EUnsupportedSyntax (loc, Flow_error.IllegalName));
           x
+
+      (* Previously, call properties were stored in the props map under the key
+         $call. Unfortunately, this made it possible to specify call properties
+         using this syntax in interfaces, declared classes, and even normal classes.
+
+         Note that $call properties always override the call property syntax.
+         As before, if both are present, the $call property is used and the call
+         property is ignored. *)
+      | _, Property.Identifier (id_loc, "$call"),
+          Ast.Type.Object.Property.Init value when not proto ->
+          Flow.add_output cx Flow_error.(EDeprecatedCallSyntax id_loc);
+          let t = convert cx tparams_map value in
+          let t = if optional then Type.optional t else t in
+          add_call_deprecated ~static t x
+
       | true, Property.Identifier (id_loc, name),
           Ast.Type.Object.Property.Init (_, Ast.Type.Function func) ->
           let fsig = mk_func_sig cx tparams_map loc func in

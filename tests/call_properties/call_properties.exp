@@ -303,6 +303,30 @@ References:
               ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ deprecated.js:2:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   2|   $call: () => void;
+        ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ deprecated.js:6:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   6|   $call: () => void;
+        ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- deprecated.js:10:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   10|   $call: () => void;
+         ^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
 Cannot cast `a` to `B` because a callable signature is missing in object type [1] but exists in function type [2] in
@@ -322,7 +346,7 @@ References:
 
 
 
-Found 20 errors
+Found 23 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
