@@ -979,7 +979,11 @@ export class TestBuilder {
 
       // No server running (6) is ok - the file change might have killed the
       // server and we raced it here
-      if (err && err.code !== 6) {
+      // There's a known issue on Windows/Appveyor where force-recheck on
+      // .flowconfig returns an error code. It nevertheless correctly causes
+      // the server to restart.
+      const changedFlowConfig = files.some(f => f.includes('.flowconfig'));
+      if (err && err.code !== 6 && !changedFlowConfig) {
         throw new Error(
           format('flow force-recheck failed!', err, stdout, stderr, files),
         );

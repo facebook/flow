@@ -81,7 +81,7 @@ let close_connection sockaddr =
 let establish_connection ~timeout ~client_handshake ~tmp_dir root =
   let sock_name = Socket.get_path (Server_files.socket_file ~tmp_dir root) in
   let sockaddr =
-    if Sys.win32 then
+    if Sys.win32 || true then
       let ic = open_in_bin sock_name in
       let port = input_binary_int ic in
       close_in ic;
