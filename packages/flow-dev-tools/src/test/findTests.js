@@ -22,7 +22,11 @@ async function findTestSuites(): Promise<Array<string>> {
     cwd: __dirname,
   });
   // On Windows, glob still uses unix dir seperators, so we need to normalize
-  return testSuites.map(normalize);
+  const r1 = testSuites.map(normalize);
+  const r2 = testSuites.filter(
+    s => s.includes('lsp') && s.includes('connection'),
+  );
+  return r2;
 }
 
 export async function findTestsByName(
