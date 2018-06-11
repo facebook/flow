@@ -183,7 +183,7 @@ module Response = struct
   | INFER_TYPE of infer_type_response
   | PORT of port_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
-  | FORCE_RECHECK of Profiling_js.finished option
+  | FORCE_RECHECK of string * Profiling_js.finished option
   | SUGGEST of suggest_response
 
   let to_string = function
