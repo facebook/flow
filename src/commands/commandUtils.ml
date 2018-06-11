@@ -767,6 +767,7 @@ let json_version_flag prev = CommandSpec.ArgSpec.(
 )
 
 let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
+  Memlog.set_root root;
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -1017,18 +1018,24 @@ let rec connect_and_make_request =
       |> FlowConfig.emoji in
 
     let response: MonitorProt.monitor_to_client_message = try
-      Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic)
+      Memlog.log "wait_for_response.1";
+      let r = Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic) in
+      Memlog.log "wait_for_response.2";
+      r
     with
-    | Unix.Unix_error ((Unix.EPIPE | Unix.ECONNRESET), _, _) ->
+    | (Unix.Unix_error ((Unix.EPIPE | Unix.ECONNRESET), _, _)) as exn ->
+      Memlog.log ("wait_for_response.3 exn=" ^ (Printexc.to_string exn));
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
       raise End_of_file
     | exn ->
+      Memlog.log ("wait_for_response.4 e=" ^ (Printexc.to_string exn));
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
       raise exn
     in
 
     match response with
     | MonitorProt.Please_hold status ->
+      Memlog.log ("wait_for_response.5Please_hold " ^ (ServerStatus.string_of_status (fst status)));
       let status_string = match status with
       | server_status, watcher_status when ServerStatus.is_free server_status ->
         (* Let's ignore messages from the server that it is free. It's a confusing message for the
@@ -1044,17 +1051,22 @@ let rec connect_and_make_request =
         if not quiet then eprintf_with_spinner "Please wait. %s" status_string
       );
 
+      Memlog.log ("wait_for_response.5b Please_hold retry");
       wait_for_response ?timeout ~quiet ~root ic
     | MonitorProt.Data response ->
+      Memlog.log ("wait_for_response.6 Data");
       if not quiet && Tty.spinner_used () then Tty.print_clear_line stderr;
       response
     | MonitorProt.ServerException exn_str ->
+      Memlog.log ("wait_for_response.7 ServerExn " ^ exn_str);
       if Tty.spinner_used () then Tty.print_clear_line stderr;
       let msg = Utils_js.spf "Server threw an exception: %s" exn_str in
+      Memlog.log ("wait_for_response.8");
       FlowExitStatus.(exit ~msg Unknown_error)
   in
 
   fun ?timeout ?retries server_flags root request ->
+    Memlog.log "connect_and_make_request.1";
     let retries = match retries with
     | None -> server_flags.retries
     | Some retries -> retries in
@@ -1072,10 +1084,17 @@ let rec connect_and_make_request =
       client_type = SocketHandshake.Ephemeral;
     }) in
     (* connect handles timeouts itself *)
+    Memlog.log "connect_and_make_request.2";
     let ic, oc = connect ~client_handshake server_flags root in
+    Memlog.log "connect_and_make_request.3";
     send_command ?timeout oc request;
-    try wait_for_response ?timeout ~quiet ~root ic
+    Memlog.log "connect_and_make_request.4";
+    try
+      let r = wait_for_response ?timeout ~quiet ~root ic in
+      Memlog.log "connect_and_make_request.5";
+      r
     with End_of_file ->
+      Memlog.log "connect_and_make_request.6";
       if not quiet
       then begin
         eprintf_with_spinner
