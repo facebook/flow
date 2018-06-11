@@ -172,10 +172,16 @@ let connect_once ~client_handshake ~tmp_dir root =
   with
   | ConnectError Missing_socket ->
     if server_exists ~tmp_dir root
-    then Error Server_socket_missing
-    else Error Server_missing
-  | ConnectError Timeout
-  | _ ->
+    then
+      let () = Memlog.log "connect_once.1" in
+      Error Server_socket_missing
+    else
+      let () = Memlog.log "connect_once.2" in
+      Error Server_missing
+  | e ->
+    let b = server_exists ~tmp_dir root in
+    let msg = Printf.sprintf "connect_once.3 server_exists=%B e=%s" b (Printexc.to_string e) in
+    Memlog.log msg;
     if server_exists ~tmp_dir root
     then Error (Server_busy Not_responding)
     else Error Server_missing
