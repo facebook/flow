@@ -47,21 +47,28 @@ type command =
 let exiting = ref false
 let exit ~msg exit_status =
   if !exiting
-  then
+  then begin
     (* We're already exiting, so there's nothing to do. But no one expects `exit` to return, so
      * let's just wait forever *)
+    Memlog.log ("FlowServerMonitorServer.exit.0 forever " ^ msg);
     let waiter, _ = Lwt.wait () in
     waiter
-  else begin
+  end else begin
     exiting := true;
+    Memlog.log ("FlowServerMonitorServer.exit.1 " ^ msg);
     Logger.info "Monitor is exiting (%s)" msg;
     Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
+    Memlog.log "FlowServerMonitorServer.exit.1b ABOUT TO BROADCAST";
     Lwt_condition.broadcast ExitSignal.signal (exit_status, msg);
+    Memlog.log "FlowServerMonitorServer.exit.1c";
 
     (* Protect this thread from getting canceled *)
     Lwt.protected (
+      Memlog.log "FlowServerMonitorServer.exit.2a";
       let%lwt () = Lwt_unix.sleep 1.0 in
+      Memlog.log "FlowServerMonitorServer.exit.2b";
       FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
+      Memlog.log "FlowServerMonitorServer.exit.2c ABOUT TO EXIT";
       Pervasives.exit (FlowExitStatus.error_code exit_status)
     )
   end
@@ -113,6 +120,8 @@ end = struct
   let handle_response ~msg ~connection:_ =
     match msg with
     | MonitorProt.Response (request_id, response) ->
+      Memlog.log ("FlowServerMonitorServer.handle_response.1 MonitorProt.Response " ^
+        (ServerProt.Response.to_string response));
       Logger.debug "Read a response to request '%s' from the server!" request_id;
       let%lwt request = RequestMap.remove ~request_id in
       (match request with
@@ -122,13 +131,17 @@ end = struct
       | Some (_, client) ->
         let msg = MonitorProt.Data response in
         begin
+          Memlog.log "FlowServerMonitorServer.handle_response.1b";
           try EphemeralConnection.write_and_close ~msg client
           with Lwt_stream.Closed ->
+            let () = Memlog.log "FlowServerMonitorServer.handle_response.1c" in
             Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
         end;
+        Memlog.log "FlowServerMonitorServer.handle_response.1d";
         Lwt.return_unit
       )
     | MonitorProt.RequestFailed (request_id, exn_str) ->
+      Memlog.log ("FlowServerMonitorServer.handle_response.2 RequestFailed " ^ exn_str);
       Logger.error "Server threw exception when processing '%s': %s" request_id exn_str;
       let%lwt request = RequestMap.remove ~request_id in
       (match request with
@@ -138,19 +151,27 @@ end = struct
       | Some (_, client) ->
         let msg = MonitorProt.ServerException exn_str in
         begin
+          Memlog.log "FlowServerMonitorServer.handle_response.2b";
           try EphemeralConnection.write_and_close ~msg client
           with Lwt_stream.Closed ->
+            Memlog.log "FlowServerMonitorServer.handle_response.2c";
             Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
         end;
+        Memlog.log "FlowServerMonitorServer.handle_response.2d";
         Lwt.return_unit
       )
     | MonitorProt.StatusUpdate status ->
+      Memlog.log ("FlowServerMonitorServer.handle_response.3 StatusUpdate "
+        ^ (ServerStatus.string_of_status status));
       StatusStream.update ~status;
       Lwt.return_unit
     | MonitorProt.PersistentConnectionResponse (client_id, response) ->
+      Memlog.log ("FlowServerMonitorServer.handle_response.4 PersistentConnectionResponse "
+        ^ (Persistent_connection_prot.string_of_response response));
       (match PersistentConnectionMap.get client_id with
       | None -> Logger.error "Failed to look up persistent client #%d" client_id
       | Some connection -> PersistentConnection.write ~msg:response connection);
+      Memlog.log "FlowServerMonitorServer.handle_response.4b";
       Lwt.return_unit
 
   let has_changed_files, get_and_clear_changed_files =
@@ -235,6 +256,8 @@ end = struct
       Lwt.return (watcher, conn)
 
     let catch _ exn =
+      Memlog.log ("FlowServerMonitorServer.CommandLoop.catch " ^
+        (Printexc.to_string exn));
       Logger.fatal ~exn "Uncaught exception in Server command loop";
       raise exn
   end)
@@ -245,8 +268,10 @@ end = struct
     (* Poll for file changes every second *)
     let main watcher =
       let%lwt should_notify = has_changed_files watcher in
-      if should_notify
-      then push_to_command_stream (Some Notify_file_changes);
+      if should_notify then begin
+        Memlog.log "FlowServerMonitorServer.FileWatcherLoop.main should_notify";
+        push_to_command_stream (Some Notify_file_changes)
+      end;
       let%lwt () = Lwt_unix.sleep 1.0 in
       Lwt.return watcher
 
@@ -254,17 +279,25 @@ end = struct
       match exn with
       | FileWatcher.FileWatcherDied exn ->
         let msg = spf "File watcher (%s) died" watcher#name in
+        Memlog.log ("FlowServerMonitorServer.FileWatcherLoop.catch.1 " ^
+          (Printexc.to_string exn));
         Logger.fatal ~exn "%s" msg;
-        exit ~msg FlowExitStatus.Dfind_died
+        let%lwt () = exit ~msg FlowExitStatus.Dfind_died in
+        Memlog.log "FlowServerMonitorServer.FileWatcherLoop.catch.1b";
+        Lwt.return_unit
       | _ ->
+        Memlog.log ("FlowServerMonitorServer.FileWatcherLoop.catch.2 unexpected " ^
+          (Printexc.to_string exn));
         Logger.fatal ~exn "Uncaught exception in Server file watcher loop";
         raise exn
   end)
 
   (* The monitor is exiting. Let's try and shut down the server gracefully *)
   let cleanup_on_exit ~exit_status ~exit_msg ~connection ~pid =
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.1";
     let msg = MonitorProt.(PleaseDie (MonitorExiting (exit_status, exit_msg))) in
     ServerConnection.write ~msg connection;
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.2";
 
     (* The monitor waits 1 second before exiting. So let's give the server .75 seconds to shutdown
      * gracefully. *)
@@ -272,58 +305,83 @@ end = struct
       (let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in Lwt.return (Some status));
       (let%lwt () = Lwt_unix.sleep 0.75 in Lwt.return None)
     ] in
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.3";
 
     let%lwt () = ServerConnection.close_immediately connection in
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.4";
     let still_alive = begin match server_status with
     | Some (Unix.WEXITED exit_status) ->
       let exit_type =
         try Some (FlowExitStatus.error_type exit_status)
         with Not_found -> None
       in
-      begin if exit_type = Some FlowExitStatus.Killed_by_monitor
-      then Logger.info "Successfully killed the server process"
-      else
-        let exit_status_string =
-          Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
-        in
-        Logger.error
-          "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
-          pid
-          exit_status_string
+      begin
+        if exit_type = Some FlowExitStatus.Killed_by_monitor then begin
+          Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.4 succes";
+          Logger.info "Successfully killed the server process"
+        end else begin
+          let exit_status_string =
+            Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+          in
+          Memlog.log ("FlowServerMonitorServer.ServerInstance.cleanup_on_exit.5 failure "
+            ^ exit_status_string);
+          Logger.error
+            "Tried to kill the server process (%d), which exited with the wrong exit code: %s"
+            pid
+            exit_status_string
+        end
       end;
       false
     | Some (Unix.WSIGNALED signal) ->
+      Memlog.log ("FlowServerMonitorServer.ServerInstance.cleanup_on_exit.6 signaled "
+        ^ (PrintSignal.string_of_signal signal));
       Logger.error
         "Tried to kill the server process (%d), but for some reason it was killed with %s signal"
         pid
         (PrintSignal.string_of_signal signal);
       false
     | Some (Unix.WSTOPPED signal) ->
+      Memlog.log ("FlowServerMonitorServer.ServerInstance.cleanup_on_exit.7 stopped "
+        ^ (PrintSignal.string_of_signal signal));
       Logger.error
         "Tried to kill the server process (%d), but for some reason it was stopped with %s signal"
         pid
         (PrintSignal.string_of_signal signal);
       true
     | None ->
+      Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.8 didn't die";
       Logger.error "Tried to kill the server process (%d), but it didn't die" pid;
       true
     end in
 
-    if still_alive then Unix.kill pid Sys.sigkill;
+    if still_alive then begin
+      Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.9";
+      Unix.kill pid Sys.sigkill;
+      Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.10";
+    end;
 
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup_on_exit.11";
     Lwt.return_unit
 
   let cleanup t =
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup.1";
     Lwt.cancel t.command_loop;
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup.2";
     Lwt.cancel t.file_watcher_loop;
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup.3";
     Lwt.cancel t.file_watcher_exit_thread;
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup.4";
     Lwt.cancel t.on_exit_thread;
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup.5";
     (* Lwt.join will run these threads in parallel and only return when EVERY thread has returned
      * or failed *)
-    Lwt.join [
+    let%lwt () = Lwt.join [
       t.watcher#stop ();
       ServerConnection.close_immediately t.connection;
-    ]
+    ] in
+    Memlog.log "FlowServerMonitorServer.ServerInstance.cleanup.6";
+    Lwt.return_unit
+
 
   let handle_file_watcher_exit watcher status =
     (* TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
@@ -424,10 +482,17 @@ end = struct
     let on_exit_thread =
       try%lwt
         let%lwt (exit_status, exit_msg) = Lwt_condition.wait ExitSignal.signal in
-        cleanup_on_exit ~exit_status ~exit_msg ~connection ~pid
+        Memlog.log "FlowServerMonitorServer.ServerInstance.start.on_exit_thread.1";
+        let%lwt () = cleanup_on_exit ~exit_status ~exit_msg ~connection ~pid in
+        Memlog.log "FlowServerMonitorServer.ServerInstance.start.on_exit_thread.1b";
+        Lwt.return_unit
       with
-      | Lwt.Canceled -> Lwt.return_unit
+      | Lwt.Canceled ->
+        Memlog.log "FlowServerMonitorServer.ServerInstance.start.on_exit_thread.2 Canceled";
+        Lwt.return_unit
       | exn ->
+        Memlog.log ("FlowServerMonitorServer.ServerInstance.start.on_exit_thread.3 "
+          ^ (Printexc.to_string exn));
         Logger.fatal ~exn "Uncaught exception in on_exit_thread";
         raise exn
     in
@@ -533,7 +598,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
   let wait_for_server_to_die monitor_options server =
     let pid = ServerInstance.pid_of server in
     let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
+    Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.1";
     let%lwt () = ServerInstance.cleanup server in
+    Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.1b";
     if Sys.unix && try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false
     then FlowEventLogger.murdered_by_oom_killer ();
 
@@ -544,12 +611,15 @@ module KeepAliveLoop = LwtLoop.Make (struct
         with Not_found -> None in
       let exit_status_string =
         Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type in
+      Memlog.log ("FlowServerMonitorServer.wait_for_server_to_die.2 WEXITED "
+        ^ exit_status_string);
       Logger.error "Flow server (pid %d) exited with code %s (%d)"
         pid
         exit_status_string
         exit_status;
       begin match exit_type with
       | None ->
+          Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2b";
           exit
           ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
           FlowExitStatus.Unknown_error
@@ -558,23 +628,40 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* to know why the flow server is about to fatally close the persistent  *)
         (* connection. This WEXITED case covers them. (It doesn't matter that    *)
         (* it also sends the reason in a few additional cases as well.)          *)
+        Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2c";
         let send_close conn =
-          try PersistentConnection.write ~msg:(PersistentProt.ServerExit exit_type) conn
-          with _ -> ()
+          try
+            Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2d SENDING P.C. EXIT";
+            PersistentConnection.write ~msg:(PersistentProt.ServerExit exit_type) conn;
+            Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2e SENT P.C. EXIT"
+          with e ->
+            Memlog.log ("FlowServerMonitorServer.wait_for_server_to_die.2f "
+              ^ (Printexc.to_string e))
         in
         PersistentConnectionMap.get_all_clients () |> List.iter send_close;
-        if should_monitor_exit_with_server monitor_options exit_type
-        then exit ~msg:"Dying along with server" exit_type
-        else Lwt.return_unit
+        Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2g";
+        if should_monitor_exit_with_server monitor_options exit_type then begin
+          Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2h";
+          exit ~msg:"Dying along with server" exit_type
+        end else begin
+          Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.2i";
+          Lwt.return_unit
+        end
       end
     | Unix.WSIGNALED signal ->
       Logger.error "Flow server (pid %d) was killed with %s signal"
         pid
         (PrintSignal.string_of_signal signal);
+      Memlog.log ("FlowServerMonitorServer.wait_for_server_to_die.3 WSIGNALLED "
+        ^ (PrintSignal.string_of_signal signal));
       FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
-      if should_monitor_exit_with_signaled_server signal
-      then exit ~msg:"Dying along with signaled server" FlowExitStatus.Interrupted
-      else Lwt.return_unit
+      if should_monitor_exit_with_signaled_server signal then begin
+        Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.3b";
+        exit ~msg:"Dying along with signaled server" FlowExitStatus.Interrupted
+      end else begin
+        Memlog.log "FlowServerMonitorServer.wait_for_server_to_die.3c";
+        Lwt.return_unit
+      end
     | Unix.WSTOPPED signal ->
       (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
         * could try to signal it to resume. Or we could wait for it to start up again. But killing
@@ -582,6 +669,8 @@ module KeepAliveLoop = LwtLoop.Make (struct
       Logger.error "Flow server (pid %d) was stopped with %s signal. Sending sigkill"
         pid
         (PrintSignal.string_of_signal signal);
+      Memlog.log ("FlowServerMonitorServer.wait_for_server_to_die.4 WSTOPPED "
+        ^ (PrintSignal.string_of_signal signal));
       (* kill is not a blocking system call, which is likely why it is missing from Lwt_unix *)
       Unix.kill pid Sys.sigkill;
       Lwt.return_unit
@@ -600,17 +689,27 @@ module KeepAliveLoop = LwtLoop.Make (struct
    * tell the persistent connection that the server has died and let it adjust its state, but for
    * now lets close all persistent connections *)
   let killall_persistent_connections () =
-    PersistentConnectionMap.get_all_clients ()
-    |> Lwt_list.iter_p PersistentConnection.close_immediately
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.killall_persistent_connections.1 KILLING PC";
+    let%lwt () = PersistentConnectionMap.get_all_clients ()
+    |> Lwt_list.iter_p PersistentConnection.close_immediately in
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.killall_persistent_connections.2 KILLED PC";
+    Lwt.return_unit
 
   let main monitor_options =
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.main.1";
     let%lwt () = requeue_stalled_requests () in
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.main.2";
     let%lwt server = ServerInstance.start monitor_options in
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.main.3";
     let%lwt () = wait_for_server_to_die monitor_options server in
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.main.4 WILL KILL PC";
     let%lwt () = killall_persistent_connections () in
+    Memlog.log "FlowServerMonitorServer.KeepAliveLoop.main.5";
     Lwt.return monitor_options
 
   let catch _ exn =
+    Memlog.log ("FlowServerMonitorServer.KeepAliveLoop.main.exception " ^
+      (Printexc.to_string exn));
     Logger.error ~exn "Exception in KeepAliveLoop";
     raise exn
 end)
