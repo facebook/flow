@@ -117,7 +117,10 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    PersistentConnection.flush_and_close conn
+    Memlog.log "SocketAcceptor.close_on_exit.1 - about to flush&close";
+    let%lwt () = PersistentConnection.flush_and_close conn in
+    Memlog.log "SocketAcceptor.close_on_exit.2 - done flush&close";
+    Lwt.return_unit
   in
 
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
