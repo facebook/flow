@@ -19,19 +19,20 @@ type progress = {
 
 type event =
 | Ready (* The server is free *)
-| Init_start (* The server is starting to initialize *)
+| Init_start of string (* The server is starting to initialize *)
 | Parsing_progress of progress
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
 | Finishing_up (* The server is finishing up some typechecking or other work *)
-| Recheck_start (* The server is starting to recheck *)
-| Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
+| Recheck_start of string (* The server is starting to recheck *)
+| Handling_request_start of string
+  (* The server is starting to handle an ephemeral/persistent request *)
 | GC_start (* The server is starting to GC *)
 | Collating_errors_start (* The server is collating the errors *)
 
 type typecheck_status =
-| Starting_typecheck (* A typecheck's initial state *)
+| Starting_typecheck of string (* A typecheck's initial state *)
 | Parsing of progress
 | Resolving_dependencies
 | Calculating_dependencies
@@ -95,7 +96,7 @@ let render_emoji ~use_emoji ?(pad=After) emoji =
 
 let string_of_event = function
 | Ready -> "Ready"
-| Init_start -> "Init_start"
+| Init_start s -> "Init_start " ^ s
 | Parsing_progress progress ->
   spf "Parsing_progress files %s" (string_of_progress progress)
 | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
@@ -103,14 +104,14 @@ let string_of_event = function
 | Merging_progress progress ->
   spf "Merging_progress %s" (string_of_progress progress)
 | Finishing_up -> "Finishing_up"
-| Recheck_start -> "Recheck_start"
-| Handling_request_start -> "Handling_request_start"
+| Recheck_start s -> "Recheck_start " ^ s
+| Handling_request_start s -> "Handling_request_start " ^ s
 | GC_start -> "GC_start"
 | Collating_errors_start -> "Collating_errors_start"
 
 let string_of_typecheck_status ~use_emoji = function
-| Starting_typecheck ->
-  spf "%sstarting up" (render_emoji ~use_emoji Sleeping_face)
+| Starting_typecheck s ->
+  spf "%sstarting up %s" (render_emoji ~use_emoji Sleeping_face) s
 | Parsing progress ->
   spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
 | Resolving_dependencies ->
@@ -151,9 +152,9 @@ let update ~event ~status =
   match event, status with
   | Ready, _ -> Free
 
-  | Init_start, _ -> Typechecking (Initializing, Starting_typecheck)
-  | Recheck_start, _ -> Typechecking (Rechecking, Starting_typecheck)
-  | Handling_request_start, _ -> Typechecking (Handling_request, Starting_typecheck)
+  | Init_start s, _ -> Typechecking (Initializing, Starting_typecheck s)
+  | Recheck_start s, _ -> Typechecking (Rechecking, Starting_typecheck s)
+  | Handling_request_start s, _ -> Typechecking (Handling_request, Starting_typecheck s)
 
   | Parsing_progress progress, Typechecking (mode, _) -> Typechecking (mode, Parsing progress)
   | Resolving_dependencies_progress, Typechecking (mode, _) ->
@@ -197,7 +198,7 @@ let is_significant_transition old_status new_status =
     | Parsing _, Parsing _
     | Merging _, Merging _ -> false
     (* But changing typechecking status always is significant *)
-    | _, Starting_typecheck
+    | _, Starting_typecheck _
     | _, Parsing _
     | _, Resolving_dependencies
     | _, Calculating_dependencies
