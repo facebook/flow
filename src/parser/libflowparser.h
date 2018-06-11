@@ -8,6 +8,7 @@
 #define CAML_NAME_SPACE
 
 #include <map>
+#include <string>
 #include <caml/alloc.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
