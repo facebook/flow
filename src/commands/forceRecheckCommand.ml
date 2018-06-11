@@ -46,11 +46,15 @@ type args = {
 
 let force_recheck (args:args) server_flags =
   let files = List.map get_path_of_file args.files in
+  Memlog.log "forceRecheckCommand.force_recheck.1";
   let request = ServerProt.Request.FORCE_RECHECK {files; focus=args.focus; profile=args.profile} in
 
+  Memlog.log "forceRecheckCommand.force_recheck.2";
   let profiling = begin match connect_and_make_request server_flags args.root request with
   | ServerProt.Response.FORCE_RECHECK profiling -> profiling
-  | response -> failwith_bad_response ~request ~response
+  | response ->
+    let () = Memlog.log "forceRecheckCommand.force_recheck.3" in
+    failwith_bad_response ~request ~response
   end in
 
   (* Print profiling info *)
@@ -62,6 +66,7 @@ let force_recheck (args:args) server_flags =
       Hh_json.(print_json_endline ~pretty:(args.json = Some Pretty) (JSON_Object properties))
   end;
 
+  Memlog.log "forceRecheckCommand.force_recheck.4";
   FlowExitStatus.(exit No_error)
 
 let rec find_parent_that_exists path =
@@ -96,6 +101,7 @@ let main server_flags json pretty root from profile focus input_file files () =
     | None, file::_ -> (Some (find_parent_that_exists file))
     | None, [] -> None
   ) in
+  Memlog.set_root root;
   let json = if pretty then Some Pretty else (if json then Some JSON else None ) in
   let args = { root; files; focus; profile; json } in
   force_recheck args server_flags

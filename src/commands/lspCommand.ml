@@ -886,6 +886,7 @@ begin
       | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
     end;
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
+    Memlog.set_root i_root;
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = {

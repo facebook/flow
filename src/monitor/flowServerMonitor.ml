@@ -65,6 +65,7 @@ end)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _; } = monitor_options in
   let root = Options.root server_options in
+  Memlog.set_root root;
   let tmp_dir = Options.temp_dir server_options in
 
   (* We need to grab the lock before initializing the pid files and before allocating the shared
@@ -169,6 +170,7 @@ let daemonize ~wait ~on_spawn monitor_options =
 
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root server_options in
+  Memlog.set_root root;
   let tmp_dir = Options.temp_dir server_options in
   let lock = Server_files_js.lock_file ~tmp_dir root in
   if not (Lock.check lock)
