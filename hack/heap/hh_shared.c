@@ -593,7 +593,7 @@ static int should_collect(int aggressive);
 
 CAMLprim value hh_should_collect(value aggressive_val);
 
-CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val);
+CAMLprim value hh_collect(value aggressive_val);
 
 static void raise_heap_full(void);
 
@@ -1786,7 +1786,7 @@ value hh_check_heap_overflow(void) {
  * Step two, memcopy the values back into the shared heap.
  * We could probably use something smarter, but this is fast enough.
  *
- * The collector should only be executed by single process at the time
+ * The collector should only be called by the master.
  */
 /*****************************************************************************/
 
@@ -1801,16 +1801,13 @@ CAMLprim value hh_should_collect(value aggressive_val) {
   return Val_bool(should_collect(Bool_val(aggressive_val)));
 }
 
-CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
+CAMLprim value hh_collect(value aggressive_val) {
   // NOTE: explicitly do NOT call CAMLparam or any of the other functions/macros
   // defined in caml/memory.h .
   // This function takes a boolean and returns unit.
   // Those are both immediates in the OCaml runtime.
   int aggressive  = Bool_val(aggressive_val);
-  int allow_in_worker = Bool_val(allow_in_worker_val);
-  if (!allow_in_worker) {
-    assert_master();
-  }
+  assert_master();
   assert_allow_removes();
   char* tmp_heap = NULL;
   char* dest = NULL;
@@ -1819,6 +1816,7 @@ CAMLprim value hh_collect(value aggressive_val, value allow_in_worker_val) {
   if (!should_collect(aggressive)) {
     return Val_unit;
   }
+  printf("Starting shared memory collection\n");
 
   tmp_heap = temp_memory_map();
   dest = tmp_heap;

@@ -185,7 +185,7 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
 (*****************************************************************************)
 external hh_should_collect: bool -> bool = "hh_should_collect"
 
-external hh_collect: bool -> bool -> unit = "hh_collect"
+external hh_collect: bool -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
@@ -332,14 +332,12 @@ let hash_stats () =
 let should_collect (effort : [ `gentle | `aggressive ]) =
   hh_should_collect (effort = `aggressive)
 
-let collect ?wrapper ?allow_in_worker (effort : [ `gentle | `aggressive ]) =
-  let allow_in_worker = Option.value allow_in_worker ~default:false in
-  let wrapper = Option.value wrapper ~default:(fun f -> f ()) in
+let collect (effort : [ `gentle | `aggressive ]) =
   let old_size = heap_size () in
   Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
   (* The wrapper is used to run the function in a worker instead of master. *)
-  wrapper (fun () -> hh_collect (effort = `aggressive) allow_in_worker);
+  hh_collect (effort = `aggressive);
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
   if old_size <> new_size then begin
