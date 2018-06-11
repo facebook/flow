@@ -188,7 +188,10 @@ let get_editor_open_files (state: state) : Lsp.TextDocumentItem.t SMap.t option 
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   try
-    Server_message (Marshal_tools.from_fd_with_preamble fd)
+    let r = Server_message (Marshal_tools.from_fd_with_preamble fd) in
+    if r = Server_message Persistent_connection_prot.EOF then
+      raise (Server_fatal_connection_exception { Marshal_tools.message="EOF"; stack=""; });
+    r
   with e ->
     let message = Printexc.to_string e in
     let stack = Printexc.get_backtrace () in

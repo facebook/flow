@@ -117,6 +117,7 @@ let create_persistent_connection ~client_fd ~close ~logging_context ~lsp =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
+    PersistentConnection.write Persistent_connection_prot.EOF conn;
     PersistentConnection.flush_and_close conn
   in
 
