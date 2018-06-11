@@ -54,6 +54,7 @@ let exit ~msg exit_status =
     waiter
   else begin
     exiting := true;
+    Memlog.log ("FlowServerMonitorServer.exit.1 " ^ msg);
     Logger.info "Monitor is exiting (%s)" msg;
     Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
     Lwt_condition.broadcast ExitSignal.signal (exit_status, msg);
@@ -62,6 +63,7 @@ let exit ~msg exit_status =
     Lwt.protected (
       let%lwt () = Lwt_unix.sleep 1.0 in
       FlowEventLogger.exit (Some msg) (FlowExitStatus.to_string exit_status);
+      Memlog.log "FlowServerMonitorServer.exit.2";
       Pervasives.exit (FlowExitStatus.error_code exit_status)
     )
   end
@@ -113,6 +115,7 @@ end = struct
   let handle_response ~msg ~connection:_ =
     match msg with
     | MonitorProt.Response (request_id, response) ->
+      Memlog.log "FlowServerMonitorServer.handle_response.1 MonitorProt.Response";
       Logger.debug "Read a response to request '%s' from the server!" request_id;
       let%lwt request = RequestMap.remove ~request_id in
       (match request with
@@ -122,13 +125,17 @@ end = struct
       | Some (_, client) ->
         let msg = MonitorProt.Data response in
         begin
+          Memlog.log "FlowServerMonitorServer.handle_response.1b";
           try EphemeralConnection.write_and_close ~msg client
           with Lwt_stream.Closed ->
+            let () = Memlog.log "FlowServerMonitorServer.handle_response.1c" in
             Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
         end;
+        Memlog.log "FlowServerMonitorServer.handle_response.1d";
         Lwt.return_unit
       )
     | MonitorProt.RequestFailed (request_id, exn_str) ->
+      Memlog.log ("FlowServerMonitorServer.handle_response.2 RequestFailed " ^ exn_str);
       Logger.error "Server threw exception when processing '%s': %s" request_id exn_str;
       let%lwt request = RequestMap.remove ~request_id in
       (match request with
@@ -138,19 +145,26 @@ end = struct
       | Some (_, client) ->
         let msg = MonitorProt.ServerException exn_str in
         begin
+          Memlog.log "FlowServerMonitorServer.handle_response.2b";
           try EphemeralConnection.write_and_close ~msg client
           with Lwt_stream.Closed ->
+            Memlog.log "FlowServerMonitorServer.handle_response.2c";
             Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
         end;
+        Memlog.log "FlowServerMonitorServer.handle_response.2d";
         Lwt.return_unit
       )
     | MonitorProt.StatusUpdate status ->
+      Memlog.log ("FlowServerMonitorServer.handle_response.3 StatusUpdate "
+        ^ (ServerStatus.string_of_status status));
       StatusStream.update ~status;
       Lwt.return_unit
     | MonitorProt.PersistentConnectionResponse (client_id, response) ->
+      Memlog.log "FlowServerMonitorServer.handle_response.4 PersistentConnectionResponse";
       (match PersistentConnectionMap.get client_id with
       | None -> Logger.error "Failed to look up persistent client #%d" client_id
       | Some connection -> PersistentConnection.write ~msg:response connection);
+      Memlog.log "FlowServerMonitorServer.handle_response.4b";
       Lwt.return_unit
 
   let has_changed_files, get_and_clear_changed_files =
@@ -245,8 +259,10 @@ end = struct
     (* Poll for file changes every second *)
     let main watcher =
       let%lwt should_notify = has_changed_files watcher in
-      if should_notify
-      then push_to_command_stream (Some Notify_file_changes);
+      if should_notify then begin
+        Memlog.log "FlowServerMonitorServer.FileWatcherLoop.main should_notify";
+        push_to_command_stream (Some Notify_file_changes)
+      end;
       let%lwt () = Lwt_unix.sleep 1.0 in
       Lwt.return watcher
 
