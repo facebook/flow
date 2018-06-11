@@ -4331,7 +4331,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason, (ObjT _ | InstanceT _)), (
         UseT (use_op, DefT (reason_op, (FunT _ | AnyFunT))) |
-        BindT (use_op, reason_op, _, _) |
         CallT (use_op, reason_op, _)
       ) ->
       let prop_name = Some "$call" in
@@ -4348,16 +4347,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | DefT (_, ObjT {call_t = Some t; _}) -> t
       | DefT (_, InstanceT (_, _, _, {inst_call_t = Some t; _})) -> t
       | _ ->
-        (match u with
-        | BindT (_, _, {call_tout; _}, true) ->
-          (* Pass-through binding an object should not error if the object lacks
-             a callable property. Instead, we should flow the object to the
-             output tvar. *)
-          rec_flow_t cx trace (l, call_tout)
-        | _ ->
-          let reason_prop = replace_reason_const (RProperty prop_name) reason_op in
-          add_output cx ~trace (FlowError.EStrictLookupFailed
-            ((reason_prop, reason), reason, prop_name, Some use_op)));
+        let reason_prop = replace_reason_const (RProperty prop_name) reason_op in
+        add_output cx ~trace (FlowError.EStrictLookupFailed
+          ((reason_prop, reason), reason, prop_name, Some use_op));
         AnyT.why reason_op
       in
       (match u with
@@ -5643,6 +5635,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let resolve_to =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
         resolve_call_list cx ~trace ~use_op reason tins2 resolve_to;
+
+    | DefT (_, ObjT {call_t = Some t; _}), BindT _ ->
+      rec_flow cx trace (t, u)
+
+    | DefT (_, InstanceT (_, _, _, {inst_call_t = Some t; _})), BindT _ ->
+      rec_flow cx trace (t, u)
 
     | DefT (_, (AnyT | AnyFunT)),
       BindT (use_op, reason, calltype, _) ->
