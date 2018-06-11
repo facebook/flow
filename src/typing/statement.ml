@@ -2427,6 +2427,7 @@ and variable cx kind
             let default_t = Flow.mk_default cx reason d ~expr:expression in
             Flow.flow_t cx (default_t, t)
           );
+          Flow.flow cx (t, AssertImportIsValueT(reason, name));
           init_var cx ~use_op name ~has_anno t loc
         ) t init None id
 )
