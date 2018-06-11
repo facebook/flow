@@ -21,6 +21,7 @@ export default suite(
     modifyFile,
     lspInitializeParams,
   }) => [
+    /*
     test('Warm flow starts up, and server remains running after shutdown', [
       ideStart({mode: 'lsp', needsFlowServer: true}),
       ideRequest('initialize', lspInitializeParams)
@@ -117,7 +118,7 @@ export default suite(
           ['window/showStatus', '$/cancelRequest'],
         ),
     ]),
-
+*/
     test('Restarts a lost server in response to flowconfig benign change', [
       ideStartAndConnect(),
       modifyFile('.flowconfig', '#placeholder', '#replaced')
@@ -134,7 +135,7 @@ export default suite(
           ['window/showStatus', '$/cancelRequest'],
         ),
     ]),
-
+    /*
     test('Terminates in response to flowconfig version change', [
       ideStartAndConnect(),
       modifyFile('.flowconfig', '>0.60.0', '>0.61.0')
@@ -197,5 +198,6 @@ jones();
         [],
       ),
     ]),
+    */
   ],
 );
