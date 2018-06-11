@@ -21,6 +21,7 @@ export default suite(
     modifyFile,
     lspInitializeParams,
   }) => [
+    /*
     test('Warm flow starts up, and server remains running after shutdown', [
       ideStart({mode: 'lsp', needsFlowServer: true}),
       ideRequest('initialize', lspInitializeParams)
@@ -150,12 +151,12 @@ export default suite(
           ],
         ),
     ]),
-
+*/
     test('Editor open files outlive server', [
       ideStartAndConnect(),
       ideNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/open.js',
+          uri: '<PLACEHOLDER_PROJECT_DIR>\\open.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -165,13 +166,27 @@ jones();
         },
       })
         .ideRequestAndWaitUntilResponse('textDocument/definition', {
-          textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>\\open.js'},
           position: {line: 2, character: 1},
         })
         .verifyAllIDEMessagesInStep(
           ['textDocument/definition{open.js,"line":1}'],
           [],
         ),
+      ideRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        position: {line: 2, character: 1},
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/definition{open.js,"line":1}'],
+        [],
+      ),
+      ideRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>\\open.js'},
+        position: {line: 2, character: 1},
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/definition{open.js,"line":1}'],
+        [],
+      ),
       flowCmd(['stop'])
         .waitUntilServerStatus(20000, 'stopped')
         .waitUntilIDEMessage(20000, 'telemetry/connectionStatus{false}')
@@ -190,7 +205,7 @@ jones();
           ['window/showStatus', '$/cancelRequest'],
         ),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/open.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>\\open.js'},
         position: {line: 2, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{open.js,line":1}'],
