@@ -173,6 +173,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     );
 
     let root = guess_root root in
+    Memlog.set_root root;
 
     let json = json || Option.is_some json_version || pretty in
 
