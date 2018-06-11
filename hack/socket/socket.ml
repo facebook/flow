@@ -14,7 +14,7 @@ let unix_socket sock_name =
       Sys_utils.mkdir_no_fail (Filename.dirname sock_name);
       if Sys.file_exists sock_name then Sys.remove sock_name;
       let domain, addr =
-        if Sys.win32 then
+        if Sys.win32 || true then
           Unix.(PF_INET, Unix.ADDR_INET (inet_addr_loopback, 0))
         else
           Unix.(PF_UNIX, Unix.ADDR_UNIX sock_name) in

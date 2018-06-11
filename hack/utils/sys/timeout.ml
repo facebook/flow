@@ -502,9 +502,9 @@ module type S = sig
 end
 
 let select = (module Select_timeout : S)
-let alarm = (module Alarm_timeout : S)
+let _alarm = (module Alarm_timeout : S)
 
-include (val (if Sys.win32 then select else alarm))
+include (val (if Sys.win32 then select else select))
 
 let read_connection ~timeout ~on_timeout ~reader sockaddr =
   with_timeout ~timeout ~on_timeout
