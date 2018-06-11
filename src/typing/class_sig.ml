@@ -23,6 +23,7 @@ type signature = {
   methods: (Loc.t option * Func_sig.t) Nel.t SMap.t;
   getters: (Loc.t option * Func_sig.t) SMap.t;
   setters: (Loc.t option * Func_sig.t) SMap.t;
+  calls: Func_sig.t list;
 }
 
 type t = {
@@ -62,6 +63,7 @@ let empty id reason tparams tparams_map super =
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
+    calls = [];
   } in
   let structural, super, ssuper, implements =
     let open Type in
@@ -199,6 +201,11 @@ let append_method ~static name loc fsig x =
     setters = SMap.remove name s.setters;
   }) x
 
+let append_call ~static fsig = map_sig ~static (fun s -> {
+  s with
+  calls = fsig :: s.calls
+})
+
 let add_getter ~static name loc fsig x =
   let flat = static || x.structural in
   map_sig ~static (fun s -> {
@@ -245,6 +252,7 @@ let subst_sig cx map s =
     methods = SMap.map (Nel.map subst_func_sig) s.methods;
     getters = SMap.map (subst_func_sig) s.getters;
     setters = SMap.map (subst_func_sig) s.setters;
+    calls = List.map (Func_sig.subst cx map) s.calls;
   }
 
 let generate_tests cx f x =
@@ -343,6 +351,15 @@ let elements cx ~tparams_map ?constructor s =
     SMap.add name (to_field fld) acc
   ) s.proto_fields methods in
 
+  let call = match List.rev_map (Func_sig.methodtype cx) s.calls with
+  | [] -> None
+  | [t] -> Some t
+  | t0::t1::ts ->
+    let open Type in
+    let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
+    Some t
+  in
+
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
   let initialized_field_names = SMap.fold (fun x (_, _, field) acc ->
@@ -351,7 +368,7 @@ let elements cx ~tparams_map ?constructor s =
     | Infer _ -> SSet.add x acc
   ) s.fields SSet.empty in
 
-  initialized_field_names, fields, methods
+  initialized_field_names, fields, methods, call
 
 let arg_polarities x =
   List.fold_left Type.(fun acc tp ->
@@ -359,7 +376,7 @@ let arg_polarities x =
   ) SMap.empty x.tparams
 
 let statictype cx ~tparams_map s =
-  let inited_fields, fields, methods = elements cx ~tparams_map s in
+  let inited_fields, fields, methods, call = elements cx ~tparams_map s in
   let props = SMap.union fields methods
     ~combine:(fun _ _ ->
       Utils_js.assert_false (Utils_js.spf
@@ -369,7 +386,7 @@ let statictype cx ~tparams_map s =
   (* Statics are not exact, because we allow width subtyping between them.
      Specifically, given class A and class B extends A, Class<B> <: Class<A>. *)
   let static =
-    Obj_type.mk_with_proto cx s.reason ~props s.super
+    Obj_type.mk_with_proto cx s.reason ~props ?call s.super
       ~sealed:true ~exact:false
   in
   let open Type in
@@ -389,7 +406,7 @@ let insttype cx ~tparams_map ~initialized_static_field_names s =
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some (loc0, t)
   in
-  let inited_fields, fields, methods = elements cx ~tparams_map ?constructor s.instance in
+  let inited_fields, fields, methods, call = elements cx ~tparams_map ?constructor s.instance in
   { Type.
     class_id = s.id;
     type_args = SMap.map (fun t -> (Type.reason_of_t t, t)) s.tparams_map;
@@ -398,6 +415,7 @@ let insttype cx ~tparams_map ~initialized_static_field_names s =
     initialized_field_names = inited_fields;
     initialized_static_field_names;
     methods_tmap = Context.make_property_map cx methods;
+    inst_call_t = call;
     has_unknown_react_mixins = false;
     structural = s.structural;
   }

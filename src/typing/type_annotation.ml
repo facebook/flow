@@ -675,17 +675,14 @@ let rec convert cx tparams_map = Ast.Type.(function
     | _ -> false
   ) properties in
   let mk_object ~exact (call_props, dict, props_map, proto) =
-    let props_map = match List.rev call_props with
-      | [] -> props_map
-      | [t] ->
-        let p = Field (None, t, Positive) in
-        SMap.add "$call" p props_map
+    let call = match List.rev call_props with
+      | [] -> None
+      | [t] -> Some t
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
         let rep = InterRep.make t0 t1 ts in
         let t = DefT (callable_reason, IntersectionT rep) in
-        let p = Field (None, t, Positive) in
-        SMap.add "$call" p props_map
+        Some t
     in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
@@ -712,7 +709,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       frozen = false
     } in
     DefT (mk_reason reason_desc loc,
-      ObjT (mk_objecttype ~flags dict pmap proto))
+      ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
   let property loc prop props proto =
     match prop with
@@ -1083,7 +1080,7 @@ and add_interface_properties cx tparams_map properties s =
   List.fold_left Ast.Type.Object.(fun x -> function
     | CallProperty (loc, { CallProperty.value = (_, func); static }) ->
       let fsig = mk_func_sig cx tparams_map loc func in
-      append_method ~static "$call" None fsig x
+      append_call ~static fsig x
     | Indexer (loc, { Indexer.static; _ }) when mem_field ~static "$key" x ->
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, MultipleIndexers));

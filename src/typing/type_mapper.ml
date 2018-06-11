@@ -298,6 +298,7 @@ class ['a] t = object(self)
       initialized_field_names;
       initialized_static_field_names;
       methods_tmap;
+      inst_call_t;
       has_unknown_react_mixins;
       structural
     } = i in
@@ -317,7 +318,13 @@ class ['a] t = object(self)
     let methods_tmap' =
       if m_tmap == m_tmap' then methods_tmap
       else Context.make_property_map cx m_tmap' in
-    if type_args == type_args' && methods_tmap == methods_tmap' && fields_tmap == fields_tmap'
+    let inst_call_t' = OptionUtils.ident_map (self#type_ cx map_cx) inst_call_t in
+    if (
+      type_args == type_args' &&
+      methods_tmap == methods_tmap' &&
+      fields_tmap == fields_tmap' &&
+      inst_call_t = inst_call_t'
+    )
     then i
     else {
       class_id;
@@ -327,6 +334,7 @@ class ['a] t = object(self)
       initialized_field_names;
       initialized_static_field_names;
       methods_tmap = methods_tmap';
+      inst_call_t = inst_call_t';
       has_unknown_react_mixins;
       structural;
     }
@@ -425,16 +433,24 @@ class ['a] t = object(self)
     if exps == exps' then id
     else Context.make_export_map cx exps'
 
-  method obj_type cx map_cx ({ flags; dict_t; props_tmap; proto_t} as t) =
+  method obj_type cx map_cx t =
+    let { flags; dict_t; props_tmap; proto_t; call_t } = t in
     let dict_t' = OptionUtils.ident_map (self#dict_type cx map_cx) dict_t in
     let p_tmap = Context.find_props cx props_tmap in
     let p_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) p_tmap in
     let props_tmap' = if p_tmap == p_tmap' then props_tmap
           else Context.make_property_map cx p_tmap' in
     let proto_t' = self#type_ cx map_cx proto_t in
-    if dict_t' == dict_t && props_tmap' == props_tmap && proto_t' == proto_t then t
-    else
-      { flags; dict_t = dict_t'; props_tmap = props_tmap'; proto_t = proto_t' }
+    let call_t' = OptionUtils.ident_map (self#type_ cx map_cx) call_t in
+    if dict_t' == dict_t && props_tmap' == props_tmap && proto_t' == proto_t && call_t' == call_t
+    then t
+    else {
+      flags;
+      dict_t = dict_t';
+      props_tmap = props_tmap';
+      proto_t = proto_t';
+      call_t = call_t';
+    }
 
   method dict_type cx map_cx ({dict_name; key; value; dict_polarity} as t) =
     let key' = self#type_ cx map_cx key in

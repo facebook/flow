@@ -711,11 +711,13 @@ class ['a] t = object(self)
       dict_t;
       props_tmap;
       proto_t;
+      call_t;
       flags = _;
     } = o in
     let acc = self#opt (self#dict_type cx pole) acc dict_t in
     let acc = self#props cx pole acc props_tmap in
     let acc = self#type_ cx pole acc proto_t in
+    let acc = self#opt (self#type_ cx pole) acc call_t in
     acc
 
   method private arr_type cx pole acc = function
@@ -736,6 +738,7 @@ class ['a] t = object(self)
       type_args;
       fields_tmap;
       methods_tmap;
+      inst_call_t;
       class_id = _;
       initialized_field_names = _;
       initialized_static_field_names = _;
@@ -748,6 +751,7 @@ class ['a] t = object(self)
     ) type_args acc in
     let acc = self#props cx pole acc fields_tmap in
     let acc = self#props cx pole acc methods_tmap in
+    let acc = self#opt (self#type_ cx pole) acc inst_call_t in
     acc
 
   method private export_types cx pole acc e =

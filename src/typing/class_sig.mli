@@ -77,6 +77,8 @@ val add_method: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
     of a single overloaded method. *)
 val append_method: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 
+val append_call: static:bool -> Func_sig.t -> t -> t
+
 (** Add getter to signature. *)
 val add_getter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
 

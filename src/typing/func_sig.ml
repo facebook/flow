@@ -84,9 +84,8 @@ let generate_tests cx f x =
 let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
   let knot = Tvar.mk cx reason in
   let static =
-    let props = SMap.singleton "$call" (Method (None, knot)) in
     let proto = FunProtoT reason in
-    Obj_type.mk_with_proto cx reason ~props proto
+    Obj_type.mk_with_proto cx reason ~call:knot proto
   in
   let prototype =
     let reason = replace_reason_const RPrototype reason in

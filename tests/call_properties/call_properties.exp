@@ -289,6 +289,20 @@ References:
                    ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------------- G.js:5:1
+
+Cannot call `o` because a callable signature is missing in `Object.create` [1].
+
+   G.js:5:1
+   5| o(); // error: o is not callable
+      ^^^
+
+References:
+   G.js:4:9
+   4| var o = Object.create(f);
+              ^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
 Cannot cast `a` to `B` because a callable signature is missing in object type [1] but exists in function type [2] in
@@ -308,7 +322,7 @@ References:
 
 
 
-Found 19 errors
+Found 20 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

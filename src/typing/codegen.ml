@@ -253,7 +253,7 @@ let rec gen_type t env = Type.(
     add_str "number" env
   | DefT (_, NumT (Truthy|AnyLiteral)) -> add_str "number" env
   | DefT (_, NullT) | NullProtoT _ -> add_str "null" env
-  | DefT (_, ObjT {flags = _; dict_t; props_tmap; proto_t = _;}) -> (
+  | DefT (_, ObjT {flags = _; dict_t; call_t = _; props_tmap; proto_t = _;}) -> (
     let env = add_str "{" env in
 
     (* Generate prop entries *)

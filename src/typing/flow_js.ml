@@ -291,14 +291,21 @@ let rec merge_type cx =
     | _ -> None
     in
 
+    let merge_call = match o1.call_t, o2.call_t with
+    | None, None -> Some None
+    | Some _, None -> if o2.flags.exact then Some o1.call_t else None
+    | None, Some _ -> if o1.flags.exact then Some o2.call_t else None
+    | Some c1, Some c2 -> Some (Some (create_union (UnionRep.make c1 c2 [])))
+    in
+
     (* Only merge objects if every property can be merged. *)
     let should_merge = SMap.for_all (fun _ x -> x) merge_map in
 
     (* Don't merge objects with different prototypes. *)
     let should_merge = should_merge && o1.proto_t = o2.proto_t in
 
-    (match should_merge, merge_dict with
-    | true, Some dict ->
+    (match should_merge, merge_dict, merge_call with
+    | true, Some dict, Some call ->
       let map = SMap.merge (fun _ p1_opt p2_opt ->
         match p1_opt, p2_opt with
         (* Merge disjoint+exact objects. *)
@@ -318,7 +325,7 @@ let rec merge_type cx =
         exact = o1.flags.exact && o2.flags.exact;
         frozen = o1.flags.frozen && o2.flags.frozen;
       } in
-      let objtype = mk_objecttype ~flags dict id o1.proto_t in
+      let objtype = mk_objecttype ~flags ~dict ~call id o1.proto_t in
       DefT (locationless_reason (RCustom "object"), ObjT objtype)
     | _ ->
       create_union (UnionRep.make t1 t2 []))
@@ -928,7 +935,7 @@ module ResolvableTypeJob = struct
        examples of such bugs yet. Leaving further investigation of this point as
        future work. *)
 
-    | DefT (_, ObjT { props_tmap; dict_t; _ }) ->
+    | DefT (_, ObjT { props_tmap; dict_t; call_t; _ }) ->
       let props_tmap = Context.find_props cx props_tmap in
       let ts = SMap.fold (fun x p ts ->
         (* avoid resolving types of shadow properties *)
@@ -938,6 +945,10 @@ module ResolvableTypeJob = struct
       let ts = match dict_t with
       | None -> ts
       | Some { key; value; _ } -> key::value::ts
+      in
+      let ts = match call_t with
+      | None -> ts
+      | Some t -> t::ts
       in
       collect_of_types ?log_unresolved cx reason acc ts
     | DefT (_, FunT (_, _, { params; return_t; _ })) ->
@@ -953,7 +964,7 @@ module ResolvableTypeJob = struct
       collect_of_type ?log_unresolved cx reason acc elemt
     | DefT (_, ArrT EmptyAT) -> acc
     | DefT (_, InstanceT (static, super, _,
-        { class_id; type_args; fields_tmap; methods_tmap; _ })) ->
+        { class_id; type_args; fields_tmap; methods_tmap; inst_call_t; _ })) ->
       let ts = if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ (_, t) ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
@@ -963,6 +974,10 @@ module ResolvableTypeJob = struct
       let ts = SMap.fold (fun _ p ts ->
         Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap ts in
+      let ts = match inst_call_t with
+      | None -> ts
+      | Some t -> t::ts
+      in
       collect_of_types ?log_unresolved cx reason acc ts
     | DefT (_, PolyT (_, t, _)) ->
       collect_of_type ?log_unresolved cx reason acc t
@@ -2912,15 +2927,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* values *)
     (**********)
 
-    | DefT (_, ObjT { props_tmap = tmap; dict_t; flags; _ }), GetValuesT (reason, values) ->
+    | DefT (_, ObjT o), GetValuesT (reason, values) ->
+      let {
+        flags;
+        proto_t = _;
+        props_tmap = tmap;
+        dict_t;
+        call_t = _; (* call props excluded from values *)
+      } = o in
       (* Find all of the props. *)
       let props = Context.find_props cx tmap in
       (* Get the read type for all readable properties and discard the rest. *)
-      let ts = SMap.fold (fun key prop ts ->
+      let ts = SMap.fold (fun _ prop ts ->
         match Property.read_t prop with
-        (* Don't include the type for the internal "$call" property if one
-           exists. *)
-        | Some t when key != "$call" ->
+        | Some t ->
             let t = if flags.frozen then
               match t with
               | DefT (t_reason, StrT (Literal (_, lit))) ->
@@ -2935,7 +2955,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               | _ -> t
             else t in
             t :: ts
-        | _ -> ts
+        | None -> ts
       ) props [] in
       (* If the object has a dictionary value then add that to our types. *)
       let ts = match dict_t with
@@ -2953,11 +2973,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         match Property.read_t prop with
         (* We don't want to include the property type if its name is the
            internal value "$key" because that will be the type for the instance
-           index and not the value.
-
-           We also don't include the type for the internal "$call" property if
-           one exists. *)
-        | Some t when key != "$key" && key != "$call" -> t :: ts
+           index and not the value. *)
+        | Some t when key != "$key" -> t :: ts
         | _ -> ts
       ) props [] in
       (* Create a union type from all our selected types. *)
@@ -3127,12 +3144,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         slices, but that approach behaves in nonobvious ways. TODO why?
       *)
     | DefT (_, IntersectionT _),
-      UseT (use_op, DefT (r, ObjT { flags; props_tmap; proto_t; dict_t }))
+      UseT (use_op, DefT (r, ObjT { flags; props_tmap; proto_t; dict_t; call_t }))
       when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
       iter_real_props cx props_tmap (fun ~is_sentinel:_ x p ->
         let pmap = SMap.singleton x p in
         let id = Context.make_property_map cx pmap in
-        let obj = mk_objecttype ~flags dict_t id dummy_prototype in
+        let obj = mk_objecttype ~flags ~dict:dict_t ~call:call_t id dummy_prototype in
         rec_flow cx trace (l, UseT (use_op, DefT (r, ObjT obj)))
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
@@ -4243,10 +4260,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (lreason, InstanceT (_, super, _, {
         fields_tmap = lflds;
-        methods_tmap = lmethods; _ })),
+        methods_tmap = lmethods;
+        inst_call_t = lcall; _ })),
       UseT (use_op, (DefT (ureason, ObjT {
         props_tmap = uflds;
-        proto_t = uproto; _ }) as u_deft)) ->
+        proto_t = uproto;
+        call_t = ucall; _ }) as u_deft)) ->
       Type_inference_hooks_js.dispatch_instance_to_obj_hook cx l u_deft;
 
       let lflds =
@@ -4254,6 +4273,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let methods_tmap = Context.find_props cx lmethods in
         SMap.union fields_tmap methods_tmap
       in
+
+      Option.iter ucall ~f:(fun ucall ->
+        let prop_name = Some "$call" in
+        let use_op = Frame (PropertyCompatibility {
+          prop = prop_name;
+          lower = lreason;
+          upper = ureason;
+          is_sentinel = false;
+        }, use_op) in
+        (match lcall with
+        | Some lcall -> rec_flow cx trace (lcall, UseT (use_op, ucall))
+        | None ->
+          let reason_prop = replace_reason_const (RProperty prop_name) ureason in
+          add_output cx ~trace (FlowError.EStrictLookupFailed
+            ((reason_prop, lreason), lreason, prop_name, Some use_op)))
+      );
 
       iter_real_props cx uflds (fun ~is_sentinel s up ->
         let use_op = Frame (PropertyCompatibility {
@@ -4299,37 +4334,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         BindT (use_op, reason_op, _, _) |
         CallT (use_op, reason_op, _)
       ) ->
-      let tvar = Tvar.mk cx (
-        replace_reason (fun desc ->
-          RCustom (spf "%s used as a function" (string_of_desc desc))
-        ) reason
-      ) in
-      let strict = match u with
-        | BindT (_, reason_op, {call_tout; _}, true) ->
-          (* Pass-through binding an object should not error if the object lacks
-             a callable property. Instead, we should flow the object to the
-             output tvar. This nonstrict lookup will unify the object with
-             `pass`, which flows to the output tvar. *)
-          let pass = Tvar.mk_where cx reason_op (fun t ->
-            rec_flow_t cx trace (t, call_tout)
-          ) in
-          NonstrictReturning (Some (l, pass), None)
-        | _ -> Strict reason
-      in
-      let action = match u with
-      | UseT (use_op, (DefT (_, (FunT _ | AnyFunT)) as u_def)) ->
-        let use_op = Frame (PropertyCompatibility {
-          prop = Some "$call";
+      let prop_name = Some "$call" in
+      let use_op = match u with
+      | UseT (_, DefT (_, (FunT _ | AnyFunT))) ->
+        Frame (PropertyCompatibility {
+          prop = prop_name;
           lower = reason;
           upper = reason_op;
           is_sentinel = false;
-        }, use_op) in
-        LookupProp (use_op, Field (None, u_def, Positive))
+        }, use_op)
+      | _ -> use_op in
+      let fun_t = match l with
+      | DefT (_, ObjT {call_t = Some t; _}) -> t
+      | DefT (_, InstanceT (_, _, _, {inst_call_t = Some t; _})) -> t
       | _ ->
-        RWProp (use_op, l, tvar, Read)
+        (match u with
+        | BindT (_, _, {call_tout; _}, true) ->
+          (* Pass-through binding an object should not error if the object lacks
+             a callable property. Instead, we should flow the object to the
+             output tvar. *)
+          rec_flow_t cx trace (l, call_tout)
+        | _ ->
+          let reason_prop = replace_reason_const (RProperty prop_name) reason_op in
+          add_output cx ~trace (FlowError.EStrictLookupFailed
+            ((reason_prop, reason), reason, prop_name, Some use_op)));
+        AnyT.why reason_op
       in
-      lookup_prop cx trace l reason_op reason strict "$call" action;
-      rec_flow cx trace (tvar, u)
+      (match u with
+      | UseT (_, (DefT (_, (FunT _ | AnyFunT)) as u_def)) ->
+        rec_flow cx trace (fun_t, UseT (use_op, u_def))
+      | _ -> rec_flow cx trace (fun_t, u))
 
     (******************************)
     (* matching shapes of objects *)
@@ -4353,7 +4387,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ShapeT (o), _) ->
         rec_flow cx trace (o, u)
 
-    | DefT (reason, ObjT { props_tmap = mapr; _ }), UseT (use_op', ShapeT (proto)) ->
+    | DefT (reason, ObjT { props_tmap = mapr; call_t = None; _ }), UseT (use_op', ShapeT proto) ->
         (* TODO: ShapeT should have its own reason *)
         let reason_op = reason_of_t proto in
         iter_real_props cx mapr (fun ~is_sentinel x p ->
@@ -4382,10 +4416,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Function definitions are incompatible with ShapeT. ShapeT is meant to
      * match an object type with a subset of the props in the type being
      * destructured. It would be complicated and confusing to use a function for
-     * this. Note that ObjTs with a $call property are, however, allowed.
+     * this.
      *
      * This invariant is important for the React setState() type definition. *)
-    | DefT (_, FunT _), UseT (use_op, ShapeT o) ->
+    | DefT (_, (FunT _ | ObjT {call_t = Some _; _})), UseT (use_op, ShapeT o) ->
         add_output cx ~trace
           (FlowError.EFunctionIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
 
@@ -4582,12 +4616,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* TODO: closure *)
       (** create new object **)
       let reason_c = replace_reason_const RNewObject reason_op in
-      let proto_reason = reason_of_t proto in
-      let sealed = UnsealedInFile (Loc.source (loc_of_reason proto_reason)) in
-      let flags = { default_flags with sealed } in
-      let dict = None in
-      let pmap = Context.make_property_map cx SMap.empty in
-      let new_obj = DefT (reason_c, ObjT (mk_objecttype ~flags dict pmap proto)) in
+      let objtype =
+        let sealed = UnsealedInFile (Loc.source (loc_of_t proto)) in
+        let flags = { default_flags with sealed } in
+        let dict = None in
+        let call = None in
+        let pmap = Context.make_property_map cx SMap.empty in
+        mk_objecttype ~flags ~dict ~call pmap proto
+      in
+      let new_obj = DefT (reason_c, ObjT objtype) in
       (** error if type arguments are provided to non-polymorphic constructor **)
       Option.iter targs ~f:(fun _ ->
         add_output cx ~trace FlowError.(ECallTypeArity {
@@ -4910,29 +4947,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (lreason, ObjT { props_tmap = mapr; flags; dict_t; _ }),
       ObjAssignFromT (reason_op, to_obj, t, ObjAssign error_flags) ->
-      let props_to_skip = ["$call"] in
       Context.iter_props cx mapr (fun x p ->
-        if not (List.mem x props_to_skip) then (
-          (* move the reason to the call site instead of the definition, so
-             that it is in the same scope as the Object.assign, so that
-             strictness rules apply. *)
-          let reason_prop =
-            lreason
-            |> replace_reason (fun desc -> RPropertyOf (x, desc))
-            |> repos_reason (loc_of_reason reason_op)
-          in
-          match Property.read_t p with
-          | Some t ->
-            let propref = Named (reason_prop, x) in
-            let t = filter_optional cx ~trace reason_prop t in
-            rec_flow cx trace (to_obj, SetPropT (
-              unknown_use, reason_prop, propref, Normal, t, None
-            ))
-          | None ->
-            add_output cx ~trace (FlowError.EPropAccess (
-              (reason_prop, reason_op), Some x, Property.polarity p, Read, unknown_use
-            ))
-        )
+        (* move the reason to the call site instead of the definition, so
+           that it is in the same scope as the Object.assign, so that
+           strictness rules apply. *)
+        let reason_prop =
+          lreason
+          |> replace_reason (fun desc -> RPropertyOf (x, desc))
+          |> repos_reason (loc_of_reason reason_op)
+        in
+        match Property.read_t p with
+        | Some t ->
+          let propref = Named (reason_prop, x) in
+          let t = filter_optional cx ~trace reason_prop t in
+          rec_flow cx trace (to_obj, SetPropT (
+            unknown_use, reason_prop, propref, Normal, t, None
+          ))
+        | None ->
+          add_output cx ~trace (FlowError.EPropAccess (
+            (reason_prop, reason_op), Some x, Property.polarity p, Read, unknown_use
+          ))
       );
       if dict_t <> None then rec_flow_t cx trace (DefT (reason_op, AnyObjT), t)
       else begin
@@ -4946,7 +4980,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
-      let props_to_skip = ["$call"; "$key"; "$value"] in
+      let props_to_skip = ["$key"; "$value"] in
       pmap |> SMap.iter (fun x p ->
         if not (List.mem x props_to_skip) then (
           match Property.read_t p with
@@ -5690,11 +5724,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
+        inst_call_t;
         structural = true;
         _;
       })),
       ImplementsT (use_op, t) ->
-      structural_subtype cx trace ~use_op t reason_inst (fields_tmap, methods_tmap);
+      structural_subtype cx trace ~use_op t reason_inst
+        (fields_tmap, methods_tmap, inst_call_t);
       rec_flow cx trace (super,
         ReposLowerT (reason_inst, false, ImplementsT (use_op, t)))
 
@@ -6209,11 +6245,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ExtendsUseT (use_op, _, [], l, DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
+        inst_call_t;
         structural = true;
         _;
       }))) ->
       structural_subtype cx trace ~use_op l reason_inst
-        (fields_tmap, methods_tmap);
+        (fields_tmap, methods_tmap, inst_call_t);
       rec_flow cx trace (l, UseT (use_op, super))
 
     | DefT (_, NullT),
@@ -6497,12 +6534,14 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   let {
     flags = lflags;
     dict_t = ldict;
+    call_t = lcall;
     props_tmap = lflds;
     proto_t = lproto;
   } = l_obj in
   let {
     flags = rflags;
     dict_t = udict;
+    call_t = ucall;
     props_tmap = uflds;
     proto_t = uproto;
   } = u_obj in
@@ -6551,6 +6590,23 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       )
     )
   );
+
+  (match ucall with
+  | Some ucall ->
+    let prop_name = Some "$call" in
+    let use_op = Frame (PropertyCompatibility {
+      prop = prop_name;
+      lower = lreason;
+      upper = ureason;
+      is_sentinel = false;
+    }, use_op) in
+    (match lcall with
+    | Some lcall -> rec_flow cx trace (lcall, UseT (use_op, ucall))
+    | None ->
+      let reason_prop = replace_reason_const (RProperty prop_name) ureason in
+      add_output cx ~trace (FlowError.EStrictLookupFailed
+        ((reason_prop, lreason), lreason, prop_name, Some use_op)))
+  | None -> ());
 
   (* Properties in u must either exist in l, or match l's indexer. *)
   iter_real_props cx uflds (fun ~is_sentinel s up ->
@@ -6613,11 +6669,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            robust. Tracked by #11299251. *)
         if not (Speculation.speculating ()) then
           Context.set_prop cx lflds s up;
-      (* Don't lookup $call in the prototype chain. Instead of going through
-       * LookupT add an EStrictLookupFailed error here. *)
-      | _ when s = "$call" ->
-        add_output cx ~trace (FlowError.EStrictLookupFailed
-          ((reason_prop, lreason), lreason, Some s, Some use_op))
       | _ ->
         (* otherwise, look up the property in the prototype *)
         let strict = match Obj_type.sealed_in_op ureason lflags.sealed, ldict with
@@ -6663,8 +6714,40 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         else
           let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
           let propref = Named (reason_prop, s) in
+          rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)));
+
+      (* Previously, call properties were stored in the props map, and were
+         checked against dictionary upper bounds. This is wrong, but useful for
+         distinguishing between thunk-like types found in graphql-js.
+
+         Now that call properties are stored separately, it is particularly
+         egregious to emit this constraint. This only serves to maintain buggy
+         behavior, which should be fixed, and this code removed. *)
+      (match lcall, ucall with
+      | Some lcall, None ->
+        let s = "$call" in
+        let use_op = Frame (PropertyCompatibility {
+          prop = Some s;
+          lower = lreason;
+          upper = ureason;
+          is_sentinel = false;
+        }, use_op) in
+        let lp = match lcall with
+        | DefT (_, OptionalT t) -> Field (None, t, Positive)
+        | _ -> Field (None, lcall, Positive)
+        in
+        let up = Field (None, value, dict_polarity) in
+        if lit
+        then
+          match Property.read_t lp, Property.read_t up with
+          | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+          | _ -> ()
+        else
+          let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
+          let propref = Named (reason_prop, s) in
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
-      )));
+      | _ -> ());
+  );
 
   rec_flow cx trace (uproto,
     ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
@@ -6699,7 +6782,6 @@ and is_function_prototype = function
  * implied by an object indexer type *)
 and is_dictionary_exempt = function
   | x when is_object_prototype_method x -> true
-  | "$call" -> true
   | _ -> false
 
 (* common case checking a function as an object *)
@@ -6719,7 +6801,6 @@ and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
       in
       not (
         optional ||
-        x = "$call" ||
         is_function_prototype x ||
         SMap.mem x statics_own_props
       )
@@ -6978,12 +7059,12 @@ and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
     | Neutral -> rec_unify cx trace ~use_op t1 t2)
   )
 
-and inherited_method x = x <> "constructor" && x <> "$call"
+and inherited_method x = x <> "constructor"
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
 and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
-  (fields_pmap, methods_pmap) =
+  (fields_pmap, methods_pmap, call_t) =
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
@@ -7032,6 +7113,26 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
     rec_flow cx trace (lower,
       LookupT (reason_struct, Strict lreason, [], propref,
         LookupProp (use_op, p)))
+  );
+  call_t |> Option.iter ~f:(fun ut ->
+    let prop_name = Some "$call" in
+    let use_op = Frame (PropertyCompatibility {
+      prop = prop_name;
+      lower = lreason;
+      upper = reason_struct;
+      is_sentinel = false;
+    }, use_op) in
+    match lower with
+    | DefT (_, ObjT {call_t = Some lt; _}) ->
+      rec_flow cx trace (lt, UseT (use_op, ut))
+    | DefT (_, InstanceT (_, _, _, {inst_call_t = Some lt; _})) ->
+      rec_flow cx trace (lt, UseT (use_op, ut))
+    | _ ->
+      let reason_prop = replace_reason (fun desc ->
+        RPropertyOf ("$call", desc)
+      ) reason_struct in
+      add_output cx ~trace (FlowError.EStrictLookupFailed
+        ((reason_prop, lreason), lreason, prop_name, Some use_op))
   );
 
 and check_super cx trace ~use_op lreason ureason t x p =
@@ -11091,7 +11192,8 @@ and object_kit =
         in
         { sealed = Sealed; frozen = false; exact }
       in
-      let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
+      let call = None in
+      let t = DefT (r, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       if flags.exact then ExactT (reason, t) else t
     in
@@ -11290,7 +11392,8 @@ and object_kit =
       } in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT r1 in
-      let t = DefT (r1, ObjT (mk_objecttype ~flags dict id proto)) in
+      let call = None in
+      let t = DefT (r1, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       if flags.exact then ExactT (r1, t) else t
     in
@@ -11325,9 +11428,10 @@ and object_kit =
 
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
       let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+      let call = None in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
-      let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
+      let t = DefT (r, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
       if flags.exact then ExactT (reason, t) else t
     in
 
@@ -11442,10 +11546,11 @@ and object_kit =
           } in
           props, dict, flags
       in
+      let call = None in
       (* Finish creating our props object. *)
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
-      let t = DefT (reason, ObjT (mk_objecttype ~flags dict id proto)) in
+      let t = DefT (reason, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
       if flags.exact then ExactT (reason, t) else t
     in
 

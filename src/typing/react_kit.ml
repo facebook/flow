@@ -196,7 +196,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (component, component_function tin)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (_, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
+    | DefT (_, ObjT { call_t = Some _; _ }) ->
       (* This direction works because function arguments are flowed in the
        * opposite direction. *)
       rec_flow_t cx trace (component, component_function tin)
@@ -228,7 +228,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (_, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
+    | DefT (_, ObjT { call_t = Some _; _ }) ->
       (* This direction works because function arguments are flowed in the
        * opposite direction. *)
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
@@ -488,7 +488,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (r, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
+    | DefT (r, ObjT { call_t = Some _; _ }) ->
       rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Intrinsic components. *)
@@ -964,6 +964,7 @@ let run cx trace ~use_op reason_op l u
         initialized_field_names = SSet.empty;
         initialized_static_field_names = SSet.empty;
         methods_tmap = Context.make_property_map cx SMap.empty;
+        inst_call_t = None;
         has_unknown_react_mixins = spec.unknown_mixins <> [];
         structural = false;
       } in

@@ -787,6 +787,7 @@ module rec TypeTerm : sig
     dict_t: dicttype option;
     props_tmap: Properties.id;
     proto_t: prototype;
+    call_t: t option;
   }
 
   (* Object.assign(target, source1, ...source2) first resolves target then the
@@ -915,6 +916,7 @@ module rec TypeTerm : sig
     initialized_field_names: SSet.t;
     initialized_static_field_names: SSet.t;
     methods_tmap: Properties.id;
+    inst_call_t: t option;
     has_unknown_react_mixins: bool;
     structural: bool;
   }
@@ -3287,11 +3289,12 @@ let default_flags = {
   frozen = false;
 }
 
-let mk_objecttype ?(flags=default_flags) dict pmap proto = {
+let mk_objecttype ?(flags=default_flags) ~dict ~call pmap proto = {
   flags;
-  dict_t = dict;
+  proto_t = proto;
   props_tmap = pmap;
-  proto_t = proto
+  dict_t = dict;
+  call_t = call;
 }
 
 let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
