@@ -360,6 +360,25 @@ let elements cx ~tparams_map ?constructor s =
     Some t
   in
 
+  (* Previously, call properties were stored in the props map under the key
+     $call. Unfortunately, this made it possible to specify call properties
+     using this syntax in interfaces, declared classes, and even normal classes.
+
+     Soon, I will deprecate this syntax, but for now the previous behavior is
+     (partially) preserved. A field-like, covariant or invariant field property
+     named $call is special-cased to be a call property. Everything else is left
+     as a normal named property.
+
+     Note that $call properties always override the call property syntax
+     As before, if both are present, the $call property is used and the call
+     property is ignored. *)
+
+  let fields, call = Type.(match SMap.get "$call" fields with
+  | Some (Field (_, t, (Positive | Neutral))) ->
+    SMap.remove "$call" fields, Some t
+  | _ -> fields, call
+  ) in
+
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
   let initialized_field_names = SMap.fold (fun x (_, _, field) acc ->

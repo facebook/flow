@@ -684,6 +684,26 @@ let rec convert cx tparams_map = Ast.Type.(function
         let t = DefT (callable_reason, IntersectionT rep) in
         Some t
     in
+    (* Previously, call properties were stored in the props map under the key
+       $call. Unfortunately, this made it possible to specify call properties
+       using this syntax in object types, and some libraries adopted this
+       syntax.
+
+       Soon, I will deprecate this syntax, but for now the previous behavior is
+       (partially) preserved. A field-like, covariant or invariant property
+       named $call is special-cased to be a call property. Everything else is
+       left as a normal named property.
+
+       Note that call properties using the call property syntax always override
+       $call properties. Previously, if both were present, the $call property
+       was ignored, but is now left as a named property. *)
+    let props_map, call =
+      if call <> None then props_map, call
+      else match SMap.get "$call" props_map with
+      | Some (Field (_, t, (Positive | Neutral))) ->
+        SMap.remove "$call" props_map, Some t
+      | _ -> props_map, call
+    in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let props_map, proto = match proto with
