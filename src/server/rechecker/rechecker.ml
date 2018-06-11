@@ -19,6 +19,7 @@ let get_lazy_stats genv env =
    a FilenameSet. updates may be coming in from
    the root, or an include path. *)
 let process_updates genv env updates =
+  let log = not (SSet.is_empty updates) in
   let options = genv.ServerEnv.options in
   let file_options = Options.file_options options in
   let all_libs =
@@ -27,20 +28,27 @@ let process_updates genv env updates =
     SSet.union known_libs maybe_new_libs
   in
   let root = Options.root options in
+  Memlog.set_root root;
   let config_path = Server_files_js.config_file root in
   let sroot = Path.to_string root in
   let want = Files.wanted ~options:file_options all_libs in
+  let msg = Printf.sprintf "config_path=%s updates=%s"
+    config_path (SSet.elements updates |> String.concat ",") in
+  if log then Memlog.log ("rechecker.process_updates.2 " ^ msg);
 
   (* Die if the .flowconfig changed *)
   if SSet.mem config_path updates then begin
+    Memlog.log "rechecker.process_updates.3";
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal
       "%s changed in an incompatible way. Exiting.\n%!"
       config_path;
     Persistent_connection.send_exit env.connections FlowExitStatus.Flowconfig_changed;
+    Unix.sleep 2;
     FlowExitStatus.(exit Flowconfig_changed)
   end;
 
+  if log then Memlog.log "rechecker.process_updates.4";
   let is_incompatible filename_str =
     let filename = File_key.JsonFile filename_str in
     let filename_set = FilenameSet.singleton filename in
@@ -154,7 +162,7 @@ let recheck genv env ?(force_focus=false) updates =
   if FilenameSet.is_empty updates
   then Lwt.return (None, env)
   else begin
-    MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
+    MonitorRPC.status_update ~event:(ServerStatus.Recheck_start "recheck");
     Persistent_connection.send_start_recheck env.connections;
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
