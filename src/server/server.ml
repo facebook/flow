@@ -237,6 +237,7 @@ let run ~monitor_channels ~shared_mem_config options =
   MonitorRPC.init ~channels:monitor_channels;
   let genv, program_init =
     create_program_init ~shared_mem_config ~focus_targets:None options in
+  Memlog.set_root (Path.to_string genv.ServerEnv.options.Options.opt_root);
 
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
