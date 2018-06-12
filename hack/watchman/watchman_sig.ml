@@ -94,7 +94,7 @@ module type S = sig
   val get_changes_synchronously: timeout:int ->
     watchman_instance -> watchman_instance * SSet.t
 
-  val get_fd: watchman_instance -> Unix.file_descr option
+  val get_reader: watchman_instance -> Buffered_line_reader.t option
 
   (** Expose some things for testing. *)
   module Testing : sig

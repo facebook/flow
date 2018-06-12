@@ -603,10 +603,9 @@ module Watchman_actual = struct
         in
         env, Watchman_synchronous result
 
-  let get_fd instance = match instance with
+  let get_reader instance = match instance with
     | Watchman_dead _ -> None
-    | Watchman_alive {socket = (reader, _); _} ->
-      Some (Buffered_line_reader.get_fd reader)
+    | Watchman_alive {socket = (reader, _); _} -> Some reader
 
   let flush_request ~(timeout:int) watch_root =
     let open Hh_json in
@@ -746,7 +745,7 @@ module Watchman_mock = struct
     Mocking.changes_synchronously := SSet.empty;
     instance, result
 
-  let get_fd _ = None
+  let get_reader _ = None
 
   let get_all_files _ =
     let result = !Mocking.all_files in
