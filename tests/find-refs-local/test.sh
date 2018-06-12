@@ -77,6 +77,16 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 26 
 printf "Call of an instance method on an upcasted class: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 32 15
 
+# TODO it would be nice if the results included the use of the inherited class property.
+printf "Definition of a static class property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 4 10
+# TODO it would be nice if the results included the use of the inherited class property.
+printf "Use of a static class property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 38 3
+# TODO it would be nice if this returned results.
+printf "Use of an inherited static class property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 39 3
+
 printf "Method declaration in an object type alias: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 4 4
 printf "Property declaration in an object type alias: "

@@ -720,14 +720,21 @@ let def_info_of_typecheck_results cx props_access_info =
     | None -> Ok None
     | Some (Obj_def (loc, name)) ->
         Ok (Some (Nel.one (Object loc), name))
-    | Some (Class_def (ty, name, _static)) ->
-        (* We get the type of the class back here, so we need to extract the type of an instance *)
-        extract_instancet cx ty >>= fun ty ->
-        begin extract_def_loc_resolved cx ty name >>= function
-          | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
-          | FoundObject _ -> Error "Expected to extract class def info from a class"
-          | _ -> Error "Unexpectedly failed to extract definition from known type"
-        end
+    | Some (Class_def (ty, name, static)) ->
+        if static then
+          (* Here, `ty` ends up resolving to `ObjT` so we lose the knowledge that this is a static
+           * property. This means that we don't get the fancy look-up-the-inheritance-chain behavior
+           * that we get with class instances. That would be nice to add at some point. *)
+          def_info_of_type name ty
+          >>| Option.map ~f:(fun def_info -> (def_info, name))
+        else
+          (* We get the type of the class back here, so we need to extract the type of an instance *)
+          extract_instancet cx ty >>= fun ty ->
+          begin extract_def_loc_resolved cx ty name >>= function
+            | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
+            | FoundObject _ -> Error "Expected to extract class def info from a class"
+            | _ -> Error "Unexpectedly failed to extract definition from known type"
+          end
     | Some (Use (ty, name)) ->
         def_info_of_type name ty
         >>| Option.map ~f:(fun def_info -> (def_info, name))

@@ -807,6 +807,43 @@ Call of an instance method on an upcasted class: {
     }
   ]
 }
+Definition of a static class property: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":10,"offset":29},
+      "end":{"line":4,"column":12,"offset":32}
+    },
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":38,"column":3,"offset":559},
+      "end":{"line":38,"column":5,"offset":562}
+    }
+  ]
+}
+Use of a static class property: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":10,"offset":29},
+      "end":{"line":4,"column":12,"offset":32}
+    },
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":38,"column":3,"offset":559},
+      "end":{"line":38,"column":5,"offset":562}
+    }
+  ]
+}
+Use of an inherited static class property: {"kind":"no-symbol-found"}
 Method declaration in an object type alias: {
   "kind":"symbol-found",
   "name":"foo",

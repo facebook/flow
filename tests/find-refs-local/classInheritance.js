@@ -34,3 +34,6 @@ new Foo().bar();
 class HasNoBar { }
 // $FlowFixMe
 new HasNoBar().bar();
+
+A.bar;
+B.bar;
