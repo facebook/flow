@@ -1,6 +1,7 @@
 // @flow
 
 class A {
+  static bar = 1;
   bar(): void { }
 }
 
