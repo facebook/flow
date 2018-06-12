@@ -141,5 +141,18 @@ export default suite(
         [],
       ),
     ]),
+
+    test('telemetry/rage', [
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse(
+        'telemetry/rage',
+        {},
+      ).verifyAllIDEMessagesInStep(
+        [
+          'telemetry/rage{Focused: 1,LSP adapter state: Connected,.monitor_log,.log}',
+        ],
+        [],
+      ),
+    ]),
   ],
 );

@@ -167,6 +167,12 @@ let string_of_event (event: event) : string =
   | Tick ->
     "Tick"
 
+let string_of_show_message (show_message: show_message_t) : string =
+  match show_message with
+  | Never_shown -> "Never_shown"
+  | Shown (id_opt, params) -> Printf.sprintf "Shown id=%s params=%s"
+      (Option.value_map id_opt ~default:"None" ~f:Lsp_fmt.id_to_string)
+      (print_showMessageRequest params |> Hh_json.json_to_string)
 
 let to_stdout (json: Hh_json.json) : unit =
   (* Extra \r\n purely for easier logfile reading; not required by protocol. *)
@@ -343,15 +349,12 @@ let do_initialize () : Initialize.result =
       codeLensProvider = None;
       documentFormattingProvider = false;
       documentRangeFormattingProvider = false;
-      documentOnTypeFormattingProvider = Some {
-        firstTriggerCharacter = ";";
-        moreTriggerCharacter = ["}"];
-      };
+      documentOnTypeFormattingProvider = None;
       renameProvider = false;
       documentLinkProvider = None;
       executeCommandProvider = None;
       typeCoverageProvider = true;
-      rageProvider = false;
+      rageProvider = true;
     }
   }
 
@@ -801,6 +804,188 @@ let do_documentSymbol (state: state) (params: DocumentSymbol.params) : DocumentS
   in
   Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri program
 
+
+
+module RagePrint = struct
+  let addline (b: Buffer.t) (prefix: string) (s: string) : unit =
+    Buffer.add_string b prefix;
+    Buffer.add_string b s;
+    Buffer.add_string b "\n";
+    ()
+
+  let string_of_lazy_stats (lazy_stats: ServerProt.Response.lazy_stats) : string =
+    let open ServerProt in
+    Printf.sprintf "lazy_mode=%s, checked_files=%d, total_files=%d"
+      (Option.value_map lazy_stats.Response.lazy_mode ~default:"" ~f:Options.lazy_mode_to_string)
+      lazy_stats.Response.checked_files lazy_stats.Response.total_files
+
+  let string_of_command_params (p: command_params) : string =
+    let open CommandUtils in
+    Printf.sprintf (
+      "from=%s, retries=%d, retry_if_init=%B, no_auto_start=%B, autostop=%B, \
+      ignore_version=%B quiet=%B, temp_dir=%s, \
+      timeout=%s, lazy_mode=%s")
+    p.from p.retries p.retry_if_init p.no_auto_start p.autostop
+    p.ignore_version p.quiet (Option.value ~default:"None" p.temp_dir)
+    (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
+    (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string)
+
+  let add_ienv (b: Buffer.t) (ienv: initialized_env) : unit =
+    addline b "i_connect_params=" (ienv.i_connect_params |> string_of_command_params);
+    addline b "i_root=" (ienv.i_root |> Path.to_string);
+    addline b "i_version=" (ienv.i_version |> Option.value ~default:"None");
+    addline b "i_server_id=" (ienv.i_server_id |> string_of_int);
+    addline b "i_can_autostart_after_version_mismatch=" (ienv.i_can_autostart_after_version_mismatch
+      |> string_of_bool);
+    addline b "i_outstanding_local_handlers=" (ienv.i_outstanding_local_handlers
+      |> IdMap.bindings |> List.map ~f:(fun (id,_handler) -> Lsp_fmt.id_to_string id)
+      |> String.concat ",");
+    addline b "i_outstanding_local_requests=" (ienv.i_outstanding_local_requests
+      |> IdMap.bindings |> List.map ~f:(fun (id,req) -> Printf.sprintf "%s:%s"
+          (Lsp_fmt.id_to_string id) (Lsp_fmt.request_name_to_string req))
+      |> String.concat ",");
+    addline b "i_outstanding_requests_from_server=" (ienv.i_outstanding_requests_from_server
+      |> WrappedMap.bindings
+      |> List.map ~f:(fun (id,req) -> Printf.sprintf "#%d:%s:%s"
+          id.server_id (Lsp_fmt.id_to_string id.message_id) (Lsp_fmt.request_name_to_string req))
+      |> String.concat ",");
+    addline b "i_isConnected=" (ienv.i_isConnected |> string_of_bool);
+    addline b "i_status=" (ienv.i_status |> string_of_show_message);
+    ()
+
+  let add_denv (b: Buffer.t) (denv: disconnected_env) : unit =
+    let server_status, watcher_status = match denv.d_server_status with
+      | None -> None, None
+      | Some (s, w) -> Some s, Some w in
+    add_ienv b denv.d_ienv;
+    addline b "d_autostart=" (denv.d_autostart |> string_of_bool);
+    addline b "d_server_status:server=" (server_status
+      |> Option.value_map  ~default:"None" ~f:ServerStatus.string_of_status);
+    addline b "d_server_status:watcher=" (watcher_status
+      |> Option.value_map  ~default:"None" ~f:FileWatcherStatus.string_of_status);
+    ()
+
+  let add_cenv (b: Buffer.t) (cenv: connected_env) : unit =
+    let server_status, watcher_status = cenv.c_server_status in
+    add_ienv b cenv.c_ienv;
+    addline b "c_server_status:server=" (server_status |> ServerStatus.string_of_status);
+    addline b "c_server_status:watcher=" (watcher_status
+      |> Option.value_map  ~default:"None" ~f:FileWatcherStatus.string_of_status);
+    addline b "c_about_to_exit_code=" (cenv.c_about_to_exit_code
+      |> Option.value_map ~default:"None" ~f:FlowExitStatus.to_string);
+    addline b "c_is_rechecking=" (cenv.c_is_rechecking |> string_of_bool);
+    addline b "c_diagnostics=" (cenv.c_diagnostics
+      |> SMap.bindings |> List.map ~f:(fun (uri, d) -> Printf.sprintf "%s:%d" uri (List.length d))
+      |> String.concat ", ");
+    addline b "c_lazy_stats=" (cenv.c_lazy_stats
+      |> Option.value_map ~default:"None" ~f:string_of_lazy_stats);
+    addline b "c_outstanding_requests_to_server=" (cenv.c_outstanding_requests_to_server
+      |> IdSet.elements |> List.map ~f:Lsp_fmt.id_to_string |> String.concat ",");
+    addline b "c_outstanding_diagnostics=" (cenv.c_outstanding_diagnostics
+      |> SSet.elements |> String.concat ", ");
+    ()
+
+  let string_of_state (state: state) : string =
+    let b = Buffer.create 10000 in
+    begin match state with
+      | Pre_init p -> Buffer.add_string b (Printf.sprintf "Pre_init:\n%s\n"
+        (string_of_command_params p))
+      | Post_shutdown -> Buffer.add_string b "Post_shutdown:\n[]\n"
+      | Disconnected denv -> Buffer.add_string b "Disconnected:\n"; add_denv b denv;
+      | Connected cenv -> Buffer.add_string b "Connected:\n"; add_cenv b cenv;
+    end;
+    Buffer.contents b
+end
+
+let do_rage (state: state) : Rage.result =
+  let open Rage in
+
+  (* Some helpers to add various types of data to the rage output... *)
+  let add_file (items: rageItem list) (file: Path.t) : rageItem list =
+    if Path.file_exists file then
+      let data = Path.cat file in (* cat even up to 1gig is workable even if ugly *)
+      let len = String.length data in
+      let max_len = 10 * 1024 * 1024 in (* maximum 10mb *)
+      let data = if len <= max_len then data else String.sub data (len - max_len) max_len in
+      { title = Some (Path.to_string file); data; } :: items
+    else
+      items in
+  let add_string (items: rageItem list) (data: string) : rageItem list =
+    { title = None; data; } :: items in
+  let add_pid (items: rageItem list) ((pid, reason): (int * string)) : rageItem list =
+    if String_utils.string_starts_with reason "slave" then
+     items
+    else
+      let pid = string_of_int pid in
+      (* some systems have "pstack", some have "gstack", some have neither... *)
+      let stack = try Sys_utils.exec_read_lines ~reverse:true ("pstack " ^ pid)
+      with _ -> begin
+        try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid)
+        with e -> ["unable to pstack - " ^ (Printexc.to_string e)]
+      end in
+      let stack = String.concat "\n" stack in
+      add_string items (Printf.sprintf "PSTACK %s (%s) - %s\n\n" pid reason stack)
+  in
+
+  let items: rageItem list = [] in
+
+  (* LOGFILES. *)
+  (* Where are the logs? Specified explicitly by the user with --log-file and *)
+  (* --monitor-log-file when they launched the server. Failing that, the      *)
+  (* values in environment variables FLOW_LOG_FILE and FLOW_MONITOR_LOG_FILE  *)
+  (* upon launch. Failing that, CommandUtils.server_log_file will look in the *)
+  (* flowconfig for a "log.file" option. Failing that it will synthesize one  *)
+  (* from `Server_files_js.file_of_root "log"` in the tmp-directory. And      *)
+  (* CommandUtils.monitor_log_file is similar except it bypasses flowconfig.  *)
+  (* As for tmp dir, that's --temp_dir, failing that FLOW_TEMP_DIR, failing   *)
+  (* that temp_dir in flowconfig, failing that Sys_utils.temp_dir_name /flow. *)
+  (* WOW! *)
+  (* Notionally the only authoritative way to find logs is to connect to a    *)
+  (* running monitor and ask it. But we're a 'rage' command whose whole point *)
+  (* is to give good answers even when things are not working, e.g. when the  *)
+  (* monitor is down. And in any case, by design, a flow client can only ever *)
+  (* interact with a server if the client was launched with the same flags    *)
+  (* (minimum tmp_dir and flowconfig) as the server was launched with.        *)
+  (* Therefore there's no need to ask the monitor. We'll just work with what  *)
+  (* log files we'd write to were we ourselves asked to start a server.       *)
+  let ienv = match state with
+    | Pre_init _ -> None
+    | Disconnected denv -> Some denv.d_ienv
+    | Connected cenv -> Some cenv.c_ienv
+    | Post_shutdown -> None in
+  let items = match ienv with
+    | None -> items
+    | Some ienv ->
+      let start_env = CommandUtils.make_env ienv.i_connect_params ienv.i_root in
+      let tmp_dir = start_env.CommandConnect.tmp_dir in
+      let server_log_file = Path.make start_env.CommandConnect.log_file in
+      (* monitor log file isn't retained anywhere. But since flow lsp doesn't *)
+      (* take a --monitor-log-file option, then we know where it must be.     *)
+      let monitor_log_file = CommandUtils.monitor_log_file tmp_dir start_env.CommandConnect.root in
+      let items = add_file items server_log_file in
+      let items = add_file items monitor_log_file in
+      (* Let's pick up the old files in case user reported bug after a crash *)
+      let items = add_file items (Path.concat server_log_file ".old") in
+      let items = add_file items (Path.concat monitor_log_file ".old") in
+      (* And the pids file *)
+      let items = try
+        let pids = PidLog.get_pids (Server_files_js.pids_file ~tmp_dir ienv.i_root) in
+        Core_list.fold pids ~init:items ~f:add_pid
+      with e ->
+        let message = Printexc.to_string e in
+        let stack = Printexc.get_backtrace () in
+        add_string items (Printf.sprintf "Failed to get PIDs: %s - %s" message stack)
+      in
+      items
+  in
+
+  (* CLIENT. This includes the client's perception of the server state. *)
+  let items = add_string items ("LSP adapter state: " ^ (RagePrint.string_of_state state) ^ "\n") in
+
+  (* DONE! *)
+  items
+
+
 let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
   (* to know how to parse a response, we must provide the corresponding request *)
   let outstanding (id: lsp_id) : lsp_request =
@@ -958,6 +1143,17 @@ begin
     send_lsp_to_server cenv c;
     state
 
+  | _, Client_message (RequestMessage (id, RageRequest)) ->
+    (* How to handle a rage request? If we're connected to a server, then the *)
+    (* above case will just have forwarded the message on to the server (and  *)
+    (* we'll patch in our own extra information when the server replies). But *)
+    (* if there's no server then we have to reply here and now.               *)
+    let result = do_rage state in
+    let response = ResponseMessage (id, RageResult result) in
+    let json = Lsp_fmt.print_lsp response in
+    to_stdout json;
+    state
+
   | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c)
   | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c)
   | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c)
@@ -984,6 +1180,8 @@ begin
       | RequestMessage (id, request) ->
         let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
         RequestMessage (encode_wrapped wrapped, request)
+      | ResponseMessage (id, RageResult items) ->
+        ResponseMessage (id, RageResult (items @ (do_rage state)))
       | _ -> outgoing
     in
     to_stdout (Lsp_fmt.print_lsp outgoing);
@@ -1010,7 +1208,8 @@ begin
         (all: PublishDiagnostics.diagnostic list SMap.t)
       : PublishDiagnostics.diagnostic list SMap.t =
       let error = Errors.Lsp_output.lsp_of_error error in
-      let location = Flow_lsp_conversions.loc_to_lsp_with_default error.Errors.Lsp_output.loc ~default_uri in
+      let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri
+        error.Errors.Lsp_output.loc in
       let uri = location.Lsp.Location.uri in
       let related_to_lsp (loc, relatedMessage) =
         let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in

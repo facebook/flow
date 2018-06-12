@@ -81,11 +81,15 @@ let dependents = filter_into_set ~f:(fun kind -> kind = Dependent)
 let dependencies = filter_into_set ~f:(fun kind -> kind = Dependency)
 
 (* Helper function for debugging *)
-let debug_to_string =
+let debug_to_string ?(limit) =
   let string_of_set set =
-    Utils_js.FilenameSet.elements set
-    |> List.map (fun f -> spf "\"%s\"" (File_key.to_string f))
-    |> String.concat "\n"
+    let files = Utils_js.FilenameSet.elements set
+      |> List.map (fun f -> spf "\"%s\"" (File_key.to_string f)) in
+    let files = match limit with
+      | None -> files
+      | Some n -> ListUtils.first_upto_n n (fun t -> Some (spf "[shown %d/%d]" n t)) files
+    in
+    String.concat "\n" files
   in
   fun checked ->
     Printf.sprintf "Focused:\n%s\nDependents:\n%s\nDependencies:\n%s"

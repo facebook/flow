@@ -762,6 +762,44 @@ let handle_persistent_unsafe genv env client profiling msg
         Lwt.return (Error (!env, reason, Utils.Callstack stack))
     end
 
+  | Persistent_connection_prot.LspToServer (RequestMessage (id, RageRequest)) ->
+    let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
+    let items = [] in
+    (* genv: lazy-mode options *)
+    let lazy_mode = genv.options.Options.opt_lazy_mode in
+    let data = Printf.sprintf "lazy_mode=%s\n"
+      (Option.value_map lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string) in
+    let items = { Lsp.Rage.title = None; data; } :: items in
+    (* env: checked files *)
+    let data = Printf.sprintf "%s\n\n%s\n"
+      (CheckedSet.debug_counts_to_string env.checked_files)
+      (CheckedSet.debug_to_string ~limit:200 env.checked_files) in
+    let items = { Lsp.Rage.title = Some (root ^ ":env.checked_files"); data; } :: items in
+    (* env: dependency graph *)
+    let dependency_to_string (file, deps) =
+      let file = File_key.to_string file in
+      let deps = Utils_js.FilenameSet.elements deps
+        |> List.map File_key.to_string
+        |> ListUtils.first_upto_n 20 (fun t -> Some (Printf.sprintf " ...%d more" t))
+        |> String.concat "," in
+      file ^ ":" ^ deps ^ "\n" in
+    let dependencies = Utils_js.FilenameMap.bindings env.ServerEnv.dependency_graph
+      |> List.map dependency_to_string
+      |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
+      |> String.concat "" in
+    let data = "DEPENDENCIES:\n" ^ dependencies in
+    let items = { Lsp.Rage.title = Some (root ^ ":env.dependencies"); data; } :: items in
+    (* env: errors *)
+    let errors, warnings, _ = ErrorCollator.get env in
+    let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
+      ~suppressed_errors:[] ~errors ~warnings () in
+    let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
+    let items = { Lsp.Rage.title = Some (root ^ ":env.errors"); data; } :: items in
+    (* done! *)
+    let r = RageResult items in
+    lsp_writer (ResponseMessage (id, r));
+    Lwt.return (Ok (env, None))
+
   | Persistent_connection_prot.LspToServer unhandled ->
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_to_string unhandled) in

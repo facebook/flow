@@ -79,6 +79,18 @@ let rec first_some_map f = function
     | None -> first_some_map f tl
   end
 
+(** this function takes a list and truncates it if needed to no more than
+    the first n elements. If truncation happened, then the callback 'f'
+    is used to generated a final element e.g. "shown 5/200" *)
+let first_upto_n n f lst =
+  let (first, total) = Core_list.fold lst ~init:([],0) ~f:(fun (first, total) s ->
+    let first = if total < n then (s :: first) else first in
+    (first, total + 1)) in
+  let r = if total <= n then first else match f total with
+    | None -> first
+    | Some e -> e :: first in
+  Core_list.rev r
+
 (* truncate a list to first 0 < n <= len items *)
 let first_n n lst =
   List.rev (fold_left_for n (fun rl x -> x :: rl) [] lst)
