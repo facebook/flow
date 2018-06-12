@@ -40,6 +40,7 @@ type response =
   | ServerExit of FlowExitStatus.t (* only used for the subset of exists which client handles *)
   | LspFromServer of Lsp.lsp_message (* requests, notifications, responses to client *)
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
+  | EOF (* monitor is about to close the connection *)
 
 let string_of_response = function
 | Errors _ -> "errors"
@@ -53,3 +54,4 @@ let string_of_response = function
 | Please_hold (server_status, watcher_status) -> Printf.sprintf "pleaseHold_server=%s_watcher=%s"
     (ServerStatus.string_of_status server_status)
     (FileWatcherStatus.string_of_status watcher_status)
+| EOF -> "EOF"
