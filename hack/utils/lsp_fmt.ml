@@ -451,6 +451,27 @@ let parse_result_showMessageRequest (result: json option) : ShowMessageRequest.r
 
 
 (************************************************************************)
+(** window/showStatus request                                          **)
+(************************************************************************)
+
+let print_showStatus (r: ShowStatus.showStatusParams) : json =
+  let print_action (action: ShowMessageRequest.messageActionItem) : json =
+    JSON_Object [
+      "title", JSON_String action.ShowMessageRequest.title;
+    ]
+  in
+  let rr = r.ShowStatus.request in
+  Jprint.object_opt [
+    "type", Some (print_messageType rr.ShowMessageRequest.type_);
+    "actions", Some (JSON_Array (List.map rr.ShowMessageRequest.actions ~f:print_action));
+    "message", Some (JSON_String rr.ShowMessageRequest.message);
+    "shortMessage", Option.map r.ShowStatus.shortMessage ~f:string_;
+    "progress", Option.map r.ShowStatus.progress ~f:int_;
+    "total", Option.map r.ShowStatus.total ~f:int_;
+  ]
+
+
+(************************************************************************)
 (** window/progress notification                                       **)
 (************************************************************************)
 
@@ -1060,7 +1081,7 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | ShowMessageRequestRequest _ ->
     ShowMessageRequestResult (parse_result_showMessageRequest (Some result))
   | ShowStatusRequest _ ->
-    ShowStatusResult (parse_result_showMessageRequest (Some result))
+    ShowStatusResult (parse_result_showMessageRequest (Some result)) (* shares result type *)
   | InitializeRequest _
   | ShutdownRequest
   | HoverRequest _
@@ -1104,7 +1125,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
   let method_ = request_name_to_string request in
   let params = match request with
     | ShowMessageRequestRequest r -> print_showMessageRequest r
-    | ShowStatusRequest r -> print_showMessageRequest r  (* uses same type as ShowMessageRequest *)
+    | ShowStatusRequest r -> print_showStatus r
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _

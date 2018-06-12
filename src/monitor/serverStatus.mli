@@ -30,3 +30,4 @@ val update: event:event -> status:status -> status
 val string_of_status: ?use_emoji:bool ->status -> string
 val is_free: status -> bool
 val is_significant_transition: status -> status -> bool
+val get_progress: status -> string option * int option * int option

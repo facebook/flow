@@ -212,3 +212,15 @@ let is_significant_transition old_status new_status =
   | _, Typechecking _
   | _, Garbage_collecting
   | _, Unknown -> true
+
+let get_progress status =
+  let print progress =
+    match progress with
+    | {finished; total=None} ->
+      Some (Printf.sprintf "%d" finished), Some finished, None
+    | {finished; total=Some total} ->
+      Some (Printf.sprintf "%d/%d" finished total), Some finished, Some total in
+  match status with
+  | Typechecking (_, Parsing progress)
+  | Typechecking (_, Merging progress) -> print progress
+  | _ -> None, None, None

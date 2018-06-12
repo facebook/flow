@@ -86,9 +86,9 @@ type server_conn = {
   oc: out_channel;
 }
 
-type show_message_t =
+type show_status_t =
   | Never_shown
-  | Shown of lsp_id option * ShowMessageRequest.showMessageRequestParams
+  | Shown of lsp_id option * ShowStatus.showStatusParams
     (* Shown (Some id, params) -- means it is currently shown *)
     (* Shown (None, params) - means it was shown but user dismissed it *)
 
@@ -114,7 +114,7 @@ type initialized_env = {
   i_outstanding_local_requests: lsp_request IdMap.t;
   i_outstanding_requests_from_server: Lsp.lsp_request WrappedMap.t;
   i_isConnected: bool; (* what we've told the client about our connection status *)
-  i_status: show_message_t;
+  i_status: show_status_t;
   i_open_files: open_file_info SMap.t;
   i_outstanding_diagnostics: SSet.t;
 }
@@ -176,13 +176,6 @@ let string_of_event (event: event) : string =
     Printf.sprintf "Client_message(%s)" (Lsp_fmt.message_to_string c)
   | Tick ->
     "Tick"
-
-let string_of_show_message (show_message: show_message_t) : string =
-  match show_message with
-  | Never_shown -> "Never_shown"
-  | Shown (id_opt, params) -> Printf.sprintf "Shown id=%s params=%s"
-      (Option.value_map id_opt ~default:"None" ~f:Lsp_fmt.id_to_string)
-      (print_showMessageRequest params |> Hh_json.json_to_string)
 
 let to_stdout (json: Hh_json.json) : unit =
   (* Extra \r\n purely for easier logfile reading; not required by protocol. *)
@@ -255,15 +248,19 @@ let get_next_event
 let show_status
     ?(titles = [])
     ?(handler = fun _title state -> state)
-    (type_: MessageType.t)
-    (message: string)
+    ~(type_: MessageType.t)
+    ~(message: string)
+    ~(shortMessage: string option)
+    ~(progress: int option)
+    ~(total: int option)
     (ienv: initialized_env)
   : initialized_env =
+  let open ShowStatus in
   let open ShowMessageRequest in
   let open MessageType in
   let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
-  let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title; }) in
-  let params = { ShowMessageRequest.type_; message;  actions; } in
+  let actions = List.map titles ~f:(fun title -> { title; }) in
+  let params = {request={type_; message; actions;}; shortMessage; progress; total;} in
 
   (* What should we display/hide? It's a tricky question... *)
   let will_dismiss_old, will_show_new = match use_status, ienv.i_status, params with
@@ -274,10 +271,11 @@ let show_status
     (* If the client only supports dialog boxes, then we'll be very limited:  *)
     (* only every display failures; and if there was already an error up even *)
     (* a different one then leave it undisturbed. *)
-    | false, Shown (_, {type_ = ErrorMessage; _}), {type_ = ErrorMessage; _} -> false, false
-    | false, Shown (id, _), {type_ = ErrorMessage; _} -> Option.is_some id, true
+    | false, Shown (_, {request={type_=ErrorMessage; _};_}),
+        {request={type_=ErrorMessage;_};_} -> false, false
+    | false, Shown (id, _), {request={type_=ErrorMessage;_};_} -> Option.is_some id, true
     | false, Shown (id, _), _ -> Option.is_some id, false
-    | false, Never_shown, {type_ = ErrorMessage; _} -> false, true
+    | false, Never_shown, {request={type_=ErrorMessage;_};_} -> false, true
     | false, Never_shown, _ -> false, false in
 
   (* dismiss the old one *)
@@ -296,7 +294,7 @@ let show_status
   else begin
     let id = NumberId (Jsonrpc.get_next_request_id ()) in
     let request = if use_status
-      then ShowStatusRequest params else ShowMessageRequestRequest params in
+      then ShowStatusRequest params else ShowMessageRequestRequest params.request in
     let json = Lsp_fmt.print_lsp (RequestMessage (id, request)) in
     to_stdout json;
 
@@ -386,8 +384,9 @@ let show_connected (env: connected_env) : state =
     to_stdout env.c_ienv.i_isConnected true in
   let env = { env with c_ienv = { env.c_ienv with i_isConnected; }; } in
   (* show green status *)
-  let msg = "Flow server is now ready" in
-  let c_ienv = show_status MessageType.InfoMessage msg env.c_ienv
+  let message = "Flow server is now ready" in
+  let c_ienv = show_status
+    ~type_:MessageType.InfoMessage ~message ~shortMessage:None ~progress:None ~total:None env.c_ienv
   in
   Connected { env with c_ienv; }
 
@@ -396,26 +395,30 @@ let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env)
   if reason = CommandConnectSimple.Server_missing then
     Lsp_helpers.log_info to_stdout "Starting Flow server";
 
-  let msg = match reason, env.d_server_status with
-    | CommandConnectSimple.Server_missing, _ -> "Flow: Server starting"
-    | CommandConnectSimple.Server_socket_missing, _ -> "Flow: Server starting?"
-    | CommandConnectSimple.Build_id_mismatch, _ -> "Flow: Server is wrong version"
+  let message, shortMessage, progress, total = match reason, env.d_server_status with
+    | CommandConnectSimple.Server_missing, _ -> "Flow: Server starting", None, None, None
+    | CommandConnectSimple.Server_socket_missing, _ -> "Flow: Server starting?", None, None, None
+    | CommandConnectSimple.Build_id_mismatch, _ -> "Flow: Server is wrong version", None, None, None
     | CommandConnectSimple.Server_busy (CommandConnectSimple.Too_many_clients), _ ->
-      "Flow: Server busy"
-    | CommandConnectSimple.Server_busy _, None -> "Flow: Server busy"
+      "Flow: Server busy", None, None, None
+    | CommandConnectSimple.Server_busy _, None -> "Flow: Server busy", None, None, None
     | CommandConnectSimple.Server_busy _, Some (server_status, watcher_status) ->
       if not (ServerStatus.is_free server_status) then
-        "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status)
+        let shortMessage, progress, total = ServerStatus.get_progress server_status in
+        "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status),
+        shortMessage, progress, total
       else
-        "Flow: " ^ (FileWatcherStatus.string_of_status watcher_status)
+        "Flow: " ^ (FileWatcherStatus.string_of_status watcher_status), None, None, None
 
   in
-  Disconnected { env with d_ienv = show_status MessageType.WarningMessage msg env.d_ienv; }
+  Disconnected { env with d_ienv = show_status
+    ~type_:MessageType.WarningMessage ~message ~shortMessage ~progress ~total env.d_ienv;
+  }
 
 
 let show_disconnected
     (code: FlowExitStatus.t option)
-    (msg: string option)
+    (message: string option)
     (env: disconnected_env)
   : state =
   (* report that we're disconnected to telemetry/connectionStatus *)
@@ -424,16 +427,17 @@ let show_disconnected
   let env = { env with d_ienv = { env.d_ienv with i_isConnected; }; } in
 
   (* show red status *)
-  let msg = Option.value msg ~default:"Flow: server is stopped" in
-  let msg = match code with
-    | Some code -> Printf.sprintf "%s [%s]" msg (FlowExitStatus.to_string code)
-    | None -> msg in
+  let message = Option.value message ~default:"Flow: server is stopped" in
+  let message = match code with
+    | Some code -> Printf.sprintf "%s [%s]" message (FlowExitStatus.to_string code)
+    | None -> message in
   let handler r state = match state, r with
     | Disconnected e, "Restart" -> Disconnected { e with d_autostart = true; }
     | _ -> state
   in
   Disconnected { env with
-    d_ienv = show_status ~handler ~titles:["Restart"] MessageType.ErrorMessage msg env.d_ienv;
+    d_ienv = show_status ~handler ~titles:["Restart"] ~type_:MessageType.ErrorMessage
+      ~message ~shortMessage:None ~progress:None ~total:None env.d_ienv;
   }
 
 
@@ -954,23 +958,27 @@ let do_live_diagnostics (state: state) (uri: string): state =
 
 
 let show_recheck_progress (cenv: connected_env) : state =
-  let type_, msg = match cenv.c_is_rechecking, cenv.c_server_status, cenv.c_lazy_stats with
+  let type_, message, shortMessage, progress, total =
+  match cenv.c_is_rechecking, cenv.c_server_status, cenv.c_lazy_stats with
     | true, (server_status, _), _ when not (ServerStatus.is_free server_status) ->
-      let msg = "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status) in
-      MessageType.WarningMessage, msg
+      let shortMessage, progress, total = ServerStatus.get_progress server_status in
+      let message = "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status) in
+      MessageType.WarningMessage, message, shortMessage, progress, total
     | true, _, _ ->
-      MessageType.WarningMessage, "Flow: Server is rechecking..."
+      MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None
     | false, _, Some {ServerProt.Response.lazy_mode=Some mode; checked_files; total_files}
       when checked_files < total_files ->
-      let msg = Printf.sprintf
+      let message = Printf.sprintf
         "Flow: done recheck. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
         Options.(match mode with LAZY_MODE_FILESYSTEM -> "fs" | LAZY_MODE_IDE -> "ide")
         checked_files total_files "https://flow.org/en/docs/lang/lazy-modes/" in
-      MessageType.InfoMessage, msg
+      MessageType.InfoMessage, message, None, None, None
     | false, _, _ ->
-      MessageType.InfoMessage, "Flow: done recheck"
+      MessageType.InfoMessage, "Flow: done recheck", None, None, None
   in
-  Connected { cenv with c_ienv = show_status type_ msg cenv.c_ienv }
+  Connected { cenv with
+    c_ienv = show_status~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv
+  }
 
 let do_documentSymbol (state: state) (id: lsp_id) (params: DocumentSymbol.params) : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
@@ -1021,6 +1029,13 @@ module RagePrint = struct
       |> List.map ~f:(fun (_,ofi) -> string_of_open_file ofi)
       |> String.concat ","
 
+  let string_of_show_status (show_status: show_status_t) : string =
+    match show_status with
+    | Never_shown -> "Never_shown"
+    | Shown (id_opt, params) -> Printf.sprintf "Shown id=%s params=%s"
+        (Option.value_map id_opt ~default:"None" ~f:Lsp_fmt.id_to_string)
+        (print_showStatus params |> Hh_json.json_to_string)
+
   let add_ienv (b: Buffer.t) (ienv: initialized_env) : unit =
     addline b "i_connect_params=" (ienv.i_connect_params |> string_of_command_params);
     addline b "i_root=" (ienv.i_root |> Path.to_string);
@@ -1041,7 +1056,7 @@ module RagePrint = struct
           id.server_id (Lsp_fmt.id_to_string id.message_id) (Lsp_fmt.request_name_to_string req))
       |> String.concat ",");
     addline b "i_isConnected=" (ienv.i_isConnected |> string_of_bool);
-    addline b "i_status=" (ienv.i_status |> string_of_show_message);
+    addline b "i_status=" (ienv.i_status |> string_of_show_status);
     addline b "i_open_files=" (ienv.i_open_files |> string_of_open_files);
     addline b "i_outstanding_diagnostics=" (ienv.i_outstanding_diagnostics
       |> SSet.elements |> String.concat ", ");

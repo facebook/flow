@@ -825,8 +825,16 @@ end
 
 (* ShowStatus request, method="window/showStatus" *)
 module ShowStatus = struct
-  type params = ShowMessageRequest.showMessageRequestParams
-  type result = ShowMessageRequest.messageActionItem option
+  type params = showStatusParams
+
+  and result = ShowMessageRequest.messageActionItem option
+
+  and showStatusParams = {
+    request: ShowMessageRequest.showMessageRequestParams;
+    progress: int option;
+    total: int option;
+    shortMessage: string option;
+  }
 end
 
 
