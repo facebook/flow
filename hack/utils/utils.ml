@@ -214,3 +214,8 @@ let infimum (arr : 'a array)
 
 (** Callstack is simply a typed way to indicate that a string is a callstack *)
 type callstack = Callstack of string
+
+let unwrap_snd (a, b_opt) =
+  match b_opt with
+  | None -> None
+  | Some b -> Some (a, b)

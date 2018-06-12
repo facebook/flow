@@ -66,6 +66,15 @@ module Location = struct
   }
 end
 
+(* Represents a location inside a resource which also wants to display a
+   friendly name to the user. *)
+module DefinitionLocation = struct
+  type t = {
+    location: Location.t;
+    title: string option;
+  }
+end
+
 (* markedString can be used to render human readable text. It is either a
  * markdown string or a code-block that provides a language and a code snippet.
  * Note that markdown strings will be sanitized by the client - including
@@ -491,7 +500,7 @@ end
 module Definition = struct
   type params = TextDocumentPositionParams.t
 
-  and result = Location.t list  (* wire: either a single one or an array *)
+  and result = DefinitionLocation.t list  (* wire: either a single one or an array *)
 end
 
 (* Completion request, method="textDocument/completion" *)
