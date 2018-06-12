@@ -684,11 +684,31 @@ let handle_persistent_unsafe genv env client profiling msg
     let env = ref env in
     let textDocument = params.TypeCoverage.textDocument in
     let file = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow ~client textDocument in
-    let force = false in (* force=true would make it produce coverage for non-flow JS files *)
-    let%lwt result = coverage ~options ~workers ~env ~profiling ~force file
+    (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
+    let fkey = File_key.SourceFile (File_input.filename_of_file_input file) in
+    let content = File_input.content_of_file_input file in
+    let is_flow = match content with
+      | Ok content ->
+        let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens fkey content) in
+        Docblock.is_flow docblock
+      | Error _ -> false in
+    let%lwt result = if is_flow then
+      let force = false in (* 'true' makes it report "unknown" for all exprs in non-flow files *)
+      coverage ~options ~workers ~env ~profiling ~force file
+    else
+      Lwt.return (Ok [])
     in
-    begin match result with
-      | Ok (all_locs) ->
+    begin match is_flow, result with
+      | false, _ ->
+        let range = {start={line=0; character=0;}; end_={line=1; character=0;};} in
+        let r = TypeCoverageResult { TypeCoverage.
+          coveredPercent = 0;
+          uncoveredRanges = [{TypeCoverage.range; message=None;}];
+          defaultMessage = "Use @flow to get type coverage for this file";
+        } in
+        lsp_writer (ResponseMessage (id, r));
+        Lwt.return (Ok (!env, None))
+      | true, Ok (all_locs) ->
         (* Figure out the percentages *)
         let accum_coverage (covered, total) (_loc, is_covered) =
           (covered + if is_covered then 1 else 0), total + 1 in
@@ -724,7 +744,7 @@ let handle_persistent_unsafe genv env client profiling msg
         } in
         lsp_writer (ResponseMessage (id, r));
         Lwt.return (Ok (!env, None))
-      | Error reason ->
+      | true, Error reason ->
         let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
         Lwt.return (Error (!env, reason, Utils.Callstack stack))
     end

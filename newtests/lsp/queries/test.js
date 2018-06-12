@@ -142,6 +142,17 @@ export default suite(
       ),
     ]),
 
+    test('textDocument/typeCoverage 2', [
+      addFiles('coverage2.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/typeCoverage{Use @flow}'],
+        [],
+      ),
+    ]),
+
     test('telemetry/rage', [
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse(
