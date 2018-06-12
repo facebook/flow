@@ -116,7 +116,7 @@ type def_kind =
   | Use of Type.t * string
   (* In a class, where a property/method is defined. Includes the type of the class and the name
   of the property. *)
-  | Class_def of Type.t * string (* name *)
+  | Class_def of Type.t * string (* name *) * bool (* static *)
   (* In an object type. Includes the location of the property definition and its name. *)
   | Obj_def of Loc.t * string (* name *)
   (* List of types that the object literal flows into directly, as well as the name of the
@@ -154,9 +154,9 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
     end;
     ret
   in
-  let class_def_hook _ctxt ty name loc =
+  let class_def_hook _ctxt ty static name loc =
     if Loc.contains loc target_loc then
-      set_prop_access_info (Class_def (ty, name))
+      set_prop_access_info (Class_def (ty, name, static))
   in
   let obj_def_hook _ctxt name loc =
     if Loc.contains loc target_loc then
@@ -720,7 +720,7 @@ let def_info_of_typecheck_results cx props_access_info =
     | None -> Ok None
     | Some (Obj_def (loc, name)) ->
         Ok (Some (Nel.one (Object loc), name))
-    | Some (Class_def (ty, name)) ->
+    | Some (Class_def (ty, name, _static)) ->
         (* We get the type of the class back here, so we need to extract the type of an instance *)
         extract_instancet cx ty >>= fun ty ->
         begin extract_def_loc_resolved cx ty name >>= function

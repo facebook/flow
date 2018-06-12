@@ -5295,7 +5295,7 @@ and mk_class_sig =
         decorators;
       }) ->
 
-      Type_inference_hooks_js.dispatch_class_member_decl_hook cx self name id_loc;
+      Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
       warn_or_ignore_decorators cx decorators;
 
       (match kind with
@@ -5320,7 +5320,7 @@ and mk_class_sig =
         variance;
         _;
       }) ->
-        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self name id_loc;
+        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
         if value <> None
         then warn_or_ignore_class_properties cx ~static loc;
@@ -5338,7 +5338,7 @@ and mk_class_sig =
         variance;
         _;
       }) ->
-        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self name id_loc;
+        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
         if value <> None
         then warn_or_ignore_class_properties cx ~static loc;
