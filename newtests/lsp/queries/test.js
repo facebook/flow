@@ -119,7 +119,7 @@ export default suite(
     ]),
 
     test('textDocument/documentSymbol', [
-      addFiles('outline.js'),
+      addFiles('outline.js', 'references.js'),
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('textDocument/documentSymbol', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/outline.js'},
