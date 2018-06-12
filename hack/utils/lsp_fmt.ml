@@ -767,8 +767,8 @@ let parse_initialize (params: json option) : Initialize.params =
     | _ -> Off
   and parse_initializationOptions json =
     {
-      use_textedit_autocomplete =
-        Option.value (Jget.bool_opt json "useTextEditAutocomplete") ~default:false;
+      useTextEditAutocomplete = Jget.bool_d json "useTextEditAutocomplete" ~default:false;
+      liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
     }
   and parse_capabilities json =
     {

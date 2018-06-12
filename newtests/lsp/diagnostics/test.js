@@ -10,6 +10,7 @@ export default suite(
   ({
     ideStartAndConnect,
     ideRequestAndWaitUntilResponse,
+    ideNotification,
     addFile,
     modifyFile,
   }) => [
@@ -74,6 +75,92 @@ export default suite(
         .verifyAllIDEMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
           ['window/showStatus', 'textDocument/publishDiagnostics'],
+        ),
+    ]),
+
+    test('live diagnostics', [
+      ideStartAndConnect(),
+      // Open a document with errors. We should get a live syntax error immediately.
+      ideNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+function fred(): number {return 1+;}
+`,
+        },
+      })
+        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllIDEMessagesInStep(
+          ['textDocument/publishDiagnostics{Unexpected token}'],
+          ['window/showStatus'],
+        ),
+      // Edit it fix the problem. The live syntax error should be dismissed immediately.
+      ideNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          version: 2,
+        },
+        contentChanges: [
+          {
+            text: `// @flow
+function fred(): number {return 1+2;}
+`,
+          },
+        ],
+      })
+        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllIDEMessagesInStep(
+          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [],
+        ),
+      // Make another change that doesn't introduce errors. We should get no reports.
+      ideNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          version: 2,
+        },
+        contentChanges: [
+          {
+            text: `// @flow
+  function fred(): number {return 1+3;}
+  `,
+          },
+        ],
+      })
+        .sleep(1000)
+        .verifyAllIDEMessagesInStep([], []),
+      // Make a change that introduces the error. We should get a report immediately.
+      ideNotification('textDocument/didChange', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          version: 3,
+        },
+        contentChanges: [
+          {
+            text: `// @flow
+  function fred(): number {return 1+;}
+  `,
+          },
+        ],
+      })
+        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllIDEMessagesInStep(
+          ['textDocument/publishDiagnostics{Unexpected token}'],
+          [],
+        ),
+      // Close the file. The live error should go away.
+      ideNotification('textDocument/didClose', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          version: 3,
+        },
+      })
+        .waitUntilIDEMessage(9000, 'textDocument/publishDiagnostics')
+        .verifyAllIDEMessagesInStep(
+          ['textDocument/publishDiagnostics{"diagnostics":[]}'],
+          [],
         ),
     ]),
   ],

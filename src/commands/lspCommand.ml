@@ -92,6 +92,16 @@ type show_message_t =
     (* Shown (Some id, params) -- means it is currently shown *)
     (* Shown (None, params) - means it was shown but user dismissed it *)
 
+type open_file_info = {
+  (* o_open_doc is guaranteed to be up-to-date with respect to the editor *)
+  o_open_doc: Lsp.TextDocumentItem.t;
+  (* o_ast, if present, is guaranteed to be up-to-date. It gets computed lazily. *)
+  o_ast: Loc.t Ast.program option;
+  (* o_live_diagnostics, if present, is guaranteed to be up-to-date, and to only contain
+   * parse errors, and to be a better source of truth about the parse errors
+   * in this file than what the flow server has told us. It also gets computed lazily. *)
+  o_live_diagnostics: PublishDiagnostics.diagnostic list option;
+}
 
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
@@ -105,11 +115,12 @@ type initialized_env = {
   i_outstanding_requests_from_server: Lsp.lsp_request WrappedMap.t;
   i_isConnected: bool; (* what we've told the client about our connection status *)
   i_status: show_message_t;
+  i_open_files: open_file_info SMap.t;
+  i_outstanding_diagnostics: SSet.t;
 }
 
 and disconnected_env = {
   d_ienv: initialized_env;
-  d_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   d_autostart: bool;
   d_server_status: (ServerStatus.status * FileWatcherStatus.status) option;
 }
@@ -118,7 +129,6 @@ and connected_env = {
   c_ienv: initialized_env;
   c_conn: server_conn;
   c_server_status: ServerStatus.status * (FileWatcherStatus.status option);
-  c_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   c_about_to_exit_code: FlowExitStatus.t option;
   (* stateful handling of Errors+status from server... *)
   c_is_rechecking: bool;
@@ -185,11 +195,22 @@ let get_current_version (root: Path.t) : string option =
     |> FlowConfig.required_version
 
 
-let get_editor_open_files (state: state) : Lsp.TextDocumentItem.t SMap.t option =
+let get_open_files (state: state) : open_file_info SMap.t option =
   match state with
-  | Connected cenv -> Some cenv.c_editor_open_files
-  | Disconnected denv -> Some denv.d_editor_open_files
+  | Connected cenv -> Some cenv.c_ienv.i_open_files
+  | Disconnected denv -> Some denv.d_ienv.i_open_files
   | _ -> None
+
+let update_open_file (uri: string) (open_file_info: open_file_info option) (state: state) : state =
+  let update_ienv ienv =
+    match open_file_info with
+    | Some open_file_info -> {ienv with i_open_files=SMap.add uri open_file_info ienv.i_open_files}
+    | None -> { ienv with i_open_files = SMap.remove uri ienv.i_open_files}
+  in
+  match state with
+  | Connected cenv -> Connected { cenv with c_ienv=update_ienv cenv.c_ienv }
+  | Disconnected denv -> Disconnected { denv with d_ienv=update_ienv denv.d_ienv }
+  | _ -> failwith ("client shouldn't be updating files in state " ^ (string_of_state state))
 
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
@@ -461,14 +482,13 @@ let try_connect (env: disconnected_env) : state =
       c_diagnostics = SMap.empty;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
       c_outstanding_diagnostics = SSet.empty;
-      c_editor_open_files = env.d_editor_open_files;
     } in
     (* send the initial messages to the server *)
     send_to_server new_env Persistent_connection_prot.Subscribe;
     let make_open_message (textDocument: TextDocumentItem.t) : lsp_message =
       NotificationMessage (DidOpenNotification { DidOpen.textDocument; }) in
-    let open_messages = env.d_editor_open_files |> SMap.bindings |> List.map ~f:snd
-      |> List.map ~f:make_open_message in
+    let open_messages = env.d_ienv.i_open_files |> SMap.bindings
+      |> List.map ~f:(fun (_, {o_open_doc; _}) -> make_open_message o_open_doc) in
     List.iter open_messages ~f:(send_lsp_to_server new_env);
     (* close the old UI and bring up the new *)
     let new_state = show_connected new_env in
@@ -580,40 +600,41 @@ let close_conn (env: connected_env) : unit =
 (*   so it can erase all outstanding progress messages.                 *)
 (* OUTSTANDING_ACTION_REQUIRED - similar to outstanding_progress.       *)
 
-let track_to_server (state: state) (c: Lsp.lsp_message) : state =
+type track_effect = {
+  changed_live_uri: string option;
+}
+
+let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect) =
   (* didOpen, didChange, didSave, didClose: save them up in editor_file_events *)
-  let editor_open_files = match (get_editor_open_files state), c with
-    | Some editor_open_files, NotificationMessage (DidOpenNotification params) ->
-      let doc = params.DidOpen.textDocument in
+  let changed_open_file = match (get_open_files state), c with
+    | _, NotificationMessage (DidOpenNotification params) ->
+      let o_open_doc = params.DidOpen.textDocument in
       let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
-      SMap.add uri doc editor_open_files
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
 
-    | Some editor_open_files, NotificationMessage (DidCloseNotification params) ->
+    | _, NotificationMessage (DidCloseNotification params) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
-      SMap.remove uri editor_open_files
+      Some (uri, None)
 
-    | Some editor_open_files, NotificationMessage (DidChangeNotification params) ->
+    | Some open_files, NotificationMessage (DidChangeNotification params) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      let doc = SMap.find uri editor_open_files in
-      let text = doc.TextDocumentItem.text in
-      let doc' = { Lsp.TextDocumentItem.
+      let {o_open_doc; _} = SMap.find uri open_files in
+      let text = o_open_doc.TextDocumentItem.text in
+      let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
+      let o_open_doc = { Lsp.TextDocumentItem.
         uri;
-        languageId = doc.TextDocumentItem.languageId;
+        languageId = o_open_doc.TextDocumentItem.languageId;
         version = params.DidChange.textDocument.VersionedTextDocumentIdentifier.version;
-        text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges;
+        text;
       } in
-      SMap.add uri doc' editor_open_files
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
 
-    | Some editor_open_files, _ ->
-      editor_open_files
-
-    | None, _ ->
-      SMap.empty
+    | _, _ ->
+      None
   in
-  let state = match state with
-    | Connected env -> Connected { env with c_editor_open_files = editor_open_files; }
-    | Disconnected env -> Disconnected { env with d_editor_open_files = editor_open_files; }
-    | _ -> state
+  let state, changed_live_uri = match changed_open_file with
+    | Some (uri, open_file_info) -> update_open_file uri open_file_info state, Some uri
+    | None -> state, None
   in
   let state = match state, c with
     (* client->server requests *)
@@ -630,7 +651,7 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : state =
       Connected { env with c_ienv; }
     | _ -> state
   in
-  state
+  state, { changed_live_uri; }
 
 
 let track_from_server (state: state) (c: Lsp.lsp_message) : state =
@@ -695,6 +716,27 @@ let dismiss_tracks (state: state) : state =
   | _ -> state
 
 
+let lsp_DocumentItem_to_flow (open_doc: Lsp.TextDocumentItem.t) : File_input.t =
+  let uri = open_doc.TextDocumentItem.uri in
+  let fn = Lsp_helpers.lsp_uri_to_path uri in
+  let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+  File_input.FileContent (Some fn, open_doc.TextDocumentItem.text)
+
+
+let lsp_DocumentIdentifier_to_flow
+    (textDocument: Lsp.TextDocumentIdentifier.t)
+    ~(state: state)
+  : File_input.t =
+  let uri = textDocument.TextDocumentIdentifier.uri in
+  let editor_open_files = get_open_files state in
+  match Option.bind editor_open_files (SMap.get uri) with
+  | None ->
+    let fn = Lsp_helpers.lsp_uri_to_path uri in
+    let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+    File_input.FileName fn
+  | Some {o_open_doc; _} -> lsp_DocumentItem_to_flow o_open_doc
+
+
 (******************************************************************************)
 (* Diagnostics                                                                *)
 (* These should really be handle inside the flow server so it sends out       *)
@@ -704,16 +746,165 @@ let dismiss_tracks (state: state) : state =
 (* handling them here for now.                                                *)
 (******************************************************************************)
 
-(* print_diagnostics: just pushes the set of diagnostis for this uri to the client *)
+let error_to_lsp
+    ~(severity: PublishDiagnostics.diagnosticSeverity option)
+    ~(default_uri: string)
+    (error: Errors.error)
+  : string * PublishDiagnostics.diagnostic =
+  let error = Errors.Lsp_output.lsp_of_error error in
+  let location = Flow_lsp_conversions.loc_to_lsp_with_default
+    error.Errors.Lsp_output.loc ~default_uri in
+  let uri = location.Lsp.Location.uri in
+  let related_to_lsp (loc, relatedMessage) =
+    let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in
+    { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
+  let relatedInformation =
+    List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
+  in
+  uri, { Lsp.PublishDiagnostics.
+    range = location.Lsp.Location.range;
+    severity;
+    code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
+    source = Some "Flow";
+    message = error.Errors.Lsp_output.message;
+    relatedInformation;
+    relatedLocations = relatedInformation; (* legacy fb extension *)
+  }
+
+
+(* parse_and_cache: either the uri is an open file for which we already
+ * have parse results (ast+diagnostics), so we can just return them;
+ * or it's an open file and we are expected to lazily compute the parse results
+ * and store them in the state;
+ * or it's an unopened file in which case we'll retrieve parse results but
+ * won't store them. *)
+let parse_and_cache (state: state) (uri: string)
+  : state * Loc.t Ast.program * PublishDiagnostics.diagnostic list option =
+  (* part of parsing is producing parse errors, if so desired *)
+  let liveSyntaxErrors = let open Initialize in match state with
+    | Connected cenv -> cenv.c_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
+    | Disconnected denv -> denv.d_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
+    | _ -> false in
+
+  let error_to_diagnostic (loc, parse_error) =
+    let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
+    let error = Errors.mk_error ~kind:Errors.ParseError loc message in
+    let _, diagnostic = error_to_lsp
+      ~default_uri:uri ~severity:(Some PublishDiagnostics.Error) error in
+    diagnostic in
+
+  (* The way flow compilation works in the flow server is that parser options *)
+  (* are permissive to allow all constructs, so that parsing works well; if   *)
+  (* the user choses not to enable features through the user's .flowconfig    *)
+  (* then use of impermissable constructs will be reported at typecheck time  *)
+  (* (not as parse errors). We'll do the same here, with permissive parsing   *)
+  (* and only reporting parse errors.                                         *)
+  let get_parse_options () =
+    let root = match state with
+      | Connected cenv -> Some cenv.c_ienv.i_root
+      | Disconnected denv -> Some denv.d_ienv.i_root
+      | _ -> None in
+    let use_strict = Option.value_map root ~default:false ~f:(fun root ->
+      Server_files_js.config_file root |> FlowConfig.get |> FlowConfig.modules_are_use_strict) in
+    Some Parser_env.({
+      esproposal_class_instance_fields = true;
+      esproposal_class_static_fields = true;
+      esproposal_decorators = true;
+      esproposal_export_star_as = true;
+      esproposal_optional_chaining = true;
+      esproposal_nullish_coalescing = true;
+      types = true;
+      use_strict;
+    }) in
+
+  let parse file =
+    let (program, errors) = try
+      let content = File_input.content_of_file_input_unsafe file in
+      let filename_opt = File_input.path_of_file_input file in
+      let filekey = Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
+      let parse_options = get_parse_options () in
+      Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
+    with _ ->
+      (Loc.none,[],[]), []
+    in
+    program, if liveSyntaxErrors then Some (List.map errors ~f:error_to_diagnostic) else None in
+
+  let open_files = get_open_files state in
+  let existing_open_file_info = Option.bind open_files (SMap.get uri) in
+  match existing_open_file_info with
+  | Some {o_ast=Some o_ast; o_live_diagnostics; _} ->
+    state, o_ast, o_live_diagnostics
+  | Some {o_open_doc; _} ->
+    let file = lsp_DocumentItem_to_flow o_open_doc in
+    let o_ast, o_live_diagnostics = parse file in
+    let open_file_info = Some {o_open_doc; o_ast=Some o_ast; o_live_diagnostics;} in
+    let state = update_open_file uri open_file_info state in
+    state, o_ast, o_live_diagnostics
+  | None ->
+    let fn = Lsp_helpers.lsp_uri_to_path uri in
+    let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+    let file = File_input.FileName fn in
+    let open_ast, open_diagnostics = parse file in
+    state, open_ast, open_diagnostics
+
+
+(* print_diagnostics: just pushes the set of diagnostics for this uri to the client *)
+(* taking into account whether there are superceding local parse errors as well.    *)
 let print_diagnostics
     (uri: string)
     (diagnostics: PublishDiagnostics.diagnostic list)
     (state: state)
   : state =
+  let open PublishDiagnostics in
+
+  let prev_server_reported, prev_open_reported = match state with
+    | Connected cenv ->
+      SSet.mem uri cenv.c_outstanding_diagnostics,
+      SSet.mem uri cenv.c_ienv.i_outstanding_diagnostics
+    | Disconnected denv ->
+      false, SSet.mem uri denv.d_ienv.i_outstanding_diagnostics
+    | _ -> false, false in
+
+  (* First we'll look at server tracks, update then appropriately. *)
   let msg = NotificationMessage
     (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
   let state = track_from_server state msg in
-  to_stdout (Lsp_fmt.print_lsp msg);
+
+  (* Next look at open-file tracks, update them appropriately. *)
+  let open_file_info = Option.bind (get_open_files state) (SMap.get uri) in
+  let state, use_live, o_live_diagnostics = match open_file_info with
+    | None
+    | Some {o_live_diagnostics=None; _} ->
+      state, false, []
+    | Some {o_live_diagnostics=Some o_live_diagnostics; _} ->
+      let update_ienv ienv =
+        let i_outstanding_diagnostics = match o_live_diagnostics with
+        | [] -> SSet.remove uri ienv.i_outstanding_diagnostics
+        | _ -> SSet.add uri ienv.i_outstanding_diagnostics in
+        { ienv with i_outstanding_diagnostics; } in
+      let state = match state with
+        | Connected cenv -> Connected {cenv with c_ienv = update_ienv cenv.c_ienv}
+        | Disconnected denv -> Disconnected {denv with d_ienv=update_ienv denv.d_ienv}
+        | _ -> state in
+      state, true, o_live_diagnostics in
+
+  (* If using live-diagnostics, then strip out parse errors from the server diagnostics *)
+  (* and instead include the local ones. *)
+  let diagnostics = if use_live then
+    let parse_code = Errors.string_of_kind Errors.ParseError in
+    let diagnostics = List.filter diagnostics ~f:(fun d ->  d.code <> StringCode (parse_code)) in
+    o_live_diagnostics @ diagnostics
+  else
+    diagnostics in
+
+  (* Avoid sending the message if it was empty before and is empty now. *)
+  (* This isn't needed for correct client behavior, but it makes the transcripts *)
+  (* easier to write unit-tests for! *)
+  let msg = NotificationMessage
+    (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
+  let new_reported = match diagnostics with [] -> false | _ -> true in
+  if prev_open_reported || prev_server_reported || new_reported then
+    to_stdout (Lsp_fmt.print_lsp msg);
   state
 
 let do_additional_diagnostics
@@ -732,7 +923,6 @@ let do_additional_diagnostics
   in
   state
 
-
 let do_replacement_diagnostics
     (cenv: connected_env)
     (c_diagnostics: PublishDiagnostics.diagnostic list SMap.t)
@@ -743,11 +933,23 @@ let do_replacement_diagnostics
   let old_uris = SMap.bindings cenv.c_diagnostics |> List.map ~f:fst |> SSet.of_list in
   let new_uris = SMap.bindings c_diagnostics |> List.map ~f:fst |> SSet.of_list in
   let now_empty_uris = SSet.diff old_uris new_uris in
-  let state = SSet.fold (fun uri state -> print_diagnostics uri [] state) now_empty_uris state in
+  let print_empty uri state = print_diagnostics uri [] state in
+  let state = SSet.fold print_empty now_empty_uris state in
 
   (* Send publishDiagnostics for all files that have diagnostics *)
   let state = SMap.fold print_diagnostics c_diagnostics state
   in
+  state
+
+let do_live_diagnostics (state: state) (uri: string): state =
+  (* reparse the file and write it into the state's editor_open_files as needed *)
+  let state, _, _ = parse_and_cache state uri in
+  (* republish the diagnostics for this file based on a mix of server-generated ones *)
+  (* if present, and client-generated ones if the file is open *)
+  let server_diagnostics = match state with
+    | Connected cenv -> Option.value (SMap.get uri cenv.c_diagnostics) ~default:[]
+    | _ -> [] in
+  let state = print_diagnostics uri server_diagnostics state in
   state
 
 
@@ -770,39 +972,14 @@ let show_recheck_progress (cenv: connected_env) : state =
   in
   Connected { cenv with c_ienv = show_status type_ msg cenv.c_ienv }
 
-
-let lsp_DocumentIdentifier_to_flow
-    (textDocument: Lsp.TextDocumentIdentifier.t)
-    ~(state: state)
-  : File_input.t =
-  let uri = textDocument.TextDocumentIdentifier.uri in
-  let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
-  let editor_open_files = get_editor_open_files state in
-  let doc = Option.bind editor_open_files (SMap.get uri) in
-  match doc with
-  | None -> File_input.FileName fn
-  | Some doc -> File_input.FileContent (Some fn, doc.TextDocumentItem.text)
-
-let do_documentSymbol (state: state) (params: DocumentSymbol.params) : DocumentSymbol.result =
+let do_documentSymbol (state: state) (id: lsp_id) (params: DocumentSymbol.params) : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
-  let file = lsp_DocumentIdentifier_to_flow ~state params.DocumentSymbol.textDocument in
-  let content = File_input.content_of_file_input_unsafe file in
-  let filename_opt = File_input.path_of_file_input file in
-  let filekey = Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
-  let parse_options = Some Parser_env.({
-    esproposal_class_instance_fields = true;
-    esproposal_class_static_fields = true;
-    esproposal_decorators = true;
-    esproposal_export_star_as = true;
-    esproposal_optional_chaining = true;
-    esproposal_nullish_coalescing = true;
-    types = true;
-    use_strict = false;
-  }) in
-  let (program, _errors) =
-    Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
-  in
-  Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri program
+  let state, ast, _ = parse_and_cache state uri in
+  let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
+  let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
+  to_stdout json;
+  state
+
 
 
 
@@ -830,6 +1007,20 @@ module RagePrint = struct
     (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
     (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string)
 
+  let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics} : string =
+    Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s])"
+      o_open_doc.TextDocumentItem.uri
+      o_open_doc.TextDocumentItem.version
+      (String.length o_open_doc.TextDocumentItem.text)
+      (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
+      (Option.value_map o_live_diagnostics ~default:"absent"
+        ~f:(fun d -> List.length d |> string_of_int))
+
+  let string_of_open_files (files: open_file_info SMap.t) : string =
+    SMap.bindings files
+      |> List.map ~f:(fun (_,ofi) -> string_of_open_file ofi)
+      |> String.concat ","
+
   let add_ienv (b: Buffer.t) (ienv: initialized_env) : unit =
     addline b "i_connect_params=" (ienv.i_connect_params |> string_of_command_params);
     addline b "i_root=" (ienv.i_root |> Path.to_string);
@@ -851,6 +1042,9 @@ module RagePrint = struct
       |> String.concat ",");
     addline b "i_isConnected=" (ienv.i_isConnected |> string_of_bool);
     addline b "i_status=" (ienv.i_status |> string_of_show_message);
+    addline b "i_open_files=" (ienv.i_open_files |> string_of_open_files);
+    addline b "i_outstanding_diagnostics=" (ienv.i_outstanding_diagnostics
+      |> SSet.elements |> String.concat ", ");
     ()
 
   let add_denv (b: Buffer.t) (denv: disconnected_env) : unit =
@@ -1060,6 +1254,8 @@ begin
       i_outstanding_requests_from_server = WrappedMap.empty;
       i_isConnected = false;
       i_status = Never_shown;
+      i_open_files = SMap.empty;
+      i_outstanding_diagnostics = SSet.empty;
     } in
     (* If the version in .flowconfig is simply incompatible with our current *)
     (* binary then it doesn't even make sense for us to start up. And future *)
@@ -1077,7 +1273,6 @@ begin
       d_ienv;
       d_autostart = true;
       d_server_status = None;
-      d_editor_open_files = SMap.empty;
     } in
     try_connect env
 
@@ -1120,7 +1315,7 @@ begin
     with Not_found ->
       match state with
       | Connected cenv ->
-        let state = track_to_server state c in
+        let (state, _) = track_to_server state c in
         let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
         if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
         state
@@ -1132,15 +1327,13 @@ begin
     (* documentSymbols is handled in the client, not the server, since it's *)
     (* purely syntax-driven and we'd like it to work even if the server is  *)
     (* busy or disconnected *)
-    let result = do_documentSymbol state params in
-    let response = ResponseMessage (id, DocumentSymbolResult result) in
-    let json = Lsp_fmt.print_lsp response in
-    to_stdout json;
+    let state = do_documentSymbol state id params in
     state
 
   | Connected cenv, Client_message c ->
-    let state = track_to_server state c in
+    let state, {changed_live_uri} = track_to_server state c in
     send_lsp_to_server cenv c;
+    let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
     state
 
   | _, Client_message (RequestMessage (id, RageRequest)) ->
@@ -1158,11 +1351,12 @@ begin
   | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c)
   | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c)
   | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c) ->
-    let state = track_to_server state c in
+    let state, {changed_live_uri} = track_to_server state c in
+    let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
     state
 
   | Disconnected _, Client_message c ->
-    let state = track_to_server state c in
+    let (state, _) = track_to_server state c in
     let method_ = Lsp_fmt.message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
@@ -1202,32 +1396,9 @@ begin
     (* fatal to Nuclide, so if it does, then we'll at least use a fall-back path.    *)
     let default_uri = cenv.c_ienv.i_root |> Path.to_string |> File_url.create in
     (* 'all' is an SMap from uri to diagnostic list, and 'add' appends the error within the map *)
-    let add
-        (severity: PublishDiagnostics.diagnosticSeverity option)
-        (error: Errors.error)
-        (all: PublishDiagnostics.diagnostic list SMap.t)
-      : PublishDiagnostics.diagnostic list SMap.t =
-      let error = Errors.Lsp_output.lsp_of_error error in
-      let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri
-        error.Errors.Lsp_output.loc in
-      let uri = location.Lsp.Location.uri in
-      let related_to_lsp (loc, relatedMessage) =
-        let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in
-        { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
-      let relatedInformation =
-        List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
-      in
-      let diagnostic = { Lsp.PublishDiagnostics.
-        range = location.Lsp.Location.range;
-        severity;
-        code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
-        source = Some "Flow";
-        message = error.Errors.Lsp_output.message;
-        relatedInformation;
-        relatedLocations = relatedInformation; (* legacy fb extension *)
-      } in
-      SMap.add ~combine:List.append uri [diagnostic] all
-    in
+    let add severity error all =
+      let uri, diagnostic = error_to_lsp ~severity ~default_uri error in
+      SMap.add ~combine:List.append uri [diagnostic] all in
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
     let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
@@ -1311,7 +1482,6 @@ and main_handle_error
       d_ienv;
       d_autostart;
       d_server_status = None;
-      d_editor_open_files = Option.value (get_editor_open_files state) ~default:SMap.empty;
     }
     in
     let _state = state |> dismiss_tracks in

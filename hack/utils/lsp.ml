@@ -242,15 +242,13 @@ module Initialize = struct
     | Messages
     | Verbose
 
-  (** Although all of the values in here are technically optional, we don't
-      represent any of them as options. When working with optional
-      configuration, it's very important to track where optional values get
-      their defaults from in order to avoid some costly confusion later.
-      Instead of having the defaults implicitly defined by `match` statements
-      scattered far and wide throughout the code, we can use the type system to
-      enforce that they're only set in one easily-greppable place. *)
+  (* Following initialization options are unfortunately a mix of Hack
+   * and Flow. We should find a way to separate them.
+   * Anyway, they're all optional in the source json, but we pick
+   * a default if necessary while parsing. *)
   and initializationOptions = {
-    use_textedit_autocomplete: bool;
+    useTextEditAutocomplete: bool; (* only supported for Hack so far *)
+    liveSyntaxErrors: bool; (* implicitly true for Hack; supported in Flow *)
   }
 
   and client_capabilities = {
