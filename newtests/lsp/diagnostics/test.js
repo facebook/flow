@@ -83,7 +83,7 @@ export default suite(
       // Open a document with errors. We should get a live syntax error immediately.
       ideNotification('textDocument/didOpen', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           languageId: 'javascript',
           version: 1,
           text: `// @flow
@@ -99,7 +99,7 @@ function fred(): number {return 1+;}
       // Edit it fix the problem. The live syntax error should be dismissed immediately.
       ideNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 2,
         },
         contentChanges: [
@@ -118,7 +118,7 @@ function fred(): number {return 1+2;}
       // Make another change that doesn't introduce errors. We should get no reports.
       ideNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 2,
         },
         contentChanges: [
@@ -134,7 +134,7 @@ function fred(): number {return 1+2;}
       // Make a change that introduces the error. We should get a report immediately.
       ideNotification('textDocument/didChange', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 3,
         },
         contentChanges: [
@@ -153,7 +153,7 @@ function fred(): number {return 1+2;}
       // Close the file. The live error should go away.
       ideNotification('textDocument/didClose', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_DIR>/syntaxError1.js',
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>syntaxError1.js',
           version: 3,
         },
       })

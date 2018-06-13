@@ -573,6 +573,7 @@ export class TestBuilder {
     // a '.flowVersion' field
     // LSP sends back document URLs, to files within the test project
     const url = this.getDirUrl();
+    const urlslash = url + dir_sep;
     function replace(obj: Object) {
       for (const k in obj) {
         if (!obj.hasOwnProperty(k)) {
@@ -588,6 +589,10 @@ export class TestBuilder {
           case 'string':
             if (k == 'flowVersion') {
               obj[k] = '<VERSION STUBBED FOR TEST>';
+            } else if (obj[k].startsWith(urlslash)) {
+              obj[k] =
+                '<PLACEHOLDER_PROJECT_URL_SLASH>' +
+                obj[k].substr(urlslash.length);
             } else if (obj[k].startsWith(url)) {
               obj[k] = '<PLACEHOLDER_PROJECT_URL>' + obj[k].substr(url.length);
             }
@@ -621,8 +626,8 @@ export class TestBuilder {
           case 'string':
             if (obj[k].startsWith('<PLACEHOLDER')) {
               obj[k] = obj[k]
-                .replace(/^<PLACEHOLDER_PROJECT_DIR>/, dir)
-                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
+                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl)
+                .replace(/^<PLACEHOLDER_PROJECT_URL_SLASH>/, dirUrl + dir_sep);
             }
             break;
         }
