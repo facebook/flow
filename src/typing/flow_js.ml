@@ -6586,6 +6586,23 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         let err = FlowError.EPropNotFound (Some s, (reason_prop, ureason), use_op) in
         add_output cx ~trace err
       )
+    );
+    Option.iter lcall ~f:(fun _ ->
+      if Option.is_none ucall
+      then (
+        let prop = Some "$call" in
+        let use_op = Frame (PropertyCompatibility {
+          prop;
+          (* Lower and upper are reversed in this case since the lower object
+           * is the one requiring the prop. *)
+          lower = ureason;
+          upper = lreason;
+          is_sentinel = false;
+        }, use_op) in
+        let reason_prop = replace_reason_const (RProperty prop) lreason in
+        let err = FlowError.EPropNotFound (prop, (reason_prop, ureason), use_op) in
+        add_output cx ~trace err
+      )
     )
   );
 
