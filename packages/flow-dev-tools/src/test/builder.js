@@ -250,6 +250,26 @@ export class TestBuilder {
     await this.forceRecheck([filename]);
   }
 
+  async execManualAndLog(
+    cmd: string,
+    options?: Object,
+  ): Promise<[?Object, string, string]> {
+    await this.log(`# ${cmd}...`);
+    const [err, stdout_, stderr_] = await execManual(cmd, options);
+    await this.log(`# Finished ${cmd}.`);
+    const stderr = typeof stderr_ === 'string' ? stderr_ : stderr_.toString();
+    const stdout = typeof stdout_ === 'string' ? stdout_ : stdout_.toString();
+    if (err != null) {
+      await this.log(`# err.code=${err.code} err=${String(err)}`);
+    }
+    if (stderr !== '') {
+      await this.log(`# stderr=BEGIN`);
+      await this.log(stderr);
+      await this.log(`# END stderr`);
+    }
+    return [err, stdout, stderr];
+  }
+
   async flowCmd(
     args: Array<string>,
     stdinFile?: string,
@@ -260,11 +280,12 @@ export class TestBuilder {
       args.map(arg => format('"%s"', arg)).join(' '),
       stdinFile == null ? '' : format('< %s', stdinFile),
     );
-    await this.log('# %s', cmd);
-    const [err, stdout, stderr] = await execManual(cmd, {cwd: this.dir});
+    const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
+      cwd: this.dir,
+    });
     const code = err == null ? 0 : err.code;
 
-    return [code, stdout.toString(), stderr.toString()];
+    return [code, stdout, stderr];
   }
 
   async getFlowErrors(retry?: boolean = true): Promise<Object> {
@@ -287,7 +308,7 @@ export class TestBuilder {
       );
     }
 
-    const [err, stdout, stderr] = await execManual(cmd, {
+    const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
       cwd: __dirname,
       maxBuffer: 1024 * 1024,
     });
@@ -971,8 +992,7 @@ export class TestBuilder {
   async forceRecheck(files: Array<string>): Promise<void> {
     if (this.server && (await isRunning(this.server.pid))) {
       const files_str = files.map(s => `"${s}"`).join(' ');
-      await this.log('Running force-recheck for files: %s', files_str);
-      const [err, stdout, stderr] = await execManual(
+      const [err, stdout, stderr] = await this.execManualAndLog(
         format(
           '%s force-recheck --no-auto-start --temp-dir %s %s',
           this.bin,
@@ -980,7 +1000,6 @@ export class TestBuilder {
           files_str,
         ),
       );
-      await this.log('force-recheck finished');
 
       // No server running (6) is ok - the file change might have killed the
       // server and we raced it here
