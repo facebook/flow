@@ -8062,7 +8062,11 @@ and resolve_bindings cx trace reason id bindings =
 and fully_resolve_type cx trace reason id t =
   if is_unexplored_source cx id then
     let imap = ResolvableTypeJob.collect_of_type cx reason IMap.empty t in
-    resolve_bindings cx trace reason id (bindings_of_jobs cx trace imap)
+    let bindings = bindings_of_jobs cx trace imap in
+    (* NOTE: bindings_of_jobs might change the state of id because it resolves it, so check
+       again. TODO: there must be a better way *)
+    if is_unexplored_source cx id then
+      resolve_bindings cx trace reason id bindings
 
 and filter_bindings cx =
   List.filter (fun (id, _) -> is_unfinished_target cx id)
