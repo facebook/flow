@@ -92,6 +92,7 @@ module HumanReadable: ClientProtocol = struct
     | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
     | Prot.DidOpenAck -> print_endline "Received file open ack"
     | Prot.DidCloseAck -> print_endline "Received file close ack"
+    | Prot.EOF -> () (* ignored here; used in lspCommand *)
 
 end
 
@@ -137,6 +138,7 @@ module VeryUnstable: ClientProtocol = struct
      * involving the buffers between the ide command and the flow server *)
     | Prot.DidOpenAck -> ()
     | Prot.DidCloseAck -> ()
+    | Prot.EOF -> ()
 
   let handle_autocomplete id = Hh_json.(function
     | [JSON_String file; JSON_Number line_str; JSON_Number column_str; JSON_String contents] ->
@@ -244,7 +246,8 @@ end = struct
       | LspFromServer _, _
       | Please_hold _, _
       | StartRecheck, _
-      | EndRecheck _, _ ->
+      | EndRecheck _, _
+      | EOF, _ ->
           t
       | AutocompleteResult (_, response_id), Some (Autocomplete (_, request_id)) ->
           if response_id <> request_id then begin

@@ -981,7 +981,14 @@ export class TestBuilder {
       // server and we raced it here
       if (err && err.code !== 6) {
         throw new Error(
-          format('flow force-recheck failed!', err, stdout, stderr, files),
+          format(
+            'flow force-recheck failed! err.code=%s err=%s stdout=%s stderr=%s files=%s',
+            err.code,
+            err,
+            stdout,
+            stderr,
+            files,
+          ),
         );
       }
     }
