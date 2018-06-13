@@ -37,7 +37,7 @@ homepage_code_bigger_img_alt: ""
 homepage_code_bigger_description: >
   Working in a codebase with lots of developers can make it difficult to keep
   your master branch working. Flow can help prevent bad rebases. Flow can help
-  protect your carefully designed library from your coworkers. And Flow can help
+  protect your carefully designed library from errors. And Flow can help
   you understand the code you wrote six months ago.
 
 homepage_featurettes:
