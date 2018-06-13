@@ -1042,7 +1042,7 @@ and Class : sig
       key: 'M Expression.Object.Property.key;
       value: 'M * 'M Function.t;
       static: bool;
-      decorators: 'M Expression.t list;
+      decorators: 'M Class.Decorator.t list;
     }
   end
   module Property : sig
@@ -1082,6 +1082,12 @@ and Class : sig
       body: 'M element list;
     }
   end
+  module Decorator : sig
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      expression: 'M Expression.t;
+    }
+  end
   type 'M t = {
     id: 'M Identifier.t option;
     body: 'M Class.Body.t;
@@ -1089,7 +1095,7 @@ and Class : sig
     super: 'M Expression.t option;
     super_targs: 'M Type.ParameterInstantiation.t option;
     implements: 'M Class.Implements.t list;
-    classDecorators: 'M Expression.t list;
+    classDecorators: 'M Decorator.t list;
   }
 end = Class
 

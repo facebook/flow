@@ -722,9 +722,14 @@ end with type t = Impl.t) = struct
       "superClass", option expression c.super;
       "superTypeParameters", option type_parameter_instantiation c.super_targs;
       "implements", array_of_list class_implements c.implements;
-      "decorators", array_of_list expression c.classDecorators;
+      "decorators", array_of_list class_decorator c.classDecorators;
     ]
   )
+
+  and class_decorator (loc, { Ast.Class.Decorator.expression = expr }) =
+    node "Decorator" loc [
+      "expression", expression expr;
+    ]
 
   and class_expression (loc, c) = Class.(
     node "ClassExpression" loc [
@@ -734,7 +739,7 @@ end with type t = Impl.t) = struct
       "superClass", option expression c.super;
       "superTypeParameters", option type_parameter_instantiation c.super_targs;
       "implements", array_of_list class_implements c.implements;
-      "decorators", array_of_list expression c.classDecorators;
+      "decorators", array_of_list class_decorator c.classDecorators;
     ]
   )
 
@@ -774,7 +779,7 @@ end with type t = Impl.t) = struct
       "kind", string kind;
       "static", bool static;
       "computed", bool computed;
-      "decorators", array_of_list expression decorators;
+      "decorators", array_of_list class_decorator decorators;
     ]
 
   and class_private_field (loc, prop) = Class.PrivateField.(

@@ -1228,7 +1228,7 @@ and decorators_list decorators =
       ~break:Break_if_pretty
       ~indent:0
       (List.map
-        (fun expr -> fuse [
+        (fun (_, { Ast.Class.Decorator.expression = expr }) -> fuse [
           Atom "@";
           begin
             (* Magic number, after `Call` but before `Update` *)

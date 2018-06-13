@@ -29,7 +29,7 @@ module type STATEMENT = sig
  val declare_opaque_type : env -> Loc.t Statement.t
  val do_while: env -> Loc.t Statement.t
  val empty: env -> Loc.t Statement.t
- val export_declaration: decorators:Loc.t Expression.t list -> env -> Loc.t Statement.t
+ val export_declaration: decorators:Loc.t Class.Decorator.t list -> env -> Loc.t Statement.t
  val expression: env -> Loc.t Statement.t
  val import_declaration: env -> Loc.t Statement.t
  val interface: env -> Loc.t Statement.t

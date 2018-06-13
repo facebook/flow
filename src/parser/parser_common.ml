@@ -21,7 +21,7 @@ type pattern_cover =
 module type PARSER = sig
   val program : env -> Loc.t program
   val statement : env -> Loc.t Statement.t
-  val statement_list_item : ?decorators:Loc.t Expression.t list -> env -> Loc.t Statement.t
+  val statement_list_item : ?decorators:Loc.t Class.Decorator.t list -> env -> Loc.t Statement.t
   val statement_list : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list
   val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list * bool
   val module_body : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list
@@ -42,7 +42,7 @@ module type PARSER = sig
   val pattern : env -> Error.t -> Loc.t Pattern.t
   val pattern_from_expr : env -> Loc.t Expression.t -> Loc.t Pattern.t
   val object_key : ?class_body: bool -> env -> Loc.t * Loc.t Expression.Object.Property.key
-  val class_declaration : env -> Loc.t Expression.t list -> Loc.t Statement.t
+  val class_declaration : env -> Loc.t Class.Decorator.t list -> Loc.t Statement.t
   val class_expression : env -> Loc.t Expression.t
   val is_assignable_lhs : Loc.t Expression.t -> bool
 end
