@@ -12,6 +12,7 @@ export default suite(
     ideRequestAndWaitUntilResponse,
     ideNotification,
     addFile,
+    lspIgnoreStatusAndCancellation,
   }) => [
     test('didOpen+didChange+didClose', [
       ideStartAndConnect(),
@@ -26,13 +27,13 @@ function jones(): number { return 15; }
 jones();
 `,
         },
-      }).verifyAllIDEMessagesInStep([''], []),
+      }).verifyAllIDEMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{open.js,line":2}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('textDocument/didChange', {
         textDocument: {
@@ -48,23 +49,23 @@ wilbur();
 `,
           },
         ],
-      }).verifyAllIDEMessagesInStep([''], []),
+      }).verifyAllIDEMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{open.js,"line":1}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('textDocument/didClose', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
-      }).verifyAllIDEMessagesInStep([''], []),
+      }).verifyAllIDEMessagesInStep([''], [...lspIgnoreStatusAndCancellation]),
       ideRequestAndWaitUntilResponse('textDocument/definition', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/definition{No such file or directory}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],

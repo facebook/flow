@@ -13,16 +13,20 @@ export default suite(
     ideRequestAndWaitUntilResponse,
     addFile,
     addFiles,
+    lspIgnoreStatusAndCancellation,
   }) => [
     test('invalid_method', [
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
         ['foobar{not implemented}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})
         .waitUntilIDEMessage(2000, 'barfoo')
-        .verifyAllIDEMessagesInStep(['telemetry/event{not implemented}'], []),
+        .verifyAllIDEMessagesInStep(
+          ['telemetry/event{not implemented}'],
+          [...lspIgnoreStatusAndCancellation],
+        ),
     ]),
 
     test('textDocument/definition', [
@@ -35,7 +39,7 @@ export default suite(
         [
           'textDocument/definition{definition.js,"start":{"line":2,"character":0}}',
         ],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
@@ -45,27 +49,45 @@ export default suite(
       ideRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 6, character: 1}, // over a function use
-      }).verifyAllIDEMessagesInStep(['textDocument/hover{() => number}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/hover{() => number}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 3, character: 1}, // over whitespace
-      }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/hover{null}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 2, character: 1}, // over a keyword
-      }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/hover{null}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 0, character: 1}, // over a comment
-      }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/hover{null}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 6, character: 100}, // past the end of a line
-      }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/hover{null}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>hover.js'},
         position: {line: 100, character: 0}, // past the end of the file
-      }).verifyAllIDEMessagesInStep(['textDocument/hover{null}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/hover{null}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
     ]),
 
     test('textDocument/completion', [
@@ -78,7 +100,7 @@ export default suite(
         [
           'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
         ],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
@@ -90,20 +112,29 @@ export default suite(
         position: {line: 9, character: 17}, // on an identifier
       }).verifyAllIDEMessagesInStep(
         ['textDocument/documentHighlight{"line":3,"line":9}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 9, character: 1}, // on a keyword
-      }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/documentHighlight{[]}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 6, character: 0}, // on whitespace
-      }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/documentHighlight{[]}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
       ideRequestAndWaitUntilResponse('textDocument/documentHighlight', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
         position: {line: 6, character: 100}, // off the right edge of the text
-      }).verifyAllIDEMessagesInStep(['textDocument/documentHighlight{[]}'], []),
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/documentHighlight{[]}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
     ]),
 
     test('textDocument/references', [
@@ -114,7 +145,7 @@ export default suite(
         position: {line: 9, character: 17}, // on an identifier
       }).verifyAllIDEMessagesInStep(
         ['textDocument/references{line":3,"line":5,"line":9}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
@@ -127,7 +158,7 @@ export default suite(
         [
           'textDocument/documentSymbol{WORD_REGEX,State,Preferences,pref1,EPrefs,pref2,MyClass1,_projectRoot,command,constructor,dispose,MyInterface2,getFoo,myFunction3}',
         ],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
@@ -138,7 +169,7 @@ export default suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/typeCoverage{"line":12,"line":8,"line":6}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 

@@ -13,6 +13,7 @@ export default suite(
     ideNotification,
     addFile,
     modifyFile,
+    lspIgnoreStatusAndCancellation,
   }) => [
     test('textDocument/publishDiagnostics #1', [
       ideStartAndConnect(),
@@ -35,7 +36,10 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
-          ['window/showStatus', 'textDocument/publishDiagnostics'],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
         ),
     ]),
 
@@ -50,7 +54,10 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"`H` [1] is not an instance type.","message":"[1] `H`"}',
           ],
-          ['window/showStatus', 'textDocument/publishDiagnostics'],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
         ),
     ]),
 
@@ -65,7 +72,10 @@ export default suite(
           [
             'textDocument/publishDiagnostics{"Cannot return `23` because  number [1] is incompatible with  string [2].","message":"[1] number","message":"[2] string"}',
           ],
-          ['window/showStatus', 'textDocument/publishDiagnostics'],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
         ),
       modifyFile('witherrors1.js', 'return 23;', 'return "";')
         .waitUntilIDEMessage(
@@ -74,7 +84,10 @@ export default suite(
         )
         .verifyAllIDEMessagesInStep(
           ['textDocument/publishDiagnostics{"diagnostics":[]}'],
-          ['window/showStatus', 'textDocument/publishDiagnostics'],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
         ),
     ]),
 
