@@ -7,8 +7,8 @@ Cannot assign `d.getTime()` to `x` because number [1] is incompatible with strin
                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:363:16
-   363|     getTime(): number;
+   <BUILTINS>/core.js:364:16
+   364|     getTime(): number;
                        ^^^^^^ [1]
    date.js:2:7
      2| var x:string = d.getTime();
@@ -30,14 +30,14 @@ References:
    date.js:18:10
     18| new Date({});
                  ^^ [1]
-   <BUILTINS>/core.js:352:28
-   352|     constructor(timestamp: number): void;
+   <BUILTINS>/core.js:353:28
+   353|     constructor(timestamp: number): void;
                                    ^^^^^^ [2]
-   <BUILTINS>/core.js:353:29
-   353|     constructor(dateString: string): void;
+   <BUILTINS>/core.js:354:29
+   354|     constructor(dateString: string): void;
                                     ^^^^^^ [3]
-   <BUILTINS>/core.js:354:23
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:23
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                               ^^^^^^ [4]
 
 
@@ -53,8 +53,8 @@ References:
    date.js:19:16
     19| new Date(2015, '6');
                        ^^^ [1]
-   <BUILTINS>/core.js:354:38
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:38
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                              ^^^^^^ [2]
 
 
@@ -70,8 +70,8 @@ References:
    date.js:20:19
     20| new Date(2015, 6, '18');
                           ^^^^ [1]
-   <BUILTINS>/core.js:354:52
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:52
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                            ^^^^^^ [2]
 
 
@@ -87,8 +87,8 @@ References:
    date.js:21:23
     21| new Date(2015, 6, 18, '11');
                               ^^^^ [1]
-   <BUILTINS>/core.js:354:67
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:67
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                           ^^^^^^ [2]
 
 
@@ -104,8 +104,8 @@ References:
    date.js:22:27
     22| new Date(2015, 6, 18, 11, '55');
                                   ^^^^ [1]
-   <BUILTINS>/core.js:354:84
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:84
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -121,8 +121,8 @@ References:
    date.js:23:31
     23| new Date(2015, 6, 18, 11, 55, '42');
                                       ^^^^ [1]
-   <BUILTINS>/core.js:354:101
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:101
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                                                             ^^^^^^ [2]
 
 
@@ -138,8 +138,8 @@ References:
    date.js:24:35
     24| new Date(2015, 6, 18, 11, 55, 42, '999');
                                           ^^^^^ [1]
-   <BUILTINS>/core.js:354:123
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:123
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                                                                                                                                   ^^^^^^ [2]
 
 
@@ -156,17 +156,17 @@ Cannot call `Date` because:
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:351:5
-   351|     constructor(): void;
-            ^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:352:5
-   352|     constructor(timestamp: number): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   352|     constructor(): void;
+            ^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:353:5
-   353|     constructor(dateString: string): void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   353|     constructor(timestamp: number): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:354:5
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   354|     constructor(dateString: string): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:355:5
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -182,8 +182,8 @@ References:
    date.js:26:10
     26| new Date('2015', 6);
                  ^^^^^^ [1]
-   <BUILTINS>/core.js:354:23
-   354|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+   <BUILTINS>/core.js:355:23
+   355|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
                               ^^^^^^ [2]
 
 
