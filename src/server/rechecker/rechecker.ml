@@ -136,8 +136,9 @@ let process_updates genv env updates =
     FlowExitStatus.(exit Server_out_of_date)
   end;
 
+  let is_flow_file = Files.is_flow_file ~options:file_options in
   SSet.fold (fun f acc ->
-    if Files.is_flow_file ~options:file_options f &&
+    if is_flow_file f &&
       (* note: is_included may be expensive. check in-root match first. *)
       (String_utils.string_starts_with f sroot ||
         Files.is_included file_options f) &&
