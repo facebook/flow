@@ -2027,8 +2027,10 @@ let is_lint_error = function
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _
+  | EDeprecatedType _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
-  | EInexactSpread _ ->
+  | EInexactSpread _
+  | EUnnecessaryOptionalChain _ ->
     true
   | _ -> false
