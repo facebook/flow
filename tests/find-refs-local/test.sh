@@ -143,3 +143,7 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root unchecked.js 4 5
 
 printf 'Property in a file read from stdin: '
 assert_ok "$FLOW" find-refs --json --pretty --strip-root --path empty.js 3 15 < empty.js-contents.txt
+
+printf "Optional chaining:\\n"
+assert_ok "$FLOW" find-refs --json --pretty --strip-root optional-chaining.js 17 6
+assert_ok "$FLOW" find-refs --json --pretty --strip-root optional-chaining.js 17 10

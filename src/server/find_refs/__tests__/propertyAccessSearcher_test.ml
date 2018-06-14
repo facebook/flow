@@ -55,4 +55,10 @@ let tests = "SymbolKind" >::: [
   "class_property" >:: begin fun ctxt ->
     run ctxt true "bar" "class Foo { bar: number }"
   end;
+  "optional_chain_new" >:: begin fun ctxt ->
+    run ctxt true "bar" "foo?.bar"
+  end;
+  "optional_chain_continued" >:: begin fun ctxt ->
+    run ctxt true "baz" "foo?.bar.baz"
+  end;
 ];

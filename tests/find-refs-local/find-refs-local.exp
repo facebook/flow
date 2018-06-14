@@ -1381,3 +1381,52 @@ Property in a file read from stdin: {
     }
   ]
 }
+Optional chaining:
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":25},
+      "end":{"line":4,"column":5,"offset":28}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":3,"offset":89},
+      "end":{"line":12,"column":5,"offset":92}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":6,"offset":121},
+      "end":{"line":17,"column":8,"offset":124}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":3,"offset":52},
+      "end":{"line":8,"column":5,"offset":55}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":13,"column":5,"offset":100},
+      "end":{"line":13,"column":7,"offset":103}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":10,"offset":125},
+      "end":{"line":17,"column":12,"offset":128}
+    }
+  ]
+}
