@@ -3822,22 +3822,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT (_, _, id1)), UseT (_, DefT (_, PolyT (_, _, id2)))
       when id1 = id2 -> ()
 
-    | DefT (_, PolyT (params1, t1, id1)), UseT (use_op, DefT (_, PolyT (params2, t2, id2)))
-      when List.length params1 = List.length params2 ->
-      (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
-          by these *)
-      let args1 = instantiate_poly_param_upper_bounds cx params1 in
-      let args2 = instantiate_poly_param_upper_bounds cx params2 in
-      List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
-      let inst1 =
-        let r = reason_of_t t1 in
-        mk_typeapp_of_poly cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
-      let inst2 =
-        let r = reason_of_t t2 in
-        mk_typeapp_of_poly cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
-      rec_flow_t cx trace (inst1, inst2)
+    | DefT (r1, PolyT (params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (params2, t2, id2))) ->
+      let n1 = List.length params1 in
+      let n2 = List.length params2 in
+      if n2 > n1 then
+        add_output cx ~trace (FlowError.ETooManyTypeArgs (r2, r1, n1))
+      else if n2 < n1 then
+        add_output cx ~trace (FlowError.ETooFewTypeArgs (r2, r1, n1))
+      else
+        (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
+            by these *)
+        let args1 = instantiate_poly_param_upper_bounds cx params1 in
+        let args2 = instantiate_poly_param_upper_bounds cx params2 in
+        List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
+        let inst1 =
+          let r = reason_of_t t1 in
+          mk_typeapp_of_poly cx trace
+            ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
+        let inst2 =
+          let r = reason_of_t t2 in
+          mk_typeapp_of_poly cx trace
+            ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
+        rec_flow_t cx trace (inst1, inst2)
 
     (** general case **)
     | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
@@ -9654,22 +9660,28 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
   | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
     when id1 = id2 -> ()
 
-  | DefT (_, PolyT (params1, t1, id1)), DefT (_, PolyT (params2, t2, id2))
-    when List.length params1 = List.length params2 ->
-    (** for equal-arity polymorphic types, unify param upper bounds
-        with each other, then instances parameterized by these *)
-    let args1 = instantiate_poly_param_upper_bounds cx params1 in
-    let args2 = instantiate_poly_param_upper_bounds cx params2 in
-    List.iter2 (rec_unify cx trace ~use_op) args1 args2;
-    let inst1 =
-      let r = reason_of_t t1 in
-      mk_typeapp_of_poly cx trace
-        ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
-    let inst2 =
-      let r = reason_of_t t2 in
-      mk_typeapp_of_poly cx trace
-        ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
-    rec_unify cx trace ~use_op inst1 inst2
+  | DefT (r1, PolyT (params1, t1, id1)), DefT (r2, PolyT (params2, t2, id2)) ->
+    let n1 = List.length params1 in
+    let n2 = List.length params2 in
+    if n2 > n1 then
+      add_output cx ~trace (FlowError.ETooManyTypeArgs (r2, r1, n1))
+    else if n2 < n1 then
+      add_output cx ~trace (FlowError.ETooFewTypeArgs (r2, r1, n1))
+    else
+      (** for equal-arity polymorphic types, unify param upper bounds
+          with each other, then instances parameterized by these *)
+      let args1 = instantiate_poly_param_upper_bounds cx params1 in
+      let args2 = instantiate_poly_param_upper_bounds cx params2 in
+      List.iter2 (rec_unify cx trace ~use_op) args1 args2;
+      let inst1 =
+        let r = reason_of_t t1 in
+        mk_typeapp_of_poly cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
+      let inst2 =
+        let r = reason_of_t t2 in
+        mk_typeapp_of_poly cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
+      rec_unify cx trace ~use_op inst1 inst2
 
   | DefT (_, ArrT (ArrayAT(t1, ts1))),
     DefT (_, ArrT (ArrayAT(t2, ts2))) ->
