@@ -153,38 +153,6 @@ end = struct
       | Some connection -> PersistentConnection.write ~msg:response connection);
       Lwt.return_unit
 
-  let has_changed_files, get_and_clear_changed_files =
-    let acc = ref SSet.empty in
-
-    let fetch watcher =
-      let%lwt files = watcher#get_changed_files () in
-      if not (SSet.is_empty files)
-      then begin
-        let count = SSet.cardinal files in
-        Logger.info "File watcher reported %d file%s changed" count (if count = 1 then "" else "s")
-      end;
-      acc := SSet.union !acc files;
-      Lwt.return_unit
-    in
-
-    (* Queries dfind for any new file system events and then returns whether or not we've
-     * accumulated any file system events *)
-    let has_changed_files watcher =
-      let%lwt () = fetch watcher in
-      Lwt.return (not (SSet.is_empty !acc))
-    in
-
-    (* Queries dfind for any new file system events and then returns all the accumulated file
-     * system events. This call will clear the accumulator *)
-    let get_and_clear_changed_files watcher =
-      let%lwt () = fetch watcher in
-      let ret = !acc in
-      acc := SSet.empty;
-      Lwt.return ret
-    in
-
-    has_changed_files, get_and_clear_changed_files
-
   module CommandLoop = LwtLoop.Make (struct
     type acc = (FileWatcher.watcher * ServerConnection.t)
 
@@ -193,9 +161,13 @@ end = struct
     (* In order to try and avoid races between the file system and a command (like `flow status`),
      * we check for file system notification before sending a request to the server *)
     let send_file_watcher_notification watcher conn =
-      let%lwt files = get_and_clear_changed_files watcher in
+      let%lwt files = watcher#get_and_clear_changed_files in
       if not (SSet.is_empty files)
-      then send_request ~msg:(MonitorProt.FileWatcherNotification files) conn;
+      then begin
+        let count = SSet.cardinal files in
+        Logger.info "File watcher reported %d file%s changed" count (if count = 1 then "" else "s");
+        send_request ~msg:(MonitorProt.FileWatcherNotification files) conn
+      end;
       Lwt.return_unit
 
     let main (watcher, conn) =
@@ -244,10 +216,8 @@ end = struct
 
     (* Poll for file changes every second *)
     let main watcher =
-      let%lwt should_notify = has_changed_files watcher in
-      if should_notify
-      then push_to_command_stream (Some Notify_file_changes);
-      let%lwt () = Lwt_unix.sleep 1.0 in
+      let%lwt () = watcher#wait_for_changed_files in
+      push_to_command_stream (Some Notify_file_changes);
       Lwt.return watcher
 
     let catch watcher exn =
@@ -321,7 +291,7 @@ end = struct
     (* Lwt.join will run these threads in parallel and only return when EVERY thread has returned
      * or failed *)
     Lwt.join [
-      t.watcher#stop ();
+      t.watcher#stop;
       ServerConnection.close_immediately t.connection;
     ]
 
@@ -435,10 +405,10 @@ end = struct
     (* This may block for quite awhile. No messages will be sent to the server process until the
      * file watcher is up and running *)
     Logger.debug "Initializing file watcher (%s)" watcher#name;
-    let%lwt () = watcher#init () in
+    let%lwt () = watcher#init in
     Logger.debug "File watcher (%s) ready!" watcher#name;
     let file_watcher_exit_thread =
-      let%lwt status = watcher#waitpid () in handle_file_watcher_exit watcher status
+      let%lwt status = watcher#waitpid in handle_file_watcher_exit watcher status
     in
     StatusStream.file_watcher_ready ();
 

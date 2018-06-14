@@ -19,32 +19,35 @@ exception FileWatcherDied of exn
 class type watcher =
   object
     method name: string
-    method init: unit -> unit Lwt.t
-    method get_changed_files: unit -> SSet.t Lwt.t
-    method stop: unit -> unit Lwt.t
-    method waitpid: unit -> Unix.process_status Lwt.t
+    method init: unit Lwt.t
+    method get_and_clear_changed_files: SSet.t Lwt.t
+    method wait_for_changed_files: unit Lwt.t
+    method stop: unit Lwt.t
+    method waitpid: Unix.process_status Lwt.t
   end
 
 class dummy : watcher = object
   method name = "dummy"
-  method init () = Lwt.return_unit
-  method get_changed_files () = Lwt.return SSet.empty
-  method stop () = Lwt.return_unit
-  method waitpid () = let wait_forever_thread, _ = Lwt.task () in wait_forever_thread
+  method init = Lwt.return_unit
+  method get_and_clear_changed_files = Lwt.return SSet.empty
+  method wait_for_changed_files = Lwt.return_unit
+  method stop = Lwt.return_unit
+  method waitpid = let wait_forever_thread, _ = Lwt.task () in wait_forever_thread
 end
 
 class dfind (watch_paths: Path.t list) : watcher =
   object (self)
     val mutable dfind_instance = None
+    val mutable files = SSet.empty
 
     method name = "dfind"
 
-    method private get_dfind () =
+    method private get_dfind =
       match dfind_instance with
       | None -> failwith "Dfind was not initialized"
       | Some dfind -> dfind
 
-    method init () =
+    method init =
       let null_fd = Daemon.null_fd () in
       let fds = (null_fd, null_fd, null_fd) in
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
@@ -55,18 +58,35 @@ class dfind (watch_paths: Path.t list) : watcher =
     (* We don't want two threads to talk to dfind at the same time. And we don't want those two
      * threads to get the same file change events *)
     val dfind_mutex = Lwt_mutex.create ()
-    method private get_changed_files () =
+    method private fetch =
       Lwt_mutex.with_lock dfind_mutex (fun () ->
-        let dfind = self#get_dfind () in
-        try%lwt DfindLibLwt.get_changes dfind
+        let dfind = self#get_dfind in
+        try%lwt
+          let%lwt new_files = DfindLibLwt.get_changes dfind in
+          files <- SSet.union files new_files;
+          Lwt.return_unit
         with
         | Sys_error msg as exn when msg = "Broken pipe" -> raise (FileWatcherDied exn)
         | End_of_file
         | Unix.Unix_error (Unix.EPIPE, _, _) as exn -> raise (FileWatcherDied exn)
       )
 
-    method stop () =
-      let dfind = self#get_dfind () in
+    method get_and_clear_changed_files =
+      let%lwt () = self#fetch in
+      let ret = files in
+      files <- SSet.empty;
+      Lwt.return ret
+
+    method wait_for_changed_files =
+      let%lwt () = self#fetch in
+      if not (SSet.is_empty files)
+      then Lwt.return_unit
+      else
+        let%lwt () = Lwt_unix.sleep 1.0 in
+        self#wait_for_changed_files
+
+    method stop =
+      let dfind = self#get_dfind in
       let pid = DfindLibLwt.pid dfind in
       DfindLibLwt.stop dfind;
       dfind_instance <- None;
@@ -74,8 +94,8 @@ class dfind (watch_paths: Path.t list) : watcher =
       let%lwt _ = LwtSysUtils.blocking_waitpid pid in
       Lwt.return_unit
 
-    method waitpid () =
-      let dfind = self#get_dfind () in
+    method waitpid =
+      let dfind = self#get_dfind in
       let pid = DfindLibLwt.pid dfind in
       let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
       Lwt.return status
