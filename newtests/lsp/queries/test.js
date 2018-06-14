@@ -180,7 +180,7 @@ export default suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
       }).verifyAllIDEMessagesInStep(
         ['textDocument/typeCoverage{Use @flow}'],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
 
@@ -193,7 +193,7 @@ export default suite(
         [
           'telemetry/rage{Focused: 1,LSP adapter state: Connected,.monitor_log,.log}',
         ],
-        [],
+        [...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
