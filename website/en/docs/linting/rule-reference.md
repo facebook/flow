@@ -16,6 +16,7 @@ layout: guide
 * [`unsafe-getters-setters`](#toc-unsafe-getters-setters)
 * [`deprecated-declare-exports`](#toc-deprecated-declare-exports)
 * [`nonstrict-import`](#toc-nonstrict-import)
+* [`unnecessary-optional-chain`](#toc-unnecessary-optional-chain)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -139,3 +140,37 @@ deprecated-declare-exports=off
 ```
 
 However, note that this syntax will be removed soon, so you should file issues with any projects that still use it.
+
+#### `unnecessary-optional-chain` <a class="toc" id="toc-unnecessary-optional-chain" href="#toc-unnecessary-optional-chain"></a>
+
+Triggers when you use `?.` where it isn't needed. This comes in two main flavors. The first is when the left-hand-side cannot be nullish:
+
+```js
+type Foo = {
+  bar: number
+}
+
+declare var foo: Foo;
+foo?.bar; // Lint: unnecessary-optional-chain
+```
+
+The second is when the left-hand-side could be nullish, but the short-circuiting behavior of `?.` is sufficient to handle it anyway:
+
+```js
+type Foo = {
+  bar: {
+    baz: number
+  }
+}
+
+declare var foo: ?Foo;
+foo?.bar?.baz; // Lint: unnecessary-optional-chain
+```
+
+In the second example, the first use of `?.` is valid, since `foo` is potentially nullish, but the second use of `?.` is unnecessary. The left-hand-side of the second `?.` (`foo?.bar`) can only be nullish as a result of `foo` being nullish, and when `foo` is nullish, short-circuiting lets us avoid the second `?.` altogether!
+
+```js
+foo?.bar.baz;
+```
+
+This makes it clear to the reader that `bar` is not a potentially nullish property.
