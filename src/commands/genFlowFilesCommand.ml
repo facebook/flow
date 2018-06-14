@@ -56,7 +56,7 @@ let spec = {
     |> ignore_flag
     |> include_flag
     |> untyped_flag
-    |> silence_flag
+    |> declaration_flag
     |> from_flag
     |> anon "src" (required string)
     |> flag "--out-dir" string
@@ -86,7 +86,7 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   Unix.close fd
 
 let main option_values root error_flags strip_root ignore_flag
-  include_flag untyped_flag silence_flag from src out_dir () = (
+  include_flag untyped_flag declaration_flag from src out_dir () = (
   FlowEventLogger.set_from from;
   let src = expand_path src in
   let root = guess_root (
@@ -112,7 +112,7 @@ let main option_values root error_flags strip_root ignore_flag
         FlowExitStatus.exit ~msg FlowExitStatus.Commandline_usage_error
       );
 
-      let options = LsCommand.make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~silence_flag in
+      let options = LsCommand.make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag in
       let _, libs = Files.init options in
       let next_files =
         LsCommand.get_ls_files ~root ~all:false ~options ~libs ~imaginary:false (Some src)

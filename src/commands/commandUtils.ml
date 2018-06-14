@@ -382,7 +382,7 @@ let assert_version flowconfig =
 type flowconfig_params = {
   ignores: string list;
   untyped: string list;
-  silence: string list;
+  declarations: string list;
   includes: string list;
   libs: string list;
   (* We store raw_lint_severities as a string list instead of as a LintSettings.t so we
@@ -395,14 +395,14 @@ let list_of_string_arg = function
 | None -> []
 | Some arg_str -> Str.split (Str.regexp ",") arg_str
 
-let collect_flowconfig_flags main ignores_str untyped_str silence_str includes_str lib_str lints_str =
+let collect_flowconfig_flags main ignores_str untyped_str declarations_str includes_str lib_str lints_str =
   let ignores = list_of_string_arg ignores_str in
   let untyped = list_of_string_arg untyped_str in
-  let silence = list_of_string_arg silence_str in
+  let declarations = list_of_string_arg declarations_str in
   let includes = list_of_string_arg includes_str in
   let libs = list_of_string_arg lib_str in
   let raw_lint_severities = list_of_string_arg lints_str in
-  main { ignores; includes; libs; raw_lint_severities; untyped; silence; }
+  main { ignores; includes; libs; raw_lint_severities; untyped; declarations; }
 
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
@@ -468,7 +468,7 @@ let file_options =
     | [] -> config_libs
     | _ -> config_libs @ (List.map (Files.make_path_absolute root) extras)
   in
-  fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~silence flowconfig ->
+  fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
       let no_flowlib = no_flowlib || FlowConfig.no_flowlib flowconfig in
       Some (default_lib_dir ~no_flowlib temp_dir)
@@ -481,10 +481,10 @@ let file_options =
       root
       (FlowConfig.untyped flowconfig)
       untyped in
-    let silence = ignores_of_arg
+    let declarations = ignores_of_arg
       root
-      (FlowConfig.silence flowconfig)
-      silence in
+      (FlowConfig.declarations flowconfig)
+      declarations in
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
@@ -494,7 +494,7 @@ let file_options =
       default_lib_dir;
       ignores;
       untyped;
-      silence;
+      declarations;
       includes;
       lib_paths;
       module_file_exts = FlowConfig.module_file_exts flowconfig;
@@ -514,10 +514,10 @@ let untyped_flag prev = CommandSpec.ArgSpec.(
     ~doc:"Specify one or more patterns, comma separated, for files to treat as untyped"
 )
 
-let silence_flag prev = CommandSpec.ArgSpec.(
+let declaration_flag prev = CommandSpec.ArgSpec.(
   prev
-  |> flag "--silence" (optional string)
-    ~doc:"Specify one or more patterns, comma separated, for files to treat as silenced"
+  |> flag "--declaration" (optional string)
+    ~doc:"Specify one or more patterns, comma separated, for files to treat as declarations"
 )
 
 let include_flag prev = CommandSpec.ArgSpec.(
@@ -549,7 +549,7 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
   |> collect collect_flowconfig_flags
   |> ignore_flag
   |> untyped_flag
-  |> silence_flag
+  |> declaration_flag
   |> include_flag
   |> lib_flag
   |> lints_flag
@@ -796,9 +796,9 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
       libs;
       raw_lint_severities=_;
       untyped;
-      silence;
+      declarations;
     } = options_flags.flowconfig_flags in
-    file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~silence flowconfig
+    file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig
   in
   let lint_severities = parse_lints_flag
     (FlowConfig.lint_severities flowconfig) options_flags.flowconfig_flags.raw_lint_severities

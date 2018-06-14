@@ -344,16 +344,13 @@ let scan_for_lint_suppressions =
 
 let scan_for_suppressions cx lint_severities file_options comments =
   let filename = File_key.to_string (Context.file cx) in
-  let silenced = match file_options with
-  | Some file_options -> Files.is_silenced file_options filename
+  let declaration = match file_options with
+  | Some file_options -> Files.is_declaration file_options filename
   | None -> false
   in
-  if silenced then
-    (* Whole file is silenced. *)
-    (* A more "correct" solution might be to keep all the errors and instead
-     * synthesize suppressions for them. That would be a lot of work
-     * for the same end result though.
-     *)
+  if declaration then
+    (* Declaration mode.
+     * We don't report any warnings or errors. *)
     Context.remove_all_errors cx
   else
     (* Scan comments for line suppressions. *)

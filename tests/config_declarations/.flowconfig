@@ -5,7 +5,7 @@
 [libs]
 lib.js
 
-[silence]
+[declarations]
 .*/B.js
 .*/C.js
 

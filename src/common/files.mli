@@ -11,7 +11,7 @@ type options = {
   default_lib_dir: Path.t option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
-  silence: (string * Str.regexp) list;
+  declarations: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -22,7 +22,7 @@ type options = {
 val default_lib_dir: options -> Path.t option
 val ignores: options -> (string * Str.regexp) list
 val untyped: options -> (string * Str.regexp) list
-val silence: options -> (string * Str.regexp) list
+val declarations: options -> (string * Str.regexp) list
 val includes: options -> Path_matcher.t
 val lib_paths: options -> Path.t list
 val module_file_exts: options -> SSet.t
@@ -44,8 +44,8 @@ val is_flow_file: options: options -> string -> bool
 val is_ignored: options -> string -> bool
 (* true if a file path matches an [untyped] entry in config *)
 val is_untyped: options -> string -> bool
-(* true if a file path matches an [silence] entry in config *)
-val is_silenced: options -> string -> bool
+(* true if a file path matches a [declarations] entry in config *)
+val is_declaration: options -> string -> bool
 (* true if a file path matches an [include] path in config *)
 val is_included: options -> string -> bool
 

@@ -50,7 +50,7 @@ let main from flowconfig_flags options root () =
   in
   let ignores = flowconfig_flags.CommandUtils.ignores in
   let untyped = flowconfig_flags.CommandUtils.untyped in
-  let silence = flowconfig_flags.CommandUtils.silence in
+  let declarations = flowconfig_flags.CommandUtils.declarations in
   let includes = flowconfig_flags.CommandUtils.includes in
   let libs = flowconfig_flags.CommandUtils.libs in
   let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
@@ -62,7 +62,7 @@ let main from flowconfig_flags options root () =
     FlowExitStatus.(exit ~msg Invalid_flowconfig)
   end;
 
-  let config = FlowConfig.init ~ignores ~untyped ~silence ~includes ~libs ~options ~lints in
+  let config = FlowConfig.init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints in
 
   let out = Sys_utils.open_out_no_fail file in
   FlowConfig.write config out;

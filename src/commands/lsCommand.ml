@@ -26,7 +26,7 @@ let spec = {
     |> ignore_flag
     |> include_flag
     |> untyped_flag
-    |> silence_flag
+    |> declaration_flag
     |> root_flag
     |> json_flags
     |> from_flag
@@ -107,16 +107,16 @@ let rec iter_get_next ~f get_next =
       List.iter f result;
       iter_get_next ~f get_next
 
-let make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~silence_flag =
+let make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
   let temp_dir = FlowConfig.temp_dir flowconfig in
   let includes = CommandUtils.list_of_string_arg include_flag in
   let ignores = CommandUtils.list_of_string_arg ignore_flag in
   let untyped = CommandUtils.list_of_string_arg untyped_flag in
-  let silence = CommandUtils.list_of_string_arg silence_flag in
+  let declarations = CommandUtils.list_of_string_arg declaration_flag in
   let libs = [] in
   CommandUtils.file_options flowconfig
-    ~root ~no_flowlib:true ~temp_dir ~ignores ~includes ~libs ~untyped ~silence
+    ~root ~no_flowlib:true ~temp_dir ~ignores ~includes ~libs ~untyped ~declarations
 
 (* The problem with Files.wanted is that it says yes to everything except ignored files and libs.
  * So implicitly ignored files (like files in another directory) pass the Files.wanted check *)
@@ -176,7 +176,7 @@ let get_next_append_const get_next const =
       ret
 
 let main
-  strip_root ignore_flag include_flag untyped_flag silence_flag root_flag json pretty from all imaginary reason
+  strip_root ignore_flag include_flag untyped_flag declaration_flag root_flag json pretty from all imaginary reason
   input_file root_or_files () =
 
   let files_or_dirs = get_filenames_from_input ~allow_imaginary:true input_file root_or_files in
@@ -196,7 +196,7 @@ let main
       | _ -> None)
   ) in
 
-  let options = make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~silence_flag in
+  let options = make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag in
   (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
   let options = { options with Files.default_lib_dir = None; } in
   let _, libs = Files.init options in
