@@ -40,7 +40,7 @@ let spec = { CommandSpec.
 
 let main
     options_flags json pretty server_log_file monitor_log_file wait lazy_mode
-    autostop shm_flags ignore_version from no_restart file_watcher path_opt () =
+    autostop shm_flags ignore_version from no_restart file_watcher file_watcher_debug path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -97,6 +97,7 @@ let main
     shared_mem_config;
     argv = Sys.argv;
     file_watcher;
+    file_watcher_debug;
   } in
 
   FlowServerMonitor.daemonize ~wait ~on_spawn monitor_options

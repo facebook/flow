@@ -8,6 +8,7 @@
 type file_watcher =
 | NoFileWatcher
 | DFind
+| Watchman
 
 type status' =
 | Initializing
@@ -18,6 +19,7 @@ let string_of_status =
   let string_of_watcher = function
   | NoFileWatcher -> "Dummy file watcher"
   | DFind -> "Dfind file watcher"
+  | Watchman -> "Watchman file watcher"
   in
 
   let string_of_status = function

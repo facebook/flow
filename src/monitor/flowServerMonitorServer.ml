@@ -340,7 +340,9 @@ end = struct
     | FileWatcherStatus.NoFileWatcher ->
       new FileWatcher.dummy
     | FileWatcherStatus.DFind ->
-      new FileWatcher.dfind (Files.watched_paths (Options.file_options server_options))
+      new FileWatcher.dfind monitor_options
+    | FileWatcherStatus.Watchman ->
+      new FileWatcher.watchman monitor_options
     in
     let handle = Server.daemonize
       ~log_file ~shared_mem_config ~argv server_options in

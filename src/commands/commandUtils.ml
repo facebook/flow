@@ -725,19 +725,22 @@ let options_flags =
       ~env:"FLOW_MERGE_TIMEOUT"
 
 let file_watcher_flag =
-  let collect_file_watcher_flag main file_watcher =
+  let collect_file_watcher_flag main file_watcher file_watcher_debug =
     let file_watcher = match file_watcher with
     | "none" -> FileWatcherStatus.NoFileWatcher
     | "dfind" -> FileWatcherStatus.DFind
+    | "watchman" -> FileWatcherStatus.Watchman
     | _ -> assert false in
-    main file_watcher
+    main file_watcher file_watcher_debug
   in
   fun prev -> CommandSpec.ArgSpec.(
     prev
     |> collect collect_file_watcher_flag
-    |> flag "--file-watcher" (required ~default:"dfind" (enum ["none"; "dfind"]))
-      ~doc:("Which file watcher Flow should use (none, dfind). " ^
+    |> flag "--file-watcher" (required ~default:"dfind" (enum ["none"; "dfind"; "watchman"]))
+      ~doc:("Which file watcher Flow should use (none, dfind, watchman). " ^
         "Flow will ignore file system events if this is set to none. (default: dfind)")
+    |> flag "--file-watcher-debug" no_arg
+      ~doc:("Enable debug logging for the file watcher. This is very noisy")
   )
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)

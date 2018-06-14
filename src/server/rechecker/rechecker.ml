@@ -41,6 +41,10 @@ let process_updates genv env updates =
     FlowExitStatus.(exit Flowconfig_changed)
   end;
 
+  (* WARNING! Be careful when adding new incompatibilities to this function. While dfind will
+   * return any file which changes within the watched directories, watchman only watches for
+   * specific extensions and files. Make sure to update the watchman_expression_terms in our
+   * watchman file watcher! *)
   let is_incompatible filename_str =
     let filename = File_key.JsonFile filename_str in
     let filename_set = FilenameSet.singleton filename in

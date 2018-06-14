@@ -26,4 +26,6 @@ type t = {
   argv: string array;
   (* What to use for file watching *)
   file_watcher: FileWatcherStatus.file_watcher;
+  (* Turn on debugging messages for the file watcher *)
+  file_watcher_debug: bool;
 }

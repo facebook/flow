@@ -47,6 +47,8 @@ val is_included: options -> string -> bool
 
 val is_valid_path: options: options -> string -> bool
 
+val get_all_watched_extensions: options -> SSet.t
+
 val init: options -> string list * SSet.t
 
 val module_ref: File_key.t -> string
