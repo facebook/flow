@@ -273,11 +273,11 @@ module Watchman_actual = struct
      with Not_found -> ())
 
   let sanitize_watchman_response ~debug_logging output =
-    if debug_logging then Printf.eprintf "Watchman response: %s\n%!" output;
+    if debug_logging then Hh_logger.info "Watchman response: %s" output;
     let response =
       try Hh_json.json_of_string output
       with e ->
-        Printf.eprintf "Failed to parse string as JSON: %s\n%!" output;
+        Hh_logger.error ~exn:e "Failed to parse string as JSON: %s" output;
         raise e
     in
     assert_no_error response;
@@ -285,7 +285,7 @@ module Watchman_actual = struct
 
   let send_request ~debug_logging oc json =
     let json_str = Hh_json.(json_to_string json) in
-    if debug_logging then Printf.eprintf "Watchman request: %s\n%!" json_str ;
+    if debug_logging then Hh_logger.info "Watchman request: %s" json_str ;
     output_string oc json_str;
     output_string oc "\n";
     flush oc
