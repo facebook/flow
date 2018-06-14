@@ -10,6 +10,7 @@ open Token
 open Lex_env
 
 let lexeme = Sedlexing.Utf8.lexeme
+let sub_lexeme = Sedlexing.Utf8.sub_lexeme
 
 let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '$']
 let id_letter = [%sedlex.regexp? letter | '_']
@@ -325,25 +326,23 @@ let decode_identifier =
     | eof -> lex_error env loc Parse_error.IllegalUnicodeEscape
     | _ -> failwith "unreachable"
   in
-  let loc_and_lexeme env offset lexbuf  =
+  let loc_and_sub_lexeme env offset lexbuf trim_start trim_end  =
     let start_offset = offset + Sedlexing.lexeme_start lexbuf in
     let end_offset = offset + Sedlexing.lexeme_end lexbuf in
     let loc = loc_of_offsets env start_offset end_offset in
-    loc, lexeme lexbuf
+    loc, sub_lexeme lexbuf trim_start (Sedlexing.lexeme_length lexbuf - trim_start - trim_end)
   in
   let rec id_char env offset buf lexbuf =
     match%sedlex lexbuf with
     | unicode_escape ->
-      let loc, str = loc_and_lexeme env offset lexbuf in
-      let hex = String.sub str 2 (String.length str - 2) in
+      let loc, hex = loc_and_sub_lexeme env offset lexbuf 2 0 in
       let code = int_of_string ("0x"^hex) in
       let env = assert_valid_unicode_in_identifier env loc code in
       Wtf8.add_wtf_8 buf code;
       id_char env offset buf lexbuf
 
     | codepoint_escape ->
-      let loc, str = loc_and_lexeme env offset lexbuf in
-      let hex = String.sub str 3 (String.length str - 4) in
+      let loc, hex = loc_and_sub_lexeme env offset lexbuf 3 1 in
       let code = int_of_string ("0x"^hex) in
       let env = assert_valid_unicode_in_identifier env loc code in
       Wtf8.add_wtf_8 buf code;
