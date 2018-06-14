@@ -33,7 +33,8 @@ module Types = struct
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     debug_logging: bool;
-    root: Path.t;
+    roots: Path.t list;
+    subscription_prefix: string;
   }
 
   type pushed_changes =
@@ -82,8 +83,6 @@ module type S = sig
 
   include module type of Types
   include module type of Abstract_types
-
-  val crash_marker_path: Path.t -> string
 
   val init: init_settings -> env option
 
