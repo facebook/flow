@@ -214,7 +214,7 @@ module Watchman_actual = struct
     if Buffered_line_reader.has_buffered_content reader
     then true
     else
-      match Unix.select [Buffered_line_reader.get_fd reader] [] [] timeout with
+      match Sys_utils.select_non_intr [Buffered_line_reader.get_fd reader] [] [] timeout with
       | [], _, _ -> false
       | _ -> true
 
