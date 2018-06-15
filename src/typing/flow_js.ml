@@ -3017,11 +3017,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
         let def = match sentinel with
-          | SentinelStr v -> SingletonStrT v
-          | SentinelNum v -> SingletonNumT v
-          | SentinelBool v -> SingletonBoolT v
-          | SentinelVoid -> VoidT
-          | SentinelNull -> NullT in
+          | Enum.Str v -> SingletonStrT v
+          | Enum.Num v -> SingletonNumT v
+          | Enum.Bool v -> SingletonBoolT v
+          | Enum.Void -> VoidT
+          | Enum.Null -> NullT in
         match UnionRep.quick_mem_enum (DefT (r, def)) rep with
         | UnionRep.No -> ()  (* provably unreachable, so prune *)
         | UnionRep.Yes -> rec_flow_t cx trace (l, result)
@@ -5894,7 +5894,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       guard cx trace l pred result sink
 
     | DefT (_, StrT lit),
-      SentinelPropTestT (reason, l, key, sense, SentinelStr sentinel, result) ->
+      SentinelPropTestT (reason, l, key, sense, Enum.Str sentinel, result) ->
       begin match lit with
         | Literal (_, value) when (value = sentinel) != sense ->
           if not sense
@@ -5907,7 +5907,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, NumT lit),
-      SentinelPropTestT (reason, l, key, sense, SentinelNum sentinel_lit, result) ->
+      SentinelPropTestT (reason, l, key, sense, Enum.Num sentinel_lit, result) ->
       let sentinel, _ = sentinel_lit in
       begin match lit with
         | Literal (_, (value, _)) when (value = sentinel) != sense ->
@@ -5921,7 +5921,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, BoolT lit),
-      SentinelPropTestT (reason, l, key, sense, SentinelBool sentinel, result) ->
+      SentinelPropTestT (reason, l, key, sense, Enum.Bool sentinel, result) ->
         begin match lit with
         | Some value when (value = sentinel) != sense ->
           if not sense
@@ -5934,13 +5934,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         end
 
     | DefT (_, NullT),
-      SentinelPropTestT (_reason, l, _key, sense, SentinelNull, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, Enum.Null, result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, VoidT),
-      SentinelPropTestT (_reason, l, _key, sense, SentinelVoid, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, Enum.Void, result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
@@ -9200,11 +9200,11 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       (match Property.read_t p with
       | Some t ->
         let desc = RMatchingProp (key, match sentinel with
-          | SentinelStr s -> RStringLit s
-          | SentinelNum (_, n) -> RNumberLit n
-          | SentinelBool b -> RBooleanLit b
-          | SentinelNull -> RNull
-          | SentinelVoid -> RVoid
+          | Enum.Str s -> RStringLit s
+          | Enum.Num (_, n) -> RNumberLit n
+          | Enum.Bool b -> RBooleanLit b
+          | Enum.Null -> RNull
+          | Enum.Void -> RVoid
         ) in
         let reason = replace_reason_const desc (reason_of_t result) in
         let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
@@ -9227,11 +9227,11 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
   in
   let sentinel_of_literal = function
-    | DefT (_, StrT (Literal (_, value))) -> Some (SentinelStr value)
-    | DefT (_, NumT (Literal (_, value))) -> Some (SentinelNum value)
-    | DefT (_, BoolT (Some value)) -> Some (SentinelBool value)
-    | DefT (_, VoidT) -> Some SentinelVoid
-    | DefT (_, NullT) -> Some SentinelNull
+    | DefT (_, StrT (Literal (_, value))) -> Some (Enum.Str value)
+    | DefT (_, NumT (Literal (_, value))) -> Some (Enum.Num value)
+    | DefT (_, BoolT (Some value)) -> Some (Enum.Bool value)
+    | DefT (_, VoidT) -> Some Enum.Void
+    | DefT (_, NullT) -> Some Enum.Null
     | _ -> None
   in
   fun (sense, obj, t) -> match sentinel_of_literal t with

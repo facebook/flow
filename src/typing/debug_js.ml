@@ -774,11 +774,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "key", JSON_String key;
       "sense", JSON_Bool sense;
       "sentinel", (match sentinel with
-      | SentinelStr s -> JSON_String s
-      | SentinelNum (_, raw) -> JSON_String raw
-      | SentinelBool b -> JSON_Bool b
-      | SentinelNull -> JSON_Null
-      | SentinelVoid -> JSON_Null (* hmm, undefined doesn't exist in JSON *)
+      | Enum.Str s -> JSON_String s
+      | Enum.Num (_, raw) -> JSON_String raw
+      | Enum.Bool b -> JSON_Bool b
+      | Enum.Null -> JSON_Null
+      | Enum.Void -> JSON_Null (* hmm, undefined doesn't exist in JSON *)
       );
       "result", _json_of_t json_cx result;
     ]
@@ -2133,11 +2133,11 @@ and dump_use_t_ (depth, tvars) cx t =
         (kid l)
         sense
         (match sentinel with
-        | SentinelStr x -> spf "string %s" x
-        | SentinelNum (_,x) -> spf "number %s" x
-        | SentinelBool x -> spf "boolean %b" x
-        | SentinelNull -> "null"
-        | SentinelVoid -> "void")
+        | Enum.Str x -> spf "string %s" x
+        | Enum.Num (_,x) -> spf "number %s" x
+        | Enum.Bool x -> spf "boolean %b" x
+        | Enum.Null -> "null"
+        | Enum.Void -> "void")
         (kid result))
       t
   | SubstOnPredT _ -> p t
