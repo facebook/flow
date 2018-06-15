@@ -318,6 +318,11 @@ let first_char_of_line p =
 let to_relative_string p =
   set_file (Relative_path.suffix (filename p)) p
 
+let get_text_from_pos ~content pos =
+  let pos_length = length pos in
+  let offset = start_cnum pos in
+  String.sub content offset pos_length
+
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position
  *)
