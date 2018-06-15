@@ -3031,15 +3031,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
               UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
           end
-        | Enum.Many _enums ->
-          rec_flow_t cx trace (l, result)
+        | Enum.Many enums ->
+          let acc = EnumSet.fold (fun enum acc ->
+            let def = match enum with
+              | Enum.Str v -> SingletonStrT v
+              | Enum.Num v -> SingletonNumT v
+              | Enum.Bool v -> SingletonBoolT v
+              | Enum.Void -> VoidT
+              | Enum.Null -> NullT in
+            UnionRep.join_quick_mem_results (acc, UnionRep.quick_mem_enum (DefT (r, def)) rep)
+          ) enums UnionRep.No in
+          begin match acc with
+            | UnionRep.No -> ()  (* provably unreachable, so prune *)
+            | UnionRep.Yes -> rec_flow_t cx trace (l, result)
+            | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
+              UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
+          end
       else
         (* for l.key !== sentinel where l.key is a union, we can't really prove
            that the check is guaranteed to fail (assuming the union doesn't
            degenerate to a singleton) *)
         rec_flow_t cx trace (l, result)
 
-    | DefT (_, UnionT rep), _ ->
+    | DefT (_, UnionT rep), _
+      when (match u with
+        (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
+           prevents a drastic blowup of cases which can cause perf problems. *)
+        | PredicateT (RightP (SentinelProp _, _), _)
+        | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
+        | _ -> true
+      ) ->
       UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
 
     | _, UseT (use_op, DefT (_, IntersectionT rep)) ->
@@ -5950,6 +5971,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
+
+    | DefT (_, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
+      SentinelPropTestT (reason, obj, key, sense, Enum.Many enums, result) ->
+      if sense
+      then EnumSet.iter (fun enum ->
+        rec_flow cx trace (l, SentinelPropTestT (reason, obj, key, sense, Enum.One enum, result))
+      ) enums
+      else rec_flow_t cx trace (obj, result)
 
     | DefT (_, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
       SentinelPropTestT (_reason, l, _key, sense, _, result) ->
@@ -9239,6 +9268,11 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     | DefT (_, BoolT (Some value)) -> Some Enum.(One (Bool value))
     | DefT (_, VoidT) -> Some Enum.(One Void)
     | DefT (_, NullT) -> Some Enum.(One Null)
+    | DefT (_, UnionT rep) ->
+      begin match UnionRep.check_enum rep with
+        | Some enums -> Some Enum.(Many enums)
+        | None -> None
+      end
     | _ -> None
   in
   fun (sense, obj, t) -> match sentinel_of_literal t with
