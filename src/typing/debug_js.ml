@@ -45,6 +45,17 @@ let string_of_polarity = function
   | Neutral -> "Neutral"
   | Positive -> "Positive"
 
+let string_of_enum = function
+  | Enum.Str x -> spf "string %s" x
+  | Enum.Num (_,x) -> spf "number %s" x
+  | Enum.Bool x -> spf "boolean %b" x
+  | Enum.Null -> "null"
+  | Enum.Void -> "void"
+
+let string_of_sentinel = function
+  | Enum.One enum -> string_of_enum enum
+  | Enum.Many enums -> ListUtils.to_string " | " string_of_enum @@ EnumSet.elements enums
+
 let string_of_rw = function
   | Read -> "Read"
   | Write _ -> "Write"
@@ -773,13 +784,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "l", _json_of_t json_cx l;
       "key", JSON_String key;
       "sense", JSON_Bool sense;
-      "sentinel", (match sentinel with
-      | Enum.Str s -> JSON_String s
-      | Enum.Num (_, raw) -> JSON_String raw
-      | Enum.Bool b -> JSON_Bool b
-      | Enum.Null -> JSON_Null
-      | Enum.Void -> JSON_Null (* hmm, undefined doesn't exist in JSON *)
-      );
+      "sentinel", json_of_sentinel json_cx sentinel;
       "result", _json_of_t json_cx result;
     ]
   | IdxUnwrap (_, t_out) -> [
@@ -898,6 +903,21 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
     "t_in", _json_of_t json_cx tin;
   ]
 ))
+
+and _json_of_enum _json_cx = function
+  | Enum.Str s -> Hh_json.JSON_String s
+  | Enum.Num (_, raw) -> Hh_json.JSON_String raw
+  | Enum.Bool b -> Hh_json.JSON_Bool b
+  | Enum.Null -> Hh_json.JSON_Null
+  | Enum.Void -> Hh_json.JSON_Null (* hmm, undefined doesn't exist in JSON *)
+
+and json_of_sentinel json_cx = check_depth json_of_sentinel_impl json_cx
+and json_of_sentinel_impl json_cx = function
+  | Enum.One enum -> _json_of_enum json_cx enum
+  | Enum.Many enums ->
+    Hh_json.JSON_Array (
+      List.map (_json_of_enum json_cx) @@ EnumSet.elements enums
+    )
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 and json_of_polarity_impl _json_cx polarity =
@@ -2132,12 +2152,7 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
         sense
-        (match sentinel with
-        | Enum.Str x -> spf "string %s" x
-        | Enum.Num (_,x) -> spf "number %s" x
-        | Enum.Bool x -> spf "boolean %b" x
-        | Enum.Null -> "null"
-        | Enum.Void -> "void")
+        (string_of_sentinel sentinel)
         (kid result))
       t
   | SubstOnPredT _ -> p t
