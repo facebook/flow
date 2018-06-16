@@ -285,10 +285,10 @@ let run_test (name, frontmatter, content) =
     ~fail:false ~parse_options:(Some parse_options)
     content (Some (File_key.SourceFile filename)) in
   let result = match errors, Frontmatter.negative_phase frontmatter with
-  | [], Some "early" ->
+  | [], Some ("early" | "parse") ->
     (* expected a parse error, didn't get it *)
     Error Missing_parse_error
-  | _, Some "early" ->
+  | _, Some ("early" | "parse") ->
     (* expected a parse error, got one *)
     Ok ()
   | [], Some _

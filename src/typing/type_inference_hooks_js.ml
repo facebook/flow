@@ -19,7 +19,7 @@ let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
-let class_member_decl_nop _ _ _ _ = ()
+let class_member_decl_nop _ _ _ _ _ = ()
 
 let obj_prop_decl_nop _ _ _ = ()
 
@@ -110,6 +110,7 @@ type hook_state_t = {
   class_member_decl_hook:
      (Context.t ->
       Type.t (* self *) ->
+      bool (* static *) ->
       string -> Loc.t ->
       unit);
 
@@ -220,8 +221,8 @@ let dispatch_jsx_hook cx name loc this_t =
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
 
-let dispatch_class_member_decl_hook cx self name loc =
-  !hook_state.class_member_decl_hook cx self name loc
+let dispatch_class_member_decl_hook cx self static name loc =
+  !hook_state.class_member_decl_hook cx self static name loc
 
 let dispatch_obj_prop_decl_hook cx name loc =
   !hook_state.obj_prop_decl_hook cx name loc

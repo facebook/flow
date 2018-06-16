@@ -65,17 +65,27 @@ printf "Method call within a class that has type params: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 96 10
 
 printf "Instance method on a superclass: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 4 3
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 5 3
 printf "Call of instance method on subclass which does not override: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 20 10
-printf "Instance method on a subclass which does override: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 10 3
-printf "Call of instance method on a subclass which does override: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 21 10
+printf "Instance method on a subclass which does override: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 11 3
+printf "Call of instance method on a subclass which does override: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 22 10
 printf "Definition of a method in a parameterized class: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 25 3
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 26 3
 printf "Call of an instance method on an upcasted class: "
-assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 31 15
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 32 15
+
+# TODO it would be nice if the results included the use of the inherited class property.
+printf "Definition of a static class property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 4 10
+# TODO it would be nice if the results included the use of the inherited class property.
+printf "Use of a static class property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 38 3
+# TODO it would be nice if this returned results.
+printf "Use of an inherited static class property: "
+assert_ok "$FLOW" find-refs --json --pretty --strip-root classInheritance.js 39 3
 
 printf "Method declaration in an object type alias: "
 assert_ok "$FLOW" find-refs --json --pretty --strip-root objects.js 4 4
@@ -133,3 +143,7 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root unchecked.js 4 5
 
 printf 'Property in a file read from stdin: '
 assert_ok "$FLOW" find-refs --json --pretty --strip-root --path empty.js 3 15 < empty.js-contents.txt
+
+printf "Optional chaining:\\n"
+assert_ok "$FLOW" find-refs --json --pretty --strip-root optional-chaining.js 17 6
+assert_ok "$FLOW" find-refs --json --pretty --strip-root optional-chaining.js 17 10

@@ -207,12 +207,21 @@ let update_open_file (uri: string) (open_file_info: open_file_info option) (stat
 
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
-  try
+  let r = begin try
     Server_message (Marshal_tools.from_fd_with_preamble fd)
   with e ->
     let message = Printexc.to_string e in
     let stack = Printexc.get_backtrace () in
     raise (Server_fatal_connection_exception { Marshal_tools.message; stack; })
+  end in
+  (* The server sends an explicit 'EOF' message in case the underlying *)
+  (* transport protocol doesn't result in EOF normally. We'll respond  *)
+  (* to it by synthesizing the EOF exception we'd otherwise get. *)
+  if r = Server_message Persistent_connection_prot.EOF then begin
+    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+    raise (Server_fatal_connection_exception { Marshal_tools.message="End_of_file"; stack; });
+  end else
+    r
 
 let get_next_event_from_client
     (client: Jsonrpc.queue)

@@ -35,7 +35,7 @@ let spec = { CommandSpec.
 }
 
 let main lazy_mode options_flags shm_flags ignore_version from
-  server_log_file monitor_log_file no_restart file_watcher path_opt () =
+  server_log_file monitor_log_file no_restart file_watcher file_watcher_debug path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -71,6 +71,7 @@ let main lazy_mode options_flags shm_flags ignore_version from
     shared_mem_config;
     argv = Sys.argv;
     file_watcher;
+    file_watcher_debug;
   } in
 
   FlowServerMonitor.start monitor_options

@@ -1228,7 +1228,7 @@ and decorators_list decorators =
       ~break:Break_if_pretty
       ~indent:0
       (List.map
-        (fun expr -> fuse [
+        (fun (_, { Ast.Class.Decorator.expression = expr }) -> fuse [
           Atom "@";
           begin
             (* Magic number, after `Call` but before `Update` *)
@@ -2008,15 +2008,15 @@ and type_function ~sep { Ast.Type.Function.
 
 and type_object_property = Ast.Type.Object.(function
   | Property (loc, { Property.
-      key; value; optional; static; proto; variance; _method=_
+      key; value; optional; static; proto; variance; _method;
     }) ->
     let s_static = if static then fuse [Atom "static"; space] else Empty in
     let s_proto = if proto then fuse [Atom "proto"; space] else Empty in
     SourceLocation (
       loc,
-      match value, variance, proto, optional with
+      match value, _method, proto, optional with
         (* Functions with no special properties can be rendered as methods *)
-      | Property.Init (loc, Ast.Type.Function func), None, false, false ->
+      | Property.Init (loc, Ast.Type.Function func), true, false, false ->
         SourceLocation (loc, fuse [
           s_static;
           object_property_key key;

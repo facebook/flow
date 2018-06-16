@@ -125,6 +125,7 @@ MODULES=\
   hack/utils/disk\
   hack/utils/hh_json\
   hack/utils/sys\
+  hack/watchman\
   $(INOTIFY)\
   $(FSNOTIFY)\
   $(INTERNAL_MODULES)

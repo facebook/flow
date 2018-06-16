@@ -3016,24 +3016,51 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, UnionT rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result) ->
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
-        let def = match sentinel with
-          | SentinelStr v -> SingletonStrT v
-          | SentinelNum v -> SingletonNumT v
-          | SentinelBool v -> SingletonBoolT v
-          | SentinelVoid -> VoidT
-          | SentinelNull -> NullT in
-        match UnionRep.quick_mem_enum (DefT (r, def)) rep with
-        | UnionRep.No -> ()  (* provably unreachable, so prune *)
-        | UnionRep.Yes -> rec_flow_t cx trace (l, result)
-        | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
-          UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
+        match sentinel with
+        | Enum.One enum ->
+          begin
+            let def = match enum with
+              | Enum.Str v -> SingletonStrT v
+              | Enum.Num v -> SingletonNumT v
+              | Enum.Bool v -> SingletonBoolT v
+              | Enum.Void -> VoidT
+              | Enum.Null -> NullT in
+            match UnionRep.quick_mem_enum (DefT (r, def)) rep with
+            | UnionRep.No -> ()  (* provably unreachable, so prune *)
+            | UnionRep.Yes -> rec_flow_t cx trace (l, result)
+            | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
+              UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
+          end
+        | Enum.Many enums ->
+          let acc = EnumSet.fold (fun enum acc ->
+            let def = match enum with
+              | Enum.Str v -> SingletonStrT v
+              | Enum.Num v -> SingletonNumT v
+              | Enum.Bool v -> SingletonBoolT v
+              | Enum.Void -> VoidT
+              | Enum.Null -> NullT in
+            UnionRep.join_quick_mem_results (acc, UnionRep.quick_mem_enum (DefT (r, def)) rep)
+          ) enums UnionRep.No in
+          begin match acc with
+            | UnionRep.No -> ()  (* provably unreachable, so prune *)
+            | UnionRep.Yes -> rec_flow_t cx trace (l, result)
+            | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
+              UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
+          end
       else
         (* for l.key !== sentinel where l.key is a union, we can't really prove
            that the check is guaranteed to fail (assuming the union doesn't
            degenerate to a singleton) *)
         rec_flow_t cx trace (l, result)
 
-    | DefT (_, UnionT rep), _ ->
+    | DefT (_, UnionT rep), _
+      when (match u with
+        (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
+           prevents a drastic blowup of cases which can cause perf problems. *)
+        | PredicateT (RightP (SentinelProp _, _), _)
+        | PredicateT (NotP (RightP (SentinelProp _, _)), _) -> false
+        | _ -> true
+      ) ->
       UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
 
     | _, UseT (use_op, DefT (_, IntersectionT rep)) ->
@@ -3822,22 +3849,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT (_, _, id1)), UseT (_, DefT (_, PolyT (_, _, id2)))
       when id1 = id2 -> ()
 
-    | DefT (_, PolyT (params1, t1, id1)), UseT (use_op, DefT (_, PolyT (params2, t2, id2)))
-      when List.length params1 = List.length params2 ->
-      (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
-          by these *)
-      let args1 = instantiate_poly_param_upper_bounds cx params1 in
-      let args2 = instantiate_poly_param_upper_bounds cx params2 in
-      List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
-      let inst1 =
-        let r = reason_of_t t1 in
-        mk_typeapp_of_poly cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
-      let inst2 =
-        let r = reason_of_t t2 in
-        mk_typeapp_of_poly cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
-      rec_flow_t cx trace (inst1, inst2)
+    | DefT (r1, PolyT (params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (params2, t2, id2))) ->
+      let n1 = List.length params1 in
+      let n2 = List.length params2 in
+      if n2 > n1 then
+        add_output cx ~trace (FlowError.ETooManyTypeArgs (r2, r1, n1))
+      else if n2 < n1 then
+        add_output cx ~trace (FlowError.ETooFewTypeArgs (r2, r1, n1))
+      else
+        (** for equal-arity polymorphic types, flow param upper bounds, then instances parameterized
+            by these *)
+        let args1 = instantiate_poly_param_upper_bounds cx params1 in
+        let args2 = instantiate_poly_param_upper_bounds cx params2 in
+        List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
+        let inst1 =
+          let r = reason_of_t t1 in
+          mk_typeapp_of_poly cx trace
+            ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
+        let inst2 =
+          let r = reason_of_t t2 in
+          mk_typeapp_of_poly cx trace
+            ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
+        rec_flow_t cx trace (inst1, inst2)
 
     (** general case **)
     | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
@@ -5888,7 +5921,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       guard cx trace l pred result sink
 
     | DefT (_, StrT lit),
-      SentinelPropTestT (reason, l, key, sense, SentinelStr sentinel, result) ->
+      SentinelPropTestT (reason, l, key, sense, Enum.(One Str sentinel), result) ->
       begin match lit with
         | Literal (_, value) when (value = sentinel) != sense ->
           if not sense
@@ -5901,7 +5934,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, NumT lit),
-      SentinelPropTestT (reason, l, key, sense, SentinelNum sentinel_lit, result) ->
+      SentinelPropTestT (reason, l, key, sense, Enum.(One Num sentinel_lit), result) ->
       let sentinel, _ = sentinel_lit in
       begin match lit with
         | Literal (_, (value, _)) when (value = sentinel) != sense ->
@@ -5915,7 +5948,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (_, BoolT lit),
-      SentinelPropTestT (reason, l, key, sense, SentinelBool sentinel, result) ->
+      SentinelPropTestT (reason, l, key, sense, Enum.(One Bool sentinel), result) ->
         begin match lit with
         | Some value when (value = sentinel) != sense ->
           if not sense
@@ -5928,16 +5961,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         end
 
     | DefT (_, NullT),
-      SentinelPropTestT (_reason, l, _key, sense, SentinelNull, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, Enum.(One Null), result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, VoidT),
-      SentinelPropTestT (_reason, l, _key, sense, SentinelVoid, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, Enum.(One Void), result) ->
         if not sense
         then ()
         else rec_flow_t cx trace (l, result)
+
+    | DefT (_, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
+      SentinelPropTestT (reason, obj, key, sense, Enum.Many enums, result) ->
+      if sense
+      then EnumSet.iter (fun enum ->
+        rec_flow cx trace (l, SentinelPropTestT (reason, obj, key, sense, Enum.One enum, result))
+      ) enums
+      else rec_flow_t cx trace (obj, result)
 
     | DefT (_, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
       SentinelPropTestT (_reason, l, _key, sense, _, result) ->
@@ -6584,6 +6625,23 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         }, use_op) in
         let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
         let err = FlowError.EPropNotFound (Some s, (reason_prop, ureason), use_op) in
+        add_output cx ~trace err
+      )
+    );
+    Option.iter lcall ~f:(fun _ ->
+      if Option.is_none ucall
+      then (
+        let prop = Some "$call" in
+        let use_op = Frame (PropertyCompatibility {
+          prop;
+          (* Lower and upper are reversed in this case since the lower object
+           * is the one requiring the prop. *)
+          lower = ureason;
+          upper = lreason;
+          is_sentinel = false;
+        }, use_op) in
+        let reason_prop = replace_reason_const (RProperty prop) lreason in
+        let err = FlowError.EPropNotFound (prop, (reason_prop, ureason), use_op) in
         add_output cx ~trace err
       )
     )
@@ -8062,7 +8120,11 @@ and resolve_bindings cx trace reason id bindings =
 and fully_resolve_type cx trace reason id t =
   if is_unexplored_source cx id then
     let imap = ResolvableTypeJob.collect_of_type cx reason IMap.empty t in
-    resolve_bindings cx trace reason id (bindings_of_jobs cx trace imap)
+    let bindings = bindings_of_jobs cx trace imap in
+    (* NOTE: bindings_of_jobs might change the state of id because it resolves it, so check
+       again. TODO: there must be a better way *)
+    if is_unexplored_source cx id then
+      resolve_bindings cx trace reason id bindings
 
 and filter_bindings cx =
   List.filter (fun (id, _) -> is_unfinished_target cx id)
@@ -9173,11 +9235,12 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       (match Property.read_t p with
       | Some t ->
         let desc = RMatchingProp (key, match sentinel with
-          | SentinelStr s -> RStringLit s
-          | SentinelNum (_, n) -> RNumberLit n
-          | SentinelBool b -> RBooleanLit b
-          | SentinelNull -> RNull
-          | SentinelVoid -> RVoid
+          | Enum.(One Str s) -> RStringLit s
+          | Enum.(One Num (_, n)) -> RNumberLit n
+          | Enum.(One Bool b) -> RBooleanLit b
+          | Enum.(One Null) -> RNull
+          | Enum.(One Void) -> RVoid
+          | Enum.(Many _enums) -> REnum
         ) in
         let reason = replace_reason_const desc (reason_of_t result) in
         let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
@@ -9200,11 +9263,16 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
   in
   let sentinel_of_literal = function
-    | DefT (_, StrT (Literal (_, value))) -> Some (SentinelStr value)
-    | DefT (_, NumT (Literal (_, value))) -> Some (SentinelNum value)
-    | DefT (_, BoolT (Some value)) -> Some (SentinelBool value)
-    | DefT (_, VoidT) -> Some SentinelVoid
-    | DefT (_, NullT) -> Some SentinelNull
+    | DefT (_, StrT (Literal (_, value))) -> Some Enum.(One (Str value))
+    | DefT (_, NumT (Literal (_, value))) -> Some Enum.(One (Num value))
+    | DefT (_, BoolT (Some value)) -> Some Enum.(One (Bool value))
+    | DefT (_, VoidT) -> Some Enum.(One Void)
+    | DefT (_, NullT) -> Some Enum.(One Null)
+    | DefT (_, UnionT rep) ->
+      begin match UnionRep.check_enum rep with
+        | Some enums -> Some Enum.(Many enums)
+        | None -> None
+      end
     | _ -> None
   in
   fun (sense, obj, t) -> match sentinel_of_literal t with
@@ -9633,22 +9701,28 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
   | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
     when id1 = id2 -> ()
 
-  | DefT (_, PolyT (params1, t1, id1)), DefT (_, PolyT (params2, t2, id2))
-    when List.length params1 = List.length params2 ->
-    (** for equal-arity polymorphic types, unify param upper bounds
-        with each other, then instances parameterized by these *)
-    let args1 = instantiate_poly_param_upper_bounds cx params1 in
-    let args2 = instantiate_poly_param_upper_bounds cx params2 in
-    List.iter2 (rec_unify cx trace ~use_op) args1 args2;
-    let inst1 =
-      let r = reason_of_t t1 in
-      mk_typeapp_of_poly cx trace
-        ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
-    let inst2 =
-      let r = reason_of_t t2 in
-      mk_typeapp_of_poly cx trace
-        ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
-    rec_unify cx trace ~use_op inst1 inst2
+  | DefT (r1, PolyT (params1, t1, id1)), DefT (r2, PolyT (params2, t2, id2)) ->
+    let n1 = List.length params1 in
+    let n2 = List.length params2 in
+    if n2 > n1 then
+      add_output cx ~trace (FlowError.ETooManyTypeArgs (r2, r1, n1))
+    else if n2 < n1 then
+      add_output cx ~trace (FlowError.ETooFewTypeArgs (r2, r1, n1))
+    else
+      (** for equal-arity polymorphic types, unify param upper bounds
+          with each other, then instances parameterized by these *)
+      let args1 = instantiate_poly_param_upper_bounds cx params1 in
+      let args2 = instantiate_poly_param_upper_bounds cx params2 in
+      List.iter2 (rec_unify cx trace ~use_op) args1 args2;
+      let inst1 =
+        let r = reason_of_t t1 in
+        mk_typeapp_of_poly cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
+      let inst2 =
+        let r = reason_of_t t2 in
+        mk_typeapp_of_poly cx trace
+          ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
+      rec_unify cx trace ~use_op inst1 inst2
 
   | DefT (_, ArrT (ArrayAT(t1, ts1))),
     DefT (_, ArrT (ArrayAT(t2, ts2))) ->

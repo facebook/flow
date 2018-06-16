@@ -36,6 +36,23 @@ References:
                       ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ callable.js:17:26
+
+Cannot assign `f` to `g` because a callable signature is missing in object type [1] but exists in object type [2].
+
+   callable.js:17:26
+   17| var g: {| x: string |} = f; // error: callable signature in f missing in g
+                                ^
+
+References:
+   callable.js:17:8
+   17| var g: {| x: string |} = f; // error: callable signature in f missing in g
+              ^^^^^^^^^^^^^^^ [1]
+   callable.js:16:16
+   16| declare var f: {| (): void, x: string |};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- error_continues.js:3:3
 
 Cannot cast `any` to object type because:
@@ -282,4 +299,4 @@ References:
 
 
 
-Found 17 errors
+Found 18 errors

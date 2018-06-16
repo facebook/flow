@@ -19,10 +19,10 @@ open Parser_common
 module type OBJECT = sig
   val key : ?class_body: bool -> env -> Loc.t * Loc.t Ast.Expression.Object.Property.key
   val _initializer : env -> Loc.t * Loc.t Ast.Expression.Object.t * pattern_errors
-  val class_declaration : env -> Loc.t Ast.Expression.t list -> Loc.t Ast.Statement.t
+  val class_declaration : env -> Loc.t Ast.Class.Decorator.t list -> Loc.t Ast.Statement.t
   val class_expression : env -> Loc.t Ast.Expression.t
   val class_implements : env -> Loc.t Ast.Class.Implements.t list -> Loc.t Ast.Class.Implements.t list
-  val decorator_list : env -> Loc.t Ast.Expression.t list
+  val decorator_list : env -> Loc.t Ast.Class.Decorator.t list
 end
 
 module Object
@@ -33,15 +33,16 @@ module Object
   (Pattern_cover: Pattern_cover.COVER)
 : OBJECT = struct
   let decorator_list =
+    let decorator env =
+      Eat.token env;
+      { Ast.Class.Decorator.expression = Expression.left_hand_side env }
+    in
     let rec decorator_list_helper env decorators =
       match Peek.token env with
-      | T_AT ->
-          Eat.token env;
-          decorator_list_helper env ((Expression.left_hand_side env)::decorators)
-      | _ ->
-          decorators
-
-    in fun env ->
+      | T_AT -> decorator_list_helper env ((with_loc decorator env)::decorators)
+      | _ -> decorators
+    in
+    fun env ->
       if (parse_options env).esproposal_decorators
       then List.rev (decorator_list_helper env [])
       else []

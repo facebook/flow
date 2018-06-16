@@ -293,8 +293,12 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  lspIgnoreStatusAndCancellation: Array<string> = [
+    'window/showStatus',
+    '$/cancelRequest',
+  ];
+
   lspInitializeParams: any = {
-    rootPath: '<PLACEHOLDER_PROJECT_DIR>',
     rootUri: '<PLACEHOLDER_PROJECT_URL>',
     capabilities: {
       workspace: {},

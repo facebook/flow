@@ -65,6 +65,15 @@ let print_location (location: Location.t) : json =
     "range", print_range location.range;
   ]
 
+let print_definition_location (definition_location: DefinitionLocation.t) : json =
+  let open DefinitionLocation in
+  let location = definition_location.location in
+  JSON_Object [
+    "uri", JSON_String location.Location.uri;
+    "range", print_range location.Location.range;
+    "title", Hh_json.opt_string_to_json (definition_location.title);
+  ]
+
 let parse_range_exn (json: json option) : range =
   {
     start = Jget.obj_exn json "start" |> parse_position;
@@ -466,8 +475,10 @@ let print_showStatus (r: ShowStatus.showStatusParams) : json =
     "actions", Some (JSON_Array (List.map rr.ShowMessageRequest.actions ~f:print_action));
     "message", Some (JSON_String rr.ShowMessageRequest.message);
     "shortMessage", Option.map r.ShowStatus.shortMessage ~f:string_;
-    "progress", Option.map r.ShowStatus.progress ~f:int_;
-    "total", Option.map r.ShowStatus.total ~f:int_;
+    "progress", Option.map r.ShowStatus.progress ~f:(fun progress -> Jprint.object_opt [
+      "numerator", Some (int_ progress);
+      "denominator", Option.map r.ShowStatus.total ~f:int_;
+      ]);
   ]
 
 
@@ -534,7 +545,7 @@ let parse_definition (params: json option) : Definition.params =
   parse_textDocumentPositionParams params
 
 let print_definition (r: Definition.result) : json =
-  JSON_Array (List.map r ~f:print_location)
+  JSON_Array (List.map r ~f:print_definition_location)
 
 
 (************************************************************************)

@@ -592,32 +592,32 @@ Instance method on a superclass: {
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":22},
-      "end":{"line":4,"column":5,"offset":25}
+      "start":{"line":5,"column":3,"offset":40},
+      "end":{"line":5,"column":5,"offset":43}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":15,"column":11,"offset":153},
-      "end":{"line":15,"column":13,"offset":156}
+      "start":{"line":16,"column":11,"offset":171},
+      "end":{"line":16,"column":13,"offset":174}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":9,"offset":175},
-      "end":{"line":19,"column":11,"offset":178}
+      "start":{"line":20,"column":9,"offset":193},
+      "end":{"line":20,"column":11,"offset":196}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":9,"offset":190},
-      "end":{"line":20,"column":11,"offset":193}
+      "start":{"line":21,"column":9,"offset":208},
+      "end":{"line":21,"column":11,"offset":211}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":31,"column":15,"offset":475},
-      "end":{"line":31,"column":17,"offset":478}
+      "start":{"line":32,"column":15,"offset":493},
+      "end":{"line":32,"column":17,"offset":496}
     }
   ]
 }
@@ -628,32 +628,32 @@ Call of instance method on subclass which does not override: {
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":22},
-      "end":{"line":4,"column":5,"offset":25}
+      "start":{"line":5,"column":3,"offset":40},
+      "end":{"line":5,"column":5,"offset":43}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":15,"column":11,"offset":153},
-      "end":{"line":15,"column":13,"offset":156}
+      "start":{"line":16,"column":11,"offset":171},
+      "end":{"line":16,"column":13,"offset":174}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":9,"offset":175},
-      "end":{"line":19,"column":11,"offset":178}
+      "start":{"line":20,"column":9,"offset":193},
+      "end":{"line":20,"column":11,"offset":196}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":9,"offset":190},
-      "end":{"line":20,"column":11,"offset":193}
+      "start":{"line":21,"column":9,"offset":208},
+      "end":{"line":21,"column":11,"offset":211}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":31,"column":15,"offset":475},
-      "end":{"line":31,"column":17,"offset":478}
+      "start":{"line":32,"column":15,"offset":493},
+      "end":{"line":32,"column":17,"offset":496}
     }
   ]
 }
@@ -664,44 +664,44 @@ Instance method on a subclass which does override: {
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":22},
-      "end":{"line":4,"column":5,"offset":25}
+      "start":{"line":5,"column":3,"offset":40},
+      "end":{"line":5,"column":5,"offset":43}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":10,"column":3,"offset":87},
-      "end":{"line":10,"column":5,"offset":90}
+      "start":{"line":11,"column":3,"offset":105},
+      "end":{"line":11,"column":5,"offset":108}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":15,"column":11,"offset":153},
-      "end":{"line":15,"column":13,"offset":156}
+      "start":{"line":16,"column":11,"offset":171},
+      "end":{"line":16,"column":13,"offset":174}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":9,"offset":175},
-      "end":{"line":19,"column":11,"offset":178}
+      "start":{"line":20,"column":9,"offset":193},
+      "end":{"line":20,"column":11,"offset":196}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":9,"offset":190},
-      "end":{"line":20,"column":11,"offset":193}
+      "start":{"line":21,"column":9,"offset":208},
+      "end":{"line":21,"column":11,"offset":211}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":10,"offset":206},
-      "end":{"line":21,"column":12,"offset":209}
+      "start":{"line":22,"column":10,"offset":224},
+      "end":{"line":22,"column":12,"offset":227}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":31,"column":15,"offset":475},
-      "end":{"line":31,"column":17,"offset":478}
+      "start":{"line":32,"column":15,"offset":493},
+      "end":{"line":32,"column":17,"offset":496}
     }
   ]
 }
@@ -712,44 +712,44 @@ Call of instance method on a subclass which does override: {
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":22},
-      "end":{"line":4,"column":5,"offset":25}
+      "start":{"line":5,"column":3,"offset":40},
+      "end":{"line":5,"column":5,"offset":43}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":10,"column":3,"offset":87},
-      "end":{"line":10,"column":5,"offset":90}
+      "start":{"line":11,"column":3,"offset":105},
+      "end":{"line":11,"column":5,"offset":108}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":15,"column":11,"offset":153},
-      "end":{"line":15,"column":13,"offset":156}
+      "start":{"line":16,"column":11,"offset":171},
+      "end":{"line":16,"column":13,"offset":174}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":9,"offset":175},
-      "end":{"line":19,"column":11,"offset":178}
+      "start":{"line":20,"column":9,"offset":193},
+      "end":{"line":20,"column":11,"offset":196}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":9,"offset":190},
-      "end":{"line":20,"column":11,"offset":193}
+      "start":{"line":21,"column":9,"offset":208},
+      "end":{"line":21,"column":11,"offset":211}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":21,"column":10,"offset":206},
-      "end":{"line":21,"column":12,"offset":209}
+      "start":{"line":22,"column":10,"offset":224},
+      "end":{"line":22,"column":12,"offset":227}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":31,"column":15,"offset":475},
-      "end":{"line":31,"column":17,"offset":478}
+      "start":{"line":32,"column":15,"offset":493},
+      "end":{"line":32,"column":17,"offset":496}
     }
   ]
 }
@@ -760,14 +760,14 @@ Definition of a method in a parameterized class: {
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":25,"column":3,"offset":247},
-      "end":{"line":25,"column":5,"offset":250}
+      "start":{"line":26,"column":3,"offset":265},
+      "end":{"line":26,"column":5,"offset":268}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":27,"column":11,"offset":275},
-      "end":{"line":27,"column":13,"offset":278}
+      "start":{"line":28,"column":11,"offset":293},
+      "end":{"line":28,"column":13,"offset":296}
     }
   ]
 }
@@ -778,35 +778,72 @@ Call of an instance method on an upcasted class: {
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":22},
-      "end":{"line":4,"column":5,"offset":25}
+      "start":{"line":5,"column":3,"offset":40},
+      "end":{"line":5,"column":5,"offset":43}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":15,"column":11,"offset":153},
-      "end":{"line":15,"column":13,"offset":156}
+      "start":{"line":16,"column":11,"offset":171},
+      "end":{"line":16,"column":13,"offset":174}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":19,"column":9,"offset":175},
-      "end":{"line":19,"column":11,"offset":178}
+      "start":{"line":20,"column":9,"offset":193},
+      "end":{"line":20,"column":11,"offset":196}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":20,"column":9,"offset":190},
-      "end":{"line":20,"column":11,"offset":193}
+      "start":{"line":21,"column":9,"offset":208},
+      "end":{"line":21,"column":11,"offset":211}
     },
     {
       "source":"classInheritance.js",
       "type":"SourceFile",
-      "start":{"line":31,"column":15,"offset":475},
-      "end":{"line":31,"column":17,"offset":478}
+      "start":{"line":32,"column":15,"offset":493},
+      "end":{"line":32,"column":17,"offset":496}
     }
   ]
 }
+Definition of a static class property: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":10,"offset":29},
+      "end":{"line":4,"column":12,"offset":32}
+    },
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":38,"column":3,"offset":559},
+      "end":{"line":38,"column":5,"offset":562}
+    }
+  ]
+}
+Use of a static class property: {
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":10,"offset":29},
+      "end":{"line":4,"column":12,"offset":32}
+    },
+    {
+      "source":"classInheritance.js",
+      "type":"SourceFile",
+      "start":{"line":38,"column":3,"offset":559},
+      "end":{"line":38,"column":5,"offset":562}
+    }
+  ]
+}
+Use of an inherited static class property: {"kind":"no-symbol-found"}
 Method declaration in an object type alias: {
   "kind":"symbol-found",
   "name":"foo",
@@ -1341,6 +1378,55 @@ Property in a file read from stdin: {
       "type":"SourceFile",
       "start":{"line":6,"column":3,"offset":73},
       "end":{"line":6,"column":5,"offset":76}
+    }
+  ]
+}
+Optional chaining:
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":25},
+      "end":{"line":4,"column":5,"offset":28}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":3,"offset":89},
+      "end":{"line":12,"column":5,"offset":92}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":6,"offset":121},
+      "end":{"line":17,"column":8,"offset":124}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"baz",
+  "locs":[
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":8,"column":3,"offset":52},
+      "end":{"line":8,"column":5,"offset":55}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":13,"column":5,"offset":100},
+      "end":{"line":13,"column":7,"offset":103}
+    },
+    {
+      "source":"optional-chaining.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":10,"offset":125},
+      "end":{"line":17,"column":12,"offset":128}
     }
   ]
 }

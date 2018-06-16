@@ -562,7 +562,7 @@ module rec TypeTerm : sig
     | DebugPrintT of reason
     | DebugSleepT of reason
 
-    | SentinelPropTestT of reason * t * string * bool * sentinel_value * t_out
+    | SentinelPropTestT of reason * t * string * bool * Enum.star * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -1031,13 +1031,6 @@ module rec TypeTerm : sig
   | DebugThrow
   | DebugSleep
 
-  and sentinel_value =
-  | SentinelStr of string
-  | SentinelNum of number_literal
-  | SentinelBool of bool
-  | SentinelNull
-  | SentinelVoid
-
   and choice_tool =
   | Trigger
 
@@ -1106,6 +1099,32 @@ module rec TypeTerm : sig
   | ResolveSpreadsToCallT of funcalltype * t
 
 end = TypeTerm
+
+and Enum : sig
+  type t =
+    | Str of string
+    | Num of TypeTerm.number_literal
+    | Bool of bool
+    | Void
+    | Null
+  val compare: t -> t -> int
+  type star =
+    | One of t
+    | Many of EnumSet.t
+end = struct
+  type t =
+    | Str of string
+    | Num of TypeTerm.number_literal
+    | Bool of bool
+    | Void
+    | Null
+  let compare = Pervasives.compare
+  type star =
+    | One of t
+    | Many of EnumSet.t
+end
+
+and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
 
 and Polarity : sig
   type t = TypeTerm.polarity
@@ -1440,6 +1459,8 @@ and UnionRep : sig
     | Conditional of TypeTerm.t
     | Unknown
 
+  val join_quick_mem_results: quick_mem_result * quick_mem_result -> quick_mem_result
+
   val quick_mem_enum:
     TypeTerm.t ->
     t -> quick_mem_result
@@ -1449,17 +1470,9 @@ and UnionRep : sig
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
     TypeTerm.t ->
     t -> quick_mem_result
-end = struct
 
-  module Enum = struct
-    type t =
-      | Str of string
-      | Num of TypeTerm.number_literal
-      | Bool of bool
-      | Void
-      | Null
-    let compare = Pervasives.compare
-  end
+  val check_enum: t -> EnumSet.t option
+end = struct
 
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
@@ -1483,9 +1496,6 @@ end = struct
       -> true
     | _ -> false
   )
-
-  (* enums are stored as singleton type sets *)
-  module EnumSet = Set.Make(Enum)
 
   (* disjoint unions are stored as singleton type maps *)
   module EnumMap = MyMap.Make(Enum)
@@ -1689,6 +1699,12 @@ end = struct
     | Conditional of TypeTerm.t
     | Unknown
 
+  let join_quick_mem_results = function
+    | Yes, _ | _, Yes -> Yes
+    | Unknown, _ | _, Unknown -> Unknown
+    | Conditional _, _ | _, Conditional _ -> Unknown (* TODO *)
+    | No, No -> No
+
   (* assume we know that l is a canonizable type *)
   let quick_mem_enum l (_t0, _t1, _ts, specialization) =
     match canon l with
@@ -1758,6 +1774,11 @@ end = struct
             else Unknown
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
+
+  let check_enum (_, _, _, specialization) =
+    match !specialization with
+      | Some Enum enums -> Some enums
+      | _ -> None
 
 end
 

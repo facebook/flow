@@ -46,3 +46,19 @@ let enclosing_class occurrence =
   | ClassConst (c, _)
   | Typeconst (c, _) -> Some c
   | _ -> None
+
+let get_class_name occurrence =
+  match enclosing_class occurrence with
+  | Some _ as res -> res
+  | None ->
+    if occurrence.type_ = Class then Some occurrence.name else None
+
+let is_constructor occurrence =
+  match occurrence.type_ with
+  | Method (_, name) when name = Naming_special_names.Members.__construct -> true
+  | _ -> false
+
+let is_class occurrence =
+  match occurrence.type_ with
+  | Class -> true
+  | _ -> false

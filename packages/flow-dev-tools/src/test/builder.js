@@ -250,6 +250,26 @@ export class TestBuilder {
     await this.forceRecheck([filename]);
   }
 
+  async execManualAndLog(
+    cmd: string,
+    options?: Object,
+  ): Promise<[?Object, string, string]> {
+    await this.log(`# ${cmd}...`);
+    const [err, stdout_, stderr_] = await execManual(cmd, options);
+    await this.log(`# Finished ${cmd}.`);
+    const stderr = typeof stderr_ === 'string' ? stderr_ : stderr_.toString();
+    const stdout = typeof stdout_ === 'string' ? stdout_ : stdout_.toString();
+    if (err != null) {
+      await this.log(`# err.code=${err.code} err=${String(err)}`);
+    }
+    if (stderr !== '') {
+      await this.log(`# stderr=BEGIN`);
+      await this.log(stderr);
+      await this.log(`# END stderr`);
+    }
+    return [err, stdout, stderr];
+  }
+
   async flowCmd(
     args: Array<string>,
     stdinFile?: string,
@@ -260,11 +280,12 @@ export class TestBuilder {
       args.map(arg => format('"%s"', arg)).join(' '),
       stdinFile == null ? '' : format('< %s', stdinFile),
     );
-    await this.log('# %s', cmd);
-    const [err, stdout, stderr] = await execManual(cmd, {cwd: this.dir});
+    const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
+      cwd: this.dir,
+    });
     const code = err == null ? 0 : err.code;
 
-    return [code, stdout.toString(), stderr.toString()];
+    return [code, stdout, stderr];
   }
 
   async getFlowErrors(retry?: boolean = true): Promise<Object> {
@@ -287,7 +308,7 @@ export class TestBuilder {
       );
     }
 
-    const [err, stdout, stderr] = await execManual(cmd, {
+    const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
       cwd: __dirname,
       maxBuffer: 1024 * 1024,
     });
@@ -573,6 +594,7 @@ export class TestBuilder {
     // a '.flowVersion' field
     // LSP sends back document URLs, to files within the test project
     const url = this.getDirUrl();
+    const urlslash = url + dir_sep;
     function replace(obj: Object) {
       for (const k in obj) {
         if (!obj.hasOwnProperty(k)) {
@@ -588,6 +610,10 @@ export class TestBuilder {
           case 'string':
             if (k == 'flowVersion') {
               obj[k] = '<VERSION STUBBED FOR TEST>';
+            } else if (obj[k].startsWith(urlslash)) {
+              obj[k] =
+                '<PLACEHOLDER_PROJECT_URL_SLASH>' +
+                obj[k].substr(urlslash.length);
             } else if (obj[k].startsWith(url)) {
               obj[k] = '<PLACEHOLDER_PROJECT_URL>' + obj[k].substr(url.length);
             }
@@ -621,8 +647,8 @@ export class TestBuilder {
           case 'string':
             if (obj[k].startsWith('<PLACEHOLDER')) {
               obj[k] = obj[k]
-                .replace(/^<PLACEHOLDER_PROJECT_DIR>/, dir)
-                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
+                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl)
+                .replace(/^<PLACEHOLDER_PROJECT_URL_SLASH>/, dirUrl + dir_sep);
             }
             break;
         }
@@ -966,8 +992,7 @@ export class TestBuilder {
   async forceRecheck(files: Array<string>): Promise<void> {
     if (this.server && (await isRunning(this.server.pid))) {
       const files_str = files.map(s => `"${s}"`).join(' ');
-      await this.log('Running force-recheck for files: %s', files_str);
-      const [err, stdout, stderr] = await execManual(
+      const [err, stdout, stderr] = await this.execManualAndLog(
         format(
           '%s force-recheck --no-auto-start --temp-dir %s %s',
           this.bin,
@@ -975,13 +1000,19 @@ export class TestBuilder {
           files_str,
         ),
       );
-      await this.log('force-recheck finished');
 
       // No server running (6) is ok - the file change might have killed the
       // server and we raced it here
       if (err && err.code !== 6) {
         throw new Error(
-          format('flow force-recheck failed!', err, stdout, stderr, files),
+          format(
+            'flow force-recheck failed! err.code=%s err=%s stdout=%s stderr=%s files=%s',
+            err.code,
+            err,
+            stdout,
+            stderr,
+            files,
+          ),
         );
       }
     }

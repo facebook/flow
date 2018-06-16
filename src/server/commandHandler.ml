@@ -584,7 +584,8 @@ let handle_persistent_unsafe genv env client profiling msg
       | Ok loc ->
         let default_uri = params.textDocument.TextDocumentIdentifier.uri in
         let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
-        lsp_writer (ResponseMessage (id, DefinitionResult [location]));
+        let definition_location = Lsp.DefinitionLocation.{ location; title = None } in
+        lsp_writer (ResponseMessage (id, DefinitionResult [definition_location]));
         Lwt.return (Ok (!env, json_data))
       | Error reason ->
         let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in

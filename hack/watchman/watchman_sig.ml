@@ -33,7 +33,8 @@ module Types = struct
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
     debug_logging: bool;
-    root: Path.t;
+    roots: Path.t list;
+    subscription_prefix: string;
   }
 
   type pushed_changes =
@@ -78,27 +79,56 @@ module Abstract_types = struct
     | Watchman_alive of env
 end
 
+
+module type WATCHMAN_PROCESS = sig
+  type 'a result
+  type conn
+
+  exception Read_payload_too_long
+
+  val (>>=): 'a result -> ('a -> 'b result) -> 'b result
+  val (>|=): 'a result -> ('a -> 'b) -> 'b result
+  val return: 'a -> 'a result
+  val catch: f:(unit -> 'b result) -> catch:(exn -> 'b result) -> 'b result
+
+  val map_fold_values: 'a SMap.t -> init:'b -> f:('a -> 'b -> 'b result) -> 'b result
+  val map_iter_values_s: 'a SMap.t -> f:('a -> unit result) -> unit result
+
+  val open_connection: timeout:float -> conn result
+  val request:
+    debug_logging:bool -> ?conn:conn -> ?timeout:float -> Hh_json.json -> Hh_json.json result
+  val send_request_and_do_not_wait_for_response:
+    debug_logging:bool -> conn:conn -> Hh_json.json -> unit result
+  val blocking_read: debug_logging:bool -> ?timeout:float -> conn:conn -> Hh_json.json option result
+  val close_connection: conn -> unit result
+
+  module Testing: sig
+    val get_test_conn: unit -> conn result
+  end
+end
+
 module type S = sig
 
   include module type of Types
   include module type of Abstract_types
 
-  val crash_marker_path: Path.t -> string
+  type 'a result
+  type conn
 
-  val init: init_settings -> env option
+  val init: init_settings -> env option result
 
-  val get_all_files: env -> string list
+  val get_all_files: env -> string list result
 
   val get_changes: ?deadline:float ->
-    watchman_instance -> watchman_instance * changes
+    watchman_instance -> (watchman_instance * changes) result
   val get_changes_synchronously: timeout:int ->
-    watchman_instance -> watchman_instance * SSet.t
+    watchman_instance -> (watchman_instance * SSet.t) result
 
-  val get_reader: watchman_instance -> Buffered_line_reader.t option
+  val conn_of_instance: watchman_instance -> conn option
 
   (** Expose some things for testing. *)
   module Testing : sig
-    val test_env : env
+    val get_test_env : unit -> env result
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :

@@ -96,6 +96,8 @@ val to_absolute : t -> absolute
 
 val to_relative_string : t -> string pos
 
+val get_text_from_pos: content:string -> 'a pos -> string
+
 (* This returns a half-open interval. *)
 val destruct_range : 'a pos -> (int * int * int * int)
 

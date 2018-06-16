@@ -44,6 +44,11 @@ def("DeclareExportAllDeclaration")
     .build("source")
     .field("source", def("Literal"));
 
+def("Decorator")
+  .bases("Node")
+  .build("expression")
+  .field("expression", def("Expression"));
+
 def("OpaqueType")
   .bases("Declaration")
   .build("id", "typeParameters", "impltype", "supertype")

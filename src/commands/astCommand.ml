@@ -26,6 +26,8 @@ let spec = {
         ~doc:"Include a list of syntax tokens in the output"
     |> flag "--pretty" no_arg
         ~doc:"Pretty-print JSON output"
+    |> flag "--check" no_arg
+        ~doc:"Checks whether the file parses, returning any errors but not the AST"
     |> flag "--type" (enum ["js"; "json"])
         ~doc:"Type of input file (js or json)"
     |> flag "--strict" no_arg
@@ -37,8 +39,12 @@ let spec = {
 }
 
 type ast_file_type =
-  | Ast_json
-  | Ast_js
+  | File_json
+  | File_js
+
+type ast_result_type =
+  | Ast_json of Loc.t Ast.Expression.t
+  | Ast_js of Loc.t Ast.program
 
 let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
@@ -53,7 +59,7 @@ end)
 
 module Token_translator = Token_translator.Translate (Json_of_estree)
 
-let main include_tokens pretty file_type_opt use_strict from path filename () =
+let main include_tokens pretty check file_type_opt use_strict from path filename () =
   FlowEventLogger.set_from from;
   let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
@@ -61,12 +67,12 @@ let main include_tokens pretty file_type_opt use_strict from path filename () =
 
   let file_type =
     match file_type_opt with
-    | Some "json" -> Ast_json
-    | Some "js" -> Ast_js
+    | Some "json" -> File_json
+    | Some "js" -> File_js
     | _ ->
       begin match filename with
-      | Some fn -> if Files.is_json_file fn then Ast_json else Ast_js
-      | None -> Ast_js
+      | Some fn -> if Files.is_json_file fn then File_json else File_js
+      | None -> File_js
       end
   in
 
@@ -102,27 +108,37 @@ let main include_tokens pretty file_type_opt use_strict from path filename () =
         then Option.map filename ~f:(Files.relative_path (Sys.getcwd ()))
         else filename
       in
-      let (translated_ast, errors) =
+      let (ast, errors) =
         match file_type with
-        | Ast_js ->
+        | File_js ->
           let filekey = Option.map filename ~f:(fun s -> File_key.SourceFile s) in
           let (ocaml_ast, errors) =
             Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
           in
-          Translate.program ocaml_ast, errors
-        | Ast_json ->
+          Ast_js ocaml_ast, errors
+        | File_json ->
           let filekey = Option.map filename ~f:(fun s -> File_key.JsonFile s) in
           let (ocaml_ast, errors) =
             Parser_flow.json_file ~fail:false ~parse_options ~token_sink content filekey
           in
-          Translate.expression ocaml_ast, errors
+          Ast_json ocaml_ast, errors
       in
-      match translated_ast with
-      | JSON_Object params ->
-          let errors_prop = ("errors", Translate.errors errors) in
-          let tokens_prop = ("tokens", JSON_Array (List.rev !tokens)) in
-          JSON_Object (errors_prop::tokens_prop::params)
-      | _ -> assert false
+      if check then
+        JSON_Object [
+          "errors", Translate.errors errors;
+          "tokens", JSON_Array (List.rev !tokens);
+        ]
+      else
+        let translated_ast = match ast with
+        | Ast_js ast -> Translate.program ast
+        | Ast_json ast -> Translate.expression ast
+        in
+        match translated_ast with
+        | JSON_Object params ->
+            let errors_prop = ("errors", Translate.errors errors) in
+            let tokens_prop = ("tokens", JSON_Array (List.rev !tokens)) in
+            JSON_Object (errors_prop::tokens_prop::params)
+        | _ -> assert false
     with Parse_error.Error l ->
       JSON_Object ["errors", Translate.errors l]
   in
