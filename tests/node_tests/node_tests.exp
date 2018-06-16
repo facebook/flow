@@ -138,6 +138,393 @@ References:
                             ^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- events/events.js:9:1
+
+Cannot call `emitter.addListener` because function [1] requires another argument.
+
+   events/events.js:9:1
+     9| emitter.addListener();                    // err: both args are required
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:720:3
+   720|   addListener(event: string, listener: Function): this;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:10:21
+
+Cannot call `emitter.addListener` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:10:21
+    10| emitter.addListener(123, {});             // err: `event` and `handler `type mismatch
+                            ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:720:22
+   720|   addListener(event: string, listener: Function): this;
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:10:26
+
+Cannot call `emitter.addListener` with object literal bound to `listener` because a callable signature is missing in
+object literal [1] but exists in function type [2].
+
+   events/events.js:10:26
+    10| emitter.addListener(123, {});             // err: `event` and `handler `type mismatch
+                                 ^^ [1]
+
+References:
+   <BUILTINS>/node.js:720:40
+   720|   addListener(event: string, listener: Function): this;
+                                               ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:14:14
+
+Cannot call `emitter.emit` with object literal bound to `event` because object literal [1] is incompatible with
+string [2].
+
+   events/events.js:14:14
+    14| emitter.emit({});                         // err: `event` must be a string
+                     ^^ [1]
+
+References:
+   <BUILTINS>/node.js:721:15
+   721|   emit(event: string, ...args:Array<any>): boolean;
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:17:1
+
+Cannot call `emitter.eventNames` because no arguments are expected by function type [1].
+
+   events/events.js:17:1
+    17| emitter.eventNames('foo')                 // err: does not process args
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:722:3
+   722|   eventNames(): Array<string>;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:20:1
+
+Cannot call `emitter.listeners` because function [1] requires another argument.
+
+   events/events.js:20:1
+    20| emitter.listeners();                      // err: requires `event`
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:723:3
+   723|   listeners(event: string): Array<Function>;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:23:1
+
+Cannot call `emitter.listenerCount` because function [1] requires another argument.
+
+   events/events.js:23:1
+    23| emitter.listenerCount();                  // err: requires `event`
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:724:3
+   724|   listenerCount(event: string): number;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:27:12
+
+Cannot call `emitter.on` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:27:12
+    27| emitter.on(123, []);                      // err: `event` and `handler `type mismatch
+                   ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:725:13
+   725|   on(event: string, listener: Function): this;
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:27:17
+
+Cannot call `emitter.on` with array literal bound to `listener` because empty array literal [1] is incompatible with
+function type [2].
+
+   events/events.js:27:17
+    27| emitter.on(123, []);                      // err: `event` and `handler `type mismatch
+                        ^^ [1]
+
+References:
+   <BUILTINS>/node.js:725:31
+   725|   on(event: string, listener: Function): this;
+                                      ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:31:14
+
+Cannot call `emitter.once` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:31:14
+    31| emitter.once(123, []);                    // err: `event` and `handler `type mismatch
+                     ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:726:15
+   726|   once(event: string, listener: Function): this;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:31:19
+
+Cannot call `emitter.once` with array literal bound to `listener` because empty array literal [1] is incompatible with
+function type [2].
+
+   events/events.js:31:19
+    31| emitter.once(123, []);                    // err: `event` and `handler `type mismatch
+                          ^^ [1]
+
+References:
+   <BUILTINS>/node.js:726:33
+   726|   once(event: string, listener: Function): this;
+                                        ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:35:1
+
+Cannot call `emitter.prependListener` because function [1] requires another argument.
+
+   events/events.js:35:1
+    35| emitter.prependListener();                // err: both args are required
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:727:3
+   727|   prependListener(event: string, listener: Function): this;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:36:25
+
+Cannot call `emitter.prependListener` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:36:25
+    36| emitter.prependListener(123, {});         // err: `event` and `handler `type mismatch
+                                ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:727:26
+   727|   prependListener(event: string, listener: Function): this;
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:36:30
+
+Cannot call `emitter.prependListener` with object literal bound to `listener` because a callable signature is missing in
+object literal [1] but exists in function type [2].
+
+   events/events.js:36:30
+    36| emitter.prependListener(123, {});         // err: `event` and `handler `type mismatch
+                                     ^^ [1]
+
+References:
+   <BUILTINS>/node.js:727:44
+   727|   prependListener(event: string, listener: Function): this;
+                                                   ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:40:1
+
+Cannot call `emitter.prependOnceListener` because function [1] requires another argument.
+
+   events/events.js:40:1
+    40| emitter.prependOnceListener();            // err: both args are required
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:728:3
+   728|   prependOnceListener(event: string, listener: Function): this;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:41:29
+
+Cannot call `emitter.prependOnceListener` with `123` bound to `event` because number [1] is incompatible with
+string [2].
+
+   events/events.js:41:29
+    41| emitter.prependOnceListener(123, {});     // err: `event` and `handler `type mismatch
+                                    ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:728:30
+   728|   prependOnceListener(event: string, listener: Function): this;
+                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:41:34
+
+Cannot call `emitter.prependOnceListener` with object literal bound to `listener` because a callable signature is
+missing in object literal [1] but exists in function type [2].
+
+   events/events.js:41:34
+    41| emitter.prependOnceListener(123, {});     // err: `event` and `handler `type mismatch
+                                         ^^ [1]
+
+References:
+   <BUILTINS>/node.js:728:48
+   728|   prependOnceListener(event: string, listener: Function): this;
+                                                       ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:46:28
+
+Cannot call `emitter.removeAllListeners` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:46:28
+    46| emitter.removeAllListeners(123);          // err: `event` must be a string
+                                   ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:729:30
+   729|   removeAllListeners(event?: string): this;
+                                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:50:1
+
+Cannot call `emitter.removeListener` because function [1] requires another argument.
+
+   events/events.js:50:1
+    50| emitter.removeListener();                 // err: both args are required
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:730:3
+   730|   removeListener(event: string, listener: Function): this;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:51:24
+
+Cannot call `emitter.removeListener` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:51:24
+    51| emitter.removeListener(123, {});          // `event` and `handler `type mismatch
+                               ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:730:25
+   730|   removeListener(event: string, listener: Function): this;
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:51:29
+
+Cannot call `emitter.removeListener` with object literal bound to `listener` because a callable signature is missing in
+object literal [1] but exists in function type [2].
+
+   events/events.js:51:29
+    51| emitter.removeListener(123, {});          // `event` and `handler `type mismatch
+                                    ^^ [1]
+
+References:
+   <BUILTINS>/node.js:730:43
+   730|   removeListener(event: string, listener: Function): this;
+                                                  ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:55:1
+
+Cannot call `emitter.off` because function [1] requires another argument.
+
+   events/events.js:55:1
+    55| emitter.off();                            // err: both args are required
+        ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:731:3
+   731|   off(event: string, listener: Function): this;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:56:13
+
+Cannot call `emitter.off` with `123` bound to `event` because number [1] is incompatible with string [2].
+
+   events/events.js:56:13
+    56| emitter.off(123, {});                     // `event` and `handler `type mismatch
+                    ^^^ [1]
+
+References:
+   <BUILTINS>/node.js:731:14
+   731|   off(event: string, listener: Function): this;
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:56:18
+
+Cannot call `emitter.off` with object literal bound to `listener` because a callable signature is missing in object
+literal [1] but exists in function type [2].
+
+   events/events.js:56:18
+    56| emitter.off(123, {});                     // `event` and `handler `type mismatch
+                         ^^ [1]
+
+References:
+   <BUILTINS>/node.js:731:32
+   731|   off(event: string, listener: Function): this;
+                                       ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- events/events.js:59:25
+
+Cannot call `emitter.setMaxListeners` with `'foo'` bound to `n` because string [1] is incompatible with number [2].
+
+   events/events.js:59:25
+    59| emitter.setMaxListeners('foo');           // err: numeric arg is required
+                                ^^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:732:22
+   732|   setMaxListeners(n: number): this;
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:62:1
+
+Cannot call `emitter.getMaxListeners` because no arguments are expected by function type [1].
+
+   events/events.js:62:1
+    62| emitter.getMaxListeners('foo');           // err: does not process args
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:733:3
+   733|   getMaxListeners(): number;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- events/events.js:65:1
+
+Cannot call `emitter.rawListeners` because function [1] requires another argument.
+
+   events/events.js:65:1
+    65| emitter.rawListeners();                   // err: requires `event`
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:734:3
+   734|   rawListeners(event: string): Array<Function>;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- fs/fs.js:13:1
 
 Could not decide which case to select. Since case 3 [1] may work but if it doesn't case 4 [2] looks promising too. To
@@ -1459,7 +1846,7 @@ References:
 
 
 
-Found 77 errors
+Found 104 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
