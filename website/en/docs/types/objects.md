@@ -215,7 +215,7 @@ method({
 > **Note:** This is because of ["width subtyping"](../../lang/width-subtyping/).
 
 Sometimes it is useful to disable this behavior and only allow a specific set
-of properties. For this, Flow supports "exact" object types.
+of properties. For this, Flow supports "exact" object types through enabling to add a pair of vertical bars.
 
 ```js
 {| foo: string, bar: number |}
