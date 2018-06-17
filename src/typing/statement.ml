@@ -2375,7 +2375,11 @@ and variable cx kind
         Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
         (match init with
           | Some ((rhs_loc, _) as expr) ->
-            let rhs = expression cx expr in
+            let rhs =
+              match kind with
+              | VariableDeclaration.Const -> expression ~is_const:true cx expr
+              | _ -> expression cx expr
+            in
             (**
              * Const and let variables are not declared during evaluation of
              * their initializer expressions.
@@ -2464,8 +2468,8 @@ and mixin_element_spread cx (loc, e) =
     Flow.flow_t cx (arr, DefT (reason, ArrT (ArrayAT(tvar, None))));
   )
 
-and expression ?(is_cond=false) cx (loc, e) =
-  let t = expression_ ~is_cond cx loc e in
+and expression ?(is_cond=false) ?(is_const=false) cx (loc, e) =
+  let t = expression_ ~is_cond ~is_const cx loc e in
   Env.add_type_table cx loc t;
   t
 
@@ -2478,10 +2482,10 @@ and this_ cx loc = Ast.Expression.(
 and super_ cx loc =
   Env.var_ref cx (internal_name "super") loc
 
-and expression_ ~is_cond cx loc e = let ex = (loc, e) in Ast.Expression.(match e with
+and expression_ ~is_cond ~is_const cx loc e = let ex = (loc, e) in Ast.Expression.(match e with
 
   | Ast.Expression.Literal lit ->
-      literal cx loc lit
+      literal ~is_const cx loc lit
 
   (* Treat the identifier `undefined` as an annotation for error reporting
    * purposes. Like we do with other literals. Otherwise we end up pointing to
@@ -3581,7 +3585,7 @@ and identifier cx name loc =
   t
 
 (* traverse a literal expression, return result type *)
-and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
+and literal ?(is_const=false) cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
@@ -3590,7 +3594,9 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
         then Literal (None, s)
         else AnyLiteral
       in
-      DefT (annot_reason (mk_reason RString loc), StrT lit)
+      if is_const
+      then DefT (annot_reason (mk_reason RString loc), SingletonStrT s)
+      else DefT (annot_reason (mk_reason RString loc), StrT lit)
 
   | Boolean b ->
       DefT (annot_reason (mk_reason RBoolean loc), BoolT (Some b))
