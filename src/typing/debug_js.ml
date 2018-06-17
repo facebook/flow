@@ -2453,6 +2453,8 @@ let dump_flow_error =
         spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsValue (reason, str) ->
         spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
+    | ERefineAsValue (reason, str) ->
+        spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) str
     | ENoDefaultExport (reason, module_name, _) ->
         spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
     | EOnlyDefaultExport (reason, module_name, export_name) ->

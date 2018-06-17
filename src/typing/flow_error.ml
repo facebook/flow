@@ -45,6 +45,7 @@ type error_message =
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
   | EImportTypeAsValue of reason * string
+  | ERefineAsValue of reason * string
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string * string
   | ENoNamedExport of reason * string * string * string option
@@ -315,6 +316,7 @@ let util_use_op_of_msg nope util = function
 | EImportValueAsType (_, _)
 | EImportTypeAsTypeof (_, _)
 | EImportTypeAsValue (_, _)
+| ERefineAsValue (_, _)
 | ENoDefaultExport (_, _, _)
 | EOnlyDefaultExport (_, _, _)
 | ENoNamedExport (_, _, _, _)
@@ -1195,6 +1197,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error ~trace_infos (loc_of_reason r) [
       text "Cannot import the type "; msg_export export_name; text " as a value. ";
       text "Use "; code "import type"; text " instead.";
+    ]
+
+  | ERefineAsValue (r, name) ->
+    mk_error ~trace_infos (loc_of_reason r) [
+      text "Cannot refine "; msg_export name; text " as a value. ";
+      (* text "Use "; code "import type"; text " instead."; *)
     ]
 
   | ENoDefaultExport (r, module_name, suggestion) ->
