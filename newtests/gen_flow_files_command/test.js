@@ -146,7 +146,7 @@ export default suite(({addFile, addFiles, flowCmd}) => [
           // @flow
 
           declare export default number;
-          declare export var str: string;
+          declare export var str: "asdf";
 
 
         `,
