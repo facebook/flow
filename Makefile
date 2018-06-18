@@ -102,6 +102,7 @@ MODULES=\
   src/server/shmem\
   src/services/autocomplete\
   src/services/inference\
+  src/services/inference/module\
   src/services/flowFileGen\
   src/services/port\
   src/services/type_info\
