@@ -95,6 +95,7 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
 end
 
 module MarshalToolsFunctor (WriterReader: WRITER_READER): sig
+  val expected_preamble_size: int
   val to_fd_with_preamble:
     ?timeout:Timeout.t ->
     ?flags:Marshal.extern_flags list ->

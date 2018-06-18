@@ -46,6 +46,8 @@ module type WRITER_READER = sig
 end
 
 module MarshalToolsFunctor :  functor (WriterReader: WRITER_READER) -> sig
+  val expected_preamble_size: int
+
   val to_fd_with_preamble:
     ?timeout:Timeout.t ->
     ?flags:Marshal.extern_flags list ->
