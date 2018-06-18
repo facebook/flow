@@ -64,10 +64,12 @@ type t = {
   opt_module_resolver: Path.t option;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
+  opt_no_saved_state: bool;
   opt_profile : bool;
   opt_lazy_mode: lazy_mode option;
   opt_quiet : bool;
   opt_root : Path.t;
+  opt_saved_state_load_script: string option;
   opt_strip_root : bool;
   opt_suppress_comments : Str.regexp list;
   opt_suppress_types : SSet.t;
@@ -110,8 +112,10 @@ let module_name_mappers opts = opts.opt_module_name_mappers
 let module_resolver opts = opts.opt_module_resolver
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
+let no_saved_state opts = opts.opt_no_saved_state
 let root opts = opts.opt_root
 let facebook_fbt opts = opts.opt_facebook_fbt
+let saved_state_load_script opts = opts.opt_saved_state_load_script
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_include_warnings opts = opts.opt_include_warnings

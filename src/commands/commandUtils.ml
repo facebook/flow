@@ -636,16 +636,18 @@ module Options_flags = struct
     include_warnings: bool;
     max_warnings: int option;
     max_workers: int option;
+    merge_timeout: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
+    no_saved_state: bool;
     profile: bool;
     quiet: bool;
+    saved_state_load_script: string option;
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
     verbose: Verbose.t option;
     weak: bool;
-    merge_timeout: int option;
   }
 end
 
@@ -669,7 +671,7 @@ let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
-    merge_timeout =
+    merge_timeout saved_state_load_script no_saved_state =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -692,6 +694,8 @@ let options_flags =
       temp_dir;
       quiet;
       merge_timeout;
+      saved_state_load_script;
+      no_saved_state;
    }
   in
   fun prev ->
@@ -723,6 +727,10 @@ let options_flags =
       ~doc:("The maximum time in seconds to attempt to typecheck a file or cycle of files. " ^
         "0 means no timeout (default: 100)")
       ~env:"FLOW_MERGE_TIMEOUT"
+    |> flag "--saved-state-load-script" (optional string)
+      ~doc:"Use this script to fetch the saved state"
+    |> flag "--no-saved-state" no_arg
+      ~doc:"Do not load from a saved state even if one is available"
 
 let file_watcher_flag =
   let collect_file_watcher_flag main file_watcher file_watcher_debug =
@@ -807,6 +815,12 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
       |> Path.make
   in
 
+  (* The CLI flag overrides the .flowconfig *)
+  let opt_saved_state_load_script = Option.first_some
+    options_flags.saved_state_load_script
+    (FlowConfig.saved_state_load_script flowconfig)
+  in
+
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_lazy_mode = lazy_mode;
@@ -858,6 +872,9 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
+    (* TODO - add a flag for this to override the .flowconfig *)
+    opt_saved_state_load_script;
+    opt_no_saved_state = options_flags.no_saved_state;
   }
 
 let make_env server_flags root =
