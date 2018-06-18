@@ -99,9 +99,10 @@ let merge_strict_context ~options component =
 
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
+  let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
   let cx, other_cxs = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~strict_mode ~file_sigs
+    ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
     ~do_gc:(Options.is_debug_mode options)
@@ -140,9 +141,10 @@ let merge_contents_context options file ast info file_sig ~ensure_checked_depend
 
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
+    let file_options = Some (Options.file_options options) in
     let strict_mode = Options.strict_mode options in
     let cx, _ = Merge_js.merge_component_strict
-      ~metadata ~lint_severities ~strict_mode ~file_sigs
+      ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
       ~get_ast_unsafe:(fun _ -> ast)
       ~get_docblock_unsafe:(fun _ -> info)
       component file_reqs dep_cxs master_cx
