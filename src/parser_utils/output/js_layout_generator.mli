@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module LocMap = Utils_js.LocMap
+
 type expression_context = {
   left: expression_context_left;
   group: expression_context_group;
@@ -20,9 +22,24 @@ and expression_context_group =
   | In_arrow_func
   | In_for_init
 
+type comment_attach =
+    | Preceding
+    | Enclosing
+    | Following
+
+type comment_map =
+  (comment_attach * Loc.t Ast.Statement.t * Loc.t Ast.Comment.t)
+  list LocMap.t
+
 val normal_context: expression_context
 
-val program: preserve_docblock:bool -> checksum:string option -> Loc.t Ast.program -> Layout.layout_node
+val program:
+  preserve_docblock:bool ->
+  checksum:string option ->
+  Loc.t Ast.program -> Layout.layout_node
+val program_prettier:
+  attached_comments:comment_map ->
+  Loc.t Ast.program -> Layout.layout_node
 val expression: ?ctxt:expression_context -> Loc.t Ast.Expression.t -> Layout.layout_node
 val statement:
   ?allow_empty:bool ->

@@ -7,6 +7,7 @@
 
 open Layout
 
+module LocMap = Utils_js.LocMap
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
    ambiguity. We pass whether we're in one of these special cases down through
@@ -27,6 +28,15 @@ and expression_context_group =
   | Normal_group
   | In_arrow_func (* `() => ({a: b})` would become `() => {a: b}` *)
   | In_for_init (* `for ((x in y);;);` would become a for-in *)
+
+type comment_attach =
+    | Preceding
+    | Enclosing
+    | Following
+
+type comment_map =
+  (comment_attach * Loc.t Ast.Statement.t * Loc.t Ast.Comment.t)
+  list LocMap.t
 
 let normal_context = { left = Normal_left; group = Normal_group; }
 
@@ -303,6 +313,50 @@ let utf8_escape =
     |> Wtf8.fold_wtf_8 (f ~quote) (Buffer.create (String.length str))
     |> Buffer.contents
 
+let with_attached_comments: comment_map option ref = ref None
+
+let layout_node_with_comments current_loc layout_node =
+  let open Layout in
+  let open Ast.Comment in
+  let layout_from_comment anchor (loc_st, _) (loc_cm, comment) =
+    let comment_text = match comment with
+      | Line txt -> Printf.sprintf "//%s\n" txt
+      | Block txt ->
+        match Loc.lines_intersect loc_st loc_cm, anchor with
+        | false, Preceding -> Printf.sprintf "\n/*%s*/" txt
+        | false, Following -> Printf.sprintf "/*%s*/\n" txt
+        | false, Enclosing -> Printf.sprintf "/*%s*/\n" txt
+        | _ -> Printf.sprintf "/*%s*/" txt
+    in
+    SourceLocation (loc_cm, Atom comment_text)
+  in
+  match !with_attached_comments with
+    | None -> layout_node
+    | Some attached when LocMap.is_empty attached -> layout_node
+    | Some attached ->
+      match LocMap.find_opt current_loc attached with
+        | None | Some [] -> layout_node
+        | Some comments ->
+          with_attached_comments := Some (LocMap.remove current_loc attached);
+          let matched = List.fold_left (fun nodes comment ->
+            let (anchor, statement_attached, comment) = comment in
+            match anchor with
+              | Preceding ->
+                nodes @ [layout_from_comment anchor statement_attached comment]
+              | Following ->
+                [layout_from_comment anchor statement_attached comment] @ nodes
+              | Enclosing ->
+                (* TODO(festevezga)(T29896911) print enclosing comments using statement_attached *)
+                [layout_from_comment anchor statement_attached comment] @ nodes
+          ) [layout_node] comments in
+          Concat matched
+
+let source_location_with_comments (current_loc, layout_node) =
+  layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
+
+let identifier_with_comments (current_loc, name) =
+  layout_node_with_comments current_loc (Identifier (current_loc, name))
+
 (* Generate JS layouts *)
 let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   let nodes =
@@ -323,7 +377,15 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   in
   let nodes = maybe_embed_checksum nodes checksum in
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
-  SourceLocation (loc, nodes)
+  source_location_with_comments (loc, nodes)
+
+and program_prettier ~attached_comments (loc, statements, _) =
+  with_attached_comments := Some attached_comments;
+  let nodes = fuse_vertically ~inline:(true, true) (
+    statements_list_with_newlines statements
+  ) in
+  let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
+  source_location_with_comments (loc, nodes)
 
 and combine_directives_and_comments directives comments : Layout.layout_node =
   let directives = List.map (fun ((loc, _) as x) -> loc, Statement x) directives in
@@ -344,7 +406,7 @@ and maybe_embed_checksum nodes checksum = match checksum with
 
 and comment (loc, comment) =
   let module C = Ast.Comment in
-  SourceLocation (loc, match comment with
+  source_location_with_comments (loc, match comment with
   | C.Block txt -> fuse [
       Atom "/*";
       prepend_newline (Atom txt);
@@ -378,11 +440,12 @@ and statement_list ?allow_empty ?pretty_semicolon (stmts: Loc.t Ast.Statement.t 
  * a semicolon is never required on the last statement of a statement list, so we can set
  * `~pretty_semicolon:true` to only print the unnecessary semicolon in pretty mode.
  *)
-and statement ?(allow_empty=false) ?(pretty_semicolon=false) ((loc, stmt): Loc.t Ast.Statement.t) =
+and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: Loc.t Ast.Statement.t) =
+  let (loc, stmt) = root_stmt in
   let module E = Ast.Expression in
   let module S = Ast.Statement in
   let with_semicolon = if pretty_semicolon then with_pretty_semicolon else with_semicolon in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match stmt with
     | S.Empty -> if allow_empty then Atom ";" else IfPretty(Atom "{}", Atom ";")
@@ -471,7 +534,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) ((loc, stmt): Loc.t
         block b;
         (match handler with
         | Some (loc, { S.Try.CatchClause.param; body }) ->
-          SourceLocation (loc, match param with
+          source_location_with_comments (loc, match param with
             | Some p -> fuse [
                 pretty_space;
                 statement_with_test "catch"
@@ -593,10 +656,11 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) ((loc, stmt): Loc.t
     | S.DeclareExportDeclaration export -> declare_export_declaration export
   )
 
-and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
+and expression ?(ctxt=normal_context) (root_expr: Loc.t Ast.Expression.t) =
+  let (loc, expr) = root_expr in
   let module E = Ast.Expression in
   let precedence = precedence_of_expression (loc, expr) in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match expr with
     | E.This -> Atom "this"
@@ -839,7 +903,7 @@ and expression ?(ctxt=normal_context) ((loc, expr): Loc.t Ast.Expression.t) =
       let ctxt = { normal_context with left = In_tagged_template } in
       fuse [
         expression_with_parens ~precedence ~ctxt tag;
-        SourceLocation (loc, template_literal template)
+        source_location_with_comments (loc, template_literal template)
       ]
     | E.TemplateLiteral template -> template_literal template
     | E.JSXElement el -> jsx_element loc el
@@ -887,7 +951,7 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
       Empty, lparen
     | Some (loc, args) ->
       let less_than = if optional then "?.<" else "<" in
-      SourceLocation (
+      source_location_with_comments (
         loc,
         list
           ~wrap:(Atom less_than, Atom ">")
@@ -919,11 +983,11 @@ and expression_or_spread ?(ctxt=normal_context) expr_or_spread =
   | Ast.Expression.Expression expr ->
     expression_with_parens ~precedence ~ctxt expr
   | Ast.Expression.Spread (loc, { Ast.Expression.SpreadElement.argument }) ->
-    SourceLocation (loc, fuse [
+    source_location_with_comments (loc, fuse [
       Atom "..."; expression_with_parens ~precedence ~ctxt argument
     ])
 
-and identifier (loc, name) = Identifier (loc, name)
+and identifier (loc, name) = identifier_with_comments (loc, name)
 
 and number_literal ~in_member_object raw num =
   let str = Dtoa.shortest_string_of_float num in
@@ -941,7 +1005,7 @@ and number_literal ~in_member_object raw num =
 
 and literal (loc, { Ast.Literal.raw; value; }) =
   let open Ast.Literal in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match value with
     | Number num ->
@@ -975,9 +1039,9 @@ and member ?(optional=false) ~precedence ~ctxt member_node =
     ldelim;
     begin match property with
     | Ast.Expression.Member.PropertyIdentifier (loc, id) ->
-      SourceLocation (loc, Atom id)
+      source_location_with_comments (loc, Atom id)
     | Ast.Expression.Member.PropertyPrivateName (loc, (_, id)) ->
-      SourceLocation (loc, Atom ("#" ^ id))
+      source_location_with_comments (loc, Atom ("#" ^ id))
     | Ast.Expression.Member.PropertyExpression expr ->
       expression ~ctxt expr
     end;
@@ -986,7 +1050,7 @@ and member ?(optional=false) ~precedence ~ctxt member_node =
 
 and string_literal (loc, { Ast.StringLiteral.value; _ }) =
   let quote = better_quote value in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote]
   )
@@ -1004,7 +1068,7 @@ and pattern_object_property_key = Ast.Pattern.Object.(function
 
 and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
   let module P = Ast.Pattern in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match pat with
     | P.Object { P.Object.properties; annot } ->
@@ -1017,7 +1081,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
             | P.Object.Property (loc, { P.Object.Property.
                 key; pattern=pat; shorthand
               }) ->
-              SourceLocation (loc,
+              source_location_with_comments (loc,
                 begin match pat, shorthand with
                 (* Special case shorthand assignments *)
                 | (_, P.Assignment _), true -> pattern pat
@@ -1032,7 +1096,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
                 end;
               )
             | P.Object.RestProperty (loc, { P.Object.RestProperty.argument }) ->
-              SourceLocation (loc, fuse [Atom "..."; pattern argument])
+              source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
             )
             properties
           );
@@ -1050,7 +1114,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
             | Some P.Array.RestElement (loc, { P.Array.RestElement.
                 argument
               }) ->
-              SourceLocation (loc, fuse [Atom "..."; pattern argument])
+              source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
             )
             elements);
         option type_annotation annot;
@@ -1079,7 +1143,7 @@ and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions } =
   let module T = Ast.Expression.TemplateLiteral in
   let template_element i (loc, { T.Element.value={ T.Element.raw; _ }; tail }) =
     fuse [
-      SourceLocation (loc, fuse [
+      source_location_with_comments (loc, fuse [
         if i > 0 then Atom "}" else Empty;
         Atom raw;
         if not tail then Atom "${" else Empty;
@@ -1096,7 +1160,7 @@ and variable_declaration ?(ctxt=normal_context) (loc, {
   Ast.Statement.VariableDeclaration.declarations;
   kind;
 }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     begin match kind with
     | Ast.Statement.VariableDeclaration.Var -> Atom "var"
     | Ast.Statement.VariableDeclaration.Let -> Atom "let"
@@ -1118,7 +1182,7 @@ and variable_declarator ~ctxt (loc, {
   Ast.Statement.VariableDeclaration.Declarator.id;
   init;
 }) =
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match init with
     | Some expr ->
@@ -1203,14 +1267,14 @@ and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
   let s_params = List.map (pattern ~ctxt) params in
   match rest with
   | Some (loc, {Ast.Function.RestElement.argument}) ->
-      let s_rest = SourceLocation (loc, fuse [
+      let s_rest = source_location_with_comments (loc, fuse [
         Atom "..."; pattern ~ctxt argument
       ]) in
       List.append s_params [s_rest]
   | None -> s_params
 
 and block (loc, { Ast.Statement.Block.body }) =
-  SourceLocation (
+  source_location_with_comments (
     loc,
     if List.length body > 0 then
       body
@@ -1245,7 +1309,7 @@ and class_method (
   { Ast.Class.Method.kind; key; value=(func_loc, func); static; decorators }
 ) =
   let module M = Ast.Class.Method in
-  SourceLocation (loc, begin
+  source_location_with_comments (loc, begin
     let s_key = object_property_key key in
     let s_key =
       let { Ast.Function.generator; _ } = func in
@@ -1260,7 +1324,7 @@ and class_method (
     fuse [
       decorators_list decorators;
       if static then fuse [Atom "static"; space] else Empty;
-      SourceLocation (
+      source_location_with_comments (
         func_loc,
         function_base
           ~ctxt:normal_context
@@ -1273,7 +1337,7 @@ and class_method (
   )
 
 and class_property_helper loc key value static annot variance =
-  SourceLocation (loc, with_semicolon (fuse [
+  source_location_with_comments (loc, with_semicolon (fuse [
     if static then fuse [Atom "static"; space] else Empty;
     option variance_ variance;
     key;
@@ -1300,7 +1364,7 @@ and class_private_field (loc, { Ast.Class.PrivateField.
 
 and class_body (loc, { Ast.Class.Body.body }) =
   if List.length body > 0 then
-    SourceLocation (
+    source_location_with_comments (
       loc,
       list
         ~wrap:(Atom "{", Atom "}")
@@ -1348,7 +1412,7 @@ and class_base { Ast.Class.
               ~sep:(Atom ",")
               (List.map
                 (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                  SourceLocation (loc, fuse [
+                  source_location_with_comments (loc, fuse [
                     identifier id;
                     option type_parameter_instantiation targs;
                   ])
@@ -1451,7 +1515,7 @@ and object_property property =
   let module O = Ast.Expression.Object in
   match property with
   | O.Property (loc, O.Property.Init { key; value; shorthand }) ->
-    SourceLocation (loc,
+    source_location_with_comments (loc,
       let s_key = object_property_key key in
       if shorthand then s_key
       else fuse [
@@ -1468,15 +1532,15 @@ and object_property property =
       if generator then Atom "*" else Empty;
       s_key;
     ] in
-    SourceLocation (loc,
-      SourceLocation (fn_loc, function_base ~ctxt ~precedence ~id:g_key func)
+    source_location_with_comments (loc,
+      source_location_with_comments (fn_loc, function_base ~ctxt ~precedence ~id:g_key func)
     )
   | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
     let s_key = object_property_key key in
     let precedence = max_precedence in
     let ctxt = normal_context in
-    SourceLocation (loc,
-      SourceLocation (fn_loc, fuse [
+    source_location_with_comments (loc,
+      source_location_with_comments (fn_loc, fuse [
         Atom "get"; space;
         function_base ~ctxt ~precedence ~id:s_key func
       ])
@@ -1485,14 +1549,14 @@ and object_property property =
     let s_key = object_property_key key in
     let precedence = max_precedence in
     let ctxt = normal_context in
-    SourceLocation (loc,
-      SourceLocation (fn_loc, fuse [
+    source_location_with_comments (loc,
+      source_location_with_comments (fn_loc, fuse [
         Atom "set"; space;
         function_base ~ctxt ~precedence ~id:s_key func
       ])
     )
   | O.SpreadProperty (loc, { O.SpreadProperty.argument }) ->
-    SourceLocation (loc, fuse [Atom "..."; expression argument])
+    source_location_with_comments (loc, fuse [Atom "..."; expression argument])
 
 and jsx_element loc { Ast.JSX.openingElement; closingElement; children } =
   fuse [
@@ -1519,17 +1583,17 @@ and jsx_fragment loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_ch
     end;
   ]
 
-and jsx_identifier (loc, { Ast.JSX.Identifier.name }) = Identifier (loc, name)
+and jsx_identifier (loc, { Ast.JSX.Identifier.name }) = identifier_with_comments (loc, name)
 
 and jsx_namespaced_name (loc, { Ast.JSX.NamespacedName.namespace; name }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     jsx_identifier namespace;
     Atom ":";
     jsx_identifier name;
   ])
 
 and jsx_member_expression (loc, { Ast.JSX.MemberExpression._object; property }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     begin match _object with
     | Ast.JSX.MemberExpression.Identifier ident -> jsx_identifier ident
     | Ast.JSX.MemberExpression.MemberExpression member ->
@@ -1546,14 +1610,14 @@ and jsx_expression_container { Ast.JSX.ExpressionContainer.expression=expr } =
     | Ast.JSX.ExpressionContainer.Expression expr -> expression expr
     | Ast.JSX.ExpressionContainer.EmptyExpression loc ->
       (* Potentally we will need to inject comments here *)
-      SourceLocation (loc, Empty)
+      source_location_with_comments (loc, Empty)
     end;
     Atom "}";
   ]
 
 and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
   let module A = Ast.JSX.Attribute in
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     begin match name with
     | A.Identifier ident -> jsx_identifier ident
     | A.NamespacedName name -> jsx_namespaced_name name
@@ -1564,7 +1628,7 @@ and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
       begin match v with
       | A.Literal (loc, lit) -> literal (loc, lit)
       | A.ExpressionContainer (loc, express) ->
-        SourceLocation (loc, jsx_expression_container express)
+        source_location_with_comments (loc, jsx_expression_container express)
       end;
     ]
     | None -> flat_ugly_space (* TODO we shouldn't do this for the last attr *)
@@ -1572,7 +1636,7 @@ and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
   ])
 
 and jsx_spread_attribute (loc, { Ast.JSX.SpreadAttribute.argument }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "{";
     Atom "...";
     expression argument;
@@ -1595,7 +1659,7 @@ and jsx_fragment_opening loc =
   jsx_opening_helper loc None []
 
 and jsx_opening_helper loc nameOpt attributes =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "<";
     (match nameOpt with
     | Some name -> jsx_element_name name
@@ -1612,7 +1676,7 @@ and jsx_opening_helper loc nameOpt attributes =
 and jsx_self_closing (loc, { Ast.JSX.Opening.
   name; attributes; selfClosing=_
 }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "<";
     jsx_element_name name;
     if List.length attributes > 0 then
@@ -1624,14 +1688,14 @@ and jsx_self_closing (loc, { Ast.JSX.Opening.
   ])
 
 and jsx_closing (loc, { Ast.JSX.Closing.name }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "</";
     jsx_element_name name;
     Atom ">";
   ])
 
 and jsx_closing_fragment loc =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "</>";
   ])
 
@@ -1698,7 +1762,7 @@ and partition_specifiers default specifiers =
   | None -> special, named
 
 and import_namespace_specifier (loc, id) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "*"; pretty_space; Atom "as"; space; identifier id
   ])
 
@@ -1785,7 +1849,7 @@ and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
         ~wrap:(Atom "{", Atom "}")
         ~sep:(Atom ",")
         (List.map
-          (fun (loc, { ExportSpecifier.local; exported }) -> SourceLocation (
+          (fun (loc, { ExportSpecifier.local; exported }) -> source_location_with_comments (
             loc,
             fuse [
               identifier local;
@@ -1805,7 +1869,7 @@ and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
       export_source ~prefix:pretty_space source;
     ]
   | ExportBatchSpecifier (loc, Some ident) -> fuse [
-      SourceLocation (loc, fuse [
+      source_location_with_comments (loc, fuse [
         Atom "*";
         pretty_space;
         Atom "as";
@@ -1815,7 +1879,7 @@ and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
        export_source ~prefix:space source;
      ]
   | ExportBatchSpecifier (loc, None) -> fuse [
-      SourceLocation (loc, Atom "*");
+      source_location_with_comments (loc, Atom "*");
       export_source ~prefix:pretty_space source;
     ]
   )
@@ -1854,7 +1918,7 @@ and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.
   ]
 
 and variance_ (loc, var) =
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match var with
     | Ast.Variance.Plus -> Atom "+"
@@ -1869,7 +1933,7 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
       fuse [expression expr; Atom ":"]
     ]
   | None -> Atom "default:" in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match consequent with
     | [] -> case_left
@@ -1885,7 +1949,7 @@ and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
 }) =
   fuse [
     option variance_ variance;
-    SourceLocation (loc, Atom name);
+    source_location_with_comments (loc, Atom name);
     option type_annotation bound;
     begin match default with
     | Some t -> fuse [
@@ -1899,7 +1963,7 @@ and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
   ]
 
 and type_parameter (loc, params) =
-  SourceLocation (
+  source_location_with_comments (
     loc,
     list
       ~wrap:(Atom "<", Atom ">")
@@ -1908,7 +1972,7 @@ and type_parameter (loc, params) =
   )
 
 and type_parameter_instantiation (loc, args) =
-  SourceLocation (
+  source_location_with_comments (
     loc,
     list
       ~wrap:(Atom "<", Atom ">")
@@ -1940,14 +2004,14 @@ and opaque_type ~declare { Ast.Statement.OpaqueType.id; tparams; impltype; super
     | None -> [])))
 
 and type_annotation (loc, t) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom ":";
     pretty_space;
     type_ t;
   ])
 
 and type_predicate (loc, pred) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     Atom "%checks";
     Ast.Type.Predicate.(match pred with
     | Declared expr -> wrap_in_parens (expression expr)
@@ -1970,7 +2034,7 @@ and type_union_or_intersection ~sep ts =
 and type_function_param (loc, { Ast.Type.Function.Param.
   name; annot; optional
 }) =
-  SourceLocation (loc, fuse [
+  source_location_with_comments (loc, fuse [
     begin match name with
     | Some id -> fuse [
         identifier id;
@@ -1991,7 +2055,7 @@ and type_function ~sep { Ast.Type.Function.
   let params = List.map type_function_param params in
   let params = match restParams with
   | Some (loc, { Ast.Type.Function.RestParam.argument }) -> params@[
-      SourceLocation (loc, fuse [Atom "..."; type_function_param argument]);
+      source_location_with_comments (loc, fuse [Atom "..."; type_function_param argument]);
     ]
   | None -> params
   in
@@ -2012,12 +2076,12 @@ and type_object_property = Ast.Type.Object.(function
     }) ->
     let s_static = if static then fuse [Atom "static"; space] else Empty in
     let s_proto = if proto then fuse [Atom "proto"; space] else Empty in
-    SourceLocation (
+    source_location_with_comments (
       loc,
       match value, _method, proto, optional with
         (* Functions with no special properties can be rendered as methods *)
       | Property.Init (loc, Ast.Type.Function func), true, false, false ->
-        SourceLocation (loc, fuse [
+        source_location_with_comments (loc, fuse [
           s_static;
           object_property_key key;
           type_function ~sep:(Atom ":") func;
@@ -2034,24 +2098,24 @@ and type_object_property = Ast.Type.Object.(function
           type_ t
         ]
         (* Getters/Setters *)
-      | Property.Get (loc, func), _, _, _ -> SourceLocation (loc, fuse [
+      | Property.Get (loc, func), _, _, _ -> source_location_with_comments (loc, fuse [
           Atom "get"; space;
           object_property_key key;
           type_function ~sep:(Atom ":") func;
         ])
-      | Property.Set (loc, func), _, _, _ -> SourceLocation (loc, fuse [
+      | Property.Set (loc, func), _, _, _ -> source_location_with_comments (loc, fuse [
           Atom "set"; space;
           object_property_key key;
           type_function ~sep:(Atom ":") func;
         ])
     )
   | SpreadProperty (loc, { SpreadProperty.argument }) ->
-    SourceLocation (loc, fuse [
+    source_location_with_comments (loc, fuse [
       Atom "...";
       type_ argument;
     ])
   | Indexer (loc, { Indexer.id; key; value; static; variance }) ->
-    SourceLocation (loc, fuse [
+    source_location_with_comments (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;
       option variance_ variance;
       Atom "[";
@@ -2066,12 +2130,12 @@ and type_object_property = Ast.Type.Object.(function
       type_ value;
     ])
   | CallProperty (loc, { CallProperty.value=(call_loc, func); static }) ->
-    SourceLocation (loc, fuse [
+    source_location_with_comments (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;
-      SourceLocation (call_loc, type_function ~sep:(Atom ":") func);
+      source_location_with_comments (call_loc, type_function ~sep:(Atom ":") func);
     ])
   | InternalSlot (loc, { InternalSlot.id; value; optional; static; _method=_ }) ->
-    SourceLocation (loc, fuse [
+    source_location_with_comments (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;
       Atom "[[";
       identifier id;
@@ -2094,7 +2158,7 @@ and type_interface { Ast.Type.Interface.extends; body=(loc, obj) } =
     Atom "interface";
     interface_extends extends;
     pretty_space;
-    SourceLocation (loc, type_object ~sep:(Atom ",") obj)
+    source_location_with_comments (loc, type_object ~sep:(Atom ",") obj)
   ]
 
 and interface_extends = function
@@ -2104,7 +2168,7 @@ and interface_extends = function
     fuse_list
       ~sep:(Atom ",")
       (List.map
-        (fun (loc, generic) -> SourceLocation (loc, type_generic generic))
+        (fun (loc, generic) -> source_location_with_comments (loc, type_generic generic))
         xs
       )
     ]
@@ -2113,7 +2177,7 @@ and type_generic { Ast.Type.Generic.id; targs } =
   let rec generic_identifier = Ast.Type.Generic.Identifier.(function
   | Unqualified id -> identifier id
   | Qualified (loc, { qualification; id }) ->
-    SourceLocation (loc, fuse [
+    source_location_with_comments (loc, fuse [
       generic_identifier qualification;
       Atom ".";
       identifier id;
@@ -2134,7 +2198,7 @@ and type_with_parens t =
 
 and type_ ((loc, t): Loc.t Ast.Type.t) =
   let module T = Ast.Type in
-  SourceLocation (
+  source_location_with_comments (
     loc,
     match t with
     | T.Any -> Atom "any"
@@ -2183,7 +2247,7 @@ and interface_declaration_base ~def { Ast.Statement.Interface.
     option type_parameter tparams;
     interface_extends extends;
     pretty_space;
-    SourceLocation (loc, type_object ~sep:(Atom ",") obj)
+    source_location_with_comments (loc, type_object ~sep:(Atom ",") obj)
   ]
 
 and interface_declaration interface =
@@ -2210,11 +2274,11 @@ and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
     | None -> Empty
     | Some (loc, generic) -> fuse [
         space; Atom "extends"; space;
-        SourceLocation (loc, type_generic generic)
+        source_location_with_comments (loc, type_generic generic)
       ]
     end;
     pretty_space;
-    SourceLocation (loc, type_object ~sep:(Atom ",") obj)
+    source_location_with_comments (loc, type_object ~sep:(Atom ",") obj)
   ]
 
 and declare_function ?(s_type=Empty) { Ast.Statement.DeclareFunction.
@@ -2225,9 +2289,9 @@ and declare_function ?(s_type=Empty) { Ast.Statement.DeclareFunction.
     s_type;
     Atom "function"; space;
     identifier id;
-    SourceLocation (loc, match t with
+    source_location_with_comments (loc, match t with
     | loc, Ast.Type.Function func ->
-      SourceLocation (loc, type_function ~sep:(Atom ":") func)
+      source_location_with_comments (loc, type_function ~sep:(Atom ":") func)
     | _ -> failwith "Invalid DeclareFunction"
     );
     begin match predicate with
@@ -2277,13 +2341,13 @@ and declare_export_declaration { Ast.Statement.DeclareExportDeclaration.
   | Some decl, None -> Ast.Statement.DeclareExportDeclaration.(match decl with
     (* declare export var *)
     | Variable (loc, var) ->
-      SourceLocation (loc, declare_variable ~s_type:s_export var)
+      source_location_with_comments (loc, declare_variable ~s_type:s_export var)
     (* declare export function *)
     | Function (loc, func) ->
-      SourceLocation (loc, declare_function ~s_type:s_export func)
+      source_location_with_comments (loc, declare_function ~s_type:s_export func)
     (* declare export class *)
     | Class (loc, c) ->
-      SourceLocation (loc, declare_class ~s_type:s_export c)
+      source_location_with_comments (loc, declare_class ~s_type:s_export c)
     (* declare export default [type]
      * this corresponds to things like
      * export default 1+1; *)
@@ -2294,19 +2358,19 @@ and declare_export_declaration { Ast.Statement.DeclareExportDeclaration.
       ])
     (* declare export type *)
     | NamedType (loc, typeAlias) ->
-      SourceLocation (loc, fuse [
+      source_location_with_comments (loc, fuse [
         Atom "declare"; space; s_export;
         type_alias ~declare:false typeAlias;
       ])
     (* declare export opaque type *)
     | NamedOpaqueType (loc, opaqueType) ->
-      SourceLocation (loc, fuse [
+      source_location_with_comments (loc, fuse [
         Atom "declare"; space; s_export;
         opaque_type ~declare:false opaqueType;
       ])
     (* declare export interface *)
     | Interface (loc, interface) ->
-      SourceLocation (loc, fuse [
+      source_location_with_comments (loc, fuse [
         Atom "declare"; space; s_export;
         interface_declaration interface;
       ])
