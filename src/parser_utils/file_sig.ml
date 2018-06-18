@@ -772,3 +772,195 @@ end
 let program ~ast =
   let walk = new requires_calculator ~ast in
   walk#eval walk#program ast
+
+class mapper = object(this)
+  method file_sig (file_sig: t) =
+    let { module_sig; declare_modules; tolerable_errors } = file_sig in
+    let module_sig' = this#module_sig module_sig in
+    let declare_modules' = SMap.map (fun (loc, module_sig) ->
+      let loc = this#loc loc in
+      let module_sig = this#module_sig module_sig in
+      (loc, module_sig)
+    ) declare_modules in
+    let tolerable_errors' = List.map this#tolerable_error tolerable_errors in
+    if module_sig == module_sig' &&
+      declare_modules == declare_modules' &&
+      tolerable_errors == tolerable_errors'
+    then file_sig
+    else {
+      module_sig = module_sig';
+      declare_modules = declare_modules';
+      tolerable_errors = tolerable_errors';
+    }
+
+  method module_sig (module_sig: module_sig) =
+    let { requires; module_kind; type_exports_named; type_exports_star } = module_sig in
+    let requires' = List.map this#require requires in
+    let module_kind' = this#module_kind module_kind in
+    let type_exports_named' = SMap.map this#type_export type_exports_named in
+    let type_exports_star' = SMap.map this#export_star type_exports_star in
+    if requires == requires' &&
+      module_kind == module_kind' &&
+      type_exports_named == type_exports_named' &&
+      type_exports_star == type_exports_star'
+    then module_sig
+    else {
+      requires = requires';
+      module_kind = module_kind';
+      type_exports_named = type_exports_named';
+      type_exports_star = type_exports_star';
+    }
+
+  method require (require: require) =
+    match require with
+    | Require { source; require_loc; bindings; } ->
+      let source' = this#ident source in
+      let require_loc' = this#loc require_loc in
+      let bindings' = Option.map ~f:this#require_bindings bindings in
+      if source == source' && require_loc == require_loc' && bindings == bindings'
+      then require
+      else Require { source = source'; require_loc = require_loc'; bindings = bindings'; }
+    | ImportDynamic { source; import_loc } ->
+      let source' = this#ident source in
+      let import_loc' = this#loc import_loc in
+      if source == source' && import_loc == import_loc'
+      then require
+      else ImportDynamic { source = source'; import_loc = import_loc'; }
+    | Import0 ident ->
+      let ident' = this#ident ident in
+      if ident == ident'
+      then require
+      else Import0 ident'
+    | Import { source; named; ns; types; typesof; typesof_ns; } ->
+      let source' = this#ident source in
+      let named' = SMap.map (SMap.map (Nel.map this#imported_locs)) named in
+      let ns' = SMap.map (Nel.map this#loc) ns in
+      let types' = SMap.map (SMap.map (Nel.map this#imported_locs)) types in
+      let typesof' = SMap.map (SMap.map (Nel.map this#imported_locs)) typesof in
+      let typesof_ns' = SMap.map (Nel.map this#loc) typesof_ns in
+      if source == source' &&
+        named == named' &&
+        ns == ns' &&
+        types == types' &&
+        typesof == typesof' &&
+        typesof_ns == typesof_ns'
+      then require
+      else Import {
+        source = source';
+        named = named';
+        ns = ns';
+        types = types';
+        typesof = typesof';
+        typesof_ns = typesof_ns';
+      }
+
+  method imported_locs (imported_locs: imported_locs) =
+    let {remote_loc; local_loc} = imported_locs in
+    let remote_loc' = this#loc remote_loc in
+    let local_loc' = this#loc local_loc in
+    if remote_loc == remote_loc' && local_loc == local_loc'
+    then imported_locs
+    else {remote_loc = remote_loc'; local_loc = local_loc'}
+
+  method require_bindings (require_bindings: require_bindings) =
+    match require_bindings with
+    | BindIdent ident ->
+      let ident' = this#ident ident in
+      if ident == ident'
+      then require_bindings
+      else BindIdent ident'
+    | BindNamed map ->
+      let map' = SMapUtils.ident_map (fun (loc, ident) ->
+        let loc = this#loc loc in
+        let ident = this#ident ident in
+        (loc, ident)
+      ) map in
+      if map == map'
+      then require_bindings
+      else BindNamed map'
+
+  method module_kind (module_kind: module_kind) =
+    match module_kind with
+    | CommonJS { mod_exp_loc } ->
+      let mod_exp_loc' = OptionUtils.ident_map this#loc mod_exp_loc in
+      if mod_exp_loc == mod_exp_loc'
+      then module_kind
+      else CommonJS { mod_exp_loc = mod_exp_loc' }
+    | ES { named; star } ->
+      let named' = SMapUtils.ident_map this#export named in
+      let star' = SMapUtils.ident_map this#export_star star in
+      if named == named' && star == star'
+      then module_kind
+      else ES { named = named'; star = star' }
+
+  method export (export: export) =
+    match export with
+    | ExportDefault { default_loc; local } ->
+      let default_loc' = this#loc default_loc in
+      let local' = OptionUtils.ident_map this#ident local in
+      if default_loc == default_loc' && local == local'
+      then export
+      else ExportDefault { default_loc = default_loc'; local = local' }
+    | ExportNamed { loc; local; source; } ->
+      let loc' = this#loc loc in
+      let local' = Option.map ~f:this#ident local in
+      let source' = Option.map ~f:this#ident source in
+      if loc == loc' && local == local' && source == source'
+      then export
+      else ExportNamed { loc = loc'; local = local'; source = source'; }
+    | ExportNs { loc; source; } ->
+      let loc' = this#loc loc in
+      let source' = this#ident source in
+      if loc == loc' && source == source'
+      then export
+      else ExportNs { loc = loc'; source = source'; }
+
+  method export_star (export_star: export_star) =
+    match export_star with
+    | ExportStar { star_loc; source_loc } ->
+      let star_loc' = this#loc star_loc in
+      let source_loc' = this#loc source_loc in
+      if star_loc == star_loc' && source_loc == source_loc'
+      then export_star
+      else ExportStar { star_loc = star_loc'; source_loc = source_loc'; }
+
+  method type_export (type_export: type_export) =
+    match type_export with
+    | TypeExportNamed { loc; local; source; } ->
+      let loc' = this#loc loc in
+      let local' = Option.map ~f:this#ident local in
+      let source' = Option.map ~f:this#ident source in
+      if loc == loc' && local == local' && source == source'
+      then type_export
+      else TypeExportNamed { loc = loc'; local = local'; source = source'; }
+
+  method ident (ident: ident) =
+    let (loc, str) = ident in
+    let loc' = this#loc loc in
+    if loc == loc'
+    then ident
+    else (loc', str)
+
+  method tolerable_error (tolerable_error: tolerable_error) =
+    match tolerable_error with
+    | BadExportPosition loc ->
+      let loc' = this#loc loc in
+      if loc == loc'
+      then tolerable_error
+      else BadExportPosition loc'
+    | BadExportContext (str, loc) ->
+      let loc' = this#loc loc in
+      if loc == loc'
+      then tolerable_error
+      else BadExportContext (str, loc')
+
+  method error (error: error) =
+    match error with
+    | IndeterminateModuleType loc ->
+      let loc' = this#loc loc in
+      if loc == loc'
+      then error
+      else IndeterminateModuleType loc'
+
+  method loc (loc: Loc.t) = loc
+end

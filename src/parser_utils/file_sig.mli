@@ -180,3 +180,19 @@ val program: ast:Loc.t Ast.program -> (t, error) result
 
 (* Use for debugging; not for exposing info the the end user *)
 val to_string: t -> string
+
+class mapper : object
+  method error: error -> error
+  method export: export -> export
+  method export_star: export_star -> export_star
+  method file_sig: t -> t
+  method ident: ident -> Loc.t * string
+  method imported_locs: imported_locs -> imported_locs
+  method loc: Loc.t -> Loc.t
+  method module_kind: module_kind -> module_kind
+  method module_sig: module_sig -> module_sig
+  method require: require -> require
+  method require_bindings: require_bindings -> require_bindings
+  method tolerable_error: tolerable_error -> tolerable_error
+  method type_export: type_export -> type_export
+end
