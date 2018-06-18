@@ -8,6 +8,7 @@
 type id_kind =
   | PropertyAccess of Type.t (* receiver type *)
   | Import of string (* remote name *) * Type.t (* module type *)
+  | Exists
   | Other
 
 type name = string

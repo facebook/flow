@@ -43,9 +43,11 @@ module QueryTypeNormalizer = Ty_normalizer.Make(struct
   let flag_shadowed_type_params = false
 end)
 
-let query_type cx loc =
+let query_type cx ?type_table loc =
   let pred = fun range -> Reason.in_range loc range in
-  let type_table = Context.type_table cx in
+  let type_table = match type_table with
+    | Some type_table -> type_table
+    | None -> Context.type_table cx in
   match Type_table.find_type_info ~pred type_table with
   | None -> FailureNoMatch
   | Some (loc, (_, scheme, _)) ->

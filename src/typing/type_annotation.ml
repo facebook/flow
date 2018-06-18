@@ -939,7 +939,11 @@ let rec convert cx tparams_map = Ast.Type.(function
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty tparams_map in
   let reason = derivable_reason (mk_reason RExistential loc) in
-  if force then Tvar.mk cx reason
+  if force then begin
+    let tvar = Tvar.mk cx reason in
+    Env.add_type_table_info cx ~tparams_map loc ("Star", tvar, Type_table.Exists);
+    tvar
+  end
   else ExistsT reason
 )
 
