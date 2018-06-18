@@ -356,14 +356,12 @@ let print_summary =
   (* If there's more than 1% of wall time since the last end and the next start_age, then print an
    * <Unknown> row *)
   let print_unknown last_end (wall_start_age, cpu_start_age) total =
-    match last_end with
-    | None -> ()
-    | Some (wall_end, cpu_end) ->
-      let unknown_wall = wall_start_age -. wall_end in
-      if unknown_wall /. total.wall.duration > 0.01
-      then
-        let unknown_cpu = cpu_start_age -. cpu_end in
-        print_summary_single_raw "<Unknown>" (unknown_wall, unknown_cpu) total
+    let (wall_end, cpu_end) = last_end in
+    let unknown_wall = wall_start_age -. wall_end in
+    if unknown_wall /. total.wall.duration > 0.01
+    then
+      let unknown_cpu = cpu_start_age -. cpu_end in
+      print_summary_single_raw "<Unknown>" (unknown_wall, unknown_cpu) total
   in
 
   fun profile ->
@@ -399,9 +397,9 @@ let print_summary =
         let last_end =
           result.wall.start_age +. result.wall.duration,
           (sum_cpu_start_age result) +. (sum_cpu result) in
-        Some last_end, remaining
+        last_end, remaining
       )
-      (None, (total.wall.duration, sum_cpu total))
+      ((total.wall.start_age, sum_cpu_start_age total), (total.wall.duration, sum_cpu total))
       parts in
 
     (* Print an <Unknown> row if there's too much time between the last section and the end of the
