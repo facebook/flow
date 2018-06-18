@@ -66,6 +66,7 @@ val modules_are_use_strict: config -> bool
 val munge_underscores: config -> bool
 val no_flowlib: config -> bool
 val node_resolver_dirnames: config -> string list
+val saved_state_load_script: config -> string option
 val shm_dep_table_pow: config -> int
 val shm_dirs: config -> string list
 val shm_global_size: config -> int

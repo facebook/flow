@@ -70,6 +70,7 @@ module Opts = struct
     max_workers: int;
     no_flowlib: bool;
     temp_dir: string;
+    saved_state_load_script: string option;
     shm_global_size: int;
     shm_heap_size: int;
     shm_dirs: string list;
@@ -178,6 +179,7 @@ module Opts = struct
     max_workers = Sys_utils.nbr_procs;
     no_flowlib = false;
     temp_dir = default_temp_dir;
+    saved_state_load_script = None;
     shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
     shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
     shm_dirs = default_shm_dirs;
@@ -807,6 +809,15 @@ let parse_options config lines =
       });
     }
 
+    |> define_opt "saved_state.load_script" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_string;
+      setter = (fun opts v -> Ok {
+        opts with saved_state_load_script = Some v;
+      });
+    }
+
     |> define_opt "sharedmemory.dirs" {
       initializer_ = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
@@ -1063,6 +1074,7 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+let saved_state_load_script c = c.options.Opts.saved_state_load_script
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs
 let shm_global_size c = c.options.Opts.shm_global_size
