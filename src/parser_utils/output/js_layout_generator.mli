@@ -33,12 +33,13 @@ type comment_map =
 
 val normal_context: expression_context
 
+val with_attached_comments: comment_map option ref
+
 val program:
   preserve_docblock:bool ->
   checksum:string option ->
   Loc.t Ast.program -> Layout.layout_node
-val program_prettier:
-  attached_comments:comment_map ->
+val program_simple:
   Loc.t Ast.program -> Layout.layout_node
 val expression: ?ctxt:expression_context -> Loc.t Ast.Expression.t -> Layout.layout_node
 val statement:
@@ -46,6 +47,10 @@ val statement:
   ?pretty_semicolon:bool ->
   Loc.t Ast.Statement.t -> Layout.layout_node
 val object_property: Loc.t Ast.Expression.Object.property -> Layout.layout_node
+val class_method: Loc.t Ast.Class.Method.t -> Layout.layout_node
+val class_property: Loc.t Ast.Class.Property.t -> Layout.layout_node
+val class_private_field: Loc.t Ast.Class.PrivateField.t -> Layout.layout_node
+val type_: Loc.t Ast.Type.t -> Layout.layout_node
 
 val better_quote: string -> string
 val utf8_escape: quote:string -> string -> string

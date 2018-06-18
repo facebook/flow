@@ -379,8 +379,7 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
   source_location_with_comments (loc, nodes)
 
-and program_prettier ~attached_comments (loc, statements, _) =
-  with_attached_comments := Some attached_comments;
+and program_simple (loc, statements, _) =
   let nodes = fuse_vertically ~inline:(true, true) (
     statements_list_with_newlines statements
   ) in
