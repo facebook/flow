@@ -10,27 +10,52 @@ open Token
 open Lex_env
 
 let lexeme = Sedlexing.Utf8.lexeme
+let sub_lexeme = Sedlexing.Utf8.sub_lexeme
 
-let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '_' | '$']
+let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '$']
+let id_letter = [%sedlex.regexp? letter | '_']
 let digit = [%sedlex.regexp? '0'..'9']
+let digit_non_zero = [%sedlex.regexp? '1'..'9']
 let decintlit = [%sedlex.regexp? '0' | ('1'..'9', Star digit)] (* DecimalIntegerLiteral *)
 let alphanumeric = [%sedlex.regexp? digit | letter]
 let word = [%sedlex.regexp? letter, Star alphanumeric]
 
 let hex_digit = [%sedlex.regexp? digit | 'a'..'f' | 'A'..'F']
-let non_hex_letter = [%sedlex.regexp? 'g'..'z' | 'G'..'Z' | '_' | '$']
+let non_hex_letter = [%sedlex.regexp? 'g'..'z' | 'G'..'Z' | '$']
+
+let bin_digit = [%sedlex.regexp? '0' | '1']
+let oct_digit = [%sedlex.regexp? '0'..'7']
+
+(* This regex could be simplified to (digit Star (digit OR '_' digit))
+ * That makes the underscore and failure cases faster, and the base case take x2-3 the steps
+ * As the codebase contains more base cases than underscored or errors, prefer this version *)
+let underscored_bin = [%sedlex.regexp?
+  Plus bin_digit | (bin_digit, Star (bin_digit | ('_', bin_digit)))
+]
+let underscored_oct = [%sedlex.regexp?
+  Plus oct_digit | (oct_digit, Star (oct_digit | ('_', oct_digit)))
+]
+let underscored_hex = [%sedlex.regexp?
+  Plus hex_digit | (hex_digit, Star (hex_digit | ('_', hex_digit)))
+]
+let underscored_digit = [%sedlex.regexp?
+  Plus digit | (digit_non_zero, Star (digit | ('_', digit)))
+]
+let underscored_decimal = [%sedlex.regexp?
+  Plus digit | (digit, Star (digit | ('_', digit)))
+]
 
 (* Different ways you can write a number *)
-let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), Plus ('0' | '1')]
-let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), Plus ('0'..'7')]
-let legacyoctnumber = [%sedlex.regexp? '0', Plus ('0'..'7')]
-let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), Plus hex_digit]
+let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), underscored_bin]
+let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), underscored_oct]
+let legacyoctnumber = [%sedlex.regexp? '0', underscored_oct]
+let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), underscored_hex]
 let scinumber = [%sedlex.regexp?
-  ((decintlit, Opt ('.', Star digit)) | ('.', Plus digit)),
-  ('e' | 'E'), Opt ('-' | '+'), Plus digit
+  ((decintlit, Opt ('.', Opt underscored_decimal)) | ('.', underscored_decimal)),
+  ('e' | 'E'), Opt ('-' | '+'), underscored_digit
 ]
-let wholenumber = [%sedlex.regexp? Plus digit, Opt '.']
-let floatnumber = [%sedlex.regexp? Star digit, '.', Plus digit]
+let wholenumber = [%sedlex.regexp? underscored_digit, Opt '.']
+let floatnumber = [%sedlex.regexp? Opt underscored_digit, '.', underscored_decimal]
 
 (* 2-8 alphanumeric characters. I could match them directly, but this leads to
  * ~5k more lines of generated lexer
@@ -84,6 +109,7 @@ let whitespace = [%sedlex.regexp?
 let neg = [%sedlex.regexp? '-', Star whitespace]
 
 let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
+let line_terminator_sequence_start = [%sedlex.regexp? '\n' | '\r' | 0x2028 | 0x2029]
 
 let hex_quad = [%sedlex.regexp? hex_digit, hex_digit, hex_digit, hex_digit]
 let unicode_escape = [%sedlex.regexp? "\\u", hex_quad]
@@ -300,25 +326,23 @@ let decode_identifier =
     | eof -> lex_error env loc Parse_error.IllegalUnicodeEscape
     | _ -> failwith "unreachable"
   in
-  let loc_and_lexeme env offset lexbuf  =
+  let loc_and_sub_lexeme env offset lexbuf trim_start trim_end  =
     let start_offset = offset + Sedlexing.lexeme_start lexbuf in
     let end_offset = offset + Sedlexing.lexeme_end lexbuf in
     let loc = loc_of_offsets env start_offset end_offset in
-    loc, lexeme lexbuf
+    loc, sub_lexeme lexbuf trim_start (Sedlexing.lexeme_length lexbuf - trim_start - trim_end)
   in
   let rec id_char env offset buf lexbuf =
     match%sedlex lexbuf with
     | unicode_escape ->
-      let loc, str = loc_and_lexeme env offset lexbuf in
-      let hex = String.sub str 2 (String.length str - 2) in
+      let loc, hex = loc_and_sub_lexeme env offset lexbuf 2 0 in
       let code = int_of_string ("0x"^hex) in
       let env = assert_valid_unicode_in_identifier env loc code in
       Wtf8.add_wtf_8 buf code;
       id_char env offset buf lexbuf
 
     | codepoint_escape ->
-      let loc, str = loc_and_lexeme env offset lexbuf in
-      let hex = String.sub str 3 (String.length str - 4) in
+      let loc, hex = loc_and_sub_lexeme env offset lexbuf 3 1 in
       let code = int_of_string ("0x"^hex) in
       let env = assert_valid_unicode_in_identifier env loc code in
       Wtf8.add_wtf_8 buf code;
@@ -327,6 +351,8 @@ let decode_identifier =
     | eof ->
       env, Buffer.contents buf
 
+    (* match multi-char substrings that don't contain the start chars of the above patterns *)
+    | Plus (Compl (eof | "\\"))
     | any ->
       let x = lexeme lexbuf in
       Buffer.add_string buf x;
@@ -377,6 +403,8 @@ let rec comment env buf lexbuf =
       comment env buf lexbuf
     )
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl (line_terminator_sequence_start | '*'))
   | any ->
     Buffer.add_string buf (lexeme lexbuf);
     comment env buf lexbuf
@@ -403,6 +431,8 @@ let rec line_comment env buf lexbuf =
     } in
     env, { Loc.source; start; _end; }
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl (eof | line_terminator_sequence_start))
   | any ->
     let str = lexeme lexbuf in
     Buffer.add_string buf str;
@@ -518,6 +548,8 @@ let rec string_quote env q buf raw octal lexbuf =
     Buffer.add_string buf x;
     env, loc_of_lexbuf env lexbuf, octal
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl ("'" | '"' | '\\' | '\n' | eof))
   | any ->
     let x = lexeme lexbuf in
     Buffer.add_string raw x;
@@ -568,6 +600,8 @@ let rec template_part env start cooked raw literal lexbuf =
     let env = new_line env lexbuf in
     template_part env start cooked raw literal lexbuf
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl (eof | '`' | '$' | '\\' | '\r' | '\n'))
   | any ->
     let c = lexeme lexbuf in
     Buffer.add_string raw c;
@@ -821,6 +855,16 @@ let token (env: Lex_env.t) lexbuf : result =
   | ";" -> Token (env, T_SEMICOLON)
   | "," -> Token (env, T_COMMA)
   | ":" -> Token (env, T_COLON)
+
+  | "?.", digit ->
+    Sedlexing.rollback lexbuf;
+    begin match%sedlex lexbuf with
+    | "?" -> Token (env, T_PLING)
+    | _ -> failwith "expected ?"
+    end
+
+  | "?." -> Token (env, T_PLING_PERIOD)
+  | "??" -> Token (env, T_PLING_PLING)
   | "?" -> Token (env, T_PLING)
   | "&&" -> Token (env, T_AND)
   | "||" -> Token (env, T_OR)
@@ -899,6 +943,8 @@ let rec regexp_class env buf lexbuf =
     Buffer.add_char buf ']';
     env
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl (eof | '\\' | ']'))
   | any ->
     let str = lexeme lexbuf in
     Buffer.add_string buf str;
@@ -924,7 +970,7 @@ let rec regexp_body env buf lexbuf =
     Buffer.add_string buf s;
     regexp_body env buf lexbuf
 
-  | '/', Plus letter ->
+  | '/', Plus id_letter ->
     let flags =
       let str = lexeme lexbuf in
       String.sub str 1 (String.length str - 1)
@@ -944,6 +990,8 @@ let rec regexp_body env buf lexbuf =
     let env = lex_error env loc Parse_error.UnterminatedRegExp in
     env, ""
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl (eof | '\\' | '/' | '[' | line_terminator_sequence_start))
   | any ->
     let str = lexeme lexbuf in
     Buffer.add_string buf str;
@@ -1302,6 +1350,8 @@ let rec jsx_text env mode buf raw lexbuf =
     | None -> Buffer.add_string buf ("&" ^ entity ^";"));
     jsx_text env mode buf raw lexbuf
 
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  | Plus (Compl ("'" | '"' | '<' | '{' | '&' | eof | line_terminator_sequence_start))
   | any ->
     let c = lexeme lexbuf in
     Buffer.add_string raw c;
@@ -1616,7 +1666,9 @@ let type_token env lexbuf =
   | "bool" -> Token (env, (T_BOOLEAN_TYPE BOOL))
   | "boolean" -> Token (env, (T_BOOLEAN_TYPE BOOLEAN))
   | "empty" -> Token (env, T_EMPTY_TYPE)
+  | "extends" -> Token (env, T_EXTENDS)
   | "false" -> Token (env, T_FALSE)
+  | "interface" -> Token (env, T_INTERFACE)
   | "mixed" -> Token (env, T_MIXED_TYPE)
   | "null" -> Token (env, T_NULL)
   | "number" -> Token (env, T_NUMBER_TYPE)

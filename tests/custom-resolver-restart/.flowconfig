@@ -1,0 +1,3 @@
+[options]
+module.resolver=./resolver.js
+module.system=haste

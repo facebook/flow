@@ -1,8 +1,16 @@
-Error: private.js:11
- 11:     var _x: string = this._x;
-                               ^^ property `_x`. Property not found in
- 11:     var _x: string = this._x;
-                          ^^^^ B
+Error ------------------------------------------------------------------------------------------------- private.js:11:22
+
+Cannot get `this._x` because property `_x` is missing in `B` [1].
+
+   private.js:11:22
+   11|     var _x: string = this._x;
+                            ^^^^^^^
+
+References:
+   private.js:8:7
+    8| class B extends A {
+             ^ [1]
+
 
 
 Found 1 error

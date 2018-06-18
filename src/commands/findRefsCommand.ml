@@ -24,15 +24,14 @@ let spec = {
         CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> server_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
     |> from_flag
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> path_flag
+    |> flag "--global" no_arg ~doc:"Search for references in other files (beta)"
+    |> flag "--multi-hop" no_arg ~doc:"Include references on related object types (implies `--global`; experimental)"
     |> anon "args" (required (list_of string))
-        ~doc:"[FILE] LINE COL"
   )
 }
 
@@ -42,7 +41,7 @@ let parse_args path args =
       let file = expand_path file in
       File_input.FileName file, (int_of_string line), (int_of_string column)
     | [line; column] ->
-      get_file_from_filename_or_stdin path None,
+      get_file_from_filename_or_stdin path ~cmd:CommandSpec.(spec.name) None,
       (int_of_string line),
       (int_of_string column)
     | _ ->
@@ -52,13 +51,39 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
+let print_json result ~pretty ~strip_root =
+  let open Hh_json in
+  let json = match result with
+    | None -> JSON_Object ["kind", JSON_String "no-symbol-found"]
+    | Some (name, locs) ->
+      JSON_Object [
+        "kind", JSON_String "symbol-found";
+        "name", JSON_String name;
+        "locs", JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
+      ]
+  in
+  print_json_endline ~pretty json
+
+let to_string result option_values ~strip_root =
+  let locs = match result with
+    | None -> []
+    | Some (_, locs) -> locs
+  in
+  String.concat "\n" @@
+    if option_values.from = "vim" || option_values.from = "emacs"
+    then List.map (Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
+    else List.map (range_string_of_loc ~strip_root) locs
+
+
     (* find-refs command handler.
    - json toggles JSON output
    - strip_root toggles whether output positions are relativized w.r.t. root
    - path is a user-specified path to use as incoming content source path
+   - global indicates whether to search for references in different files (much slower)
+   - multi_hop indicates whether to include properties on related objects (even slower)
    - args is mandatory command args; see parse_args above
     *)
-let main option_values root json pretty strip_root from path args () =
+let main option_values json pretty root strip_root from path global multi_hop args () =
   FlowEventLogger.set_from from;
   let (file, line, column) = parse_args path args in
   let root = guess_root (
@@ -67,28 +92,19 @@ let main option_values root json pretty strip_root from path args () =
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  (* connect to server *)
-  let ic, oc = connect option_values root in
-  (* dispatch command *)
-  send_command oc (ServerProt.FIND_REFS (file, line, column));
+
+  let request = ServerProt.Request.FIND_REFS (file, line, column, global, multi_hop) in
   (* command result will be a position structure with full file path *)
-  let response: ServerProt.find_refs_response = Timeout.input_value ic in
-  match response with
-  | Ok locs ->
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.FIND_REFS (Ok result) ->
     (* format output *)
-    print_endline @@
-      if json || pretty
-      then Hh_json.(json_to_string ~pretty @@
-        JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
-      )
-      else String.concat "\n" @@
-        if option_values.from = "vim" || option_values.from = "emacs"
-        then List.map (Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
-        else List.map (range_string_of_loc ~strip_root) locs
-  | Error exn_msg ->
+    if json || pretty
+    then print_json result ~pretty ~strip_root
+    else print_endline (to_string result option_values ~strip_root)
+  | ServerProt.Response.FIND_REFS (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not find refs for %s:%d:%d\n%s"
       (File_input.filename_of_file_input file) line column exn_msg
-
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

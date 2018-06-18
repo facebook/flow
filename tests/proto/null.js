@@ -14,6 +14,6 @@ var o_shadow = Object.create(null);
 o_shadow.p = 0; // error: number ~> string
 
 declare var o_nonstrict: { __proto__: null };
-if (o_nonstrict.p) {
+if (o_nonstrict.p) { // Error - property p is unknown
   (o_nonstrict.p: empty); // error: mixed ~> empty
 }

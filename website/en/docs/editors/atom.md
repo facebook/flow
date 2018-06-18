@@ -5,6 +5,18 @@ layout: guide
 If you're using [Atom](https://atom.io) you have a bunch of options to
 integrate Flow into your code base.
 
+### Flow for Atom IDE <a class="toc" id="toc-ide-flowtype" href="#toc-ide-flowtype"></a>
+
+```sh
+apm install atom-ide-ui && apm install ide-flowtype
+```
+
+[Flow for Atom IDE](https://atom.io/packages/ide-flowtype) is extracted from 
+Nuclide, and works with the [Atom IDE](https://ide.atom.io/) UI. It brings 
+the core features you expect in a full-featured IDE into Atom, such as 
+language-aware autocomplete, diagnostics, go-to-definition, type hints, and 
+symbol outlines.
+
 ### Nuclide <a class="toc" id="toc-nuclide" href="#toc-nuclide"></a>
 
 ```sh

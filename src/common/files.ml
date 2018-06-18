@@ -10,6 +10,7 @@
 type options = {
   default_lib_dir: Path.t option;
   ignores: (string * Str.regexp) list;
+  untyped: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -19,6 +20,7 @@ type options = {
 
 let default_lib_dir options = options.default_lib_dir
 let ignores options = options.ignores
+let untyped options = options.untyped
 let includes options = options.includes
 let lib_paths options = options.lib_paths
 let module_file_exts options = options.module_file_exts
@@ -40,10 +42,6 @@ let chop_flow_ext file =
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
-let is_dot_file path =
-  let filename = Filename.basename path in
-  String.length filename > 0 && filename.[0] = '.'
-
 let is_prefix prefix =
   let prefix_with_sep = if String_utils.string_ends_with prefix Filename.dir_sep
     then prefix
@@ -54,24 +52,59 @@ let is_prefix prefix =
 let is_json_file filename =
   Utils_js.extension_of_filename filename = Some ".json"
 
-let is_valid_path ~options =
-  let file_exts = SSet.union options.module_file_exts options.module_resource_exts in
-  let is_valid_path_helper path =
-    not (is_dot_file path) &&
-    (SSet.exists (Filename.check_suffix path) file_exts ||
-      Filename.basename path = "package.json")
+(* This is the set of file extensions which we watch for changes *)
+let get_all_watched_extensions options =
+  SSet.union options.module_file_exts options.module_resource_exts
 
-  in fun path ->
-    if Filename.check_suffix path flow_ext
-    (* foo.js.flow is valid if foo.js is valid *)
-    then is_valid_path_helper (Filename.chop_suffix path flow_ext)
-    else is_valid_path_helper path
+let is_valid_path =
+  (* Given a file foo.bar.baz.bat, checks the extensions .bat, .baz.bat, and .bar.baz.bat *)
+  let check_ext =
+    (*    helper file_exts "foo.bar.baz" "" ".bat"
+     * -> helper file_exts "foo.bar" ".bat" ".baz"
+     * -> helper file_exts "foo" ".baz.bat" ".bar"
+     * -> helper file_exts "" ".bar.baz.bat" ""
+     * -> false
+     *)
+    let rec helper file_exts basename acc ext =
+      ext <> "" && (
+        let acc = ext ^ acc in
+        SSet.mem acc file_exts || (
+          let basename = Filename.chop_suffix basename ext in
+          let ext = Filename.extension basename in
+          helper file_exts basename acc ext
+        )
+      )
+    in
+
+    fun file_exts basename ->
+      let extension = Filename.extension basename in
+      let acc = "" in
+      if extension = flow_ext
+      then
+        (* We treat bar.foo.flow like bar.foo *)
+        let basename = Filename.chop_suffix basename flow_ext in
+        helper file_exts basename acc (Filename.extension basename)
+      else
+        helper file_exts basename acc extension
+  in
+
+  let is_dot_file basename =
+    basename <> "" && basename.[0] = '.'
+  in
+
+  fun ~options ->
+    let file_exts = get_all_watched_extensions options in
+
+    fun path ->
+      let basename = Filename.basename path in
+      not (is_dot_file basename) && (check_ext file_exts basename || basename = "package.json")
 
 let is_node_module options path =
   List.mem (Filename.basename path) options.node_resolver_dirnames
 
-let is_flow_file ~options path =
-  is_valid_path ~options path && not (is_directory path)
+let is_flow_file ~options =
+  let is_valid_path = is_valid_path ~options in
+  fun path -> is_valid_path path && not (is_directory path)
 
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
@@ -243,7 +276,8 @@ let init (options: options) =
     | None -> libs, is_valid_path ~options
     | Some root ->
       let is_in_flowlib = is_prefix (Path.to_string root) in
-      let filter path = is_in_flowlib path || is_valid_path ~options path in
+      let is_valid_path = is_valid_path ~options in
+      let filter path = is_in_flowlib path || is_valid_path path in
       root::libs, filter
   in
   (* preserve enumeration order *)
@@ -289,6 +323,15 @@ let is_ignored (options: options) =
     let path = Sys_utils.normalize_filename_dir_sep path in
     List.exists (fun rx -> Str.string_match rx path 0) list
 
+(* true if a file path matches an [untyped] entry in config *)
+let is_untyped (options: options) =
+  let list = List.map snd options.untyped in
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
+
 (* true if a file path matches an [include] path in config *)
 let is_included options f =
   Path_matcher.matches options.includes f
@@ -297,9 +340,8 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
-let watched_paths ~root options =
-  let others = Path_matcher.stems options.includes in
-  root::others
+let watched_paths options =
+  Path_matcher.stems options.includes
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
@@ -315,11 +357,12 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
 
   (* The directories from which we start our search *)
   let starting_points = match subdir with
-  | None -> watched_paths ~root options
+  | None -> watched_paths options
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in
-  let realpath_filter path = is_valid_path ~options path && filter path in
+  let is_valid_path = is_valid_path ~options in
+  let realpath_filter path = is_valid_path path && filter path in
   let path_filter =
     (**
      * This function is very hot on large codebases, so specialize it up front

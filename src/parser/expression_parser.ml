@@ -56,9 +56,12 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
+    | _, OptionalCall _
+    | _, OptionalMember _
     | _, Sequence _
     | _, Super
     | _, TaggedTemplate _
@@ -206,10 +209,13 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
     | _, Object _
+    | _, OptionalCall _
+    | _, OptionalMember _
     | _, Sequence _
     | _, Super
     | _, TaggedTemplate _
@@ -277,6 +283,7 @@ module Expression
           logical_and env (make_logical env left right Logical.And loc) loc
       | _  -> lloc, left
     and logical_or env left lloc =
+      let options = parse_options env in
       match Peek.token env with
       | T_OR ->
           Expect.token env T_OR;
@@ -284,6 +291,15 @@ module Expression
           let rloc, right = logical_and env right rloc in
           let loc = Loc.btwn lloc rloc in
           logical_or env (make_logical env left right Logical.Or loc) loc
+      | T_PLING_PLING ->
+          if not options.esproposal_nullish_coalescing
+          then error env Parse_error.NullishCoalescingDisabled;
+
+          Expect.token env T_PLING_PLING;
+          let rloc, right = with_loc binary_cover env in
+          let rloc, right = logical_and env right rloc in
+          let loc = Loc.btwn lloc rloc in
+          logical_or env (make_logical env left right Logical.NullishCoalesce loc) loc
       | _ -> left
     in fun env ->
       let loc, left = with_loc binary_cover env in
@@ -472,7 +488,7 @@ module Expression
     let env = with_no_new false env in
     let expr = match Peek.token env with
     | T_NEW when allow_new -> Cover_expr (new_expression env)
-    | T_IMPORT -> Cover_expr (import env start_loc)
+    | T_IMPORT -> Cover_expr (import env)
     | T_SUPER -> Cover_expr (super env)
     | _ when Peek.is_function env -> Cover_expr (_function env)
     | _ -> primary_cover env in
@@ -499,7 +515,7 @@ module Expression
         end else
           super
       in
-      call env loc super
+      call ~allow_optional_chain:false env loc super
     | T_LPAREN ->
       let super =
         if not call_allowed then begin
@@ -508,33 +524,60 @@ module Expression
         end else
           super
       in
-      call env loc super
+      call ~allow_optional_chain:false env loc super
     | _ ->
       if not allowed
         then error_at env (loc, Parse_error.UnexpectedSuper)
         else error_unexpected env;
       super
 
-  and import env start_loc =
+  and import env = with_loc (fun env ->
     Expect.token env T_IMPORT;
     Expect.token env T_LPAREN;
     let arg = assignment (with_no_in false env) in
     Expect.token env T_RPAREN;
-    Expression.(Loc.btwn start_loc (fst arg), Import arg)
+    Expression.Import arg
+  ) env
 
-  and call_cover env start_loc left =
-    let left = member_cover env start_loc left in
-    match Peek.token env with
-    | T_LPAREN when not (no_call env) ->
-        let args_loc, arguments = arguments env in
-        let loc = Loc.btwn start_loc args_loc in
-        call_cover env start_loc (Cover_expr (loc, Expression.(Call { Call.
-          callee = as_expression env left;
-          arguments;
-        })))
+  and call_cover ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left =
+    let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
+    let optional = last_token env = Some T_PLING_PERIOD in
+    let arguments ?targs env =
+      let args_loc, arguments = arguments env in
+      let loc = Loc.btwn start_loc args_loc in
+      let call = { Expression.Call.
+        callee = as_expression env left;
+        targs;
+        arguments;
+      } in
+      let call = if optional || in_optional_chain
+        then Expression.(OptionalCall { OptionalCall.
+          call;
+          optional;
+        })
+        else Expression.Call call
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, call))
+    in
+    if no_call env then left
+    else match Peek.token env with
+    | T_LPAREN -> arguments env
+    | T_LESS_THAN when should_parse_types env ->
+        (* If we are parsing types, then f<T>(e) is a function call with a
+           type application. If we aren't, it's a nested binary expression. *)
+        let error_callback _ _ = raise Try.Rollback in
+        let env = env |> with_error_callback error_callback in
+        (* Parameterized call syntax is ambiguous, so we fall back to
+           standard parsing if it fails. *)
+        Try.or_else env ~fallback:left (fun env ->
+          let targs = Type.type_parameter_instantiation env in
+          arguments ?targs env
+        )
     | _ -> left
 
-  and call env start_loc left = as_expression env (call_cover env start_loc (Cover_expr left))
+  and call ?(allow_optional_chain=true) env start_loc left =
+    as_expression env (call_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and new_expression env =
     let start_loc = Peek.loc env in
@@ -562,19 +605,34 @@ module Expression
       | T_SUPER -> super (env |> with_no_call true)
       | _ when Peek.is_function env -> _function env
       | _ -> primary env in
-      let callee = member (env |> with_no_call true) callee_loc expr in
+      let callee = member ~allow_optional_chain:false (env |> with_no_call true) callee_loc expr in
       (* You can do something like
        *   new raw`42`
        *)
       let callee = match Peek.token env with
       | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
       | _ -> callee in
-      let end_loc, arguments = match Peek.token env with
-      | T_LPAREN -> arguments env
+      let targs =
+        (* If we are parsing types, then new C<T>(e) is a constructor with a
+           type application. If we aren't, it's a nested binary expression. *)
+        if should_parse_types env
+        then
+          (* Parameterized call syntax is ambiguous, so we fall back to
+             standard parsing if it fails. *)
+          let error_callback _ _ = raise Try.Rollback in
+          let env = env |> with_error_callback error_callback in
+          Try.or_else env ~fallback:None Type.type_parameter_instantiation
+        else
+          None
+      in
+      let end_loc, arguments = match Peek.token env, targs with
+      | T_LPAREN, _ -> arguments env
+      | _, Some (targs_loc, _) -> targs_loc, []
       | _ -> fst callee, [] in
 
       Loc.btwn start_loc end_loc, Expression.(New New.({
         callee;
+        targs;
         arguments;
       }))
 
@@ -611,43 +669,97 @@ module Expression
       Expect.token env T_RPAREN;
       Loc.btwn start_loc end_loc, args
 
-  and member_cover env start_loc left =
-    match Peek.token env with
-    | T_LBRACKET ->
-        Expect.token env T_LBRACKET;
-        let expr = Parse.expression (env |> with_no_call false) in
-        let last_loc = Peek.loc env in
-        Expect.token env T_RBRACKET;
-        let loc = Loc.btwn start_loc last_loc in
-        call_cover env start_loc (Cover_expr (loc, Expression.(Member { Member.
-          _object  = as_expression env left;
-          property = Member.PropertyExpression expr;
-          computed = true;
-        })))
-    | T_PERIOD ->
-        Expect.token env T_PERIOD;
-        let id_loc, id, is_private = property_name_include_private env in
-        if is_private then add_used_private env (snd id) id_loc;
-        let loc = Loc.btwn start_loc id_loc in
-        let open Expression.Member in
-        let property = if is_private then PropertyPrivateName (id_loc, id)
-        else PropertyIdentifier id in
-        (* super.PrivateName is a syntax error *)
-        begin match left with
-        | Cover_expr (_, Ast.Expression.Super) when is_private ->
-            error_at env (loc, Error.SuperPrivate)
-        | _ -> () end;
-        call_cover env start_loc (Cover_expr (loc, Expression.(Member { Member.
-          _object = as_expression env left;
-          property;
-          computed = false;
-        })))
-    | T_TEMPLATE_PART part ->
-        let expr = tagged_template env start_loc (as_expression env left) part in
-        call_cover env start_loc (Cover_expr expr)
-    | _ -> left
+  and member_cover =
+    let dynamic ?(allow_optional_chain=true) ?(in_optional_chain=false)
+                ?(optional=false) env start_loc left =
+      let expr = Parse.expression (env |> with_no_call false) in
+      let last_loc = Peek.loc env in
+      Expect.token env T_RBRACKET;
+      let loc = Loc.btwn start_loc last_loc in
+      let member = Expression.Member.({
+        _object  = as_expression env left;
+        property = PropertyExpression expr;
+        computed = true;
+      }) in
+      let member = if in_optional_chain
+        then Expression.(OptionalMember { OptionalMember.
+          member;
+          optional;
+        })
+        else Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, member))
+    in
+    let static ?(allow_optional_chain=true) ?(in_optional_chain=false)
+               ?(optional=false) env start_loc left =
+      let id_loc, id, is_private = property_name_include_private env in
+      if is_private then add_used_private env (snd id) id_loc;
+      let loc = Loc.btwn start_loc id_loc in
+      let open Expression.Member in
+      let property = if is_private then PropertyPrivateName (id_loc, id)
+      else PropertyIdentifier id in
+      (* super.PrivateName is a syntax error *)
+      begin match left with
+      | Cover_expr (_, Ast.Expression.Super) when is_private ->
+          error_at env (loc, Error.SuperPrivate)
+      | _ -> () end;
+      let member = Expression.Member.({
+        _object = as_expression env left;
+        property;
+        computed = false;
+      }) in
+      let member = if in_optional_chain
+        then Expression.(OptionalMember { OptionalMember.
+          member;
+          optional;
+        })
+        else Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, member))
+    in
+    fun ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left ->
+      let options = parse_options env in
+      match Peek.token env with
+      | T_PLING_PERIOD ->
+          if not options.esproposal_optional_chaining
+          then error env Parse_error.OptionalChainingDisabled;
 
-  and member env start_loc left = as_expression env (member_cover env start_loc (Cover_expr left))
+          if not allow_optional_chain
+          then error env Parse_error.OptionalChainNew;
+
+          Expect.token env T_PLING_PERIOD;
+          begin match Peek.token env with
+          | T_TEMPLATE_PART _ ->
+            error env Parse_error.OptionalChainTemplate;
+            left
+          | T_LPAREN -> left
+          | T_LESS_THAN when should_parse_types env -> left
+          | T_LBRACKET ->
+            Expect.token env T_LBRACKET;
+            dynamic ~allow_optional_chain ~in_optional_chain:true
+                    ~optional:true env start_loc left
+          | _ ->
+            static ~allow_optional_chain ~in_optional_chain:true
+                   ~optional:true env start_loc left
+          end
+      | T_LBRACKET ->
+          Expect.token env T_LBRACKET;
+          dynamic ~allow_optional_chain ~in_optional_chain env start_loc left
+      | T_PERIOD ->
+          Expect.token env T_PERIOD;
+          static ~allow_optional_chain ~in_optional_chain env start_loc left
+      | T_TEMPLATE_PART part ->
+          if in_optional_chain
+          then error env Parse_error.OptionalChainTemplate;
+
+          let expr = tagged_template env start_loc (as_expression env left) part in
+          call_cover ~allow_optional_chain:false env start_loc (Cover_expr expr)
+      | _ -> left
+
+  and member ?(allow_optional_chain=true) env start_loc left =
+    as_expression env (member_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and _function env =
     let start_loc = Peek.loc env in
@@ -660,7 +772,7 @@ module Expression
     | false, true -> true, false (* #prod-GeneratorExpression *)
     | false, false -> false, false (* #prod-FunctionExpression *)
     in
-    let id, typeParameters =
+    let id, tparams =
       if Peek.token env = T_LPAREN
       then None, None
       else begin
@@ -676,7 +788,7 @@ module Expression
     let env = env |> with_allow_super No_super in
 
     let params = Declaration.function_params ~await ~yield env in
-    let returnType, predicate = Type.annotation_and_predicate_opt env in
+    let return, predicate = Type.annotation_and_predicate_opt env in
     let end_loc, body, strict =
       Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
@@ -693,8 +805,8 @@ module Expression
       async;
       predicate;
       expression;
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     }))
 
   and number env kind raw =
@@ -757,8 +869,10 @@ module Expression
     | T_DIV
     | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
-        let loc, element = Parse.jsx_element env in
-        Cover_expr (loc, Expression.JSXElement element)
+        let loc, expression = match Parse.jsx_element_or_fragment env with
+            | (loc, `Element e) -> (loc, Expression.JSXElement e)
+            | (loc, `Fragment f) -> (loc, Expression.JSXFragment f) in
+        Cover_expr (loc, expression)
     | T_TEMPLATE_PART part ->
         let loc, template = template_literal env part in
         Cover_expr (loc, Expression.TemplateLiteral template)
@@ -837,11 +951,11 @@ module Expression
     let ret = (match Peek.token env with
     | T_COMMA -> sequence env [expression]
     | T_COLON ->
-        let typeAnnotation = Type.annotation env in
-        Expression.(Loc.btwn (fst expression) (fst typeAnnotation),
+        let annot = Type.annotation env in
+        Expression.(Loc.btwn (fst expression) (fst annot),
           TypeCast TypeCast.({
             expression;
-            typeAnnotation;
+            annot;
           }))
     | _ -> expression) in
     Expect.token env T_RPAREN;
@@ -872,7 +986,7 @@ module Expression
              they will be in the element list, but a trailing elision, like `[...x,]`, is not part
              of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
           let new_errs =
-            if not is_last && Peek.token ~i:1 env = T_RBRACKET then
+            if not is_last && Peek.ith_token ~i:1 env = T_RBRACKET then
               let if_patt = (loc, Parse_error.ElementAfterRestElement)::new_errs.if_patt in
               { new_errs with if_patt }
             else new_errs
@@ -939,17 +1053,17 @@ module Expression
       let start_loc = Peek.loc env in
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
-      let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
-      let typeParameters = Type.type_parameter_declaration env in
-      let params, returnType, predicate =
+      let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
+      let tparams = Type.type_parameter_declaration env in
+      let params, return, predicate =
         (* Disallow all fancy features for identifier => body *)
-        if Peek.is_identifier env && typeParameters = None
+        if Peek.is_identifier env && tparams = None
         then
           let loc, name =
             Parse.identifier ~restricted_error:Error.StrictParamName env in
           let param = loc, Pattern.Identifier {
             Pattern.Identifier.name = loc, name;
-                               typeAnnotation=None;
+                               annot=None;
                                optional=false;
           } in
           (loc, { Ast.Function.Params.params = [param]; rest = None }), None, None
@@ -963,10 +1077,10 @@ module Expression
            * type for an arrow function. So we disallow anonymous function
            * types in arrow function return types unless the function type is
            * enclosed in parens *)
-          let returnType, predicate = env
+          let return, predicate = env
             |> with_no_anon_function_type true
             |> Type.annotation_and_predicate_opt in
-          params, returnType, predicate in
+          params, return, predicate in
 
       (* It's hard to tell if an invalid expression was intended to be an
        * arrow function before we see the =>. If there are no params, that
@@ -1006,8 +1120,8 @@ module Expression
         generator = false; (* arrow functions cannot be generators *)
         predicate;
         expression;
-        returnType;
-        typeParameters;
+        return;
+        tparams;
       }))
 
   and sequence env acc =

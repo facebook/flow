@@ -22,12 +22,13 @@ module Entry :
       | ConstParamBinding
       | ConstVarBinding
     and let_binding_kind =
-        LetVarBinding
-      | LetConstlikeVarBinding
+      | LetVarBinding
+      | ConstlikeLetVarBinding
       | ClassNameBinding
       | CatchParamBinding
       | FunctionBinding
       | ParamBinding
+      | ConstlikeParamBinding
     and var_binding_kind =
       | VarBinding
       | ConstlikeVarBinding
@@ -82,6 +83,7 @@ type var_scope_kind =
   | Module
   | Global
   | Predicate
+  | Ctor
 val string_of_var_scope_kind : var_scope_kind -> string
 type kind = VarScope of var_scope_kind | LexScope
 val string_of_kind : kind -> string
@@ -94,6 +96,7 @@ type t = {
   id : int;
   kind : kind;
   mutable entries : Entry.t SMap.t;
+  mutable tparam_entries : Loc.t SMap.t;
   mutable refis : refi_binding Key_map.t;
 }
 val fresh_impl : kind -> t
@@ -103,6 +106,7 @@ val clone : t -> t
 val iter_entries : (SMap.key -> Entry.t -> unit) -> t -> unit
 val update_entries : (SMap.key -> Entry.t -> Entry.t) -> t -> unit
 val add_entry : SMap.key -> Entry.t -> t -> unit
+val add_tparam_entry : SMap.key -> Loc.t -> t -> unit
 val remove_entry : SMap.key -> t -> unit
 val get_entry : SMap.key -> t -> Entry.t option
 val havoc_entry : SMap.key -> t -> unit

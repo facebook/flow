@@ -1,114 +1,251 @@
-Error: cycle_C.js:4
-  4:   if (x); /* sketchy because of uses */
-           ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    7: var resNull = f(null);
-                       ^^^^ Potentially null/undefined value.
-    8: var resB = f(vars.b);
-                    ^^^^^^ Potentially 0 value.
+Error --------------------------------------------------------------------------------------------------- cycle_C.js:4:7
 
-Error: fully_across_B.js:4
-  4:   if(x){ /* sketchy because of uses */ }
-          ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
-    6: f(a);
-         ^ Potentially null/undefined value.
-    6: f(a);
-         ^ Potentially "" value.
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
 
-Error: partial_across_B.js:4
-  4:   if(x){ /* sketchy because of uses */ }
-          ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
-    7: f(a);
-         ^ Potentially null/undefined value.
-    8: f("");
-         ^^ Potentially "" value.
+   cycle_C.js:4:7
+   4|   if (x); /* sketchy because of uses */
+            ^
 
-Error: simple_sketchies.js:5
-  5:   if (x) {/* sketchy */}
-           ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    4: function f(x: ?number) {
-                     ^^^^^^^ Potentially null/undefined value.
-    4: function f(x: ?number) {
-                      ^^^^^^ Potentially 0 value.
+References:
+   cycle_B.js:3:19
+   3| var b = {a: a, b: 0};
+                        ^ [1]
+   cycle_C.js:7:17
+   7| var resNull = f(null);
+                      ^^^^ [2]
 
-Error: simple_sketchies.js:10
- 10:   if (x) { /* sketchy */ }
-           ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-    9: function h(x: number|null) {
-                            ^^^^ Potentially null/undefined value.
-    9: function h(x: number|null) {
-                     ^^^^^^ Potentially 0 value.
 
-Error: simple_sketchies.js:31
- 31:   if (x) { /* sketchy because of calls */ }
-           ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
-   33: r(null);
-         ^^^^ Potentially null/undefined value.
-   34: r(""); // definitely falsey, sketchy
-         ^^ Potentially "" value.
+Error -------------------------------------------------------------------------------------------- fully_across_B.js:4:6
 
-Error: simple_sketchies.js:37
- 37:   if (x) { /* sketchy because of calls */ }
-           ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
-   39: s(null);
-         ^^^^ Potentially null/undefined value.
-   41: s(unknown_str); // possibly falsey, sketchy
-         ^^^^^^^^^^^ Potentially "" value.
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
 
-Error: simple_sketchies.js:47
- 47:   if (o.p) {/* sketchy */}
-           ^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-   47:   if (o.p) {/* sketchy */}
-             ^^^ Potentially null/undefined value.
-   47:   if (o.p) {/* sketchy */}
-             ^^^ Potentially 0 value.
+   fully_across_B.js:4:6
+   4|   if(x){ /* sketchy because of uses */ }
+           ^
 
-Error: simple_sketchies.js:52
- 52:   if (o.p) {/* sketchy */}
-           ^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-   52:   if (o.p) {/* sketchy */}
-             ^^^ Potentially null/undefined value.
-   52:   if (o.p) {/* sketchy */}
-             ^^^ Potentially 0 value.
+References:
+   fully_across_A.js:1:13
+   1| var maybe: ?string = "foo"
+                  ^^^^^^ [1]
+   fully_across_A.js:1:12
+   1| var maybe: ?string = "foo"
+                 ^^^^^^^ [2]
 
-Error: simple_sketchies.js:57
- 57:   if (o.p) { /* sketchy */ }
-           ^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-   57:   if (o.p) { /* sketchy */ }
-             ^^^ Potentially null/undefined value.
-   57:   if (o.p) { /* sketchy */ }
-             ^^^ Potentially 0 value.
 
-Error: simple_sketchies.js:68
- 68:   if (assignee = x) { /* sketchy */ }
-           ^^^^^^^^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
-   68:   if (assignee = x) { /* sketchy */ }
-                        ^ Potentially null/undefined value.
-   68:   if (assignee = x) { /* sketchy */ }
-                        ^ Potentially "" value.
+Error ------------------------------------------------------------------------------------------ partial_across_B.js:4:6
 
-Error: simple_sketchies.js:73
- 73: var valToUse = value || defaultVal; /* sketchy */
-                    ^^^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-   71: var value: ?number = 0;
-                  ^^^^^^^ Potentially null/undefined value.
-   71: var value: ?number = 0;
-                   ^^^^^^ Potentially 0 value.
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
 
-Error: simple_sketchies.js:78
- 78: var sketchyFalse = value && false; /* sketchy */
-                        ^^^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-   71: var value: ?number = 0;
-                  ^^^^^^^ Potentially null/undefined value.
-   71: var value: ?number = 0;
-                   ^^^^^^ Potentially 0 value.
+   partial_across_B.js:4:6
+   4|   if(x){ /* sketchy because of uses */ }
+           ^
 
-Error: simple_sketchies.js:79
- 79: var sketchyTrue = value || true; /* sketchy */
-                       ^^^^^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
-   71: var value: ?number = 0;
-                  ^^^^^^^ Potentially null/undefined value.
-   71: var value: ?number = 0;
-                   ^^^^^^ Potentially 0 value.
+References:
+   partial_across_B.js:8:3
+   8| f("");
+        ^^ [1]
+   partial_across_A.js:1:18
+   1| module.exports = null;
+                       ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ simple_sketchies.js:5:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:5:7
+   5|   if (x) {/* sketchy */}
+            ^
+
+References:
+   simple_sketchies.js:4:16
+   4| function f(x: ?number) {
+                     ^^^^^^ [1]
+   simple_sketchies.js:4:15
+   4| function f(x: ?number) {
+                    ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:10:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:10:7
+   10|   if (x) { /* sketchy */ }
+             ^
+
+References:
+   simple_sketchies.js:9:15
+    9| function h(x: number|null) {
+                     ^^^^^^ [1]
+   simple_sketchies.js:9:22
+    9| function h(x: number|null) {
+                            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:31:7
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
+
+   simple_sketchies.js:31:7
+   31|   if (x) { /* sketchy because of calls */ }
+             ^
+
+References:
+   simple_sketchies.js:34:3
+   34| r(""); // definitely falsey, sketchy
+         ^^ [1]
+   simple_sketchies.js:33:3
+   33| r(null);
+         ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:37:7
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
+
+   simple_sketchies.js:37:7
+   37|   if (x) { /* sketchy because of calls */ }
+             ^
+
+References:
+   simple_sketchies.js:40:26
+   40| declare var unknown_str: string;
+                                ^^^^^^ [1]
+   simple_sketchies.js:39:3
+   39| s(null);
+         ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:47:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [1]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:47:7
+   47|   if (o.p) {/* sketchy */}
+             ^^^
+
+References:
+   simple_sketchies.js:46:21
+   46| function l(o: { p?: number }) {
+                           ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:52:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:52:7
+   52|   if (o.p) {/* sketchy */}
+             ^^^
+
+References:
+   simple_sketchies.js:51:21
+   51| function m(o: { p: ?number }) {
+                           ^^^^^^ [1]
+   simple_sketchies.js:51:20
+   51| function m(o: { p: ?number }) {
+                          ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:57:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:57:7
+   57|   if (o.p) { /* sketchy */ }
+             ^^^
+
+References:
+   simple_sketchies.js:56:20
+   56| function n(o: { p: number|null|void }) {
+                          ^^^^^^ [1]
+   simple_sketchies.js:56:32
+   56| function n(o: { p: number|null|void }) {
+                                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:68:7
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
+
+   simple_sketchies.js:68:7
+   68|   if (assignee = x) { /* sketchy */ }
+             ^^^^^^^^
+
+References:
+   simple_sketchies.js:66:16
+   66| function z(x: ?string) {
+                      ^^^^^^ [1]
+   simple_sketchies.js:66:15
+   66| function z(x: ?string) {
+                     ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:73:16
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:73:16
+   73| var valToUse = value || defaultVal; /* sketchy */
+                      ^^^^^
+
+References:
+   simple_sketchies.js:71:13
+   71| var value: ?number = 0;
+                   ^^^^^^ [1]
+   simple_sketchies.js:71:12
+   71| var value: ?number = 0;
+                  ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:78:20
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:78:20
+   78| var sketchyFalse = value && false; /* sketchy */
+                          ^^^^^
+
+References:
+   simple_sketchies.js:71:13
+   71| var value: ?number = 0;
+                   ^^^^^^ [1]
+   simple_sketchies.js:71:12
+   71| var value: ?number = 0;
+                  ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- simple_sketchies.js:79:19
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+(`sketchy-null-number`)
+
+   simple_sketchies.js:79:19
+   79| var sketchyTrue = value || true; /* sketchy */
+                         ^^^^^
+
+References:
+   simple_sketchies.js:71:13
+   71| var value: ?number = 0;
+                   ^^^^^^ [1]
+   simple_sketchies.js:71:12
+   71| var value: ?number = 0;
+                  ^^^^^^^ [2]
+
 
 
 Found 14 errors

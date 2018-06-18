@@ -17,7 +17,7 @@ class C3 extends React.Component { // error
   props: T2;
 }
 
-class C4 extends React.Component { // error
+class C4 extends React.Component {
   // no need to declare defaultProps unless necessary
   props: T2;
 }

@@ -24,7 +24,7 @@ let rec mkdir_p = function
   | "" -> failwith "Unexpected empty directory, should never happen"
   | d when not (Sys.file_exists d) ->
     mkdir_p (Filename.dirname d);
-    Unix.mkdir d 0o770;
+    Unix.mkdir d 0o777;
   | d when Sys.is_directory d -> ()
   | d -> raise (NotADirectory d)
 
@@ -58,6 +58,7 @@ let file_exists = Sys.file_exists
 let getcwd = Sys.getcwd
 let chdir = Sys.chdir
 let mkdir = Unix.mkdir
+let readdir = Sys.readdir
 let rename old target =
   if not (file_exists old) then
     raise (No_such_file_or_directory old)

@@ -17,4 +17,4 @@ val init :
     bool *
     Errors.ErrorSet.t *
     Error_suppressions.t *
-    ExactCover.lint_severity_cover) list
+    ExactCover.lint_severity_cover) list Lwt.t

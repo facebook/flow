@@ -1,4 +1,4 @@
-# Flow [![Build Status](https://travis-ci.org/facebook/flow.svg?branch=master)](https://travis-ci.org/facebook/flow) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master)
+# Flow [![Build Status](https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/flow/tree/master) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master)
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
@@ -60,7 +60,7 @@ opam depext --install flowtype
 If you don't have a new enough version of OCaml to compile Flow, you can also use OPAM to bootstrap a modern version.  Install OPAM via the [binary packages](http://opam.ocaml.org/doc/Install.html#InstallOPAMin2minutes) for your operating system and run:
 
 ```
-opam init --comp=4.03.0
+opam init --comp=4.05.0
 opam install flowtype
 eval `opam config env`
 flow --help
@@ -90,27 +90,28 @@ More thorough documentation and many examples can be found at https://flow.org.
 
 ## Building Flow
 
-Flow is written in OCaml (OCaml 4.03.0 or higher is required). You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
+Flow is written in OCaml (OCaml 4.05.0 or higher is required). You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
 
 For example, on Ubuntu 16.04 and similar systems:
 
 ```
 sudo apt-get install opam
-opam init --comp 4.03.0
+opam init --comp 4.05.0
 ```
 
 On OS X, using the [brew package manager](http://brew.sh/):
 
 ```
 brew install opam
-opam init --comp 4.03.0
+opam init --comp 4.05.0
 ```
 
 Then, restart your shell and install these additional libraries:
 
 ```
 opam update
-opam install -y ocamlfind sedlex
+opam pin add flowtype . -n
+opam install --deps-only flowtype
 ```
 
 Once you have these dependencies, building Flow just requires running
@@ -153,9 +154,9 @@ The general idea is that we build in Cygwin, targeting mingw. This gives us a bi
 1. Open the cygwin64 terminal
 2. Download opam with `curl -fsSL -o opam64.tar.xz https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.1/opam64.tar.xz`
 3. `tar -xf opam64.tar.xz`
-4. `cd opam64.tar.xz`
+4. `cd opam64`
 5. Install opam `./install.sh`
-6. Initialize opam to point to a mingw fork: `opam init -a default "https://github.com/fdopen/opam-repository-mingw.git" --comp "4.03.0+mingw64c" --switch "4.03.0+mingw64c"`
+6. Initialize opam to point to a mingw fork: `opam init -a default "https://github.com/fdopen/opam-repository-mingw.git" --comp "4.05.0+mingw64c" --switch "4.05.0+mingw64c"`
 7. Make sure opam stuff is in your path: ```eval `opam config env` ```
 
 ### Install Flow
@@ -164,8 +165,7 @@ The general idea is that we build in Cygwin, targeting mingw. This gives us a bi
 3. Tell opam to use this directory as the flowtype project: `opam pin add flowtype . -n`
 4. Install system dependencies `opam depext -u flowtype`
 5. Install Flow's dependencies `opam install flowtype --deps-only`
-6. We need these too: `opam install camlp4 ocp-build`
-7. Finally, build Flow: `make all-ocp`
+7. Finally, build Flow: `make all`
 
 ## Using Flow's parser from JavaScript
 
@@ -190,4 +190,4 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is MIT-licensed.
+Flow is MIT-licensed ([LICENSE](http://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).

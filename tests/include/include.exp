@@ -1,14 +1,30 @@
-Error: ../foo/batman/baz.js:3
-  3: var x: number = "not a number" // Error string ~> number
-                     ^^^^^^^^^^^^^^ string. This type is incompatible with
-  3: var x: number = "not a number" // Error string ~> number
-            ^^^^^^ number
+Error ---------------------------------------------------------------------------------------- ../foo/batman/baz.js:3:17
 
-Error: ../included/test.js:1
-  1: (123: string);
-      ^^^ number. This type is incompatible with
-  1: (123: string);
-           ^^^^^^ string
+Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2].
+
+   ../foo/batman/baz.js:3:17
+   3| var x: number = "not a number" // Error string ~> number
+                      ^^^^^^^^^^^^^^ [1]
+
+References:
+   ../foo/batman/baz.js:3:8
+   3| var x: number = "not a number" // Error string ~> number
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ ../included/test.js:1:2
+
+Cannot cast `123` to string because number [1] is incompatible with string [2].
+
+   ../included/test.js:1:2
+   1| (123: string);
+       ^^^ [1]
+
+References:
+   ../included/test.js:1:7
+   1| (123: string);
+            ^^^^^^ [2]
+
 
 
 Found 2 errors

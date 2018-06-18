@@ -1,53 +1,93 @@
-Error: test.js:8
-  8: function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
-                                                               ^ number. This type is incompatible with the expected return type of
-  8: function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
-                                                ^^^^^ Queue
+Error ----------------------------------------------------------------------------------------------------- test.js:8:59
 
-Error: test.js:9
-  9: function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
-                                                              ^ Queue. This type is incompatible with the expected return type of
-  9: function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
-                                               ^^^^^^ number
+Cannot return `x` because number [1] is incompatible with `Queue` [2].
 
-Error: test.js:13
- 13: counter_to_number(y); // Error: number ~> Counter
-                       ^ number. This type is incompatible with the expected param type of
-  8: declare function counter_to_number(c: Counter): number;
-                                           ^^^^^^^ Counter. See lib: flow-typed/decls.js:8
+   test.js:8:59
+   8| function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
+                                                                ^
 
-Error: test.js:22
- 22:     return x; // Error: string ~> number, number ~> string
-                ^ type application of identifier `PolyStack`. This type is incompatible with the expected return type of
- 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                           ^^^^^^^^^^^^^^^^^ type application of identifier `PolyStack`
-  Type argument `T` is incompatible:
-     21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                     ^^^^^^ number. This type is incompatible with
-     21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                                         ^^^^^^ string
-
-Error: test.js:22
- 22:     return x; // Error: string ~> number, number ~> string
-                ^ type application of identifier `PolyStack`. This type is incompatible with the expected return type of
- 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                           ^^^^^^^^^^^^^^^^^ type application of identifier `PolyStack`
-  Type argument `T` is incompatible:
-     21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                                         ^^^^^^ string. This type is incompatible with
-     21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                     ^^^^^^ number
-
-Error: test.js:27
- 27:     return x; // Error string ~> number
-                ^ type application of identifier `Contra`. This type is incompatible with the expected return type of
- 26: function contraBad(x: Contra<number>): Contra<number | string> {
-                                            ^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Contra`
-  Type argument `T` is incompatible:
-     26: function contraBad(x: Contra<number>): Contra<number | string> {
-                                                                ^^^^^^ string. This type is incompatible with
-     26: function contraBad(x: Contra<number>): Contra<number | string> {
-                                      ^^^^^^ number
+References:
+   test.js:8:35
+   8| function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
+                                        ^^^^^^ [1]
+   test.js:8:44
+   8| function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
+                                                 ^^^^^ [2]
 
 
-Found 6 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:9:58
+
+Cannot return `q` because `Queue` [1] is incompatible with number [2].
+
+   test.js:9:58
+   9| function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
+                                                               ^
+
+References:
+   test.js:9:35
+   9| function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
+                                        ^^^^^ [1]
+   test.js:9:43
+   9| function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
+                                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:19
+
+Cannot call `counter_to_number` with `y` bound to `c` because number [1] is incompatible with `Counter` [2].
+
+   test.js:13:19
+   13| counter_to_number(y); // Error: number ~> Counter
+                         ^
+
+References:
+   test.js:12:9
+   12| var y = c + 1; // Fine, since Counter is a number.
+               ^^^^^ [1]
+   flow-typed/decls.js:8:39
+    8| declare function counter_to_number(c: Counter): number;
+                                             ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:22:12
+
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+
+   test.js:22:12
+   22|     return x; // Error: string ~> number, number ~> string
+                  ^
+
+References:
+   test.js:21:45
+   21| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                   ^^^^^^ [1]
+   test.js:21:65
+   21| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                                       ^^^^^^ [2]
+   flow-typed/decls.js:10:38
+   10| declare export opaque type PolyStack<T>;
+                                            ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:12
+
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3].
+
+   test.js:27:12
+   27|     return x; // Error string ~> number
+                  ^
+
+References:
+   test.js:26:30
+   26| function contraBad(x: Contra<number>): Contra<number | string> {
+                                    ^^^^^^ [1]
+   test.js:26:56
+   26| function contraBad(x: Contra<number>): Contra<number | string> {
+                                                              ^^^^^^ [2]
+   flow-typed/decls.js:15:36
+   15| declare export opaque type Contra<-T>;
+                                          ^ [3]
+
+
+
+Found 5 errors

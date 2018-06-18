@@ -19,7 +19,7 @@ open Code
 
 (* Check the expression is of the given type *)
 let mk_type_assertion (etype : T.t') (expr : t') : t =
-  (* Make a variable decalration first *)
+  (* Make a variable declaration first *)
   let final_id = E.Identifier (Loc.none, "t") in
   let final_decl = Mutator.mk_vardecl_code "t" (Some etype) (Some expr) in
   let callee = E.Identifier (Loc.none, "assert_type") in

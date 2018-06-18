@@ -11,8 +11,6 @@
 
 open CommandUtils
 
-module Main = ServerFunctors.ServerMain (Server.FlowProgram)
-
 let spec = { CommandSpec.
   name = "server";
   doc = "Runs a Flow server in the foreground";
@@ -23,7 +21,10 @@ let spec = { CommandSpec.
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
-      |> anon "root" (optional string) ~doc:"Root directory"
+      |> log_file_flags
+      |> no_restart_flag
+      |> file_watcher_flag
+      |> anon "root" (optional string)
     );
   usage = Printf.sprintf
     "Usage: %s server [OPTION]... [ROOT]\n\n\
@@ -33,7 +34,9 @@ let spec = { CommandSpec.
       exe_name;
 }
 
-let main lazy_mode options_flags shm_flags ignore_version from path_opt () =
+let main lazy_mode options_flags shm_flags ignore_version from
+  server_log_file monitor_log_file no_restart file_watcher file_watcher_debug path_opt () =
+
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
   let options = make_options ~flowconfig ~lazy_mode ~root options_flags in
@@ -45,6 +48,32 @@ let main lazy_mode options_flags shm_flags ignore_version from path_opt () =
 
   let shared_mem_config = shm_config shm_flags flowconfig in
 
-  Main.run ~shared_mem_config options
+  let server_log_file = match server_log_file with
+  | Some s -> s
+  | None ->
+    CommandUtils.server_log_file ~tmp_dir:(Options.temp_dir options) root flowconfig
+    |> Path.to_string
+  in
+
+  let monitor_log_file = match monitor_log_file with
+  | Some s -> s
+  | None ->
+    CommandUtils.monitor_log_file ~tmp_dir:(Options.temp_dir options) root
+    |> Path.to_string
+  in
+
+  let monitor_options = { FlowServerMonitorOptions.
+    log_file = monitor_log_file;
+    autostop = false;
+    no_restart;
+    server_log_file;
+    server_options = options;
+    shared_mem_config;
+    argv = Sys.argv;
+    file_watcher;
+    file_watcher_debug;
+  } in
+
+  FlowServerMonitor.start monitor_options
 
 let command = CommandSpec.command spec main

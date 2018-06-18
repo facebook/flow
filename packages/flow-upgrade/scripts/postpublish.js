@@ -20,15 +20,11 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 if (pkg.name === 'flow-upgrade') {
   pkg.name = 'create-flow-upgrade';
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-  cp.spawnSync(
-    process.env.npm_execpath,
-    ['publish'],
-    {
-      cwd: path.resolve(__dirname, '..'),
-      env: process.env,
-      stdio: 'inherit',
-    }
-  );
+  cp.spawnSync(process.env.npm_execpath, ['publish'], {
+    cwd: path.resolve(__dirname, '..'),
+    env: process.env,
+    stdio: 'inherit',
+  });
 } else if (pkg.name === 'create-flow-upgrade') {
   pkg.name = 'flow-upgrade';
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));

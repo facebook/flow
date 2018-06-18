@@ -2,9 +2,8 @@
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  */
 #define CAML_NAME_SPACE
@@ -19,10 +18,18 @@
 static const char section_name[] = "build_id";
 static const char default_id[] = "hackc-unknown-version";
 
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY_VALUE(x) STRINGIFY_HELPER(x)
+
 value hh_get_compiler_id(void) {
   CAMLparam0();
+#ifdef HACKC_COMPILER_ID
+  const char* const buf = STRINGIFY_VALUE(HACKC_COMPILER_ID);
+  const ssize_t len = strlen(buf);
+#else
   char buf[BUF_SIZE];
-  ssize_t len = hphp_read_embedded_data(section_name, buf, BUF_SIZE);
+  const ssize_t len = hphp_read_embedded_data(section_name, buf, BUF_SIZE);
+#endif
   value result;
 
   if (len < 0) {

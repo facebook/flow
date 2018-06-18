@@ -64,10 +64,16 @@
               "typeParameters":null
             },
             "static":false,
-            "variance":"minus"
+            "variance":{
+              "type":"Variance",
+              "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
+              "range":[10,11],
+              "kind":"minus"
+            }
           }
         ],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],

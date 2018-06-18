@@ -22,6 +22,8 @@ can be overridden with command line flags.
 * [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
 * [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
 * [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
+* [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
+* [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
 * [`log.file`](#toc-log-file-string)
@@ -103,6 +105,30 @@ You may also set this to `ignore` to indicate that Flow should simply ignore
 the syntax. The default value of this option is `warn`, which gives a warning
 on use since this proposal is still very early-stage.
 
+#### `esproposal.optional_chaining` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[optional chaining](https://github.com/tc39/proposal-optional-chaining)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
+
+#### `esproposal.nullish_coalescing` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-nullish-coalescing-enable-ignore-warn" href="#toc-esproposal-nullish-coalescing-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
+
 #### `experimental.const_params` _`(boolean)`_ <a class="toc" id="toc-experimental-const-params-boolean" href="#toc-experimental-const-params-boolean"></a>
 
 Setting this to `true` makes Flow treat all function parameters as const
@@ -130,12 +156,16 @@ start lexing a file to see if it has `@flow` or `@noflow` in it. This option
 lets you configure how much of the file Flow lexes before it decides there is
 no relevant docblock.
 
+- Neither `@flow` nor `@noflow` - Parse this file with Flow syntax disallowed and do not typecheck it.
+- @flow - Parse this file with Flow syntax allowed and typecheck it.
+- @noflow - Parse this file with Flow syntax allowed and do not typecheck it. This is meant as an escape hatch to suppress Flow in a file without having to delete all the Flow-specific syntax.
+
 The default value of `max_header_tokens` is 10.
 
 #### `module.file_ext` _`(string)`_ <a class="toc" id="toc-module-file-ext-string" href="#toc-module-file-ext-string"></a>
 
-By default, Flow will look for files with the extensions `.js`, `.jsx`, and
-`.json`. You can override this behavior with this option.
+By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`
+and `.json`. You can override this behavior with this option.
 
 For example, if you do:
 
@@ -332,7 +362,7 @@ var x : string = 123;
 ```
 
 and suppress the error. If there is no error on the next line (the suppression
-is unnecessary), an "Unused suppression" error will be shown instead.
+is unnecessary), an "Unused suppression" warning will be shown instead.
 
 If no suppression comments are specified in your config, Flow will apply one
 default: `// $FlowFixMe`.

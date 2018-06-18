@@ -1,264 +1,594 @@
-Error: c.js:5
-  5: c.foo();
-       ^^^ property `foo`. Property not found in
-  5: c.foo();
-     ^ object literal
+Error --------------------------------------------------------------------------------------------------------- c.js:5:1
 
-Error: object_assign.js:7
-  7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                       ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-      7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                           ^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-      7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+Cannot call `c.foo` because property `foo` is missing in object literal [1].
 
-Error: object_create.js:12
- 12: ({ foo: "foo" }: C);
-      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 12: ({ foo: "foo" }: C);
-                      ^ C
+   c.js:5:1
+   5| c.foo();
+      ^^^^^^^
 
-Error: object_create.js:17
- 17: (o: C);
-      ^ object type. This type is incompatible with
- 17: (o: C);
-         ^ C
-
-Error: object_keys.js:5
-  5: (Object.keys(sealed): void); // error, Array<string>
-      ^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
-  5: (Object.keys(sealed): void); // error, Array<string>
-                           ^^^^ undefined
-
-Error: object_keys.js:9
-  9:   (k : number) // error: string ~> number
-        ^ string. This type is incompatible with
-  9:   (k : number) // error: string ~> number
-            ^^^^^^ number
-
-Error: object_keys.js:14
- 14:   (k : number) // error: string ~> number
-        ^ string. This type is incompatible with
- 14:   (k : number) // error: string ~> number
-            ^^^^^^ number
-
-Error: object_keys.js:18
- 18: (Object.keys(any): Array<number>); // error, Array<string>
-      ^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 18: (Object.keys(any): Array<number>); // error, Array<string>
-                        ^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     18: (Object.keys(any): Array<number>); // error, Array<string>
-                      ^^^ string. This type is incompatible with
-     18: (Object.keys(any): Array<number>); // error, Array<string>
-                                  ^^^^^^ number
-
-Error: object_keys.js:25
- 25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-      ^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-                              ^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-          ^^^^^^^^^^^^^^^^^^^^^^ string literal `prop`. Expected string literal `error`, got `prop` instead
-     25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-                                        ^^^^^^^ string literal `error`
-
-Error: object_keys.js:32
- 32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-      ^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
- 32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-                              ^^^^^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-          ^^^^^^^^^^^^^^^^^^^^^^ string literal `bar_prop`. Expected string literal `error`, got `bar_prop` instead
-     32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-                                        ^^^^^^^ string literal `error`
-
-Error: object_missing.js:5
-  5:     Object.doesNotExist();
-                ^^^^^^^^^^^^ property `doesNotExist`. Property not found in
-  5:     Object.doesNotExist();
-         ^^^^^^ statics of Object
-
-Error: object_prototype.js:31
- 31: b.toString = function(): string { return 'foo'; };
-     ^^^^^^^^^^ Object. Covariant property `toString` incompatible with contravariant use in
- 31: b.toString = function(): string { return 'foo'; };
-     ^^^^^^^^^^ assignment of property `toString`
-
-Error: object_prototype.js:38
- 38: var xToString : number = x.toString; // error
-                              ^^^^^^^^^^ function type. This type is incompatible with
- 38: var xToString : number = x.toString; // error
-                     ^^^^^^ number
-
-Error: object_prototype.js:39
- 39: var xToString2 : () => number = x.toString; // error
-                                     ^^^^^^^^^^ function type. This type is incompatible with
- 39: var xToString2 : () => number = x.toString; // error
-                      ^^^^^^^^^^^^ function type
-  This parameter is incompatible:
-     54:     toString(): string;
-                         ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:54
-     39: var xToString2 : () => number = x.toString; // error
-                                ^^^^^^ number
-
-Error: object_prototype.js:43
- 43: var yToString : number = y.toString; // error
-                              ^^^^^^^^^^ function type. This type is incompatible with
- 43: var yToString : number = y.toString; // error
-                     ^^^^^^ number
-
-Error: object_prototype.js:49
- 49: (123).toString = function() {}; // error
-           ^^^^^^^^ property `toString`. Property cannot be assigned on
- 49: (123).toString = function() {}; // error
-      ^^^ number
-
-Error: object_prototype.js:51
- 51: (123).toString('foo'); // error
-                    ^^^^^ string. This type is incompatible with the expected param type of
-144:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:144
-
-Error: object_prototype.js:52
- 52: (123).toString(null); // error
-                    ^^^^ null. This type is incompatible with the expected param type of
-144:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:144
-
-Error: object_prototype.js:68
- 68: b.hasOwnProperty = function() { return false; };
-     ^^^^^^^^^^^^^^^^ Object. Covariant property `hasOwnProperty` incompatible with contravariant use in
- 68: b.hasOwnProperty = function() { return false; };
-     ^^^^^^^^^^^^^^^^ assignment of property `hasOwnProperty`
-
-Error: object_prototype.js:71
- 71: var xHasOwnProperty : number = x.hasOwnProperty; // error
-                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 71: var xHasOwnProperty : number = x.hasOwnProperty; // error
-                           ^^^^^^ number
-
-Error: object_prototype.js:72
- 72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                                                       ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
-     50:     hasOwnProperty(prop: any): boolean;
-                                        ^^^^^^^ boolean. This type is incompatible with. See lib: <BUILTINS>/core.js:50
-     72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                                                  ^^^^^^ number
-
-Error: object_prototype.js:76
- 76: var yHasOwnProperty : number = y.hasOwnProperty; // error
-                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 76: var yHasOwnProperty : number = y.hasOwnProperty; // error
-                           ^^^^^^ number
-
-Error: object_prototype.js:93
- 93: b.propertyIsEnumerable = function() { return false; };
-     ^^^^^^^^^^^^^^^^^^^^^^ Object. Covariant property `propertyIsEnumerable` incompatible with contravariant use in
- 93: b.propertyIsEnumerable = function() { return false; };
-     ^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propertyIsEnumerable`
-
-Error: object_prototype.js:96
- 96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
-                                          ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
-                                 ^^^^^^ number
-
-Error: object_prototype.js:98
- 98:   x.propertyIsEnumerable; // error
-       ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 97: var xPropertyIsEnumerable2 : (prop: string) => number =
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  This parameter is incompatible:
-     52:     propertyIsEnumerable(prop: any): boolean;
-                                              ^^^^^^^ boolean. This type is incompatible with. See lib: <BUILTINS>/core.js:52
-     97: var xPropertyIsEnumerable2 : (prop: string) => number =
-                                                        ^^^^^^ number
-
-Error: object_prototype.js:102
-102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
-                                          ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
-102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
-                                 ^^^^^^ number
-
-Error: object_prototype.js:119
-119: b.valueOf = function() { return {}; };
-     ^^^^^^^^^ Object. Covariant property `valueOf` incompatible with contravariant use in
-119: b.valueOf = function() { return {}; };
-     ^^^^^^^^^ assignment of property `valueOf`
-
-Error: object_prototype.js:122
-122: var xValueOf : number = x.valueOf; // error
-                             ^^^^^^^^^ function type. This type is incompatible with
-122: var xValueOf : number = x.valueOf; // error
-                    ^^^^^^ number
-
-Error: object_prototype.js:126
-126: var yValueOf : number = y.valueOf; // error
-                             ^^^^^^^^^ function type. This type is incompatible with
-126: var yValueOf : number = y.valueOf; // error
-                    ^^^^^^ number
-
-Error: object_prototype.js:147
-147: b.toLocaleString = function() { return 'derp'; };
-     ^^^^^^^^^^^^^^^^ Object. Covariant property `toLocaleString` incompatible with contravariant use in
-147: b.toLocaleString = function() { return 'derp'; };
-     ^^^^^^^^^^^^^^^^ assignment of property `toLocaleString`
-
-Error: object_prototype.js:150
-150: var xToLocaleString : number = x.toLocaleString; // error
-                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
-150: var xToLocaleString : number = x.toLocaleString; // error
-                           ^^^^^^ number
-
-Error: object_prototype.js:151
-151: var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                           ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
-151: var xToLocaleString2 : () => number = x.toLocaleString; // error
-                            ^^^^^^^^^^^^ function type
-  This parameter is incompatible:
-    407:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
-                                                                                             ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:407
-    151: var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                      ^^^^^^ number
-
-Error: object_prototype.js:155
-155: var yToLocaleString : number = y.toLocaleString; // error
-                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
-155: var yToLocaleString : number = y.toLocaleString; // error
-                           ^^^^^^ number
-
-Error: proto.js:3
-  3: (o1_proto.toString: empty); // error: function ~> empty
-      ^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
-  3: (o1_proto.toString: empty); // error: function ~> empty
-                         ^^^^^ empty
-
-Error: proto.js:7
-  7: (o2.__proto__.p: empty); // error: number ~> empty
-      ^^^^^^^^^^^^^^ number. This type is incompatible with
-  7: (o2.__proto__.p: empty); // error: number ~> empty
-                      ^^^^^ empty
-
-Error: proto.js:13
- 13: (C1_proto.bind: empty); // error: function ~> empty
-      ^^^^^^^^^^^^^ function type. This type is incompatible with
- 13: (C1_proto.bind: empty); // error: function ~> empty
-                     ^^^^^ empty
-
-Error: proto.js:17
- 17: (inst1_proto.m: empty); // TODO error: function ~> empty
-                  ^ property `m`. Property not found in
- 17: (inst1_proto.m: empty); // TODO error: function ~> empty
-      ^^^^^^^^^^^ super of C1
+References:
+   b.js:4:23
+   4| var b = Object.assign({ bar() {}, ...{} }, a);
+                            ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Found 37 errors
+Error -------------------------------------------------------------------------------------------- object_assign.js:7:44
+
+Cannot assign `Object.assign(...)` to `decl_export_` because property `bar` is missing in object literal [1] but exists
+in object type [2].
+
+   object_assign.js:7:44
+   7| var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_assign.js:7:58
+   7| var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                                                               ^^ [1]
+   object_assign.js:7:19
+   7| var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                        ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_create.js:12:2
+
+Cannot cast object literal to `C` because object literal [1] is incompatible with `C` [2].
+
+   object_create.js:12:2
+   12| ({ foo: "foo" }: C);
+        ^^^^^^^^^^^^^^ [1]
+
+References:
+   object_create.js:12:18
+   12| ({ foo: "foo" }: C);
+                        ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_create.js:17:2
+
+Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2].
+
+   object_create.js:17:2
+   17| (o: C);
+        ^
+
+References:
+   object_create.js:16:16
+   16| declare var o: O;
+                      ^ [1]
+   object_create.js:17:5
+   17| (o: C);
+           ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- object_keys.js:5:2
+
+Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
+
+   object_keys.js:5:2
+   5| (Object.keys(sealed): void); // error, Array<string>
+       ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_keys.js:5:23
+   5| (Object.keys(sealed): void); // error, Array<string>
+                            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- object_keys.js:9:4
+
+Cannot cast `k` to number because string [1] is incompatible with number [2].
+
+   object_keys.js:9:4
+   9|   (k : number) // error: string ~> number
+         ^
+
+References:
+   object_keys.js:8:1
+   8| Object.keys(unsealed).forEach(k => {
+      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_keys.js:9:8
+   9|   (k : number) // error: string ~> number
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:14:4
+
+Cannot cast `k` to number because string [1] is incompatible with number [2].
+
+   object_keys.js:14:4
+   14|   (k : number) // error: string ~> number
+          ^
+
+References:
+   object_keys.js:13:1
+   13| Object.keys(dict).forEach(k => {
+       ^^^^^^^^^^^^^^^^^ [1]
+   object_keys.js:14:8
+   14|   (k : number) // error: string ~> number
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:18:2
+
+Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with number [2] in array element.
+
+   object_keys.js:18:2
+   18| (Object.keys(any): Array<number>); // error, Array<string>
+        ^^^^^^^^^^^^^^^^
+
+References:
+   object_keys.js:17:10
+   17| var any: Object = {};
+                ^^^^^^ [1]
+   object_keys.js:18:26
+   18| (Object.keys(any): Array<number>); // error, Array<string>
+                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:25:2
+
+Cannot cast `Object.keys(...)` to array type because string literal `prop` [1] is incompatible with string literal
+`error` [2] in array element.
+
+   object_keys.js:25:2
+   25| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_keys.js:25:32
+   25| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+                                      ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:32:2
+
+Cannot cast `Object.keys(...)` to array type because string literal `bar_prop` [1] is incompatible with string literal
+`error` [2] in array element.
+
+   object_keys.js:32:2
+   32| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_keys.js:32:32
+   32| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+                                      ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:38:6
+
+Cannot cast `Object.keys(...)` to array type because string literal `hi` [1] is incompatible with string literal
+`bye` [2] in array element.
+
+   object_keys.js:38:6
+   38|     (Object.keys(dict): Array<'bye'>); // error
+            ^^^^^^^^^^^^^^^^^
+
+References:
+   object_keys.js:36:20
+   36|   function(dict: {['hi']: mixed}) {
+                          ^^^^ [1]
+   object_keys.js:38:31
+   38|     (Object.keys(dict): Array<'bye'>); // error
+                                     ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:44:6
+
+Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with string literal `123` [2] in array
+element.
+
+   object_keys.js:44:6
+   44|     (Object.keys(dict): Array<'123'>); // error: not supported yet
+            ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_keys.js:44:31
+   44|     (Object.keys(dict): Array<'123'>); // error: not supported yet
+                                     ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- object_missing.js:5:5
+
+Cannot call method `doesNotExist` because property `doesNotExist` is missing in statics of `Object` [1].
+
+   object_missing.js:5:5
+    5|     Object.doesNotExist();
+           ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:38:15
+   38| declare class Object {
+                     ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- object_prototype.js:31:1
+
+Cannot assign function to `b.toString` because property `toString` is not writable.
+
+   31| b.toString = function(): string { return 'foo'; };
+       ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:38:26
+
+Cannot assign `x.toString` to `xToString` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:38:26
+   38| var xToString : number = x.toString; // error
+                                ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:67:5
+   67|     toString(): string;
+           ^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:38:17
+   38| var xToString : number = x.toString; // error
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
+
+Cannot assign `x.toString` to `xToString2` because string [1] is incompatible with number [2] in the return value.
+
+   object_prototype.js:39:33
+   39| var xToString2 : () => number = x.toString; // error
+                                       ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:67:17
+   67|     toString(): string;
+                       ^^^^^^ [1]
+   object_prototype.js:39:24
+   39| var xToString2 : () => number = x.toString; // error
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:43:26
+
+Cannot assign `y.toString` to `yToString` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:43:26
+   43| var yToString : number = y.toString; // error
+                                ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:67:5
+   67|     toString(): string;
+           ^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:43:17
+   43| var yToString : number = y.toString; // error
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- object_prototype.js:49:1
+
+Cannot assign function to `123.toString` because property `toString` is missing in number [1].
+
+   object_prototype.js:49:1
+   49| (123).toString = function() {}; // error
+       ^^^^^^^^^^^^^^
+
+References:
+   object_prototype.js:49:2
+   49| (123).toString = function() {}; // error
+        ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:51:16
+
+Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is incompatible with number [2].
+
+   object_prototype.js:51:16
+    51| (123).toString('foo'); // error
+                       ^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:145:22
+   145|     toString(radix?: number): string;
+                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:52:16
+
+Cannot call `123.toString` with `null` bound to `radix` because null [1] is incompatible with number [2].
+
+   object_prototype.js:52:16
+    52| (123).toString(null); // error
+                       ^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:145:22
+   145|     toString(radix?: number): string;
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- object_prototype.js:68:1
+
+Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` is not writable.
+
+   68| b.hasOwnProperty = function() { return false; };
+       ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:71:32
+
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:71:32
+   71| var xHasOwnProperty : number = x.hasOwnProperty; // error
+                                      ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:63:5
+   63|     hasOwnProperty(prop: any): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:71:23
+   71| var xHasOwnProperty : number = x.hasOwnProperty; // error
+                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
+
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because boolean [1] is incompatible with number [2] in the return
+value.
+
+   object_prototype.js:72:51
+   72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                         ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:63:32
+   63|     hasOwnProperty(prop: any): boolean;
+                                      ^^^^^^^ [1]
+   object_prototype.js:72:42
+   72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:76:32
+
+Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:76:32
+   76| var yHasOwnProperty : number = y.hasOwnProperty; // error
+                                      ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:63:5
+   63|     hasOwnProperty(prop: any): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:76:23
+   76| var yHasOwnProperty : number = y.hasOwnProperty; // error
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- object_prototype.js:93:1
+
+Cannot assign function to `b.propertyIsEnumerable` because property `propertyIsEnumerable` is not writable.
+
+   93| b.propertyIsEnumerable = function() { return false; };
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:96:38
+
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable` because function type [1] is incompatible with
+number [2].
+
+   object_prototype.js:96:38
+   96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                            ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:65:5
+   65|     propertyIsEnumerable(prop: any): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:96:29
+   96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
+
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because boolean [1] is incompatible with number [2]
+in the return value.
+
+   object_prototype.js:98:3
+   98|   x.propertyIsEnumerable; // error
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:65:38
+   65|     propertyIsEnumerable(prop: any): boolean;
+                                            ^^^^^^^ [1]
+   object_prototype.js:97:48
+   97| var xPropertyIsEnumerable2 : (prop: string) => number =
+                                                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:102:38
+
+Cannot assign `y.propertyIsEnumerable` to `yPropertyIsEnumerable` because function type [1] is incompatible with
+number [2].
+
+   object_prototype.js:102:38
+   102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:65:5
+    65|     propertyIsEnumerable(prop: any): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:102:29
+   102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:119:1
+
+Cannot assign function to `b.valueOf` because property `valueOf` is not writable.
+
+   119| b.valueOf = function() { return {}; };
+        ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:122:25
+
+Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:122:25
+   122| var xValueOf : number = x.valueOf; // error
+                                ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:397:5
+   397|     valueOf(): number;
+            ^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:122:16
+   122| var xValueOf : number = x.valueOf; // error
+                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:126:25
+
+Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:126:25
+   126| var yValueOf : number = y.valueOf; // error
+                                ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:68:5
+    68|     valueOf(): Object;
+            ^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:126:16
+   126| var yValueOf : number = y.valueOf; // error
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:147:1
+
+Cannot assign function to `b.toLocaleString` because property `toLocaleString` is not writable.
+
+   147| b.toLocaleString = function() { return 'derp'; };
+        ^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:150:32
+
+Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:150:32
+   150| var xToLocaleString : number = x.toLocaleString; // error
+                                       ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:393:5
+   393|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:150:23
+   150| var xToLocaleString : number = x.toLocaleString; // error
+                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
+
+Cannot assign `x.toLocaleString` to `xToLocaleString2` because string [1] is incompatible with number [2] in the return
+value.
+
+   object_prototype.js:151:39
+   151| var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                              ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:393:93
+   393|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+                                                                                                    ^^^^^^ [1]
+   object_prototype.js:151:30
+   151| var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:155:32
+
+Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] is incompatible with number [2].
+
+   object_prototype.js:155:32
+   155| var yToLocaleString : number = y.toLocaleString; // error
+                                       ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:66:5
+    66|     toLocaleString(): string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prototype.js:155:23
+   155| var yToLocaleString : number = y.toLocaleString; // error
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- proto.js:3:2
+
+Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2].
+
+   proto.js:3:2
+    3| (o1_proto.toString: empty); // error: function ~> empty
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:67:5
+   67|     toString(): string;
+           ^^^^^^^^^^^^^^^^^^ [1]
+   proto.js:3:21
+    3| (o1_proto.toString: empty); // error: function ~> empty
+                           ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- proto.js:7:2
+
+Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with empty [2].
+
+   proto.js:7:2
+   7| (o2.__proto__.p: empty); // error: number ~> empty
+       ^^^^^^^^^^^^^^
+
+References:
+   proto.js:5:27
+   5| var o2 = Object.create({p:0});
+                                ^ [1]
+   proto.js:7:18
+   7| (o2.__proto__.p: empty); // error: number ~> empty
+                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- proto.js:13:2
+
+Cannot cast `C1_proto.bind` to empty because function type [1] is incompatible with empty [2].
+
+   proto.js:13:2
+   13| (C1_proto.bind: empty); // error: function ~> empty
+        ^^^^^^^^^^^^^ [1]
+
+References:
+   proto.js:13:17
+   13| (C1_proto.bind: empty); // error: function ~> empty
+                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- proto.js:17:2
+
+Cannot get `inst1_proto.m` because property `m` is missing in super of `C1` [1].
+
+   proto.js:17:2
+   17| (inst1_proto.m: empty); // TODO error: function ~> empty
+        ^^^^^^^^^^^^^
+
+References:
+   proto.js:17:2
+   17| (inst1_proto.m: empty); // TODO error: function ~> empty
+        ^^^^^^^^^^^ [1]
+
+
+
+Found 39 errors

@@ -39,7 +39,7 @@ module Jekyll
       tags = site.data['flow_dot_js_versions']
       site.config['flow'] ||= {}
       if tags.nil? || tags.empty?
-        version = ENV["TRAVIS_TAG"] || "master"
+        version = ENV["CIRCLE_TAG"] || "master"
         site.config['flow']['version'] = version
         site.config['flow']['versions'] = [version]
       else

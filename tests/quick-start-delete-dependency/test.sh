@@ -8,7 +8,7 @@ assert_ok "$FLOW" stop .
 mkdir tmp
 
 printf "\nQuick start.\n"
-assert_ok "$FLOW" start --lazy .
+assert_ok "$FLOW" start --lazy --file-watcher none .
 
 printf "\nExpect no errors.\n"
 assert_ok "$FLOW" status --no-auto-start .

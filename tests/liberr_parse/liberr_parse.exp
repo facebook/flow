@@ -1,7 +1,10 @@
-Library parse error:
-libs/parse_error.js:8
-  8:   methodB: () => any
-       ^^^^^^^ Unexpected identifier
+Error ------------------------------------------------------------------------------------------ libs/parse_error.js:8:3
+
+Unexpected identifier
+
+   8|   methodB: () => any
+        ^^^^^^^
+
 
 
 Found 1 error

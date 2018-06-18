@@ -6,6 +6,7 @@
  *)
 module Utils = Flowtestgen_utils;;
 module Logging = Flowtestgen_logging;;
+module Config = Flowtestgen_config;;
 
 (* A virtual class that defines the framework for ocaml-stype rules.
 
@@ -85,7 +86,7 @@ module Logging = Flowtestgen_logging;;
    the style of the traditional type rule where preconditions are
    written separately. With the power of backtracking, users could
    write rules with simple require and assert functions and we
-   recommend users writting rules this way. *)
+   recommend users writing rules this way. *)
 
 (* An exception indicating we want to backtrack *)
 exception Backtrack
@@ -281,9 +282,13 @@ class virtual ['a, 'b, 'c] engine = object(self)
       Queue.iter (fun (slist, env) ->
           (* type check the program *)
           let prog = self#combine_syntax slist in
-          let type_check_result = Utils.type_check prog in
+          let type_check_result =
+            if Utils.is_typecheck (self#get_name ()) || Config.(config.random) then
+              Utils.type_check prog
+            else
+              None in
           match type_check_result with
-          | Some msg -> Logging.log_type_error prog msg
+          | Some msg -> Logging.log_early_type_error prog msg
           | None ->
             let result = self#run_exhaustive rule env in
             if result = [] then

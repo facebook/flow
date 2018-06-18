@@ -1,41 +1,50 @@
-Error: test.js:2
-  2: var s1: string = o1.y; // error
-                         ^ property `y`. Property not found in
-  2: var s1: string = o1.y; // error
-                      ^^ object literal
+Error ----------------------------------------------------------------------------------------------------- test.js:2:18
 
-Error: test.js:7
-  7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-  7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-      7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `y`. Property not found in
-      7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+Cannot get `o1.y` because property `y` is missing in object literal [1].
 
-Error: test.js:19
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                  ^^^^^^ string. This type is incompatible with
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                                                                    ^^^^^^ number
+   test.js:2:18
+   2| var s1: string = o1.y; // error
+                       ^^^^
 
-Error: test.js:19
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `y` is incompatible:
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                                                                    ^^^^^^ number. This type is incompatible with
-     19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                  ^^^^^^ string
+References:
+   test.js:1:10
+   1| var o1 = { x: 0 };
+               ^^^^^^^^ [1]
 
 
-Found 4 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:7:39
+
+Cannot assign object literal to `o3` because property `y` is missing in object type [1] but exists in object type [2].
+
+   test.js:7:39
+   7| var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:7:55
+   7| var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+                                                            ^^^^^^^^^^^^^^ [1]
+   test.js:7:9
+   7| var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:19:39
+
+Cannot assign object literal to `o7` because number [1] is incompatible with string [2] in property `y`.
+
+   test.js:19:39
+   19| var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:19:76
+   19| var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                                                                  ^^^^^^ [1]
+   test.js:19:26
+   19| var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                ^^^^^^ [2]
+
+
+
+Found 3 errors

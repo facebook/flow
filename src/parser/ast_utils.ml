@@ -46,10 +46,19 @@ let bindings_of_variable_declarations =
       bindings_of_pattern acc pattern
   ) []
 
-let bindings_of_export_specifiers =
-  let open Ast.Statement.ExportNamedDeclaration in
-  List.fold_left ExportSpecifier.(fun acc -> function
-    | loc, { local = id; exported = None }
-    | loc, { exported = Some id; _ } ->
-      (loc, snd id)::acc
-  ) []
+let partition_directives statements =
+  let open Ast.Statement in
+  let rec helper directives = function
+    | ((_, Expression { Expression.directive = Some _; _ }) as directive)::rest ->
+      helper (directive::directives) rest
+    | rest -> List.rev directives, rest
+  in
+  helper [] statements
+
+let negate_number_literal (value, raw) =
+  let raw_len = String.length raw in
+  let raw = if raw_len > 0 && raw.[0] = '-'
+    then String.sub raw 1 (raw_len - 1)
+    else "-" ^ raw
+  in
+  ~-. value, raw

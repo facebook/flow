@@ -6,11 +6,14 @@
  *)
 
 val add_sig: (Context.t -> unit) Expensive.t
-val find_sig: options:Options.t -> File_key.t -> Context.t
+val find_sig: File_key.t -> Context.sig_t
 
 val find_leader: File_key.t -> File_key.t
 
-val add_merge_on_diff: (Context.t -> File_key.t list -> SigHash.t -> bool) Expensive.t
+val add_merge_on_diff: (Context.t -> File_key.t Nel.t -> Xx.hash -> unit) Expensive.t
+val add_merge_on_exn: (options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
+val sig_hash_changed: File_key.t -> bool
 val oldify_merge_batch: Utils_js.FilenameSet.t -> unit
 val revive_merge_batch: Utils_js.FilenameSet.t -> unit
+val remove_merge_batch: Utils_js.FilenameSet.t -> unit
 val remove_old_merge_batch: Utils_js.FilenameSet.t -> unit

@@ -1,0 +1,1588 @@
+Error -------------------------------------------------------------------------------------- computed_properties.js:12:2
+
+Cannot cast `x1?.["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:12:2
+   12| (x1?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:6:17
+    6| declare var x1: ?X;
+                       ^^ [1]
+   computed_properties.js:12:15
+   12| (x1?.["foo"]: empty);
+                     ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:13:2
+
+Cannot cast `x2?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:13:2
+   13| (x2?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:13:15
+   13| (x2?.["foo"]: empty);
+                     ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:13:2
+
+This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:13:2
+   13| (x2?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:13:2
+   13| (x2?.["foo"]: empty);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
+
+Cannot cast `y1?.["bar"]?.["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:15:2
+   15| (y1?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   computed_properties.js:15:24
+   15| (y1?.["bar"]?.["foo"]: empty);
+                              ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:15:2
+
+This use of optional chaining (`?.`) is unnecessary because `y1?.["bar"]` [1] cannot be nullish or because an earlier
+`?.` will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:15:2
+   15| (y1?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:15:2
+   15| (y1?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
+
+Cannot cast `y2?.["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:16:24
+   16| (y2?.["bar"]?.["foo"]: empty);
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:16:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2?.["bar"]` [1] cannot be nullish or because an earlier
+`?.` will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:16:2
+   16| (y2?.["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:17:2
+
+Cannot cast `y1?.["baz"]?.["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - null or undefined [3] is incompatible with empty [2].
+ - number [4] is incompatible with empty [2].
+
+   computed_properties.js:17:2
+   17| (y1?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   computed_properties.js:17:24
+   17| (y1?.["baz"]?.["foo"]: empty);
+                              ^^^^^ [2]
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [3]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:18:2
+   18| (y2?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:18:2
+   18| (y2?.["baz"]?.["foo"]: empty);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:18:2
+
+Cannot cast `y2?.["baz"]?.["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:18:2
+   18| (y2?.["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   computed_properties.js:18:24
+   18| (y2?.["baz"]?.["foo"]: empty);
+                              ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:20:2
+
+Cannot cast `y1?.["bar"]["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:20:2
+   20| (y1?.["bar"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   computed_properties.js:20:22
+   20| (y1?.["bar"]["foo"]: empty);
+                            ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:21:2
+   21| (y2?.["bar"]["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:21:2
+   21| (y2?.["bar"]["foo"]: empty);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:21:2
+
+Cannot cast `y2?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:21:2
+   21| (y2?.["bar"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:21:22
+   21| (y2?.["bar"]["foo"]: empty);
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
+
+Cannot cast `y1?.["baz"]["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:22:2
+   22| (y1?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   computed_properties.js:22:22
+   22| (y1?.["baz"]["foo"]: empty);
+                            ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:22:2
+
+Cannot get `y1?.["baz"]["foo"]` because an indexer property is missing in null or undefined [1].
+
+   computed_properties.js:22:2
+   22| (y1?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:23:2
+   23| (y2?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^
+
+References:
+   computed_properties.js:23:2
+   23| (y2?.["baz"]["foo"]: empty);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
+
+Cannot cast `y2?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:23:2
+   23| (y2?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:23:22
+   23| (y2?.["baz"]["foo"]: empty);
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:23:2
+
+Cannot get `y2?.["baz"]["foo"]` because an indexer property is missing in null or undefined [1].
+
+   computed_properties.js:23:2
+   23| (y2?.["baz"]["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
+
+Cannot get `y1["bar"]` because an indexer property is missing in null or undefined [1].
+
+   computed_properties.js:25:2
+   25| (y1["bar"]?.["foo"]: empty);
+        ^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
+
+Cannot cast `y1["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:25:2
+   25| (y1["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:25:22
+   25| (y1["bar"]?.["foo"]: empty);
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:25:2
+
+This use of optional chaining (`?.`) is unnecessary because `y1["bar"]` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:25:2
+   25| (y1["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:25:2
+   25| (y1["bar"]?.["foo"]: empty);
+        ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:26:2
+
+Cannot cast `y2["bar"]?.["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:26:2
+   26| (y2["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:26:22
+   26| (y2["bar"]?.["foo"]: empty);
+                            ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:26:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2["bar"]` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:26:2
+   26| (y2["bar"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:26:2
+   26| (y2["bar"]?.["foo"]: empty);
+        ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
+
+Cannot get `y1["baz"]` because an indexer property is missing in null or undefined [1].
+
+   computed_properties.js:27:2
+   27| (y1["baz"]?.["foo"]: empty);
+        ^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:27:2
+
+Cannot cast `y1["baz"]?.["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:27:2
+   27| (y1["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   computed_properties.js:27:22
+   27| (y1["baz"]?.["foo"]: empty);
+                            ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:28:2
+
+Cannot cast `y2["baz"]?.["foo"]` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   computed_properties.js:28:2
+   28| (y2["baz"]?.["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   computed_properties.js:28:22
+   28| (y2["baz"]?.["foo"]: empty);
+                            ^^^^^ [2]
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:30:2
+
+Cannot cast `y1?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:30:2
+   30| ((y1?.["bar"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:30:24
+   30| ((y1?.["bar"])["foo"]: empty);
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:30:2
+
+Cannot get `y1?.["bar"]["foo"]` because an indexer property is missing in null or undefined [1].
+
+   computed_properties.js:30:2
+   30| ((y1?.["bar"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:31:2
+
+Cannot cast `y2?.["bar"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:31:2
+   31| ((y2?.["bar"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:31:24
+   31| ((y2?.["bar"])["foo"]: empty);
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:31:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:31:3
+   31| ((y2?.["bar"])["foo"]: empty);
+         ^^^^^^^^^^^
+
+References:
+   computed_properties.js:31:3
+   31| ((y2?.["bar"])["foo"]: empty);
+         ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
+
+Cannot cast `y1?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:32:2
+   32| ((y1?.["baz"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:32:24
+   32| ((y1?.["baz"])["foo"]: empty);
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:32:2
+
+Cannot get `y1?.["baz"]["foo"]` because:
+ - an indexer property is missing in null or undefined [1].
+ - an indexer property is missing in null or undefined [2].
+
+   computed_properties.js:32:2
+   32| ((y1?.["baz"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   computed_properties.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:33:2
+
+Cannot cast `y2?.["baz"]["foo"]` to empty because number [1] is incompatible with empty [2].
+
+   computed_properties.js:33:2
+   33| ((y2?.["baz"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   computed_properties.js:33:24
+   33| ((y2?.["baz"])["foo"]: empty);
+                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:33:2
+
+Cannot get `y2?.["baz"]["foo"]` because an indexer property is missing in null or undefined [1].
+
+   computed_properties.js:33:2
+   33| ((y2?.["baz"])["foo"]: empty);
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:33:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   computed_properties.js:33:3
+   33| ((y2?.["baz"])["foo"]: empty);
+         ^^^^^^^^^^^
+
+References:
+   computed_properties.js:33:3
+   33| ((y2?.["baz"])["foo"]: empty);
+         ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- function_calls.js:8:2
+
+Cannot cast `x1?.()` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   function_calls.js:8:2
+   8| (x1?.(): empty);
+       ^^^^^^
+
+References:
+   function_calls.js:5:17
+   5| declare var x1: ?X;
+                      ^^ [1]
+   function_calls.js:8:10
+   8| (x1?.(): empty);
+               ^^^^^ [2]
+   function_calls.js:3:16
+   3| type X = () => number;
+                     ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- function_calls.js:9:2
+
+Cannot cast `x2?.()` to empty because number [1] is incompatible with empty [2].
+
+   function_calls.js:9:2
+   9| (x2?.(): empty)
+       ^^^^^^
+
+References:
+   function_calls.js:3:16
+   3| type X = () => number;
+                     ^^^^^^ [1]
+   function_calls.js:9:10
+   9| (x2?.(): empty)
+               ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_calls.js:9:2
+
+This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   function_calls.js:9:2
+   9| (x2?.(): empty)
+       ^^^^^^
+
+References:
+   function_calls.js:9:2
+   9| (x2?.(): empty)
+       ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ lhs_types.js:12:2
+
+This use of optional chaining (`?.`) is unnecessary because `x` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   lhs_types.js:12:2
+   12| (x?.foo: ?number); // no error, lint
+        ^^^^^^
+
+References:
+   lhs_types.js:12:2
+   12| (x?.foo: ?number); // no error, lint
+        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ lhs_types.js:13:2
+
+Cannot get `mixed?.foo` because property `foo` is missing in mixed [1].
+
+   lhs_types.js:13:2
+   13| (mixed?.foo: ?number); // error, no lint
+        ^^^^^^^^^^
+
+References:
+   lhs_types.js:6:20
+    6| declare var mixed: mixed;
+                          ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
+
+Flow does not yet support method or property calls in optional chains.
+
+   9| (foo?.bar?.(): empty);
+       ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- method_calls.js:9:2
+
+Cannot cast `foo?.bar?.()` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - null or undefined [3] is incompatible with empty [2].
+ - number [4] is incompatible with empty [2].
+
+   method_calls.js:9:2
+   9| (foo?.bar?.(): empty);
+       ^^^^^^^^^^^^
+
+References:
+   method_calls.js:7:18
+   7| declare var foo: ?X;
+                       ^^ [1]
+   method_calls.js:9:16
+   9| (foo?.bar?.(): empty);
+                     ^^^^^ [2]
+   method_calls.js:4:8
+   4|   bar: ?(() => number),
+             ^^^^^^^^^^^^^^^ [3]
+   method_calls.js:4:16
+   4|   bar: ?(() => number),
+                     ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
+
+Flow does not yet support method or property calls in optional chains.
+
+   10| (foo.bar?.(): empty);
+        ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
+
+Cannot call `foo.bar` because:
+ - null or undefined [1] is not a function.
+ - property `bar` is missing in null or undefined [2].
+
+   method_calls.js:10:2
+   10| (foo.bar?.(): empty);
+        ^^^^^^^^^^^
+
+References:
+   method_calls.js:4:8
+    4|   bar: ?(() => number),
+              ^^^^^^^^^^^^^^^ [1]
+   method_calls.js:7:18
+    7| declare var foo: ?X;
+                        ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:10:2
+
+Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2].
+
+   method_calls.js:10:2
+   10| (foo.bar?.(): empty);
+        ^^^^^^^^^^^
+
+References:
+   method_calls.js:4:16
+    4|   bar: ?(() => number),
+                      ^^^^^^ [1]
+   method_calls.js:10:15
+   10| (foo.bar?.(): empty);
+                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
+
+Flow does not yet support method or property calls in optional chains.
+
+   11| (foo?.bar(): empty);
+        ^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
+
+Cannot call `foo?.bar` because null or undefined [1] is not a function.
+
+   method_calls.js:11:2
+   11| (foo?.bar(): empty);
+        ^^^^^^^^^^
+
+References:
+   method_calls.js:4:8
+    4|   bar: ?(() => number),
+              ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:11:2
+
+Cannot cast `foo?.bar()` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   method_calls.js:11:2
+   11| (foo?.bar(): empty);
+        ^^^^^^^^^^
+
+References:
+   method_calls.js:7:18
+    7| declare var foo: ?X;
+                        ^^ [1]
+   method_calls.js:11:14
+   11| (foo?.bar(): empty);
+                    ^^^^^ [2]
+   method_calls.js:4:16
+    4|   bar: ?(() => number),
+                      ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+
+Flow does not yet support method or property calls in optional chains.
+
+   12| ((foo?.bar)(): empty);
+        ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+
+Cannot call `foo?.bar` because:
+ - null or undefined [1] is not a function.
+ - null or undefined [2] is not a function.
+
+   method_calls.js:12:2
+   12| ((foo?.bar)(): empty);
+        ^^^^^^^^^^^^
+
+References:
+   method_calls.js:4:8
+    4|   bar: ?(() => number),
+              ^^^^^^^^^^^^^^^ [1]
+   method_calls.js:7:18
+    7| declare var foo: ?X;
+                        ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+
+Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2].
+
+   method_calls.js:12:2
+   12| ((foo?.bar)(): empty);
+        ^^^^^^^^^^^^
+
+References:
+   method_calls.js:4:16
+    4|   bar: ?(() => number),
+                      ^^^^^^ [1]
+   method_calls.js:12:16
+   12| ((foo?.bar)(): empty);
+                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
+
+Cannot cast `this?.#foo` to empty because number [1] is incompatible with empty [2].
+
+   private_properties.js:6:6
+   6|     (this?.#foo: empty);
+           ^^^^^^^^^^
+
+References:
+   private_properties.js:4:9
+   4|   #foo: number
+              ^^^^^^ [1]
+   private_properties.js:6:18
+   6|     (this?.#foo: empty);
+                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- private_properties.js:6:6
+
+This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   private_properties.js:6:6
+   6|     (this?.#foo: empty);
+           ^^^^^^^^^^
+
+References:
+   private_properties.js:6:6
+   6|     (this?.#foo: empty);
+           ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:14:6
+
+Cannot cast `this?.#bar` to empty because `X` [1] is incompatible with empty [2].
+
+   private_properties.js:14:6
+   14|     (this?.#bar: empty);
+            ^^^^^^^^^^
+
+References:
+   private_properties.js:11:9
+   11|   #bar: X
+               ^ [1]
+   private_properties.js:14:18
+   14|     (this?.#bar: empty);
+                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:14:6
+
+This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   private_properties.js:14:6
+   14|     (this?.#bar: empty);
+            ^^^^^^^^^^
+
+References:
+   private_properties.js:14:6
+   14|     (this?.#bar: empty);
+            ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:15:6
+
+Cannot cast `this?.#baz` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - `X` [3] is incompatible with empty [2].
+
+   private_properties.js:15:6
+   15|     (this?.#baz: empty);
+            ^^^^^^^^^^
+
+References:
+   private_properties.js:12:9
+   12|   #baz: ?X
+               ^^ [1]
+   private_properties.js:15:18
+   15|     (this?.#baz: empty);
+                        ^^^^^ [2]
+   private_properties.js:12:10
+   12|   #baz: ?X
+                ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- private_properties.js:15:6
+
+This use of optional chaining (`?.`) is unnecessary because `this` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   private_properties.js:15:6
+   15|     (this?.#baz: empty);
+            ^^^^^^^^^^
+
+References:
+   private_properties.js:15:6
+   15|     (this?.#baz: empty);
+            ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:12:2
+
+Cannot cast `x1?.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:12:2
+   12| (x1?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:6:17
+    6| declare var x1: ?X;
+                       ^^ [1]
+   static_members.js:12:11
+   12| (x1?.foo: empty);
+                 ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:13:2
+
+Cannot cast `x2?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:13:2
+   13| (x2?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:13:11
+   13| (x2?.foo: empty);
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:13:2
+
+This use of optional chaining (`?.`) is unnecessary because `x2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:13:2
+   13| (x2?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:13:2
+   13| (x2?.foo: empty);
+        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:15:2
+
+Cannot cast `y1?.bar?.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:15:2
+   15| (y1?.bar?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   static_members.js:15:16
+   15| (y1?.bar?.foo: empty);
+                      ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:15:2
+
+This use of optional chaining (`?.`) is unnecessary because `y1?.bar` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:15:2
+   15| (y1?.bar?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:15:2
+   15| (y1?.bar?.foo: empty);
+        ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:16:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:16:2
+
+Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:16:16
+   16| (y2?.bar?.foo: empty);
+                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:16:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2?.bar` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:16:2
+   16| (y2?.bar?.foo: empty);
+        ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:17:2
+
+Cannot cast `y1?.baz?.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - null or undefined [3] is incompatible with empty [2].
+ - number [4] is incompatible with empty [2].
+
+   static_members.js:17:2
+   17| (y1?.baz?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   static_members.js:17:16
+   17| (y1?.baz?.foo: empty);
+                      ^^^^^ [2]
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [3]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:18:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:18:2
+   18| (y2?.baz?.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:18:2
+   18| (y2?.baz?.foo: empty);
+        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:18:2
+
+Cannot cast `y2?.baz?.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:18:2
+   18| (y2?.baz?.foo: empty);
+        ^^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   static_members.js:18:16
+   18| (y2?.baz?.foo: empty);
+                      ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:20:2
+
+Cannot cast `y1?.bar.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:20:2
+   20| (y1?.bar.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   static_members.js:20:15
+   20| (y1?.bar.foo: empty);
+                     ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:21:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:21:2
+   21| (y2?.bar.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:21:2
+   21| (y2?.bar.foo: empty);
+        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:21:2
+
+Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:21:2
+   21| (y2?.bar.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:21:15
+   21| (y2?.bar.foo: empty);
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:22:2
+
+Cannot cast `y1?.baz.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:22:2
+   22| (y1?.baz.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+   static_members.js:22:15
+   22| (y1?.baz.foo: empty);
+                     ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:22:2
+
+Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1].
+
+   static_members.js:22:2
+   22| (y1?.baz.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:23:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:23:2
+   23| (y2?.baz.foo: empty);
+        ^^^^^^^
+
+References:
+   static_members.js:23:2
+   23| (y2?.baz.foo: empty);
+        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:23:2
+
+Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:23:2
+   23| (y2?.baz.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:23:15
+   23| (y2?.baz.foo: empty);
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:23:2
+
+Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1].
+
+   static_members.js:23:2
+   23| (y2?.baz.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:25:2
+
+Cannot get `y1.bar` because property `bar` is missing in null or undefined [1].
+
+   static_members.js:25:2
+   25| (y1.bar?.foo: empty);
+        ^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:25:2
+
+Cannot cast `y1.bar?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:25:2
+   25| (y1.bar?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:25:15
+   25| (y1.bar?.foo: empty);
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:25:2
+
+This use of optional chaining (`?.`) is unnecessary because `y1.bar` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:25:2
+   25| (y1.bar?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:25:2
+   25| (y1.bar?.foo: empty);
+        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:26:2
+
+Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:26:2
+   26| (y2.bar?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:26:15
+   26| (y2.bar?.foo: empty);
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:26:2
+
+This use of optional chaining (`?.`) is unnecessary because `y2.bar` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:26:2
+   26| (y2.bar?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:26:2
+   26| (y2.bar?.foo: empty);
+        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:27:2
+
+Cannot get `y1.baz` because property `baz` is missing in null or undefined [1].
+
+   static_members.js:27:2
+   27| (y1.baz?.foo: empty);
+        ^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:27:2
+
+Cannot cast `y1.baz?.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:27:2
+   27| (y1.baz?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   static_members.js:27:15
+   27| (y1.baz?.foo: empty);
+                     ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:28:2
+
+Cannot cast `y2.baz?.foo` to empty because:
+ - null or undefined [1] is incompatible with empty [2].
+ - number [3] is incompatible with empty [2].
+
+   static_members.js:28:2
+   28| (y2.baz?.foo: empty);
+        ^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   static_members.js:28:15
+   28| (y2.baz?.foo: empty);
+                     ^^^^^ [2]
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:30:2
+
+Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:30:2
+   30| ((y1?.bar).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:30:17
+   30| ((y1?.bar).foo: empty);
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:30:2
+
+Cannot get `y1?.bar.foo` because property `foo` is missing in null or undefined [1].
+
+   static_members.js:30:2
+   30| ((y1?.bar).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:31:2
+
+Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:31:2
+   31| ((y2?.bar).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:31:17
+   31| ((y2?.bar).foo: empty);
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:31:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:31:3
+   31| ((y2?.bar).foo: empty);
+         ^^^^^^^
+
+References:
+   static_members.js:31:3
+   31| ((y2?.bar).foo: empty);
+         ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:32:2
+
+Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:32:2
+   32| ((y1?.baz).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:32:17
+   32| ((y1?.baz).foo: empty);
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:32:2
+
+Cannot get `y1?.baz.foo` because:
+ - property `foo` is missing in null or undefined [1].
+ - property `foo` is missing in null or undefined [2].
+
+   static_members.js:32:2
+   32| ((y1?.baz).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+   static_members.js:9:17
+    9| declare var y1: ?Y;
+                       ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:33:2
+
+Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2].
+
+   static_members.js:33:2
+   33| ((y2?.baz).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:3:16
+    3| type X = {foo: number};
+                      ^^^^^^ [1]
+   static_members.js:33:17
+   33| ((y2?.baz).foo: empty);
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:33:2
+
+Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1].
+
+   static_members.js:33:2
+   33| ((y2?.baz).foo: empty);
+        ^^^^^^^^^^^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:33:3
+
+This use of optional chaining (`?.`) is unnecessary because `y2` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. (`unnecessary-optional-chain`)
+
+   static_members.js:33:3
+   33| ((y2?.baz).foo: empty);
+         ^^^^^^^
+
+References:
+   static_members.js:33:3
+   33| ((y2?.baz).foo: empty);
+         ^^ [1]
+
+
+
+Found 121 errors

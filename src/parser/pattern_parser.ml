@@ -21,22 +21,24 @@ module Pattern
   let rec object_from_expr =
     let rec properties env acc = Ast.Expression.Object.(function
       | [] -> List.rev acc
-      | Property (loc, { Property.key; value; shorthand; _method; _ })::remaining ->
+      | Property (loc, prop)::remaining ->
+          let key, pattern, shorthand = match prop with
+          | Property.Init { key; value; shorthand } ->
+            key, from_expr env value, shorthand
+          | Property.Method { key; value = (loc, f) } ->
+            error_at env (loc, Parse_error.MethodInDestructuring);
+            key, (loc, Pattern.Expression (loc, Ast.Expression.Function f)), false
+          | Property.Get { key; value = (loc, f) }
+          | Property.Set { key; value = (loc, f) } ->
+            (* these should never happen *)
+            error_at env (loc, Parse_error.UnexpectedIdentifier);
+            key, (loc, Pattern.Expression (loc, Ast.Expression.Function f)), false
+          in
           let key = match key with
           | Property.Literal lit -> Pattern.Object.Property.Literal lit
           | Property.Identifier id -> Pattern.Object.Property.Identifier id
           | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
           | Property.Computed expr -> Pattern.Object.Property.Computed expr
-          in
-          let pattern = match value with
-          | Property.Init t ->
-              if _method then error_at env (fst t, Parse_error.MethodInDestructuring);
-              from_expr env t
-          | Property.Get (loc, f)
-          | Property.Set (loc, f) ->
-            (* these should never happen *)
-            error_at env (loc, Parse_error.UnexpectedIdentifier);
-            loc, Pattern.Expression (loc, Ast.Expression.Function f)
           in
           let acc = Pattern.(Object.Property (loc, { Object.Property.
             key;
@@ -57,7 +59,7 @@ module Pattern
     fun env (loc, { Ast.Expression.Object.properties = props }) ->
       loc, Pattern.(Object { Object.
         properties = properties env [] props;
-        typeAnnotation = None;
+        annot = None;
       })
 
   and array_from_expr =
@@ -112,7 +114,7 @@ module Pattern
     fun env (loc, { Ast.Expression.Array.elements = elems }) ->
       loc, Pattern.Array { Pattern.Array.
         elements = elements env [] elems;
-        typeAnnotation = None;
+        annot = None;
       }
 
   and from_expr env (loc, expr) =
@@ -140,7 +142,7 @@ module Pattern
         end;
         loc, Pattern.Identifier { Pattern.Identifier.
           name;
-          typeAnnotation = None;
+          annot = None;
           optional = false;
         }
     | Assignment { Assignment.operator = Assignment.Assign; left; right } ->
@@ -185,7 +187,7 @@ module Pattern
               end;
               let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
                 name;
-                typeAnnotation = None;
+                annot = None;
                 optional = false;
               }) in
               Some (pattern, true)
@@ -215,27 +217,48 @@ module Pattern
         | None -> None
       end
 
-    and properties env acc =
+    (* seen_rest is true when we've seen a rest element. rest_trailing_comma is the location of
+     * the rest element's trailing command
+     * Trailing comma: `let { ...rest, } = obj`
+     * Still invalid, but not a trailing comma: `let { ...rest, x } = obj` *)
+    and properties env ~seen_rest ~rest_trailing_comma acc =
       match Peek.token env with
       | T_EOF
-      | T_RCURLY -> List.rev acc
+      | T_RCURLY ->
+        begin match rest_trailing_comma with
+        | Some loc -> error_at env (loc, Parse_error.TrailingCommaAfterRestElement)
+        | None -> ()
+        end;
+        List.rev acc
       | _ ->
         (match property env with
-        | Some prop ->
+        | Some (Pattern.Object.Property (loc, _) | Pattern.Object.RestProperty (loc, _) as prop) ->
+          let rest_trailing_comma =
+            if seen_rest
+            then begin
+              error_at env (loc, Parse_error.PropertyAfterRestProperty);
+              None
+            end
+            else rest_trailing_comma
+          in
+          let seen_rest, rest_trailing_comma = begin match prop with
+          | Pattern.Object.RestProperty _ ->
+            true, if Peek.token env = T_COMMA then Some (Peek.loc env) else None
+          | _ -> seen_rest, rest_trailing_comma end in
           if Peek.token env <> T_RCURLY
           then Expect.token env T_COMMA;
-          properties env (prop::acc)
-        | None -> properties env acc)
+          properties env ~seen_rest ~rest_trailing_comma (prop::acc)
+        | None -> properties env ~seen_rest ~rest_trailing_comma acc)
     in
     with_loc (fun env ->
       Expect.token env T_LCURLY;
-      let properties = properties env [] in
+      let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
       Expect.token env T_RCURLY;
-      let typeAnnotation =
+      let annot =
         if Peek.token env = T_COLON then Some (Type.annotation env)
         else None
       in
-      Pattern.Object { Pattern.Object.properties; typeAnnotation; }
+      Pattern.Object { Pattern.Object.properties; annot; }
     )
 
   (* Parse array destructuring pattern *)
@@ -284,11 +307,11 @@ module Pattern
       Expect.token env T_LBRACKET;
       let elements = elements env [] in
       Expect.token env T_RBRACKET;
-      let typeAnnotation =
+      let annot =
         if Peek.token env = T_COLON then Some (Type.annotation env)
         else None
       in
-      Pattern.Array { Pattern.Array.elements; typeAnnotation; }
+      Pattern.Array { Pattern.Array.elements; annot; }
     )
 
   and pattern env restricted_error =

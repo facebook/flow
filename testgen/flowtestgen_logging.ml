@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Config = Flowtestgen_config;;
@@ -14,10 +11,12 @@ open Printf;;
 
 let runtime_error_file = "runtime_error.txt";;
 let type_error_file = "type_error.txt";;
+let early_type_error_file = "early_type_error.txt";;
 let no_error_file = "no_error.txt";;
 
 let no_error_count = ref 0;;
 let type_error_count = ref 0;;
+let early_type_error_count = ref 0;;
 let runtime_error_count = ref 0;;
 
 let runtime_error_out =
@@ -30,6 +29,11 @@ let type_error_out =
     stdout
   else
     open_out type_error_file
+let early_type_error_out =
+  if Config.(config.log_to_console) then
+    stdout
+  else
+    open_out early_type_error_file
 let no_error_out =
   if Config.(config.log_to_console) then
     stdout
@@ -51,13 +55,28 @@ let log_type_error code msg =
   fprintf type_error_out "//====================\n%s\n%!" code;
   fprintf type_error_out "/*\nType Error: \n%s\n*/\n%!" msg;;
 
-let log_runtime_error code msg =
+let log_early_type_error code msg = 
+  early_type_error_count := !early_type_error_count + 1;
+  printf "EARLY TYPE ERROR.\n%!";
+  fprintf early_type_error_out "//====================\n%s\n%!" code;
+  fprintf early_type_error_out "/*\nType Error: \n%s\n*/\n%!" msg;;
+
+let log_runtime_error code msg = 
   runtime_error_count := !runtime_error_count + 1;
   printf "RUNTIME ERROR.\n%!";
   fprintf runtime_error_out "//====================\n%s\n%!" code;
   fprintf runtime_error_out "/*\nRuntime Error: \n%s\n*/\n%!" msg;;
 
+
 let print_stats () =
+  let early_type_count_str =
+    sprintf
+      "%d early type errors written to %s\n%!"
+      !early_type_error_count
+      early_type_error_file in
+  fprintf early_type_error_out "// %s\n%!" early_type_count_str;
+  printf "%s%!" early_type_count_str;
+
   (* print type error message *)
   let type_count_str =
     sprintf
@@ -84,9 +103,9 @@ let print_stats () =
       no_error_file in
   fprintf no_error_out "// %s\n%!" noerror_count_str;
   printf "%s%!" noerror_count_str;;
-
+  
 let close () =
+  if not Config.(config.log_to_console) then close_out early_type_error_out;
   if not Config.(config.log_to_console) then close_out type_error_out;
   if not Config.(config.log_to_console) then close_out runtime_error_out;
   if not Config.(config.log_to_console) then close_out no_error_out;;
-

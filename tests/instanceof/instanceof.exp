@@ -1,30 +1,72 @@
-Error: instanceof.js:17
- 17:     if (g instanceof X1) g.foo = '1337';  // oops
-                                      ^^^^^^ string. This type is incompatible with
- 17:     if (g instanceof X1) g.foo = '1337';  // oops
-                              ^^^^^ number
+Error ---------------------------------------------------------------------------------------------- instanceof.js:17:34
 
-Error: instanceof.js:34
- 34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
-                                              ^^^^^^ string. This type is incompatible with
- 34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
-                                  ^^^^^^^^^ number
+Cannot assign `'1337'` to `g.foo` because string [1] is incompatible with number [2].
 
-Error: instanceof.js:51
- 51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
-                                                      ^^^^^^ string. This type is incompatible with
- 51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
-                                      ^^^^^^^^^^^^^ number
+   instanceof.js:17:34
+   17|     if (g instanceof X1) g.foo = '1337';  // oops
+                                        ^^^^^^ [1]
 
-Error: instanceof.js:83
- 83:     x++; // error
-         ^ array type. The operand of an arithmetic operation must be a number.
+References:
+   instanceof.js:4:17
+    4| class X1 { foo: number; };
+                       ^^^^^^ [2]
 
-Error: instanceof.js:85
- 85:     x[0] = 123; // error
-         ^^^^ assignment of computed property/element. Computed property/element cannot be assigned on
- 85:     x[0] = 123; // error
-         ^ number
+
+Error ---------------------------------------------------------------------------------------------- instanceof.js:34:42
+
+Cannot assign `'1337'` to `g.bar.foo` because string [1] is incompatible with number [2].
+
+   instanceof.js:34:42
+   34|     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
+                                                ^^^^^^ [1]
+
+References:
+   instanceof.js:4:17
+    4| class X1 { foo: number; };
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- instanceof.js:51:50
+
+Cannot assign `'1337'` to `g.baz.bar.foo` because string [1] is incompatible with number [2].
+
+   instanceof.js:51:50
+   51|     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
+                                                        ^^^^^^ [1]
+
+References:
+   instanceof.js:4:17
+    4| class X1 { foo: number; };
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- instanceof.js:83:5
+
+Cannot perform arithmetic operation because array type [1] is not a number.
+
+   instanceof.js:83:5
+   83|     x++; // error
+           ^
+
+References:
+   instanceof.js:81:18
+   81| function foo1(x: Array<number> | number) {
+                        ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- instanceof.js:85:5
+
+Cannot assign `123` to `x[0]` because an indexer property is missing in number [1].
+
+   instanceof.js:85:5
+   85|     x[0] = 123; // error
+           ^^^^
+
+References:
+   instanceof.js:81:34
+   81| function foo1(x: Array<number> | number) {
+                                        ^^^^^^ [1]
+
 
 
 Found 5 errors

@@ -7,30 +7,25 @@
 
 open Utils_js
 
-type element =
-| Skip of File_key.t
-| Component of File_key.t list
+type element = Component of File_key.t Nel.t
 
 type 'a merge_result = (File_key.t * 'a) list
 
-val make :
-  (* dependency graph *)
-  FilenameSet.t FilenameMap.t ->
-  (* leader map *)
-  File_key.t FilenameMap.t ->
-  (* component map *)
-  File_key.t list FilenameMap.t ->
-  (* recheck_leader_map *)
-  bool FilenameMap.t ->
-  unit ->
-  element list MultiWorker.bucket
+type 'a merge_stream = {
+  next: unit -> element list Bucket.bucket;
+  merge:
+    (* merged *)
+    'a merge_result ->
+    (* accumulator *)
+    'a merge_result ->
+    (* accumulated results *)
+    'a merge_result
+}
 
-val join :
-  (* intermediate result callback *)
-  ('a merge_result Lazy.t -> unit) ->
-  (* merged, unchanged *)
-  'a merge_result * File_key.t list ->
-  (* accumulators *)
-  'a merge_result * File_key.t list ->
-  (* accumulated results *)
-  'a merge_result * File_key.t list
+val make :
+  dependency_graph: FilenameSet.t FilenameMap.t ->
+  leader_map: File_key.t FilenameMap.t ->
+  component_map: File_key.t Nel.t FilenameMap.t ->
+  recheck_leader_map: bool FilenameMap.t ->
+  intermediate_result_callback: ('a merge_result Lazy.t -> unit) ->
+  'a merge_stream

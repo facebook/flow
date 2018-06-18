@@ -108,22 +108,22 @@ let tests = [
     r: Object, s: Function, t: () => void
   ) {
     if (x.length === 0) {}
-    if (x.legnth === 0) { // typos are allowed to be tested
+    if (x.legnth === 0) { // Error, typos
       (x.legnth: number); // inside the block, it's a number
       (x.legnth: string); // error: number literal 0 !~> string
     }
     if (y.length === 0) {}
-    if (y.legnth === 0) { // typos are allowed to be tested
+    if (y.legnth === 0) { // Error, typo
       (y.legnth: number); // inside the block, it's a number
       (y.legnth: string); // error: number literal 0 !~> string
     }
     if (z.toString === 0) {}
-    if (z.toStirng === 0) { // typos are allowed to be tested
+    if (z.toStirng === 0) { // Error, typo
       (z.toStirng: number); // inside the block, it's a number
       (z.toStirng: string); // error: number literal 0 !~> string
     }
     if (q.valueOf === 0) {}
-    if (q.valeuOf === 0) { // typos are allowed to be tested
+    if (q.valeuOf === 0) { // Error, typo
       (q.valeuOf: number); // inside the block, it's a number
       (q.valeuOf: string); // error: number literal 0 !~> string
     }
@@ -152,13 +152,13 @@ let tests = [
       (x.bool: false); // error: true !~> false
     }
     // even if it doesn't exist...
-    if (x.badStr === 'bad') {
+    if (x.badStr === 'bad') { // Error, reading unknown property
       (x.badStr: empty); // error: 'bad' !~> empty
     }
-    if (x.badNum === 123) {
+    if (x.badNum === 123) { // Error, reading unknown property
       (x.badNum: empty); // error: 123 !~> empty
     }
-    if (x.badBool === true) {
+    if (x.badBool === true) { // Error, reading unknown property
       (x.badBool: empty); // error: true !~> empty
     }
   },

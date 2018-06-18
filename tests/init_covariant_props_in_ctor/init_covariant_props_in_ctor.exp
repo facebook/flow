@@ -1,0 +1,93 @@
+Error -------------------------------------------------------------------------------------------------------- a.js:13:1
+
+Cannot assign `2` to `a.prop` because property `prop` is not writable.
+
+   13| a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
+       ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:20:17
+
+Cannot assign `prop` to `this.prop` because string [1] is incompatible with number [2].
+
+   a.js:20:17
+   20|     this.prop = prop;         // ERROR: we should not be assigning a string here
+                       ^^^^
+
+References:
+   a.js:19:21
+   19|   constructor(prop: string) {
+                           ^^^^^^ [1]
+   a.js:16:10
+   16|   +prop: number;
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:21:5
+
+Cannot assign function to `this.m` because property `m` is not writable.
+
+   21|     this.m = () => {};        // ERORR: cannot assign method
+           ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:47:7
+
+Cannot assign `prop` to `this.prop` because property `prop` is not writable.
+
+   47|       this.prop = prop;       // ERROR: the initilized object can only be
+             ^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:61:5
+
+Cannot assign `1` to `this.prop` because property `prop` is not writable.
+
+   61|     this.prop = 1;            // ERROR
+           ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:70:17
+
+Cannot assign empty string to `this.prop` because string [1] is incompatible with number [2].
+
+   a.js:70:17
+   70|     this.prop = "";           // ERROR
+                       ^^ [1]
+
+References:
+   a.js:5:10
+    5|   +prop: number;
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:74:1
+
+Cannot extend `F` [1] with `G` because property `prop` is write-only in `G` [2] but read-only in `A` [3].
+
+   a.js:74:1
+       v------------------
+   74| class G extends F {
+   75|   -prop: number               // ERROR: Was covariant in F and A
+   76|   constructor(prop: number) {
+   77|     super(prop);
+   78|     this.prop = prop;         // OK
+   79|     this.prop = prop;
+   80|   }
+   81| }
+       ^
+
+References:
+   a.js:74:17
+   74| class G extends F {
+                       ^ [1]
+   a.js:74:7
+   74| class G extends F {
+             ^ [2]
+   a.js:4:7
+    4| class A {
+             ^ [3]
+
+
+
+Found 7 errors

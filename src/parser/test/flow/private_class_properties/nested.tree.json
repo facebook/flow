@@ -66,14 +66,17 @@
                       "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
                       "range":[21,27]
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
+                    "proto":false,
                     "variance":null,
                     "kind":"init"
                   }
                 ],
                 "indexers":[],
-                "callProperties":[]
+                "callProperties":[],
+                "internalSlots":[]
               }
             },
             "static":false,
@@ -81,8 +84,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

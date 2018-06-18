@@ -2,15 +2,19 @@
  * Copyright (c) 2017, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-type t = int array
+type t = int array [@@deriving show]
+
+let last_offset = ref 0
+let curr_index = ref 0
 
 let make text =
+  last_offset := 0;
+  curr_index := 0;
   (* Clever Tricks Warning
    * ---------------------
    * We prepend 0, so as to make the invariant hold that there is always a
@@ -37,42 +41,42 @@ let make text =
   in
   Array.of_list newline_list
 
-let offset_to_position ?(cyclic_index=false) lbmap offset =
-  let len = Array.length lbmap in
-  let offset =
-    if cyclic_index (* Normalise and/or cycle around the length of the text. *)
-    then
-      max 0 (if offset < 0 then Array.get lbmap (len - 1) + offset else offset)
-    else offset
-  in
-  let rec binary_search lower upper =
-    if lower >= upper then lower - 1 else begin
-      let i = (upper - lower) / 2 + lower in
-      let offset_at_i = Array.get lbmap i in
-      let l, u = if offset_at_i > offset then lower, i else (i + 1), upper in
-      binary_search l u
-    end
-  in
-  let index = binary_search 0 len in
-  let line_start = Array.get lbmap index in
-  (index + 1, offset - line_start + 1)
+let offset_to_file_pos_triple bolmap offset =
+  let len = Array.length bolmap in
+  let rec forward_search i =
+    let offset_at_i = Array.unsafe_get bolmap i in
+    if offset < offset_at_i then i - 1 else
+    (if i+1 >= len then len - 1 else forward_search (i+1)) in
+  let rec backward_search i =
+    let offset_at_i = Array.unsafe_get bolmap i in
+    if offset >= offset_at_i then i else
+     (if i = 0 then 0 else backward_search (i-1)) in
+  let index = if !last_offset < offset && !curr_index <>  len - 1  then
+    forward_search (!curr_index + 1) else if !last_offset > offset then
+    backward_search !curr_index else !curr_index in
+  let line_start = Array.get bolmap index in
+  curr_index := index;
+  last_offset := offset;
+  index + 1, line_start, offset
 
-let position_to_offset ?(cyclic_index = false) ?(existing = false)
-    lbmap (line, column) =
-  let len = Array.length lbmap in
-  let file_line =
-    if cyclic_index && line < 1
-    then max 1 (len + line - 1)
-    else line
+let offset_to_position bolmap offset =
+  let index, line_start, offset =
+    offset_to_file_pos_triple bolmap offset
   in
+  (index, offset - line_start + 1)
 
-  let line_start = Array.get lbmap (file_line - 1) in
+let position_to_offset ?(existing = false)
+    bolmap (line, column) =
+  let len = Array.length bolmap in
+  let file_line = line in
+
+  let line_start = Array.get bolmap (file_line - 1) in
   let offset = line_start + column - 1 in
 
   if not existing
-  || offset >= 0 && offset <= Array.get lbmap (min (len-1) file_line)
+  || offset >= 0 && offset <= Array.get bolmap (min (len-1) file_line)
   then offset
   else raise Not_found
 
-let offset_to_line_start_offset ?(cyclic_index = false) lbmap offset =
-  offset - snd (offset_to_position ~cyclic_index lbmap offset) + 1
+let offset_to_line_start_offset  bolmap offset =
+  offset - snd (offset_to_position  bolmap offset) + 1

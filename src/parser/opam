@@ -1,16 +1,8 @@
 opam-version: "1.2"
 name: "flow_parser"
-version: "0.55.0"
-maintainer: "gabe@fb.com"
-authors: [
-  "Avik Chaudhuri"
-  "Basil Hosmer"
-  "Gabe Levi"
-  "Jeff Morrison"
-  "Marshall Roch"
-  "Sam Goldman"
-  "James Kyle"
-]
+version: "0.74.0"
+maintainer: "flow@fb.com"
+authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
 bug-reports: "https://github.com/facebook/flow/issues"
 license: "MIT"
@@ -22,6 +14,7 @@ depends: [
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "sedlex"
+  "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]
 dev-repo: "https://github.com/facebook/flow.git"

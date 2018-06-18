@@ -1,20 +1,53 @@
 first status, after recheck
-Error: test.js:5
-  5: bar(5);
-         ^ number. This type is incompatible with the expected param type of
-  2:   declare function bar(str: string): number;
-                                 ^^^^^^ string. See lib: lib/lib.js:2
+Error ------------------------------------------------------------------------------------------------------ test.js:5:5
+
+Cannot call `bar` with `5` bound to `str` because number [1] is incompatible with string [2].
+
+   test.js:5:5
+   5| bar(5);
+          ^ [1]
+
+References:
+   lib/lib.js:2:29
+   2|   declare function bar(str: string): number;
+                                  ^^^^^^ [2]
+
 
 
 Found 1 error
 second status, after touch
-Error: test.js:5
-  5: bar(5);
-         ^ number. This type is incompatible with the expected param type of
-  2:   declare function bar(str: string): number;
-                                 ^^^^^^ string. See lib: lib/lib.js:2
+Error ------------------------------------------------------------------------------------------------------ test.js:5:5
+
+Cannot call `bar` with `5` bound to `str` because number [1] is incompatible with string [2].
+
+   test.js:5:5
+   5| bar(5);
+          ^ [1]
+
+References:
+   lib/lib.js:2:29
+   2|   declare function bar(str: string): number;
+                                  ^^^^^^ [2]
+
 
 
 Found 1 error
 third status, after modification
+Error ------------------------------------------------------------------------------------------------------ test.js:5:5
+
+Cannot call `bar` with `5` bound to `str` because number [1] is incompatible with string [2].
+
+   test.js:5:5
+   5| bar(5);
+          ^ [1]
+
+References:
+   lib/lib.js:2:29
+   2|   declare function bar(str: string): number;
+                                  ^^^^^^ [2]
+
+
+
+Found 1 error
+fourth status, after modification
 done

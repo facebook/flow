@@ -1,8 +1,19 @@
-Error: regexp.js:2
-  2: var match:number = patt.test("Hello world!");
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
-  2: var match:number = patt.test("Hello world!");
-               ^^^^^^ number
+Error --------------------------------------------------------------------------------------------------- regexp.js:2:20
+
+Cannot assign `patt.test(...)` to `match` because boolean [1] is incompatible with number [2].
+
+   regexp.js:2:20
+     2| var match:number = patt.test("Hello world!");
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:347:27
+   347|     test(string: string): boolean;
+                                  ^^^^^^^ [1]
+   regexp.js:2:11
+     2| var match:number = patt.test("Hello world!");
+                  ^^^^^^ [2]
+
 
 
 Found 1 error

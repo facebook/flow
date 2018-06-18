@@ -9,53 +9,64 @@ open Utils_js
 
 val init:
   profiling:Profiling_js.running ->
-  workers:Worker.t list option ->
+  workers:MultiWorkerLwt.worker list option ->
   Options.t ->
-  FilenameSet.t * SSet.t * bool * ServerEnv.errors
+  (FilenameSet.t * FilenameSet.t FilenameMap.t * SSet.t * bool * ServerEnv.errors) Lwt.t
 
 val calc_deps:
   options:Options.t ->
   profiling:Profiling_js.running ->
-  workers:Worker.t list option ->
-  File_key.t list ->
-  FilenameSet.t FilenameMap.t * File_key.t list FilenameMap.t
+  dependency_graph:FilenameSet.t FilenameMap.t ->
+  components:File_key.t Nel.t list ->
+  FilenameSet.t ->
+  (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
 
 (* incremental typecheck entry point *)
 val recheck:
   options:Options.t ->
-  workers:Worker.t list option ->
+  workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
   ServerEnv.env ->
-  serve_ready_clients:(unit -> unit) ->
-  ServerEnv.env
+  force_focus:bool ->
+  (Profiling_js.finished * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
 val full_check:
   profiling:Profiling_js.running ->
   options:Options.t ->
-  workers:Worker.t list option ->
+  workers:MultiWorkerLwt.worker list option ->
   focus_targets:FilenameSet.t option ->
-  should_merge:bool ->
-  File_key.t list ->
+  FilenameSet.t ->
+  FilenameSet.t FilenameMap.t ->
   ServerEnv.errors ->
-  CheckedSet.t * ServerEnv.errors
+  (CheckedSet.t * ServerEnv.errors) Lwt.t
 
-val basic_check_contents:
-  options: Options.t ->
-  workers: Worker.t list option ->
-  env: ServerEnv.env ref ->
-  string ->               (* contents *)
-  File_key.t ->           (* fake file-/module name *)
-  (Profiling_js.finished *
-   Context.t *
-   Docblock.t,
-   string) result
+ val basic_check_contents:
+   options: Options.t ->
+   workers: MultiWorkerLwt.worker list option ->
+   env: ServerEnv.env ref ->
+   profiling: Profiling_js.running ->
+   string ->               (* contents *)
+   File_key.t ->           (* fake file-/module name *)
+   (Context.t *
+    Docblock.t,
+    string) result Lwt.t
 
 val typecheck_contents:
   options: Options.t ->
-  workers: Worker.t list option ->
+  workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
-  string ->               (* contents *)
-  File_key.t ->           (* fake file-/module name *)
-  Errors.ErrorSet.t *     (* errors *)
-  Errors.ErrorSet.t       (* warnings *)
+  profiling: Profiling_js.running ->
+  string ->                                 (* contents *)
+  File_key.t ->                             (* fake file-/module name *)
+  ((Context.t * Loc.t Ast.program) option *
+   Errors.ErrorSet.t *                      (* errors *)
+   Errors.ErrorSet.t) Lwt.t                 (* warnings *)
+
+val ensure_checked_dependencies:
+  options: Options.t ->
+  profiling: Profiling_js.running ->
+  workers: MultiWorkerLwt.worker list option ->
+  env: ServerEnv.env ref ->
+  Modulename.Set.t ->
+  unit Lwt.t

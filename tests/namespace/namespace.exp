@@ -1,58 +1,88 @@
-Error: client.js:3
-  3: var bar: string = ns.foo
-                       ^^^^^^ number. This type is incompatible with
-  3: var bar: string = ns.foo
-              ^^^^^^ string
+Error --------------------------------------------------------------------------------------------------- client.js:3:19
 
-Error: namespace.js:3
-  3: var f: T = function(x:string): void { }
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  3: var f: T = function(x:string): void { }
-            ^ function type
-  This parameter is incompatible:
-      2: type T = (x:number) => void;
-                     ^^^^^^ number. This type is incompatible with
-      3: var f: T = function(x:string): void { }
-                               ^^^^^^ string
+Cannot assign `ns.foo` to `bar` because number [1] is incompatible with string [2].
 
-Error: namespace.js:11
- 11: var y:number = bar(0, x => "");
-                    ^^^^^^^^^^^^^^^ string. This type is incompatible with
- 11: var y:number = bar(0, x => "");
-           ^^^^^^ number
+   client.js:3:19
+    3| var bar: string = ns.foo
+                         ^^^^^^
 
-Error: namespace.js:15
- 15: var s2:Seq = [[""]];
-                   ^^^^ array literal. Has some incompatible type argument with
- 13: type Seq = number | Array<Seq>;
-                         ^^^^^^^^^^ array type
-  Type argument `T` is incompatible:
-     15: var s2:Seq = [[""]];
-                        ^^ string. This type is incompatible with
-     13: type Seq = number | Array<Seq>;
-                                   ^^^ union: number | array type
-      Member 1:
-       13: type Seq = number | Array<Seq>;
-                      ^^^^^^ number
-      Error:
-       15: var s2:Seq = [[""]];
-                          ^^ string. This type is incompatible with
-       13: type Seq = number | Array<Seq>;
-                      ^^^^^^ number
-      Member 2:
-       13: type Seq = number | Array<Seq>;
-                               ^^^^^^^^^^ array type
-      Error:
-       15: var s2:Seq = [[""]];
-                          ^^ string. This type is incompatible with
-       13: type Seq = number | Array<Seq>;
-                               ^^^^^^^^^^ array type
+References:
+   namespace.js:17:30
+   17| module.exports = { foo: ("": number) };
+                                    ^^^^^^ [1]
+   client.js:3:10
+    3| var bar: string = ns.foo
+                ^^^^^^ [2]
 
-Error: namespace.js:17
- 17: module.exports = { foo: ("": number) };
-                              ^^ string. This type is incompatible with
- 17: module.exports = { foo: ("": number) };
-                                  ^^^^^^ number
+
+Error ------------------------------------------------------------------------------------------------ namespace.js:3:12
+
+Cannot assign function to `f` because string [1] is incompatible with number [2] in the first argument.
+
+   namespace.js:3:12
+   3| var f: T = function(x:string): void { }
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   namespace.js:3:23
+   3| var f: T = function(x:string): void { }
+                            ^^^^^^ [1]
+   namespace.js:2:13
+   2| type T = (x:number) => void;
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- namespace.js:11:16
+
+Cannot assign `bar(...)` to `y` because string [1] is incompatible with number [2].
+
+   namespace.js:11:16
+   11| var y:number = bar(0, x => "");
+                      ^^^^^^^^^^^^^^^
+
+References:
+   namespace.js:11:28
+   11| var y:number = bar(0, x => "");
+                                  ^^ [1]
+   namespace.js:11:7
+   11| var y:number = bar(0, x => "");
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- namespace.js:15:14
+
+Cannot assign array literal to `s2` because string [1] is incompatible with number [2] in array element of array
+element.
+
+   namespace.js:15:14
+   15| var s2:Seq = [[""]];
+                    ^^^^^^
+
+References:
+   namespace.js:15:16
+   15| var s2:Seq = [[""]];
+                      ^^ [1]
+   namespace.js:13:12
+   13| type Seq = number | Array<Seq>;
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- namespace.js:17:26
+
+Cannot cast empty string to number because string [1] is incompatible with number [2].
+
+   namespace.js:17:26
+   17| module.exports = { foo: ("": number) };
+                                ^^ [1]
+
+References:
+   namespace.js:17:30
+   17| module.exports = { foo: ("": number) };
+                                    ^^^^^^ [2]
+
 
 
 Found 5 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

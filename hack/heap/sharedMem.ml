@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
 (* Don't change the ordering of this record without updating hh_shared_init in
  * hh_shared.c, which indexes into config objects *)
@@ -29,6 +28,21 @@ type handle = private {
   h_heap_size: int;
 }
 
+(* note: types are in the same kind as classes *)
+let int_of_kind kind = match kind with
+  | `ConstantK -> 0
+  | `ClassK -> 1
+  | `FuncK -> 2
+
+let kind_of_int x = match x with
+  | 0 -> `ConstantK
+  | 1 -> `ClassK
+  | 2 -> `FuncK
+  | _ when x < 0 -> failwith "kind_of_int: attempted to convert from negative int"
+  | _ -> assert (x > 0); failwith "kind_of_int: int too large, no corresponding kind"
+let _kind_of_int = kind_of_int
+
+exception Worker_should_exit
 exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
@@ -39,6 +53,7 @@ exception Less_than_minimum_available of int
 exception Failed_to_use_shm_dir of string
 exception C_assertion_failure of string
 let () =
+  Callback.register_exception "worker_should_exit" Worker_should_exit;
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "dep_table_full" Dep_table_full;
@@ -135,6 +150,32 @@ let init config =
     then Hh_logger.log "Failed to use anonymous memfd init";
     shm_dir_init config config.shm_dirs
 
+external stop_workers : unit -> unit = "hh_stop_workers"
+external resume_workers : unit -> unit = "hh_resume_workers"
+external set_can_worker_stop : bool -> unit = "hh_set_can_worker_stop"
+
+let on_worker_cancelled = ref (fun () -> ())
+let set_on_worker_cancelled f = on_worker_cancelled := f
+
+let with_no_cancellations f =
+  Utils.try_finally
+  ~f:begin fun () ->
+    set_can_worker_stop false;
+    f ()
+  end
+  ~finally:(fun () -> set_can_worker_stop true)
+
+let with_worker_exit f =
+  try f () with
+  | Worker_should_exit ->
+    !on_worker_cancelled ();
+    exit 0
+
+external allow_removes : bool -> unit = "hh_allow_removes"
+
+external allow_hashtable_writes_by_current_process : bool -> unit
+  = "hh_allow_hashtable_writes_by_current_process"
+
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
 (*****************************************************************************)
@@ -142,17 +183,67 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
+external hh_should_collect: bool -> bool = "hh_should_collect"
+
 external hh_collect: bool -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
 (*****************************************************************************)
-external save_dep_table_sqlite: string -> int = "hh_save_dep_table_sqlite"
+
+external loaded_dep_table_filename_c: unit -> string = "hh_get_loaded_dep_table_filename"
+
+external get_in_memory_dep_table_entry_count: unit -> int =
+  "hh_get_in_memory_dep_table_entry_count"
+
+let loaded_dep_table_filename () =
+  let fn = loaded_dep_table_filename_c () in
+  if String.equal "" fn then
+    None
+  else
+    Some fn
+
+(** Returns number of dependency edges added. *)
+external save_dep_table_sqlite_c: string -> string -> int = "hh_save_dep_table_sqlite"
+
+(** Returns number of dependency edges added. *)
+external update_dep_table_sqlite_c: string -> string -> int ="hh_update_dep_table_sqlite"
+
+let save_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
+  if (loaded_dep_table_filename ()) <> None then
+    failwith "save_dep_table_sqlite not supported when server is loaded from a saved state";
+  Hh_logger.log "Dumping a saved state deptable.";
+  save_dep_table_sqlite_c fn build_revision
+
+let update_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
+  Hh_logger.log "Updating given saved state deptable.";
+  update_dep_table_sqlite_c fn build_revision
+
+(*****************************************************************************)
+(* Serializes the dependency table and writes it to a file *)
+(*****************************************************************************)
+external hh_save_file_info_sqlite: string -> string -> int -> string -> unit =
+  "hh_save_file_info_sqlite"
+let save_file_info_sqlite ~hash ~name kind filespec =
+  Hh_logger.log "save_file_info_sqlite\n";
+  hh_save_file_info_sqlite hash name (int_of_kind kind) filespec
+
+external hh_save_file_info_init : string -> unit =
+  "hh_save_file_info_init"
+let save_file_info_init path = hh_save_file_info_init path
+
+external hh_save_file_info_free : unit -> unit =
+  "hh_save_file_info_free"
+let save_file_info_free = hh_save_file_info_free
 
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
-external load_dep_table_sqlite: string -> int = "hh_load_dep_table_sqlite"
+
+external load_dep_table_sqlite_c: string -> bool -> int = "hh_load_dep_table_sqlite"
+
+let load_dep_table_sqlite : string -> bool -> int = fun fn ignore_hh_version ->
+  load_dep_table_sqlite_c fn ignore_hh_version
 
 (*****************************************************************************)
 (* Cleans up the artifacts generated by SQL *)
@@ -195,13 +286,25 @@ external dep_slots : unit -> int = "hh_dep_slots"
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
+
+external hh_removed_count : unit -> int = "hh_removed_count"
+
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
 external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
 
+external get_file_info_on_disk : unit -> bool = "get_file_info_on_disk"
+
+external get_file_info_on_disk_path : unit -> string =
+  "get_file_info_on_disk_path"
+
+external set_file_info_on_disk_path : string -> unit =
+  "set_file_info_on_disk_path"
+
+external open_file_info_db : unit -> unit = "open_file_info_db"
+
 let init_done () =
   hh_init_done ();
-  if hh_log_level() > 0 then Measure.print_stats ();
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
@@ -226,10 +329,14 @@ let hash_stats () =
     slots = hash_slots ();
   }
 
+let should_collect (effort : [ `gentle | `aggressive ]) =
+  hh_should_collect (effort = `aggressive)
+
 let collect (effort : [ `gentle | `aggressive ]) =
   let old_size = heap_size () in
   Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
+  (* The wrapper is used to run the function in a worker instead of master. *)
   hh_collect (effort = `aggressive);
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
@@ -307,7 +414,7 @@ module type Key = sig
   (* Md5 primitives *)
   val md5     : t -> md5
   val md5_old : old -> md5
-
+  val string_of_md5 : md5 -> string
 end
 
 module KeyFunctor (UserKeyType : sig
@@ -339,6 +446,7 @@ end) : Key with type userkey = UserKeyType.t = struct
   let md5 = Digest.string
   let md5_old = Digest.string
 
+  let string_of_md5 x = x
 end
 
 (*****************************************************************************)
@@ -354,6 +462,7 @@ module Raw (Key: Key) (Value:Value.Type): sig
   val move   : Key.md5 -> Key.md5 -> unit
 
   module LocalChanges : sig
+    val has_local_changes : unit -> bool
     val push_stack : unit -> unit
     val pop_stack : unit -> unit
     val revert : Key.md5 -> unit
@@ -362,21 +471,39 @@ module Raw (Key: Key) (Value:Value.Type): sig
     val commit_all : unit -> unit
   end
 end = struct
-
   (* Returns the number of bytes allocated in the heap, or a negative number
    * if no new memory was allocated *)
-  external hh_add    : Key.md5 -> Value.t -> int = "hh_add"
+  external hh_add    : Key.md5 -> Value.t -> int * int = "hh_add"
   external hh_mem         : Key.md5 -> bool            = "hh_mem"
+  external hh_mem_status  : Key.md5 -> int             = "hh_mem_status"
   external hh_get_size    : Key.md5 -> int             = "hh_get_size"
   external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
   external hh_remove      : Key.md5 -> unit            = "hh_remove"
   external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
 
-  let log_serialize n =
-    let sharedheap = float n in
+  let hh_mem_status x = with_worker_exit (fun () -> hh_mem_status x)
+
+  let _ = hh_mem_status
+
+  let hh_mem x = with_worker_exit (fun () -> hh_mem x)
+  let hh_add x y = with_worker_exit (fun () -> hh_add x y)
+  let hh_get_and_deserialize x =
+    with_worker_exit (fun () -> hh_get_and_deserialize x)
+
+  let log_serialize compressed original =
+    let compressed = float compressed in
+    let original = float original in
+    let saved = original -. compressed in
+    let ratio = compressed /. original in
     Measure.sample (Value.description
-      ^ " (bytes serialized into shared heap)") sharedheap;
-    Measure.sample ("ALL bytes serialized into shared heap") sharedheap
+      ^ " (bytes serialized into shared heap)") compressed;
+    Measure.sample ("ALL bytes serialized into shared heap") compressed;
+    Measure.sample (Value.description
+      ^ " (bytes saved in shared heap due to compression)") saved;
+    Measure.sample ("ALL bytes saved in shared heap due to compression") saved;
+    Measure.sample (Value.description
+      ^ " (shared heap compression ratio)") ratio;
+    Measure.sample ("ALL bytes shared heap compression ratio") ratio
 
   let log_deserialize l r =
     let sharedheap = float l in
@@ -428,6 +555,8 @@ end = struct
     }
 
     let stack: t option ref = ref None
+
+    let has_local_changes () = Option.is_some (!stack)
 
     let rec mem stack_opt key =
       match stack_opt with
@@ -502,9 +631,9 @@ end = struct
     let add stack_opt key value =
       match stack_opt with
       | None ->
-        let size = hh_add key value in
-        if hh_log_level() > 0 && size > 0
-        then log_serialize size
+        let compressed_size, original_size = hh_add key value in
+        if hh_log_level() > 0 && compressed_size > 0
+        then log_serialize compressed_size original_size
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove
@@ -699,11 +828,13 @@ module type NoCache = sig
   val find_unsafe      : key -> t
   val get_batch        : KeySet.t -> t option KeyMap.t
   val remove_batch     : KeySet.t -> unit
+  val string_of_key : key -> string
   val mem              : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
 
   module LocalChanges : sig
+    val has_local_changes : unit -> bool
     val push_stack : unit -> unit
     val pop_stack : unit -> unit
     val revert_batch : KeySet.t -> unit
@@ -716,6 +847,7 @@ end
 module type WithCache = sig
   include NoCache
   val write_through : key -> t -> unit
+  val get_no_cache : key -> t option
 end
 
 (*****************************************************************************)
@@ -742,6 +874,9 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   type key = UserKeyType.t
   type t = Value.t
+
+  let string_of_key key =
+    key |> Key.make Value.prefix |> Key.md5 |> Key.string_of_md5;;
 
   let add x y = New.add (Key.make Value.prefix x) y
   let find_unsafe x = New.find_unsafe (Key.make Value.prefix x)
@@ -846,6 +981,8 @@ module type CacheType = sig
   val get: key -> value option
   val remove: key -> unit
   val clear: unit -> unit
+
+  val string_of_key : key -> string
 end
 
 (*****************************************************************************)
@@ -856,6 +993,9 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
   CacheType with type key := Key.t and type value := Config.value = struct
 
   type value = Config.value
+
+  let string_of_key  _key =
+    failwith "FreqCache does not support 'string_of_key'"
 
 (* The cache itself *)
   let (cache: (Key.t, int ref * Config.value) Hashtbl.t)
@@ -927,6 +1067,9 @@ end
 module OrderedCache (Key : sig type t end) (Config:ConfigType):
   CacheType with type key := Key.t and type value := Config.value = struct
 
+  let string_of_key _key =
+    failwith "OrderedCache does not support 'string_of_key'"
+
   let (cache: (Key.t, Config.value) Hashtbl.t) =
     Hashtbl.create Config.capacity
 
@@ -990,6 +1133,9 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   (* Frequent values cache *)
   module L2 = FreqCache (UserKeyType) (ConfValue)
 
+  let string_of_key _key =
+    failwith "LocalCache does not support 'string_of_key'"
+
   let add x y =
     L1.add x y;
     L2.add x y
@@ -1041,9 +1187,14 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module Cache = LocalCache (UserKeyType) (Value)
 
+  let string_of_key key =
+    Direct.string_of_key key
+
   let add x y =
     Direct.add x y;
     Cache.add x y
+
+  let get_no_cache = Direct.get
 
   let write_through x y =
     (* Note that we do not need to do any cache invalidation here because
@@ -1125,5 +1276,8 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     let commit_all () =
       Direct.LocalChanges.commit_all ();
       Cache.clear ()
+
+    let has_local_changes () =
+      Direct.LocalChanges.has_local_changes ()
   end
 end
