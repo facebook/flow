@@ -68,10 +68,10 @@ let print_location (location: Location.t) : json =
 let print_definition_location (definition_location: DefinitionLocation.t) : json =
   let open DefinitionLocation in
   let location = definition_location.location in
-  JSON_Object [
-    "uri", JSON_String location.Location.uri;
-    "range", print_range location.Location.range;
-    "title", Hh_json.opt_string_to_json (definition_location.title);
+  Jprint.object_opt [
+    "uri", Some (JSON_String location.Location.uri);
+    "range", Some (print_range location.Location.range);
+    "title", Option.map definition_location.title ~f:string_;
   ]
 
 let parse_range_exn (json: json option) : range =
