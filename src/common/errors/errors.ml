@@ -3037,3 +3037,84 @@ module Lsp_output = struct
       relatedLocations = List.rev relatedLocations;
     }
 end
+
+class mapper = object(this)
+  method error (error: error) =
+    let (error_kind, messages, friendly_error) = error in
+    let error_kind' = this#error_kind error_kind in
+    let messages' = ListUtils.ident_map this#message messages in
+    let friendly_error' = this#friendly_error friendly_error in
+    if error_kind == error_kind' && messages == messages' && friendly_error == friendly_error'
+    then error
+    else (error_kind', messages', friendly_error')
+
+  method error_kind (error_kind: error_kind) = error_kind
+
+  method private message (message: message) =
+    match message with
+    | BlameM (loc, str) ->
+      let loc' = this#loc loc in
+      if loc == loc'
+      then message
+      else BlameM (loc', str)
+    | CommentM _ -> message
+
+  method private friendly_error (friendly_error: Friendly.t) =
+    let { Friendly.loc; root; message; } = friendly_error in
+    let loc' = this#loc loc in
+    let root' = OptionUtils.ident_map this#error_root root in
+    let message' = this#error_message message in
+    if loc == loc' && root == root' && message == message'
+    then friendly_error
+    else { Friendly.loc = loc'; root = root'; message = message'; }
+
+  method private error_root (error_root: Loc.t Friendly.error_root) =
+    let { Friendly.root_loc; root_message; } = error_root in
+    let root_loc' = this#loc root_loc in
+    let root_message' = this#friendly_message root_message in
+    if root_loc == root_loc' && root_message == root_message'
+    then error_root
+    else { Friendly.root_loc = root_loc'; root_message = root_message'; }
+
+  method private error_message (error_message: Loc.t Friendly.error_message) =
+    match error_message with
+    | Friendly.Normal { message; frames; } ->
+      let message' = this#friendly_message message in
+      let frames' = OptionUtils.ident_map (ListUtils.ident_map this#friendly_message) frames in
+      if message == message' && frames == frames'
+      then error_message
+      else Friendly.Normal { message = message'; frames = frames' }
+    | Friendly.Speculation { frames; branches; } ->
+      let frames' = ListUtils.ident_map this#friendly_message frames in
+      let branches' = ListUtils.ident_map (fun branch ->
+        let (score, friendly_error) = branch in
+        let friendly_error' = this#friendly_error friendly_error in
+        if friendly_error == friendly_error'
+        then branch
+        else (score, friendly_error')
+      ) branches in
+      if frames == frames' && branches == branches'
+      then error_message
+      else Friendly.Speculation { frames = frames'; branches = branches'; }
+
+  method friendly_message (friendly_message: Loc.t Friendly.message) =
+    ListUtils.ident_map this#message_feature friendly_message
+
+  method message_feature (message_feature: Loc.t Friendly.message_feature) =
+    match message_feature with
+    | Friendly.Inline inlines ->
+      let inlines' = ListUtils.ident_map this#message_inline inlines in
+      if inlines == inlines'
+      then message_feature
+      else Friendly.Inline inlines'
+    | Friendly.Reference (inlines, loc) ->
+      let inlines' = ListUtils.ident_map this#message_inline inlines in
+      let loc' = this#loc loc in
+      if inlines == inlines' && loc == loc'
+      then message_feature
+      else Friendly.Reference (inlines', loc')
+
+  method message_inline (message_inline: Friendly.message_inline) = message_inline
+
+  method loc (loc: Loc.t) = loc
+end

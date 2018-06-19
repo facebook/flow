@@ -180,3 +180,12 @@ module Lsp_output : sig
   }
   val lsp_of_error: error -> t
 end
+
+class mapper : object
+  method error: error -> error
+  method error_kind: error_kind -> error_kind
+  method friendly_message: Loc.t Friendly.message -> Loc.t Friendly.message
+  method loc: Loc.t -> Loc.t
+  method message_feature: Loc.t Friendly.message_feature -> Loc.t Friendly.message_feature
+  method message_inline: Friendly.message_inline -> Friendly.message_inline
+end
