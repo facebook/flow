@@ -269,9 +269,9 @@ let get_all =
   in
   fun next -> get_all_rec next SSet.empty
 
-let init (options: options) =
+let init ?(flowlibs_only=false) (options: options) =
   let node_module_filter = is_node_module options in
-  let libs = options.lib_paths in
+  let libs = if flowlibs_only then [] else options.lib_paths in
   let libs, filter = match options.default_lib_dir with
     | None -> libs, is_valid_path ~options
     | Some root ->
