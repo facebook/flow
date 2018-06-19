@@ -27,8 +27,15 @@ type saved_state_data = {
   node_modules_containers: SSet.t;
 }
 
+exception Invalid_saved_state
+
 val save:
   saved_state_filename:Path.t ->
   genv:ServerEnv.genv ->
   env:ServerEnv.env ->
   unit Lwt.t
+val load:
+  workers:MultiWorkerLwt.worker list option ->
+  saved_state_filename:Path.t ->
+  options:Options.t ->
+  saved_state_data Lwt.t

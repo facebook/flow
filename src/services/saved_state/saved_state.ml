@@ -246,4 +246,230 @@ end = struct
 
     Lwt.return_unit
 end
+
+exception Invalid_saved_state
+
+(* Loading the saved state generally consists of 2 things:
+ *
+ * 1. Loading the saved state from a file
+ * 2. Denormalizing the data. This generally means turning relative paths into absolute paths
+ *
+ * This is on the critical path for starting up a server with saved state. We really care about
+ * the perf
+ *)
+module Load: sig
+  val load:
+    workers:MultiWorkerLwt.worker list option ->
+    saved_state_filename:Path.t ->
+    options:Options.t ->
+    saved_state_data Lwt.t
+end = struct
+
+  let denormalize_file_key ~root fn = File_key.map (Files.absolute_path root) fn
+
+  class file_sig_denormalizer (root) = object
+    inherit File_sig.mapper
+
+    method! loc (loc: Loc.t) =
+      { loc with
+        Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source;
+      }
+  end
+
+  class error_denormalizer (root) = object
+    inherit Errors.mapper
+
+    method! loc (loc: Loc.t) =
+      { loc with
+        Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source;
+      }
+  end
+
+  let verify_version =
+    let version_length = String.length Flow_version.version in
+    let rec read_version fd buf offset len =
+      if len > 0
+      then
+        let%lwt bytes_read = Lwt_unix.read fd buf offset len in
+        if bytes_read = 0
+        then begin
+          Hh_logger.error
+            "Invalid saved state version header. It should be %d bytes but only read %d bytes"
+            version_length
+            (version_length - len);
+          raise Invalid_saved_state
+        end;
+        let offset = offset + bytes_read in
+        let len = len - bytes_read in
+        read_version fd buf offset len
+      else
+        let result = Bytes.to_string buf in
+        if result <> Flow_version.version
+        then begin
+          Hh_logger.error
+            "Saved-state file failed version check. Expected version %S but got %S"
+            Flow_version.version
+            result;
+          raise Invalid_saved_state
+        end else Lwt.return_unit
+    in
+    fun fd -> read_version fd (Bytes.create version_length) 0 version_length
+
+  let denormalize_info ~root info =
+    let module_name =
+      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_js.module_name
+    in
+    { info with Module_js.module_name }
+
+  (* Turns all the relative paths in a file's data back into absolute paths.
+   *
+   * We do our best to avoid reading the file system (which Path.make will do) *)
+  let denormalize_parsed_data ~root file_data =
+    (* info *)
+    let info = denormalize_info ~root file_data.info in
+
+    (* file_sig *)
+    let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
+
+    (* resolved_requires *)
+    let { Module_js.resolved_modules; phantom_dependents } = file_data.resolved_requires in
+    let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
+    let resolved_modules = SMap.map
+      (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules in
+    let resolved_requires = { Module_js.resolved_modules; phantom_dependents } in
+
+    { package = file_data.package; info; file_sig; resolved_requires }
+
+  let progress_fn real_total offset ~total:_ ~start ~length:_ =
+    let finished = start + offset in
+    MonitorRPC.status_update
+      ServerStatus.(Load_saved_state_progress { total = Some real_total; finished })
+
+  (* Denormalize the data for all the parsed files. This is kind of slow :( *)
+  let denormalize_parsed_heaps ~workers ~root ~progress_fn parsed_heaps =
+    let next =
+      MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers (FilenameMap.bindings parsed_heaps)
+    in
+    MultiWorkerLwt.call workers
+      ~job:(List.fold_left (fun acc (relative_fn, parsed_file_data) ->
+        let parsed_file_data = denormalize_parsed_data ~root parsed_file_data in
+        let fn = denormalize_file_key ~root relative_fn in
+        FilenameMap.add fn parsed_file_data acc
+      ))
+      ~neutral:FilenameMap.empty
+      ~merge:FilenameMap.union
+      ~next
+
+  (* Denormalize the data for all the unparsed files *)
+  let denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps =
+    let next =
+      MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers (FilenameMap.bindings unparsed_heaps)
+    in
+    MultiWorkerLwt.call workers
+      ~job:(List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
+        let unparsed_info = denormalize_info ~root unparsed_file_data.unparsed_info in
+        let fn = denormalize_file_key ~root relative_fn in
+        FilenameMap.add fn { unparsed_info } acc
+      ))
+      ~neutral:FilenameMap.empty
+      ~merge:FilenameMap.union
+      ~next
+
+  let denormalize_error_set ~root normalized_error_set =
+    let denormalizer = new error_denormalizer root in
+    Errors.ErrorSet.map denormalizer#error normalized_error_set
+
+  (* Denormalize all the data *)
+  let denormalize_data ~workers ~options ~data =
+    let root = Options.root options |> Path.to_string in
+
+    let {
+      flowconfig_hash;
+      parsed_heaps;
+      unparsed_heaps;
+      ordered_non_flowlib_libs;
+      local_errors;
+      node_modules_containers;
+    } = data in
+
+    let current_flowconfig_hash =
+      FlowConfig.get_hash @@ Server_files_js.config_file @@ Options.root options
+    in
+
+    if flowconfig_hash <> current_flowconfig_hash
+    then begin
+      Hh_logger.error
+        "Invalid saved state: .flowconfig has changed since this saved state was generated.";
+      raise Invalid_saved_state
+    end;
+
+    let parsed_count = FilenameMap.cardinal parsed_heaps in
+    let progress_fn = progress_fn (parsed_count + (FilenameMap.cardinal unparsed_heaps)) in
+
+    Hh_logger.info "Denormalizing the data for the parsed files";
+    let%lwt parsed_heaps =
+      let progress_fn = progress_fn 0 in
+      denormalize_parsed_heaps ~workers ~root ~progress_fn parsed_heaps
+    in
+
+    Hh_logger.info "Denormalizing the data for the unparsed files";
+    let%lwt unparsed_heaps =
+      let progress_fn = progress_fn parsed_count in
+      denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
+    in
+
+    let ordered_non_flowlib_libs = List.map (Files.absolute_path root) ordered_non_flowlib_libs in
+
+    let local_errors = FilenameMap.fold (fun normalized_fn normalized_error_set acc ->
+      let fn = denormalize_file_key ~root normalized_fn in
+      let error_set = denormalize_error_set ~root normalized_error_set in
+      FilenameMap.add fn error_set acc
+    ) local_errors FilenameMap.empty in
+
+    let node_modules_containers = SSet.map (Files.absolute_path root) node_modules_containers in
+
+    Lwt.return {
+      flowconfig_hash;
+      parsed_heaps;
+      unparsed_heaps;
+      ordered_non_flowlib_libs;
+      local_errors;
+      node_modules_containers;
+    }
+
+  let load ~workers ~saved_state_filename ~options =
+    let filename = Path.to_string saved_state_filename in
+
+    Hh_logger.info "Reading saved-state file at %S" filename;
+
+    MonitorRPC.status_update ServerStatus.Read_saved_state;
+
+    let%lwt fd = try%lwt
+      Lwt_unix.openfile filename [Unix.O_RDONLY; Unix.O_NONBLOCK] 0o666
+    with
+    | Unix.Unix_error(Unix.ENOENT, _, _) as exn ->
+      Hh_logger.error ~exn "Failed to open %S" filename;
+      raise Invalid_saved_state
+    in
+
+    let%lwt () = verify_version fd in
+    let%lwt (data: saved_state_data) =
+      try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
+      with exn ->
+        Hh_logger.error ~exn "Failed to parsed saved state data";
+        raise Invalid_saved_state
+    in
+
+    let%lwt () = Lwt_unix.close fd in
+
+    Hh_logger.info "Denormalizing saved-state data";
+
+    let%lwt data = denormalize_data ~workers ~options ~data in
+
+    Hh_logger.info "Finished loading saved-state";
+
+    Lwt.return data
+end
+
 let save = Save.save
+let load = Load.load
