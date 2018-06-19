@@ -898,7 +898,6 @@ let get_providers = Hashtbl.find all_providers
 let commit_modules workers ~options new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
   (* prep for registering new mappings in NameHeap *)
-  let new_or_changed = FilenameSet.of_list new_or_changed in
   let remove, providers, replace, errmap, changed_modules = List.fold_left
     (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
     match get_providers m with

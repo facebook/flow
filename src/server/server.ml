@@ -40,7 +40,7 @@ let init ~focus_targets genv =
 
   let should_print_summary = Options.should_profile options in
   let%lwt env = Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
-    let%lwt parsed, dependency_graph, libs, libs_ok, errors =
+    let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
       Types_js.init ~profiling ~workers options in
 
     (* If any libs errored, skip typechecking and just show lib errors. Note
@@ -65,8 +65,10 @@ let init ~focus_targets genv =
        `errors` contains the current set of errors. *)
     let env = { ServerEnv.
       files = parsed;
+      unparsed;
       dependency_graph;
       checked_files = checked;
+      ordered_libs;
       libs;
       errors;
       collated_errors = ref None;

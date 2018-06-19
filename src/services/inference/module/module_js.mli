@@ -88,7 +88,7 @@ val clear_files:
 val commit_modules:
   MultiWorkerLwt.worker list option ->
   options: Options.t ->
-  File_key.t list ->                    (* parsed / unparsed files *)
+  FilenameSet.t ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)
     (File_key.t list *                   (* providers *)
     Modulename.Set.t *                  (* changed modules *)

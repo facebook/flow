@@ -747,6 +747,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   let%lwt new_or_changed, freshparsed, unparsed, new_local_errors =
      reparse ~options ~profiling ~workers modified in
   let freshparsed = freshparsed |> FilenameMap.keys |> FilenameSet.of_list in
+  let unparsed_set =
+    List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
+  in
 
   (* clear errors for new, changed and deleted files *)
   let errors =
@@ -921,7 +924,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       ~old_modules
       ~parsed:freshparsed_list
       ~unparsed
-      ~new_or_changed:(FilenameSet.elements new_or_changed)
+      ~new_or_changed
       ~errors in
 
   let parsed = FilenameSet.union freshparsed unchanged in
@@ -975,10 +978,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
         let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
-        let old_focus_targets = List.fold_left
-          (fun targets (unparsed, _) -> FilenameSet.remove unparsed targets)
-          old_focus_targets
-          unparsed in
+        let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
         let parsed = FilenameSet.union old_focus_targets freshparsed in
         let%lwt updated_checked_files = unfocused_files_to_infer ~options ~parsed ~dependency_graph in
         Lwt.return (updated_checked_files, all_dependent_files)
@@ -1067,11 +1067,22 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
     ))
   in
 
+  (* Here's how to update unparsed:
+   * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
+   * 2. Remove the deleted files. This removes any previously unparsed file which was deleted
+   * 3. Add the newly unparsed files. This adds new unparsed files or files which became unparsed *)
+  let unparsed =
+    let to_remove = FilenameSet.union parsed deleted in
+    FilenameSet.diff env.ServerEnv.unparsed to_remove
+    |> FilenameSet.union unparsed_set
+  in
+
   (* NOTE: unused fields are left in their initial empty state *)
   env.ServerEnv.collated_errors := None;
   Lwt.return (
     ({ env with ServerEnv.
       files = parsed;
+      unparsed;
       dependency_graph;
       checked_files = checked;
       errors;
@@ -1116,6 +1127,18 @@ let make_next_files ~libs ~file_options root =
 
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
+  (* TODO - explicitly order the libs.
+   *
+   * Should we let the filesystem dictate the order that we merge libs? Are we sheep? No! We are
+   * totally humans and we should deterministically order our library definitions. The order that
+   * they are merged determines priority. We should be able to guarantee
+   *
+   * flowlibs are merged first (therefore have the lowest priority)
+   * other libs are merged second (and therefore have the highest priority)
+   *
+   * However making this change is likely going to be a breaking change for people with conflicting
+   * libraries
+   *)
   let ordered_libs, libs = Files.init file_options in
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
 
@@ -1135,17 +1158,19 @@ let init ~profiling ~workers options =
 
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+
+  let parsed_list = FilenameSet.elements parsed in
+  let all_files, unparsed_set = List.fold_left (fun (all_files, unparsed_set) (filename, _) ->
+    FilenameSet.add filename all_files, (FilenameSet.add filename unparsed_set)
+  ) (FilenameSet.of_list parsed_list, FilenameSet.empty) unparsed in
+
   let%lwt _, errors =
-    let parsed_list = FilenameSet.elements parsed in
     let errors = { ServerEnv.
       local_errors;
       merge_errors = FilenameMap.empty;
       suppressions;
       severity_cover_set;
     } in
-    let all_files = List.fold_left (fun acc (filename, _) ->
-      filename::acc
-    ) parsed_list unparsed in
     commit_modules_and_resolve_requires
       ~options
       ~profiling
@@ -1159,7 +1184,7 @@ let init ~profiling ~workers options =
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
     Dep_service.calc_dependency_graph workers ~parsed
   ) in
-  Lwt.return (parsed, dependency_graph, libs, libs_ok, errors)
+  Lwt.return (parsed, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
 
 let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
   let%lwt infer_input = files_to_infer

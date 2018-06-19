@@ -44,7 +44,10 @@ type env = {
     dependency_graph: Utils_js.FilenameSet.t Utils_js.FilenameMap.t;
     (* All the current files we typecheck. *)
     checked_files: CheckedSet.t;
+    ordered_libs: string list; (* The lib files, in their merge order *)
     libs: SSet.t; (* a subset of `files` *)
+    (* The files which didn't parse (skipped or errored) *)
+    unparsed: Utils_js.FilenameSet.t;
     errors: errors;
     collated_errors: collated_errors option ref;
     connections: Persistent_connection.t;

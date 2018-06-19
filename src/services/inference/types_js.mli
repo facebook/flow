@@ -11,7 +11,15 @@ val init:
   profiling:Profiling_js.running ->
   workers:MultiWorkerLwt.worker list option ->
   Options.t ->
-  (FilenameSet.t * FilenameSet.t FilenameMap.t * SSet.t * bool * ServerEnv.errors) Lwt.t
+  (
+    FilenameSet.t * (* parsed *)
+    FilenameSet.t * (* unparsed *)
+    FilenameSet.t FilenameMap.t * (* dependency_graph *)
+    string list * (* ordered libs *)
+    SSet.t * (* libs *)
+    bool * (* libs_ok *)
+    ServerEnv.errors (* errors *)
+  ) Lwt.t
 
 val calc_deps:
   options:Options.t ->
