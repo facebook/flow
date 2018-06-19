@@ -40,6 +40,12 @@ let new_lex_env lex_source lex_lb ~enable_types_in_comments = {
   lex_state = empty_lex_state;
 }
 
+(* copy all the mutable things so that we have a distinct lexing environment
+   that does not interfere with ordinary lexer operations *)
+let clone env =
+  let lex_lb = env.lex_lb |> Obj.repr |> Obj.dup |> Obj.obj in
+  { env with lex_lb }
+
 let get_and_clear_state env =
   let state = env.lex_state in
   let env = if state != empty_lex_state
@@ -49,7 +55,6 @@ let get_and_clear_state env =
   env, state
 
 let lexbuf env = env.lex_lb
-let with_lexbuf ~lexbuf env = { env with lex_lb = lexbuf }
 let source env = env.lex_source
 let state env = env.lex_state
 let line env = env.lex_bol.line

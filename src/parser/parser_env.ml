@@ -56,14 +56,7 @@ end = struct
   }
 
   let create lex_env mode =
-    let lexbuf = Lex_env.lexbuf lex_env in
-    (* copy all the mutable things so that we have a distinct lexing environment
-     * that does not interfere with ordinary lexer operations *)
-    (* lex_buffer has type bytes, which is itself mutable, but the lexer
-     * promises not to change it so a shallow copy should be fine *)
-    (* I don't know how to do a copy without an update *)
-    let lexbuf = lexbuf |> Obj.repr |> Obj.dup |> Obj.obj in
-    let lex_env = Lex_env.with_lexbuf ~lexbuf lex_env in
+    let lex_env = Lex_env.clone lex_env in
     {
       la_results = [||];
       la_num_lexed = 0;
@@ -104,15 +97,7 @@ end = struct
       | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
       | Lex_mode.REGEXP -> Lexer.regexp lex_env
     in
-    let cloned_env =
-      let lexbuf =
-        Lex_env.lexbuf lex_env
-        |> Obj.repr
-        |> Obj.dup
-        |> Obj.obj
-      in
-      Lex_env.with_lexbuf ~lexbuf lex_env
-    in
+    let cloned_env = Lex_env.clone lex_env in
     t.la_lex_env <- lex_env;
     t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
     t.la_num_lexed <- t.la_num_lexed + 1
