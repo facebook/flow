@@ -197,6 +197,40 @@ References:
                            ^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- optional.js:3:47
+
+Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2].
+
+   optional.js:3:47
+   3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
+                                                    ^
+
+References:
+   optional.js:3:18
+   3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
+                       ^^^^ [1]
+   optional.js:3:25
+   3| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
+                              ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:5:71
+
+Cannot return `x` because string [1] is incompatible with number [2] in property `p`.
+
+   optional.js:5:71
+   5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
+                                                                            ^
+
+References:
+   optional.js:5:36
+   5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
+                                         ^^^^^^ [1]
+   optional.js:5:54
+   5| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
+                                                           ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ prop_test.js:12:7
 
 Property `xxx` is missing in `Person` [1].
@@ -299,4 +333,4 @@ References:
 
 
 
-Found 18 errors
+Found 20 errors

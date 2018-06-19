@@ -6725,6 +6725,11 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            robust. Tracked by #11299251. *)
         if not (Speculation.speculating ()) then
           Context.set_prop cx lflds s up;
+      | Field (_, DefT (_, OptionalT _), Positive)
+          when lflags.exact && Obj_type.sealed_in_op ureason lflags.sealed ->
+        rec_flow cx trace (lproto,
+          LookupT (ureason, NonstrictReturning (None, None), [], propref,
+            LookupProp (use_op, up)))
       | _ ->
         (* otherwise, look up the property in the prototype *)
         let strict = match Obj_type.sealed_in_op ureason lflags.sealed, ldict with
