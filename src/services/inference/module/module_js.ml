@@ -600,19 +600,25 @@ module Haste: MODULE_SYSTEM = struct
       (Options.haste_name_reducers options)
 
   let rec exported_module options file info =
-    if is_mock file
-    then Modulename.String (short_module_name_of file)
-    else if Options.haste_use_name_reducers options
-    then
-      if is_haste_file options file
-      then Modulename.String (haste_name options file)
-      else exported_non_haste_module options file
-    else match Docblock.providesModule info with
-      | Some m -> Modulename.String m
-      | None ->
-          (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
-           * and use its @providesModule instead *)
-          exported_non_haste_module options file
+    match file with
+    | File_key.SourceFile _ ->
+      if is_mock file
+      then Modulename.String (short_module_name_of file)
+      else if Options.haste_use_name_reducers options
+      then
+        if is_haste_file options file
+        then Modulename.String (haste_name options file)
+        else exported_non_haste_module options file
+      else begin match Docblock.providesModule info with
+        | Some m -> Modulename.String m
+        | None ->
+            (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
+             * and use its @providesModule instead *)
+            exported_non_haste_module options file
+      end
+    | _ ->
+      (* Lib files, resource files, etc don't have any fancy haste name *)
+      Modulename.Filename file
 
   and exported_non_haste_module options file =
     match Files.chop_flow_ext file with
