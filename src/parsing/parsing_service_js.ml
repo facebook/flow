@@ -75,6 +75,8 @@ module FileSigHeap = SharedMem_js.WithCache (File_key) (struct
     let use_sqlite_fallback () = false
 end)
 
+let add_file_sig_from_saved_state = FileSigHeap.add
+
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add file ast info file_sig =

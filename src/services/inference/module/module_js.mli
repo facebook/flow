@@ -69,10 +69,10 @@ val checked_file: (File_key.t -> bool) Expensive.t
    returns the set of modules added
 *)
 val introduce_files:
-  MultiWorkerLwt.worker list option ->
+  workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
-  File_key.t list ->
-  (File_key.t * Docblock.t) list ->
+  parsed:File_key.t list ->
+  unparsed:(File_key.t * Docblock.t) list ->
     (Modulename.t * File_key.t option) list Lwt.t
 
 (* remove module records being tracked for given files;
@@ -115,3 +115,11 @@ val clear_filename_cache: unit -> unit
 
 (* APIs mainly intended for saving and loading saved state *)
 val get_package_json_for_saved_state_unsafe: string -> Package_json.t
+val add_package_from_saved_state: string -> Package_json.t -> unit
+val add_resolved_requires_from_saved_state: (File_key.t -> resolved_requires -> unit) Expensive.t
+val introduce_files_from_saved_state:
+  workers:MultiWorkerLwt.worker list option ->
+  options: Options.t ->
+  parsed:(File_key.t * info) list ->
+  unparsed:(File_key.t * info) list ->
+    (Modulename.t * File_key.t option) list Lwt.t

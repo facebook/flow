@@ -141,6 +141,8 @@ end)
 let get_resolved_requires = Expensive.wrap ResolvedRequiresHeap.get
 let add_resolved_requires = Expensive.wrap ResolvedRequiresHeap.add
 
+let add_resolved_requires_from_saved_state = add_resolved_requires
+
 (* map from filename to module name *)
 (* note: currently we may have many files for one module name.
    this is an issue. *)
@@ -178,17 +180,22 @@ let get_package_json_for_saved_state_unsafe file =
   try PackageHeap.find_unsafe file
   with Not_found -> raise (Package_not_found file)
 
+let add_package_json filename package_json =
+  PackageHeap.add filename package_json;
+  begin match Package_json.name package_json with
+  | Some name ->
+    ReversePackageHeap.add name (Filename.dirname filename)
+  | None -> ()
+  end
+
 let add_package filename ast =
   match Package_json.parse ast with
   | Ok package ->
-    PackageHeap.add filename package;
-    begin match Package_json.name package with
-    | Some name ->
-      ReversePackageHeap.add name (Filename.dirname filename)
-    | None -> ()
-    end
+    add_package_json filename package
   | Error parse_err ->
     assert_false (spf "%s: %s" filename parse_err)
+
+let add_package_from_saved_state = add_package_json
 
 let package_incompatible filename ast =
   match Package_json.parse ast with
@@ -1069,91 +1076,121 @@ let clear_files workers ~options new_or_changed_or_deleted =
 
   Lwt.return (calc_old_modules ~options old_file_module_assoc)
 
-(* Before and after inference, we add per-file module info to the shared heap
-   from worker processes. Note that we wait to choose providers until inference
-   is complete. *)
-let add_parsed_info ~audit ~options file docblock =
-  let force_check = Options.all options in
-  let module_name = exported_module ~options file docblock in
-  let checked =
-    force_check ||
-    Docblock.is_flow docblock
-  in
-  let info = {
-    module_name;
-    checked;
-    parsed = true;
-  } in
-  add_info ~audit file info;
-  module_name
 
-(* We need to track files that have failed to parse. This begins with
-   adding tracking records for unparsed files to InfoHeap. They never
-   become providers - the process of committing modules happens after
-   parsed files are finished with local inference. But since we guess
-   the module names of unparsed files, we're able to tell whether an
-   unparsed file has been required/imported.
- *)
-let add_unparsed_info ~audit ~options file docblock =
-  let force_check = Options.all options in
-  let module_name = exported_module ~options file docblock in
-  let checked =
-    force_check ||
-    File_key.is_lib_file file ||
-    Docblock.is_flow docblock ||
-    Docblock.isDeclarationFile docblock
-  in
-  let info = {
-    module_name;
-    checked;
-    parsed = false;
-  } in
-  add_info ~audit file info;
-  module_name
+module IntroduceFiles : sig
+  val introduce_files:
+    workers:MultiWorkerLwt.worker list option ->
+    options: Options.t ->
+    parsed:File_key.t list ->
+    unparsed:(File_key.t * Docblock.t) list ->
+      (Modulename.t * File_key.t option) list Lwt.t
 
-let calc_new_modules ~options file_module_assoc =
-  (* all modules provided by newly parsed / unparsed files must be repicked *)
-  let new_modules = List.fold_left (fun new_modules (file, module_opt_provider_assoc) ->
-    List.fold_left (fun new_modules (module_, opt_provider) ->
-      add_provider file module_;
-      (module_, opt_provider)::new_modules
-    ) new_modules module_opt_provider_assoc
-  ) [] file_module_assoc in
+  val introduce_files_from_saved_state:
+    workers:MultiWorkerLwt.worker list option ->
+    options: Options.t ->
+    parsed:(File_key.t * info) list ->
+    unparsed:(File_key.t * info) list ->
+      (Modulename.t * File_key.t option) list Lwt.t
+end = struct
+  (* Before and after inference, we add per-file module info to the shared heap
+     from worker processes. Note that we wait to choose providers until inference
+     is complete. *)
+  let add_parsed_info ~audit ~options file =
+    let force_check = Options.all options in
+    let docblock = Parsing_service_js.get_docblock_unsafe file in
+    let module_name = exported_module ~options file docblock in
+    let checked =
+      force_check ||
+      Docblock.is_flow docblock
+    in
+    let info = {
+      module_name;
+      checked;
+      parsed = true;
+    } in
+    add_info ~audit file info;
+    file, module_name
 
-  let debug = Options.is_debug_mode options in
-  if debug then prerr_endlinef
-    "*** new modules (new and changed files) %d ***"
-    (List.length new_modules);
+  (* We need to track files that have failed to parse. This begins with
+     adding tracking records for unparsed files to InfoHeap. They never
+     become providers - the process of committing modules happens after
+     parsed files are finished with local inference. But since we guess
+     the module names of unparsed files, we're able to tell whether an
+     unparsed file has been required/imported.
+   *)
+  let add_unparsed_info ~audit ~options (file, docblock) =
+    let force_check = Options.all options in
+    let module_name = exported_module ~options file docblock in
+    let checked =
+      force_check ||
+      File_key.is_lib_file file ||
+      Docblock.is_flow docblock ||
+      Docblock.isDeclarationFile docblock
+    in
+    let info = {
+      module_name;
+      checked;
+      parsed = false;
+    } in
+    add_info ~audit file info;
+    file, module_name
 
-  new_modules
+  let calc_new_modules ~options file_module_assoc =
+    (* all modules provided by newly parsed / unparsed files must be repicked *)
+    let new_modules = List.fold_left (fun new_modules (file, module_opt_provider_assoc) ->
+      List.fold_left (fun new_modules (module_, opt_provider) ->
+        add_provider file module_;
+        (module_, opt_provider)::new_modules
+      ) new_modules module_opt_provider_assoc
+    ) [] file_module_assoc in
 
-let introduce_files workers ~options parsed unparsed =
-  (* add tracking modules for unparsed files *)
-  let%lwt unparsed_file_module_assoc = MultiWorkerLwt.call workers
-    ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
-      let m = add_unparsed_info ~audit:Expensive.ok
-        ~options filename docblock in
-      (filename,
-       get_files ~audit:Expensive.ok filename m) :: file_module_assoc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorkerLwt.next workers unparsed)
-  in
-  (* create info for parsed files *)
-  let%lwt parsed_file_module_assoc = MultiWorkerLwt.call workers
-    ~job: (List.fold_left (fun file_module_assoc filename ->
-      let docblock = Parsing_service_js.get_docblock_unsafe filename in
-      let m = add_parsed_info ~audit:Expensive.ok
-        ~options filename docblock in
-      (filename,
-       get_files ~audit:Expensive.ok filename m) :: file_module_assoc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorkerLwt.next workers parsed)
-  in
-  let new_file_module_assoc =
-    List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
+    let debug = Options.is_debug_mode options in
+    if debug then prerr_endlinef
+      "*** new modules (new and changed files) %d ***"
+      (List.length new_modules);
 
-  Lwt.return (calc_new_modules ~options new_file_module_assoc)
+    new_modules
+
+  let introduce_files_generic
+      ~add_parsed_info ~add_unparsed_info ~workers ~options ~parsed ~unparsed =
+
+    (* add tracking modules for unparsed files *)
+    let%lwt unparsed_file_module_assoc = MultiWorkerLwt.call workers
+      ~job: (List.fold_left (fun file_module_assoc unparsed_file ->
+        let filename, m = add_unparsed_info ~audit:Expensive.ok ~options unparsed_file in
+        (filename,
+         get_files ~audit:Expensive.ok filename m) :: file_module_assoc
+      ))
+      ~neutral: []
+      ~merge: List.rev_append
+      ~next: (MultiWorkerLwt.next workers unparsed)
+    in
+    (* create info for parsed files *)
+    let%lwt parsed_file_module_assoc = MultiWorkerLwt.call workers
+      ~job: (List.fold_left (fun file_module_assoc parsed_file ->
+        let filename, m = add_parsed_info ~audit:Expensive.ok ~options parsed_file in
+        (filename,
+         get_files ~audit:Expensive.ok filename m) :: file_module_assoc
+      ))
+      ~neutral: []
+      ~merge: List.rev_append
+      ~next: (MultiWorkerLwt.next workers parsed)
+    in
+    let new_file_module_assoc =
+      List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
+
+    Lwt.return (calc_new_modules ~options new_file_module_assoc)
+
+  let introduce_files = introduce_files_generic ~add_parsed_info ~add_unparsed_info
+
+  let introduce_files_from_saved_state =
+    let add_info_from_saved_state ~audit ~options:_ (filename, info) =
+      add_info ~audit filename info;
+      filename, info.module_name
+    in
+    introduce_files_generic
+      ~add_parsed_info:add_info_from_saved_state ~add_unparsed_info:add_info_from_saved_state
+end
+
+let introduce_files = IntroduceFiles.introduce_files
+let introduce_files_from_saved_state = IntroduceFiles.introduce_files_from_saved_state

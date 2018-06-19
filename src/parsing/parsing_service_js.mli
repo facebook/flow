@@ -134,3 +134,6 @@ val next_of_filename_set:
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
   File_key.t list Bucket.next
+
+(* APIs for loading saved state *)
+val add_file_sig_from_saved_state: File_key.t -> File_sig.t -> unit

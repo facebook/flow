@@ -148,7 +148,7 @@ let commit_modules ~options profiling ~workers
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
     with_timer_lwt ~options "CommitModules" profiling (fun () ->
-      let%lwt new_modules = Module_js.introduce_files workers ~options parsed unparsed in
+      let%lwt new_modules = Module_js.introduce_files ~workers ~options ~parsed ~unparsed in
       let dirty_modules = List.rev_append old_modules new_modules in
       let%lwt providers, changed_modules, errmap =
         Module_js.commit_modules workers ~options new_or_changed dirty_modules in
