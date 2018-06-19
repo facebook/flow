@@ -20,6 +20,8 @@ type progress = {
 type event =
 | Ready (* The server is free *)
 | Init_start (* The server is starting to initialize *)
+| Read_saved_state
+| Load_saved_state_progress of progress
 | Parsing_progress of progress
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
@@ -32,6 +34,8 @@ type event =
 
 type typecheck_status =
 | Starting_typecheck (* A typecheck's initial state *)
+| Reading_saved_state
+| Loading_saved_state of progress
 | Parsing of progress
 | Resolving_dependencies
 | Calculating_dependencies
@@ -60,25 +64,29 @@ let string_of_progress {finished; total} =
 
 type emoji =
 | Bicyclist
+| Closed_book
 | Cookie
+| File_cabinet
 | Ghost
+| Open_book
 | Panda_face
 | Sleeping_face
 | Smiling_face_with_mouth_open
 | Taco
 | Wastebasket
-| File_cabinet
 
 let string_of_emoji = function
 | Bicyclist -> "\xF0\x9F\x9A\xB4"
+| Closed_book -> "\xF0\x9F\x93\x95"
 | Cookie -> "\xF0\x9F\x8D\xAA"
+| File_cabinet -> "\xF0\x9F\x97\x84"
 | Ghost -> "\xF0\x9F\x91\xBB"
+| Open_book -> "\xF0\x9F\x93\x96"
 | Panda_face -> "\xF0\x9F\x90\xBC"
 | Sleeping_face -> "\xF0\x9F\x98\xB4"
 | Smiling_face_with_mouth_open -> "\xF0\x9F\x98\x83"
 | Taco -> "\xF0\x9F\x8C\xAE"
 | Wastebasket -> "\xF0\x9F\x97\x91"
-| File_cabinet -> "\xF0\x9F\x97\x84"
 
 type pad_emoji =
 | Before
@@ -96,6 +104,9 @@ let render_emoji ~use_emoji ?(pad=After) emoji =
 let string_of_event = function
 | Ready -> "Ready"
 | Init_start -> "Init_start"
+| Read_saved_state -> "Read_saved_state"
+| Load_saved_state_progress progress ->
+  spf "Load_saved_state_progress %s" (string_of_progress progress)
 | Parsing_progress progress ->
   spf "Parsing_progress files %s" (string_of_progress progress)
 | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
@@ -111,6 +122,10 @@ let string_of_event = function
 let string_of_typecheck_status ~use_emoji = function
 | Starting_typecheck ->
   spf "%sstarting up" (render_emoji ~use_emoji Sleeping_face)
+| Reading_saved_state ->
+  spf "%sreading saved state" (render_emoji ~use_emoji Closed_book)
+| Loading_saved_state progress ->
+  spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
 | Parsing progress ->
   spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
 | Resolving_dependencies ->
@@ -155,6 +170,9 @@ let update ~event ~status =
   | Recheck_start, _ -> Typechecking (Rechecking, Starting_typecheck)
   | Handling_request_start, _ -> Typechecking (Handling_request, Starting_typecheck)
 
+  | Read_saved_state, Typechecking (mode, _) -> Typechecking (mode, Reading_saved_state)
+  | Load_saved_state_progress progress, Typechecking (mode, _) ->
+      Typechecking (mode, Loading_saved_state progress)
   | Parsing_progress progress, Typechecking (mode, _) -> Typechecking (mode, Parsing progress)
   | Resolving_dependencies_progress, Typechecking (mode, _) ->
       Typechecking (mode, Resolving_dependencies)
@@ -198,6 +216,8 @@ let is_significant_transition old_status new_status =
     | Merging _, Merging _ -> false
     (* But changing typechecking status always is significant *)
     | _, Starting_typecheck
+    | _, Reading_saved_state
+    | _, Loading_saved_state _
     | _, Parsing _
     | _, Resolving_dependencies
     | _, Calculating_dependencies
