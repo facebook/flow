@@ -310,7 +310,7 @@ let lib_module_ref = ""
 let dir_sep = Str.regexp "[/\\\\]"
 let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
-let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
+let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
@@ -421,12 +421,24 @@ and normalize_path_ dir names =
 
 and construct_path = List.fold_left Filename.concat
 
-(* helper: make relative path from root to file *)
-let relative_path =
+(* relative_path: (/path/to/foo, /path/to/bar/baz) -> ../bar/baz
+ * absolute_path (/path/to/foo, ../bar/baz) -> /path/to/bar/baz
+ *
+ * Both of these are designed to avoid using Path and realpath so that we don't actually read the
+ * file system *)
+let relative_path, absolute_path =
   let split_path =
     let rec f acc rest =
       let dir = Filename.dirname rest in
-      if rest = dir then acc
+      if rest = dir
+      then begin
+        if Filename.is_relative dir (* True for things like ".", false for "/", "C:/" *)
+        then acc  (* "path/to/foo.js" becomes ["path"; "to"; "foo.js"] *)
+        else match acc with
+        | [] -> [dir] (* "/" becomes ["/"] *)
+        | last_dir::rest ->  (* "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"] *)
+          Filename.concat dir last_dir :: rest
+      end
       else f ((Filename.basename rest)::acc) dir
     in
     fun path -> f [] path
@@ -436,12 +448,29 @@ let relative_path =
     | (root, file) ->
         List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
   in
-  fun root file ->
-    (* This functions is only used for displaying error location.
-       We use '/' as file separator even on Windows. This simplify
-       the test-suite script... *)
+  let make_relative root file =
+    (* This functions is only used for displaying error location or creating saved state.
+       We use '/' as file separator even on Windows. This simplify the test-suite script... *)
     make_relative (split_path root, split_path file)
     |> String.concat "/"
+  in
+  let rec absolute_path = function
+  | (_::root, dir2::file) when dir2 = Filename.parent_dir_name ->
+    absolute_path (root, file)
+  | (root, file) ->
+    List.rev_append root file
+  in
+  let absolute_path root file =
+    (* Let's avoid creating paths like "/path/to/foo/." *)
+    if file = Filename.current_dir_name || file = ""
+    then root
+    else
+      absolute_path ((List.rev @@ split_path root), split_path file)
+      (* We may actually use these paths, so use the correct directory sep *)
+      |> String.concat Filename.dir_sep
+  in
+
+  make_relative, absolute_path
 
 (* helper to get the full path to the "flow-typed" library dir *)
 let get_flowtyped_path root =
@@ -460,7 +489,7 @@ let mkdirp path_str perm =
   (* If path_str is absolute, then path_prefix will be something like C:\ on
    * Windows and / on Linux *)
   let path_prefix =
-    if Str.string_match absolute_path path_str 0
+    if Str.string_match absolute_path_regexp path_str 0
     then Str.matched_string path_str
     else "" in
 

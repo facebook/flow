@@ -58,7 +58,7 @@ val lib_module_ref: string
 val dir_sep: Str.regexp
 val current_dir_name: Str.regexp
 val parent_dir_name: Str.regexp
-val absolute_path: Str.regexp
+val absolute_path_regexp: Str.regexp
 
 val project_root_token: Str.regexp
 
@@ -88,6 +88,7 @@ val normalize_path: string -> string -> string
 val construct_path: string -> string list -> string
 
 val relative_path: string -> string -> string
+val absolute_path: string -> string -> string
 
 (* TODO: this doesn't match the signatures of the related functions above *)
 val make_path_absolute: Path.t -> string -> Path.t

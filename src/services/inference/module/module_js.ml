@@ -518,7 +518,7 @@ module Node = struct
     ]
 
   let absolute r =
-    Str.string_match Files.absolute_path r 0
+    Str.string_match Files.absolute_path_regexp r 0
 
   let explicitly_relative r =
     Str.string_match Files.current_dir_name r 0
