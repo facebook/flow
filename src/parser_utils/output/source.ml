@@ -7,9 +7,6 @@
 
 module LocMap = Utils_js.LocMap
 
-type source_entry = int * Loc.t
-type source_line = source_entry list
-
 type t = {
   buffer: Buffer.t;
   sourcemap: Sourcemap.t option;
@@ -40,9 +37,6 @@ let pop_loc source =
   (* raises if you call pop more than push *)
   let loc_stack = List.tl source.loc_stack in
   { source with loc_stack }
-
-let pos_add_cols pos len =
-   Sourcemap.({ pos with col = pos.col + len })
 
 let pos_new_line pos =
    Sourcemap.({ line = pos.line + 1; col = 0 })
