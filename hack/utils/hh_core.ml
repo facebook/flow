@@ -78,5 +78,9 @@ module List = struct
       let env, rl = map2_env env rl1 rl2 ~f in
       env, x :: rl
 
+  let filter_map_env env xs ~f =
+    let env, l = rev_map_env env xs ~f in
+    env, rev_filter_map l ~f:(fun x -> x)
+
   let for_all2 = List.for_all2
 end
