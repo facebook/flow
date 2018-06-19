@@ -119,29 +119,32 @@ let js_id_continue = [%sedlex.regexp?
   '$' | '_' | 0x200C | 0x200D | id_continue | unicode_escape | codepoint_escape
 ]
 
+let pos_at_offset env offset =
+  { Loc.
+    line = Lex_env.line env;
+    column = offset - Lex_env.bol_offset env;
+    offset = offset;
+  }
+
 let loc_of_offsets env start_offset end_offset =
   { Loc.
     source = Lex_env.source env;
-    start = { Loc.
-      line = Lex_env.line env;
-      column = start_offset - Lex_env.bol_offset env;
-      offset = start_offset;
-    };
-    _end = { Loc.
-      line = Lex_env.line env;
-      column = end_offset - Lex_env.bol_offset env;
-      offset = end_offset;
-    }
+    start = pos_at_offset env start_offset;
+    _end = pos_at_offset env end_offset;
   }
+
+let start_pos_of_lexbuf env (lexbuf: Sedlexing.lexbuf) =
+  let start_offset = Sedlexing.lexeme_start lexbuf in
+  pos_at_offset env start_offset
+
+let end_pos_of_lexbuf env (lexbuf: Sedlexing.lexbuf) =
+  let end_offset = Sedlexing.lexeme_end lexbuf in
+  pos_at_offset env end_offset
 
 let loc_of_lexbuf env (lexbuf: Sedlexing.lexbuf) =
   let start_offset = Sedlexing.lexeme_start lexbuf in
   let end_offset = Sedlexing.lexeme_end lexbuf in
   loc_of_offsets env start_offset end_offset
-
-let loc_of_curr env (lexbuf: Sedlexing.lexbuf) =
-  let curr = Sedlexing.lexeme_end lexbuf in
-  loc_of_offsets env curr curr
 
 let get_result_and_clear_state (env, lex_token) =
   let env, state = get_and_clear_state env in
@@ -281,12 +284,12 @@ end
 
 let save_comment
   (env: Lex_env.t)
-  (start: Loc.t) (_end: Loc.t)
+  (start: Loc.position) (_end: Loc.position)
   (buf: Buffer.t)
   (multiline: bool)
 : Lex_env.t =
   let open Ast.Comment in
-  let loc = Loc.btwn start _end in
+  let loc = { Loc.source = Lex_env.source env; start; _end } in
   let s = Buffer.contents buf in
   let c = if multiline then Block s else Line s in
   let lex_comments_acc = (loc, c) :: env.lex_state.lex_comments_acc in
@@ -388,16 +391,17 @@ let rec comment env buf lexbuf =
     comment env buf lexbuf
 
   | "*/" ->
-    let loc = loc_of_lexbuf env lexbuf in
-    let env = if is_in_comment_syntax env
-      then unexpected_error_w_suggest env loc "*/" "*-/"
+    let env =
+      if is_in_comment_syntax env then
+        let loc = loc_of_lexbuf env lexbuf in
+        unexpected_error_w_suggest env loc "*/" "*-/"
       else env
     in
-    env, loc
+    env, end_pos_of_lexbuf env lexbuf
 
   | "*-/" ->
     if is_in_comment_syntax env
-    then env, loc_of_lexbuf env lexbuf
+    then env, end_pos_of_lexbuf env lexbuf
     else (
       Buffer.add_string buf "*-/";
       comment env buf lexbuf
@@ -411,25 +415,24 @@ let rec comment env buf lexbuf =
 
   | _ ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, loc_of_lexbuf env lexbuf
+    env, end_pos_of_lexbuf env lexbuf
 
 
 let rec line_comment env buf lexbuf =
   match%sedlex lexbuf with
   | eof ->
-    env, loc_of_lexbuf env lexbuf
+    env, end_pos_of_lexbuf env lexbuf
 
   | line_terminator_sequence ->
-    let { Loc.source; start; _end = { Loc.line; column; offset } }
-      = loc_of_lexbuf env lexbuf in
+    let { Loc.line; column; offset } = end_pos_of_lexbuf env lexbuf in
     let env = new_line env lexbuf in
     let len = Sedlexing.lexeme_length lexbuf in
-    let _end = { Loc.
+    let end_pos = { Loc.
       line;
       column = column - len;
       offset = offset - len;
     } in
-    env, { Loc.source; start; _end; }
+    env, end_pos
 
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (eof | line_terminator_sequence_start))
@@ -527,7 +530,7 @@ let rec string_quote env q buf raw octal lexbuf =
     let q' = lexeme lexbuf in
     Buffer.add_string raw q';
     if q = q'
-    then env, loc_of_lexbuf env lexbuf, octal
+    then env, end_pos_of_lexbuf env lexbuf, octal
     else begin
       Buffer.add_string buf q';
       string_quote env q buf raw octal lexbuf
@@ -546,7 +549,7 @@ let rec string_quote env q buf raw octal lexbuf =
     Buffer.add_string raw x;
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Buffer.add_string buf x;
-    env, loc_of_lexbuf env lexbuf, octal
+    env, end_pos_of_lexbuf env lexbuf, octal
 
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl ("'" | '"' | '\\' | '\n' | eof))
@@ -559,19 +562,19 @@ let rec string_quote env q buf raw octal lexbuf =
   | _ -> failwith "unreachable"
 
 
-let rec template_part env start cooked raw literal lexbuf =
+let rec template_part env cooked raw literal lexbuf =
   match%sedlex lexbuf with
   | eof ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, Loc.btwn start (loc_of_lexbuf env lexbuf), true
+    env, true
 
   | '`' ->
     Buffer.add_char literal '`';
-    env, Loc.btwn start (loc_of_lexbuf env lexbuf), true
+    env, true
 
   | "${" ->
     Buffer.add_string literal "${";
-    env, Loc.btwn start (loc_of_lexbuf env lexbuf), false
+    env, false
 
   | '\\' ->
     Buffer.add_char raw '\\';
@@ -580,7 +583,7 @@ let rec template_part env start cooked raw literal lexbuf =
     Buffer.add_string raw str;
     Buffer.add_string literal str;
     Array.iter (Wtf8.add_wtf_8 cooked) codes;
-    template_part env start cooked raw literal lexbuf
+    template_part env cooked raw literal lexbuf
 
   (* ECMAScript 6th Syntax, 11.8.6.1 Static Semantics: TV's and TRV's
    * Long story short, <LF> is 0xA, <CR> is 0xA, and <CR><LF> is 0xA
@@ -590,7 +593,7 @@ let rec template_part env start cooked raw literal lexbuf =
     Buffer.add_string literal "\r\n";
     Buffer.add_string cooked "\n";
     let env = new_line env lexbuf in
-    template_part env start cooked raw literal lexbuf
+    template_part env cooked raw literal lexbuf
 
   | "\n" | "\r" ->
     let lf = lexeme lexbuf in
@@ -598,7 +601,7 @@ let rec template_part env start cooked raw literal lexbuf =
     Buffer.add_string literal lf;
     Buffer.add_char cooked '\n';
     let env = new_line env lexbuf in
-    template_part env start cooked raw literal lexbuf
+    template_part env cooked raw literal lexbuf
 
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (eof | '`' | '$' | '\\' | '\r' | '\n'))
@@ -607,7 +610,7 @@ let rec template_part env start cooked raw literal lexbuf =
     Buffer.add_string raw c;
     Buffer.add_string literal c;
     Buffer.add_string cooked c;
-    template_part env start cooked raw literal lexbuf
+    template_part env cooked raw literal lexbuf
 
   | _ -> failwith "unreachable"
 
@@ -626,20 +629,20 @@ let token (env: Lex_env.t) lexbuf : result =
     Continue env
 
   | "/*" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = comment env buf lexbuf in
-    let env = save_comment env start _end buf true in
+    let env, end_pos = comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf true in
     Continue env
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
     let pattern = lexeme lexbuf in
     if not (is_comment_syntax_enabled env) then
-      let start = loc_of_lexbuf env lexbuf in
+      let start_pos = start_pos_of_lexbuf env lexbuf in
       let buf = Buffer.create 127 in
       Buffer.add_string buf (String.sub pattern 2 (String.length pattern - 2));
-      let env, _end = comment env buf lexbuf in
-      let env = save_comment env start _end buf true in
+      let env, end_pos = comment env buf lexbuf in
+      let env = save_comment env start_pos end_pos buf true in
       Continue env
     else
       let env =
@@ -668,10 +671,10 @@ let token (env: Lex_env.t) lexbuf : result =
     end
 
   | "//" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = line_comment env buf lexbuf in
-    let env = save_comment env start _end buf false in
+    let env, end_pos = line_comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf false in
     Continue env
 
   (* Support for the shebang at the beginning of a file. It is treated like a
@@ -686,13 +689,13 @@ let token (env: Lex_env.t) lexbuf : result =
   (* Values *)
   | "'" | '"' ->
     let quote = lexeme lexbuf in
-    let start = loc_of_lexbuf env lexbuf in
+    let start = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     Buffer.add_string raw quote;
     let octal = false in
     let env, _end, octal = string_quote env quote buf raw octal lexbuf in
-    let loc = Loc.btwn start _end in
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_STRING (loc, Buffer.contents buf, Buffer.contents raw, octal))
 
   | '`' ->
@@ -701,9 +704,10 @@ let token (env: Lex_env.t) lexbuf : result =
     let literal = Buffer.create 127 in
     Buffer.add_string literal (lexeme lexbuf);
 
-    let start = loc_of_lexbuf env lexbuf in
-    let env, loc, is_tail =
-      template_part env start cooked raw literal lexbuf in
+    let start = start_pos_of_lexbuf env lexbuf in
+    let env, is_tail = template_part env cooked raw literal lexbuf in
+    let _end = end_pos_of_lexbuf env lexbuf in
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_TEMPLATE_PART (
       loc,
       {
@@ -1012,25 +1016,25 @@ let rec regexp env lexbuf =
     regexp env lexbuf
 
   | "//" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = line_comment env buf lexbuf in
-    let env = save_comment env start _end buf false in
+    let env, end_pos = line_comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf false in
     regexp env lexbuf
 
   | "/*" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = comment env buf lexbuf in
-    let env = save_comment env start _end buf true in
+    let env, end_pos = comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf true in
     regexp env lexbuf
 
   | '/' ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, flags = regexp_body env buf lexbuf in
-    let end_ = loc_of_lexbuf env lexbuf in
-    let loc = Loc.btwn start end_ in
+    let _end = end_pos_of_lexbuf env lexbuf in
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
     env, T_REGEXP (loc, Buffer.contents buf, flags)
 
   | any ->
@@ -1047,12 +1051,12 @@ let rec jsx_text env mode buf raw lexbuf =
     begin match mode, c with
     | JSX_SINGLE_QUOTED_TEXT, "'"
     | JSX_DOUBLE_QUOTED_TEXT, "\"" ->
-        env, loc_of_lexbuf env lexbuf
+        env
     | JSX_CHILD_TEXT, ("<" | "{") ->
         (* Don't actually want to consume these guys
          * yet...they're not part of the JSX text *)
         Sedlexing.rollback lexbuf;
-        env, loc_of_lexbuf env lexbuf
+        env
     | _ ->
         Buffer.add_string raw c;
         Buffer.add_string buf c;
@@ -1061,7 +1065,7 @@ let rec jsx_text env mode buf raw lexbuf =
 
   | eof ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, loc_of_lexbuf env lexbuf
+    env
 
   | line_terminator_sequence ->
     let lt = lexeme lexbuf in
@@ -1374,17 +1378,17 @@ let jsx_tag env lexbuf =
     Continue env
 
   | "//" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = line_comment env buf lexbuf in
-    let env = save_comment env start _end buf false in
+    let env, end_pos = line_comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf false in
     Continue env
 
   | "/*" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = comment env buf lexbuf in
-    let env = save_comment env start _end buf true in
+    let env, end_pos = comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf true in
     Continue env
 
   | '<' -> Token (env, T_LESS_THAN)
@@ -1399,18 +1403,20 @@ let jsx_tag env lexbuf =
 
   | "'" | '"' ->
     let quote = lexeme lexbuf in
-    let start = loc_of_lexbuf env lexbuf in
+    let start = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     Buffer.add_string raw quote;
     let mode = if quote = "'"
       then JSX_SINGLE_QUOTED_TEXT
       else JSX_DOUBLE_QUOTED_TEXT in
-    let env, _end = jsx_text env mode buf raw lexbuf in
+    let env = jsx_text env mode buf raw lexbuf in
+    let _end = end_pos_of_lexbuf env lexbuf in
     Buffer.add_string raw quote;
     let value = Buffer.contents buf in
     let raw = Buffer.contents raw in
-    Token (env, T_JSX_TEXT (Loc.btwn start _end, value, raw))
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
+    Token (env, T_JSX_TEXT (loc, value, raw))
 
   | any ->
     Token (env, T_ERROR (lexeme lexbuf))
@@ -1425,11 +1431,12 @@ let jsx_child env start buf raw lexbuf =
     Buffer.add_string raw lt;
     Buffer.add_string buf lt;
     let env = new_line env lexbuf in
-    let env, _end =
-      jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
+    let env = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
+    let _end = end_pos_of_lexbuf env lexbuf in
     let value = Buffer.contents buf in
     let raw = Buffer.contents raw in
-    env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
+    env, T_JSX_TEXT (loc, value, raw)
 
   | eof -> env, T_EOF
   | '<' -> env, T_LESS_THAN
@@ -1439,11 +1446,12 @@ let jsx_child env start buf raw lexbuf =
     let c = lexeme lexbuf in
     Buffer.add_string raw c;
     Buffer.add_string buf c;
-    let env, _end =
-      jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
+    let env = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
+    let _end = end_pos_of_lexbuf env lexbuf in
     let value = Buffer.contents buf in
     let raw = Buffer.contents raw in
-    env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
+    env, T_JSX_TEXT (loc, value, raw)
 
   | _ -> failwith "unreachable"
 
@@ -1458,27 +1466,28 @@ let rec template_tail env lexbuf =
     template_tail env lexbuf
 
   | "//" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = line_comment env buf lexbuf in
-    let env = save_comment env start _end buf false in
+    let env, end_pos = line_comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf false in
     template_tail env lexbuf
 
   | "/*" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = comment env buf lexbuf in
-    let env = save_comment env start _end buf true in
+    let env, end_pos = comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf true in
     template_tail env lexbuf
 
   | '}' ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start = start_pos_of_lexbuf env lexbuf in
     let cooked = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let literal = Buffer.create 127 in
     Buffer.add_string literal "}";
-    let env, loc, is_tail =
-      template_part env start cooked raw literal lexbuf in
+    let env, is_tail = template_part env cooked raw literal lexbuf in
+    let _end = end_pos_of_lexbuf env lexbuf in
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
     env, (T_TEMPLATE_PART (loc, {
       cooked = Buffer.contents cooked;
       raw = Buffer.contents raw;
@@ -1510,20 +1519,20 @@ let type_token env lexbuf =
     Continue env
 
   | "/*" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = comment env buf lexbuf in
-    let env = save_comment env start _end buf true in
+    let env, end_pos = comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf true in
     Continue env
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
     let pattern = lexeme lexbuf in
     if not (is_comment_syntax_enabled env) then
-      let start = loc_of_lexbuf env lexbuf in
+      let start_pos = start_pos_of_lexbuf env lexbuf in
       let buf = Buffer.create 127 in
       Buffer.add_string buf pattern;
-      let env, _end = comment env buf lexbuf in
-      let env = save_comment env start _end buf true in
+      let env, end_pos = comment env buf lexbuf in
+      let env = save_comment env start_pos end_pos buf true in
       Continue env
     else
       let env =
@@ -1552,21 +1561,21 @@ let type_token env lexbuf =
     end
 
   | "//" ->
-    let start = loc_of_lexbuf env lexbuf in
+    let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
-    let env, _end = line_comment env buf lexbuf in
-    let env = save_comment env start _end buf false in
+    let env, end_pos = line_comment env buf lexbuf in
+    let env = save_comment env start_pos end_pos buf false in
     Continue env
 
   | "'" | '"' ->
     let quote = lexeme lexbuf in
-    let start = loc_of_lexbuf env lexbuf in
+    let start = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     Buffer.add_string raw quote;
     let octal = false in
     let env, _end, octal = string_quote env quote buf raw octal lexbuf in
-    let loc = Loc.btwn start _end in
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_STRING (loc, Buffer.contents buf, Buffer.contents raw, octal))
 
   (**
@@ -1749,7 +1758,8 @@ let regexp env =
 (* Lexing JSX children requires a string buffer to keep track of whitespace
  * *)
 let jsx_child env =
-  let start = loc_of_curr env env.lex_lb in
+  (* yes, the _start_ of the child is the _end_pos_ of the lexbuf! *)
+  let start = end_pos_of_lexbuf env env.lex_lb in
   let buf = Buffer.create 127 in
   let raw = Buffer.create 127 in
   let env, child = jsx_child env start buf raw env.lex_lb in
