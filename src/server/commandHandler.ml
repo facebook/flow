@@ -308,6 +308,11 @@ let get_imports ~options module_names =
    * flow. *)
   List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
+let save_state ~saved_state_filename ~genv ~env =
+  try_with (fun () ->
+    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env:!env in
+    Lwt.return (Ok ())
+  )
 
 let handle_ephemeral_unsafe
   genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
@@ -424,6 +429,11 @@ let handle_ephemeral_unsafe
       | ServerProt.Request.SUGGEST fn ->
           let%lwt result = suggest ~options ~workers ~env ~profiling fn in
           ServerProt.Response.SUGGEST result
+          |> respond;
+          Lwt.return None
+      | ServerProt.Request.SAVE_STATE out ->
+          let%lwt result = save_state ~saved_state_filename:out ~genv ~env in
+          ServerProt.Response.SAVE_STATE result
           |> respond;
           Lwt.return None
     end

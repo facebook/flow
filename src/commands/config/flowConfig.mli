@@ -8,6 +8,7 @@
 type config
 
 val get: ?allow_cache:bool -> string -> config
+val get_hash: ?allow_cache:bool -> string -> Xx.hash
 val empty_config: config
 
 val init:
@@ -19,8 +20,6 @@ val init:
   lints: string list ->
   config
 val write: config -> out_channel -> unit
-
-val restore: string * config -> unit
 
 (* Accessors *)
 

@@ -34,6 +34,7 @@ end = struct
     LspCommand.command;
     LsCommand.command;
     PortCommand.command;
+    SaveStateCommand.command;
     ServerCommand.command;
     StartCommand.command;
     StopCommand.command;

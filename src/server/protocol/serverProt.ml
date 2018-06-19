@@ -30,6 +30,7 @@ module Request = struct
   | STATUS of Path.t * bool (* include_warnings *)
   | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
   | SUGGEST of File_input.t
+  | SAVE_STATE of Path.t
 
   let to_string = function
   | AUTOCOMPLETE fn ->
@@ -66,6 +67,7 @@ module Request = struct
       "status"
   | SUGGEST (_) ->
       "suggest"
+  | SAVE_STATE out -> Printf.sprintf "save-state %s" (Path.to_string out)
 
   type command_with_context = {
     client_logging_context: FlowEventLogger.logging_context;
@@ -185,6 +187,7 @@ module Response = struct
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
   | FORCE_RECHECK of Profiling_js.finished option
   | SUGGEST of suggest_response
+  | SAVE_STATE of (unit, string) result
 
   let to_string = function
   | AUTOCOMPLETE _ -> "autocomplete response"
@@ -202,4 +205,5 @@ module Response = struct
   | STATUS _ -> "status response"
   | FORCE_RECHECK _ -> "force_recheck response"
   | SUGGEST _ -> "suggest response"
+  | SAVE_STATE _ -> "save_state response"
 end

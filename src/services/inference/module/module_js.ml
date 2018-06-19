@@ -172,6 +172,12 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     let use_sqlite_fallback () = false
   end)
 
+exception Package_not_found of string
+
+let get_package_json_for_saved_state_unsafe file =
+  try PackageHeap.find_unsafe file
+  with Not_found -> raise (Package_not_found file)
+
 let add_package filename ast =
   match Package_json.parse ast with
   | Ok package ->

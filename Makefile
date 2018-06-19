@@ -105,6 +105,7 @@ MODULES=\
   src/services/inference/module\
   src/services/flowFileGen\
   src/services/port\
+  src/services/saved_state\
   src/services/type_info\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\

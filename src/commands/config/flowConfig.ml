@@ -985,7 +985,13 @@ let default_lint_severities = [
 ]
 
 let read filename =
-  let lines = Sys_utils.cat_no_fail filename
+  let contents = Sys_utils.cat_no_fail filename in
+  let hash =
+    let xx_state = Xx.init () in
+    Xx.update xx_state contents;
+    Xx.digest xx_state
+  in
+  let lines = contents
     |> Sys_utils.split_lines
     |> List.mapi (fun i line -> (i+1, String.trim line))
     |> List.filter is_not_comment in
@@ -995,7 +1001,7 @@ let read filename =
       LintSettings.set_value lint severity acc
     ) empty_config.lint_severities default_lint_severities
   } in
-  parse config lines
+  parse config lines, hash
 
 let init ~ignores ~untyped ~includes ~libs ~options ~lints =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
@@ -1017,18 +1023,24 @@ let write config oc = Pp.config oc config
 (* We should restart every time the config changes, so it's generally cool to cache it *)
 let cache = ref None
 
-let get ?(allow_cache=true) filename  =
+let get_from_cache ?(allow_cache=true) filename =
   match !cache with
-  | Some (cached_filename, config) when allow_cache ->
+  | Some (cached_filename, _, _ as cached_data) when allow_cache ->
       assert (filename = cached_filename);
-      config
+      cached_data
   | _ ->
-      let config = read filename in
-      cache := Some (filename, config);
-      config
+      let config, hash = read filename in
+      let cached_data = filename, config, hash in
+      cache := Some cached_data;
+      filename, config, hash
 
-let restore (filename, config) = cache := Some (filename, config)
+let get ?allow_cache filename =
+  let (_, config, _) = get_from_cache ?allow_cache filename in
+  config
 
+let get_hash ?allow_cache filename =
+  let (_, _, hash) = get_from_cache ?allow_cache filename in
+  hash
 
 (* Accessors *)
 
