@@ -259,8 +259,19 @@ let gen_flow_files ~options env files =
   in
   result
 
+let convert_find_refs_result
+    (result: FindRefsTypes.find_refs_ok)
+    : ServerProt.Response.find_refs_success =
+  Option.map result ~f:begin fun (name, refs) ->
+    (name, List.map snd refs)
+  end
+
 let find_refs ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
-  FindRefs_js.find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
+  let%lwt result, json =
+    FindRefs_js.find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
+  in
+  let result = Core_result.map result ~f:convert_find_refs_result in
+  Lwt.return (result, json)
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)

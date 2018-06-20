@@ -22,4 +22,5 @@ let local_find_refs ast loc =
     let def = def_of_use scope_info use in
     let sorted_locs = LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
     let name = Def.(def.actual_name) in
+    let sorted_locs = List.map (fun loc -> (FindRefsTypes.Other, loc)) sorted_locs in
     Some ((name, sorted_locs), Nel.hd def.Def.locs)

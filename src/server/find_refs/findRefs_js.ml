@@ -9,10 +9,24 @@ let (>>|) = Core_result.(>>|)
 
 open Utils_js
 
+let locmap_of_bindings =
+  List.fold_left begin fun map (loc, x) ->
+    LocMap.add loc x map
+  end LocMap.empty
+
 let sort_and_dedup =
   Core_result.map ~f:begin
-    Option.map ~f:begin
-      fun (name, locs) -> name, LocSet.of_list locs |> LocSet.elements
+    Option.map ~f:begin fun (name, refs) ->
+      let refs =
+        (* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
+         * if we ever need to report multiple ref kinds for a single location. *)
+        refs
+        |> List.map (fun ((_, loc) as reference) -> (loc, reference))
+        |> locmap_of_bindings
+        |> LocMap.bindings
+        |> List.map snd
+      in
+      name, refs
     end
   end
 

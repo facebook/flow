@@ -491,6 +491,7 @@ let add_related_bindings ast_info refs =
     let new_refs =
       VariableFindRefs.local_find_refs ast loc
       |> Option.value_map ~default:[] ~f:(fun ((_, refs), _) -> refs)
+      |> List.map snd
     in
     List.rev_append new_refs acc
   end refs related_bindings
@@ -860,11 +861,13 @@ let find_refs_global genv env multi_hop def_info =
     dependent_file_count;
   let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info in
   refs %>>| fun refs ->
+  let refs = List.map (fun loc -> (FindRefsTypes.Other, loc)) refs in
   Lwt.return @@ Some ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
 let find_refs_local genv file_key content def_info =
   compute_ast_result file_key content >>= fun ast_info ->
   find_refs_in_file genv.options ast_info file_key def_info >>= fun refs ->
+  let refs = List.map (fun loc -> (FindRefsTypes.Other, loc)) refs in
   Ok (Some ((display_name_of_def_info def_info, refs), None))
 
 let find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop =
