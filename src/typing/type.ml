@@ -562,7 +562,7 @@ module rec TypeTerm : sig
     | DebugPrintT of reason
     | DebugSleepT of reason
 
-    | SentinelPropTestT of reason * t * string * bool * sentinel_value * t_out
+    | SentinelPropTestT of reason * t * string * bool * Enum.t * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -1031,13 +1031,6 @@ module rec TypeTerm : sig
   | DebugThrow
   | DebugSleep
 
-  and sentinel_value =
-  | SentinelStr of string
-  | SentinelNum of number_literal
-  | SentinelBool of bool
-  | SentinelNull
-  | SentinelVoid
-
   and choice_tool =
   | Trigger
 
@@ -1106,6 +1099,26 @@ module rec TypeTerm : sig
   | ResolveSpreadsToCallT of funcalltype * t
 
 end = TypeTerm
+
+and Enum : sig
+  type t =
+    | Str of string
+    | Num of TypeTerm.number_literal
+    | Bool of bool
+    | Void
+    | Null
+  val compare: t -> t -> int
+end = struct
+  type t =
+    | Str of string
+    | Num of TypeTerm.number_literal
+    | Bool of bool
+    | Void
+    | Null
+  let compare = Pervasives.compare
+end
+
+and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
 
 and Polarity : sig
   type t = TypeTerm.polarity
@@ -1451,16 +1464,6 @@ and UnionRep : sig
     t -> quick_mem_result
 end = struct
 
-  module Enum = struct
-    type t =
-      | Str of string
-      | Num of TypeTerm.number_literal
-      | Bool of bool
-      | Void
-      | Null
-    let compare = Pervasives.compare
-  end
-
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
     | DefT (_, SingletonStrT lit)
@@ -1483,9 +1486,6 @@ end = struct
       -> true
     | _ -> false
   )
-
-  (* enums are stored as singleton type sets *)
-  module EnumSet = Set.Make(Enum)
 
   (* disjoint unions are stored as singleton type maps *)
   module EnumMap = MyMap.Make(Enum)
