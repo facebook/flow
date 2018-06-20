@@ -14,6 +14,7 @@ let mk_with_proto cx reason
     else UnsealedInFile (Loc.source (Reason.loc_of_reason reason))
   in
   let flags = { sealed; exact; frozen } in
+  let call = Option.map call ~f:(Context.make_call_prop cx) in
   let pmap = Context.make_property_map cx props in
   DefT (reason, ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
 

@@ -425,6 +425,7 @@ module ContextOptimizer = struct
     reduced_module_map : Type.t SMap.t;
     reduced_graph : node IMap.t;
     reduced_property_maps : Properties.map;
+    reduced_call_props : Type.t IMap.t;
     reduced_export_maps : Exports.map;
     reduced_evaluated : Type.t IMap.t;
   }
@@ -433,6 +434,7 @@ module ContextOptimizer = struct
     reduced_module_map = SMap.empty;
     reduced_graph = IMap.empty;
     reduced_property_maps = Properties.Map.empty;
+    reduced_call_props = IMap.empty;
     reduced_export_maps = Exports.Map.empty;
     reduced_evaluated = IMap.empty;
   }
@@ -496,6 +498,17 @@ module ContextOptimizer = struct
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
         super#props cx pole { quotient with reduced_property_maps } id
+
+    method! call_prop cx pole quotient id =
+      let { reduced_call_props; _ } = quotient in
+      if (IMap.mem id reduced_call_props)
+      then
+        let () = SigHash.add_int sig_hash id in
+        quotient
+      else
+        let t = Context.find_call cx id in
+        let reduced_call_props = IMap.add id t reduced_call_props in
+        super#call_prop cx pole { quotient with reduced_call_props } id
 
     method! exports cx pole quotient id =
       let { reduced_export_maps; _ } = quotient in
@@ -597,6 +610,7 @@ module ContextOptimizer = struct
     Context.set_module_map cx quotient.reduced_module_map;
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
+    Context.set_call_props cx quotient.reduced_call_props;
     Context.set_export_maps cx quotient.reduced_export_maps;
     Context.set_evaluated cx quotient.reduced_evaluated;
     Context.set_type_graph cx (

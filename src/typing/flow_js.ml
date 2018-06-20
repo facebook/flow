@@ -295,7 +295,11 @@ let rec merge_type cx =
     | None, None -> Some None
     | Some _, None -> if o2.flags.exact then Some o1.call_t else None
     | None, Some _ -> if o1.flags.exact then Some o2.call_t else None
-    | Some c1, Some c2 -> Some (Some (create_union (UnionRep.make c1 c2 [])))
+    | Some id1, Some id2 ->
+      let c1 = Context.find_call cx id1 in
+      let c2 = Context.find_call cx id2 in
+      let id = Context.make_call_prop cx (create_union (UnionRep.make c1 c2 [])) in
+      Some (Some id)
     in
 
     (* Only merge objects if every property can be merged. *)
@@ -948,7 +952,7 @@ module ResolvableTypeJob = struct
       in
       let ts = match call_t with
       | None -> ts
-      | Some t -> t::ts
+      | Some id -> (Context.find_call cx id)::ts
       in
       collect_of_types ?log_unresolved cx reason acc ts
     | DefT (_, FunT (_, _, { params; return_t; _ })) ->
@@ -976,7 +980,7 @@ module ResolvableTypeJob = struct
       ) props_tmap ts in
       let ts = match inst_call_t with
       | None -> ts
-      | Some t -> t::ts
+      | Some id -> (Context.find_call cx id)::ts
       in
       collect_of_types ?log_unresolved cx reason acc ts
     | DefT (_, PolyT (_, t, _)) ->
@@ -4316,7 +4320,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           is_sentinel = false;
         }, use_op) in
         (match lcall with
-        | Some lcall -> rec_flow cx trace (lcall, UseT (use_op, ucall))
+        | Some lcall ->
+          rec_flow cx trace (Context.find_call cx lcall,
+            UseT (use_op, Context.find_call cx ucall))
         | None ->
           let reason_prop = replace_reason_const (RProperty prop_name) ureason in
           add_output cx ~trace (FlowError.EStrictLookupFailed
@@ -4377,8 +4383,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         }, use_op)
       | _ -> use_op in
       let fun_t = match l with
-      | DefT (_, ObjT {call_t = Some t; _}) -> t
-      | DefT (_, InstanceT (_, _, _, {inst_call_t = Some t; _})) -> t
+      | DefT (_, ObjT {call_t = Some id; _})
+      | DefT (_, InstanceT (_, _, _, {inst_call_t = Some id; _})) ->
+        Context.find_call cx id
       | _ ->
         let reason_prop = replace_reason_const (RProperty prop_name) reason_op in
         add_output cx ~trace (FlowError.EStrictLookupFailed
@@ -5669,11 +5676,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
         resolve_call_list cx ~trace ~use_op reason tins2 resolve_to;
 
-    | DefT (_, ObjT {call_t = Some t; _}), BindT _ ->
-      rec_flow cx trace (t, u)
+    | DefT (_, ObjT {call_t = Some id; _}), BindT _ ->
+      rec_flow cx trace (Context.find_call cx id, u)
 
-    | DefT (_, InstanceT (_, _, _, {inst_call_t = Some t; _})), BindT _ ->
-      rec_flow cx trace (t, u)
+    | DefT (_, InstanceT (_, _, _, {inst_call_t = Some id; _})), BindT _ ->
+      rec_flow cx trace (Context.find_call cx id, u)
 
     | DefT (_, (AnyT | AnyFunT)),
       BindT (use_op, reason, calltype, _) ->
@@ -6657,7 +6664,9 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       is_sentinel = false;
     }, use_op) in
     (match lcall with
-    | Some lcall -> rec_flow cx trace (lcall, UseT (use_op, ucall))
+    | Some lcall ->
+      rec_flow cx trace (Context.find_call cx lcall,
+        UseT (use_op, Context.find_call cx ucall))
     | None ->
       let reason_prop = replace_reason_const (RProperty prop_name) ureason in
       add_output cx ~trace (FlowError.EStrictLookupFailed
@@ -6793,9 +6802,9 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           upper = ureason;
           is_sentinel = false;
         }, use_op) in
-        let lp = match lcall with
+        let lp = match Context.find_call cx lcall with
         | DefT (_, OptionalT t) -> Field (None, t, Positive)
-        | _ -> Field (None, lcall, Positive)
+        | t -> Field (None, t, Positive)
         in
         let up = Field (None, value, dict_polarity) in
         if lit
@@ -7125,10 +7134,11 @@ and inherited_method x = x <> "constructor"
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
 and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
-  (fields_pmap, methods_pmap, call_t) =
+  (fields_pmap, methods_pmap, call_id) =
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
+  let call_t = Option.map call_id ~f:(Context.find_call cx) in
   fields_pmap |> SMap.iter (fun s p ->
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
@@ -7184,9 +7194,9 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       is_sentinel = false;
     }, use_op) in
     match lower with
-    | DefT (_, ObjT {call_t = Some lt; _}) ->
-      rec_flow cx trace (lt, UseT (use_op, ut))
-    | DefT (_, InstanceT (_, _, _, {inst_call_t = Some lt; _})) ->
+    | DefT (_, ObjT {call_t = Some lid; _})
+    | DefT (_, InstanceT (_, _, _, {inst_call_t = Some lid; _})) ->
+      let lt = Context.find_call cx lid in
       rec_flow cx trace (lt, UseT (use_op, ut))
     | _ ->
       let reason_prop = replace_reason (fun desc ->

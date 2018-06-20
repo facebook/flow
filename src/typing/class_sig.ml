@@ -439,7 +439,7 @@ let insttype cx ~tparams_map ~initialized_static_field_names s =
     initialized_field_names = inited_fields;
     initialized_static_field_names;
     methods_tmap = Context.make_property_map cx methods;
-    inst_call_t = call;
+    inst_call_t = Option.map call ~f:(Context.make_call_prop cx);
     has_unknown_react_mixins = false;
     structural = s.structural;
   }
