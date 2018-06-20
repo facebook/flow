@@ -1459,6 +1459,8 @@ and UnionRep : sig
     | Conditional of TypeTerm.t
     | Unknown
 
+  val join_quick_mem_results: quick_mem_result * quick_mem_result -> quick_mem_result
+
   val quick_mem_enum:
     TypeTerm.t ->
     t -> quick_mem_result
@@ -1468,6 +1470,8 @@ and UnionRep : sig
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
     TypeTerm.t ->
     t -> quick_mem_result
+
+  val check_enum: t -> EnumSet.t option
 end = struct
 
   (* canonicalize a type w.r.t. enum membership *)
@@ -1695,6 +1699,12 @@ end = struct
     | Conditional of TypeTerm.t
     | Unknown
 
+  let join_quick_mem_results = function
+    | Yes, _ | _, Yes -> Yes
+    | Unknown, _ | _, Unknown -> Unknown
+    | Conditional _, _ | _, Conditional _ -> Unknown (* TODO *)
+    | No, No -> No
+
   (* assume we know that l is a canonizable type *)
   let quick_mem_enum l (_t0, _t1, _ts, specialization) =
     match canon l with
@@ -1764,6 +1774,11 @@ end = struct
             else Unknown
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
+
+  let check_enum (_, _, _, specialization) =
+    match !specialization with
+      | Some Enum enums -> Some enums
+      | _ -> None
 
 end
 

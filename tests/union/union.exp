@@ -74,22 +74,8 @@ References:
             ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- yuge.js:23:6
 
-Cannot cast empty string to `ErrorCode` because string [1] is incompatible with enum [2].
-
-   yuge.js:23:6
-   23|     ("": ErrorCode);  // also, error pos omits this line completely
-            ^^ [1]
-
-References:
-   yuge.js:23:10
-   23|     ("": ErrorCode);  // also, error pos omits this line completely
-                ^^^^^^^^^ [2]
-
-
-
-Found 6 errors
+Found 5 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
