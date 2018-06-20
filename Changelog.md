@@ -1,3 +1,33 @@
+### 0.75.0
+
+Likely to cause new Flow errors:
+* Added return type to RegExp.prototype.match() (thanks @peter-leonov!)
+* Fixed callable property lookup rules to no longer walk the prototype chain
+* Made it an error to import a type via destructuring on a `require` call (use `import type` instead)
+* Made the type of `Array.of` stricter (thanks @wchargin!)
+
+New Features:
+* Added typing rules to support `{| |}` as a subtype of `{ +p?: T }`
+* Added support for optional catch bindings (thanks @cpojer!)
+* Improved performance of enum equality checks
+* Added support for `[[call]]` syntax in objects and interfaces
+* Many improvements to `flow find-refs` command
+* Many improvements to LSP support
+
+Notable bug fixes:
+* Fixed crash when refining a non-value
+
+Misc:
+* Updated node.js libdefs (thanks @hcz!)
+* Fixed some flakiness in the LSP tests
+* Added libdefs for ECDH class (thanks @eleith!)
+* Added `--check` flag to `flow ast` command
+* Added `filter` property to `CanvasRenderingContext2D` libdef
+* Added `timingSafeEqual` method to node crypto module (thanks @n-johnson!)
+
+Parser:
+* Added `Decorator` node, matching estree
+
 ### 0.74.0
 
 Likely to cause new Flow errors:
