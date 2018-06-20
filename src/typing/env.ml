@@ -1374,9 +1374,9 @@ let refine_with_preds cx loc preds orig_types =
         | Some change -> Changeset.add_var change acc
         | None -> acc
         end
-      | _, entry ->
-        assert_false (
-          spf "attempt to refine %s %s" (Entry.string_of_kind entry) name)
+      | _, _ ->
+        Flow.add_output cx (FlowError.ERefineAsValue (refi_reason, name));
+        acc
       )
     (* for heap refinements, we just add new entries *)
     | _ ->

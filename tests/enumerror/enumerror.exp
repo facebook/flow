@@ -1,3 +1,35 @@
+Error ----------------------------------------------------------------------------------------------- enum-crash.js:7:25
+
+Cannot resolve module `somewhere`.
+
+   7| import type {Enum} from 'somewhere';
+                              ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- enum-crash.js:13:5
+
+Cannot refine `Enum` as a value. 
+
+           v-------------
+   13|     case Enum.FOO:
+   14|       return 0;
+             --------^
+
+
+Error ---------------------------------------------------------------------------------------------- enum-crash.js:13:10
+
+Cannot reference type `Enum` [1] from a value position.
+
+   enum-crash.js:13:10
+   13|     case Enum.FOO:
+                ^^^^
+
+References:
+   enum-crash.js:7:14
+    7| import type {Enum} from 'somewhere';
+                    ^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- enumerror.js:10:10
 
 Cannot call `isActive` with object literal bound to `ad` because property `PAUSE` is missing in object type [1] in
@@ -34,4 +66,4 @@ References:
 
 
 
-Found 2 errors
+Found 5 errors
