@@ -667,6 +667,10 @@ class ['a] t = object(self)
       let acc = self#type_ cx (P.inv pole) acc t2 in
       acc
 
+  method call_prop cx pole acc id =
+    let t = Context.find_call cx id in
+    self#type_ cx pole acc t
+
   method exports cx pole acc id =
     let visit_pair acc (_loc, t) = self#type_ cx pole acc t in
     Context.find_exports cx id
@@ -717,7 +721,7 @@ class ['a] t = object(self)
     let acc = self#opt (self#dict_type cx pole) acc dict_t in
     let acc = self#props cx pole acc props_tmap in
     let acc = self#type_ cx pole acc proto_t in
-    let acc = self#opt (self#type_ cx pole) acc call_t in
+    let acc = self#opt (self#call_prop cx pole) acc call_t in
     acc
 
   method private arr_type cx pole acc = function
@@ -751,7 +755,7 @@ class ['a] t = object(self)
     ) type_args acc in
     let acc = self#props cx pole acc fields_tmap in
     let acc = self#props cx pole acc methods_tmap in
-    let acc = self#opt (self#type_ cx pole) acc inst_call_t in
+    let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
     acc
 
   method private export_types cx pole acc e =

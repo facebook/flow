@@ -318,7 +318,7 @@ class ['a] t = object(self)
     let methods_tmap' =
       if m_tmap == m_tmap' then methods_tmap
       else Context.make_property_map cx m_tmap' in
-    let inst_call_t' = OptionUtils.ident_map (self#type_ cx map_cx) inst_call_t in
+    let inst_call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) inst_call_t in
     if (
       type_args == type_args' &&
       methods_tmap == methods_tmap' &&
@@ -441,7 +441,7 @@ class ['a] t = object(self)
     let props_tmap' = if p_tmap == p_tmap' then props_tmap
           else Context.make_property_map cx p_tmap' in
     let proto_t' = self#type_ cx map_cx proto_t in
-    let call_t' = OptionUtils.ident_map (self#type_ cx map_cx) call_t in
+    let call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) call_t in
     if dict_t' == dict_t && props_tmap' == props_tmap && proto_t' == proto_t && call_t' == call_t
     then t
     else {
@@ -451,6 +451,11 @@ class ['a] t = object(self)
       proto_t = proto_t';
       call_t = call_t';
     }
+
+  method private call_prop cx map_cx id =
+    let t = Context.find_call cx id in
+    let t' = self#type_ cx map_cx t in
+    if t == t' then id else Context.make_call_prop cx t'
 
   method dict_type cx map_cx ({dict_name; key; value; dict_polarity} as t) =
     let key' = self#type_ cx map_cx key in

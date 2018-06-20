@@ -721,6 +721,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         then FunProtoT (locationless_reason RFunctionPrototype)
         else ObjProtoT (locationless_reason RObjectPrototype)
     in
+    let call = Option.map call ~f:(Context.make_call_prop cx) in
     let pmap = Context.make_property_map cx props_map in
     let flags = {
       sealed = Sealed;

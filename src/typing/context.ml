@@ -8,6 +8,7 @@
 module LocMap = Utils_js.LocMap
 
 exception Props_not_found of Type.Properties.id
+exception Call_not_found of int
 exception Exports_not_found of Type.Exports.id
 exception Require_not_found of string
 exception Module_not_found of string
@@ -59,6 +60,9 @@ type sig_t = {
 
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.Properties.map;
+
+  (* indirection to support context opt *)
+  mutable call_props: Type.t IMap.t;
 
   (* modules point to mutable export maps *)
   mutable export_maps: Type.Exports.map;
@@ -166,6 +170,7 @@ let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, LocMap.
 let make_sig () = {
   graph = IMap.empty;
   property_maps = Type.Properties.Map.empty;
+  call_props = IMap.empty;
   export_maps = Type.Exports.Map.empty;
   evaluated = IMap.empty;
   type_graph = Graph_explorer.new_graph ISet.empty;
@@ -246,6 +251,9 @@ let file cx = cx.file
 let find_props cx id =
   try Type.Properties.Map.find_unsafe id cx.sig_cx.property_maps
   with Not_found -> raise (Props_not_found id)
+let find_call cx id =
+  try IMap.find_unsafe id cx.sig_cx.call_props
+  with Not_found -> raise (Call_not_found id)
 let find_exports cx id =
   try Type.Exports.Map.find_unsafe id cx.sig_cx.export_maps
   with Not_found -> raise (Exports_not_found id)
@@ -275,6 +283,7 @@ let module_ref cx =
   | Some module_ref -> module_ref
   | None -> cx.module_ref
 let property_maps cx = cx.sig_cx.property_maps
+let call_props cx = cx.sig_cx.call_props
 let refs_table cx = cx.refs_table
 let export_maps cx = cx.sig_cx.export_maps
 let root cx = cx.metadata.root
@@ -304,6 +313,7 @@ let copy_of_context cx = {
     cx.sig_cx with
     graph = IMap.map Constraint.copy_node cx.sig_cx.graph;
     property_maps = cx.sig_cx.property_maps;
+    call_props = cx.sig_cx.call_props;
   };
   type_table = Type_table.copy cx.type_table;
 }
@@ -330,6 +340,8 @@ let add_module cx name tvar =
   cx.sig_cx.module_map <- SMap.add name tvar cx.sig_cx.module_map
 let add_property_map cx id pmap =
   cx.sig_cx.property_maps <- Type.Properties.Map.add id pmap cx.sig_cx.property_maps
+let add_call_prop cx id t =
+  cx.sig_cx.call_props <- IMap.add id t cx.sig_cx.call_props
 let add_export_map cx id tmap =
   cx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.sig_cx.export_maps
 let add_tvar cx id bounds =
@@ -356,6 +368,8 @@ let set_module_kind cx module_kind =
   cx.module_kind <- module_kind
 let set_property_maps cx property_maps =
   cx.sig_cx.property_maps <- property_maps
+let set_call_props cx call_props =
+  cx.sig_cx.call_props <- call_props
 let set_export_maps cx export_maps =
   cx.sig_cx.export_maps <- export_maps
 let set_type_graph cx type_graph =
@@ -389,6 +403,8 @@ let clear_master_shared cx master_cx =
     (IMap.mem id master_cx.graph)));
   set_property_maps cx (property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
     (Type.Properties.Map.mem id master_cx.property_maps)));
+  set_call_props cx (call_props cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id master_cx.call_props)));
   set_evaluated cx (evaluated cx |> IMap.filter (fun id _ -> not
     (IMap.mem id master_cx.evaluated)))
 
@@ -450,6 +466,11 @@ let make_property_map cx pmap =
   add_property_map cx id pmap;
   id
 
+let make_call_prop cx t =
+  let id = Reason.mk_id () in
+  add_call_prop cx id t;
+  id
+
 let make_export_map cx tmap =
   let id = Type.Exports.mk_id () in
   add_export_map cx id tmap;
@@ -463,6 +484,7 @@ let make_nominal cx =
 (* Copy context from cx_other to cx *)
 let merge_into cx cx_other =
   cx.property_maps <- Type.Properties.Map.union cx_other.property_maps cx.property_maps;
+  cx.call_props <- IMap.union cx_other.call_props cx.call_props;
   cx.export_maps <- Type.Exports.Map.union cx_other.export_maps cx.export_maps;
   cx.evaluated <- IMap.union cx_other.evaluated cx.evaluated;
   cx.type_graph <- Graph_explorer.union cx_other.type_graph cx.type_graph;

@@ -77,6 +77,7 @@ val esproposal_nullish_coalescing: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
+val find_call: t -> int -> Type.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_require: t -> Loc.t -> Type.t
 val find_module: t -> string -> Type.t
@@ -97,6 +98,7 @@ val require_map: t -> Type.t LocMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
+val call_props: t -> Type.t IMap.t
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
 val root: t -> Path.t
@@ -133,6 +135,7 @@ val add_imported_t: t -> string -> Type.t -> unit
 val add_require: t -> Loc.t -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
+val add_call_prop: t -> int -> Type.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
@@ -147,6 +150,7 @@ val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
+val set_call_props: t -> Type.t IMap.t -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
@@ -185,6 +189,7 @@ val set_export: t -> Type.Exports.id -> string -> (Loc.t option * Type.t) -> uni
 
 (* constructors *)
 val make_property_map: t -> Type.Properties.t -> Type.Properties.id
+val make_call_prop: t -> Type.t -> int
 val make_export_map: t -> Type.Exports.t -> Type.Exports.id
 val make_nominal: t -> int
 

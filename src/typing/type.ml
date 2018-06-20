@@ -787,7 +787,7 @@ module rec TypeTerm : sig
     dict_t: dicttype option;
     props_tmap: Properties.id;
     proto_t: prototype;
-    call_t: t option;
+    call_t: int option;
   }
 
   (* Object.assign(target, source1, ...source2) first resolves target then the
@@ -916,7 +916,7 @@ module rec TypeTerm : sig
     initialized_field_names: SSet.t;
     initialized_static_field_names: SSet.t;
     methods_tmap: Properties.id;
-    inst_call_t: t option;
+    inst_call_t: int option;
     has_unknown_react_mixins: bool;
     structural: bool;
   }
