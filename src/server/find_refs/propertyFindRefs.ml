@@ -398,12 +398,9 @@ let file_key_of_module_ref file_key module_ref =
   in
   Module_js.get_file ~audit:Expensive.warn resolved
 
-let filter_prop_refs cx potential_refs file_key local_defs prop_def_info name =
+let filter_prop_refs cx potential_refs file_key prop_def_info name =
   potential_refs |>
     LocMap.bindings |>
-    (* The location where a shadow prop is introduced is considered both a definition and a use.
-     * Make sure we include it only once despite that. *)
-    List.filter (fun (loc, _) -> not (List.mem loc local_defs)) |>
     List.map begin fun (ref_loc, ty) ->
       type_matches_locs cx ty prop_def_info name
       >>| function
@@ -455,7 +452,7 @@ let property_find_refs_in_file options ast_info file_key def_info name =
     in
     literal_prop_refs_result
     >>= begin fun literal_prop_refs_result ->
-      filter_prop_refs cx !potential_refs file_key local_defs def_info name
+      filter_prop_refs cx !potential_refs file_key def_info name
       >>| (@) local_defs
       >>| (@) literal_prop_refs_result
     end
