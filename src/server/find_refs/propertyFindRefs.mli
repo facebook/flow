@@ -14,4 +14,4 @@ val find_refs:
   Loc.t ->
   global: bool ->
   multi_hop: bool ->
-  ((string * Loc.t list * int option) option, string) result Lwt.t
+  ((FindRefsTypes.find_refs_found * int option) option, string) result Lwt.t

@@ -32,7 +32,7 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
       match VariableFindRefs.local_find_refs ast loc with
       (* Got nothing from local variable find-refs, try object property find-refs *)
       | None -> property_find_refs loc
-      | Some (name, local_refs, local_def_loc) ->
+      | Some ((name, local_refs), local_def_loc) ->
         (* We got something from local variable find-refs -- now let's check if it's an exported
          * symbol *)
         let start_loc = match ImportExportSymbols.find_related_symbol file_sig local_def_loc with
@@ -45,14 +45,14 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
         refs %>>| fun refs ->
         (* If property find-refs returned nothing (for example if we are importing from an untyped
          * module), then fall back on the local refs we computed earlier. *)
-        Lwt.return @@ Some (Option.value ~default:(name, local_refs, None) refs)
+        Lwt.return @@ Some (Option.value ~default:((name, local_refs), None) refs)
     in
     let json_data = match result with
-      | Ok (Some (_, _, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]
+      | Ok (Some (_, Some count)) -> ["deps", Hh_json.JSON_Number (string_of_int count)]
       | _ -> []
     in
     (* Drop the dependent file count  from the result *)
-    let result = result >>| Option.map ~f:(fun (name, locs, _) -> (name, locs)) in
+    let result = result >>| Option.map ~f:(fun (result, _) -> result) in
     let result = sort_and_dedup result in
     let json_data =
       ("result", Hh_json.JSON_String (match result with Ok _ -> "SUCCESS" | _ -> "FAILURE"))

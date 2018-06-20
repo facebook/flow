@@ -14,4 +14,4 @@ val find_refs:
   col: int ->
   global: bool ->
   multi_hop: bool ->
-  (ServerProt.Response.find_refs_response * Hh_json.json option) Lwt.t
+  (FindRefsTypes.find_refs_result * Hh_json.json option) Lwt.t

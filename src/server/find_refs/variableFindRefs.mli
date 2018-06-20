@@ -11,4 +11,4 @@
 val local_find_refs:
   Loc.t Ast.program ->
   Loc.t ->
-  (string * Loc.t list * Loc.t (* definition location *)) option
+  (FindRefsTypes.find_refs_found * Loc.t (* definition location *)) option
