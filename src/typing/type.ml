@@ -562,7 +562,7 @@ module rec TypeTerm : sig
     | DebugPrintT of reason
     | DebugSleepT of reason
 
-    | SentinelPropTestT of reason * t * string * bool * Enum.t * t_out
+    | SentinelPropTestT of reason * t * string * bool * Enum.star * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -1108,6 +1108,9 @@ and Enum : sig
     | Void
     | Null
   val compare: t -> t -> int
+  type star =
+    | One of t
+    | Many of EnumSet.t
 end = struct
   type t =
     | Str of string
@@ -1116,6 +1119,9 @@ end = struct
     | Void
     | Null
   let compare = Pervasives.compare
+  type star =
+    | One of t
+    | Many of EnumSet.t
 end
 
 and EnumSet: Set.S with type elt = Enum.t = Set.Make(Enum)
