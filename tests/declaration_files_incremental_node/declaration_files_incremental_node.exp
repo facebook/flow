@@ -203,6 +203,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with boolean [2].
@@ -221,7 +272,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -423,6 +474,57 @@ References:
                                      ^^^^^^^^^^ [1]
    test_absolute.js:41:11
    41| (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js.flow:4:24
+    4| declare var fun: () => Definition;
+                              ^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js.flow:2:32
+    2| declare export function fun(): Definition;
+                                      ^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js.flow:4:31
+    4| declare export var fun: () => Definition;
+                                     ^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
                  ^^^^^^^ [2]
 
 
@@ -444,7 +546,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
@@ -649,6 +751,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Implementation` [1] is incompatible with boolean [2].
@@ -667,7 +820,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 
 
 ======Start off with the .js files and the .flow file======
@@ -875,6 +1028,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js.flow:4:24
+    4| declare var fun: () => Definition;
+                              ^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js.flow:2:32
+    2| declare export function fun(): Definition;
+                                      ^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js.flow:4:31
+    4| declare export var fun: () => Definition;
+                                     ^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -893,7 +1097,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
@@ -1095,6 +1299,57 @@ References:
                                 ^^^^^^^^^^^^^^ [1]
    test_absolute.js:41:11
    41| (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js:4:26
+    4| module.exports.fun = (): Implementation => new Implementation();
+                                ^^^^^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
                  ^^^^^^^ [2]
 
 
@@ -1116,7 +1371,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -1321,6 +1576,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js.flow:4:24
+    4| declare var fun: () => Definition;
+                              ^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js.flow:2:32
+    2| declare export function fun(): Definition;
+                                      ^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js.flow:4:31
+    4| declare export var fun: () => Definition;
+                                     ^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -1339,7 +1645,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 
 
 ======Start off without the .js files and with the .flow file======
@@ -1547,6 +1853,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js.flow:4:24
+    4| declare var fun: () => Definition;
+                              ^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js.flow:2:32
+    2| declare export function fun(): Definition;
+                                      ^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js.flow:4:31
+    4| declare export var fun: () => Definition;
+                                     ^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -1565,7 +1922,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -1770,6 +2127,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js.flow:4:24
+    4| declare var fun: () => Definition;
+                              ^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js.flow:2:32
+    2| declare export function fun(): Definition;
+                                      ^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js.flow:4:31
+    4| declare export var fun: () => Definition;
+                                     ^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -1788,7 +2196,7 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
 Error --------------------------------------------------------------------------------------------- test_absolute.js:5:2
 
 Cannot cast `B1.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -1993,6 +2401,57 @@ References:
                  ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- test_absolute.js:44:2
+
+Cannot cast `G.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:44:2
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_full_flow_main/code.js.flow:4:24
+    4| declare var fun: () => Definition;
+                              ^^^^^^^^^^ [1]
+   test_absolute.js:44:11
+   44| (G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:47:2
+
+Cannot cast `H.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:47:2
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_partial_flow_main/code.js.flow:2:32
+    2| declare export function fun(): Definition;
+                                      ^^^^^^^^^^ [1]
+   test_absolute.js:47:11
+   47| (H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_absolute.js:50:2
+
+Cannot cast `I.fun()` to boolean because `Definition` [1] is incompatible with boolean [2].
+
+   test_absolute.js:50:2
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+        ^^^^^^^
+
+References:
+   node_modules/package_with_dir_flow_main/dir/index.js.flow:4:31
+    4| declare export var fun: () => Definition;
+                                     ^^^^^^^^^^ [1]
+   test_absolute.js:50:11
+   50| (I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- test_relative.js:3:2
 
 Cannot cast `foo()` to boolean because `Definition` [1] is incompatible with boolean [2].
@@ -2011,4 +2470,4 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors
