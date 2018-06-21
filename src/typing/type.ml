@@ -805,9 +805,7 @@ module rec TypeTerm : sig
   (* Instance types are represented as an InstanceT while statics are ObjT.
      However, both need to be checked for compatibility with the super type at
      declaration time. *)
- and derived_type =
-    | DerivedInstance of insttype
-    | DerivedStatics of objtype
+  and derived_type = Derived of { instance: insttype; statics: objtype }
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the

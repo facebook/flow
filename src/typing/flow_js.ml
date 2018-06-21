@@ -5786,33 +5786,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | DefT (ureason, InstanceT _),
-      SuperT (use_op, reason, derived_type) ->
-      let check_super = check_super cx trace ~use_op reason ureason l in
-      (match derived_type with
-      | DerivedInstance {fields_tmap; methods_tmap; _} ->
-        Context.iter_props cx fields_tmap check_super;
+    | DefT (ureason, InstanceT (static, _, _, _)),
+      SuperT (use_op, reason, Derived {instance=di; statics=ds}) ->
+      let check_super l = check_super cx trace ~use_op reason ureason l in
+      begin (* instance *)
+        let {fields_tmap; methods_tmap; _} = di in
+        Context.iter_props cx fields_tmap (check_super l);
         Context.iter_props cx methods_tmap (fun x p ->
-          if inherited_method x then check_super x p
+          if inherited_method x then check_super l x p
         )
-      | DerivedStatics {props_tmap; _} ->
+      end;
+      begin (* statics *)
+        let {props_tmap; _} = ds in
         Context.iter_props cx props_tmap (fun x p ->
-          if inherited_method x then check_super x p
-        ))
+          if inherited_method x then check_super static x p
+        )
+      end
 
     | DefT (ureason, ObjT _), SuperT (use_op, reason, derived_type)
     | DefT (ureason, AnyObjT), SuperT (use_op, reason, derived_type) ->
+      (* NOTE: ObjT can only appear as a super type of an interface, which does
+         not have statics. It's not clear that allowing ObjT here is desirable. *)
       let check_super = check_super cx trace ~use_op reason ureason l in
-      (match derived_type with
-      | DerivedInstance {fields_tmap; methods_tmap; _} ->
-        Context.iter_props cx fields_tmap check_super;
-        Context.iter_props cx methods_tmap (fun x p ->
-          if inherited_method x then check_super x p
-        )
-      | DerivedStatics {props_tmap; _} ->
-        Context.iter_props cx props_tmap (fun x p ->
-          if inherited_method x then check_super x p
-        ))
+      let Derived {instance=i; statics=_} = derived_type in
+      let {fields_tmap; methods_tmap; _} = i in
+      Context.iter_props cx fields_tmap check_super;
+      Context.iter_props cx methods_tmap (fun x p ->
+        if inherited_method x then check_super x p
+      )
 
     (***********************)
     (* opaque types part 2 *)

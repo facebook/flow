@@ -518,8 +518,10 @@ let check_super cx def_reason x =
     name = reason;
     extends = reason_of_t x.instance.super;
   }) in
-  Flow.flow cx (x.static.super, SuperT (use_op, reason, DerivedStatics static_objtype));
-  Flow.flow cx (x.instance.super, SuperT (use_op, reason, DerivedInstance insttype))
+  Flow.flow cx (x.instance.super, SuperT (use_op, reason, Derived {
+    instance = insttype;
+    statics = static_objtype
+  }))
 
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)

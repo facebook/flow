@@ -1045,14 +1045,6 @@ References:
                            ^ [1]
 
 
-Error -------------------------------------------------------------------------------------- misc-incompatibles.js:11:21
-
-number [1] is not an instance type.
-
-   11| interface B extends A {}
-                           ^ [1]
-
-
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:14:3
 
 Cannot access computed property using boolean [1].
@@ -1198,4 +1190,4 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 69 errors
+Found 68 errors
