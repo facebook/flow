@@ -43,25 +43,6 @@ let convert_targs cx = function
       |> List.map (Anno.convert cx SMap.empty)
       |> List.split in
     Some targts, Some ((), List.map (fun t -> (), t) targs_ast)
-
-let error_expression_ast =
-  Ast.Expression.Identifier ((), "Error Expression AST")
-
-let error_pattern_ast =
-  Ast.Pattern.Expression ((), error_expression_ast)
-
-let error_property_ast = Ast.Expression.Object.(
-  Property (
-    (),
-    Property.Init {
-      key = Property.Identifier ((), "Error property");
-      value = (), error_expression_ast;
-      shorthand = false;
-    }
-  ))
-let error_expression_or_spread_list =
-  [ Ast.Expression.Expression ((), error_expression_ast) ]
-
 (*********************************************************)
 (* Temporary -- to be deleted once AST threading is done *)
 (*********************************************************)
@@ -82,7 +63,7 @@ let unimplemented_function_ast = { Ast.Function.
   }
 let unimplemented_targs_ast = None
 let unimplemented_expression_or_spread_list =
-  [ Ast.Expression.Expression ((), error_expression_ast) ]
+  [ Ast.Expression.Expression ((), unimplemented_expression_ast) ]
 module Old_Anno = struct
   include Anno
   let convert cx tparams_map t =
@@ -2298,7 +2279,7 @@ and object_prop cx map = Ast.Expression.Object.(function
   | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
-    map, error_property_ast
+    map, Typed_ast.Expression.Object.property_error
 
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
@@ -2306,16 +2287,16 @@ and object_prop cx map = Ast.Expression.Object.(function
   | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
-    map, error_property_ast
+    map, Typed_ast.Expression.Object.property_error
 
   (* computed LHS silently ignored for now *)
   | Property (_, Property.Init { key = Property.Computed _; _ })
   | Property (_, Property.Method { key = Property.Computed _; _ }) ->
-    map, error_property_ast
+    map, Typed_ast.Expression.Object.property_error
 
   (* spread prop *)
   | SpreadProperty _ ->
-    map, error_property_ast
+    map, Typed_ast.Expression.Object.property_error
 
   | Property (_, Property.Init { key = Property.PrivateName _; _ })
   | Property (_, Property.Method { key = Property.PrivateName _; _ })
@@ -2807,7 +2788,7 @@ and expression_ ~is_cond cx loc e : Type.t * unit Ast.Expression.t' =
       | Error err ->
         Flow.add_output cx err;
         EmptyT.at loc,
-        error_expression_ast
+        Typed_ast.Expression.error
     )
 
   | New { New.callee; targs; arguments } ->
@@ -3092,17 +3073,17 @@ and expression_ ~is_cond cx loc e : Type.t * unit Ast.Expression.t' =
   | Comprehension _ ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ComprehensionExpression));
-    EmptyT.at loc, error_expression_ast
+    EmptyT.at loc, Typed_ast.Expression.error
 
   | Generator _ ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, GeneratorExpression));
-    EmptyT.at loc, error_expression_ast
+    EmptyT.at loc, Typed_ast.Expression.error
 
   | MetaProperty _->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, MetaPropertyExpression));
-    EmptyT.at loc, error_expression_ast
+    EmptyT.at loc, Typed_ast.Expression.error
 
   | Import arg -> (
     match arg with
@@ -3136,7 +3117,7 @@ and expression_ ~is_cond cx loc e : Type.t * unit Ast.Expression.t' =
       then
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ImportDynamicArgument));
-      AnyT.at loc, error_expression_ast
+      AnyT.at loc, Typed_ast.Expression.error
   )
 )
 
@@ -3226,7 +3207,7 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at loc, error_expression_or_spread_list
+          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           let ignore_non_literals =
@@ -3235,7 +3216,7 @@ and subscript =
           then
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          AnyT.at loc, error_expression_or_spread_list
+          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
       ) in
       ex, lhs_t, acc, lhs_t,
       call_ast { Call.
@@ -3308,12 +3289,12 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at loc, error_expression_or_spread_list
+          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           Flow.add_output cx
             Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          AnyT.at loc, error_expression_or_spread_list
+          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
       ) in
       ex, lhs_t, acc, lhs_t,
       call_ast { Call.
@@ -3522,7 +3503,7 @@ and subscript =
             ignore (List.map (expression_or_spread cx) arguments);
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
-            error_expression_or_spread_list
+            Typed_ast.Expression.expression_or_spread_list_error
           | Some _, _ ->
             ignore (List.map (expression_or_spread cx) arguments);
             Flow.add_output cx Flow_error.(ECallTypeArity {
@@ -3531,7 +3512,7 @@ and subscript =
               reason_arity = Reason.(locationless_reason (RFunction RNormal));
               expected_arity = 0;
             });
-            error_expression_or_spread_list
+            Typed_ast.Expression.expression_or_spread_list_error
         in
         let lhs_t = VoidT.at loc in
         ex, lhs_t, acc, lhs_t,
@@ -4207,7 +4188,7 @@ and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
   | loc, Array _ ->
       Flow.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
-      AnyT.at loc, error_pattern_ast
+      AnyT.at loc, Typed_ast.Pattern.error
 
   | _, Identifier { Identifier.name = (loc, name); optional; _; } ->
       identifier cx name loc,

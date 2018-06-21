@@ -27,45 +27,9 @@ let qualified_name =
 
 let ident_name (_, name) = name
 
-(*  Arbitrary bogus AST nodes to return in the case of errors that prevent
-    type annotation conversion from traversing the rest of the AST *)
-let error_type_ast =
-  Ast.Type.Generic { Ast.Type.Generic.
-    id = (Ast.Type.Generic.Identifier.Unqualified ((), "Error"));
-    targs = None
-  }
-let error_property_ast { Ast.Type.Object.Property.
-    optional; static; proto; _method; variance; _
-  } = { Ast.Type.Object.Property.
-    key = Ast.Expression.Object.Property.Literal ((), { Ast.Literal.
-      (* literal null was chosen arbitrarily *)
-      value = Ast.Literal.Null;
-      raw = "Error";
-    });
-    value = Ast.Type.Object.Property.Init ((), error_type_ast);
-    optional; static; proto; _method;
-    variance = Option.map ~f:(fun (_, v) -> ((), v)) variance;
-  }
-let error_indexer_ast = { Ast.Type.Object.Indexer.
-    id = Some ((), "Error");
-    key = (), error_type_ast;
-    value = (), error_type_ast;
-    static = false;
-    variance = None;
-  }
-let error_internal_slot_ast name = { Ast.Type.Object.InternalSlot.
-    id = (), name;
-    value = (), error_type_ast;
-    optional = false;
-    static = false;
-    _method = false;
-  }
-let error_spread_property_ast =
-  { Ast.Type.Object.SpreadProperty.argument = (), error_type_ast }
-
 let error_type cx loc msg =
   Flow.add_output cx msg;
-  AnyT.at loc, error_type_ast
+  AnyT.at loc, Typed_ast.Type.error
 
 let is_suppress_type cx type_name =
   SSet.mem type_name (Context.suppress_types cx)
@@ -944,7 +908,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | Ast.Expression.Object.Property.Computed (loc, _)
           ->
         Flow.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
-        props, proto, call_deprecated, error_property_ast prop
+        props, proto, call_deprecated, Typed_ast.Type.Object.Property.error
       end
 
     (* unsafe getter property *)
@@ -993,7 +957,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         value = Object.Property.Get _ | Object.Property.Set _; _ } ->
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-      props, proto, call_deprecated, error_property_ast prop
+      props, proto, call_deprecated, Typed_ast.Type.Object.Property.error
   in
   let add_call c = function
     | None -> Some ([c], None, SMap.empty, None, None)
@@ -1030,7 +994,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     | Some (_, Some _, _, _, _) as o ->
       Flow.add_output cx
         FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));
-      o, error_indexer_ast
+      o, Typed_ast.Type.Object.Indexer.error
   in
   let add_prop loc p = function
     | None ->
@@ -1079,7 +1043,7 @@ let rec convert cx tparams_map = Ast.Type.(function
             name;
             static = false;
           }));
-        o, ts, spread, InternalSlot ((), error_internal_slot_ast name)::rev_prop_asts
+        o, ts, spread, InternalSlot ((), Typed_ast.Type.Object.InternalSlot.error)::rev_prop_asts
       )
     | SpreadProperty (_, { Object.SpreadProperty.argument }) ->
       let ts = match o with
@@ -1407,7 +1371,7 @@ and add_interface_properties cx tparams_map properties s =
       when mem_field ~static "$key" x ->
       Flow.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, MultipleIndexers));
-      x, Indexer ((), error_indexer_ast)::rev_prop_asts
+      x, Indexer ((), Typed_ast.Type.Object.Indexer.error)::rev_prop_asts
     | Indexer (_, { Indexer.key; value; static; variance; id }) ->
       let k, k_ast = convert cx tparams_map key in
       let v, v_ast = convert cx tparams_map value in
@@ -1423,7 +1387,7 @@ and add_interface_properties cx tparams_map properties s =
       })::rev_prop_asts
     | Property (loc, ({ Property.
         key; value; static; proto; _method; optional; variance;
-      } as prop)) ->
+      })) ->
       if optional && _method
       then Flow.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = polarity variance in
@@ -1433,7 +1397,7 @@ and add_interface_properties cx tparams_map properties s =
         | _, Property.PrivateName (loc, _), _
         | _, Property.Computed (loc, _), _ ->
             Flow.add_output cx (Flow_error.EUnsupportedSyntax (loc, Flow_error.IllegalName));
-            x, ((), error_property_ast prop)
+            x, ((), Typed_ast.Type.Object.Property.error)
 
         (* Previously, call properties were stored in the props map under the key
            $call. Unfortunately, this made it possible to specify call properties
@@ -1473,7 +1437,7 @@ and add_interface_properties cx tparams_map properties s =
         | true, Property.Identifier _, _ ->
             Flow.add_output cx
               Flow_error.(EInternal (loc, MethodNotAFunction));
-            x, ((), error_property_ast prop)
+            x, ((), Typed_ast.Type.Object.Property.error)
 
         | false, Property.Identifier (id_loc, name),
             Ast.Type.Object.Property.Init value ->
@@ -1540,13 +1504,13 @@ and add_interface_properties cx tparams_map properties s =
             name;
             static;
           }));
-        x, InternalSlot ((), error_internal_slot_ast name)::rev_prop_asts
+        x, InternalSlot ((), Typed_ast.Type.Object.InternalSlot.error)::rev_prop_asts
       )
 
     | SpreadProperty (loc, _) ->
       Flow.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x,
-      SpreadProperty ((), error_spread_property_ast)::rev_prop_asts
+      SpreadProperty ((), Typed_ast.Type.Object.SpreadProperty.error)::rev_prop_asts
   ) (s, []) properties
   in
   x, List.rev rev_prop_asts
