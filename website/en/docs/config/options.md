@@ -48,7 +48,6 @@ can be overridden with command line flags.
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
-* [`unsafe.enable_getters_and_setters`](#toc-unsafe-enable-getters-and-setters-boolean)
 
 #### `all` _`(boolean)`_ <a class="toc" id="toc-all-boolean" href="#toc-all-boolean"></a>
 
@@ -414,12 +413,3 @@ The default value is `/tmp/flow`.
 Enables traces on all error output (showing additional details about the flow
 of types through the system), to the depth specified. This can be very
 expensive, so is disabled by default.
-
-#### `unsafe.enable_getters_and_setters` _`(boolean)`_ <a class="toc" id="toc-unsafe-enable-getters-and-setters-boolean" href="#toc-unsafe-enable-getters-and-setters-boolean"></a>
-
-Flow cannot safely type getter and setter properties, so using them is an
-error by default. If you want Flow to allow them, set this option to `true`.
-Flow will recognize these properties exist and give them types, but won't
-properly invalidate refinements when they're read or written.
-
-The default value is `false`.
