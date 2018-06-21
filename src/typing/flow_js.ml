@@ -6495,18 +6495,17 @@ and needs_resolution = function
 and flow_addition cx trace use_op reason flip l r u =
   if needs_resolution r then rec_flow cx trace (r, AdderT (use_op, reason, not flip, l, u)) else
   let (l, r) = if flip then (r, l) else (l, r) in
-  (* disable ops because the left and right sides should already be
-     repositioned. *)
+  let loc = loc_of_reason reason in
   begin match l, r with
   | DefT (_, StrT _), DefT (_, StrT _)
   | DefT (_, StrT _), DefT (_, NumT _)
   | DefT (_, NumT _), DefT (_, StrT _) ->
-    rec_flow_t cx trace (StrT.why reason, u)
+    rec_flow_t cx trace (StrT.at loc, u)
 
   (* unreachable additions are unreachable *)
   | DefT (_, EmptyT), _
   | _, DefT (_, EmptyT) ->
-    rec_flow_t cx trace (EmptyT.why reason, u)
+    rec_flow_t cx trace (EmptyT.at loc, u)
 
   | DefT (reason, MixedT _), _
   | _, DefT (reason, MixedT _) ->
@@ -6514,27 +6513,27 @@ and flow_addition cx trace use_op reason flip l r u =
 
   | DefT (_, (NumT _ | BoolT _ | NullT | VoidT)),
     DefT (_, (NumT _ | BoolT _ | NullT | VoidT)) ->
-    rec_flow_t cx trace (NumT.why reason, u)
+    rec_flow_t cx trace (NumT.at loc, u)
 
   | DefT (_, StrT _), _ ->
     rec_flow cx trace (r, UseT (use_op, l));
-    rec_flow_t cx trace (StrT.why reason, u);
+    rec_flow_t cx trace (StrT.at loc, u);
 
   | _, DefT (_, StrT _) ->
     rec_flow cx trace (l, UseT (use_op, r));
-    rec_flow_t cx trace (StrT.why reason, u);
+    rec_flow_t cx trace (StrT.at loc, u);
 
   | DefT (_, AnyT), _
   | _, DefT (_, AnyT) ->
-    rec_flow_t cx trace (AnyT.why reason, u)
+    rec_flow_t cx trace (AnyT.at loc, u)
 
   | DefT (_, NumT _), _ ->
     rec_flow cx trace (r, UseT (use_op, l));
-    rec_flow_t cx trace (NumT.why reason, u);
+    rec_flow_t cx trace (NumT.at loc, u);
 
   | _, DefT (_, NumT _) ->
     rec_flow cx trace (l, UseT (use_op, r));
-    rec_flow_t cx trace (NumT.why reason, u);
+    rec_flow_t cx trace (NumT.at loc, u);
 
   | (_, _) ->
     let fake_str = StrT.why reason in
