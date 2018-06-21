@@ -31,7 +31,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_and_json_flags
+    |> connect_and_json_flags
     |> root_flag
     |> strip_root_flag
     |> from_flag

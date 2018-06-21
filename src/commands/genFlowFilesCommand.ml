@@ -49,7 +49,7 @@ let spec = {
   ;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> connect_flags
     |> root_flag
     |> error_flags
     |> strip_root_flag

@@ -541,7 +541,7 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
   |> lints_flag
 )
 
-type command_params = {
+type connect_params = {
   from               : string;
   retries            : int;
   retry_if_init      : bool;
@@ -555,7 +555,7 @@ type command_params = {
   quiet              : bool;
 }
 
-let collect_server_flags
+let collect_connect_flags
     main
     timeout
     retries
@@ -589,9 +589,9 @@ let collect_server_flags
     quiet;
   }
 
-let server_flags prev = CommandSpec.ArgSpec.(
+let connect_flags prev = CommandSpec.ArgSpec.(
   prev
-  |> collect collect_server_flags
+  |> collect collect_connect_flags
   |> flag "--timeout" (optional int)
       ~doc:"Maximum time to wait, in seconds"
   |> flag "--retries" (optional int)
@@ -608,16 +608,16 @@ let server_flags prev = CommandSpec.ArgSpec.(
 )
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
-let server_and_json_flags =
-  let collect_server_and_json main server_flags json pretty =
-    main { server_flags with
-      quiet = server_flags.quiet || json || pretty
+let connect_and_json_flags =
+  let collect_connect_and_json main connect_flags json pretty =
+    main { connect_flags with
+      quiet = connect_flags.quiet || json || pretty
     } json pretty
   in
   fun prev ->
     prev
-    |> CommandSpec.ArgSpec.collect collect_server_and_json
-    |> server_flags
+    |> CommandSpec.ArgSpec.collect collect_connect_and_json
+    |> connect_flags
     |> json_flags
 
 let server_log_file ~tmp_dir root flowconfig =
@@ -877,45 +877,45 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_no_saved_state = options_flags.no_saved_state;
   }
 
-let make_env server_flags root =
+let make_env connect_flags root =
   let flowconfig_path = Server_files_js.config_file root in
   let flowconfig = FlowConfig.get flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir = Option.value_map
     ~f:normalize
     ~default:(FlowConfig.temp_dir flowconfig)
-    server_flags.temp_dir in
+    connect_flags.temp_dir in
   let shm_dirs = Option.map
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
-    server_flags.shm_flags.shm_dirs in
+    connect_flags.shm_flags.shm_dirs in
   let log_file =
     Path.to_string (server_log_file ~tmp_dir root flowconfig) in
-  let retries = server_flags.retries in
-  let expiry = match server_flags.timeout with
+  let retries = connect_flags.retries in
+  let expiry = match connect_flags.timeout with
   | None -> None
   | Some n -> Some (Unix.gettimeofday () +. float n)
   in
   { CommandConnect.
     root;
-    autostart = not server_flags.no_auto_start;
-    lazy_mode = server_flags.lazy_mode;
+    autostart = not connect_flags.no_auto_start;
+    lazy_mode = connect_flags.lazy_mode;
     retries;
     expiry;
-    autostop = server_flags.autostop;
+    autostop = connect_flags.autostop;
     tmp_dir;
     shm_dirs;
-    shm_min_avail = server_flags.shm_flags.shm_min_avail;
-    shm_dep_table_pow = server_flags.shm_flags.shm_dep_table_pow;
-    shm_hash_table_pow = server_flags.shm_flags.shm_hash_table_pow;
-    shm_log_level = server_flags.shm_flags.shm_log_level;
+    shm_min_avail = connect_flags.shm_flags.shm_min_avail;
+    shm_dep_table_pow = connect_flags.shm_flags.shm_dep_table_pow;
+    shm_hash_table_pow = connect_flags.shm_flags.shm_hash_table_pow;
+    shm_log_level = connect_flags.shm_flags.shm_log_level;
     log_file;
-    ignore_version = server_flags.ignore_version;
+    ignore_version = connect_flags.ignore_version;
     emoji = FlowConfig.emoji flowconfig;
-    quiet = server_flags.quiet;
+    quiet = connect_flags.quiet;
   }
 
-let connect ~client_handshake server_flags root =
-  let env = make_env server_flags root
+let connect ~client_handshake connect_flags root =
+  let env = make_env connect_flags root
   in
   CommandConnect.connect ~client_handshake env
 
@@ -1074,25 +1074,25 @@ let rec connect_and_make_request =
       FlowExitStatus.(exit ~msg Unknown_error)
   in
 
-  fun ?timeout ?retries server_flags root request ->
+  fun ?timeout ?retries connect_flags root request ->
     let retries = match retries with
-    | None -> server_flags.retries
+    | None -> connect_flags.retries
     | Some retries -> retries in
 
     if retries < 0
     then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
 
-    let quiet = server_flags.quiet in
+    let quiet = connect_flags.quiet in
     let client_handshake = ({ SocketHandshake.
       client_build_id = SocketHandshake.build_revision;
       is_stop_request = false;
-      server_should_hangup_if_still_initializing = not server_flags.retry_if_init;
+      server_should_hangup_if_still_initializing = not connect_flags.retry_if_init;
       server_should_exit_if_version_mismatch = true;
     }, { SocketHandshake.
       client_type = SocketHandshake.Ephemeral;
     }) in
     (* connect handles timeouts itself *)
-    let ic, oc = connect ~client_handshake server_flags root in
+    let ic, oc = connect ~client_handshake connect_flags root in
     send_command ?timeout oc request;
     try wait_for_response ?timeout ~quiet ~root ic
     with End_of_file ->
@@ -1103,18 +1103,18 @@ let rec connect_and_make_request =
           retries
           (if retries = 1 then "retry" else "retries")
       end;
-      connect_and_make_request ?timeout ~retries:(retries - 1) server_flags root request
+      connect_and_make_request ?timeout ~retries:(retries - 1) connect_flags root request
 
 (* If --timeout is set, wrap connect_and_make_request in a timeout *)
-let connect_and_make_request ?retries server_flags root request =
-  match server_flags.timeout with
+let connect_and_make_request ?retries connect_flags root request =
+  match connect_flags.timeout with
   | None ->
-    connect_and_make_request ?retries server_flags root request
+    connect_and_make_request ?retries connect_flags root request
   | Some timeout ->
     Timeout.with_timeout
       ~timeout
       ~on_timeout:(fun () -> FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time))
-      ~do_:(fun timeout -> connect_and_make_request ~timeout ?retries server_flags root request)
+      ~do_:(fun timeout -> connect_and_make_request ~timeout ?retries connect_flags root request)
 
 let failwith_bad_response ~request ~response =
   let msg = Printf.sprintf

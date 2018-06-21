@@ -37,7 +37,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_and_json_flags
+        |> connect_and_json_flags
         |> json_version_flag
         |> error_flags
         |> strip_root_flag
@@ -78,7 +78,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_and_json_flags
+        |> connect_and_json_flags
         |> json_version_flag
         |> error_flags
         |> strip_root_flag
@@ -99,12 +99,12 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     strip_root: bool;
   }
 
-  let check_status (args:args) server_flags =
+  let check_status (args:args) connect_flags =
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
     let request = ServerProt.Request.STATUS (args.root, include_warnings) in
-    let response, lazy_stats = match connect_and_make_request server_flags args.root request with
+    let response, lazy_stats = match connect_and_make_request connect_flags args.root request with
     | ServerProt.Response.STATUS {status_response; lazy_stats} -> status_response, lazy_stats
     | response -> failwith_bad_response ~request ~response
     in
@@ -163,7 +163,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  let main server_flags json pretty json_version error_flags strip_root from version root () =
+  let main connect_flags json pretty json_version error_flags strip_root from version root () =
     FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
@@ -178,14 +178,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
     let args = {
       root;
-      from = server_flags.CommandUtils.from;
+      from = connect_flags.CommandUtils.from;
       output_json = json;
       output_json_version = json_version;
       pretty;
       error_flags;
       strip_root;
     } in
-    check_status args server_flags
+    check_status args connect_flags
 end
 
 module Status(CommandList : COMMAND_LIST) = struct

@@ -24,7 +24,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> connect_flags
     |> root_flag
     |> from_flag
     |> anon "files" (required (list_of string))

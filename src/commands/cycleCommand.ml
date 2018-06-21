@@ -21,7 +21,7 @@ let spec = {
       Utils_js.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> connect_flags
     |> root_flag
     |> strip_root_flag
     |> anon "FILE..." (required string)

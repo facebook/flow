@@ -105,7 +105,7 @@ type open_file_info = {
 
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
-  i_connect_params: command_params;
+  i_connect_params: connect_params;
   i_root: Path.t;
   i_version: string option;
   i_server_id: int;
@@ -141,7 +141,7 @@ and connected_env = {
 
 and state =
   (* Pre_init: we haven't yet received the initialize request.           *)
-  | Pre_init of command_params
+  | Pre_init of connect_params
   (* Disconnected: we'll attempt to reconnect once a tick.               *)
   | Disconnected of disconnected_env
   (* Main_loop: we have a working connection to both server and client.  *)
@@ -1013,7 +1013,7 @@ module RagePrint = struct
       (Option.value_map lazy_stats.Response.lazy_mode ~default:"" ~f:Options.lazy_mode_to_string)
       lazy_stats.Response.checked_files lazy_stats.Response.total_files
 
-  let string_of_command_params (p: command_params) : string =
+  let string_of_connect_params (p: connect_params) : string =
     let open CommandUtils in
     Printf.sprintf (
       "from=%s, retries=%d, retry_if_init=%B, no_auto_start=%B, autostop=%B, \
@@ -1046,7 +1046,7 @@ module RagePrint = struct
         (print_showStatus params |> Hh_json.json_to_string)
 
   let add_ienv (b: Buffer.t) (ienv: initialized_env) : unit =
-    addline b "i_connect_params=" (ienv.i_connect_params |> string_of_command_params);
+    addline b "i_connect_params=" (ienv.i_connect_params |> string_of_connect_params);
     addline b "i_root=" (ienv.i_root |> Path.to_string);
     addline b "i_version=" (ienv.i_version |> Option.value ~default:"None");
     addline b "i_server_id=" (ienv.i_server_id |> string_of_int);
@@ -1107,7 +1107,7 @@ module RagePrint = struct
     let b = Buffer.create 10000 in
     begin match state with
       | Pre_init p -> Buffer.add_string b (Printf.sprintf "Pre_init:\n%s\n"
-        (string_of_command_params p))
+        (string_of_connect_params p))
       | Post_shutdown -> Buffer.add_string b "Post_shutdown:\n[]\n"
       | Disconnected denv -> Buffer.add_string b "Disconnected:\n"; add_denv b denv;
       | Connected cenv -> Buffer.add_string b "Connected:\n"; add_cenv b cenv;

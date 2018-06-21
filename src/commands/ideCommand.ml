@@ -28,7 +28,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> connect_flags
     |> root_flag
     |> from_flag
     |> flag "--protocol" (required (enum protocol_options))
