@@ -5,6 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+let hh_logger_level_of_env env =
+  match Sys_utils.get_env env with
+  | Some "off" -> Some Hh_logger.Level.Off
+  | Some "fatal" -> Some Hh_logger.Level.Fatal
+  | Some "error" -> Some Hh_logger.Level.Error
+  | Some "warn" -> Some Hh_logger.Level.Warn
+  | Some "info" -> Some Hh_logger.Level.Info
+  | Some "debug" -> Some Hh_logger.Level.Debug
+  | Some _ (* ignore invalid values *)
+  | None -> None
+
 (* TODO: min_level should probably default to warn, but was historically info *)
 let set_hh_logger_min_level ?(min_level=Hh_logger.Level.Info) options =
   Hh_logger.Level.set_min_level (
@@ -12,14 +23,8 @@ let set_hh_logger_min_level ?(min_level=Hh_logger.Level.Info) options =
       Hh_logger.Level.Off
     else if Options.verbose options != None || Options.is_debug_mode options then
       Hh_logger.Level.Debug
-    else match Sys_utils.get_env "FLOW_LOG_LEVEL" with
-      | Some "off" -> Hh_logger.Level.Off
-      | Some "fatal" -> Hh_logger.Level.Fatal
-      | Some "error" -> Hh_logger.Level.Error
-      | Some "warn" -> Hh_logger.Level.Warn
-      | Some "info" -> Hh_logger.Level.Info
-      | Some "debug" -> Hh_logger.Level.Debug
-      | Some _ (* ignore invalid values *)
+    else match hh_logger_level_of_env "FLOW_LOG_LEVEL" with
+      | Some level -> level
       | None -> min_level
   )
 
