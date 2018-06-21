@@ -9,6 +9,9 @@ IMPL_FILES="
   node_modules/package_with_full_main/code.js
   node_modules/package_with_no_package_json/index.js
   node_modules/package_with_partial_main/code.js
+  node_modules/package_with_dir_flow_main/dir/index.js
+  node_modules/package_with_full_flow_main/code.js
+  node_modules/package_with_partial_flow_main/code.js
 "
 DECL_FILES=$(echo "$IMPL_FILES" | sed -e "s/\.js/.js.flow/g")
 

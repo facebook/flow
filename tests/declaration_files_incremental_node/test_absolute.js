@@ -39,3 +39,12 @@ var E = require('package_with_no_package_json');
 
 var F = require('package_with_dir_main');
 (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+
+var G = require('package_with_full_flow_main');
+(G.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+
+var H = require('package_with_partial_flow_main');
+(H.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+
+var I = require('package_with_dir_flow_main');
+(I.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
