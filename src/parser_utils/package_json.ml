@@ -56,7 +56,8 @@ let parse ast =
           begin match key with
           | "name" -> { package with name = Some value }
           | "flow:main" -> { package with main = Some value }
-          | "main" -> { package with main = Some value }
+          (* Only use `main` if `flow:main` is not available *)
+          | "main" when package.main = None -> { package with main = Some value }
           | _ -> package
           end
       | _ -> package
