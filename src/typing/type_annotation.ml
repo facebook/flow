@@ -1743,24 +1743,3 @@ let mk_declare_class_sig =
       mixins = mixins_ast;
       implements = implements_ast;
     }
-
-(* temporarily discard AST information until statement.ml is updated to use it *)
-let convert cx tparams_map t =
-  fst (convert cx tparams_map t)
-let convert_qualification ?(lookup_mode=ForType) cx reason_prefix i =
-  fst (convert_qualification ~lookup_mode cx reason_prefix i)
-let mk_interface_super cx tparams_map t =
-  fst (mk_interface_super cx tparams_map t)
-let mk_super cx tparams_map c targs =
-  fst (mk_super cx tparams_map c targs)
-let mk_type_annotation cx tparams_map reason annot =
-  fst (mk_type_annotation cx tparams_map reason annot)
-let mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
-  fst (mk_nominal_type ~for_type cx reason tparams_map (c, targs))
-let fst2 (a, b, _) = (a, b)
-let mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
-  fst2 (mk_type_param_declarations cx ~tparams_map tparams)
-let mk_interface_sig cx reason decl =
-  fst2 (mk_interface_sig cx reason decl)
-let mk_declare_class_sig cx reason decl =
-  fst2 (mk_declare_class_sig cx reason decl)
