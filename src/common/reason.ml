@@ -154,7 +154,7 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
-  | RNamedImportedType of string
+  | RNamedImportedType of string (* module *) * string (* local name *)
   | RImportStarType of string
   | RImportStarTypeOf of string
   | RImportStar of string
@@ -519,7 +519,7 @@ let rec string_of_desc = function
     spf "undefined. Did you forget to declare %s?" (string_of_desc d)
   | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
-  | RNamedImportedType m -> spf "Named import from module `%s`" m
+  | RNamedImportedType (m, _) -> spf "Named import from module `%s`" m
   | RImportStarType n ->  spf "import type * as %s" n
   | RImportStarTypeOf n -> spf "import typeof * as %s" n
   | RImportStar n -> spf "import * as %s" n

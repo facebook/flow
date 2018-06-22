@@ -1894,7 +1894,7 @@ and statement cx = Ast.Statement.(
           ) in
           let imported_t =
             let import_reason =
-              mk_reason (RNamedImportedType module_name) (fst remote)
+              mk_reason (RNamedImportedType (module_name, local_name)) (fst remote)
             in
             if Type_inference_hooks_js.dispatch_member_hook
               cx remote_name remote_name_loc module_t

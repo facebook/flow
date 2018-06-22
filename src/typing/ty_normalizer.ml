@@ -1295,8 +1295,7 @@ end = struct
     match desc_of_reason reason with
     | RModule name
     | RCommonJSExports name
-    | RUntypedModule name
-    | RNamedImportedType name ->
+    | RUntypedModule name ->
       let symbol = symbol_from_reason env reason name in
       return (Ty.Module symbol)
     | _ ->

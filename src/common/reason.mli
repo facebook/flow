@@ -106,7 +106,7 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
-  | RNamedImportedType of string
+  | RNamedImportedType of string * string
   | RImportStarType of string
   | RImportStarTypeOf of string
   | RImportStar of string
