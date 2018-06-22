@@ -419,7 +419,7 @@ let process_prop_refs cx potential_refs file_key prop_def_info name =
     >>| begin fun refs ->
       refs
       |> ListUtils.cat_maybes
-      |> add_ref_kind FindRefsTypes.Other
+      |> add_ref_kind FindRefsTypes.PropertyAccess
     end
 
 let property_find_refs_in_file options ast_info file_key def_info name =
@@ -430,7 +430,7 @@ let property_find_refs_in_file options ast_info file_key def_info name =
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
-    |> add_ref_kind FindRefsTypes.Other
+    |> add_ref_kind FindRefsTypes.PropertyDefinition
   in
   let has_symbol = PropertyAccessSearcher.search name ast in
   if not has_symbol then
@@ -457,7 +457,7 @@ let property_find_refs_in_file options ast_info file_key def_info name =
       >>| begin fun refs ->
         refs
         |> ListUtils.cat_maybes
-        |> add_ref_kind FindRefsTypes.Other
+        |> add_ref_kind FindRefsTypes.PropertyDefinition
       end
     in
     literal_prop_refs_result

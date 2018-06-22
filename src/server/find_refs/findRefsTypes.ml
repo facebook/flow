@@ -6,6 +6,9 @@
  *)
 
 type ref_kind =
+  | PropertyDefinition
+  | PropertyAccess
+  | Local
   | Other
 
 type single_ref = ref_kind * Loc.t
