@@ -38,3 +38,5 @@ non-shorthand destructuring = {"path":"objects.js","line":3,"endline":3,"start":
 destructuring without type alias = {"path":"objects.js","line":7,"endline":7,"start":12,"end":14}
 destructuring a shadow prop = {"path":"","line":0,"endline":0,"start":1,"end":0}
 bogus array destructuring of an object = {"path":"","line":0,"endline":0,"start":1,"end":0}
+property access on the arg to the idx callback = {"path":"","line":0,"endline":0,"start":1,"end":0}
+nested property access on the arg to the idx callback = {"path":"","line":0,"endline":0,"start":1,"end":0}

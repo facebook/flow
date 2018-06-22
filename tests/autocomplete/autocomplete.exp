@@ -2090,3 +2090,7 @@ optional_chaining_continue.js = {
     }
   ]
 }
+idx.js = {
+  "error":"autocomplete on unexpected type of value IdxWrapper (please file a task!)",
+  "result":[]
+}

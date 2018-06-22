@@ -93,7 +93,11 @@ assert_ok \
 printf "optional_chaining_new.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty optional_chaining_new.js 9 15 < optional_chaining_new.js
-  
+
 printf "optional_chaining_continue.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty optional_chaining_continue.js 13 19 < optional_chaining_continue.js
+
+printf "idx.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty idx.js 12 28 < idx.js

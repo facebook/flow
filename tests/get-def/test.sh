@@ -129,3 +129,8 @@ assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
 # This one should return no results
 printf "bogus array destructuring of an object = "
 assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty
+
+printf "property access on the arg to the idx callback = "
+assert_ok "$FLOW" get-def idx.js 12 25 --strip-root --pretty
+printf "nested property access on the arg to the idx callback = "
+assert_ok "$FLOW" get-def idx.js 12 29 --strip-root --pretty

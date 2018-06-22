@@ -147,3 +147,9 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root --path empty.js 3 15 < 
 printf "Optional chaining:\\n"
 assert_ok "$FLOW" find-refs --json --pretty --strip-root optional-chaining.js 17 6
 assert_ok "$FLOW" find-refs --json --pretty --strip-root optional-chaining.js 17 10
+
+printf "Idx:\\n"
+assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 6 4
+assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 12 25
+assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 7 6
+assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 12 29

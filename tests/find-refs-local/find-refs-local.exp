@@ -1430,3 +1430,30 @@ Optional chaining:
     }
   ]
 }
+Idx:
+{
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":3,"offset":61},
+      "end":{"line":6,"column":5,"offset":64}
+    }
+  ]
+}
+{"kind":"no-symbol-found"}
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":5,"offset":73},
+      "end":{"line":7,"column":7,"offset":76}
+    }
+  ]
+}
+{"kind":"no-symbol-found"}
