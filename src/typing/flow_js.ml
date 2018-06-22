@@ -1043,7 +1043,7 @@ module ResolvableTypeJob = struct
     | MatchingPropT (_, _, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
-    | InternalT (IdxWrapper (_, t)) ->
+    | DefT (_, IdxWrapper t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
     | ReposT (_, t)
@@ -2283,7 +2283,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }) ->
       let tout = match call_targs, call_args_tlist with
       | None, (Arg obj)::(Arg cb)::[] ->
-        let wrapped_obj = InternalT (IdxWrapper (reason_op, obj)) in
+        let wrapped_obj = DefT (reason_op, IdxWrapper obj) in
         let callback_result = Tvar.mk_where cx reason_op (fun t ->
           rec_flow cx trace (cb, CallT (use_op, reason_op, {
             call_this_t;
@@ -2327,7 +2327,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (tout, call_tout)
 
     (* Unwrap idx() callback param *)
-    | InternalT (IdxWrapper (_, obj)), IdxUnwrap (_, t) -> rec_flow_t cx trace (obj, t)
+    | DefT (_, IdxWrapper obj), IdxUnwrap (_, t) -> rec_flow_t cx trace (obj, t)
     | (_, IdxUnwrap (_, t)) -> rec_flow_t cx trace (l, t)
 
     (* De-maybe-ify an idx() property access *)
@@ -2345,22 +2345,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* The set of valid uses of an idx() callback parameter. In general this
        should be limited to the various forms of property access operations. *)
-    | InternalT (IdxWrapper (idx_reason, obj)), ReposLowerT (reason_op, use_desc, u) ->
+    | DefT (idx_reason, IdxWrapper obj), ReposLowerT (reason_op, use_desc, u) ->
       let repositioned_obj = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (obj, ReposLowerT (reason_op, use_desc, UseT (unknown_use, t)))
       ) in
-      rec_flow cx trace (InternalT (IdxWrapper(idx_reason, repositioned_obj)), u)
+      rec_flow cx trace (DefT (idx_reason, IdxWrapper repositioned_obj), u)
 
-    | InternalT (IdxWrapper (idx_reason, obj)), GetPropT (use_op, reason_op, propname, t_out) ->
+    | DefT (idx_reason, IdxWrapper obj), GetPropT (use_op, reason_op, propname, t_out) ->
       let de_maybed_obj = Tvar.mk_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
       ) in
       let prop_type = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (de_maybed_obj, GetPropT (use_op, reason_op, propname, t))
       ) in
-      rec_flow_t cx trace (InternalT (IdxWrapper (idx_reason, prop_type)), t_out)
+      rec_flow_t cx trace (DefT (idx_reason, IdxWrapper prop_type), t_out)
 
-    | InternalT (IdxWrapper (idx_reason, obj)),
+    | DefT (idx_reason, IdxWrapper obj),
       GetPrivatePropT (use_op, reason_op, name, class_bindings, static, t_out) ->
       let de_maybed_obj = Tvar.mk_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
@@ -2369,21 +2369,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (de_maybed_obj,
         GetPrivatePropT (use_op, reason_op, name, class_bindings, static, t))
       ) in
-      rec_flow_t cx trace (InternalT (IdxWrapper (idx_reason, prop_type)), t_out)
+      rec_flow_t cx trace (DefT (idx_reason, IdxWrapper prop_type), t_out)
 
-    | InternalT (IdxWrapper (idx_reason, obj)), GetElemT (use_op, reason_op, prop, t_out) ->
+    | DefT (idx_reason, IdxWrapper obj), GetElemT (use_op, reason_op, prop, t_out) ->
       let de_maybed_obj = Tvar.mk_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
       ) in
       let prop_type = Tvar.mk_where cx reason_op (fun t ->
         rec_flow cx trace (de_maybed_obj, GetElemT (use_op, reason_op, prop, t))
       ) in
-      rec_flow_t cx trace (InternalT (IdxWrapper (idx_reason, prop_type)), t_out)
+      rec_flow_t cx trace (DefT (idx_reason, IdxWrapper prop_type), t_out)
 
-    | InternalT (IdxWrapper (reason, _)), UseT _ ->
+    | DefT (reason, IdxWrapper _), UseT _ ->
       add_output cx ~trace (FlowError.EIdxUse1 reason)
 
-    | InternalT (IdxWrapper (reason, _)), _ ->
+    | DefT (reason, IdxWrapper _), _ ->
       add_output cx ~trace (FlowError.EIdxUse2 reason)
 
     (*********************)
@@ -7535,7 +7535,7 @@ and check_polarity cx ?trace polarity = function
       check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
     | None -> ())
 
-  | InternalT (IdxWrapper (_, obj)) -> check_polarity cx ?trace polarity obj
+  | DefT (_, IdxWrapper obj) -> check_polarity cx ?trace polarity obj
 
   | DefT (_, UnionT rep) ->
     List.iter (check_polarity cx ?trace polarity) (UnionRep.members rep)
@@ -12043,7 +12043,7 @@ end = struct
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoT _
-    | InternalT (IdxWrapper (_, _))
+    | DefT (_, IdxWrapper _)
     | KeysT (_, _)
     | DefT (_, MixedT _)
     | NullProtoT _

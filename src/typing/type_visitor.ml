@@ -99,9 +99,6 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
 
-  | InternalT (IdxWrapper (_, t)) ->
-    self#type_ cx pole acc t
-
   | OpenPredT (_ , t, p_map, n_map) ->
     let acc = self#type_ cx pole acc t in
     let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
@@ -184,6 +181,10 @@ class ['a] t = object(self)
 
   | UnionT rep ->
     self#list (self#type_ cx pole) acc (UnionRep.members rep)
+
+  | IdxWrapper t ->
+    self#type_ cx pole acc t
+
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s

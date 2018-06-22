@@ -146,10 +146,6 @@ class ['a] t = object(self)
           let kind' = self#custom_fun_kind cx map_cx kind in
           if kind' == kind then t
           else CustomFunT (r, kind')
-      | InternalT (IdxWrapper (r, t')) ->
-          let t'' = self#type_ cx map_cx t' in
-          if t' == t'' then t
-          else InternalT (IdxWrapper (r, t''))
       | OpenPredT (r, t', map1, map2) ->
           let t'' = self#type_ cx map_cx t' in
           let map1' = Key_map.map (self#predicate cx map_cx) map1 in
@@ -239,6 +235,10 @@ class ['a] t = object(self)
           else UnionT urep'
       | AnyObjT
       | AnyFunT -> t
+      | IdxWrapper t' ->
+          let t'' = self#type_ cx map_cx t' in
+          if t' == t'' then t
+          else IdxWrapper t''
 
   method defer_use_type cx map_cx t =
     match t with

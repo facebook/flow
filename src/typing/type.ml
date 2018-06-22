@@ -254,6 +254,9 @@ module rec TypeTerm : sig
     | AnyObjT (* any object *)
     | AnyFunT (* any function *)
 
+    (* Type that wraps object types for the CustomFunT(Idx) function *)
+    | IdxWrapper of t
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -270,9 +273,6 @@ module rec TypeTerm : sig
     | ChoiceKitT of reason * choice_tool
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
-    (* Internal-only type that wraps object types for the CustomFunT(Idx)
-       function *)
-    | IdxWrapper of reason * t
     | ReposUpperT of reason * t
     | OptionalChainVoidT of reason
 
@@ -2084,7 +2084,6 @@ end = struct
     | FunProtoApplyT reason -> reason
     | FunProtoBindT reason -> reason
     | FunProtoCallT reason -> reason
-    | InternalT (IdxWrapper (reason, _)) -> reason
     | KeysT (reason, _) -> reason
     | ModuleT (reason, _, _) -> reason
     | NullProtoT reason -> reason
@@ -2233,7 +2232,6 @@ end = struct
     | FunProtoT (reason) -> FunProtoT (f reason)
     | FunProtoBindT (reason) -> FunProtoBindT (f reason)
     | FunProtoCallT (reason) -> FunProtoCallT (f reason)
-    | InternalT (IdxWrapper (reason, t)) -> InternalT (IdxWrapper (f reason, t))
     | KeysT (reason, t) -> KeysT (f reason, t)
     | ModuleT (reason, exports, is_strict) -> ModuleT (f reason, exports, is_strict)
     | NullProtoT reason -> NullProtoT (f reason)
@@ -2887,6 +2885,7 @@ let string_of_def_ctor = function
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
   | FunT _ -> "FunT"
+  | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
   | IntersectionT _ -> "IntersectionT"
   | MaybeT _ -> "MaybeT"
@@ -2927,7 +2926,6 @@ let string_of_ctor = function
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
-  | InternalT (IdxWrapper _) -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"

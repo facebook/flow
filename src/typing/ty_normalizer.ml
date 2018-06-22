@@ -632,6 +632,7 @@ end = struct
     | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t ts
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, ClassT t) -> class_t ~env t None
+    | DefT (_, IdxWrapper t) -> type__ ~env t
     | ThisClassT (_, t) -> this_class_t ~env t None
     (* NOTE For now we are ignoring the "this" type here. *)
     | ThisTypeAppT (_, c, _, None) -> type__ ~env c
@@ -1213,7 +1214,6 @@ end = struct
   and internal_t ~env t =
     let open Type in
     function
-    | IdxWrapper (_, t) -> type__ ~env t
     | ChoiceKitT _
     | ExtendsT _
     | ReposUpperT _ ->

@@ -327,7 +327,7 @@ let rec gen_type t env = Type.(
   | EvalT _
   | ExistsT _
   | InternalT (ExtendsT _)
-  | InternalT (IdxWrapper _)
+  | DefT (_, IdxWrapper _)
   | ModuleT _
   | OpaqueT _
   | MatchingPropT _
