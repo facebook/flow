@@ -1395,6 +1395,70 @@ import_lib.js:7:25 (--expand-json-output) = {
   "start":21,
   "end":28
 }
+import_lib_named.js:3:15 (--expand-json-output) = {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{
+      "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+      "name":"Listener"
+    },
+    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}],
+    "body":{
+      "kind":"Generic",
+      "typeArgs":[{"kind":"Bound","bound":"TFields"}],
+      "type":{
+        "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+        "name":"Listener"
+      },
+      "structural":true
+    }
+  },
+  "type":"imported Listener<TFields>",
+  "reasons":[],
+  "loc":{
+    "source":"import_lib_named.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":22,"offset":32}
+  },
+  "path":"import_lib_named.js",
+  "line":3,
+  "endline":3,
+  "start":15,
+  "end":22
+}
+import_lib_named.js:3:27 (--expand-json-output) = {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{
+      "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+      "name":"Listener"
+    },
+    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}],
+    "body":{
+      "kind":"Generic",
+      "typeArgs":[{"kind":"Bound","bound":"TFields"}],
+      "type":{
+        "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+        "name":"Listener"
+      },
+      "structural":true
+    }
+  },
+  "type":"imported Listener<TFields>",
+  "reasons":[],
+  "loc":{
+    "source":"import_lib_named.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":27,"offset":36},
+    "end":{"line":3,"column":36,"offset":46}
+  },
+  "path":"import_lib_named.js",
+  "line":3,
+  "endline":3,
+  "start":27,
+  "end":36
+}
 interface.js:3:12 = {
   "type":"interface IA",
   "reasons":[],

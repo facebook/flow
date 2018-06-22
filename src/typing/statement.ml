@@ -1882,6 +1882,7 @@ and statement cx = Ast.Statement.(
       | Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers) ->
         named_specifiers |> List.map (function { ImportDeclaration.local; remote; kind;} ->
           let (remote_name_loc, remote_name) = remote in
+          let local_loc_opt = Option.map ~f:fst local in
           let (loc, local_name) = (
             match local with
             | Some local ->
@@ -1900,8 +1901,13 @@ and statement cx = Ast.Statement.(
               let import_kind = type_kind_of_kind (Option.value ~default:importKind kind) in
               get_imported_t import_reason import_kind remote_name local_name
           in
-          let id_info = local_name, imported_t, Type_table.Import (remote_name, module_t) in
+          let id_kind = Type_table.Import (remote_name, module_t) in
+          let id_info = remote_name, imported_t, id_kind in
           Env.add_type_table_info cx remote_name_loc id_info;
+          Option.iter ~f:(fun local_loc ->
+            let id_info = local_name, imported_t, id_kind in
+            Env.add_type_table_info cx local_loc id_info
+          ) local_loc_opt;
           (loc, local_name, imported_t, kind)
         )
 

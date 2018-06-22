@@ -126,20 +126,7 @@ let type_ ?(size=5000) t =
 
   and type_alias { ta_name = Symbol (provenance, id); ta_tparams; ta_type } =
     match provenance with
-    | Remote loc ->
-      (match Loc.source loc with
-      | Some source ->
-        fuse ([
-            Atom "imported"; space;
-            identifier id; space;
-            Atom "from"; space;
-          ]
-          @ in_quotes (File_key.to_string source)
-        )
-      | _ ->
-        identifier id)
-
-    | Imported _ -> fuse [
+    | Imported _ | Remote _ -> fuse [
         Atom "imported"; space;
         identifier id;
         option (type_parameter ~depth:0) ta_tparams;

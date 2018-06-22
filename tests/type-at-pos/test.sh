@@ -254,6 +254,12 @@ assert_ok "$FLOW" type-at-pos import_lib.js 7 8 --strip-root --pretty
 printf "import_lib.js:7:25 (--expand-json-output) = "
 assert_ok "$FLOW" type-at-pos import_lib.js 7 25 --strip-root --pretty --expand-json-output
 
+# import_lib_named.js
+printf "import_lib_named.js:3:15 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import_lib_named.js 3 15 --strip-root --pretty --expand-json-output
+printf "import_lib_named.js:3:27 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import_lib_named.js 3 27 --strip-root --pretty --expand-json-output
+
 # interface.js
 printf "interface.js:3:12 = "
 assert_ok "$FLOW" type-at-pos interface.js 3 12 --strip-root --pretty
