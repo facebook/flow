@@ -180,20 +180,13 @@ end = struct
        *)
       free_tvars: VSet.t;
 
-      (* In determining whether a symbol is Local, Imported, Remote, etc, it is
-         useful to keep the list of imported names and the corresponding
-         location available. We can then make this decision by comparing the
-         source file with the current context's file information.
-      *)
-      imported_names: Loc.t SMap.t;
-    }
+  }
 
     let empty ~cx = {
       counter = 0;
       tvar_cache = IMap.empty;
       cx;
       free_tvars = VSet.empty;
-      imported_names = SMap.empty;
     }
 
   end
@@ -257,15 +250,24 @@ end = struct
 
   module Env = struct
     type t = {
-      depth: int;                      (* For debugging purposes mostly *)
-      tparams: (string * Loc.t) list;  (* Type parameters in scope *)
+      (* For debugging purposes mostly *)
+      depth: int;
+      (* Type parameters in scope *)
+      tparams: (string * Loc.t) list;
+      (* File the query originated from *)
       file: File_key.t;
+      (* In determining whether a symbol is Local, Imported, Remote, etc, it is
+         useful to keep the list of imported names and the corresponding
+         location available. We can then make this decision by comparing the
+         source file with the current context's file information. *)
+      imported_names: Loc.t SMap.t;
     }
 
-    let init cx tparams = {
+    let init cx tparams imported_names = {
       depth = 0;
       tparams;
       file = Context.file cx;
+      imported_names;
     }
 
     let descend e = { e with depth = e.depth + 1 }
@@ -539,6 +541,35 @@ end = struct
     tp_default = default;
   })
 
+  let symbol_from_loc env loc name =
+    let open File_key in
+    let symbol_source = Loc.source loc in
+    let provenance =
+      match symbol_source with
+      | Some LibFile _ -> Ty.Library loc
+      | Some (SourceFile _) ->
+        let current_source = env.Env.file in
+        (* Locally defined name *)
+        if Some current_source = symbol_source
+        then Ty.Local loc
+        (* Otherwise it is one of:
+           - Imported, or
+           - Remote (defined in a different file but not imported in this one) *)
+        else (match SMap.get name env.Env.imported_names with
+          | Some loc' when loc = loc' -> Ty.Imported loc
+          | _ -> Ty.Remote loc)
+      | Some (JsonFile _)
+      | Some (ResourceFile _) -> Ty.Local loc
+      | Some Builtins -> Ty.Builtin
+      | None -> Ty.Local loc
+    in
+    Ty.Symbol (provenance, name)
+
+  (* TODO due to repositioninig `reason_loc` may not point to the actual
+     location where `name` was defined. *)
+  let symbol_from_reason env reason name =
+    let def_loc = Reason.def_loc_of_reason reason in
+    symbol_from_loc env def_loc name
 
 
   (*************************)
@@ -687,7 +718,7 @@ end = struct
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
 
-    | ModuleT (reason, _, _) -> module_t reason t
+    | ModuleT (reason, _, _) -> module_t env reason t
 
     | DefT (_, CharSetT _)
     | NullProtoT _ ->
@@ -772,38 +803,6 @@ end = struct
       mapM (type__ ~env) ts >>|
       uniq_union
 
-  (* TODO due to repositioninig `reason_loc` may not point to the actual
-     location where `name` was defined. *)
-  and symbol reason name =
-    let open File_key in
-    get >>= fun st ->
-    let cx = State.(st.cx) in
-    let def_loc = Reason.def_loc_of_reason reason in
-    let def_source = Loc.source def_loc in
-    let provenance =
-      match def_source with
-      | Some LibFile _ -> Ty.Library def_loc
-      | Some (SourceFile _) ->
-        let current_source = Context.file cx in
-        (* Locally defined name *)
-        if Some current_source = def_source then
-          Ty.Local def_loc
-        else (
-          (* Otherwise it is one of:
-             - Imported, or
-             - Remote (defined in a different file but not imported in this one)
-          *)
-          match SMap.get name st.State.imported_names with
-          | Some loc when def_loc = loc -> Ty.Imported loc
-          | _ -> Ty.Remote def_loc
-        )
-      | Some (JsonFile _)
-      | Some (ResourceFile _) -> Ty.Local def_loc
-      | Some Builtins -> Ty.Builtin
-      | None -> Ty.Local def_loc
-    in
-    return (Ty.Symbol (provenance, name))
-
   and bound_t ~env t tparam =
     let open Type in
     let { reason; name; _ } = tparam in
@@ -818,10 +817,15 @@ end = struct
       match desc_of_reason r with
       (* Named aliases *)
       | RType name
-      | RJSXIdentifier (_, name) -> symbol r name >>| Ty.named_t
-      | RFbt -> symbol r "Fbt" >>| Ty.named_t
-      | RRegExp -> symbol r "regexp" >>| Ty.named_t
-
+      | RJSXIdentifier (_, name) ->
+        let symbol = symbol_from_reason env r name in
+        return (Ty.named_t symbol)
+      | RFbt ->
+        let symbol = symbol_from_reason env r "Fbt" in
+        return (Ty.named_t symbol)
+      | RRegExp ->
+        let symbol = symbol_from_reason env r "regexp" in
+        return (Ty.named_t symbol)
       (* Imported Alias: descend to get the actual name *)
       | RNamedImportedType _ ->
         type_variable ~env id >>| (function
@@ -939,7 +943,7 @@ end = struct
   and instance_t ~env r inst =
     let open Type in
     name_of_instance_reason r >>= fun name ->
-    symbol r name >>= fun symbol ->
+    let symbol = symbol_from_reason env r name in
     let args = SMap.bindings inst.type_args in
     mapM (fun (_, (_, t)) -> type__ ~env t) args >>| function
     | [] -> Ty.Generic (symbol, inst.structural, None)
@@ -1003,8 +1007,8 @@ end = struct
     (* Locally defined alias *)
     | RType name
     | RDefaultImportedType (name, _) ->
-      type__ ~env t >>= fun ta_type ->
-      symbol r name >>| fun symbol ->
+      type__ ~env t >>| fun ta_type ->
+      let symbol = symbol_from_reason env r name in
       (* TODO option to skip computing this *)
       Ty.named_alias symbol ?ta_tparams ~ta_type
 
@@ -1054,7 +1058,7 @@ end = struct
     get_cx >>= fun cx ->
     let current_source = Context.file cx in
     let opaque_source = Loc.source (def_loc_of_reason reason) in
-    symbol reason name >>= fun opaque_symbol ->
+    let opaque_symbol = symbol_from_reason env reason name in
     (* Compare the current file (of the query) and the file that the opaque
        type is defined. If they differ, then hide the underlying/super type.
        Otherwise, display the underlying/super type. *)
@@ -1287,13 +1291,14 @@ end = struct
         end
       end
 
-  and module_t reason t =
+  and module_t env reason t =
     match desc_of_reason reason with
     | RModule name
     | RCommonJSExports name
     | RUntypedModule name
     | RNamedImportedType name ->
-      symbol reason name >>| fun s -> Ty.Module s
+      let symbol = symbol_from_reason env reason name in
+      return (Ty.Module symbol)
     | _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
@@ -1318,57 +1323,55 @@ end = struct
      whether a located name (symbol) appearing is part of the file's imports or a
      remote (hidden or non-imported) name.
   *)
-  let add_imports ~cx state =
-    let open State in
+  let import_names cx state =
     let imported_ts = Context.imported_ts cx in
-    let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
+    SMap.fold (fun x t (st, m) -> Ty.(
       (* 'tparams' ought to be empty at this point *)
-      let env = Env.init cx [] in
+      let env = Env.init cx [] SMap.empty in
       match run st (type__ ~env t) with
       | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
       | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
         (st, SMap.add x loc m)
       | (_, st) ->
         (st, m)
-    )) imported_ts (state, SMap.empty) in
-    { state with imported_names }
+    )) imported_ts (state, SMap.empty)
 
-let run_type cx state tparams t =
-  let env = Env.init cx tparams in
-  run state (type__ ~env t)
+  let run_type cx state tparams imported_names t =
+    let env = Env.init cx tparams imported_names in
+    run state (type__ ~env t)
 
   (* Exposed API *)
   let from_schemes ~cx schemes =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     snd (ListUtils.fold_map (fun st (a, s) ->
       let Type_table.Scheme (tparams, t) = s in
-      match run_type cx st tparams t with
+      match run_type cx st tparams imported_names t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
     ) state schemes)
 
   let from_types ~cx ts =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     snd (ListUtils.fold_map (fun st (a, t) ->
-      match run_type cx st [] t with
+      match run_type cx st [] imported_names t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
     ) state ts)
 
   let from_scheme ~cx scheme =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     let Type_table.Scheme (tparams, t) = scheme in
-    fst (run_type cx state tparams t)
+    fst (run_type cx state tparams imported_names t)
 
   let from_type ~cx t =
-    let state = add_imports ~cx (State.empty ~cx) in
-    fst (run_type cx state [] t)
+    let state, imported_names = import_names cx (State.empty ~cx) in
+    fst (run_type cx state [] imported_names t)
 
   let fold_hashtbl ~cx ~f ~g ~htbl init =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
       let Type_table.Scheme (tparams, t) = g x in
-      let env = Env.init cx tparams in
+      let env = Env.init cx tparams imported_names in
       let result, st' = run st (type__ ~env t) in
       let acc' = f acc (loc, result) in
       (st', acc')
