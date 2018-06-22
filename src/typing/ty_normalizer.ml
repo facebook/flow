@@ -664,7 +664,7 @@ end = struct
       mapM (type__ ~env) ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
     | DefT (_, PolyT (ps, t, _)) -> poly_ty ~env t ps
-    | DefT (r, TypeT t) -> type_t ~env r t None
+    | DefT (r, TypeT (_, t)) -> type_t ~env r t None
     | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t ts
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, ClassT t) -> class_t ~env t None
@@ -988,7 +988,7 @@ end = struct
     match t with
     | T.DefT (_, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
-    | T.DefT (r, T.TypeT t) -> type_t ~env r t ps
+    | T.DefT (r, T.TypeT (_, t)) -> type_t ~env r t ps
     | T.DefT (_, T.FunT (_, _, f)) ->
       fun_ty ~env f ps >>| fun fun_t -> Ty.Fun fun_t
     | _ ->

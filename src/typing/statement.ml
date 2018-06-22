@@ -757,7 +757,8 @@ and statement cx = Ast.Statement.(
         in
         loop t
       in
-      let type_ = poly_type (Context.make_nominal cx) typeparams (DefT (r, TypeT t)) in
+      let type_ = poly_type (Context.make_nominal cx) typeparams
+        (DefT (r, TypeT (TypeAliasKind, t))) in
       Flow.check_polarity cx Positive t;
       Env.add_type_table cx loc type_;
       let id_info = name, type_, Type_table.Other in
@@ -782,7 +783,8 @@ and statement cx = Ast.Statement.(
                          opaque_name = name} in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       Flow.check_polarity cx Positive t;
-      let type_ = poly_type (Context.make_nominal cx) typeparams (DefT (r, TypeT t)) in
+      let type_ = poly_type (Context.make_nominal cx) typeparams
+        (DefT (r, TypeT (OpaqueKind, t))) in
       let open Flow in
       let () = match underlying_t, super_t with
       | Some l, Some u ->

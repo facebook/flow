@@ -202,10 +202,10 @@ class ['a] t = object(self)
       | SingletonStrT _
       | SingletonNumT _
       | SingletonBoolT _ -> t
-      | TypeT t' ->
+      | TypeT (s, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else TypeT t''
+          else TypeT (s, t'')
       | AnyT -> t
       | OptionalT t' ->
           let t'' = self#type_ cx map_cx t' in

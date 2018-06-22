@@ -157,7 +157,7 @@ class ['a] t = object(self)
   | SingletonNumT _
   | SingletonBoolT _ -> acc
 
-  | TypeT t -> self#type_ cx pole acc t
+  | TypeT (_, t) -> self#type_ cx pole acc t
 
   | OptionalT t -> self#type_ cx pole acc t
 

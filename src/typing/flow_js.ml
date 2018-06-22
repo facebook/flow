@@ -1028,7 +1028,7 @@ module ResolvableTypeJob = struct
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
     | ExactT (_, t)
-    | DefT (_, TypeT t)
+    | DefT (_, TypeT (_, t))
     | DefT (_, ClassT t)
     | ThisClassT (_, t)
       ->
@@ -1735,7 +1735,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT(typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t), id)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (poly_type id typeparams (DefT (reason, TypeT typeof_t)), t)
+      rec_flow_t cx trace (poly_type id typeparams
+        (DefT (reason, TypeT (ImportTypeofKind, typeof_t))), t)
 
     | (DefT (_, TypeT _) | DefT (_, PolyT(_, DefT (_, TypeT _), _))),
       ImportTypeofT(reason, export_name, _) ->
@@ -1743,7 +1744,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, ImportTypeofT(reason, _, t)) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason l in
-      rec_flow_t cx trace (DefT (reason, TypeT typeof_t), t)
+      rec_flow_t cx trace (DefT (reason, TypeT (ImportTypeofKind, typeof_t)), t)
 
     (**************************************************************************)
     (* Module exports                                                         *)
@@ -4577,19 +4578,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | DefT (_, ClassT it), UseT (_, DefT (r, TypeT t)) ->
+    | DefT (_, ClassT it), UseT (_, DefT (r, TypeT (_, t))) ->
       (* a class value annotation becomes the instance type *)
       rec_flow cx trace (it, BecomeT (r, t))
 
-    | DefT (_, FunT(_, prototype, _)), UseT (_, DefT (reason, TypeT t)) ->
+    | DefT (_, FunT(_, prototype, _)), UseT (_, DefT (reason, TypeT (_, t))) ->
       (* a function value annotation becomes the prototype type *)
       rec_flow cx trace (prototype, BecomeT (reason, t))
 
-    | DefT (_, AnyT), UseT (_, DefT (reason, TypeT t)) ->
+    | DefT (_, AnyT), UseT (_, DefT (reason, TypeT (_, t))) ->
       (* any can function as class or function type, hence ok for annotations *)
       rec_flow cx trace (l, BecomeT (reason, t))
 
-    | DefT (_, TypeT l), UseT (use_op, DefT (_, TypeT u)) ->
+    | DefT (_, TypeT (_, l)), UseT (use_op, DefT (_, TypeT (_, u))) ->
       rec_unify cx trace ~use_op ~unify_any:true l u
 
     (* non-class/function values used in annotations are errors *)
@@ -7501,7 +7502,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, ClassT t)
     -> check_polarity cx ?trace polarity t
 
-  | DefT (_, TypeT t)
+  | DefT (_, TypeT (_, t))
     -> check_polarity cx ?trace polarity t
 
   | DefT (_, InstanceT (static, super, _, instance)) ->
@@ -7738,16 +7739,16 @@ and fix_this_class cx trace reason (r, i) =
 and canonicalize_imported_type cx trace reason t =
   match t with
   | DefT (_, ClassT inst) ->
-    Some (DefT (reason, TypeT inst))
+    Some (DefT (reason, TypeT (ImportClassKind, inst)))
 
   | DefT (_, FunT (_, prototype, _)) ->
-    Some (DefT (reason, TypeT prototype))
+    Some (DefT (reason, TypeT (ImportFunKind, prototype)))
 
   | DefT (_, PolyT (typeparams, DefT (_, ClassT inst), id)) ->
-    Some (poly_type id typeparams (DefT (reason, TypeT inst)))
+    Some (poly_type id typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
 
   | DefT (_, PolyT (typeparams, DefT (_, FunT (_, prototype, _)), id)) ->
-    Some (poly_type id typeparams (DefT (reason, TypeT prototype)))
+    Some (poly_type id typeparams (DefT (reason, TypeT (ImportFunKind, prototype))))
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
@@ -10587,7 +10588,7 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
     (* Make an annotation. *)
     let source = Tvar.mk_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
-      flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT t))
+      flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT (InstanceKind, t)))
     ) in
     AnnotT (source, use_desc)
   else
@@ -10749,7 +10750,7 @@ and instantiate_poly_t cx t = function
           t
       )
       | DefT (_, (AnyT | AnyObjT))
-      | DefT (_, (TypeT (DefT (_, (AnyT | AnyObjT))))) ->
+      | DefT (_, (TypeT (_, DefT (_, (AnyT | AnyObjT))))) ->
           t
       | _ ->
         assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))

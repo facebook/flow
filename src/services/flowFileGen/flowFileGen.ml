@@ -349,7 +349,7 @@ let gen_named_exports =
         in
         gen_class_body static fields methods env
 
-      | DefT (_, TypeT t) ->
+      | DefT (_, TypeT (_, t)) ->
         add_str "export type " env
           |> add_str name
           |> gen_tparams_list

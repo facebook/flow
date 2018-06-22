@@ -216,7 +216,7 @@ module rec TypeTerm : sig
        e.g. RegExp flags *)
     | CharSetT of String_utils.CharSet.t
     (* type aliases *)
-    | TypeT of t
+    | TypeT of type_t_kind * t
 
     | AnyT
 
@@ -1095,6 +1095,17 @@ module rec TypeTerm : sig
   | ResolveSpreadsToMultiflowPartial of int * funtype * reason * t
 
   | ResolveSpreadsToCallT of funcalltype * t
+
+  (* Add some flavor to the TypeT constructor. For now this information is only
+   * used by the type normalizer. *)
+  and type_t_kind =
+  | TypeAliasKind         (* type A = T *)
+  | TypeParamKind
+  | OpaqueKind            (* opaque type O [: T] = T' *)
+  | ImportTypeofKind      (* import typeof *)
+  | ImportClassKind       (* import type { SomeClass } from ... *)
+  | ImportFunKind         (* import type { SomeFunction } from ... *)
+  | InstanceKind
 
 end = TypeTerm
 
