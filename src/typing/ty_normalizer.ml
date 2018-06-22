@@ -259,9 +259,14 @@ end = struct
     type t = {
       depth: int;                      (* For debugging purposes mostly *)
       tparams: (string * Loc.t) list;  (* Type parameters in scope *)
+      file: File_key.t;
     }
 
-    let init tparams = { depth = 0; tparams; }
+    let init cx tparams = {
+      depth = 0;
+      tparams;
+      file = Context.file cx;
+    }
 
     let descend e = { e with depth = e.depth + 1 }
 
@@ -1318,7 +1323,7 @@ end = struct
     let imported_ts = Context.imported_ts cx in
     let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
       (* 'tparams' ought to be empty at this point *)
-      let env = Env.init [] in
+      let env = Env.init cx [] in
       match run st (type__ ~env t) with
       | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
       | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
@@ -1328,8 +1333,8 @@ end = struct
     )) imported_ts (state, SMap.empty) in
     { state with imported_names }
 
-let run_type state tparams t =
-  let env = Env.init tparams in
+let run_type cx state tparams t =
+  let env = Env.init cx tparams in
   run state (type__ ~env t)
 
   (* Exposed API *)
@@ -1337,7 +1342,7 @@ let run_type state tparams t =
     let state = add_imports ~cx (State.empty ~cx) in
     snd (ListUtils.fold_map (fun st (a, s) ->
       let Type_table.Scheme (tparams, t) = s in
-      match run_type st tparams t with
+      match run_type cx st tparams t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
     ) state schemes)
@@ -1345,7 +1350,7 @@ let run_type state tparams t =
   let from_types ~cx ts =
     let state = add_imports ~cx (State.empty ~cx) in
     snd (ListUtils.fold_map (fun st (a, t) ->
-      match run_type st [] t with
+      match run_type cx st [] t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
     ) state ts)
@@ -1353,17 +1358,17 @@ let run_type state tparams t =
   let from_scheme ~cx scheme =
     let state = add_imports ~cx (State.empty ~cx) in
     let Type_table.Scheme (tparams, t) = scheme in
-    fst (run_type state tparams t)
+    fst (run_type cx state tparams t)
 
   let from_type ~cx t =
     let state = add_imports ~cx (State.empty ~cx) in
-    fst (run_type state [] t)
+    fst (run_type cx state [] t)
 
   let fold_hashtbl ~cx ~f ~g ~htbl init =
     let state = add_imports ~cx (State.empty ~cx) in
     let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
       let Type_table.Scheme (tparams, t) = g x in
-      let env = Env.init tparams in
+      let env = Env.init cx tparams in
       let result, st' = run st (type__ ~env t) in
       let acc' = f acc (loc, result) in
       (st', acc')
