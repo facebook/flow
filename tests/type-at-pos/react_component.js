@@ -27,3 +27,6 @@ class Welcome extends React.Component<Props, State> {
 React.default.Children;
 React.default.PropTypes;
 React.default.Component;
+
+React.Fragment
+declare var react_ct: React.ComponentType<number>;

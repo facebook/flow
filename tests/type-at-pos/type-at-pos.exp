@@ -2245,6 +2245,119 @@ react_component.js:18:17 = {
   "start":14,
   "end":18
 }
+react_component.js:31:7 = {
+  "expanded_type":{
+    "kind":"Fun",
+    "typeParams":null,
+    "paramTypes":[
+      {
+        "kind":"Obj",
+        "exact":false,
+        "frozen":false,
+        "props":[
+          {
+            "kind":"NamedProp",
+            "prop":{
+              "name":"children",
+              "prop":{
+                "kind":"field",
+                "type":{
+                  "kind":"Generic",
+                  "type":{
+                    "provenance":{"kind":"Library","loc":"[LIB] react.js:231:44-53"},
+                    "name":"React$Node"
+                  },
+                  "structural":false
+                },
+                "polarity":"Neutral",
+                "optional":false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "paramNames":["_"],
+    "restParam":null,
+    "returnType":{
+      "kind":"Generic",
+      "type":{
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:231:60-69"},
+        "name":"React$Node"
+      },
+      "structural":false
+    }
+  },
+  "type":"({children: React$Node}) => React$Node",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":7,"offset":435},
+    "end":{"line":31,"column":14,"offset":443}
+  },
+  "path":"react_component.js",
+  "line":31,
+  "endline":31,
+  "start":7,
+  "end":14
+}
+react_component.js:32:13 = {
+  "expanded_type":{
+    "kind":"Generic",
+    "typeArgs":[{"kind":"Num"}],
+    "type":{
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:228:42-63"},
+      "name":"ComponentType"
+    },
+    "structural":false
+  },
+  "type":"ComponentType<number>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":13,"offset":456},
+    "end":{"line":32,"column":20,"offset":464}
+  },
+  "path":"react_component.js",
+  "line":32,
+  "endline":32,
+  "start":13,
+  "end":20
+}
+react_component.js:32:29 = {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:228:42-63"},
+      "name":"ComponentType"
+    },
+    "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}],
+    "body":{
+      "kind":"Generic",
+      "typeArgs":[{"kind":"Bound","bound":"P"}],
+      "type":{
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:147:5,148:38"},
+        "name":"React$ComponentType"
+      },
+      "structural":false
+    }
+  },
+  "type":"type ComponentType<P> = React$ComponentType<P>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":29,"offset":472},
+    "end":{"line":32,"column":41,"offset":485}
+  },
+  "path":"react_component.js",
+  "line":32,
+  "endline":32,
+  "start":29,
+  "end":41
+}
 react.js:2:7 = {
   "type":"React$CreateElement",
   "reasons":[],
