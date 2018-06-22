@@ -256,11 +256,31 @@ end = struct
       tparams: (string * Loc.t) list;
       (* File the query originated from *)
       file: File_key.t;
+
       (* In determining whether a symbol is Local, Imported, Remote, etc, it is
          useful to keep the list of imported names and the corresponding
          location available. We can then make this decision by comparing the
          source file with the current context's file information. *)
       imported_names: Loc.t SMap.t;
+
+      (* The default behavior with type aliases is to return the name of the alias
+         instead of the expansion of the type. When normalizing type aliases `TypeT t`,
+         however, we proceed by recovering the name of the alias (say A) and then
+         normalizing the body `T` to recover the type "type A = T". So for this case
+         only it is useful to allow a one-off expansion of the contents of TypeT.
+         We do this by setting this property to `Some A`.
+
+         The reason we need the alias name (instead of just the fact that we're expanding
+         an alias) is that the RTypeAlias reason (used to discover aliases) may be
+         repeated across nested types (ExactT and MaybeT -- see statement.ml) and so we
+         need to skip over duplicates until we either encounter another type constructor
+         or a different type alias.
+
+         NOTE: The use of the name might not be robust against aliases with the same name
+         (coming from different scopes for example). Ideally we would use the location
+         or a unique ID of the type alias to make this distinction, but at the moment
+         keeping this information around introduces a small space regression. *)
+      under_type_alias: string option;
     }
 
     let init cx tparams imported_names = {
@@ -268,6 +288,7 @@ end = struct
       tparams;
       file = Context.file cx;
       imported_names;
+      under_type_alias = None;
     }
 
     let descend e = { e with depth = e.depth + 1 }
@@ -576,39 +597,54 @@ end = struct
   (* Main transformation   *)
   (*************************)
 
-  let rec type__ ~env t = type_with_reason ~env t
+  let rec type__ ~env t = type_poly ~env t
 
-  (* Before we proceed with expanding the type structure we have one last chance
-     to recover this more useful type and return early from normalizing.
+  (* Before we start pattern-matching on the structure of the input type, we can
+     reconstruct some types based on attached reasons. Two cases are of interest here:
+     - Type parameters: we use RPolyTest reasons for these
+     - Type aliases: we use RTypeAlias reasons for these *)
 
-     Perhaps more information can be recovered at this point.
-
-     NOTE: This would have been a good opportunity to catch a type alias before
-     it gets unfolded to its definition. Unfortunately, this is not a good place
-     to capture this, since the reason is completely oblivious to any attendant
-     type parameters. For example in the following code, the type of `a` in the
-     end would not include the parameter `string`.
-
-       type A<T: string> = { t: T } | boolean;
-       declare var a: A<string>;
-       if (typeof a !== "boolean") a;
-  *)
-  and type_with_reason ~env t =
+  and type_poly ~env t =
+    (* The RPolyTest description is used for types that represent type parameters.
+       When normalizing, we want such types to be replaced by the type parameter,
+       whose name is part of the description, but only in the case that the parameter
+       is in scope. The reason we need to make this distinction is that bound tests
+       may exit the scope of the structure that introduced them, in which case we
+       do not perform the substitution. There instead we unfold the underlying type. *)
     let reason = Type.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
-    (* The 'RPolyTest' description is used for types that represent type
-       parameters. When normalizing, we want such types to be replaced by the
-       type parameter, whose name is part of the description, but only in the
-       case that the parameter is in scope. The reason we need to make this
-       distinction is that bound tests may exit the scope of the structure that
-       introduced them, in which case we do not perform the substitution. There
-       instead we unfold the underlying type.
-    *)
     | RPolyTest (name, _) ->
       let loc = Reason.def_loc_of_reason reason in
-      let default t = type_after_reason ~env t in
+      let default t = type_with_alias_reason ~env t in
       Env.lookup_tparam ~default env t name loc
-    | _ -> type_after_reason ~env t
+    | _ ->
+      type_with_alias_reason ~env t
+
+  and type_with_alias_reason ~env t =
+    if C.opt_expand_type_aliases then type_after_reason ~env t else
+    let reason = Type.reason_of_t t in
+    match desc_of_reason ~unwrap:false reason with
+    | RTypeAlias (name, _) ->
+      (* The default action is to avoid expansion by using the type alias name.
+         The one case where we want to skip this process is when recovering the
+         body of a type alias A. In that case the environment field under_type_alias
+         will be 'Some A'. If the type alias name in the reason is also A, then we
+         are still at the top-level of the type-alias, so we proceed by expanding
+         one level preserving the same environment. *)
+      let continue =
+        match env.Env.under_type_alias with
+        | Some name' -> name = name'
+        | None -> false
+      in
+      if continue then type_after_reason ~env t else
+      let symbol = symbol_from_reason env reason name in
+      return (Ty.named_t symbol)
+    | _ ->
+      (* We are now beyond the point of the one-off expansion. Reset the environment
+         assigning None to under_type_alias, so that aliases are used in subsequent
+         invocations. *)
+      let env = Env.{ env with under_type_alias = None } in
+      type_after_reason ~env t
 
   and type_after_reason ~env t =
     let open Type in
@@ -617,7 +653,7 @@ end = struct
     | OpenT (_, id) -> type_variable ~env id
     | BoundT tparam -> bound_t ~env t tparam
     | AnnotT (OpenT (r, id), _) -> annot_t ~env r id
-    | AnnotT (t, _) -> type_after_reason ~env t
+    | AnnotT (t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
     | CustomFunT (_, f) -> custom_fun ~env f
@@ -664,7 +700,7 @@ end = struct
       mapM (type__ ~env) ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
     | DefT (_, PolyT (ps, t, _)) -> poly_ty ~env t ps
-    | DefT (r, TypeT (_, t)) -> type_t ~env r t None
+    | DefT (r, TypeT (kind, t)) -> type_t ~env r kind t None
     | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t ts
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, ClassT t) -> class_t ~env t None
@@ -988,41 +1024,67 @@ end = struct
     match t with
     | T.DefT (_, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
-    | T.DefT (r, T.TypeT (_, t)) -> type_t ~env r t ps
+    | T.DefT (r, T.TypeT (kind, t)) -> type_t ~env r kind t ps
     | T.DefT (_, T.FunT (_, _, f)) ->
       fun_ty ~env f ps >>| fun fun_t -> Ty.Fun fun_t
     | _ ->
       terr ~kind:BadPoly (Some t)
 
   (* Type Aliases *)
-  and type_t ~env r t ta_tparams =
-    match t with
-    | Type.OpaqueT (r, o) ->
-      opaque_t ~env r o ta_tparams
-    | _ ->
-      type_t_with_reason ~env r t ta_tparams
-
-  and type_t_with_reason ~env r t ta_tparams =
-    match desc_of_reason r with
-    (* Locally defined alias *)
-    | RType name
-    | RDefaultImportedType (name, _) ->
-      type__ ~env t >>| fun ta_type ->
-      let symbol = symbol_from_reason env r name in
-      (* TODO option to skip computing this *)
-      Ty.named_alias symbol ?ta_tparams ~ta_type
-
-    (* Imported Alias: descend to get the actual name *)
-    | RNamedImportedType _ ->
-      type__ ~env t >>| (function
-        | (Ty.Generic (import_symbol, _, _)) as ta_type ->
-          Ty.named_alias import_symbol ?ta_tparams ~ta_type
-        | ty ->
-          ty
-      )
-    | _ ->
-      let msg = spf "Parent reason: %s" (string_of_reason r) in
-      terr ~kind:BadTypeAlias ~msg (Some t)
+  and type_t =
+    let open Type in
+    let mk_type_alias symbol ps = function
+    | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
+    | Ty.Class _ as t -> return t
+    | t -> return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
+    in
+    (* NOTE the use of the reason within `t` instead of the one passed with
+       the constructor TypeT. The latter is an RType, which is somewhat more
+       unwieldy as it is used more pervasively. *)
+    let local env t ps =
+      let reason = TypeUtil.reason_of_t t in
+      match desc_of_reason ~unwrap:false reason with
+      | RTypeAlias (name, _) ->
+        let env = Env.{ env with under_type_alias = Some name } in
+        type__ ~env t >>= fun body ->
+        let symbol = symbol_from_reason env reason name in
+        mk_type_alias symbol ps body
+      | _ -> terr ~kind:BadTypeAlias ~msg:"local" (Some t)
+    in
+    let import_symbol env r t =
+      match desc_of_reason ~unwrap:false r with
+      | RNamedImportedType (name, _)
+      | RDefaultImportedType (name, _)
+      | RImportStarType name
+      | RImportStarTypeOf name
+      | RImportStar name ->
+        return (symbol_from_reason env r name)
+      | _ -> terr ~kind:BadTypeAlias ~msg:"import" (Some t)
+    in
+    let import env r t ps =
+      import_symbol env r t >>= fun symbol ->
+      let Ty.Symbol (_, name) = symbol in
+      let env = Env.{ env with under_type_alias = Some name } in
+      type__ ~env t >>= fun body ->
+      mk_type_alias symbol ps body
+    in
+    let import_typeof env r t ps = import env r t ps in
+    let import_fun env r t ps = import env r t ps in
+    let opaque env t ps =
+      match t with
+      | OpaqueT (r, o) -> opaque_t ~env r o ps
+      | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
+    in
+    fun ~env r kind t ps ->
+      match kind with
+      | TypeAliasKind -> local env t ps
+      | ImportClassKind -> class_t ~env t ps
+      | ImportTypeofKind -> import_typeof env r t ps
+      | ImportFunKind -> import_fun env r t ps
+      | OpaqueKind -> opaque env t ps
+      (* The following cases are not common *)
+      | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"typeparam" (Some t)
+      | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
 
   and exact_t ~env t = type__ ~env t >>| function
     | Ty.Obj o -> Ty.Obj { o with Ty.obj_exact = true }

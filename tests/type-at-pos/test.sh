@@ -533,3 +533,35 @@ printf "optional_chaining.js:16:20 = "
 assert_ok "$FLOW" type-at-pos optional_chaining.js 16 20 --strip-root --pretty
 printf "optional_chaining.js:16:24 = "
 assert_ok "$FLOW" type-at-pos optional_chaining.js 16 24 --strip-root --pretty
+
+# type-alias.js
+printf "type-alias.js:3:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 3 6 --strip-root --pretty
+printf "type-alias.js:4:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 4 6 --strip-root --pretty
+printf "type-alias.js:5:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 5 6 --strip-root --pretty
+printf "type-alias.js:6:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 6 6 --strip-root --pretty
+printf "type-alias.js:7:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 7 6 --strip-root --pretty
+printf "type-alias.js:8:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 8 6 --strip-root --pretty
+printf "type-alias.js:12:12 "
+assert_ok "$FLOW" type-at-pos type-alias.js 12 12 --strip-root --pretty
+printf "type-alias.js:12:29 "
+assert_ok "$FLOW" type-at-pos type-alias.js 12 29 --strip-root --pretty
+
+# Test interaction with RPolyTest
+printf "type-alias.js:15:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 15 8 --strip-root --pretty
+printf "type-alias.js:16:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 16 8 --strip-root --pretty
+printf "type-alias.js:17:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 17 8 --strip-root --pretty
+printf "type-alias.js:18:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 18 8 --strip-root --pretty
+printf "type-alias.js:19:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 19 8 --strip-root --pretty
+printf "type-alias.js:20:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 20 8 --strip-root --pretty
