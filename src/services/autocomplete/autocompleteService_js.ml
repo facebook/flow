@@ -10,10 +10,10 @@ open Core_result
 open ServerProt.Response
 
 module AutocompleteTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = true
-  let expand_internal_types = true
-  let expand_annots = false
-  let flag_shadowed_type_params = true
+  let opt_fall_through_merged = true
+  let opt_expand_internal_types = true
+  let opt_expand_type_aliases = false
+  let opt_flag_shadowed_type_params = true
 end)
 
 let add_autocomplete_token contents line column =

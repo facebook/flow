@@ -37,10 +37,10 @@ type result =
 | Success of Loc.t * Ty.t
 
 module QueryTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = false
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = false
+  let opt_fall_through_merged = false
+  let opt_expand_internal_types = false
+  let opt_expand_type_aliases = false
+  let opt_flag_shadowed_type_params = false
 end)
 
 let query_type cx ?type_table loc =
@@ -61,10 +61,10 @@ let query_type cx ?type_table loc =
 
 
 module DumpTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = false
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = false
+  let opt_fall_through_merged = false
+  let opt_expand_internal_types = false
+  let opt_expand_type_aliases = false
+  let opt_flag_shadowed_type_params = false
 end)
 
 let dump_types ~printer cx =
@@ -82,10 +82,10 @@ let is_covered = function
   | _ -> true
 
 module CoverageTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = true
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = false
+  let opt_fall_through_merged = true
+  let opt_expand_internal_types = false
+  let opt_expand_type_aliases = false
+  let opt_flag_shadowed_type_params = false
 end)
 
 let covered_types cx ~should_check =
@@ -103,10 +103,10 @@ let covered_types cx ~should_check =
   |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
 
 module SuggestTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = false
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = true
+  let opt_fall_through_merged = false
+  let opt_expand_internal_types = false
+  let opt_expand_type_aliases = false
+  let opt_flag_shadowed_type_params = true
 end)
 
 (* 'suggest' can use as many types in the type tables as possible, which is why

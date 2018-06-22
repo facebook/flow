@@ -38,12 +38,12 @@ module type Config = sig
 
      Pick `true` if the result does not need to be "parseable", e.g. coverage.
   *)
-  val fall_through_merged: bool
+  val opt_fall_through_merged: bool
 
   (* Expand the signatures of built-in functions, such as:
       Function.prototype.apply: (thisArg: any, argArray?: any): any
   *)
-  val expand_internal_types: bool
+  val opt_expand_internal_types: bool
 
   (* AnnotT is used to hide information of the lower bound flowing in and
      provides instead a type interface that then flows to the upper bounds.
@@ -52,7 +52,7 @@ module type Config = sig
      associated with the annotation. Typically this coincides with types used as
      annotations, so this is a natural type type to return for type queries.
   *)
-  val expand_annots: bool
+  val opt_expand_type_aliases: bool
 
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
      may contain the same name twice (but with different associated locations).
@@ -67,7 +67,7 @@ module type Config = sig
     is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
     This flags toggles this behavior.
   *)
-  val flag_shadowed_type_params: bool
+  val opt_flag_shadowed_type_params: bool
 
 end
 
@@ -278,7 +278,7 @@ end = struct
           return the type parameter.
        2. T appears in env but is not the first occurence. This means that some other
           type parameter shadows it. We split cases depending on the value of
-          Config.flag_shadowed_type_params:
+          Config.opt_flag_shadowed_type_params:
           - true: flag a warning, since the type is not well-formed in this context.
           - false: return the type normally ignoring the warning.
        3. The type parameter is not in env. Do the default action.
@@ -287,7 +287,7 @@ end = struct
       let pred (tp_name, _) = (name = tp_name) in
       match List.find_opt pred env.tparams with
       | Some (_, tp_loc) ->
-        if loc = tp_loc || not C.flag_shadowed_type_params
+        if loc = tp_loc || not C.opt_flag_shadowed_type_params
         then return Ty.(Bound (Symbol (Local loc, name)))
         (* If we care about shadowing of type params, then flag an error *)
         else terr ~kind:ShadowTypeParam (Some t)
@@ -687,7 +687,7 @@ end = struct
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
-      if C.expand_internal_types then
+      if C.opt_expand_internal_types then
         (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
         return Ty.(mk_fun
           ~params:[
@@ -699,7 +699,7 @@ end = struct
         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.apply"))
 
     | FunProtoBindT _ ->
-      if C.expand_internal_types then
+      if C.opt_expand_internal_types then
         (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
@@ -709,7 +709,7 @@ end = struct
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.bind"))
 
     | FunProtoCallT _ ->
-      if C.expand_internal_types then
+      if C.opt_expand_internal_types then
         (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
@@ -811,7 +811,7 @@ end = struct
     Env.lookup_tparam ~default env t name loc
 
   and annot_t ~env r id =
-    if C.expand_annots then
+    if C.opt_expand_type_aliases then
       type_variable ~env id
     else begin
       match desc_of_reason r with
@@ -1203,9 +1203,9 @@ end = struct
     | DebugSleep -> return (Ty.builtin_t "$Flow$DebugSleep")
 
   and custom_fun env t =
-    if C.expand_internal_types
-      then custom_fun_expanded env t
-      else custom_fun_short env t
+    if C.opt_expand_internal_types
+    then custom_fun_expanded env t
+    else custom_fun_short env t
 
   and react_prop_type ~env =
     let open T.React.PropType in
@@ -1309,9 +1309,9 @@ end = struct
       terr ~kind:BadUse ~msg None
 
   and merged_t ~env uses =
-    if C.fall_through_merged
-      then return Ty.Top
-      else mapM (use_t ~env) uses >>| uniq_inter
+    if C.opt_fall_through_merged
+    then return Ty.Top
+    else mapM (use_t ~env) uses >>| uniq_inter
 
 
   (* Before we start normalizing the input type we populate our environment with
