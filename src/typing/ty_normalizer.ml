@@ -1058,9 +1058,8 @@ end = struct
       | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"typeparam" (Some t)
       | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
 
-  and exact_t ~env t = type__ ~env t >>| function
-    | Ty.Obj o -> Ty.Obj { o with Ty.obj_exact = true }
-    | t -> Ty.generic_builtin_t "$Exact" [t]
+  and exact_t ~env t =
+    type__ ~env  t >>| Ty.mk_exact
 
   and type_app ~env t targs =
     type__ ~env t >>= fun ty ->

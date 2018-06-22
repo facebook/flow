@@ -163,6 +163,28 @@ assert_ok "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --pretty
 printf "destructuring.js:17:13 = "
 assert_ok "$FLOW" type-at-pos destructuring.js 17 13 --strip-root --pretty
 
+# exact.js
+printf "exact.js:4:6 = "
+assert_ok "$FLOW" type-at-pos exact.js 4 6 --strip-root --pretty
+printf "exact.js:5:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 5 13 --strip-root --pretty
+printf "exact.js:6:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 6 13 --strip-root --pretty
+printf "exact.js:7:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 7 13 --strip-root --pretty
+printf "exact.js:9:17 = "
+assert_ok "$FLOW" type-at-pos exact.js 9 17 --strip-root --pretty
+printf "exact.js:10:7 = "
+assert_ok "$FLOW" type-at-pos exact.js 10 7 --strip-root --pretty
+printf "exact.js:13:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 13 13 --strip-root --pretty
+printf "exact.js:16:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 16 13 --strip-root --pretty
+printf "exact.js:18:6 = "
+assert_ok "$FLOW" type-at-pos exact.js 18 6 --strip-root --pretty
+printf "exact.js:19:6 = "
+assert_ok "$FLOW" type-at-pos exact.js 19 6 --strip-root --pretty
+
 # facebookism.js
 printf "facebookism.js:3:8 = "
 assert_ok "$FLOW" type-at-pos facebookism.js 3 8 --strip-root --pretty

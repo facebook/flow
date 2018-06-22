@@ -145,6 +145,24 @@ let generic_t symbol targs =
 let generic_builtin_t name targs =
   generic_t (builtin_symbol name) targs
 
+let rec mk_exact ty =
+  match ty with
+  | Obj o -> Obj { o with obj_exact=true }
+  | TypeAlias a ->
+    let ta_type = Option.map ~f:mk_exact a.ta_type in
+    TypeAlias { a with ta_type }
+  | Mu (i, t) -> Mu (i, mk_exact t)
+  (* Do not nest $Exact *)
+  | Generic (Symbol (Builtin, "$Exact"), _, Some [_]) -> ty
+  (* Not applicable *)
+  | Any | AnyObj | AnyFun | Top | Bot | Void | Null
+  | Num | Str | Bool | NumLit _ | StrLit _ | BoolLit _
+  | Fun _ | Arr _ | Tup _ -> ty
+  (* Wrap in $Exact<...> *)
+  | Generic _ | TVar _ | Bound _ | Union _ | Inter _
+  | TypeOf _ | Class _ | Exists | Module _ ->
+    generic_builtin_t "$Exact" [ty]
+
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }
 

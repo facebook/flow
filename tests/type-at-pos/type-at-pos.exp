@@ -883,6 +883,156 @@ destructuring.js:17:13 = {
   "start":13,
   "end":13
 }
+exact.js:4:6 = {
+  "type":"type B = $Exact<A>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":6,"offset":39},
+    "end":{"line":4,"column":6,"offset":40}
+  },
+  "path":"exact.js",
+  "line":4,
+  "endline":4,
+  "start":6,
+  "end":6
+}
+exact.js:5:13 = {
+  "type":"$Exact<A>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":13,"offset":66},
+    "end":{"line":5,"column":13,"offset":67}
+  },
+  "path":"exact.js",
+  "line":5,
+  "endline":5,
+  "start":13,
+  "end":13
+}
+exact.js:6:13 = {
+  "type":"$Exact<B>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":13,"offset":92},
+    "end":{"line":6,"column":13,"offset":93}
+  },
+  "path":"exact.js",
+  "line":6,
+  "endline":6,
+  "start":13,
+  "end":13
+}
+exact.js:7:13 = {
+  "type":"{|p: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":13,"offset":118},
+    "end":{"line":7,"column":13,"offset":119}
+  },
+  "path":"exact.js",
+  "line":7,
+  "endline":7,
+  "start":13,
+  "end":13
+}
+exact.js:9:17 = {
+  "type":"$Exact<X>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":17,"offset":161},
+    "end":{"line":9,"column":17,"offset":162}
+  },
+  "path":"exact.js",
+  "line":9,
+  "endline":9,
+  "start":17,
+  "end":17
+}
+exact.js:10:7 = {
+  "type":"$Exact<X>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":7,"offset":183},
+    "end":{"line":10,"column":7,"offset":184}
+  },
+  "path":"exact.js",
+  "line":10,
+  "endline":10,
+  "start":7,
+  "end":7
+}
+exact.js:13:13 = {
+  "type":"$Exact<A>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":13,"offset":212},
+    "end":{"line":13,"column":13,"offset":213}
+  },
+  "path":"exact.js",
+  "line":13,
+  "endline":13,
+  "start":13,
+  "end":13
+}
+exact.js:16:13 = {
+  "type":"$Exact<class C>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":13,"offset":258},
+    "end":{"line":16,"column":13,"offset":259}
+  },
+  "path":"exact.js",
+  "line":16,
+  "endline":16,
+  "start":13,
+  "end":13
+}
+exact.js:18:6 = {
+  "type":"type P<X> = {|m: (x: X) => void|}",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":6,"offset":285},
+    "end":{"line":18,"column":6,"offset":286}
+  },
+  "path":"exact.js",
+  "line":18,
+  "endline":18,
+  "start":6,
+  "end":6
+}
+exact.js:19:6 = {
+  "type":"type Q<X> = $Exact<P<X>>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":6,"offset":327},
+    "end":{"line":19,"column":6,"offset":328}
+  },
+  "path":"exact.js",
+  "line":19,
+  "endline":19,
+  "start":6,
+  "end":6
+}
 facebookism.js:3:8 = {
   "type":"$Facebookism$Idx",
   "reasons":[],
