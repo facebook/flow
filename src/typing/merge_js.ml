@@ -359,9 +359,6 @@ let merge_tvar =
     | [] -> List.rev acc
     | t::ts ->
       match t with
-      (* Recursively unwrap unions *)
-      | DefT (_, UnionT rep) ->
-        collect_lowers cx seen acc (UnionRep.members rep @ ts)
       (* Recursively unwrap unseen tvars *)
       | OpenT (_, id) ->
         if ISet.mem id seen
