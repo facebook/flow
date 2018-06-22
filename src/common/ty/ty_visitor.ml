@@ -26,6 +26,10 @@ module Make(M: Monoid.S)(E: Env) = struct
     | _ -> return None
 
   class c = object(self)
+
+    method map_type (env: E.t) t =
+      fst (self#type_ env t)
+
     method type_ (env: E.t) t =
       let env = E.descend t env in
       match t with

@@ -413,131 +413,142 @@ end = struct
 
   *)
 
-  (* Helper functions *)
+  module Recursive = struct
 
-  (* We shouldn't really create bare Mu types for two reasons.
+    (* Helper functions *)
 
-     First, substitutions and type applications may replace the recursive variables with
-     a non-recursive type part, rendering the entire type non-recursive. When
-     `check_recursive` is set to true, we first perform the check.
+    (* Replace a recursive type variable r with a symbol sym in the type t. *)
+    let subst r sym t =
+      let visitor = object inherit Ty_visitor.UnitVisitor.c as super
+        method! type_ env = function
+        | Ty.TVar (i, ts) when r = i ->
+          super#type_ env (Ty.Generic (sym, true, ts))
+        | t -> super#type_ env t
+      end in
+      visitor#map_type () t
 
-     Second, TypeAliases and Mu types can both imply recursion, so we have little
-     to gain from nesting them. Therefore, before creating a Mu type, we should check if
-     the type under the Mu is a TypeAlias and if it is then use that structure to
-     express the recursion. To do this we replace 'i' for 'ta_name' in the body of
-     the alias.
+    (* We shouldn't really create bare Mu types for two reasons.
 
-     PV: The second one is a seemingly awkward fix. However, I am not very concerned as
-     `TypeAlias` is abusively treated as a type. Eventually, the goal is to include it
-     in a "module element" category rather than the Ty.t structure.
-  *)
-  let mk_mu ~check_recursive i t =
-    let is_rec =
-      if check_recursive
-      then Ty_utils.FreeVars.is_free_in ~is_top:true i t
-      else true in
-    if is_rec then
-      Ty.(match t with
-      | TypeAlias {ta_name;_} -> Ty_utils.subst (RVar i) (true, ta_name) t
-      | _ -> Mu (i, t))
-    else t
+       First, substitutions and type applications may replace the recursive variables with
+       a non-recursive type part, rendering the entire type non-recursive. When
+       `check_recursive` is set to true, we first perform the check.
 
-  (* When inferring recursive types, the top-level appearances of the recursive
-     variable should be eliminated. This visitor performs the following
-     transformations:
+       Second, TypeAliases and Mu types can both imply recursion, so we have little
+       to gain from nesting them. Therefore, before creating a Mu type, we should check if
+       the type under the Mu is a TypeAlias and if it is then use that structure to
+       express the recursion. To do this we replace 'i' for 'ta_name' in the body of
+       the alias.
 
-       (recursive var: X , type: X           ) ==> Bot
-       (recursive var: X , type: X | t       ) ==> Bot | t
-       (recursive var: X , type: X & t       ) ==> Top & t
-       (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
+       PV: The second one is a seemingly awkward fix. However, I am not very concerned as
+       `TypeAlias` is abusively treated as a type. Eventually, the goal is to include it
+       in a "module element" category rather than the Ty.t structure.
+    *)
+    let mk_mu ~check_recursive i t =
+      let is_rec =
+        if check_recursive
+        then Ty_utils.FreeVars.is_free_in ~is_top:true i t
+        else true in
+      if is_rec then
+        Ty.(match t with
+        | TypeAlias { ta_name; _ } -> subst (RVar i) ta_name t
+        | _ -> Mu (i, t))
+      else t
 
-     The visitor only descends down to the first concrete constructor
-     (e.g. Function, Class) and is applied to the subparts of unions,
-     intersections and recursive types.
+    (* When inferring recursive types, the top-level appearances of the recursive
+       variable should be eliminated. This visitor performs the following
+       transformations:
 
-     It is expected to followed by type minimization, so that the introduced
-     Bot and Top can be eliminated.
-  *)
+         (recursive var: X , type: X           ) ==> Bot
+         (recursive var: X , type: X | t       ) ==> Bot | t
+         (recursive var: X , type: X & t       ) ==> Top & t
+         (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
 
-  module RemoveTopLevelTvarVisitor = struct
-    module Env = struct
-      type t = U (* union context *)
-             | I (* intersection context *)
-      let descend _ e = e
-      (* The starting state is that of a union. This allows for the behavior
-         outlined above.
-      *)
-      let init = U
-      (* The "zero" element is Bot (resp. Top) if we're in a union (resp.
-         intersection) context, so that a subsequent minimization pass
-         eliminates it.
-      *)
-      let zero = function
-        | I -> Ty.Top
-        | U -> Ty.Bot
+       The visitor only descends down to the first concrete constructor
+       (e.g. Function, Class) and is applied to the subparts of unions,
+       intersections and recursive types.
+
+       It is expected to followed by type minimization, so that the introduced
+       Bot and Top can be eliminated.
+    *)
+
+    module RemoveTopLevelTvarVisitor = struct
+      module Env = struct
+        type t = U (* union context *)
+               | I (* intersection context *)
+        let descend _ e = e
+        (* The starting state is that of a union. This allows for the behavior
+           outlined above.
+        *)
+        let init = U
+        (* The "zero" element is Bot (resp. Top) if we're in a union (resp.
+           intersection) context, so that a subsequent minimization pass
+           eliminates it.
+        *)
+        let zero = function
+          | I -> Ty.Top
+          | U -> Ty.Bot
+      end
+
+      module M = Ty_visitor.MakeAny(Env)
+      open M
+
+      let run v =
+        let visitor = object(self) inherit c
+          method! type_ env = function
+          | Ty.Union (t0,t1,ts) ->
+            mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
+          | Ty.Inter (t0,t1,ts) ->
+            mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
+          | Ty.TVar (Ty.RVar v', _) when v = v' ->
+            tell true >>| fun _ -> Env.zero env
+          | Ty.Mu (v, t) ->
+            self#type_ env t >>| mk_mu ~check_recursive:true v
+          | t -> return t
+        end in
+        visitor#type_ Env.init
     end
 
-    module M = Ty_visitor.MakeAny(Env)
-    open M
 
-    let run v =
-      let visitor = object(self) inherit c
-        method! type_ env = function
-        | Ty.Union (t0,t1,ts) ->
-            mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
-        | Ty.Inter (t0,t1,ts) ->
-            mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
-        | Ty.TVar (Ty.RVar v', _) when v = v' ->
-            tell true >>| fun _ -> Env.zero env
-        | Ty.Mu (v, t) ->
-            self#type_ env t >>| mk_mu ~check_recursive:true v
-        | t ->
-            return t
-      end
-      in
-      visitor#type_ Env.init
+    (* Constructing recursive types.
+
+       This function is expected to be called after fully normalizing the lower
+       bounds of a type variable `v` and constructing a type `t`. `free_vars` is
+       the set of free variables appearing in `t`. This information is available
+       from the state of the monad.
+
+       To determine if we truly have a recursive type we take the following into
+       account:
+
+        - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
+          we return it as-is.
+
+        - If `v` appears in `free_vars`, we may be dealing with a recursive type
+          but we also might have a degenerate case like this one:
+
+            Mu (v, v | string)
+
+          which is not a recursive type. (It is equivalent to string.)
+          So, first we simplify the type by performing the "remove_top_level_tvar"
+          transformation and some subsequent simplifications. Then if the type
+          changed we check again if `v` is in the free variables.
+
+          NOTE that we need to recompute free vars since the simplifications might
+          have eliminated some of them. Here we use the FreeVars module. This is
+          an expensive pass, which is why we avoid doing it if it's definitely
+          not a recursive type.
+    *)
+    let make free_vars i t =
+      if VSet.mem i free_vars then
+        (* Maybe recursive (might be a degenerate) *)
+        let t, changed = RemoveTopLevelTvarVisitor.run i t in
+        let t = if changed then simplify_unions_inters t else t in
+        (* If not changed then all free_vars are still in, o.w. recompute free vars *)
+        mk_mu ~check_recursive:changed i t
+      else
+        (* Definitely not recursive *)
+        t
+
   end
-
-
-  (* Constructing recursive types.
-
-     This function is expected to be called after fully normalizing the lower
-     bounds of a type variable `v` and constructing a type `t`. `free_vars` is
-     the set of free variables appearing in `t`. This information is available
-     from the state of the monad.
-
-     To determine if we truly have a recursive type we take the following into
-     account:
-
-      - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
-        we return it as-is.
-
-      - If `v` appears in `free_vars`, we may be dealing with a recursive type
-        but we also might have a degenerate case like this one:
-
-          Mu (v, v | string)
-
-        which is not a recursive type. (It is equivalent to string.)
-        So, first we simplify the type by performing the "remove_top_level_tvar"
-        transformation and some subsequent simplifications. Then if the type
-        changed we check again if `v` is in the free variables.
-
-        NOTE that we need to recompute free vars since the simplifications might
-        have eliminated some of them. Here we use the FreeVars module. This is
-        an expensive pass, which is why we avoid doing it if it's definitely
-        not a recursive type.
-  *)
-  let to_recursive free_vars i t =
-    if VSet.mem i free_vars then
-      (* Maybe recursive (might be a degenerate) *)
-      let t, changed = RemoveTopLevelTvarVisitor.run i t in
-      let t = if changed then simplify_unions_inters t else t in
-      (* If not changed then all free_vars are still in, o.w. recompute free vars *)
-      mk_mu ~check_recursive:changed i t
-    else
-      (* Definitely not recursive *)
-      t
-
 
   (***********************)
   (* Construct built-ins *)
@@ -809,7 +820,7 @@ end = struct
 
     (* Create a recursive type (if needed) *)
     let ty_res = Core_result.map
-      ~f:(to_recursive out_st.free_tvars rid) ty_res
+      ~f:(Recursive.make out_st.free_tvars rid) ty_res
     in
 
     (* Reset state by removing the current tvar from the free vars set *)
