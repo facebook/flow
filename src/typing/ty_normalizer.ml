@@ -652,7 +652,6 @@ end = struct
     match t with
     | OpenT (_, id) -> type_variable ~env id
     | BoundT tparam -> bound_t ~env t tparam
-    | AnnotT (OpenT (r, id), _) -> annot_t ~env r id
     | AnnotT (t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
@@ -845,33 +844,6 @@ end = struct
     let loc = Reason.def_loc_of_reason reason in
     let default t = terr ~kind:BadBoundT (Some t) in
     Env.lookup_tparam ~default env t name loc
-
-  and annot_t ~env r id =
-    if C.opt_expand_type_aliases then
-      type_variable ~env id
-    else begin
-      match desc_of_reason r with
-      (* Named aliases *)
-      | RType name
-      | RJSXIdentifier (_, name) ->
-        let symbol = symbol_from_reason env r name in
-        return (Ty.named_t symbol)
-      | RFbt ->
-        let symbol = symbol_from_reason env r "Fbt" in
-        return (Ty.named_t symbol)
-      | RRegExp ->
-        let symbol = symbol_from_reason env r "regexp" in
-        return (Ty.named_t symbol)
-      (* Imported Alias: descend to get the actual name *)
-      | RNamedImportedType _ ->
-        type_variable ~env id >>| (function
-        | Ty.Generic (import_symbol, false, _) ->
-          Ty.named_alias import_symbol
-        | ty -> ty
-        )
-      (* The rest of the case will have to go through full resolution *)
-      | _ -> type_variable ~env id
-    end
 
   and fun_ty ~env f fun_type_params =
     let {T.params; rest_param; return_t; _} = f in
