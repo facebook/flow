@@ -624,13 +624,13 @@ end = struct
     if C.opt_expand_type_aliases then type_after_reason ~env t else
     let reason = Type.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
-    | RTypeAlias (name, _) ->
-      (* The default action is to avoid expansion by using the type alias name.
-         The one case where we want to skip this process is when recovering the
-         body of a type alias A. In that case the environment field under_type_alias
-         will be 'Some A'. If the type alias name in the reason is also A, then we
-         are still at the top-level of the type-alias, so we proceed by expanding
-         one level preserving the same environment. *)
+    | RTypeAlias (name, true, _) ->
+      (* The default action is to avoid expansion by using the type alias name,
+         when this can be trusted. The one case where we want to skip this process
+         is when recovering the body of a type alias A. In that case the environment
+         field under_type_alias will be 'Some A'. If the type alias name in the reason
+         is also A, then we are still at the top-level of the type-alias, so we
+         proceed by expanding one level preserving the same environment. *)
       let continue =
         match env.Env.under_type_alias with
         | Some name' -> name = name'
@@ -1016,7 +1016,7 @@ end = struct
     let local env t ps =
       let reason = TypeUtil.reason_of_t t in
       match desc_of_reason ~unwrap:false reason with
-      | RTypeAlias (name, _) ->
+      | RTypeAlias (name, true, _) ->
         let env = Env.{ env with under_type_alias = Some name } in
         type__ ~env t >>= fun body ->
         let symbol = symbol_from_reason env reason name in

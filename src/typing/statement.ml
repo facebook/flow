@@ -749,7 +749,8 @@ and statement cx = Ast.Statement.(
         Anno.mk_type_param_declarations cx tparams in
       let t = Anno.convert cx typeparams_map right in
       let t =
-        let mod_reason = replace_reason ~keep_def_loc:true (fun desc -> RTypeAlias (name, desc)) in
+        let mod_reason = replace_reason ~keep_def_loc:true
+          (fun desc -> RTypeAlias (name, true, desc)) in
         let rec loop = function
         | ExactT (r, t) -> ExactT (mod_reason r, loop t)
         | DefT (r, MaybeT t) -> DefT (mod_reason r, MaybeT (loop t))

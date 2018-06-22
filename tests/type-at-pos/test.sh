@@ -373,6 +373,14 @@ assert_ok "$FLOW" type-at-pos object.js 22 7 --strip-root --pretty
 printf "object.js:35:1 = "
 assert_ok "$FLOW" type-at-pos object.js 35 1 --strip-root --pretty
 
+# object-resolution.js
+printf "object-resolution.js:5:2 = "
+assert_ok "$FLOW" type-at-pos object-resolution.js 5 2 --strip-root --pretty
+printf "object-resolution.js:10:2 = "
+assert_ok "$FLOW" type-at-pos object-resolution.js 10 2 --strip-root --pretty
+printf "object-resolution.js:13:5 = "
+assert_ok "$FLOW" type-at-pos object-resolution.js 13 5 --strip-root --pretty
+
 # optional.js
 printf "optional.js:4:10 = "
 assert_ok "$FLOW" type-at-pos optional.js 4 10 --strip-root --pretty

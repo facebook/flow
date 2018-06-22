@@ -130,7 +130,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * reason_desc
+  | RTypeAlias of string * bool (* trust in normalization *) * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc * Loc.t
   | RTypeof of string
@@ -485,7 +485,7 @@ let rec string_of_desc = function
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
   | RType x -> spf "`%s`" (prettify_react_util x)
-  | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
+  | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _, _) -> spf "`%s`" x
   | RTypeof x -> spf "`typeof %s`" x
@@ -607,7 +607,7 @@ let dump_reason ?(strip_root=None) r =
 
 let desc_of_reason =
   let rec loop = function
-  | RTypeAlias (_, desc)
+  | RTypeAlias (_, _, desc)
   | RPolyTest (_, desc)
     -> loop desc
   | desc
@@ -1257,3 +1257,7 @@ let is_scalar_reason r =
 
 let is_array_reason r =
   classification_of_reason r = `Array
+
+let invalidate_rtype_alias = function
+  | RTypeAlias (name, _, desc) -> RTypeAlias (name, false, desc)
+  | desc -> desc

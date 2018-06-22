@@ -2080,6 +2080,51 @@ object.js:35:1 = {
   "start":1,
   "end":6
 }
+object-resolution.js:5:2 = {
+  "type":"{|+p: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"object-resolution.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":2,"offset":65},
+    "end":{"line":5,"column":3,"offset":67}
+  },
+  "path":"object-resolution.js",
+  "line":5,
+  "endline":5,
+  "start":2,
+  "end":3
+}
+object-resolution.js:10:2 = {
+  "type":"{q: string}",
+  "reasons":[],
+  "loc":{
+    "source":"object-resolution.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":2,"offset":172},
+    "end":{"line":10,"column":5,"offset":176}
+  },
+  "path":"object-resolution.js",
+  "line":10,
+  "endline":10,
+  "start":2,
+  "end":5
+}
+object-resolution.js:13:5 = {
+  "type":"{p?: number, q?: string}",
+  "reasons":[],
+  "loc":{
+    "source":"object-resolution.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":5,"offset":225},
+    "end":{"line":13,"column":10,"offset":231}
+  },
+  "path":"object-resolution.js",
+  "line":13,
+  "endline":13,
+  "start":5,
+  "end":10
+}
 optional.js:4:10 = {
   "type":"void | string",
   "reasons":[],

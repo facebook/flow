@@ -329,8 +329,8 @@ let rec merge_type cx =
         exact = o1.flags.exact && o2.flags.exact;
         frozen = o1.flags.frozen && o2.flags.frozen;
       } in
-      let objtype = mk_objecttype ~flags ~dict ~call id o1.proto_t in
-      DefT (locationless_reason (RCustom "object"), ObjT objtype)
+      let reason = locationless_reason (RCustom "object") in
+      mk_object_def_type ~reason ~flags ~dict ~call id o1.proto_t
     | _ ->
       create_union (UnionRep.make t1 t2 []))
 
@@ -11269,12 +11269,13 @@ and object_kit =
         { sealed = Sealed; frozen = false; exact }
       in
       let call = None in
-      let t = DefT (r, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
+      let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       if flags.exact then ExactT (reason, t) else t
     in
 
     fun options state cx trace use_op reason tout x ->
+      let reason = replace_reason invalidate_rtype_alias reason in
       let {todo_rev; acc} = state in
       Nel.iter (fun (r, _, _, {exact; _}) ->
         match options with
@@ -11469,7 +11470,7 @@ and object_kit =
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT r1 in
       let call = None in
-      let t = DefT (r1, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
+      let t = mk_object_def_type ~reason:r1 ~flags ~dict ~call id proto in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       if flags.exact then ExactT (r1, t) else t
     in
@@ -11507,7 +11508,7 @@ and object_kit =
       let call = None in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
-      let t = DefT (r, ObjT (mk_objecttype ~flags ~dict ~call id proto)) in
+      let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
       if flags.exact then ExactT (reason, t) else t
     in
 

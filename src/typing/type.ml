@@ -3325,6 +3325,10 @@ let mk_objecttype ?(flags=default_flags) ~dict ~call pmap proto = {
   call_t = call;
 }
 
+let mk_object_def_type ~reason ?(flags=default_flags) ~dict ~call pmap proto =
+  let reason = replace_reason invalidate_rtype_alias reason in
+  DefT (reason, ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
+
 let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
   call_this_t = this;
   call_targs = targs;

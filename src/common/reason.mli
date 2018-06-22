@@ -82,7 +82,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * reason_desc
+  | RTypeAlias of string * bool * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc * Loc.t
   | RTypeof of string
@@ -247,3 +247,5 @@ val mk_expression_reason: Loc.t Ast.Expression.t -> reason
 
 val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc
+
+val invalidate_rtype_alias: reason_desc -> reason_desc
