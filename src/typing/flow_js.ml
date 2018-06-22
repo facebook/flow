@@ -5804,18 +5804,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
       end
 
-    | DefT (ureason, ObjT _), SuperT (use_op, reason, derived_type)
-    | DefT (ureason, AnyObjT), SuperT (use_op, reason, derived_type) ->
-      (* NOTE: ObjT can only appear as a super type of an interface, which does
-         not have statics. It's not clear that allowing ObjT here is desirable. *)
-      let check_super = check_super cx trace ~use_op reason ureason l in
-      let Derived {instance=i; statics=_} = derived_type in
-      let {fields_tmap; methods_tmap; _} = i in
-      Context.iter_props cx fields_tmap check_super;
-      Context.iter_props cx methods_tmap (fun x p ->
-        if inherited_method x then check_super x p
-      )
-
     (***********************)
     (* opaque types part 2 *)
     (***********************)
