@@ -1919,14 +1919,13 @@ and statement cx = Ast.Statement.(
         Type_inference_hooks_js.dispatch_import_hook cx (source_loc, module_name) ns_loc;
 
         let import_reason =
-          let import_str =
+          let import_reason_desc =
             match importKind with
-            | ImportDeclaration.ImportType -> "import type"
-            | ImportDeclaration.ImportTypeof -> "import typeof"
-            | ImportDeclaration.ImportValue -> "import"
+            | ImportDeclaration.ImportType -> RImportStarType local_name
+            | ImportDeclaration.ImportTypeof -> RImportStarTypeOf local_name
+            | ImportDeclaration.ImportValue -> RImportStar local_name
           in
-          let import_reason_str = spf "%s * as %s" import_str local_name in
-          mk_reason (RCustom import_reason_str) import_loc
+          mk_reason import_reason_desc import_loc
         in
 
         (match importKind with

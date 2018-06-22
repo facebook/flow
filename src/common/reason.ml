@@ -155,6 +155,9 @@ type reason_desc =
   | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string
+  | RImportStarType of string
+  | RImportStarTypeOf of string
+  | RImportStar of string
   | RDefaultImportedType of string * string
   | RCode of string
   | RCustom of string
@@ -517,6 +520,9 @@ let rec string_of_desc = function
   | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
   | RNamedImportedType m -> spf "Named import from module `%s`" m
+  | RImportStarType n ->  spf "import type * as %s" n
+  | RImportStarTypeOf n -> spf "import typeof * as %s" n
+  | RImportStar n -> spf "import * as %s" n
   | RCode x -> "`" ^ x ^ "`"
   | RDefaultImportedType (_, m) -> spf "Default import from `%s`" m
   | RCustom x -> x
@@ -1198,6 +1204,9 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RFieldInitializer _
 | RUntypedModule _
 | RNamedImportedType _
+| RImportStarType _
+| RImportStarTypeOf _
+| RImportStar _
 | RDefaultImportedType _
 | RCode _
 | RCustom _
