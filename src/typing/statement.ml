@@ -4058,11 +4058,11 @@ and update cx loc expr = Ast.Expression.Update.(
 )
 
 (* traverse a binary expression, return result type *)
-and binary cx loc expr = Ast.Expression.Binary.(
-  let operator = expr.operator in
-  match expr with
-  | { operator = Equal; left; right }
-  | { operator = NotEqual; left; right } ->
+and binary cx loc { Ast.Expression.Binary.operator; left; right } =
+  let open Ast.Expression.Binary in
+  match operator with
+  | Equal
+  | NotEqual ->
       let t1, left = expression cx left in
       let t2, right = expression cx right in
       let desc = RBinaryOperator (
@@ -4077,7 +4077,9 @@ and binary cx loc expr = Ast.Expression.Binary.(
       Flow.flow cx (t1, EqT (reason,false,t2));
       BoolT.at loc, { operator; left = (), left; right = (), right }
 
-  | { operator = In; left = (loc1, _) as left; right = (loc2, _) as right } ->
+  | In ->
+      let (loc1, _) = left in
+      let (loc2, _) = right in
       let t1, left = expression cx left in
       let t2, right = expression cx right in
       let reason_lhs = mk_reason (RCustom "LHS of `in` operator") loc1 in
@@ -4086,17 +4088,17 @@ and binary cx loc expr = Ast.Expression.Binary.(
       Flow.flow cx (t2, AssertBinaryInRHST reason_rhs);
       BoolT.at loc, { operator; left = (), left; right = (), right }
 
-  | { operator = StrictEqual; left; right }
-  | { operator = StrictNotEqual; left; right }
-  | { operator = Instanceof; left; right } ->
+  | StrictEqual
+  | StrictNotEqual
+  | Instanceof ->
       let _, left = expression cx left in
       let _, right = expression cx right in
       BoolT.at loc, { operator; left = (), left; right = (), right }
 
-  | { operator = LessThan; left; right }
-  | { operator = LessThanEqual; left; right }
-  | { operator = GreaterThan; left; right }
-  | { operator = GreaterThanEqual; left; right } ->
+  | LessThan
+  | LessThanEqual
+  | GreaterThan
+  | GreaterThanEqual ->
       let t1, left = expression cx left in
       let t2, right = expression cx right in
       let desc = RBinaryOperator (
@@ -4113,17 +4115,17 @@ and binary cx loc expr = Ast.Expression.Binary.(
       Flow.flow cx (t1, ComparatorT (reason,false,t2));
       BoolT.at loc, { operator; left = (), left; right = (), right }
 
-  | { operator = LShift; left; right }
-  | { operator = RShift; left; right }
-  | { operator = RShift3; left; right }
-  | { operator = Minus; left; right }
-  | { operator = Mult; left; right }
-  | { operator = Exp; left; right }
-  | { operator = Div; left; right }
-  | { operator = Mod; left; right }
-  | { operator = BitOr; left; right }
-  | { operator = Xor; left; right }
-  | { operator = BitAnd; left; right } ->
+  | LShift
+  | RShift
+  | RShift3
+  | Minus
+  | Mult
+  | Exp
+  | Div
+  | Mod
+  | BitOr
+  | Xor
+  | BitAnd ->
       let reason = mk_reason (RCustom "arithmetic operation") loc in
       let t1, left = expression cx left in
       let t2, right = expression cx right in
@@ -4131,7 +4133,7 @@ and binary cx loc expr = Ast.Expression.Binary.(
       Flow.flow cx (t2, AssertArithmeticOperandT reason);
       NumT.at loc, { operator; left = (), left; right = (), right }
 
-  | { operator = Plus; left; right } ->
+  | Plus ->
       let t1, left_ast = expression cx left in
       let t2, right_ast = expression cx right in
       let desc = RBinaryOperator (
@@ -4149,10 +4151,11 @@ and binary cx loc expr = Ast.Expression.Binary.(
         Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t));
       ),
       { operator; left = (), left_ast; right = (), right_ast }
-)
 
-and logical cx loc = Ast.Expression.Logical.(function
-  | { operator = Or; left; right } ->
+and logical cx loc { Ast.Expression.Logical.operator; left; right } =
+  let open Ast.Expression.Logical in
+  match operator with
+  | Or ->
       let () = check_default_pattern cx left right in
       let t1, _, not_map, xtypes, left = predicates_of_condition cx left in
       let t2, right = Env.in_refined_env cx loc not_map xtypes
@@ -4163,8 +4166,7 @@ and logical cx loc = Ast.Expression.Logical.(function
         Flow.flow cx (t1, OrT (reason, t2, t));
       ),
       { operator = Or; left = (), left; right = (), right }
-
-  | { operator = And; left; right } ->
+  | And ->
       let t1, map, _, xtypes, left = predicates_of_condition cx left in
       let t2, right = Env.in_refined_env cx loc map xtypes
         (fun () -> expression cx right)
@@ -4174,7 +4176,7 @@ and logical cx loc = Ast.Expression.Logical.(function
         Flow.flow cx (t1, AndT (reason, t2, t));
       ),
       { operator = And; left = (), left; right = (), right }
-  | { operator = NullishCoalesce; left; right } ->
+  | NullishCoalesce ->
       let t1, left = expression cx left in
       let t2, right = expression cx right in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
@@ -4182,7 +4184,6 @@ and logical cx loc = Ast.Expression.Logical.(function
         Flow.flow cx (t1, NullishCoalesceT (reason, t2, t));
       ),
       { operator = NullishCoalesce; left = (), left; right = (), right }
-)
 
 and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
