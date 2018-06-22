@@ -263,7 +263,7 @@ let infer_type filename content line col =
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
       let loc = mk_loc filename line col in Query_types.(
-        match query_type cx loc with
+        match query_type ~expand_aliases:false cx loc with
         | FailureNoMatch -> Loc.none, Error "No match"
         | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
         | Success (loc, t) ->

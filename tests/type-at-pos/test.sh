@@ -583,6 +583,8 @@ printf "type-alias.js:6:6 = "
 assert_ok "$FLOW" type-at-pos type-alias.js 6 6 --strip-root --pretty
 printf "type-alias.js:7:6 = "
 assert_ok "$FLOW" type-at-pos type-alias.js 7 6 --strip-root --pretty
+printf "type-alias.js:7:6 (--expand-type-aliases) = "
+assert_ok "$FLOW" type-at-pos type-alias.js 7 6 --strip-root --pretty --expand-type-aliases
 printf "type-alias.js:8:6 = "
 assert_ok "$FLOW" type-at-pos type-alias.js 8 6 --strip-root --pretty
 printf "type-alias.js:12:12 "

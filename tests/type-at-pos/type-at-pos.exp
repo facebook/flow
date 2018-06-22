@@ -3423,6 +3423,21 @@ type-alias.js:7:6 = {
   "start":6,
   "end":6
 }
+type-alias.js:7:6 (--expand-type-aliases) = {
+  "type":"type E = {|x: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":6,"offset":82},
+    "end":{"line":7,"column":6,"offset":83}
+  },
+  "path":"type-alias.js",
+  "line":7,
+  "endline":7,
+  "start":6,
+  "end":6
+}
 type-alias.js:8:6 = {
   "type":"type F = ?D",
   "reasons":[],

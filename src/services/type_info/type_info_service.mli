@@ -10,6 +10,7 @@ val type_at_pos :
   workers:MultiWorkerLwt.worker list option ->
   env:ServerEnv.env ref ->
   profiling:Profiling_js.running ->
+  expand_aliases:bool ->
   File_key.t ->
   string ->
   int ->

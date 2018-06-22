@@ -33,6 +33,8 @@ let spec = {
     |> path_flag
     |> flag "--expand-json-output" no_arg
         ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
+    |> flag "--expand-type-aliases" no_arg
+        ~doc:"Replace type aliases with their bodies"
     |> anon "args" (required (list_of string))
   )
 }
@@ -103,7 +105,8 @@ let handle_error err ~json ~pretty =
     prerr_endline err
   )
 
-let main option_values json pretty root strip_root verbose from path expanded args () =
+let main option_values json pretty root strip_root verbose from path expanded
+    expand_aliases args () =
   FlowEventLogger.set_from from;
   let json = json || pretty || expanded in
   let (file, line, column) = parse_args path args in
@@ -117,7 +120,8 @@ let main option_values json pretty root strip_root verbose from path expanded ar
   if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  let request = ServerProt.Request.INFER_TYPE (file, line, column, verbose) in
+  let request = ServerProt.Request.INFER_TYPE
+    (file, line, column, verbose, expand_aliases) in
   match connect_and_make_request option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->

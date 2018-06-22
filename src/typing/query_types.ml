@@ -36,14 +36,15 @@ type result =
 | FailureUnparseable of Loc.t * Type.t * string
 | Success of Loc.t * Ty.t
 
-module QueryTypeNormalizer = Ty_normalizer.Make(struct
-  let opt_fall_through_merged = false
-  let opt_expand_internal_types = false
-  let opt_expand_type_aliases = false
-  let opt_flag_shadowed_type_params = false
-end)
+let query_type ~expand_aliases ?type_table cx loc =
 
-let query_type cx ?type_table loc =
+  let module QueryTypeNormalizer = Ty_normalizer.Make(struct
+    let opt_fall_through_merged = false
+    let opt_expand_internal_types = false
+    let opt_expand_type_aliases = expand_aliases
+    let opt_flag_shadowed_type_params = false
+  end) in
+
   let pred = fun range -> Reason.in_range loc range in
   let type_table = match type_table with
     | Some type_table -> type_table

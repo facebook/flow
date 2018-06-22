@@ -8,7 +8,7 @@
 open Core_result
 let (>|=) = Lwt.(>|=)
 
-let type_at_pos ~options ~workers ~env ~profiling file content line col =
+let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content line col =
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
@@ -20,7 +20,7 @@ let type_at_pos ~options ~workers ~env ~profiling file content line col =
         "loc", Reason.json_of_loc loc;
         "type", ty_json;
       ] in
-      Query_types.(match query_type cx loc with
+      Query_types.(match query_type ~expand_aliases cx loc with
         | FailureNoMatch ->
           Hh_json.JSON_Object [
             "result", Hh_json.JSON_String "FAILURE_NO_MATCH"
