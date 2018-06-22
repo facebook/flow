@@ -3573,3 +3573,78 @@ type-alias.js:20:8 {
   "start":8,
   "end":8
 }
+type-alias.js:24:6 {
+  "type":"type H = number | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":6,"offset":364},
+    "end":{"line":24,"column":6,"offset":365}
+  },
+  "path":"type-alias.js",
+  "line":24,
+  "endline":24,
+  "start":6,
+  "end":6
+}
+type-alias.js:25:6 {
+  "type":"type I = string | number | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":25,"column":6,"offset":384},
+    "end":{"line":25,"column":6,"offset":385}
+  },
+  "path":"type-alias.js",
+  "line":25,
+  "endline":25,
+  "start":6,
+  "end":6
+}
+type-alias.js:27:6 {
+  "type":"type K = (<X>(x: X) => void) | number | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":27,"column":6,"offset":459},
+    "end":{"line":27,"column":6,"offset":460}
+  },
+  "path":"type-alias.js",
+  "line":27,
+  "endline":27,
+  "start":6,
+  "end":6
+}
+type-alias.js:29:6 {
+  "type":"type M<Z> = (<X>(x: X, y: Z) => void) | number | Z | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":29,"column":6,"offset":536},
+    "end":{"line":29,"column":6,"offset":537}
+  },
+  "path":"type-alias.js",
+  "line":29,
+  "endline":29,
+  "start":6,
+  "end":6
+}
+type-alias.js:31:6 {
+  "type":"type O = {x: ({x: N<number>} | null)} | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":6,"offset":594},
+    "end":{"line":31,"column":6,"offset":595}
+  },
+  "path":"type-alias.js",
+  "line":31,
+  "endline":31,
+  "start":6,
+  "end":6
+}

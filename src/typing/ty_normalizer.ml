@@ -550,6 +550,56 @@ end = struct
 
   end
 
+
+  module Substitution = struct
+    module Env = struct
+      type t =  Ty.t SMap.t
+      let descend _ e = e
+    end
+    module Visitor = Ty_visitor.MakeAny(Env)
+
+    (* Replace a list of type parameters with a list of types in the given type.
+     * These lists might not match exactly in length.
+     *)
+    let run =
+      let open Ty in
+      let init_env tparams types =
+        let rec step acc = function
+        | [], _ | _, [] -> acc
+        | p::ps, t::ts -> step (SMap.add p.tp_name t acc) (ps, ts)
+        in
+        step SMap.empty (tparams, types)
+      in
+      let remove_params env = function
+      | None -> env
+      | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
+      in
+      let open Visitor in
+      let visitor = object inherit c as super
+        method! type_ env t =
+          match t with
+          | TypeAlias { ta_tparams=ps; _ }
+          | Fun { fun_type_params=ps; _ } ->
+            let env = remove_params env ps in
+            super#type_ env t
+          | Bound (Symbol (_, name)) ->
+            begin match SMap.get name env with
+            | Some t' ->
+              (* Mark the substitution *)
+              begin tell true >>= fun _ ->
+              super#type_ env t' end
+            | _ -> super#type_ env t
+            end
+          | _ -> super#type_ env t
+        end
+      in
+      fun vs ts t_body ->
+        let env = init_env vs ts in
+        let t, changed = visitor#type_ env t_body in
+        if changed then simplify_unions_inters t else t
+
+  end
+
   (***********************)
   (* Construct built-ins *)
   (***********************)
@@ -1076,9 +1126,17 @@ end = struct
     type__ ~env t >>= fun ty ->
     mapM (type__ ~env) targs >>= fun targs ->
     match ty with
-    | Ty.Class (name, _, _)
-    | Ty.TypeAlias { Ty.ta_name=name; _ } ->
+    | Ty.Class (name, _, _) ->
       return (Ty.generic_t name targs)
+    | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
+      let t = if C.opt_expand_type_aliases then
+        match ta_tparams, ta_type with
+        | Some ps, Some t -> Substitution.run ps targs t
+        | None, Some t -> t
+        | _ -> Ty.generic_t ta_name targs
+      else
+        Ty.generic_t ta_name targs
+      in return t
     | Ty.Any ->
       return Ty.Any
     (* "Fix" type application on recursive types *)

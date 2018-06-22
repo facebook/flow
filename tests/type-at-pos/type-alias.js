@@ -19,3 +19,13 @@ function f<X>() {
   type E = $Exact<X>;
   type F = ?X;
 }
+
+type G<X> = X | null;
+type H = G<number>;
+type I = G<G<number> | string>
+type J<X> = (<X>(x: X) => void) | X | null;
+type K = J<number>;
+type L<X, Y> = (<X>(x: X, y: Y) => void) | X | Y | null;
+type M<Z> = L<number, Z>;
+type N<A> = { x: N<A> } | null;
+type O = N<number>

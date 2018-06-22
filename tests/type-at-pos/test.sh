@@ -605,3 +605,14 @@ printf "type-alias.js:19:8 "
 assert_ok "$FLOW" type-at-pos type-alias.js 19 8 --strip-root --pretty
 printf "type-alias.js:20:8 "
 assert_ok "$FLOW" type-at-pos type-alias.js 20 8 --strip-root --pretty
+
+printf "type-alias.js:24:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 24 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:25:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 25 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:27:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 27 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:29:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 29 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:31:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 31 6 --strip-root --pretty --expand-type-aliases
