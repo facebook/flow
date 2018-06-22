@@ -2091,6 +2091,76 @@ optional_chaining_continue.js = {
   ]
 }
 idx.js = {
-  "error":"autocomplete on unexpected type of value IdxWrapper (please file a task!)",
-  "result":[]
+  "result":[
+    {
+      "name":"bar",
+      "type":"string",
+      "func_details":null,
+      "path":"idx.js",
+      "line":7,
+      "endline":7,
+      "start":10,
+      "end":15
+    },
+    {
+      "name":"hasOwnProperty",
+      "type":"(prop: any) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "path":"[LIB] core.js",
+      "line":63,
+      "endline":63,
+      "start":5,
+      "end":38
+    },
+    {
+      "name":"isPrototypeOf",
+      "type":"(o: any) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
+      "path":"[LIB] core.js",
+      "line":64,
+      "endline":64,
+      "start":5,
+      "end":34
+    },
+    {
+      "name":"propertyIsEnumerable",
+      "type":"(prop: any) => boolean",
+      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
+      "path":"[LIB] core.js",
+      "line":65,
+      "endline":65,
+      "start":5,
+      "end":44
+    },
+    {
+      "name":"toLocaleString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":66,
+      "endline":66,
+      "start":5,
+      "end":28
+    },
+    {
+      "name":"toString",
+      "type":"() => string",
+      "func_details":{"return_type":"string","params":[]},
+      "path":"[LIB] core.js",
+      "line":67,
+      "endline":67,
+      "start":5,
+      "end":22
+    },
+    {
+      "name":"valueOf",
+      "type":"() => Object",
+      "func_details":{"return_type":"Object","params":[]},
+      "path":"[LIB] core.js",
+      "line":68,
+      "endline":68,
+      "start":5,
+      "end":21
+    }
+  ]
 }

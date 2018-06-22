@@ -12017,6 +12017,10 @@ end = struct
     | DefT (reason, CharSetT _) ->
         extract_type cx (get_builtin_type cx reason "String")
 
+    | DefT (_, IdxWrapper t) ->
+        let t = resolve_type cx t in
+        extract_type cx t
+
     | ReposT (_, t)
     | InternalT (ReposUpperT (_, t)) ->
         extract_type cx t
@@ -12043,7 +12047,6 @@ end = struct
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoT _
-    | DefT (_, IdxWrapper _)
     | KeysT (_, _)
     | DefT (_, MixedT _)
     | NullProtoT _
