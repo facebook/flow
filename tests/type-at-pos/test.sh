@@ -521,6 +521,8 @@ printf "opaque.js:21:19 = "
 assert_ok "$FLOW" type-at-pos opaque.js 21 19 --strip-root --pretty
 printf "opaque.js:21:28 = "
 assert_ok "$FLOW" type-at-pos opaque.js 21 28 --strip-root --pretty
+printf "opaque.js:24:7 = "
+assert_ok "$FLOW" type-at-pos opaque.js 24 7 --strip-root --pretty
 
 # optional_chaining.js
 printf "optional_chaining.js:16:7 = "

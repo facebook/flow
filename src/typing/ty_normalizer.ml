@@ -712,7 +712,7 @@ end = struct
     | KeysT (_, t) ->
       type__ ~env t >>| fun ty ->
       Ty.generic_builtin_t "$Keys" [ty]
-    | OpaqueT (r, o) -> opaque_t ~env r o None
+    | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
     | TypeDestructorTriggerT _ -> return Ty.Bot
@@ -1072,7 +1072,7 @@ end = struct
     let import_fun env r t ps = import env r t ps in
     let opaque env t ps =
       match t with
-      | OpaqueT (r, o) -> opaque_t ~env r o ps
+      | OpaqueT (r, o) -> opaque_type_t ~env r o ps
       | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
     in
     fun ~env r kind t ps ->
@@ -1108,13 +1108,18 @@ end = struct
       let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
       terr ~kind:BadTypeApp ~msg (Some t)
 
+  and opaque_t ~env reason opaque_type =
+    let name = opaque_type.Type.opaque_name in
+    let opaque_symbol = symbol_from_reason env reason name in
+    return (Ty.named_t opaque_symbol)
+
   (* We are being a bit lax here with opaque types so that we don't have to
      introduce a new constructor in Ty.t to support all kinds of OpaqueT.
      If an underlying type is available, then we use that as the alias body.
      If not, we check for a super type and use that if there is one.
      Otherwise, we fall back to a bodyless TypeAlias.
   *)
-  and opaque_t ~env reason opaque_type ta_tparams =
+  and opaque_type_t ~env reason opaque_type ta_tparams =
     let open Type in
     let name = opaque_type.opaque_name in
     get_cx >>= fun cx ->

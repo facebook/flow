@@ -2950,6 +2950,21 @@ opaque.js:21:28 = {
   "start":25,
   "end":34
 }
+opaque.js:24:7 = {
+  "type":"Opaque",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":7,"offset":538},
+    "end":{"line":24,"column":7,"offset":539}
+  },
+  "path":"opaque.js",
+  "line":24,
+  "endline":24,
+  "start":7,
+  "end":7
+}
 optional_chaining.js:16:7 = {
   "type":"void | number",
   "reasons":[],
