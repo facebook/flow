@@ -1,0 +1,96 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:6:15
+
+Cannot assign `props.foo` to `num` because string [1] is incompatible with number [2].
+
+   test.js:6:15
+   6|         num = props.foo; // error: string ~> number
+                    ^^^^^^^^^
+
+References:
+   test.js:3:39
+   3| class A extends React.Component<{foo: string}, {bar: string}> {
+                                            ^^^^^^ [1]
+   test.js:5:18
+   5|         let num: number;
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:7:15
+
+Cannot assign `state.bar` to `num` because string [1] is incompatible with number [2].
+
+   test.js:7:15
+   7|         num = state.bar; // error: string ~> number
+                    ^^^^^^^^^
+
+References:
+   test.js:3:54
+   3| class A extends React.Component<{foo: string}, {bar: string}> {
+                                                           ^^^^^^ [1]
+   test.js:5:18
+   5|         let num: number;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:15
+
+Cannot assign `prevProps.foo` to `num` because string [1] is incompatible with number [2].
+
+   test.js:16:15
+   16|         num = prevProps.foo; // error: string ~> number
+                     ^^^^^^^^^^^^^
+
+References:
+   test.js:3:39
+    3| class A extends React.Component<{foo: string}, {bar: string}> {
+                                             ^^^^^^ [1]
+   test.js:15:18
+   15|         let num: number;
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:15
+
+Cannot assign `prevState.bar` to `num` because string [1] is incompatible with number [2].
+
+   test.js:17:15
+   17|         num = prevState.bar; // error: string ~> number
+                     ^^^^^^^^^^^^^
+
+References:
+   test.js:3:54
+    3| class A extends React.Component<{foo: string}, {bar: string}> {
+                                                            ^^^^^^ [1]
+   test.js:15:18
+   15|         let num: number;
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+
+Cannot extend property `Component` [1] with `C` because string [2] is incompatible with number [3] in property `foo` of
+the return value of property `getDerivedStateFromProps`.
+
+   test.js:35:1
+       v------------------------------------------------------------------
+   35| class C extends React.Component<void, {foo: number, bar: string}> {
+   36|     static getDerivedStateFromProps(props, state) {
+   37|         return {foo: "nope"}; // error: string ~> number
+   38|     }
+   39| }
+       ^
+
+References:
+   test.js:35:17
+   35| class C extends React.Component<void, {foo: number, bar: string}> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:37:22
+   37|         return {foo: "nope"}; // error: string ~> number
+                            ^^^^^^ [2]
+   test.js:35:45
+   35| class C extends React.Component<void, {foo: number, bar: string}> {
+                                                   ^^^^^^ [3]
+
+
+
+Found 5 errors

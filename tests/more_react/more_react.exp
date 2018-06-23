@@ -58,15 +58,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:199:41
+   <BUILTINS>/react.js:201:41
                                                 v---
-   199|   declare export function checkPropTypes<V>(
-   200|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-   201|     values: V,
-   202|     location: string,
-   203|     componentName: string,
-   204|     getStack: ?(() => ?string)
-   205|   ) : void;
+   201|   declare export function checkPropTypes<V>(
+   202|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+   203|     values: V,
+   204|     location: string,
+   205|     componentName: string,
+   206|     getStack: ?(() => ?string)
+   207|   ) : void;
           -------^ [1]
 
 
@@ -79,15 +79,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:199:41
+   <BUILTINS>/react.js:201:41
                                                 v---
-   199|   declare export function checkPropTypes<V>(
-   200|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-   201|     values: V,
-   202|     location: string,
-   203|     componentName: string,
-   204|     getStack: ?(() => ?string)
-   205|   ) : void;
+   201|   declare export function checkPropTypes<V>(
+   202|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+   203|     values: V,
+   204|     location: string,
+   205|     componentName: string,
+   206|     getStack: ?(() => ?string)
+   207|   ) : void;
           -------^ [1]
 
 
@@ -113,8 +113,8 @@ References:
    checkPropTypes.js:12:91
     12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
                                                                                                   ^^^ [1]
-   <BUILTINS>/react.js:204:24
-   204|     getStack: ?(() => ?string)
+   <BUILTINS>/react.js:206:24
+   206|     getStack: ?(() => ?string)
                                ^^^^^^ [2]
 
 

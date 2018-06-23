@@ -47,8 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:280:27
-   280|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:282:27
+   282|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:280:27
-   280|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:282:27
+   282|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -186,25 +186,25 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:258:26
+   <BUILTINS>/react.js:260:26
                                  v-
-   258|   declare export default {|
-   259|     +DOM: typeof DOM,
-   260|     +PropTypes: typeof PropTypes,
-   261|     +version: typeof version,
-   262|     +checkPropTypes: typeof checkPropTypes,
-   263|     +createClass: typeof createClass,
-   264|     +createContext: typeof createContext,
-   265|     +createElement: typeof createElement,
-   266|     +cloneElement: typeof cloneElement,
-   267|     +createFactory: typeof createFactory,
-   268|     +createRef: typeof createRef,
-   269|     +isValidElement: typeof isValidElement,
-   270|     +Component: typeof Component,
-   271|     +PureComponent: typeof PureComponent,
-   272|     +Fragment: typeof Fragment,
-   273|     +Children: typeof Children,
-   274|   |};
+   260|   declare export default {|
+   261|     +DOM: typeof DOM,
+   262|     +PropTypes: typeof PropTypes,
+   263|     +version: typeof version,
+   264|     +checkPropTypes: typeof checkPropTypes,
+   265|     +createClass: typeof createClass,
+   266|     +createContext: typeof createContext,
+   267|     +createElement: typeof createElement,
+   268|     +cloneElement: typeof cloneElement,
+   269|     +createFactory: typeof createFactory,
+   270|     +createRef: typeof createRef,
+   271|     +isValidElement: typeof isValidElement,
+   272|     +Component: typeof Component,
+   273|     +PureComponent: typeof PureComponent,
+   274|     +Fragment: typeof Fragment,
+   275|     +Children: typeof Children,
+   276|   |};
           -^ [1]
 
 
@@ -217,25 +217,25 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:258:26
+   <BUILTINS>/react.js:260:26
                                  v-
-   258|   declare export default {|
-   259|     +DOM: typeof DOM,
-   260|     +PropTypes: typeof PropTypes,
-   261|     +version: typeof version,
-   262|     +checkPropTypes: typeof checkPropTypes,
-   263|     +createClass: typeof createClass,
-   264|     +createContext: typeof createContext,
-   265|     +createElement: typeof createElement,
-   266|     +cloneElement: typeof cloneElement,
-   267|     +createFactory: typeof createFactory,
-   268|     +createRef: typeof createRef,
-   269|     +isValidElement: typeof isValidElement,
-   270|     +Component: typeof Component,
-   271|     +PureComponent: typeof PureComponent,
-   272|     +Fragment: typeof Fragment,
-   273|     +Children: typeof Children,
-   274|   |};
+   260|   declare export default {|
+   261|     +DOM: typeof DOM,
+   262|     +PropTypes: typeof PropTypes,
+   263|     +version: typeof version,
+   264|     +checkPropTypes: typeof checkPropTypes,
+   265|     +createClass: typeof createClass,
+   266|     +createContext: typeof createContext,
+   267|     +createElement: typeof createElement,
+   268|     +cloneElement: typeof cloneElement,
+   269|     +createFactory: typeof createFactory,
+   270|     +createRef: typeof createRef,
+   271|     +isValidElement: typeof isValidElement,
+   272|     +Component: typeof Component,
+   273|     +PureComponent: typeof PureComponent,
+   274|     +Fragment: typeof Fragment,
+   275|     +Children: typeof Children,
+   276|   |};
           -^ [1]
 
 
@@ -248,25 +248,25 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:258:26
+   <BUILTINS>/react.js:260:26
                                  v-
-   258|   declare export default {|
-   259|     +DOM: typeof DOM,
-   260|     +PropTypes: typeof PropTypes,
-   261|     +version: typeof version,
-   262|     +checkPropTypes: typeof checkPropTypes,
-   263|     +createClass: typeof createClass,
-   264|     +createContext: typeof createContext,
-   265|     +createElement: typeof createElement,
-   266|     +cloneElement: typeof cloneElement,
-   267|     +createFactory: typeof createFactory,
-   268|     +createRef: typeof createRef,
-   269|     +isValidElement: typeof isValidElement,
-   270|     +Component: typeof Component,
-   271|     +PureComponent: typeof PureComponent,
-   272|     +Fragment: typeof Fragment,
-   273|     +Children: typeof Children,
-   274|   |};
+   260|   declare export default {|
+   261|     +DOM: typeof DOM,
+   262|     +PropTypes: typeof PropTypes,
+   263|     +version: typeof version,
+   264|     +checkPropTypes: typeof checkPropTypes,
+   265|     +createClass: typeof createClass,
+   266|     +createContext: typeof createContext,
+   267|     +createElement: typeof createElement,
+   268|     +cloneElement: typeof cloneElement,
+   269|     +createFactory: typeof createFactory,
+   270|     +createRef: typeof createRef,
+   271|     +isValidElement: typeof isValidElement,
+   272|     +Component: typeof Component,
+   273|     +PureComponent: typeof PureComponent,
+   274|     +Fragment: typeof Fragment,
+   275|     +Children: typeof Children,
+   276|   |};
           -^ [1]
 
 
