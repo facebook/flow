@@ -572,7 +572,7 @@ let flow_check (code : string) : string option =
       let builtins_cx = Context.make builtins_sig_cx builtin_metadata
         File_key.Builtins Files.lib_module_ref in
       let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
-        ~exclude_syms:SSet.empty ~lint_severities ~file_sig:builtins_file_sig in
+        ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:builtins_file_sig in
       let () =
         let from_t = Context.find_module master_cx Files.lib_module_ref in
         let to_t = Context.find_module builtins_cx Files.lib_module_ref in
@@ -603,7 +603,7 @@ let flow_check (code : string) : string option =
       let reqs = Merge_js.Reqs.empty in
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
       let final_cx, _other_cxs = Merge_js.merge_component_strict
-          ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
+          ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
           ~get_ast_unsafe:(fun _ -> input_ast)
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
