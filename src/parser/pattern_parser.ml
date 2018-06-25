@@ -151,15 +151,39 @@ module Pattern
 
   (* Parse object destructuring pattern *)
   let rec object_ restricted_error =
+    let rest_property env =
+      let loc, argument = with_loc (fun env ->
+        Expect.token env T_ELLIPSIS;
+        pattern env restricted_error
+      ) env in
+      Pattern.Object.(RestProperty (loc, { RestProperty.
+        argument
+      }))
+    in
+
+    let property_default env =
+      match Peek.token env with
+      | T_ASSIGN ->
+        Expect.token env T_ASSIGN;
+        Some (Parse.assignment env)
+      | _ ->
+        None
+    in
+
+    let property_with_default env prop =
+      match property_default env with
+      | Some default ->
+        let loc = Loc.btwn (fst prop) (fst default) in
+        loc, Pattern.(Assignment Assignment.({
+          left = prop;
+          right = default;
+        }));
+      | None -> prop
+    in
+
     let rec property env =
       if Peek.token env = T_ELLIPSIS then begin
-        let loc, argument = with_loc (fun env ->
-          Expect.token env T_ELLIPSIS;
-          pattern env restricted_error
-        ) env in
-        Some Pattern.Object.(RestProperty (loc, { RestProperty.
-          argument
-        }))
+        Some (rest_property env)
       end else begin
         let start_loc = Peek.loc env in
         let key = Ast.Expression.Object.Property.(
@@ -197,17 +221,7 @@ module Pattern
         in
         match prop with
         | Some (pattern, shorthand) ->
-          let pattern = match Peek.token env with
-            | T_ASSIGN ->
-              Expect.token env T_ASSIGN;
-              let default = Parse.assignment env in
-              let loc = Loc.btwn (fst pattern) (fst default) in
-              loc, Pattern.(Assignment Assignment.({
-                left = pattern;
-                right = default;
-              }));
-            | _ -> pattern
-          in
+          let pattern = property_with_default env pattern in
           let loc = Loc.btwn start_loc (fst pattern) in
           Some Pattern.Object.(Property (loc, Property.({
             key;
