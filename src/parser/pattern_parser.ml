@@ -186,49 +186,55 @@ module Pattern
         Some (rest_property env)
       end else begin
         let start_loc = Peek.loc env in
-        let key = Ast.Expression.Object.Property.(
-          match Parse.object_key env with
-          | _, Literal lit -> Pattern.Object.Property.Literal lit
-          | _, Identifier id -> Pattern.Object.Property.Identifier id
-          | _, PrivateName _ -> failwith "Internal Error: Found object private prop"
-          | _, Computed expr -> Pattern.Object.Property.Computed expr
-        ) in
-        let prop = match Peek.token env with
-          | T_COLON ->
-            Expect.token env T_COLON;
-            Some (pattern env restricted_error, false)
-          | _ ->
-            (match key with
-            | Pattern.Object.Property.Identifier ((id_loc, string_val) as name) ->
-              (* #sec-identifiers-static-semantics-early-errors *)
-              begin
-                if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
-                  (* it is a syntax error if `name` is a reserved word other than await or yield *)
-                  error_at env (id_loc, Parse_error.UnexpectedReserved)
-                else if is_strict_reserved string_val then
-                  (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
-                  strict_error_at env (id_loc, Parse_error.StrictReservedWord)
-              end;
-              let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
-                name;
-                annot = None;
-                optional = false;
-              }) in
-              Some (pattern, true)
-            | _ ->
-              error_unexpected env; (* invalid shorthand destructuring *)
-              None)
-        in
-        match prop with
-        | Some (pattern, shorthand) ->
+        let raw_key = Parse.object_key env in
+        match Peek.token env with
+        | T_COLON ->
+          Expect.token env T_COLON;
+          let pattern = pattern env restricted_error in
           let pattern = property_with_default env pattern in
           let loc = Loc.btwn start_loc (fst pattern) in
+          let key = Ast.Expression.Object.Property.(
+            match raw_key with
+            | _, Literal lit -> Pattern.Object.Property.Literal lit
+            | _, Identifier id -> Pattern.Object.Property.Identifier id
+            | _, PrivateName _ -> failwith "Internal Error: Found object private prop"
+            | _, Computed expr -> Pattern.Object.Property.Computed expr
+          ) in
           Some Pattern.Object.(Property (loc, Property.({
             key;
             pattern;
-            shorthand;
+            shorthand = false;
           })))
-        | None -> None
+
+        | _ ->
+          (match raw_key with
+          | _, Ast.Expression.Object.Property.Identifier ((id_loc, string_val) as name) ->
+            (* #sec-identifiers-static-semantics-early-errors *)
+            begin
+              if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
+                (* it is a syntax error if `name` is a reserved word other than await or yield *)
+                error_at env (id_loc, Parse_error.UnexpectedReserved)
+              else if is_strict_reserved string_val then
+                (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
+                strict_error_at env (id_loc, Parse_error.StrictReservedWord)
+            end;
+            let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
+              name;
+              annot = None;
+              optional = false;
+            }) in
+            let pattern = property_with_default env pattern in
+            let loc = Loc.btwn start_loc (fst pattern) in
+            Some Pattern.Object.(Property (loc, { Property.
+              key = Property.Identifier name;
+              pattern;
+              shorthand = true;
+            }))
+
+          | _ ->
+            error_unexpected env; (* invalid shorthand destructuring *)
+            None
+          )
       end
 
     (* seen_rest is true when we've seen a rest element. rest_trailing_comma is the location of
