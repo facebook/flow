@@ -31,9 +31,10 @@ end
 
 module Expression : sig
   val error : annot Ast.Expression.t'
-
   val expression_or_spread_list_error : annot Ast.Expression.expression_or_spread list
-
+  val unimplemented : annot Ast.Expression.t'
+  val targs_unimplemented : annot Ast.Type.ParameterInstantiation.t option
+  val expression_or_spread_list_unimplemented : annot Ast.Expression.expression_or_spread list
   module Object : sig
     val property_error : annot Ast.Expression.Object.property
   end
@@ -41,4 +42,9 @@ end
 
 module Pattern : sig
   val error : annot Ast.Pattern.t'
+  val unimplemented : annot Ast.Pattern.t'
+end
+
+module Function : sig
+  val unimplemented : annot Ast.Function.t
 end

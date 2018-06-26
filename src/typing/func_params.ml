@@ -18,7 +18,7 @@ module Flow = Flow_js
 
 open Reason
 open Type
-open Destructuring
+open Destructuring.Old
 
 type param = string option * Type.t
 type rest = string option * Loc.t * Type.t

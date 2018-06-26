@@ -21,7 +21,7 @@ open Reason
 open Type
 open Env.LookupMode
 
-open Destructuring
+open Destructuring.Old
 open Import_export
 
 (*************)
@@ -43,27 +43,10 @@ let convert_targs cx = function
       |> List.map (Anno.convert cx SMap.empty)
       |> List.split in
     Some targts, Some ((), List.map (fun t -> (), t) targs_ast)
+
 (*********************************************************)
 (* Temporary -- to be deleted once AST threading is done *)
 (*********************************************************)
-let unimplemented_expression_ast =
-  Ast.Expression.Identifier ((), "Not-Yet-Implemented Expression AST")
-let unimplemented_pattern_ast =
-  Ast.Pattern.Expression ((), unimplemented_expression_ast)
-let unimplemented_function_ast = { Ast.Function.
-    id = Some ((), "Not-Yet-Implemented Function AST");
-    params = (), { Ast.Function.Params.params = []; rest = None; };
-    body = Ast.Function.BodyExpression ((), unimplemented_expression_ast);
-    async = false;
-    generator = false;
-    predicate = None;
-    expression = false;
-    return = None;
-    tparams = None;
-  }
-let unimplemented_targs_ast = None
-let unimplemented_expression_or_spread_list =
-  [ Ast.Expression.Expression ((), unimplemented_expression_ast) ]
 module Old_Anno = struct
   include Anno
   let convert cx tparams_map t =
@@ -2993,10 +2976,10 @@ and expression_ ~is_cond cx loc e : Type.t * unit Ast.Expression.t' =
       end
 
   | JSXElement e ->
-      jsx cx e, unimplemented_expression_ast
+      jsx cx e, Typed_ast.Expression.unimplemented
 
   | JSXFragment f ->
-      jsx_fragment cx f, unimplemented_expression_ast
+      jsx_fragment cx f, Typed_ast.Expression.unimplemented
 
   | Class c ->
       let (name_loc, name) = extract_class_name loc c in
@@ -4370,7 +4353,7 @@ and assignment cx loc = Ast.Expression.(function
         (* other r structures are handled as destructuring assignments *)
         | _ ->
             destructuring_assignment cx ~expr:(fun cx e -> fst (expression cx e)) t e r;
-            unimplemented_pattern_ast
+            Typed_ast.Pattern.unimplemented
       in
       t, lhs, rhs
 
@@ -5365,7 +5348,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
   (* fallthrough case: evaluate test expr, no refinements *)
   | e ->
       empty_result (expression cx e)
-)) |> (fun (a, b, c, d) -> a, b, c, d, unimplemented_expression_ast)
+)) |> (fun (a, b, c, d) -> a, b, c, d, Typed_ast.Expression.unimplemented)
 
 (* Conditional expressions are checked like expressions, except that property
    accesses are provisionally allowed even when such properties do not exist.
@@ -5559,7 +5542,11 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       args = mk_initial_arguments_reason args;
     }) in
     method_call cx reason ~use_op prop_loc (expr, obj_t, m) targts argts
-) |> (fun t -> t, unimplemented_targs_ast, unimplemented_expression_or_spread_list)
+) |> (fun t ->
+        t,
+        Typed_ast.Expression.targs_unimplemented,
+        Typed_ast.Expression.expression_or_spread_list_unimplemented
+      )
 
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with
@@ -5583,7 +5570,7 @@ and mk_class cx loc reason c =
     );
     let class_t = Class_sig.classtype cx class_sig in
     Flow.unify cx self class_t;
-    class_t, unimplemented_expression_ast
+    class_t, Typed_ast.Expression.unimplemented
 
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
@@ -5949,7 +5936,7 @@ and mk_function id cx loc func =
   (* Normally, functions do not have access to super. *)
   let super = ObjProtoT (mk_reason RNoSuper loc) in
   let func_sig = function_decl id cx loc func this super in
-  Func_sig.functiontype cx this func_sig, unimplemented_function_ast
+  Func_sig.functiontype cx this func_sig, Typed_ast.Function.unimplemented
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx loc func =
@@ -5961,7 +5948,7 @@ and mk_arrow cx loc func =
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
      objects through which the function may be called. *)
-  Func_sig.functiontype cx dummy_this func_sig, unimplemented_function_ast
+  Func_sig.functiontype cx dummy_this func_sig, Typed_ast.Function.unimplemented
 
 (* Transform predicate declare functions to functions whose body is the
    predicate declared for the funcion *)

@@ -7,7 +7,7 @@
 
 val destructuring :
   Context.t ->
-  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t * Typed_ast.annot Ast.Expression.t') ->
   f:(use_op:Type.use_op ->
     Loc.t ->
     string ->
@@ -16,13 +16,39 @@ val destructuring :
   Type.t ->
   Loc.t Ast.Expression.t option ->
   Loc.t Ast.Expression.t Default.t option ->
-  Loc.t Ast.Pattern.t -> unit
+  Loc.t Ast.Pattern.t ->
+  Typed_ast.annot Ast.Pattern.t'
 val type_of_pattern :
   'a * Loc.t Ast.Pattern.t' ->
   Loc.t Ast.Type.annotation option
 val destructuring_assignment :
   Context.t ->
-  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t * Typed_ast.annot Ast.Expression.t') ->
   Type.t ->
   Loc.t Ast.Expression.t ->
-  Loc.t Ast.Pattern.t -> unit
+  Loc.t Ast.Pattern.t ->
+  Typed_ast.annot Ast.Pattern.t'
+
+module Old : sig
+  val destructuring :
+    Context.t ->
+    expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+    f:(use_op:Type.use_op ->
+      Loc.t ->
+      string ->
+      Loc.t Ast.Expression.t Default.t option ->
+      Type.t -> unit) ->
+    Type.t ->
+    Loc.t Ast.Expression.t option ->
+    Loc.t Ast.Expression.t Default.t option ->
+    Loc.t Ast.Pattern.t -> unit
+  val type_of_pattern :
+    'a * Loc.t Ast.Pattern.t' ->
+    Loc.t Ast.Type.annotation option
+  val destructuring_assignment :
+    Context.t ->
+    expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+    Type.t ->
+    Loc.t Ast.Expression.t ->
+    Loc.t Ast.Pattern.t -> unit
+end

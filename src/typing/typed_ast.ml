@@ -7,10 +7,16 @@
 
 type annot = unit
 
-(*  Error AST nodes. These are used when, while generating the typed AST,
+(** Error AST nodes. These are used when, while generating the typed AST,
     errors prevent some part of the original AST from being translated.
     These are all chosen arbitrarily, and currently nothing relies on them
-    being these specific values. *)
+    being these specific values.
+    TODO(vijayramamurthy): redo error nodes in a safer way (e.g. add error
+    constructors to the datatype)
+
+    This module also contains "unimplemented" AST nodes; these will be deleted once
+    we've finished implementing the typed AST translation
+  *)
 module Type = struct
   open Ast.Type
   let error =
@@ -73,6 +79,9 @@ module Expression = struct
   open Ast.Expression
   let error = Identifier ((), "Error")
   let expression_or_spread_list_error = [ Expression ((), error) ]
+  let unimplemented = Identifier ((), "Unimplemented")
+  let targs_unimplemented = None
+  let expression_or_spread_list_unimplemented = [ Expression ((), unimplemented) ]
 
   module Object = struct
     open Object
@@ -91,4 +100,20 @@ end
 module Pattern = struct
   open Ast.Pattern
   let error = Expression ((), Expression.error)
+  let unimplemented = Expression ((), Expression.unimplemented)
+end
+
+module Function = struct
+  open Ast.Function
+  let unimplemented = {
+      id = Some ((), "Unimplemented");
+      params = (), { Params.params = []; rest = None; };
+      body = BodyExpression ((), Expression.unimplemented);
+      async = false;
+      generator = false;
+      predicate = None;
+      expression = false;
+      return = None;
+      tparams = None;
+    }
 end
