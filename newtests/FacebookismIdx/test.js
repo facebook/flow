@@ -115,6 +115,96 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(idx(obj4, obj => obj.a.b): ?number)').noNewErrors(),
   ]),
 
+  test('unions', [
+    addCode('declare var idx: $Facebookism$Idx;\n').noNewErrors(),
+    addCode('declare var ab: {a:string}|{b:number};\n').noNewErrors(),
+    addCode('(idx(ab, _ => _.a): empty);\n')
+      .newErrors(
+        `
+          test.js:9
+            9: (idx(ab, _ => _.a): empty);
+                ^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to empty because string [1] is incompatible with empty [2].
+            References:
+              6: declare var ab: {a:string}|{b:number};
+                                    ^^^^^^ [1]
+              9: (idx(ab, _ => _.a): empty);
+                                     ^^^^^ [2]
+
+          test.js:9
+            9: (idx(ab, _ => _.a): empty);
+                ^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to empty because null or undefined [1] is incompatible with empty [2].
+            References:
+              9: (idx(ab, _ => _.a): empty);
+                  ^^^^^^^^^^^^^^^^^ [1]
+              9: (idx(ab, _ => _.a): empty);
+                                     ^^^^^ [2]
+
+          test.js:9
+            9: (idx(ab, _ => _.a): empty);
+                               ^ Cannot get \`_.a\` because property \`a\` is missing in object type [1].
+            References:
+              6: declare var ab: {a:string}|{b:number};
+                                            ^^^^^^^^^^ [1]
+        `,
+      ),
+    addCode('(idx(ab, _ => _.b): empty);\n')
+      .newErrors(
+        `
+          test.js:12
+           12: (idx(ab, _ => _.b): empty);
+                ^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to empty because number [1] is incompatible with empty [2].
+            References:
+              6: declare var ab: {a:string}|{b:number};
+                                               ^^^^^^ [1]
+             12: (idx(ab, _ => _.b): empty);
+                                     ^^^^^ [2]
+
+          test.js:12
+           12: (idx(ab, _ => _.b): empty);
+                ^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to empty because null or undefined [1] is incompatible with empty [2].
+            References:
+             12: (idx(ab, _ => _.b): empty);
+                  ^^^^^^^^^^^^^^^^^ [1]
+             12: (idx(ab, _ => _.b): empty);
+                                     ^^^^^ [2]
+
+          test.js:12
+           12: (idx(ab, _ => _.b): empty);
+                               ^ Cannot get \`_.b\` because property \`b\` is missing in object type [1].
+            References:
+              6: declare var ab: {a:string}|{b:number};
+                                 ^^^^^^^^^^ [1]
+        `,
+      ),
+    addCode('(idx(ab, _ => _.c): empty);\n')
+      .newErrors(
+        `
+          test.js:15
+           15: (idx(ab, _ => _.c): empty);
+                ^^^^^^^^^^^^^^^^^ Cannot cast \`idx(...)\` to empty because null or undefined [1] is incompatible with empty [2].
+            References:
+             15: (idx(ab, _ => _.c): empty);
+                  ^^^^^^^^^^^^^^^^^ [1]
+             15: (idx(ab, _ => _.c): empty);
+                                     ^^^^^ [2]
+
+          test.js:15
+           15: (idx(ab, _ => _.c): empty);
+                               ^ Cannot get \`_.c\` because property \`c\` is missing in object type [1].
+            References:
+              6: declare var ab: {a:string}|{b:number};
+                                 ^^^^^^^^^^ [1]
+
+          test.js:15
+           15: (idx(ab, _ => _.c): empty);
+                               ^ Cannot get \`_.c\` because property \`c\` is missing in object type [1].
+            References:
+              6: declare var ab: {a:string}|{b:number};
+                                            ^^^^^^^^^^ [1]
+        `,
+      ),
+  ]),
+
   test('idx(classInst)', [
     addCode('declare var idx: $Facebookism$Idx;\n').noNewErrors(),
     addCode('class Foo1 { a: ?Foo1; b: ?number; }\n').noNewErrors(),
