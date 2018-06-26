@@ -93,10 +93,11 @@ let print =
     | Empty -> w
   in
 
-  fun ~source_maps node ->
+  fun ~source_maps ?(skip_endline=false) node ->
     let { src; _ } = print_node
       { mode=Flat; ind = 0 }
       { src=Source.create ~source_maps (); pos=0 }
       node
     in
-    Source.add_newline src
+    if skip_endline then src
+    else Source.add_newline src

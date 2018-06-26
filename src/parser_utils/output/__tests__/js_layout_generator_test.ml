@@ -19,7 +19,7 @@ let space_regex = Str.regexp_string " "
 
 let assert_output ~ctxt ?msg ?(pretty=false) expected_str layout =
   let print =
-    if pretty then Pretty_printer.print ~source_maps:None
+    if pretty then Pretty_printer.print ~source_maps:None ~skip_endline:false
     else Compact_printer.print ~source_maps:None
   in
   let out = String.trim (print layout |> Source.contents) in
