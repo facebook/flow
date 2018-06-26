@@ -799,7 +799,7 @@ end = struct
         (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
-          ~rest:(Some "argArray", Arr Any)
+          ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
           Any)
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.bind"))
@@ -809,7 +809,7 @@ end = struct
         (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
-          ~rest:(Some "argArray", Arr Any)
+          ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
           Any)
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
@@ -990,9 +990,12 @@ end = struct
     Ty.(IndexProp {dict_polarity; dict_name; dict_key; dict_value})
 
   and arr_ty ~env = function
-    | T.ArrayAT (t, _)
+    | T.ArrayAT (t, _) ->
+      type__ ~env t >>| fun t ->
+      Ty.(Arr { arr_readonly = false; arr_elt_t = t})
     | T.ROArrayAT t ->
-      type__ ~env t >>| fun t -> Ty.Arr t
+      type__ ~env t >>| fun t ->
+      Ty.(Arr { arr_readonly = true; arr_elt_t = t})
     | T.TupleAT (_, ts) ->
       mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
     | T.EmptyAT ->
@@ -1188,7 +1191,7 @@ end = struct
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
         ~params:[(Some "target", Any, non_opt_param)]
-        ~rest:(Some "sources", Arr Any)
+        ~rest:(Some "sources", Arr { arr_readonly = false; arr_elt_t = Any })
         Any
       )
 
@@ -1230,7 +1233,9 @@ end = struct
 
     (* debugPrint: (_: any[]) => void *)
     | DebugPrint -> return Ty.(
-        mk_fun ~params:[(Some "_", Arr Any, non_opt_param)] Void
+        mk_fun ~params:[
+          (Some "_", Arr { arr_readonly = false; arr_elt_t = Any }, non_opt_param)
+        ] Void
       )
 
     (* debugThrow: () => empty *)

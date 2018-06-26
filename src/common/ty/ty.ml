@@ -29,7 +29,7 @@ type t =
   | BoolLit of bool
   | Fun of fun_t
   | Obj of obj_t
-  | Arr of t
+  | Arr of arr_t
   | Tup of t list
   | Union of t * t * t list
   | Inter of t * t * t list
@@ -53,6 +53,11 @@ and obj_t = {
   obj_exact: bool;
   obj_frozen: bool;
   obj_props: prop list;
+}
+
+and arr_t = {
+  arr_readonly: bool;
+  arr_elt_t: t;
 }
 
 and type_alias = {

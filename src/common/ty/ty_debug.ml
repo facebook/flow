@@ -93,6 +93,10 @@ and dump_obj ~depth { obj_exact; obj_props; obj_frozen = _ } =
     then spf "{|%s|}" (dump_list (dump_prop ~depth) obj_props)
     else spf "{%s}"   (dump_list (dump_prop ~depth) obj_props)
 
+and dump_arr ~depth { arr_readonly; arr_elt_t } =
+  let ctor = if arr_readonly then "$ReadOnlyArray" else "Array" in
+  spf "%s<%s>" ctor (dump_t ~depth arr_elt_t)
+
 and dump_generics ~depth = function
   | Some ts -> "<" ^ dump_list (dump_t ~depth) ts ^ ">"
   | _ -> ""
@@ -133,7 +137,7 @@ and dump_t ?(depth = 10) t =
   | BoolLit b ->  spf "\"%b\"" b
   | Fun f -> dump_fun_t ~depth f
   | Obj o -> dump_obj ~depth o
-  | Arr t -> spf "Array<%s>" (dump_t ~depth t)
+  | Arr a -> dump_arr ~depth a
   | Tup ts ->
     spf "Tup (%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
   | Union (t1,t2,ts) ->
@@ -243,8 +247,9 @@ let json_of_t ~strip_root =
         "frozen", JSON_Bool obj_frozen;
         "props", JSON_Array (List.map json_of_prop obj_props);
       ]
-    | Arr t -> [
-        "type", json_of_t t;
+    | Arr { arr_readonly; arr_elt_t } -> [
+        "readonly", JSON_Bool arr_readonly;
+        "type", json_of_t arr_elt_t;
       ]
     | Tup ts -> [
         "types", JSON_Array (List.map json_of_t ts);

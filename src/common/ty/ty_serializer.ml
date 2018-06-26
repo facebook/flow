@@ -25,6 +25,13 @@ let builtin x =
     targs = None;
   })
 
+let generic_builtin x targs =
+  return (Loc.none, T.Generic {
+    T.Generic.
+    id = T.Generic.Identifier.Unqualified (identifier x);
+    targs = Some targs;
+  })
+
 let tvar (RVar _) = Error "Unsupported recursive variables."
 
 let variance_ = function
@@ -53,7 +60,7 @@ let rec type_ t =
   | BoolLit lit -> just (T.BooleanLiteral lit)
   | Fun f -> function_ f >>| fun f -> (Loc.none, T.Function f)
   | Obj o -> obj_ o
-  | Arr t -> type_ t >>| fun t -> (Loc.none, T.Array t)
+  | Arr a -> arr a
   | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
   | Union (t0, t1, ts) as t -> union t (t0,t1,ts)
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
@@ -202,6 +209,12 @@ and obj_call_prop f =
   value = (Loc.none, value);
   static = false;
 }
+
+and arr { arr_readonly; arr_elt_t } =
+  type_ arr_elt_t >>= fun t ->
+  if arr_readonly
+  then generic_builtin "$ReadOnlyArray" (Loc.none, [t])
+  else return (Loc.none, T.Array t)
 
 and type_params ts =
   mapM type_param ts >>| fun ts -> (Loc.none, ts)

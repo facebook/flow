@@ -83,7 +83,7 @@ let type_ ?(size=5000) t =
         ~sep:(fuse [pretty_space; Atom "=>"])
         func
     | Obj obj -> type_object ~depth obj
-    | Arr t -> fuse [Atom "Array<"; type_ ~depth t; Atom ">"]
+    | Arr arr -> type_array ~depth arr
     | Generic (Symbol (_, id), _, ts) -> type_generic ~depth (identifier id) ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
@@ -228,6 +228,14 @@ let type_ ?(size=5000) t =
     | CallProp func -> fuse [
         type_function ~depth ~sep:(Atom ":") func
       ]
+
+  and type_array ~depth { arr_readonly; arr_elt_t } =
+    fuse [
+      Atom (if arr_readonly then "$ReadOnlyArray" else "Array");
+      Atom "<";
+      type_ ~depth arr_elt_t;
+      Atom ">";
+    ]
 
   and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props; obj_frozen = _ } =
     let s_exact = if obj_exact then Atom "|" else Empty in
