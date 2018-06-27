@@ -419,37 +419,19 @@ and statement_decl cx = Ast.Statement.(
  * flow to check types/create graphs for merge-time checking
  ***************************************************************)
 
-and toplevels cx stmts =
-  let stmts = List.filter Ast.Statement.(function
-    | (_, Empty) -> false
-    | _ -> true
-  ) stmts
-  in
-  let n = ref 0 in
-  match Abnormal.catch_control_flow_exception (fun () ->
-    stmts |> List.iter (fun stmt ->
-      statement cx stmt;
-      incr n (* n is bumped whenever stmt doesn't exit abnormally *)
-    )
-  ) with
-  | Some exn ->
-    (* control flow exit out of a flat list:
-       check for unreachable code and rethrow *)
-    (* !n is the index of the statement that exits abnormally, so !n+1 is the
-       index of possibly unreachable code. *)
-    let uc = !n+1 in
-    if uc < List.length stmts
-    then (
+and toplevels cx = function
+  | [] -> ()
+  | (_, Ast.Statement.Empty)::stmts -> toplevels cx stmts
+  | stmt::stmts ->
+    match Abnormal.catch_control_flow_exception (fun () -> statement cx stmt) with
+    | Some exn ->
+      (* control flow exit out of a flat list:
+         check for unreachable code and rethrow *)
       let warn_unreachable loc =
         Flow.add_output cx (Flow_error.EUnreachable loc) in
-      let rec drop n lst = match (n, lst) with
-        | (_, []) -> []
-        | (0, l) -> l
-        | (x, _ :: t) -> drop (pred x) t
-      in
-      let trailing = drop uc stmts in
-      trailing |> List.iter Ast.Statement.(fun stmt ->
+      List.iter Ast.Statement.(fun stmt ->
         match stmt with
+        | (_, Empty) -> ()
         (* function declarations are hoisted, so not unreachable *)
         | (_, FunctionDeclaration _ ) -> statement cx stmt;
         (* variable declarations are hoisted, but associated assignments are
@@ -461,10 +443,9 @@ and toplevels cx stmts =
             | _ -> ()
           ))
         | (loc, _) -> warn_unreachable loc
-      )
-    );
-    Abnormal.throw_control_flow_exception exn
-  | None -> ()
+      ) stmts;
+      Abnormal.throw_control_flow_exception exn
+    | None -> toplevels cx stmts
 
 and statement cx = Ast.Statement.(
   (* TEMPORARY, until this function is updated to return ASTs *)
