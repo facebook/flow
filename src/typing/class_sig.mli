@@ -9,8 +9,15 @@
 
 type t
 
+type set_asts =
+  Typed_ast.annot Ast.Function.body option *
+  Typed_ast.annot Ast.Expression.t option
+  -> unit
+
 type field = Loc.t option * Type.polarity * field'
-and field' = Annot of Type.t | Infer of Func_sig.t
+and field' =
+  | Annot of Type.t
+  | Infer of Func_sig.t * set_asts
 
 type super =
   | Interface of {
@@ -43,7 +50,11 @@ val empty:
     Overwrites any existing constructor. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_constructor: Loc.t option -> Func_sig.t -> t -> t
+val add_constructor:
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 val add_default_constructor: Reason.t -> t -> t
 
@@ -52,7 +63,11 @@ val add_default_constructor: Reason.t -> t -> t
     Does not overwrite existing constructors. This implements the behavior of
     interfaces, which interpret duplicate definitions as branches of a single
     overloaded constructor. *)
-val append_constructor: Loc.t option -> Func_sig.t -> t -> t
+val append_constructor:
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Add field to signature. *)
 val add_field: static:bool -> string -> field -> t -> t
@@ -68,24 +83,48 @@ val add_private_field: string -> field -> static:bool -> t -> t
     Overwrites any existing synonymous method. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_method: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
+val add_method:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Add method override to signature.
 
     Does not overwrite existing synonymous methods. This implements the
     behavior of interfaces, which interpret duplicate definitions as branches
     of a single overloaded method. *)
-val append_method: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
+val append_method:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 val append_call: static:bool -> Type.t -> t -> t
 
 val add_call_deprecated: static:bool -> Type.t -> t -> t
 
 (** Add getter to signature. *)
-val add_getter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
+val add_getter:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Add setter to signature. *)
-val add_setter: static:bool -> string -> Loc.t option -> Func_sig.t -> t -> t
+val add_setter:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Check if this signature defines a given field *)
 val mem_field: string -> static:bool -> t -> bool

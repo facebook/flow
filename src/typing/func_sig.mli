@@ -78,7 +78,8 @@ val toplevels:
   stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
   expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   t ->
-  Typed_ast.annot Ast.Function.body
+  Typed_ast.annot Ast.Function.body option *
+  Typed_ast.annot Ast.Expression.t option
 
 (** 1. Type Conversion *)
 

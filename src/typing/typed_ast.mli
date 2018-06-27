@@ -37,6 +37,10 @@ module Expression : sig
   val expression_or_spread_list_unimplemented : annot Ast.Expression.expression_or_spread list
   module Object : sig
     val property_error : annot Ast.Expression.Object.property
+    module Property : sig
+      val error : annot Ast.Expression.Object.Property.t'
+      val key_error : annot Ast.Expression.Object.Property.key
+    end
   end
 end
 
@@ -46,10 +50,26 @@ module Pattern : sig
 end
 
 module Function : sig
+  val body_error : annot Ast.Function.body
+  val error : annot Ast.Function.t
   val body_unimplemented : annot Ast.Function.body
   val unimplemented : annot Ast.Function.t
+  module RestElement : sig
+    val error : annot Ast.Function.RestElement.t'
+  end
+  module Params : sig
+    val error : annot Ast.Function.Params.t'
+  end
 end
 
 module Class : sig
   val unimplemented : annot Ast.Class.t
+  module Body : sig
+    val element_error : annot Ast.Class.Body.element
+  end
+
+
+
+
+
 end

@@ -5671,15 +5671,6 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     targ_asts,
     arg_asts
 
-
-
-
-
-
-
-
-
-
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with
   | Some(name_loc, name) -> (name_loc, name)
@@ -5690,7 +5681,7 @@ and mk_class cx loc reason c =
   let def_reason = repos_reason loc reason in
   let this_in_class = Class_sig.This.in_class c in
   let self = Tvar.mk cx reason in
-  let class_sig = mk_class_sig cx loc reason self c in
+  let class_sig, class_sig_f = mk_class_sig cx loc reason self c in
     class_sig |> Class_sig.generate_tests cx (fun class_sig ->
       Class_sig.check_super cx def_reason class_sig;
       Class_sig.check_implements cx def_reason class_sig;
@@ -5702,12 +5693,7 @@ and mk_class cx loc reason c =
     );
     let class_t = Class_sig.classtype cx class_sig in
     Flow.unify cx self class_t;
-    class_t, Typed_ast.Class.unimplemented
-
-
-
-
-
+    class_t, class_sig_f ()
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
    members, a pointer to the super instance type, and a container for types of
@@ -5715,33 +5701,48 @@ and mk_class cx loc reason c =
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
 and mk_class_sig =
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let expression cx e = fst (expression cx e) in
-  let module Anno = Old_Anno in
-
   let open Class_sig in
 
+  (*  Given information about a field, returns:
+      - Class_sig.field representation of this field
+      - typed AST of the field's type annotation
+      - a function which will return a typed AST of the field's initializer expression.
+        Function should only be called after Class_sig.toplevels has been called on a
+        Class_sig.t containing this field, as that is when the initializer expression
+        gets checked.
+  *)
   let mk_field cx tparams_map loc ~polarity reason annot init =
-    loc, polarity, match init with
-    | None -> Annot (Anno.mk_type_annotation cx tparams_map reason annot)
-    | Some expr ->
-      let return_t = Anno.mk_type_annotation cx tparams_map reason annot in
-      Infer (Func_sig.field_initializer tparams_map reason expr return_t)
+    let annot_t, annot_ast = Anno.mk_type_annotation cx tparams_map reason annot in
+    let field', get_init =
+      match init with
+      | None -> Annot annot_t, Fn.const None
+      | Some expr ->
+        let value_ref : Typed_ast.annot Ast.Expression.t option ref = ref None in
+        Infer (
+          Func_sig.field_initializer tparams_map reason expr annot_t,
+          (fun (_, value_opt) -> value_ref := Some (Option.value_exn value_opt))
+        ),
+        (fun () -> Some (Option.value (!value_ref) ~default:((), Typed_ast.Expression.error)))
+    in
+    (loc, polarity, field'), annot_ast, get_init
   in
 
   let mk_method = mk_func_sig in
 
   let mk_extends cx tparams_map = function
-    | None, None -> Implicit { null = false }
+    | None, None -> Implicit { null = false }, None, None
     | None, _ -> assert false (* type args with no head expr *)
     | Some e, targs ->
       let loc = match e, targs with
       | (e, _), Some (targs, _) -> Loc.btwn e targs
       | (e, _), _ -> e
       in
-      let c = expression cx e in
+      let c, e = expression cx e in
       let c = Flow.reposition cx loc ~annot_loc:loc c in
-      Explicit (Anno.mk_super cx tparams_map c targs)
+      let targs_t, targs_ast = Anno.mk_super cx tparams_map c targs in
+      Explicit targs_t,
+      Some ((), e),
+      targs_ast
   in
 
   let warn_or_ignore_decorators cx = function
@@ -5772,18 +5773,18 @@ and mk_class_sig =
   in
 
   fun cx _loc reason self { Ast.Class.
+    id;
     body = (_, { Ast.Class.Body.body = elements });
     tparams;
     super;
     super_targs;
     implements;
     classDecorators;
-    _;
   } ->
 
   warn_or_ignore_decorators cx classDecorators;
 
-  let tparams, tparams_map =
+  let tparams, tparams_map, tparams_ast =
     Anno.mk_type_param_declarations cx tparams
   in
 
@@ -5791,12 +5792,12 @@ and mk_class_sig =
     add_this self cx reason tparams tparams_map
   in
 
-  let class_sig =
+  let extends, super_ast, super_targs_ast =
+    mk_extends cx tparams_map (super, super_targs)
+  in
+  let class_sig, implements_ast =
     let id = Context.make_nominal cx in
-    let extends =
-      mk_extends cx tparams_map (super, super_targs)
-    in
-    let implements = List.map (fun (_, i) ->
+    let implements, implements_ast = implements |> List.map (fun (_, i) ->
       let { Ast.Class.Implements.id = (loc, name); targs } = i in
       let super_loc = match targs with
       | Some (ts, _) -> Loc.btwn loc ts
@@ -5805,12 +5806,13 @@ and mk_class_sig =
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
       let id_info = name, c, Type_table.Other in
       let targs = Anno.extract_type_param_instantiations targs in
-      let t = Anno.mk_nominal_type cx reason tparams_map (c, targs) in
+      let t, targs_ast = Anno.mk_nominal_type cx reason tparams_map (c, targs) in
       Env.add_type_table_info cx ~tparams_map loc id_info;
-      Flow.reposition cx super_loc ~annot_loc:super_loc t
-    ) implements in
+      Flow.reposition cx super_loc ~annot_loc:super_loc t,
+      ((), { Ast.Class.Implements.id = (), name; targs = targs_ast})
+    ) |> List.split in
     let super = Class { extends; mixins = []; implements } in
-    empty id reason tparams tparams_map super
+    empty id reason tparams tparams_map super, implements_ast
   in
 
   (* In case there is no constructor, pick up a default one. *)
@@ -5841,7 +5843,17 @@ and mk_class_sig =
      to be redeclared if they were assigned in the constructor. So we don't do
      it. In the future, we could do it again, but only for private fields. *)
 
-  List.fold_left Ast.Class.(fun c -> function
+  (* NOTE: field initializer expressions and method bodies don't get checked
+      until Class_sig.toplevels is called on class_sig. For this reason rather
+      than returning a typed AST, we'll return a function which returns a typed
+      AST, and this function shouldn't be called until after Class_sig.toplevels
+      has been called.
+
+      If a field/method ever gets shadowed later in the class, then its
+      initializer/body (respectively) will not get checked, and the corresponding
+      nodes of the typed AST will be filled in with error nodes.
+  *)
+  let class_sig, rev_elements = List.fold_left Ast.Class.(fun (c, rev_elements) -> function
     (* instance and static methods *)
     | Body.Property (_, {
         Property.key = Ast.Expression.Object.Property.PrivateName _;
@@ -5868,14 +5880,32 @@ and mk_class_sig =
       | Method.Get | Method.Set -> Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc)
       | _ -> ());
 
+      let method_sig, reconstruct_func = mk_method cx tparams_map loc func in
+      (*  the body of a class method doesn't get checked until Class_sig.toplevels
+          is called on the class sig (in this case c). The order of how the methods
+          were arranged in the class is lost by the time this happens, so rather
+          than attempting to return a list of method bodies from the Class_sig.toplevels
+          function, we have it place the function bodies into a list via side effects. *)
+      let body_ref : Typed_ast.annot Ast.Function.body option ref = ref None in
+      let set_asts (body_opt, _) = body_ref := Some (Option.value_exn body_opt) in
+      let get_element () =
+        let body = Option.value (!body_ref) ~default:Typed_ast.Function.body_error in
+        let func = reconstruct_func body in
+        Body.Method ((), { Method.
+          key = Ast.Expression.Object.Property.Identifier ((), name);
+          value = (), func;
+          kind;
+          static;
+          decorators = []; (* we don't currently typecheck decorators *)
+        })
+      in
       let add = match kind with
       | Method.Constructor -> add_constructor (Some id_loc)
       | Method.Method -> add_method ~static name (Some id_loc)
       | Method.Get -> add_getter ~static name (Some id_loc)
       | Method.Set -> add_setter ~static name (Some id_loc)
       in
-      let method_sig, _ = mk_method cx tparams_map loc func in
-      add method_sig c
+      add method_sig ~set_asts c, get_element::rev_elements
 
     (* fields *)
     | Body.PrivateField(loc, {
@@ -5884,7 +5914,6 @@ and mk_class_sig =
         value;
         static;
         variance;
-        _;
       }) ->
         Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
@@ -5893,8 +5922,16 @@ and mk_class_sig =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field = mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
-        add_private_field ~static name field c
+        let field, annot_ast, get_value =
+          mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
+        let get_element () = Body.PrivateField ((), { PrivateField.
+          key = (), ((), name);
+          annot = Option.map ~f:(fun a -> (), ((), a)) annot_ast;
+          value = get_value ();
+          static;
+          variance = Option.map ~f:(fun (_, v) -> (), v) variance;
+        }) in
+        add_private_field ~static name field c, get_element::rev_elements
 
     | Body.Property (loc, {
       Property.key = Ast.Expression.Object.Property.Identifier (id_loc, name);
@@ -5902,7 +5939,6 @@ and mk_class_sig =
         value;
         static;
         variance;
-        _;
       }) ->
         Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
@@ -5911,8 +5947,16 @@ and mk_class_sig =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field = mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
-        add_field ~static name field c
+        let field, annot_ast, get_value =
+          mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
+        let get_element () = Body.Property ((), { Property.
+          key = Ast.Expression.Object.Property.Identifier ((), name);
+          annot = Option.map ~f:(fun a -> (), ((), a)) annot_ast;
+          value = get_value ();
+          static;
+          variance = Option.map ~f:(fun (_, v) -> (), v) variance;
+        }) in
+        add_field ~static name field c, get_element::rev_elements
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -5925,7 +5969,7 @@ and mk_class_sig =
       }) ->
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
-        c
+        c, (fun () -> Typed_ast.Class.Body.element_error)::rev_elements
 
     (* computed LHS *)
     | Body.Method (loc, {
@@ -5938,8 +5982,22 @@ and mk_class_sig =
       }) ->
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
-        c
-  ) class_sig elements
+        c, (fun () -> Typed_ast.Class.Body.element_error)::rev_elements
+  ) (class_sig, []) elements
+  in
+  let elements = List.rev rev_elements in
+  class_sig,
+  (fun () -> { Ast.Class.
+    id = Option.map ~f:(fun (_, name) -> (), name) id;
+    body = (), { Ast.Class.Body.
+      body = List.map (fun f -> f ()) elements;
+    };
+    tparams = tparams_ast;
+    super = super_ast;
+    super_targs = super_targs_ast;
+    implements = implements_ast;
+    classDecorators = []; (* class decorators not yet supported *)
+  })
 
 and mk_func_sig =
   let open Func_sig in
@@ -6082,7 +6140,7 @@ and function_decl id cx loc func this super =
   ) in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-  func_sig, reconstruct_func body
+  func_sig, reconstruct_func (Option.value_exn (fst body))
 
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
@@ -6099,11 +6157,6 @@ and mk_function id cx loc func =
   let func_sig, func_ast = function_decl id cx loc func this super in
   Func_sig.functiontype cx this func_sig, func_ast
 
-
-
-
-
-
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx loc func =
   let this = this_ cx loc in
@@ -6115,10 +6168,6 @@ and mk_arrow cx loc func =
      the body of the function. Now we want to avoid re-binding `this` to
      objects through which the function may be called. *)
   Func_sig.functiontype cx dummy_this func_sig, func_ast
-
-
-
-
 
 (* Transform predicate declare functions to functions whose body is the
    predicate declared for the funcion *)

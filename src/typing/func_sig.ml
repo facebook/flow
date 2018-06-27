@@ -316,6 +316,12 @@ let toplevels id cx this super static ~decls ~stmts ~expr
 
   Env.update_env cx loc env;
 
-  Typed_ast.Function.body_unimplemented
-
+  (*  return a tuple of (function body AST option, field initializer AST option).
+      - the function body option is Some _ if the func sig's body was Some, and
+        None if the func sig's body was None.
+      - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
+        where expr' is the typed AST translation of expr.
+  *)
+  Some Typed_ast.Function.body_unimplemented,
+  Some ((), Typed_ast.Expression.unimplemented)
 let to_ctor_sig f = { f with kind = Ctor }
