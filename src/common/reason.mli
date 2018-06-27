@@ -163,7 +163,7 @@ type reason
 type t = reason (* convenience *)
 
 module TestID: sig
-  val run: ('a -> unit) -> 'a -> unit
+  val run: ('a -> 'b) -> 'a -> 'b
 end
 
 val lexpos: string -> int -> int -> Lexing.position

@@ -105,10 +105,11 @@ end
 
 module Function = struct
   open Ast.Function
+  let body_unimplemented = BodyExpression ((), Expression.unimplemented)
   let unimplemented = {
       id = Some ((), "Unimplemented");
       params = (), { Params.params = []; rest = None; };
-      body = BodyExpression ((), Expression.unimplemented);
+      body = body_unimplemented;
       async = false;
       generator = false;
       predicate = None;
@@ -116,4 +117,17 @@ module Function = struct
       return = None;
       tparams = None;
     }
+end
+
+module Class = struct
+  open Ast.Class
+  let unimplemented = {
+    id = Some ((), "Unimplemented");
+    body = (), { Ast.Class.Body.body = [] };
+    tparams = None;
+    super = None;
+    super_targs = None;
+    implements = [];
+    classDecorators = [];
+  }
 end

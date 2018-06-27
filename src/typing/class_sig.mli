@@ -113,7 +113,7 @@ val check_super: Context.t -> Reason.reason -> t -> unit
 
 (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 val generate_tests: Context.t ->
-  (t -> unit) -> t -> unit
+  (t -> 'a) -> t -> 'a
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->

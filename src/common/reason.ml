@@ -50,8 +50,9 @@ module TestID = struct
   let run f a =
     let test_id = current () in
     _current := Some (mk_id ());
-    f a;
-    _current := test_id
+    let b = f a in
+    _current := test_id;
+    b
 
 end
 

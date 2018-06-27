@@ -59,14 +59,15 @@ val subst: Context.t ->
 
 (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 val generate_tests: Context.t ->
-  (t -> unit) -> t -> unit
+  (t -> 'a) -> t -> 'a
 
 (** Evaluate the function.
 
     This function creates a new scope, installs bindings for the function's
     parameters and internal bindings (e.g., this, yield), processes the
     statements in the function body, and provides an implicit return type if
-    necessary *)
+    necessary. This is when the body of the function gets checked, so it also
+    returns a typed AST of the function body. *)
 val toplevels:
   Loc.t Ast.Identifier.t option -> (* id *)
   Context.t ->
@@ -76,7 +77,8 @@ val toplevels:
   decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
   stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
   expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
-  t -> unit
+  t ->
+  Typed_ast.annot Ast.Function.body
 
 (** 1. Type Conversion *)
 

@@ -556,9 +556,9 @@ let toplevels cx ~decls ~stmts ~expr x =
     let method_ this super ~static f =
       let save_return = Abnormal.clear_saved Abnormal.Return in
       let save_throw = Abnormal.clear_saved Abnormal.Throw in
-      f |> Func_sig.generate_tests cx (
+      (f |> Func_sig.generate_tests cx (
         Func_sig.toplevels None cx this super static ~decls ~stmts ~expr
-      );
+      ) : Typed_ast.annot Ast.Function.body) |> ignore (* TODO(vijayramamurthy) *);
       ignore (Abnormal.swap_saved Abnormal.Return save_return);
       ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
     in

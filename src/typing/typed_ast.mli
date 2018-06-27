@@ -46,5 +46,10 @@ module Pattern : sig
 end
 
 module Function : sig
+  val body_unimplemented : annot Ast.Function.body
   val unimplemented : annot Ast.Function.t
+end
+
+module Class : sig
+  val unimplemented : annot Ast.Class.t
 end

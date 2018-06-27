@@ -7037,7 +7037,7 @@ and union_of_ts reason ts =
     (instead of Bottom), so that the recorded information is the same as if
     all type parameters were indeed erased and replaced by their bounds.
   *)
-and generate_tests =
+and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
   (* make bot type for given param *)
   let mk_bot _ { name; reason; _ } =
     let desc = RPolyTest (name, RIncompatibleInstantiation name) in
@@ -7090,7 +7090,12 @@ and generate_tests =
     let free_params, dep_params = List.partition is_free params in
     let free_sets = linear cx free_params in
     let powersets = List.map (powerset cx dep_params) free_sets in
-    List.iter (TestID.run f) (List.flatten powersets)
+    let hd_map, tl_maps =
+      match List.flatten powersets with
+      | x::xs -> x, xs
+      | [] -> assert false
+    in
+    List.fold_left (Fn.const (TestID.run f)) (f hd_map) tl_maps
 
 (*********************)
 (* inheritance utils *)
