@@ -1069,22 +1069,17 @@ end = struct
   (* Type Aliases *)
   and type_t =
     let open Type in
-    let mk_type_alias symbol ps = function
-    | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
-    | Ty.Class _ as t -> return t
-    | t -> return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
-    in
     (* NOTE the use of the reason within `t` instead of the one passed with
        the constructor TypeT. The latter is an RType, which is somewhat more
        unwieldy as it is used more pervasively. *)
-    let local env t ps =
+    let local env t ta_tparams =
       let reason = TypeUtil.reason_of_t t in
       match desc_of_reason ~unwrap:false reason with
       | RTypeAlias (name, true, _) ->
         let env = Env.{ env with under_type_alias = Some name } in
-        type__ ~env t >>= fun body ->
+        type__ ~env t >>= fun ta_type ->
         let symbol = symbol_from_reason env reason name in
-        mk_type_alias symbol ps body
+        return (Ty.named_alias symbol ?ta_tparams ~ta_type)
       | _ -> terr ~kind:BadTypeAlias ~msg:"local" (Some t)
     in
     let import_symbol env r t =
@@ -1101,8 +1096,18 @@ end = struct
       import_symbol env r t >>= fun symbol ->
       let Ty.Symbol (_, name) = symbol in
       let env = Env.{ env with under_type_alias = Some name } in
-      type__ ~env t >>= fun body ->
-      mk_type_alias symbol ps body
+      type__ ~env t >>= function
+      | Ty.TypeAlias _ ->
+        terr ~kind:BadTypeAlias ~msg:"nested type alias" None
+      | Ty.Class _ as t ->
+        (* Normalize imports of the form "import typeof { C } from 'm';" (where C
+           is defined as a class in 'm') as a Ty.Class, instead of Ty.TypeAlias.
+           The provenance information on the class should point to the defining
+           location. This way we avoid the indirection of the import location on
+           the alias symbol. *)
+        return t
+      | t ->
+        return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
     in
     let import_typeof env r t ps = import env r t ps in
     let import_fun env r t ps = import env r t ps in

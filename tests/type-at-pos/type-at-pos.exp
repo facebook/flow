@@ -1750,6 +1750,27 @@ import-default.js:3:16 = {
   "start":13,
   "end":25
 }
+import-typeof-class.js:5:16 {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "structural":false,
+    "typeParams":null
+  },
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"import-typeof-class.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":16,"offset":69},
+    "end":{"line":5,"column":16,"offset":70}
+  },
+  "path":"import-typeof-class.js",
+  "line":5,
+  "endline":5,
+  "start":16,
+  "end":16
+}
 object_special_cases.js:6:32 = {
   "type":"string",
   "reasons":[],
@@ -3647,4 +3668,30 @@ type-alias.js:31:6 {
   "endline":31,
   "start":6,
   "end":6
+}
+type-alias.js:34:6 {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:15-26"},"name":"TKlass"},
+    "typeParams":null,
+    "body":{
+      "kind":"Class",
+      "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"},
+      "structural":false,
+      "typeParams":null
+    }
+  },
+  "type":"type TKlass = class Klass",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":6,"offset":630},
+    "end":{"line":34,"column":11,"offset":636}
+  },
+  "path":"type-alias.js",
+  "line":34,
+  "endline":34,
+  "start":6,
+  "end":11
 }

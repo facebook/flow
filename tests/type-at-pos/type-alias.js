@@ -29,3 +29,6 @@ type L<X, Y> = (<X>(x: X, y: Y) => void) | X | Y | null;
 type M<Z> = L<number, Z>;
 type N<A> = { x: N<A> } | null;
 type O = N<number>
+
+class Klass {};
+type TKlass = typeof Klass;
