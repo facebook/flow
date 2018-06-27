@@ -1080,6 +1080,10 @@ class mapper = object(this)
     ignore kind;
     this#identifier ident
 
+  method pattern_literal ?kind (expr: Ast.Literal.t) =
+    ignore kind;
+    this#literal expr
+
   method pattern_object_p ?kind (p: Loc.t Ast.Pattern.Object.property) =
     let open Ast.Pattern.Object in
     match p with
@@ -1091,9 +1095,30 @@ class mapper = object(this)
   method pattern_object_property ?kind (prop: Loc.t Ast.Pattern.Object.Property.t') =
     let open Ast.Pattern.Object.Property in
     let { key; pattern; shorthand = _ } = prop in
+    let key' = this#pattern_object_property_key ?kind key in
     let pattern' = this#pattern_object_property_pattern ?kind pattern in
-    if pattern' == pattern then prop
-    else { key; pattern = pattern'; shorthand = false }
+    if key' == key && pattern' == pattern then prop
+    else { key = key'; pattern = pattern'; shorthand = false }
+
+  method pattern_object_property_key ?kind (key: Loc.t Ast.Pattern.Object.Property.key) =
+    let open Ast.Pattern.Object.Property in
+    match key with
+    | Literal (loc, lit) ->
+      id (this#pattern_object_property_literal_key ?kind) lit key (fun lit' -> Literal (loc, lit'))
+    | Identifier identifier ->
+      id (this#pattern_object_property_identifier_key ?kind) identifier key (fun id' -> Identifier id')
+    | Computed expr ->
+      id (this#pattern_object_property_computed_key ?kind) expr key (fun expr' -> Computed expr')
+
+  method pattern_object_property_literal_key ?kind (key: Ast.Literal.t) =
+    this#pattern_literal ?kind key
+
+  method pattern_object_property_identifier_key ?kind (key: Loc.t Ast.Identifier.t) =
+    this#pattern_identifier ?kind key
+
+  method pattern_object_property_computed_key ?kind (key: Loc.t Ast.Expression.t) =
+    ignore kind;
+    this#pattern_expression key
 
   method pattern_object_rest_property ?kind (prop: Loc.t Ast.Pattern.Object.RestProperty.t') =
     let open Ast.Pattern.Object.RestProperty in

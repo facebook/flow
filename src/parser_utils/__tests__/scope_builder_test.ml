@@ -171,8 +171,7 @@ let tests = "scope_builder" >::: [
     "const x = {}; const foo = ''; const {[foo]: bar} = x;"
     [mk_loc (1, 6) (1, 7);
      mk_loc (1, 20) (1, 23);
-     (* TODO: should include the use of `foo` *)
-     (* mk_loc (1, 38) (1, 41); *)
+     mk_loc (1, 38) (1, 41);
      mk_loc (1, 44) (1, 47);
      mk_loc (1, 51) (1, 52)];
 ]

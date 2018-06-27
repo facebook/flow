@@ -148,6 +148,9 @@ class scope_builder = object(this)
   (* don't rename the `foo` in `x.foo` *)
   method! member_property_identifier (id: Loc.t Ast.Identifier.t) = id
 
+  (* don't rename the `foo` in `const {foo: bar} = x` *)
+  method! pattern_object_property_identifier_key ?kind id = ignore kind; id
+
   (* don't rename the `foo` in `{ foo: ... }` *)
   method! object_key_identifier (id: Loc.t Ast.Identifier.t) = id
 
