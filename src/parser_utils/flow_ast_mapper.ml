@@ -239,7 +239,7 @@ class mapper = object(this)
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
 
-    let param' = Option.map param ~f:this#catch_clause_pattern in
+    let param' = map_opt this#catch_clause_pattern param in
     let body' = map_loc this#block body in
     if param == param' && body == body' then clause
     else { param = param'; body = body' }
@@ -759,7 +759,7 @@ class mapper = object(this)
     let open Ast.JSX in
     let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
-    let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
+    let closingElement' = map_opt this#jsx_closing_element closingElement in
     let children' = ListUtils.ident_map this#jsx_child children in
     if openingElement == openingElement' && closingElement == closingElement' && children == children' then expr
     else { openingElement = openingElement'; closingElement = closingElement'; children = children' }
