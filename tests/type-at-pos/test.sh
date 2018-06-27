@@ -163,6 +163,28 @@ assert_ok "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --pretty
 printf "destructuring.js:17:13 = "
 assert_ok "$FLOW" type-at-pos destructuring.js 17 13 --strip-root --pretty
 
+# exact.js
+printf "exact.js:4:6 = "
+assert_ok "$FLOW" type-at-pos exact.js 4 6 --strip-root --pretty
+printf "exact.js:5:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 5 13 --strip-root --pretty
+printf "exact.js:6:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 6 13 --strip-root --pretty
+printf "exact.js:7:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 7 13 --strip-root --pretty
+printf "exact.js:9:17 = "
+assert_ok "$FLOW" type-at-pos exact.js 9 17 --strip-root --pretty
+printf "exact.js:10:7 = "
+assert_ok "$FLOW" type-at-pos exact.js 10 7 --strip-root --pretty
+printf "exact.js:13:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 13 13 --strip-root --pretty
+printf "exact.js:16:13 = "
+assert_ok "$FLOW" type-at-pos exact.js 16 13 --strip-root --pretty
+printf "exact.js:18:6 = "
+assert_ok "$FLOW" type-at-pos exact.js 18 6 --strip-root --pretty
+printf "exact.js:19:6 = "
+assert_ok "$FLOW" type-at-pos exact.js 19 6 --strip-root --pretty
+
 # facebookism.js
 printf "facebookism.js:3:8 = "
 assert_ok "$FLOW" type-at-pos facebookism.js 3 8 --strip-root --pretty
@@ -253,6 +275,12 @@ printf "import_lib.js:7:8 = "
 assert_ok "$FLOW" type-at-pos import_lib.js 7 8 --strip-root --pretty
 printf "import_lib.js:7:25 (--expand-json-output) = "
 assert_ok "$FLOW" type-at-pos import_lib.js 7 25 --strip-root --pretty --expand-json-output
+
+# import_lib_named.js
+printf "import_lib_named.js:3:15 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import_lib_named.js 3 15 --strip-root --pretty --expand-json-output
+printf "import_lib_named.js:3:27 (--expand-json-output) = "
+assert_ok "$FLOW" type-at-pos import_lib_named.js 3 27 --strip-root --pretty --expand-json-output
 
 # interface.js
 printf "interface.js:3:12 = "
@@ -345,6 +373,14 @@ assert_ok "$FLOW" type-at-pos object.js 22 7 --strip-root --pretty
 printf "object.js:35:1 = "
 assert_ok "$FLOW" type-at-pos object.js 35 1 --strip-root --pretty
 
+# object-resolution.js
+printf "object-resolution.js:5:2 = "
+assert_ok "$FLOW" type-at-pos object-resolution.js 5 2 --strip-root --pretty
+printf "object-resolution.js:10:2 = "
+assert_ok "$FLOW" type-at-pos object-resolution.js 10 2 --strip-root --pretty
+printf "object-resolution.js:13:5 = "
+assert_ok "$FLOW" type-at-pos object-resolution.js 13 5 --strip-root --pretty
+
 # optional.js
 printf "optional.js:4:10 = "
 assert_ok "$FLOW" type-at-pos optional.js 4 10 --strip-root --pretty
@@ -394,6 +430,12 @@ printf "react_component.js:13:33 = "
 assert_ok "$FLOW" type-at-pos react_component.js 13 33 --strip-root --pretty
 printf "react_component.js:18:17 = "
 assert_ok "$FLOW" type-at-pos react_component.js 18 17 --strip-root --pretty
+printf "react_component.js:31:7 = "
+assert_ok "$FLOW" type-at-pos react_component.js 31 7 --strip-root --pretty --expand-json-output
+printf "react_component.js:32:13 = "
+assert_ok "$FLOW" type-at-pos react_component.js 32 13 --strip-root --pretty --expand-json-output
+printf "react_component.js:32:29 = "
+assert_ok "$FLOW" type-at-pos react_component.js 32 29 --strip-root --pretty --expand-json-output
 
 # react.js
 printf "react.js:2:7 = "
@@ -515,6 +557,8 @@ printf "opaque.js:21:19 = "
 assert_ok "$FLOW" type-at-pos opaque.js 21 19 --strip-root --pretty
 printf "opaque.js:21:28 = "
 assert_ok "$FLOW" type-at-pos opaque.js 21 28 --strip-root --pretty
+printf "opaque.js:24:7 = "
+assert_ok "$FLOW" type-at-pos opaque.js 24 7 --strip-root --pretty
 
 # optional_chaining.js
 printf "optional_chaining.js:16:7 = "
@@ -527,3 +571,48 @@ printf "optional_chaining.js:16:20 = "
 assert_ok "$FLOW" type-at-pos optional_chaining.js 16 20 --strip-root --pretty
 printf "optional_chaining.js:16:24 = "
 assert_ok "$FLOW" type-at-pos optional_chaining.js 16 24 --strip-root --pretty
+
+# type-alias.js
+printf "type-alias.js:3:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 3 6 --strip-root --pretty
+printf "type-alias.js:4:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 4 6 --strip-root --pretty
+printf "type-alias.js:5:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 5 6 --strip-root --pretty
+printf "type-alias.js:6:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 6 6 --strip-root --pretty
+printf "type-alias.js:7:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 7 6 --strip-root --pretty
+printf "type-alias.js:7:6 (--expand-type-aliases) = "
+assert_ok "$FLOW" type-at-pos type-alias.js 7 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:8:6 = "
+assert_ok "$FLOW" type-at-pos type-alias.js 8 6 --strip-root --pretty
+printf "type-alias.js:12:12 "
+assert_ok "$FLOW" type-at-pos type-alias.js 12 12 --strip-root --pretty
+printf "type-alias.js:12:29 "
+assert_ok "$FLOW" type-at-pos type-alias.js 12 29 --strip-root --pretty
+
+# Test interaction with RPolyTest
+printf "type-alias.js:15:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 15 8 --strip-root --pretty
+printf "type-alias.js:16:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 16 8 --strip-root --pretty
+printf "type-alias.js:17:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 17 8 --strip-root --pretty
+printf "type-alias.js:18:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 18 8 --strip-root --pretty
+printf "type-alias.js:19:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 19 8 --strip-root --pretty
+printf "type-alias.js:20:8 "
+assert_ok "$FLOW" type-at-pos type-alias.js 20 8 --strip-root --pretty
+
+printf "type-alias.js:24:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 24 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:25:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 25 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:27:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 27 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:29:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 29 6 --strip-root --pretty --expand-type-aliases
+printf "type-alias.js:31:6 "
+assert_ok "$FLOW" type-at-pos type-alias.js 31 6 --strip-root --pretty --expand-type-aliases

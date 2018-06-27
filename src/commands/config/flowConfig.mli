@@ -14,6 +14,7 @@ val empty_config: config
 val init:
   ignores: string list ->
   untyped: string list ->
+  declarations: string list ->
   includes: string list ->
   libs: string list ->
   options: string list ->
@@ -27,6 +28,8 @@ val write: config -> out_channel -> unit
 val ignores: config -> string list
 (* files that should be treated as untyped *)
 val untyped: config -> string list
+(* files that should be treated as declarations *)
+val declarations: config -> string list
 (* non-root include paths *)
 val includes: config -> string list
 (* library paths. no wildcards *)

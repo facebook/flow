@@ -74,6 +74,7 @@ let load_lib_files ~master_cx ~options files =
 
         let lib_file = File_key.LibFile file in
         let lint_severities = options.Options.opt_lint_severities in
+        let file_options = Options.file_options options in
         let%lwt result = parse_lib_file options file in
         Lwt.return (match result with
         | Parsing.Parse_ok (ast, file_sig) ->
@@ -89,7 +90,7 @@ let load_lib_files ~master_cx ~options files =
           Flow.mk_builtins cx;
 
           let syms = Infer.infer_lib_file cx ast
-            ~exclude_syms ~lint_severities ~file_sig
+            ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
           in
 
           Context.merge_into (Context.sig_cx master_cx) sig_cx;

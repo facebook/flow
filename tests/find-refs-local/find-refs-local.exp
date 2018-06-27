@@ -323,6 +323,12 @@ Destructuring:
       "type":"SourceFile",
       "start":{"line":37,"column":26,"offset":495},
       "end":{"line":37,"column":26,"offset":496}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":40,"column":8,"offset":531},
+      "end":{"line":40,"column":8,"offset":532}
     }
   ]
 }
@@ -389,14 +395,14 @@ Imports:
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":53,"column":10,"offset":702},
-      "end":{"line":53,"column":13,"offset":706}
+      "start":{"line":55,"column":10,"offset":725},
+      "end":{"line":55,"column":13,"offset":729}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":55,"column":2,"offset":763},
-      "end":{"line":55,"column":5,"offset":767}
+      "start":{"line":57,"column":2,"offset":786},
+      "end":{"line":57,"column":5,"offset":790}
     }
   ]
 }
@@ -409,14 +415,14 @@ Exports:
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":61,"column":14,"offset":846},
-      "end":{"line":61,"column":26,"offset":859}
+      "start":{"line":63,"column":14,"offset":869},
+      "end":{"line":63,"column":26,"offset":882}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":64,"column":13,"offset":922},
-      "end":{"line":64,"column":25,"offset":935}
+      "start":{"line":66,"column":13,"offset":945},
+      "end":{"line":66,"column":25,"offset":958}
     }
   ]
 }
@@ -427,14 +433,14 @@ Exports:
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":62,"column":17,"offset":881},
-      "end":{"line":62,"column":32,"offset":897}
+      "start":{"line":64,"column":17,"offset":904},
+      "end":{"line":64,"column":32,"offset":920}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":65,"column":1,"offset":938},
-      "end":{"line":65,"column":16,"offset":954}
+      "start":{"line":67,"column":1,"offset":961},
+      "end":{"line":67,"column":16,"offset":977}
     }
   ]
 }
@@ -448,32 +454,32 @@ Method declaration: {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":70,"column":3,"offset":1023},
-      "end":{"line":70,"column":5,"offset":1026}
+      "start":{"line":72,"column":3,"offset":1046},
+      "end":{"line":72,"column":5,"offset":1049}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":80,"column":12,"offset":1219},
-      "end":{"line":80,"column":14,"offset":1222}
+      "start":{"line":82,"column":12,"offset":1242},
+      "end":{"line":82,"column":14,"offset":1245}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":81,"column":12,"offset":1237},
-      "end":{"line":81,"column":14,"offset":1240}
+      "start":{"line":83,"column":12,"offset":1260},
+      "end":{"line":83,"column":14,"offset":1263}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":85,"column":10,"offset":1286},
-      "end":{"line":85,"column":12,"offset":1289}
+      "start":{"line":87,"column":10,"offset":1309},
+      "end":{"line":87,"column":12,"offset":1312}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":86,"column":10,"offset":1302},
-      "end":{"line":86,"column":12,"offset":1305}
+      "start":{"line":88,"column":10,"offset":1325},
+      "end":{"line":88,"column":12,"offset":1328}
     }
   ]
 }
@@ -484,32 +490,32 @@ Property declaration: {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":71,"column":3,"offset":1040},
-      "end":{"line":71,"column":5,"offset":1043}
+      "start":{"line":73,"column":3,"offset":1063},
+      "end":{"line":73,"column":5,"offset":1066}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":82,"column":12,"offset":1255},
-      "end":{"line":82,"column":14,"offset":1258}
+      "start":{"line":84,"column":12,"offset":1278},
+      "end":{"line":84,"column":14,"offset":1281}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":83,"column":12,"offset":1271},
-      "end":{"line":83,"column":14,"offset":1274}
+      "start":{"line":85,"column":12,"offset":1294},
+      "end":{"line":85,"column":14,"offset":1297}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":87,"column":10,"offset":1318},
-      "end":{"line":87,"column":12,"offset":1321}
+      "start":{"line":89,"column":10,"offset":1341},
+      "end":{"line":89,"column":12,"offset":1344}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":88,"column":10,"offset":1332},
-      "end":{"line":88,"column":12,"offset":1335}
+      "start":{"line":90,"column":10,"offset":1355},
+      "end":{"line":90,"column":12,"offset":1358}
     }
   ]
 }
@@ -520,32 +526,32 @@ Method call (finds definition and other references): {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":70,"column":3,"offset":1023},
-      "end":{"line":70,"column":5,"offset":1026}
+      "start":{"line":72,"column":3,"offset":1046},
+      "end":{"line":72,"column":5,"offset":1049}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":80,"column":12,"offset":1219},
-      "end":{"line":80,"column":14,"offset":1222}
+      "start":{"line":82,"column":12,"offset":1242},
+      "end":{"line":82,"column":14,"offset":1245}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":81,"column":12,"offset":1237},
-      "end":{"line":81,"column":14,"offset":1240}
+      "start":{"line":83,"column":12,"offset":1260},
+      "end":{"line":83,"column":14,"offset":1263}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":85,"column":10,"offset":1286},
-      "end":{"line":85,"column":12,"offset":1289}
+      "start":{"line":87,"column":10,"offset":1309},
+      "end":{"line":87,"column":12,"offset":1312}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":86,"column":10,"offset":1302},
-      "end":{"line":86,"column":12,"offset":1305}
+      "start":{"line":88,"column":10,"offset":1325},
+      "end":{"line":88,"column":12,"offset":1328}
     }
   ]
 }
@@ -556,14 +562,14 @@ Method call on an imported class (finds other references but not the definition 
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":90,"column":15,"offset":1352},
-      "end":{"line":90,"column":17,"offset":1355}
+      "start":{"line":92,"column":15,"offset":1375},
+      "end":{"line":92,"column":17,"offset":1378}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":91,"column":15,"offset":1373},
-      "end":{"line":91,"column":17,"offset":1376}
+      "start":{"line":93,"column":15,"offset":1396},
+      "end":{"line":93,"column":17,"offset":1399}
     }
   ]
 }
@@ -574,14 +580,14 @@ Method call within a class that has type params: {
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":94,"column":3,"offset":1412},
-      "end":{"line":94,"column":5,"offset":1415}
+      "start":{"line":96,"column":3,"offset":1435},
+      "end":{"line":96,"column":5,"offset":1438}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":96,"column":10,"offset":1453},
-      "end":{"line":96,"column":12,"offset":1456}
+      "start":{"line":98,"column":10,"offset":1476},
+      "end":{"line":98,"column":12,"offset":1479}
     }
   ]
 }
@@ -1427,6 +1433,79 @@ Optional chaining:
       "type":"SourceFile",
       "start":{"line":17,"column":10,"offset":125},
       "end":{"line":17,"column":12,"offset":128}
+    }
+  ]
+}
+Idx:
+{
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":3,"offset":61},
+      "end":{"line":6,"column":5,"offset":64}
+    },
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":24,"offset":150},
+      "end":{"line":12,"column":26,"offset":153}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"foo",
+  "locs":[
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":6,"column":3,"offset":61},
+      "end":{"line":6,"column":5,"offset":64}
+    },
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":24,"offset":150},
+      "end":{"line":12,"column":26,"offset":153}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":5,"offset":73},
+      "end":{"line":7,"column":7,"offset":76}
+    },
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":28,"offset":154},
+      "end":{"line":12,"column":30,"offset":157}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":5,"offset":73},
+      "end":{"line":7,"column":7,"offset":76}
+    },
+    {
+      "source":"idx.js",
+      "type":"SourceFile",
+      "start":{"line":12,"column":28,"offset":154},
+      "end":{"line":12,"column":30,"offset":157}
     }
   ]
 }

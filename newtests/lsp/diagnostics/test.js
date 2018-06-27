@@ -48,11 +48,11 @@ export default suite(
       addFile('witherrors2.js')
         .waitUntilIDEMessage(
           9000,
-          'textDocument/publishDiagnostics{is not an instance type}',
+          'textDocument/publishDiagnostics{Cannot extend}',
         )
         .verifyAllIDEMessagesInStep(
           [
-            'textDocument/publishDiagnostics{"`H` [1] is not an instance type.","message":"[1] `H`"}',
+            'textDocument/publishDiagnostics{"Cannot extend  `H` [1] with `I` because  `H` [1] is not inheritable.","message":"[1] `H`"}',
           ],
           [
             'textDocument/publishDiagnostics',

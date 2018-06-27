@@ -216,7 +216,7 @@ module rec TypeTerm : sig
        e.g. RegExp flags *)
     | CharSetT of String_utils.CharSet.t
     (* type aliases *)
-    | TypeT of t
+    | TypeT of type_t_kind * t
 
     | AnyT
 
@@ -254,6 +254,9 @@ module rec TypeTerm : sig
     | AnyObjT (* any object *)
     | AnyFunT (* any function *)
 
+    (* Type that wraps object types for the CustomFunT(Idx) function *)
+    | IdxWrapper of t
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -270,9 +273,6 @@ module rec TypeTerm : sig
     | ChoiceKitT of reason * choice_tool
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
-    (* Internal-only type that wraps object types for the CustomFunT(Idx)
-       function *)
-    | IdxWrapper of reason * t
     | ReposUpperT of reason * t
     | OptionalChainVoidT of reason
 
@@ -805,9 +805,7 @@ module rec TypeTerm : sig
   (* Instance types are represented as an InstanceT while statics are ObjT.
      However, both need to be checked for compatibility with the super type at
      declaration time. *)
- and derived_type =
-    | DerivedInstance of insttype
-    | DerivedStatics of objtype
+  and derived_type = Derived of { instance: insttype; statics: objtype }
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the
@@ -1097,6 +1095,17 @@ module rec TypeTerm : sig
   | ResolveSpreadsToMultiflowPartial of int * funtype * reason * t
 
   | ResolveSpreadsToCallT of funcalltype * t
+
+  (* Add some flavor to the TypeT constructor. For now this information is only
+   * used by the type normalizer. *)
+  and type_t_kind =
+  | TypeAliasKind         (* type A = T *)
+  | TypeParamKind
+  | OpaqueKind            (* opaque type O [: T] = T' *)
+  | ImportTypeofKind      (* import typeof *)
+  | ImportClassKind       (* import type { SomeClass } from ... *)
+  | ImportFunKind         (* import type { SomeFunction } from ... *)
+  | InstanceKind
 
 end = TypeTerm
 
@@ -2086,7 +2095,6 @@ end = struct
     | FunProtoApplyT reason -> reason
     | FunProtoBindT reason -> reason
     | FunProtoCallT reason -> reason
-    | InternalT (IdxWrapper (reason, _)) -> reason
     | KeysT (reason, _) -> reason
     | ModuleT (reason, _, _) -> reason
     | NullProtoT reason -> reason
@@ -2235,7 +2243,6 @@ end = struct
     | FunProtoT (reason) -> FunProtoT (f reason)
     | FunProtoBindT (reason) -> FunProtoBindT (f reason)
     | FunProtoCallT (reason) -> FunProtoCallT (f reason)
-    | InternalT (IdxWrapper (reason, t)) -> InternalT (IdxWrapper (f reason, t))
     | KeysT (reason, t) -> KeysT (f reason, t)
     | ModuleT (reason, exports, is_strict) -> ModuleT (f reason, exports, is_strict)
     | NullProtoT reason -> NullProtoT (f reason)
@@ -2889,6 +2896,7 @@ let string_of_def_ctor = function
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
   | FunT _ -> "FunT"
+  | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
   | IntersectionT _ -> "IntersectionT"
   | MaybeT _ -> "MaybeT"
@@ -2929,7 +2937,6 @@ let string_of_ctor = function
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
-  | InternalT (IdxWrapper _) -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
@@ -3317,6 +3324,10 @@ let mk_objecttype ?(flags=default_flags) ~dict ~call pmap proto = {
   dict_t = dict;
   call_t = call;
 }
+
+let mk_object_def_type ~reason ?(flags=default_flags) ~dict ~call pmap proto =
+  let reason = replace_reason invalidate_rtype_alias reason in
+  DefT (reason, ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
 
 let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
   call_this_t = this;

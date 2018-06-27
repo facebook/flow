@@ -22,10 +22,11 @@ val add_simple: Context.t ->
 
 val add_complex: Context.t ->
   tparams_map: Type.t SMap.t ->
-  expr: (Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+  expr: (Context.t -> Loc.t Ast.Expression.t -> Type.t * Typed_ast.annot Ast.Expression.t') ->
   ?default: Loc.t Ast.Expression.t ->
   Loc.t Ast.Pattern.t -> Type.t ->
-  t -> t
+  t ->
+  t * Typed_ast.annot Ast.Pattern.t'
 
 val add_rest: Context.t ->
   tparams_map: Type.t SMap.t ->

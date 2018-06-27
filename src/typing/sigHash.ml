@@ -175,6 +175,7 @@ type hash =
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
   | PolyT _ -> failwith "undefined hash of PolyT"
+  | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
 
   | AnyFunT -> AnyFunH
   | AnyObjT -> AnyObjH

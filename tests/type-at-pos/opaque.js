@@ -19,3 +19,6 @@ import type { Opaque, PolyTransparent, PolyOpaque } from './opaque-lib';
 declare var opaque: Opaque;
 declare var polyTransparent: PolyTransparent<string>;
 declare var polyOpaque: PolyOpaque<string>;
+
+import { fOpaque } from './opaque-lib';
+const o = fOpaque();

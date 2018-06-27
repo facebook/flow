@@ -101,7 +101,8 @@ let infer_type
     ~(workers: MultiWorkerLwt.worker list option)
     ~(env: ServerEnv.env ref)
     ~(profiling: Profiling_js.running)
-    ((file_input, line, col, verbose): (File_input.t * int * int * Verbose.t option))
+    ((file_input, line, col, verbose, expand_aliases):
+      (File_input.t * int * int * Verbose.t option * bool))
   : ((Loc.t * Ty.t option, string) Core_result.t * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
@@ -110,7 +111,8 @@ let infer_type
   | Error e -> Lwt.return (Error e, None)
   | Ok content ->
     let%lwt result = try_with_json (fun () ->
-      Type_info_service.type_at_pos ~options ~workers ~env ~profiling file content line col
+      Type_info_service.type_at_pos ~options ~workers ~env ~profiling ~expand_aliases
+        file content line col
     ) in
     Lwt.return (split_result result)
 
@@ -407,9 +409,10 @@ let handle_ephemeral_unsafe
             get_imports ~options module_names: ServerProt.Response.get_imports_response
           ) |> respond;
           Lwt.return None
-      | ServerProt.Request.INFER_TYPE (fn, line, char, verbose) ->
+      | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
           let%lwt result, json_data =
-            infer_type ~options ~workers ~env ~profiling (fn, line, char, verbose)
+            infer_type ~options ~workers ~env ~profiling
+              (fn, line, char, verbose, expand_aliases)
           in
           ServerProt.Response.INFER_TYPE result
           |> respond;
@@ -619,7 +622,7 @@ let handle_persistent_unsafe genv env client profiling msg
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let verbose = None in (* if Some, would write to server logs *)
     let%lwt result, json_data =
-      infer_type ~options ~workers ~env ~profiling (file, line, char, verbose)
+      infer_type ~options ~workers ~env ~profiling (file, line, char, verbose, false)
     in
     begin match result with
       | Ok (loc, content) ->

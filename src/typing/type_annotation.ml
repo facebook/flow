@@ -1099,7 +1099,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   Class_sig.generate_tests cx (fun iface_sig ->
     Class_sig.check_super cx reason iface_sig;
     Class_sig.check_implements cx reason iface_sig
-  ) iface_sig;
+  ) iface_sig |> ignore;
   Class_sig.thistype cx iface_sig,
   Interface { Interface.
     body = ((), { Object.

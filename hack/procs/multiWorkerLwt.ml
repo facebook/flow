@@ -63,7 +63,17 @@ include MultiWorker.CallFunctor (struct
         run_worker worker
     in
 
-    let%lwt () = LwtUtils.iter_all (List.map run_worker workers) in
+    let%lwt () =
+      let worker_threads = List.map run_worker workers in
+      try%lwt
+        LwtUtils.iter_all worker_threads
+      with Lwt.Canceled as exn ->
+        Hh_logger.info ~exn "Cancelling MultiWorkerLwt.multi_threaded_call";
+        (* For most exceptions, we want to propagate the exception as soon as one worker throws.
+         * However, for Canceled we want to wait for all the workers to process the Canceled.
+         * Lwt.join will wait for every thread to finish or fail *)
+        (Lwt.join worker_threads) [%lwt.finally SharedMem.resume_workers (); Lwt.return_unit]
+    in
 
     Lwt.return (!acc)
 end)
@@ -80,9 +90,7 @@ let call workers ~job ~merge ~neutral ~next =
     raise MultiWorkersBusy
   else begin
     is_busy := true;
-    let%lwt result = call workers ~job ~merge ~neutral ~next in
-    is_busy := false;
-    Lwt.return result
+    (call workers ~job ~merge ~neutral ~next) [%lwt.finally is_busy := false; Lwt.return_unit]
   end
 
 (* A separate abstract type from MultiWorker.worker forces users to always use MultiWorkerLwt *)

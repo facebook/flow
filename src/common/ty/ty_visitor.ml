@@ -26,6 +26,10 @@ module Make(M: Monoid.S)(E: Env) = struct
     | _ -> return None
 
   class c = object(self)
+
+    method map_type (env: E.t) t =
+      fst (self#type_ env t)
+
     method type_ (env: E.t) t =
       let env = E.descend t env in
       match t with
@@ -37,7 +41,7 @@ module Make(M: Monoid.S)(E: Env) = struct
       | Generic (_, _, None) -> return t
       | Fun ft -> self#fun_t env ft >>| fun ft -> Fun ft
       | Obj ot -> self#obj_t env ot >>| fun ot -> Obj ot
-      | Arr t -> self#type_ env t >>| fun a -> Arr a
+      | Arr at -> self#arr_t env at >>| fun at -> Arr at
       | Tup ts -> mapM (self#type_ env) ts >>| fun t -> Tup t
       | Union (t1, t2, ts) -> mapM (self#type_ env) (t1::t2::ts) >>| mk_union
       | Inter (t1, t2, ts) -> mapM (self#type_ env) (t1::t2::ts) >>| mk_inter
@@ -65,6 +69,10 @@ module Make(M: Monoid.S)(E: Env) = struct
     method private obj_t env { obj_exact; obj_props; obj_frozen } =
       mapM (self#prop_t env) obj_props >>| fun obj_props ->
       { obj_exact; obj_props; obj_frozen }
+
+    method private arr_t env { arr_readonly; arr_elt_t } =
+      self#type_ env arr_elt_t >>| fun arr_elt_t ->
+      { arr_readonly; arr_elt_t }
 
     method private prop_t env = function
       | NamedProp (n, p) -> self#named_prop_t env p >>| fun p -> NamedProp (n,p)

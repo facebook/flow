@@ -314,6 +314,8 @@ let toplevels id cx this super static ~decls ~stmts ~expr
 
   Env.pop_var_scope ();
 
-  Env.update_env cx loc env
+  Env.update_env cx loc env;
+
+  Typed_ast.Function.body_unimplemented
 
 let to_ctor_sig f = { f with kind = Ctor }

@@ -307,7 +307,7 @@ let rec gen_type t env = Type.(
   | ThisTypeAppT (_, t, _, Some ts) -> add_applied_tparams ts env |> gen_type t
   | ThisTypeAppT (_, t, _, None) -> gen_type t env
   | DefT (_, TypeAppT (_, t, ts)) -> add_applied_tparams ts env |> gen_type t
-  | DefT (_, TypeT t) -> gen_type t env
+  | DefT (_, TypeT (_, t)) -> gen_type t env
   | DefT (_, UnionT union) -> gen_union_list union env
   | DefT (_, VoidT) -> add_str "void" env
   | InternalT (OptionalChainVoidT _) -> add_str "void" env
@@ -327,7 +327,7 @@ let rec gen_type t env = Type.(
   | EvalT _
   | ExistsT _
   | InternalT (ExtendsT _)
-  | InternalT (IdxWrapper _)
+  | DefT (_, IdxWrapper _)
   | ModuleT _
   | OpaqueT _
   | MatchingPropT _

@@ -82,7 +82,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * reason_desc
+  | RTypeAlias of string * bool * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc * Loc.t
   | RTypeof of string
@@ -106,7 +106,10 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
-  | RNamedImportedType of string
+  | RNamedImportedType of string * string
+  | RImportStarType of string
+  | RImportStarTypeOf of string
+  | RImportStar of string
   | RDefaultImportedType of string * string
   | RCode of string
   | RCustom of string
@@ -160,7 +163,7 @@ type reason
 type t = reason (* convenience *)
 
 module TestID: sig
-  val run: ('a -> unit) -> 'a -> unit
+  val run: ('a -> 'b) -> 'a -> 'b
 end
 
 val lexpos: string -> int -> int -> Lexing.position
@@ -244,3 +247,5 @@ val mk_expression_reason: Loc.t Ast.Expression.t -> reason
 
 val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc
+
+val invalidate_rtype_alias: reason_desc -> reason_desc

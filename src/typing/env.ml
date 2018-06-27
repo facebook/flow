@@ -540,7 +540,7 @@ let bind_type_param cx static name t =
   let def_loc = Reason.def_loc_of_reason reason in
   if static && name = "this" then () else
     Scope.add_tparam_entry name def_loc (peek_scope ());
-  bind_type ~state cx name (DefT (reason, TypeT t)) loc
+  bind_type ~state cx name (DefT (reason, TypeT (TypeParamKind, t))) loc
 
 let bind_import_type cx name t loc =
   bind_entry cx name (Entry.new_import_type t ~loc) loc

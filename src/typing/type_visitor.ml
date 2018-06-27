@@ -99,9 +99,6 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
 
-  | InternalT (IdxWrapper (_, t)) ->
-    self#type_ cx pole acc t
-
   | OpenPredT (_ , t, p_map, n_map) ->
     let acc = self#type_ cx pole acc t in
     let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
@@ -160,7 +157,7 @@ class ['a] t = object(self)
   | SingletonNumT _
   | SingletonBoolT _ -> acc
 
-  | TypeT t -> self#type_ cx pole acc t
+  | TypeT (_, t) -> self#type_ cx pole acc t
 
   | OptionalT t -> self#type_ cx pole acc t
 
@@ -184,6 +181,10 @@ class ['a] t = object(self)
 
   | UnionT rep ->
     self#list (self#type_ cx pole) acc (UnionRep.members rep)
+
+  | IdxWrapper t ->
+    self#type_ cx pole acc t
+
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
@@ -321,8 +322,11 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SuperT (_, _, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
-  | SuperT (_, _, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
+  | SuperT (_, _, Derived {instance; statics}) ->
+    let acc = self#inst_type cx pole_TODO acc instance in
+    let acc = self#obj_type cx pole_TODO acc statics in
+    acc
+
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#use_type_ cx acc t

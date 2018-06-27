@@ -25,7 +25,8 @@ module Request = struct
       File_input.t * (* filename|content *)
       int * (* line *)
       int * (* char *)
-      Verbose.t option
+      Verbose.t option *
+      bool (* expand type aliases *)
   | PORT of string list
   | STATUS of Path.t * bool (* include_warnings *)
   | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
@@ -58,7 +59,7 @@ module Request = struct
         (File_input.filename_of_file_input fn) line char
   | GET_IMPORTS module_names ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
-  | INFER_TYPE (fn, line, char, _) ->
+  | INFER_TYPE (fn, line, char, _, _) ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input fn) line char
   | PORT (files) ->

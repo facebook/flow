@@ -77,7 +77,7 @@ let load_lib_files ~master_cx ~metadata files
         let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
         Flow_js.mk_builtins cx;
         let syms = Type_inference_js.infer_lib_file cx ast
-          ~exclude_syms ~file_sig ~lint_severities:LintSettings.empty_severities
+          ~exclude_syms ~file_sig ~lint_severities:LintSettings.empty_severities ~file_options:None
         in
 
         Context.merge_into (Context.sig_cx master_cx) sig_cx;
@@ -204,7 +204,7 @@ let infer_and_merge ~root filename ast file_sig =
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let cx, _other_cxs = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~strict_mode ~file_sigs
+    ~metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     (Nel.one filename) reqs [] (Context.sig_cx master_cx)
@@ -263,7 +263,7 @@ let infer_type filename content line col =
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
       let loc = mk_loc filename line col in Query_types.(
-        match query_type cx loc with
+        match query_type ~expand_aliases:false cx loc with
         | FailureNoMatch -> Loc.none, Error "No match"
         | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
         | Success (loc, t) ->

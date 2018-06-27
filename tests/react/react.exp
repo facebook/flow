@@ -21,8 +21,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:7:22
      7|     (this.props.foo: empty); // error: string ~> empty
@@ -38,8 +38,8 @@ Cannot cast `this.props.bar` to empty because number [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [1]
    create_class.js:8:22
      8|     (this.props.bar: empty); // error: number ~> empty
@@ -192,8 +192,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:117:22
    117|     (this.props.foo: empty); // string ~> empty
@@ -209,8 +209,8 @@ Cannot cast `this.state.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:118:22
    118|     (this.state.foo: empty); // string ~> empty
@@ -226,8 +226,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:133:22
    133|     (this.props.foo: empty); // string ~> empty
@@ -243,8 +243,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:137:22
    137|     (this.props.foo: empty); // string ~> empty
@@ -260,8 +260,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:141:22
    141|     (this.props.foo: empty); // string ~> empty
@@ -277,8 +277,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:142:21
    142|     (nextProps.foo: empty); // string ~> empty
@@ -294,8 +294,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:146:22
    146|     (this.props.foo: empty); // string ~> empty
@@ -328,8 +328,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:148:21
    148|     (nextProps.foo: empty); // string ~> empty
@@ -376,8 +376,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:153:22
    153|     (this.props.foo: empty); // string ~> empty
@@ -410,8 +410,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:155:21
    155|     (nextProps.foo: empty); // string ~> empty
@@ -444,8 +444,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:160:22
    160|     (this.props.foo: empty); // string ~> empty
@@ -478,8 +478,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:162:21
    162|     (nextProps.foo: empty); // string ~> empty
@@ -512,8 +512,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:167:22
    167|     (this.props.foo: empty); // string ~> empty
@@ -1845,8 +1845,8 @@ References:
    jsx_spread.js:10:19
     10| var props = {bar: 42};
                           ^^ [1]
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -1864,11 +1864,11 @@ References:
    key.js:12:11
     12| <Foo key={true} />; // Error
                   ^^^^ [1]
-   <BUILTINS>/react.js:180:26
-   180| declare type React$Key = string | number;
+   <BUILTINS>/react.js:186:26
+   186| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:180:35
-   180| declare type React$Key = string | number;
+   <BUILTINS>/react.js:186:35
+   186| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1886,11 +1886,11 @@ References:
    key.js:21:16
     21| <FooExact key={true} />; // Error
                        ^^^^ [1]
-   <BUILTINS>/react.js:180:26
-   180| declare type React$Key = string | number;
+   <BUILTINS>/react.js:186:26
+   186| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:180:35
-   180| declare type React$Key = string | number;
+   <BUILTINS>/react.js:186:35
+   186| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1959,8 +1959,8 @@ References:
    proptype_arrayOf.js:15:45
     15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
                                                     ^^^^^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -1976,8 +1976,8 @@ References:
    proptype_arrayOf.js:20:36
     20| var todo_required = <Example arr={[null]} />
                                            ^^^^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -1994,8 +1994,8 @@ References:
    proptype_arrayOf.js:30:25
     30| (<OptionalExample arr={[""]} />); // error: string ~> number
                                 ^^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2033,8 +2033,8 @@ Cannot cast `propName` to empty because string [1] is incompatible with empty [2
                ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:287:13
-   287|   propName: string,
+   <BUILTINS>/react.js:293:13
+   293|   propName: string,
                     ^^^^^^ [1]
    proptype_custom_validator.js:8:18
      8|       (propName: empty); // error: propName is a string
@@ -2050,8 +2050,8 @@ Cannot cast `componentName` to empty because string [1] is incompatible with emp
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:288:18
-   288|   componentName: string,
+   <BUILTINS>/react.js:294:18
+   294|   componentName: string,
                          ^^^^^^ [1]
    proptype_custom_validator.js:9:23
      9|       (componentName: empty); // error: componentName is a string
@@ -2069,8 +2069,8 @@ Cannot cast `href` to empty because:
                ^^^^
 
 References:
-   <BUILTINS>/react.js:289:10
-   289|   href?: string) => ?Error;
+   <BUILTINS>/react.js:295:10
+   295|   href?: string) => ?Error;
                  ^^^^^^ [1]
    proptype_custom_validator.js:10:14
     10|       (href: empty); // error: href is an optional string
@@ -2089,8 +2089,8 @@ References:
    proptype_custom_validator.js:11:18
     11|       return (0: mixed); // error: should return ?Error
                          ^^^^^ [1]
-   <BUILTINS>/react.js:289:22
-   289|   href?: string) => ?Error;
+   <BUILTINS>/react.js:295:22
+   295|   href?: string) => ?Error;
                              ^^^^^ [2]
 
 
@@ -2106,8 +2106,8 @@ References:
    proptype_func.js:14:36
     14| var fail_mistyped = <Example func={2} />
                                            ^ [1]
-   <BUILTINS>/react.js:314:34
-   314|   func: React$PropType$Primitive<Function>;
+   <BUILTINS>/react.js:320:34
+   320|   func: React$PropType$Primitive<Function>;
                                          ^^^^^^^^ [2]
 
 
@@ -2165,8 +2165,8 @@ References:
    proptype_object.js:13:38
     13| var fail_mistyped = <Example object={2} />
                                              ^ [1]
-   <BUILTINS>/react.js:316:36
-   316|   object: React$PropType$Primitive<Object>;
+   <BUILTINS>/react.js:322:36
+   322|   object: React$PropType$Primitive<Object>;
                                            ^^^^^^ [2]
 
 
@@ -2217,8 +2217,8 @@ References:
    proptype_objectOf.js:15:47
     15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
                                                       ^^^^^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2234,8 +2234,8 @@ References:
    proptype_objectOf.js:20:38
     20| var todo_required = <Example obj={{p:null}} />
                                              ^^^^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2251,8 +2251,8 @@ References:
    proptype_objectOf.js:30:27
     30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
                                   ^^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2427,11 +2427,11 @@ References:
    proptype_oneOfType.js:24:32
     24| var fail_bool = <Example prop={true} />;
                                        ^^^^ [1]
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [3]
 
 
@@ -2449,11 +2449,11 @@ References:
    proptype_oneOfType.js:29:36
     29| var todo_required = <Example prop={null} />;
                                            ^^^^ [1]
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:315:36
-   315|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:321:36
+   321|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [3]
 
 
@@ -2469,8 +2469,8 @@ References:
    proptype_oneOfType.js:41:22
     41| (<OptionalExample p={0} />); // error: number ~> string
                              ^ [1]
-   <BUILTINS>/react.js:317:36
-   317|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:323:36
+   323|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -2552,14 +2552,14 @@ Cannot cast `React.PropTypes.arrayOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:297:17
-   297|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:303:17
+   303|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:297:41
-   297|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:303:41
+   303|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2576,8 +2576,8 @@ empty [2] in the return value.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:299:27
-   299|   (expectedClass: any) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:305:27
+   305|   (expectedClass: any) => ReactPropsChainableTypeChecker;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2595,14 +2595,14 @@ Cannot cast `React.PropTypes.objectOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:301:17
-   301|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:307:17
+   307|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:301:41
-   301|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:307:41
+   307|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2620,14 +2620,14 @@ Cannot cast `React.PropTypes.oneOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:303:20
-   303|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:309:20
+   309|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                            ^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:303:35
-   303|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:309:35
+   309|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2645,14 +2645,14 @@ Cannot cast `React.PropTypes.oneOfType` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:305:25
-   305|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+   <BUILTINS>/react.js:311:25
+   311|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:306:5
-   306|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:312:5
+   312|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2670,14 +2670,14 @@ Cannot cast `React.PropTypes.shape` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:308:16
-   308|   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+   <BUILTINS>/react.js:314:16
+   314|   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:309:5
-   309|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:315:5
+   315|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2744,8 +2744,8 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2].
                           ^^^
 
 References:
-   <BUILTINS>/react.js:187:39
-   187|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:193:39
+   193|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:13:24
     13| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -2796,8 +2796,8 @@ Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact`
                                ^^^
 
 References:
-   <BUILTINS>/react.js:187:39
-   187|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:193:39
+   193|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:24:29
     24| <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.

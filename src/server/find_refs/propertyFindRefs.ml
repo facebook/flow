@@ -14,6 +14,8 @@ let (>>|) = Result.(>>|)
 
 open FindRefsUtils
 
+let add_ref_kind kind = List.map (fun loc -> (kind, loc))
+
 (* The default visitor does not provide all of the context we need when visiting an object key. In
  * particular, we need the location of the enclosing object literal. *)
 class ['acc] object_key_visitor ~init = object(this)
@@ -398,7 +400,7 @@ let file_key_of_module_ref file_key module_ref =
   in
   Module_js.get_file ~audit:Expensive.warn resolved
 
-let filter_prop_refs cx potential_refs file_key prop_def_info name =
+let process_prop_refs cx potential_refs file_key prop_def_info name =
   potential_refs |>
     LocMap.bindings |>
     List.map begin fun (ref_loc, ty) ->
@@ -414,8 +416,11 @@ let filter_prop_refs cx potential_refs file_key prop_def_info name =
           (File_key.to_string file_key)
           err
       )
-    >>|
-    List.fold_left (fun acc -> function None -> acc | Some loc -> loc::acc) []
+    >>| begin fun refs ->
+      refs
+      |> ListUtils.cat_maybes
+      |> add_ref_kind FindRefsTypes.PropertyAccess
+    end
 
 let property_find_refs_in_file options ast_info file_key def_info name =
   let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
@@ -425,6 +430,7 @@ let property_find_refs_in_file options ast_info file_key def_info name =
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
+    |> add_ref_kind FindRefsTypes.PropertyDefinition
   in
   let has_symbol = PropertyAccessSearcher.search name ast in
   if not has_symbol then
@@ -448,11 +454,15 @@ let property_find_refs_in_file options ast_info file_key def_info name =
       !potential_matching_literals
       |> List.map get_prop_loc_if_relevant
       |> Result.all
-      >>| ListUtils.cat_maybes
+      >>| begin fun refs ->
+        refs
+        |> ListUtils.cat_maybes
+        |> add_ref_kind FindRefsTypes.PropertyDefinition
+      end
     in
     literal_prop_refs_result
     >>= begin fun literal_prop_refs_result ->
-      filter_prop_refs cx !potential_refs file_key def_info name
+      process_prop_refs cx !potential_refs file_key def_info name
       >>| (@) local_defs
       >>| (@) literal_prop_refs_result
     end
@@ -483,12 +493,12 @@ let export_find_refs_in_file ast_info file_key def_loc =
 
 let add_related_bindings ast_info refs =
   let (ast, file_sig, _) = ast_info in
-  let related_bindings = ImportExportSymbols.find_related_symbols file_sig refs in
+  let locs = List.map snd refs in
+  let related_bindings = ImportExportSymbols.find_related_symbols file_sig locs in
   List.fold_left begin fun acc loc ->
     let new_refs =
       VariableFindRefs.local_find_refs ast loc
       |> Option.value_map ~default:[] ~f:(fun ((_, refs), _) -> refs)
-      |> List.map snd
     in
     List.rev_append new_refs acc
   end refs related_bindings
@@ -498,7 +508,8 @@ let find_refs_in_file options ast_info file_key def_info =
   | Property (def_info, name) ->
     property_find_refs_in_file options ast_info file_key def_info name
   | CJSExport loc ->
-    export_find_refs_in_file ast_info file_key loc
+    export_find_refs_in_file ast_info file_key loc >>| fun refs ->
+    add_ref_kind FindRefsTypes.Other refs
   in
   refs >>| add_related_bindings ast_info
 
@@ -521,8 +532,8 @@ let find_refs_in_multiple_files genv all_deps def_info =
   in
   (* The types got a little too complicated here. Writing out the intermediate types makes it a
    * bit clearer. *)
-  let result: (Loc.t list list, string) Result.t = Result.all result in
-  let result: (Loc.t list, string) Result.t = result >>| List.concat in
+  let result: (FindRefsTypes.single_ref list list, string) Result.t = Result.all result in
+  let result: (FindRefsTypes.single_ref list, string) Result.t = result >>| List.concat in
   Lwt.return result
 
 (* Get the source for each loc. Error if any loc is missing a source. *)
@@ -858,13 +869,11 @@ let find_refs_global genv env multi_hop def_info =
     dependent_file_count;
   let%lwt refs = find_refs_in_multiple_files genv relevant_files def_info in
   refs %>>| fun refs ->
-  let refs = List.map (fun loc -> (FindRefsTypes.Other, loc)) refs in
   Lwt.return @@ Some ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
 let find_refs_local genv file_key content def_info =
   compute_ast_result file_key content >>= fun ast_info ->
   find_refs_in_file genv.options ast_info file_key def_info >>= fun refs ->
-  let refs = List.map (fun loc -> (FindRefsTypes.Other, loc)) refs in
   Ok (Some ((display_name_of_def_info def_info, refs), None))
 
 let find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop =

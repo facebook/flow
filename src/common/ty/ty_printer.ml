@@ -83,7 +83,7 @@ let type_ ?(size=5000) t =
         ~sep:(fuse [pretty_space; Atom "=>"])
         func
     | Obj obj -> type_object ~depth obj
-    | Arr t -> fuse [Atom "Array<"; type_ ~depth t; Atom ">"]
+    | Arr arr -> type_array ~depth arr
     | Generic (Symbol (_, id), _, ts) -> type_generic ~depth (identifier id) ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
@@ -126,20 +126,7 @@ let type_ ?(size=5000) t =
 
   and type_alias { ta_name = Symbol (provenance, id); ta_tparams; ta_type } =
     match provenance with
-    | Remote loc ->
-      (match Loc.source loc with
-      | Some source ->
-        fuse ([
-            Atom "imported"; space;
-            identifier id; space;
-            Atom "from"; space;
-          ]
-          @ in_quotes (File_key.to_string source)
-        )
-      | _ ->
-        identifier id)
-
-    | Imported _ -> fuse [
+    | Imported _ | Remote _ -> fuse [
         Atom "imported"; space;
         identifier id;
         option (type_parameter ~depth:0) ta_tparams;
@@ -241,6 +228,14 @@ let type_ ?(size=5000) t =
     | CallProp func -> fuse [
         type_function ~depth ~sep:(Atom ":") func
       ]
+
+  and type_array ~depth { arr_readonly; arr_elt_t } =
+    fuse [
+      Atom (if arr_readonly then "$ReadOnlyArray" else "Array");
+      Atom "<";
+      type_ ~depth arr_elt_t;
+      Atom ">";
+    ]
 
   and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props; obj_frozen = _ } =
     let s_exact = if obj_exact then Atom "|" else Empty in

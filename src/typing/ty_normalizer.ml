@@ -38,12 +38,12 @@ module type Config = sig
 
      Pick `true` if the result does not need to be "parseable", e.g. coverage.
   *)
-  val fall_through_merged: bool
+  val opt_fall_through_merged: bool
 
   (* Expand the signatures of built-in functions, such as:
       Function.prototype.apply: (thisArg: any, argArray?: any): any
   *)
-  val expand_internal_types: bool
+  val opt_expand_internal_types: bool
 
   (* AnnotT is used to hide information of the lower bound flowing in and
      provides instead a type interface that then flows to the upper bounds.
@@ -52,7 +52,7 @@ module type Config = sig
      associated with the annotation. Typically this coincides with types used as
      annotations, so this is a natural type type to return for type queries.
   *)
-  val expand_annots: bool
+  val opt_expand_type_aliases: bool
 
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
      may contain the same name twice (but with different associated locations).
@@ -67,7 +67,7 @@ module type Config = sig
     is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
     This flags toggles this behavior.
   *)
-  val flag_shadowed_type_params: bool
+  val opt_flag_shadowed_type_params: bool
 
 end
 
@@ -180,20 +180,13 @@ end = struct
        *)
       free_tvars: VSet.t;
 
-      (* In determining whether a symbol is Local, Imported, Remote, etc, it is
-         useful to keep the list of imported names and the corresponding
-         location available. We can then make this decision by comparing the
-         source file with the current context's file information.
-      *)
-      imported_names: Loc.t SMap.t;
-    }
+  }
 
     let empty ~cx = {
       counter = 0;
       tvar_cache = IMap.empty;
       cx;
       free_tvars = VSet.empty;
-      imported_names = SMap.empty;
     }
 
   end
@@ -257,11 +250,46 @@ end = struct
 
   module Env = struct
     type t = {
-      depth: int;                      (* For debugging purposes mostly *)
-      tparams: (string * Loc.t) list;  (* Type parameters in scope *)
+      (* For debugging purposes mostly *)
+      depth: int;
+      (* Type parameters in scope *)
+      tparams: (string * Loc.t) list;
+      (* File the query originated from *)
+      file: File_key.t;
+
+      (* In determining whether a symbol is Local, Imported, Remote, etc, it is
+         useful to keep the list of imported names and the corresponding
+         location available. We can then make this decision by comparing the
+         source file with the current context's file information. *)
+      imported_names: Loc.t SMap.t;
+
+      (* The default behavior with type aliases is to return the name of the alias
+         instead of the expansion of the type. When normalizing type aliases `TypeT t`,
+         however, we proceed by recovering the name of the alias (say A) and then
+         normalizing the body `T` to recover the type "type A = T". So for this case
+         only it is useful to allow a one-off expansion of the contents of TypeT.
+         We do this by setting this property to `Some A`.
+
+         The reason we need the alias name (instead of just the fact that we're expanding
+         an alias) is that the RTypeAlias reason (used to discover aliases) may be
+         repeated across nested types (ExactT and MaybeT -- see statement.ml) and so we
+         need to skip over duplicates until we either encounter another type constructor
+         or a different type alias.
+
+         NOTE: The use of the name might not be robust against aliases with the same name
+         (coming from different scopes for example). Ideally we would use the location
+         or a unique ID of the type alias to make this distinction, but at the moment
+         keeping this information around introduces a small space regression. *)
+      under_type_alias: string option;
     }
 
-    let init tparams = { depth = 0; tparams; }
+    let init cx tparams imported_names = {
+      depth = 0;
+      tparams;
+      file = Context.file cx;
+      imported_names;
+      under_type_alias = None;
+    }
 
     let descend e = { e with depth = e.depth + 1 }
 
@@ -271,7 +299,7 @@ end = struct
           return the type parameter.
        2. T appears in env but is not the first occurence. This means that some other
           type parameter shadows it. We split cases depending on the value of
-          Config.flag_shadowed_type_params:
+          Config.opt_flag_shadowed_type_params:
           - true: flag a warning, since the type is not well-formed in this context.
           - false: return the type normally ignoring the warning.
        3. The type parameter is not in env. Do the default action.
@@ -280,7 +308,7 @@ end = struct
       let pred (tp_name, _) = (name = tp_name) in
       match List.find_opt pred env.tparams with
       | Some (_, tp_loc) ->
-        if loc = tp_loc || not C.flag_shadowed_type_params
+        if loc = tp_loc || not C.opt_flag_shadowed_type_params
         then return Ty.(Bound (Symbol (Local loc, name)))
         (* If we care about shadowing of type params, then flag an error *)
         else terr ~kind:ShadowTypeParam (Some t)
@@ -385,131 +413,192 @@ end = struct
 
   *)
 
-  (* Helper functions *)
+  module Recursive = struct
 
-  (* We shouldn't really create bare Mu types for two reasons.
+    (* Helper functions *)
 
-     First, substitutions and type applications may replace the recursive variables with
-     a non-recursive type part, rendering the entire type non-recursive. When
-     `check_recursive` is set to true, we first perform the check.
+    (* Replace a recursive type variable r with a symbol sym in the type t. *)
+    let subst r sym t =
+      let visitor = object inherit Ty_visitor.UnitVisitor.c as super
+        method! type_ env = function
+        | Ty.TVar (i, ts) when r = i ->
+          super#type_ env (Ty.Generic (sym, true, ts))
+        | t -> super#type_ env t
+      end in
+      visitor#map_type () t
 
-     Second, TypeAliases and Mu types can both imply recursion, so we have little
-     to gain from nesting them. Therefore, before creating a Mu type, we should check if
-     the type under the Mu is a TypeAlias and if it is then use that structure to
-     express the recursion. To do this we replace 'i' for 'ta_name' in the body of
-     the alias.
+    (* We shouldn't really create bare Mu types for two reasons.
 
-     PV: The second one is a seemingly awkward fix. However, I am not very concerned as
-     `TypeAlias` is abusively treated as a type. Eventually, the goal is to include it
-     in a "module element" category rather than the Ty.t structure.
-  *)
-  let mk_mu ~check_recursive i t =
-    let is_rec =
-      if check_recursive
-      then Ty_utils.FreeVars.is_free_in ~is_top:true i t
-      else true in
-    if is_rec then
-      Ty.(match t with
-      | TypeAlias {ta_name;_} -> Ty_utils.subst (RVar i) (true, ta_name) t
-      | _ -> Mu (i, t))
-    else t
+       First, substitutions and type applications may replace the recursive variables with
+       a non-recursive type part, rendering the entire type non-recursive. When
+       `check_recursive` is set to true, we first perform the check.
 
-  (* When inferring recursive types, the top-level appearances of the recursive
-     variable should be eliminated. This visitor performs the following
-     transformations:
+       Second, TypeAliases and Mu types can both imply recursion, so we have little
+       to gain from nesting them. Therefore, before creating a Mu type, we should check if
+       the type under the Mu is a TypeAlias and if it is then use that structure to
+       express the recursion. To do this we replace 'i' for 'ta_name' in the body of
+       the alias.
 
-       (recursive var: X , type: X           ) ==> Bot
-       (recursive var: X , type: X | t       ) ==> Bot | t
-       (recursive var: X , type: X & t       ) ==> Top & t
-       (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
+       PV: The second one is a seemingly awkward fix. However, I am not very concerned as
+       `TypeAlias` is abusively treated as a type. Eventually, the goal is to include it
+       in a "module element" category rather than the Ty.t structure.
+    *)
+    let mk_mu ~check_recursive i t =
+      let is_rec =
+        if check_recursive
+        then Ty_utils.FreeVars.is_free_in ~is_top:true i t
+        else true in
+      if is_rec then
+        Ty.(match t with
+        | TypeAlias { ta_name; _ } -> subst (RVar i) ta_name t
+        | _ -> Mu (i, t))
+      else t
 
-     The visitor only descends down to the first concrete constructor
-     (e.g. Function, Class) and is applied to the subparts of unions,
-     intersections and recursive types.
+    (* When inferring recursive types, the top-level appearances of the recursive
+       variable should be eliminated. This visitor performs the following
+       transformations:
 
-     It is expected to followed by type minimization, so that the introduced
-     Bot and Top can be eliminated.
-  *)
+         (recursive var: X , type: X           ) ==> Bot
+         (recursive var: X , type: X | t       ) ==> Bot | t
+         (recursive var: X , type: X & t       ) ==> Top & t
+         (recursive var: X , type: mu Y . X | t) ==> mu Y . Bot | t
 
-  module RemoveTopLevelTvarVisitor = struct
-    module Env = struct
-      type t = U (* union context *)
-             | I (* intersection context *)
-      let descend _ e = e
-      (* The starting state is that of a union. This allows for the behavior
-         outlined above.
-      *)
-      let init = U
-      (* The "zero" element is Bot (resp. Top) if we're in a union (resp.
-         intersection) context, so that a subsequent minimization pass
-         eliminates it.
-      *)
-      let zero = function
-        | I -> Ty.Top
-        | U -> Ty.Bot
+       The visitor only descends down to the first concrete constructor
+       (e.g. Function, Class) and is applied to the subparts of unions,
+       intersections and recursive types.
+
+       It is expected to followed by type minimization, so that the introduced
+       Bot and Top can be eliminated.
+    *)
+
+    module RemoveTopLevelTvarVisitor = struct
+      module Env = struct
+        type t = U (* union context *)
+               | I (* intersection context *)
+        let descend _ e = e
+        (* The starting state is that of a union. This allows for the behavior
+           outlined above.
+        *)
+        let init = U
+        (* The "zero" element is Bot (resp. Top) if we're in a union (resp.
+           intersection) context, so that a subsequent minimization pass
+           eliminates it.
+        *)
+        let zero = function
+          | I -> Ty.Top
+          | U -> Ty.Bot
+      end
+
+      module M = Ty_visitor.MakeAny(Env)
+      open M
+
+      let run v =
+        let visitor = object(self) inherit c
+          method! type_ env = function
+          | Ty.Union (t0,t1,ts) ->
+            mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
+          | Ty.Inter (t0,t1,ts) ->
+            mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
+          | Ty.TVar (Ty.RVar v', _) when v = v' ->
+            tell true >>| fun _ -> Env.zero env
+          | Ty.Mu (v, t) ->
+            self#type_ env t >>| mk_mu ~check_recursive:true v
+          | t -> return t
+        end in
+        visitor#type_ Env.init
     end
 
-    module M = Ty_visitor.MakeAny(Env)
-    open M
 
-    let run v =
-      let visitor = object(self) inherit c
-        method! type_ env = function
-        | Ty.Union (t0,t1,ts) ->
-            mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
-        | Ty.Inter (t0,t1,ts) ->
-            mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
-        | Ty.TVar (Ty.RVar v', _) when v = v' ->
-            tell true >>| fun _ -> Env.zero env
-        | Ty.Mu (v, t) ->
-            self#type_ env t >>| mk_mu ~check_recursive:true v
-        | t ->
-            return t
-      end
-      in
-      visitor#type_ Env.init
+    (* Constructing recursive types.
+
+       This function is expected to be called after fully normalizing the lower
+       bounds of a type variable `v` and constructing a type `t`. `free_vars` is
+       the set of free variables appearing in `t`. This information is available
+       from the state of the monad.
+
+       To determine if we truly have a recursive type we take the following into
+       account:
+
+        - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
+          we return it as-is.
+
+        - If `v` appears in `free_vars`, we may be dealing with a recursive type
+          but we also might have a degenerate case like this one:
+
+            Mu (v, v | string)
+
+          which is not a recursive type. (It is equivalent to string.)
+          So, first we simplify the type by performing the "remove_top_level_tvar"
+          transformation and some subsequent simplifications. Then if the type
+          changed we check again if `v` is in the free variables.
+
+          NOTE that we need to recompute free vars since the simplifications might
+          have eliminated some of them. Here we use the FreeVars module. This is
+          an expensive pass, which is why we avoid doing it if it's definitely
+          not a recursive type.
+    *)
+    let make free_vars i t =
+      if VSet.mem i free_vars then
+        (* Maybe recursive (might be a degenerate) *)
+        let t, changed = RemoveTopLevelTvarVisitor.run i t in
+        let t = if changed then simplify_unions_inters t else t in
+        (* If not changed then all free_vars are still in, o.w. recompute free vars *)
+        mk_mu ~check_recursive:changed i t
+      else
+        (* Definitely not recursive *)
+        t
+
   end
 
 
-  (* Constructing recursive types.
+  module Substitution = struct
+    module Env = struct
+      type t =  Ty.t SMap.t
+      let descend _ e = e
+    end
+    module Visitor = Ty_visitor.MakeAny(Env)
 
-     This function is expected to be called after fully normalizing the lower
-     bounds of a type variable `v` and constructing a type `t`. `free_vars` is
-     the set of free variables appearing in `t`. This information is available
-     from the state of the monad.
+    (* Replace a list of type parameters with a list of types in the given type.
+     * These lists might not match exactly in length.
+     *)
+    let run =
+      let open Ty in
+      let init_env tparams types =
+        let rec step acc = function
+        | [], _ | _, [] -> acc
+        | p::ps, t::ts -> step (SMap.add p.tp_name t acc) (ps, ts)
+        in
+        step SMap.empty (tparams, types)
+      in
+      let remove_params env = function
+      | None -> env
+      | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
+      in
+      let open Visitor in
+      let visitor = object inherit c as super
+        method! type_ env t =
+          match t with
+          | TypeAlias { ta_tparams=ps; _ }
+          | Fun { fun_type_params=ps; _ } ->
+            let env = remove_params env ps in
+            super#type_ env t
+          | Bound (Symbol (_, name)) ->
+            begin match SMap.get name env with
+            | Some t' ->
+              (* Mark the substitution *)
+              begin tell true >>= fun _ ->
+              super#type_ env t' end
+            | _ -> super#type_ env t
+            end
+          | _ -> super#type_ env t
+        end
+      in
+      fun vs ts t_body ->
+        let env = init_env vs ts in
+        let t, changed = visitor#type_ env t_body in
+        if changed then simplify_unions_inters t else t
 
-     To determine if we truly have a recursive type we take the following into
-     account:
-
-      - If `v` does NOT appear in `free_vars`, then `t` is NOT recursive, so
-        we return it as-is.
-
-      - If `v` appears in `free_vars`, we may be dealing with a recursive type
-        but we also might have a degenerate case like this one:
-
-          Mu (v, v | string)
-
-        which is not a recursive type. (It is equivalent to string.)
-        So, first we simplify the type by performing the "remove_top_level_tvar"
-        transformation and some subsequent simplifications. Then if the type
-        changed we check again if `v` is in the free variables.
-
-        NOTE that we need to recompute free vars since the simplifications might
-        have eliminated some of them. Here we use the FreeVars module. This is
-        an expensive pass, which is why we avoid doing it if it's definitely
-        not a recursive type.
-  *)
-  let to_recursive free_vars i t =
-    if VSet.mem i free_vars then
-      (* Maybe recursive (might be a degenerate) *)
-      let t, changed = RemoveTopLevelTvarVisitor.run i t in
-      let t = if changed then simplify_unions_inters t else t in
-      (* If not changed then all free_vars are still in, o.w. recompute free vars *)
-      mk_mu ~check_recursive:changed i t
-    else
-      (* Definitely not recursive *)
-      t
-
+  end
 
   (***********************)
   (* Construct built-ins *)
@@ -534,45 +623,89 @@ end = struct
     tp_default = default;
   })
 
+  let symbol_from_loc env loc name =
+    let open File_key in
+    let symbol_source = Loc.source loc in
+    let provenance =
+      match symbol_source with
+      | Some LibFile _ -> Ty.Library loc
+      | Some (SourceFile _) ->
+        let current_source = env.Env.file in
+        (* Locally defined name *)
+        if Some current_source = symbol_source
+        then Ty.Local loc
+        (* Otherwise it is one of:
+           - Imported, or
+           - Remote (defined in a different file but not imported in this one) *)
+        else (match SMap.get name env.Env.imported_names with
+          | Some loc' when loc = loc' -> Ty.Imported loc
+          | _ -> Ty.Remote loc)
+      | Some (JsonFile _)
+      | Some (ResourceFile _) -> Ty.Local loc
+      | Some Builtins -> Ty.Builtin
+      | None -> Ty.Local loc
+    in
+    Ty.Symbol (provenance, name)
+
+  (* TODO due to repositioninig `reason_loc` may not point to the actual
+     location where `name` was defined. *)
+  let symbol_from_reason env reason name =
+    let def_loc = Reason.def_loc_of_reason reason in
+    symbol_from_loc env def_loc name
 
 
   (*************************)
   (* Main transformation   *)
   (*************************)
 
-  let rec type__ ~env t = type_with_reason ~env t
+  let rec type__ ~env t = type_poly ~env t
 
-  (* Before we proceed with expanding the type structure we have one last chance
-     to recover this more useful type and return early from normalizing.
+  (* Before we start pattern-matching on the structure of the input type, we can
+     reconstruct some types based on attached reasons. Two cases are of interest here:
+     - Type parameters: we use RPolyTest reasons for these
+     - Type aliases: we use RTypeAlias reasons for these *)
 
-     Perhaps more information can be recovered at this point.
-
-     NOTE: This would have been a good opportunity to catch a type alias before
-     it gets unfolded to its definition. Unfortunately, this is not a good place
-     to capture this, since the reason is completely oblivious to any attendant
-     type parameters. For example in the following code, the type of `a` in the
-     end would not include the parameter `string`.
-
-       type A<T: string> = { t: T } | boolean;
-       declare var a: A<string>;
-       if (typeof a !== "boolean") a;
-  *)
-  and type_with_reason ~env t =
+  and type_poly ~env t =
+    (* The RPolyTest description is used for types that represent type parameters.
+       When normalizing, we want such types to be replaced by the type parameter,
+       whose name is part of the description, but only in the case that the parameter
+       is in scope. The reason we need to make this distinction is that bound tests
+       may exit the scope of the structure that introduced them, in which case we
+       do not perform the substitution. There instead we unfold the underlying type. *)
     let reason = Type.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
-    (* The 'RPolyTest' description is used for types that represent type
-       parameters. When normalizing, we want such types to be replaced by the
-       type parameter, whose name is part of the description, but only in the
-       case that the parameter is in scope. The reason we need to make this
-       distinction is that bound tests may exit the scope of the structure that
-       introduced them, in which case we do not perform the substitution. There
-       instead we unfold the underlying type.
-    *)
     | RPolyTest (name, _) ->
       let loc = Reason.def_loc_of_reason reason in
-      let default t = type_after_reason ~env t in
+      let default t = type_with_alias_reason ~env t in
       Env.lookup_tparam ~default env t name loc
-    | _ -> type_after_reason ~env t
+    | _ ->
+      type_with_alias_reason ~env t
+
+  and type_with_alias_reason ~env t =
+    if C.opt_expand_type_aliases then type_after_reason ~env t else
+    let reason = Type.reason_of_t t in
+    match desc_of_reason ~unwrap:false reason with
+    | RTypeAlias (name, true, _) ->
+      (* The default action is to avoid expansion by using the type alias name,
+         when this can be trusted. The one case where we want to skip this process
+         is when recovering the body of a type alias A. In that case the environment
+         field under_type_alias will be 'Some A'. If the type alias name in the reason
+         is also A, then we are still at the top-level of the type-alias, so we
+         proceed by expanding one level preserving the same environment. *)
+      let continue =
+        match env.Env.under_type_alias with
+        | Some name' -> name = name'
+        | None -> false
+      in
+      if continue then type_after_reason ~env t else
+      let symbol = symbol_from_reason env reason name in
+      return (Ty.named_t symbol)
+    | _ ->
+      (* We are now beyond the point of the one-off expansion. Reset the environment
+         assigning None to under_type_alias, so that aliases are used in subsequent
+         invocations. *)
+      let env = Env.{ env with under_type_alias = None } in
+      type_after_reason ~env t
 
   and type_after_reason ~env t =
     let open Type in
@@ -580,8 +713,7 @@ end = struct
     match t with
     | OpenT (_, id) -> type_variable ~env id
     | BoundT tparam -> bound_t ~env t tparam
-    | AnnotT (OpenT (r, id), _) -> annot_t ~env r id
-    | AnnotT (t, _) -> type_after_reason ~env t
+    | AnnotT (t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
     | CustomFunT (_, f) -> custom_fun ~env f
@@ -628,10 +760,11 @@ end = struct
       mapM (type__ ~env) ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
     | DefT (_, PolyT (ps, t, _)) -> poly_ty ~env t ps
-    | DefT (r, TypeT t) -> type_t ~env r t None
+    | DefT (r, TypeT (kind, t)) -> type_t ~env r kind t None
     | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t ts
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, ClassT t) -> class_t ~env t None
+    | DefT (_, IdxWrapper t) -> type__ ~env t
     | ThisClassT (_, t) -> this_class_t ~env t None
     (* NOTE For now we are ignoring the "this" type here. *)
     | ThisTypeAppT (_, c, _, None) -> type__ ~env c
@@ -639,7 +772,7 @@ end = struct
     | KeysT (_, t) ->
       type__ ~env t >>| fun ty ->
       Ty.generic_builtin_t "$Keys" [ty]
-    | OpaqueT (r, o) -> opaque_t ~env r o None
+    | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
     | TypeDestructorTriggerT _ -> return Ty.Bot
@@ -650,7 +783,7 @@ end = struct
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
-      if C.expand_internal_types then
+      if C.opt_expand_internal_types then
         (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
         return Ty.(mk_fun
           ~params:[
@@ -662,26 +795,26 @@ end = struct
         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.apply"))
 
     | FunProtoBindT _ ->
-      if C.expand_internal_types then
+      if C.opt_expand_internal_types then
         (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
-          ~rest:(Some "argArray", Arr Any)
+          ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
           Any)
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.bind"))
 
     | FunProtoCallT _ ->
-      if C.expand_internal_types then
+      if C.opt_expand_internal_types then
         (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
-          ~rest:(Some "argArray", Arr Any)
+          ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
           Any)
       else
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
 
-    | ModuleT (reason, _, _) -> module_t reason t
+    | ModuleT (reason, _, _) -> module_t env reason t
 
     | DefT (_, CharSetT _)
     | NullProtoT _ ->
@@ -737,7 +870,7 @@ end = struct
 
     (* Create a recursive type (if needed) *)
     let ty_res = Core_result.map
-      ~f:(to_recursive out_st.free_tvars rid) ty_res
+      ~f:(Recursive.make out_st.free_tvars rid) ty_res
     in
 
     (* Reset state by removing the current tvar from the free vars set *)
@@ -766,66 +899,12 @@ end = struct
       mapM (type__ ~env) ts >>|
       uniq_union
 
-  (* TODO due to repositioninig `reason_loc` may not point to the actual
-     location where `name` was defined. *)
-  and symbol reason name =
-    let open File_key in
-    get >>= fun st ->
-    let cx = State.(st.cx) in
-    let def_loc = Reason.def_loc_of_reason reason in
-    let def_source = Loc.source def_loc in
-    let provenance =
-      match def_source with
-      | Some LibFile _ -> Ty.Library def_loc
-      | Some (SourceFile _) ->
-        let current_source = Context.file cx in
-        (* Locally defined name *)
-        if Some current_source = def_source then
-          Ty.Local def_loc
-        else (
-          (* Otherwise it is one of:
-             - Imported, or
-             - Remote (defined in a different file but not imported in this one)
-          *)
-          match SMap.get name st.State.imported_names with
-          | Some loc when def_loc = loc -> Ty.Imported loc
-          | _ -> Ty.Remote def_loc
-        )
-      | Some (JsonFile _)
-      | Some (ResourceFile _) -> Ty.Local def_loc
-      | Some Builtins -> Ty.Builtin
-      | None -> Ty.Local def_loc
-    in
-    return (Ty.Symbol (provenance, name))
-
   and bound_t ~env t tparam =
     let open Type in
     let { reason; name; _ } = tparam in
     let loc = Reason.def_loc_of_reason reason in
     let default t = terr ~kind:BadBoundT (Some t) in
     Env.lookup_tparam ~default env t name loc
-
-  and annot_t ~env r id =
-    if C.expand_annots then
-      type_variable ~env id
-    else begin
-      match desc_of_reason r with
-      (* Named aliases *)
-      | RType name
-      | RJSXIdentifier (_, name) -> symbol r name >>| Ty.named_t
-      | RFbt -> symbol r "Fbt" >>| Ty.named_t
-      | RRegExp -> symbol r "regexp" >>| Ty.named_t
-
-      (* Imported Alias: descend to get the actual name *)
-      | RNamedImportedType _ ->
-        type_variable ~env id >>| (function
-        | Ty.Generic (import_symbol, false, _) ->
-          Ty.named_alias import_symbol
-        | ty -> ty
-        )
-      (* The rest of the case will have to go through full resolution *)
-      | _ -> type_variable ~env id
-    end
 
   and fun_ty ~env f fun_type_params =
     let {T.params; rest_param; return_t; _} = f in
@@ -911,9 +990,12 @@ end = struct
     Ty.(IndexProp {dict_polarity; dict_name; dict_key; dict_value})
 
   and arr_ty ~env = function
-    | T.ArrayAT (t, _)
+    | T.ArrayAT (t, _) ->
+      type__ ~env t >>| fun t ->
+      Ty.(Arr { arr_readonly = false; arr_elt_t = t})
     | T.ROArrayAT t ->
-      type__ ~env t >>| fun t -> Ty.Arr t
+      type__ ~env t >>| fun t ->
+      Ty.(Arr { arr_readonly = true; arr_elt_t = t})
     | T.TupleAT (_, ts) ->
       mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
     | T.EmptyAT ->
@@ -933,7 +1015,7 @@ end = struct
   and instance_t ~env r inst =
     let open Type in
     name_of_instance_reason r >>= fun name ->
-    symbol r name >>= fun symbol ->
+    let symbol = symbol_from_reason env r name in
     let args = SMap.bindings inst.type_args in
     mapM (fun (_, (_, t)) -> type__ ~env t) args >>| function
     | [] -> Ty.Generic (symbol, inst.structural, None)
@@ -978,53 +1060,86 @@ end = struct
     match t with
     | T.DefT (_, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
-    | T.DefT (r, T.TypeT t) -> type_t ~env r t ps
+    | T.DefT (r, T.TypeT (kind, t)) -> type_t ~env r kind t ps
     | T.DefT (_, T.FunT (_, _, f)) ->
       fun_ty ~env f ps >>| fun fun_t -> Ty.Fun fun_t
     | _ ->
       terr ~kind:BadPoly (Some t)
 
   (* Type Aliases *)
-  and type_t ~env r t ta_tparams =
-    match t with
-    | Type.OpaqueT (r, o) ->
-      opaque_t ~env r o ta_tparams
-    | _ ->
-      type_t_with_reason ~env r t ta_tparams
+  and type_t =
+    let open Type in
+    let mk_type_alias symbol ps = function
+    | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
+    | Ty.Class _ as t -> return t
+    | t -> return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
+    in
+    (* NOTE the use of the reason within `t` instead of the one passed with
+       the constructor TypeT. The latter is an RType, which is somewhat more
+       unwieldy as it is used more pervasively. *)
+    let local env t ps =
+      let reason = TypeUtil.reason_of_t t in
+      match desc_of_reason ~unwrap:false reason with
+      | RTypeAlias (name, true, _) ->
+        let env = Env.{ env with under_type_alias = Some name } in
+        type__ ~env t >>= fun body ->
+        let symbol = symbol_from_reason env reason name in
+        mk_type_alias symbol ps body
+      | _ -> terr ~kind:BadTypeAlias ~msg:"local" (Some t)
+    in
+    let import_symbol env r t =
+      match desc_of_reason ~unwrap:false r with
+      | RNamedImportedType (name, _)
+      | RDefaultImportedType (name, _)
+      | RImportStarType name
+      | RImportStarTypeOf name
+      | RImportStar name ->
+        return (symbol_from_reason env r name)
+      | _ -> terr ~kind:BadTypeAlias ~msg:"import" (Some t)
+    in
+    let import env r t ps =
+      import_symbol env r t >>= fun symbol ->
+      let Ty.Symbol (_, name) = symbol in
+      let env = Env.{ env with under_type_alias = Some name } in
+      type__ ~env t >>= fun body ->
+      mk_type_alias symbol ps body
+    in
+    let import_typeof env r t ps = import env r t ps in
+    let import_fun env r t ps = import env r t ps in
+    let opaque env t ps =
+      match t with
+      | OpaqueT (r, o) -> opaque_type_t ~env r o ps
+      | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
+    in
+    fun ~env r kind t ps ->
+      match kind with
+      | TypeAliasKind -> local env t ps
+      | ImportClassKind -> class_t ~env t ps
+      | ImportTypeofKind -> import_typeof env r t ps
+      | ImportFunKind -> import_fun env r t ps
+      | OpaqueKind -> opaque env t ps
+      (* The following cases are not common *)
+      | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"typeparam" (Some t)
+      | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
 
-  and type_t_with_reason ~env r t ta_tparams =
-    match desc_of_reason r with
-    (* Locally defined alias *)
-    | RType name
-    | RDefaultImportedType (name, _) ->
-      type__ ~env t >>= fun ta_type ->
-      symbol r name >>| fun symbol ->
-      (* TODO option to skip computing this *)
-      Ty.named_alias symbol ?ta_tparams ~ta_type
-
-    (* Imported Alias: descend to get the actual name *)
-    | RNamedImportedType _ ->
-      type__ ~env t >>| (function
-        | (Ty.Generic (import_symbol, _, _)) as ta_type ->
-          Ty.named_alias import_symbol ?ta_tparams ~ta_type
-        | ty ->
-          ty
-      )
-    | _ ->
-      let msg = spf "Parent reason: %s" (string_of_reason r) in
-      terr ~kind:BadTypeAlias ~msg (Some t)
-
-  and exact_t ~env t = type__ ~env t >>| function
-    | Ty.Obj o -> Ty.Obj { o with Ty.obj_exact = true }
-    | t -> Ty.generic_builtin_t "$Exact" [t]
+  and exact_t ~env t =
+    type__ ~env  t >>| Ty.mk_exact
 
   and type_app ~env t targs =
     type__ ~env t >>= fun ty ->
     mapM (type__ ~env) targs >>= fun targs ->
     match ty with
-    | Ty.Class (name, _, _)
-    | Ty.TypeAlias { Ty.ta_name=name; _ } ->
+    | Ty.Class (name, _, _) ->
       return (Ty.generic_t name targs)
+    | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
+      let t = if C.opt_expand_type_aliases then
+        match ta_tparams, ta_type with
+        | Some ps, Some t -> Substitution.run ps targs t
+        | None, Some t -> t
+        | _ -> Ty.generic_t ta_name targs
+      else
+        Ty.generic_t ta_name targs
+      in return t
     | Ty.Any ->
       return Ty.Any
     (* "Fix" type application on recursive types *)
@@ -1036,19 +1151,24 @@ end = struct
       let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
       terr ~kind:BadTypeApp ~msg (Some t)
 
+  and opaque_t ~env reason opaque_type =
+    let name = opaque_type.Type.opaque_name in
+    let opaque_symbol = symbol_from_reason env reason name in
+    return (Ty.named_t opaque_symbol)
+
   (* We are being a bit lax here with opaque types so that we don't have to
      introduce a new constructor in Ty.t to support all kinds of OpaqueT.
      If an underlying type is available, then we use that as the alias body.
      If not, we check for a super type and use that if there is one.
      Otherwise, we fall back to a bodyless TypeAlias.
   *)
-  and opaque_t ~env reason opaque_type ta_tparams =
+  and opaque_type_t ~env reason opaque_type ta_tparams =
     let open Type in
     let name = opaque_type.opaque_name in
     get_cx >>= fun cx ->
     let current_source = Context.file cx in
     let opaque_source = Loc.source (def_loc_of_reason reason) in
-    symbol reason name >>= fun opaque_symbol ->
+    let opaque_symbol = symbol_from_reason env reason name in
     (* Compare the current file (of the query) and the file that the opaque
        type is defined. If they differ, then hide the underlying/super type.
        Otherwise, display the underlying/super type. *)
@@ -1071,7 +1191,7 @@ end = struct
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
         ~params:[(Some "target", Any, non_opt_param)]
-        ~rest:(Some "sources", Arr Any)
+        ~rest:(Some "sources", Arr { arr_readonly = false; arr_elt_t = Any })
         Any
       )
 
@@ -1113,7 +1233,9 @@ end = struct
 
     (* debugPrint: (_: any[]) => void *)
     | DebugPrint -> return Ty.(
-        mk_fun ~params:[(Some "_", Arr Any, non_opt_param)] Void
+        mk_fun ~params:[
+          (Some "_", Arr { arr_readonly = false; arr_elt_t = Any }, non_opt_param)
+        ] Void
       )
 
     (* debugThrow: () => empty *)
@@ -1193,9 +1315,9 @@ end = struct
     | DebugSleep -> return (Ty.builtin_t "$Flow$DebugSleep")
 
   and custom_fun env t =
-    if C.expand_internal_types
-      then custom_fun_expanded env t
-      else custom_fun_short env t
+    if C.opt_expand_internal_types
+    then custom_fun_expanded env t
+    else custom_fun_short env t
 
   and react_prop_type ~env =
     let open T.React.PropType in
@@ -1213,7 +1335,6 @@ end = struct
   and internal_t ~env t =
     let open Type in
     function
-    | IdxWrapper (_, t) -> type__ ~env t
     | ChoiceKitT _
     | ExtendsT _
     | ReposUpperT _ ->
@@ -1282,13 +1403,13 @@ end = struct
         end
       end
 
-  and module_t reason t =
+  and module_t env reason t =
     match desc_of_reason reason with
     | RModule name
     | RCommonJSExports name
-    | RUntypedModule name
-    | RNamedImportedType name ->
-      symbol reason name >>| fun s -> Ty.Module s
+    | RUntypedModule name ->
+      let symbol = symbol_from_reason env reason name in
+      return (Ty.Module symbol)
     | _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
@@ -1300,9 +1421,9 @@ end = struct
       terr ~kind:BadUse ~msg None
 
   and merged_t ~env uses =
-    if C.fall_through_merged
-      then return Ty.Top
-      else mapM (use_t ~env) uses >>| uniq_inter
+    if C.opt_fall_through_merged
+    then return Ty.Top
+    else mapM (use_t ~env) uses >>| uniq_inter
 
 
   (* Before we start normalizing the input type we populate our environment with
@@ -1313,57 +1434,55 @@ end = struct
      whether a located name (symbol) appearing is part of the file's imports or a
      remote (hidden or non-imported) name.
   *)
-  let add_imports ~cx state =
-    let open State in
+  let import_names cx state =
     let imported_ts = Context.imported_ts cx in
-    let state, imported_names = SMap.fold (fun x t (st, m) -> Ty.(
+    SMap.fold (fun x t (st, m) -> Ty.(
       (* 'tparams' ought to be empty at this point *)
-      let env = Env.init [] in
+      let env = Env.init cx [] SMap.empty in
       match run st (type__ ~env t) with
       | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
       | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
         (st, SMap.add x loc m)
       | (_, st) ->
         (st, m)
-    )) imported_ts (state, SMap.empty) in
-    { state with imported_names }
+    )) imported_ts (state, SMap.empty)
 
-let run_type state tparams t =
-  let env = Env.init tparams in
-  run state (type__ ~env t)
+  let run_type cx state tparams imported_names t =
+    let env = Env.init cx tparams imported_names in
+    run state (type__ ~env t)
 
   (* Exposed API *)
   let from_schemes ~cx schemes =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     snd (ListUtils.fold_map (fun st (a, s) ->
       let Type_table.Scheme (tparams, t) = s in
-      match run_type st tparams t with
+      match run_type cx st tparams imported_names t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
     ) state schemes)
 
   let from_types ~cx ts =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     snd (ListUtils.fold_map (fun st (a, t) ->
-      match run_type st [] t with
+      match run_type cx st [] imported_names t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
     ) state ts)
 
   let from_scheme ~cx scheme =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     let Type_table.Scheme (tparams, t) = scheme in
-    fst (run_type state tparams t)
+    fst (run_type cx state tparams imported_names t)
 
   let from_type ~cx t =
-    let state = add_imports ~cx (State.empty ~cx) in
-    fst (run_type state [] t)
+    let state, imported_names = import_names cx (State.empty ~cx) in
+    fst (run_type cx state [] imported_names t)
 
   let fold_hashtbl ~cx ~f ~g ~htbl init =
-    let state = add_imports ~cx (State.empty ~cx) in
+    let state, imported_names = import_names cx (State.empty ~cx) in
     let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
       let Type_table.Scheme (tparams, t) = g x in
-      let env = Env.init tparams in
+      let env = Env.init cx tparams imported_names in
       let result, st' = run st (type__ ~env t) in
       let acc' = f acc (loc, result) in
       (st', acc')

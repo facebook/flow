@@ -58,7 +58,7 @@ let add_simple cx ~tparams_map ~optional ?default loc id t x =
 let add_complex cx ~tparams_map ~expr ?default patt t x =
   let default = Option.map default Default.expr in
   let bindings_rev = ref x.bindings_rev in
-  destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
+  let patt = destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
     let t = match type_of_pattern patt with
     | None -> t
     | Some _ ->
@@ -67,11 +67,11 @@ let add_complex cx ~tparams_map ~expr ?default patt t x =
     in
     Env.add_type_table cx ~tparams_map loc t;
     bindings_rev := (name, loc, t, default) :: !bindings_rev
-  );
+  ) in
   let t = if default <> None then Type.optional t else t in
   let params_rev = (None, t) :: x.params_rev in
   let bindings_rev = !bindings_rev in
-  { x with params_rev; bindings_rev }
+  { x with params_rev; bindings_rev }, patt
 
 let add_rest cx ~tparams_map loc id t x =
   let name = Option.map id ~f:(fun (id_loc, name) ->

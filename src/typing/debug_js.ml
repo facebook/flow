@@ -250,6 +250,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | DefT (_, AnyFunT) ->
     []
 
+  | DefT (_, IdxWrapper t) -> [
+      "wrappedObj", _json_of_t json_cx t
+    ]
+
   | ShapeT t -> [
       "type", _json_of_t json_cx t
     ]
@@ -275,7 +279,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "literal", JSON_Bool b
     ]
 
-  | DefT (_, TypeT t) -> [
+  | DefT (_, TypeT (_, t)) -> [
       "result", _json_of_t json_cx t
     ]
 
@@ -332,10 +336,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | ReactElementFactory t -> ["componentType", _json_of_t json_cx t]
       | _ -> []
     )
-
-  | InternalT (IdxWrapper (_, t)) -> [
-      "wrappedObj", _json_of_t json_cx t
-    ]
 
   | OpenPredT (_,t, pos_preds, neg_preds) -> [
       let json_key_map f map = JSON_Object (
@@ -486,12 +486,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SuperT (_, _, DerivedInstance i) -> [
-      "instance", json_of_insttype json_cx i
-    ]
-
-  | SuperT (_, _, DerivedStatics o) -> [
-      "statics", json_of_objtype json_cx o
+  | SuperT (_, _, Derived {instance=i; statics=o}) -> [
+      "instance", json_of_insttype json_cx i;
+      "statics", json_of_objtype json_cx o;
     ]
 
   | ImplementsT (op, t) -> [
@@ -1762,7 +1759,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
-  | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
+  | DefT (_, TypeT (_, arg)) -> p ~extra:(kid arg) t
   | AnnotT (arg, use_desc) ->
     p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
@@ -1791,6 +1788,7 @@ let rec dump_t_ (depth, tvars) cx t =
     ^ "]") t
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
+  | DefT (_, IdxWrapper inner_obj) -> p ~extra:(kid inner_obj) t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
@@ -1803,7 +1801,6 @@ let rec dump_t_ (depth, tvars) cx t =
   | InternalT (ChoiceKitT _) -> p t
   | TypeDestructorTriggerT (_, _, _, s, x) -> p ~extra:(spf "%s on upper, %s"
     (string_of_destructor s) (kid x)) t
-  | InternalT (IdxWrapper (_, inner_obj)) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, arg, p_pos, p_neg) -> p t
       ~extra:(spf "%s, {%s}, {%s}" (kid arg)
       (String.concat "; " (List.map (fun (k,p) ->

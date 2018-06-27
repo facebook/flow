@@ -11,6 +11,7 @@ type options = {
   default_lib_dir: Path.t option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
+  declarations: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -21,6 +22,7 @@ type options = {
 let default_lib_dir options = options.default_lib_dir
 let ignores options = options.ignores
 let untyped options = options.untyped
+let declarations options = options.declarations
 let includes options = options.includes
 let lib_paths options = options.lib_paths
 let module_file_exts options = options.module_file_exts
@@ -326,6 +328,15 @@ let is_ignored (options: options) =
 (* true if a file path matches an [untyped] entry in config *)
 let is_untyped (options: options) =
   let list = List.map snd options.untyped in
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
+
+(* true if a file path matches a [declarations] entry in config *)
+let is_declaration (options: options) =
+  let list = List.map snd options.declarations in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)

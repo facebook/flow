@@ -54,6 +54,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         let _ = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd request in
         Lwt.return_unit
       with exn ->
+        Hh_logger.error ~exn "Failed to read response from work #%d" (worker_id w);
         (* Failed to send the job to the worker. Is it because the worker is dead or is it
          * something else? *)
         let%lwt pid, status = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
@@ -69,7 +70,19 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         (* Read in a lwt-unfriendly, blocking manner from the worker *)
         (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
         Lwt.return (Marshal_tools.from_fd_with_preamble infd: (b * Measure.record_data))
-      with exn ->
+      with
+      | Lwt.Canceled as exn ->
+        (* Worker is handling a job but we're cancelling *)
+        Hh_logger.info ~exn "Stopping running worker #%d" (worker_id w);
+        (* Each worker might call this but that's ok *)
+        SharedMem.stop_workers ();
+        (* Wait for the worker to finish cancelling *)
+        let%lwt () = Lwt_unix.wait_read infd_lwt in
+        (* Read the junk from the pipe *)
+        let _ = Marshal_tools.from_fd_with_preamble infd in
+        Hh_logger.info ~exn "Finished cancelling running worker #%d" (worker_id w);
+        raise exn
+      | exn ->
         let%lwt pid, status = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
         begin match pid, status with
         | 0, _ | _, Unix.WEXITED 0 ->

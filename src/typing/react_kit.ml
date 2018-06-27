@@ -968,7 +968,15 @@ let run cx trace ~use_op reason_op l u
         has_unknown_react_mixins = spec.unknown_mixins <> [];
         structural = false;
       } in
-      rec_flow cx trace (super, SuperT (use_op, reason_op, DerivedInstance insttype));
+      rec_flow cx trace (super, SuperT (use_op, reason_op, Derived {
+        instance = insttype;
+        statics = (
+          (* TODO: check static signature against base class *)
+          let props = Context.make_property_map cx SMap.empty in
+          let proto = NullProtoT reason_op in
+          mk_objecttype ~dict:None ~call:None props proto
+        )
+      }));
 
       let instance = DefT (reason_component, InstanceT (static, super, [], insttype)) in
       rec_flow_t cx trace (instance, knot.this);

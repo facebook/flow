@@ -167,4 +167,11 @@ let tests = "scope_builder" >::: [
     "export default class Foo {} new Foo()"
     [mk_loc (1, 21) (1, 24);
      mk_loc (1, 32) (1, 35)];
+  "computed_property_destructuring" >:: mk_scope_builder_all_uses_test
+    "const x = {}; const foo = ''; const {[foo]: bar} = x;"
+    [mk_loc (1, 6) (1, 7);
+     mk_loc (1, 20) (1, 23);
+     mk_loc (1, 38) (1, 41);
+     mk_loc (1, 44) (1, 47);
+     mk_loc (1, 51) (1, 52)];
 ]

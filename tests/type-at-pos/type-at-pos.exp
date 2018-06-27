@@ -883,6 +883,156 @@ destructuring.js:17:13 = {
   "start":13,
   "end":13
 }
+exact.js:4:6 = {
+  "type":"type B = $Exact<A>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":6,"offset":39},
+    "end":{"line":4,"column":6,"offset":40}
+  },
+  "path":"exact.js",
+  "line":4,
+  "endline":4,
+  "start":6,
+  "end":6
+}
+exact.js:5:13 = {
+  "type":"$Exact<A>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":13,"offset":66},
+    "end":{"line":5,"column":13,"offset":67}
+  },
+  "path":"exact.js",
+  "line":5,
+  "endline":5,
+  "start":13,
+  "end":13
+}
+exact.js:6:13 = {
+  "type":"$Exact<B>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":13,"offset":92},
+    "end":{"line":6,"column":13,"offset":93}
+  },
+  "path":"exact.js",
+  "line":6,
+  "endline":6,
+  "start":13,
+  "end":13
+}
+exact.js:7:13 = {
+  "type":"{|p: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":13,"offset":118},
+    "end":{"line":7,"column":13,"offset":119}
+  },
+  "path":"exact.js",
+  "line":7,
+  "endline":7,
+  "start":13,
+  "end":13
+}
+exact.js:9:17 = {
+  "type":"$Exact<X>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":17,"offset":161},
+    "end":{"line":9,"column":17,"offset":162}
+  },
+  "path":"exact.js",
+  "line":9,
+  "endline":9,
+  "start":17,
+  "end":17
+}
+exact.js:10:7 = {
+  "type":"$Exact<X>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":7,"offset":183},
+    "end":{"line":10,"column":7,"offset":184}
+  },
+  "path":"exact.js",
+  "line":10,
+  "endline":10,
+  "start":7,
+  "end":7
+}
+exact.js:13:13 = {
+  "type":"$Exact<A>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":13,"offset":212},
+    "end":{"line":13,"column":13,"offset":213}
+  },
+  "path":"exact.js",
+  "line":13,
+  "endline":13,
+  "start":13,
+  "end":13
+}
+exact.js:16:13 = {
+  "type":"$Exact<class C>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":13,"offset":258},
+    "end":{"line":16,"column":13,"offset":259}
+  },
+  "path":"exact.js",
+  "line":16,
+  "endline":16,
+  "start":13,
+  "end":13
+}
+exact.js:18:6 = {
+  "type":"type P<X> = {|m: (x: X) => void|}",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":6,"offset":285},
+    "end":{"line":18,"column":6,"offset":286}
+  },
+  "path":"exact.js",
+  "line":18,
+  "endline":18,
+  "start":6,
+  "end":6
+}
+exact.js:19:6 = {
+  "type":"type Q<X> = $Exact<P<X>>",
+  "reasons":[],
+  "loc":{
+    "source":"exact.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":6,"offset":327},
+    "end":{"line":19,"column":6,"offset":328}
+  },
+  "path":"exact.js",
+  "line":19,
+  "endline":19,
+  "start":6,
+  "end":6
+}
 facebookism.js:3:8 = {
   "type":"$Facebookism$Idx",
   "reasons":[],
@@ -1365,23 +1515,15 @@ import_lib.js:7:8 = {
 }
 import_lib.js:7:25 (--expand-json-output) = {
   "expanded_type":{
-    "kind":"TypeAlias",
+    "kind":"Class",
     "name":{
       "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
       "name":"Listener"
     },
-    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}],
-    "body":{
-      "kind":"Generic",
-      "typeArgs":[{"kind":"Bound","bound":"TFields"}],
-      "type":{
-        "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
-        "name":"Listener"
-      },
-      "structural":true
-    }
+    "structural":true,
+    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
   },
-  "type":"imported Listener<TFields>",
+  "type":"interface Listener<TFields>",
   "reasons":[],
   "loc":{
     "source":"import_lib.js",
@@ -1394,6 +1536,54 @@ import_lib.js:7:25 (--expand-json-output) = {
   "endline":7,
   "start":21,
   "end":28
+}
+import_lib_named.js:3:15 (--expand-json-output) = {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{
+      "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+      "name":"Listener"
+    },
+    "structural":true,
+    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+  },
+  "type":"interface Listener<TFields>",
+  "reasons":[],
+  "loc":{
+    "source":"import_lib_named.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":22,"offset":32}
+  },
+  "path":"import_lib_named.js",
+  "line":3,
+  "endline":3,
+  "start":15,
+  "end":22
+}
+import_lib_named.js:3:27 (--expand-json-output) = {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{
+      "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+      "name":"Listener"
+    },
+    "structural":true,
+    "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+  },
+  "type":"interface Listener<TFields>",
+  "reasons":[],
+  "loc":{
+    "source":"import_lib_named.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":27,"offset":36},
+    "end":{"line":3,"column":36,"offset":46}
+  },
+  "path":"import_lib_named.js",
+  "line":3,
+  "endline":3,
+  "start":27,
+  "end":36
 }
 interface.js:3:12 = {
   "type":"interface IA",
@@ -1456,7 +1646,7 @@ declare_class.js:3:15 = {
   "end":15
 }
 mixed.js:18:17 = {
-  "type":"A | B",
+  "type":"AB",
   "reasons":[],
   "loc":{
     "source":"mixed.js",
@@ -1890,6 +2080,51 @@ object.js:35:1 = {
   "start":1,
   "end":6
 }
+object-resolution.js:5:2 = {
+  "type":"{|+p: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"object-resolution.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":2,"offset":65},
+    "end":{"line":5,"column":3,"offset":67}
+  },
+  "path":"object-resolution.js",
+  "line":5,
+  "endline":5,
+  "start":2,
+  "end":3
+}
+object-resolution.js:10:2 = {
+  "type":"{q: string}",
+  "reasons":[],
+  "loc":{
+    "source":"object-resolution.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":2,"offset":172},
+    "end":{"line":10,"column":5,"offset":176}
+  },
+  "path":"object-resolution.js",
+  "line":10,
+  "endline":10,
+  "start":2,
+  "end":5
+}
+object-resolution.js:13:5 = {
+  "type":"{p?: number, q?: string}",
+  "reasons":[],
+  "loc":{
+    "source":"object-resolution.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":5,"offset":225},
+    "end":{"line":13,"column":10,"offset":231}
+  },
+  "path":"object-resolution.js",
+  "line":13,
+  "endline":13,
+  "start":5,
+  "end":10
+}
 optional.js:4:10 = {
   "type":"void | string",
   "reasons":[],
@@ -2161,7 +2396,7 @@ predicates.js - if (Array.isArray(y.FOO)): {
   "end":23
 }
 react_component.js:3:9 = {
-  "type":"{|Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, ChildrenArray: type ChildrenArray<+T> = Array<ChildrenArray<T>> | T, Component: class React$Component<Props, State = void>, ComponentType: type ComponentType<P> = React$ComponentType<P>, DOM: any, Element: type Element<+C> = React$Element<C>, ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, ElementProps: type ElementProps<C> = React$ElementProps<C>, ElementRef: type ElementRef<C> = React$ElementRef<C>, ElementType: type ElementType = React$ElementType, Fragment: ({children: React$Node}) => React$Node, Key: type Key = React$Key, Node: type Node = React$Node, Portal: type Portal = React$Portal, PropTypes: ReactPropTypes, PureComponent: class React$PureComponent<Props, State = void>, Ref: type Ref<C> = React$Ref<C>, StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, cloneElement: React$CloneElement, createClass: React$CreateClass, createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, createElement: React$CreateElement, createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +Fragment: ({children: React$Node}) => React$Node, +PropTypes: {any: React$PropType$Primitive<any>, array: React$PropType$Primitive<Array<any>>, arrayOf: React$PropType$ArrayOf, bool: React$PropType$Primitive<boolean>, element: React$PropType$Primitive<any>, func: React$PropType$Primitive<Function>, instanceOf: React$PropType$ArrayOf, node: React$PropType$Primitive<any>, number: React$PropType$Primitive<number>, object: React$PropType$Primitive<Object>, objectOf: React$PropType$dbjectOf, oneOf: React$PropType$OneOf, oneOfType: React$PropType$OneOfType, shape: React$PropType$Shape, string: React$PropType$Primitive<string>}, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +isValidElement: (element: any) => boolean, +version: string|}, isValidElement: (element: any) => boolean, version: string|}",
+  "type":"{|Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T, Component: class React$Component<Props, State = void>, ComponentType: type ComponentType<P> = React$ComponentType<P>, DOM: any, Element: type Element<+C> = React$Element<C>, ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, ElementProps: type ElementProps<C> = React$ElementProps<C>, ElementRef: type ElementRef<C> = React$ElementRef<C>, ElementType: type ElementType = React$ElementType, Fragment: ({children: React$Node}) => React$Node, Key: type Key = React$Key, Node: type Node = React$Node, Portal: type Portal = React$Portal, PropTypes: ReactPropTypes, PureComponent: class React$PureComponent<Props, State = void>, Ref: type Ref<C> = React$Ref<C>, StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, cloneElement: React$CloneElement, createClass: React$CreateClass, createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, createElement: React$CreateElement, createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +Fragment: ({children: React$Node}) => React$Node, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +isValidElement: (element: any) => boolean, +version: string|}, isValidElement: (element: any) => boolean, version: string|}",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -2191,7 +2426,7 @@ react_component.js:13:33 = {
   "end":37
 }
 react_component.js:18:17 = {
-  "type":"{|enabled: boolean|}",
+  "type":"{|enabled: boolean|} | State",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -2204,6 +2439,119 @@ react_component.js:18:17 = {
   "endline":18,
   "start":14,
   "end":18
+}
+react_component.js:31:7 = {
+  "expanded_type":{
+    "kind":"Fun",
+    "typeParams":null,
+    "paramTypes":[
+      {
+        "kind":"Obj",
+        "exact":false,
+        "frozen":false,
+        "props":[
+          {
+            "kind":"NamedProp",
+            "prop":{
+              "name":"children",
+              "prop":{
+                "kind":"field",
+                "type":{
+                  "kind":"Generic",
+                  "type":{
+                    "provenance":{"kind":"Library","loc":"[LIB] react.js:13:5,20:24"},
+                    "name":"React$Node"
+                  },
+                  "structural":false
+                },
+                "polarity":"Neutral",
+                "optional":false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "paramNames":["_"],
+    "restParam":null,
+    "returnType":{
+      "kind":"Generic",
+      "type":{
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:13:5,20:24"},
+        "name":"React$Node"
+      },
+      "structural":false
+    }
+  },
+  "type":"({children: React$Node}) => React$Node",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":7,"offset":435},
+    "end":{"line":31,"column":14,"offset":443}
+  },
+  "path":"react_component.js",
+  "line":31,
+  "endline":31,
+  "start":7,
+  "end":14
+}
+react_component.js:32:13 = {
+  "expanded_type":{
+    "kind":"Generic",
+    "typeArgs":[{"kind":"Num"}],
+    "type":{
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:236:42-63"},
+      "name":"ComponentType"
+    },
+    "structural":false
+  },
+  "type":"ComponentType<number>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":13,"offset":456},
+    "end":{"line":32,"column":20,"offset":464}
+  },
+  "path":"react_component.js",
+  "line":32,
+  "endline":32,
+  "start":13,
+  "end":20
+}
+react_component.js:32:29 = {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:236:42-63"},
+      "name":"ComponentType"
+    },
+    "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}],
+    "body":{
+      "kind":"Generic",
+      "typeArgs":[{"kind":"Bound","bound":"P"}],
+      "type":{
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:155:5,156:38"},
+        "name":"React$ComponentType"
+      },
+      "structural":false
+    }
+  },
+  "type":"type ComponentType<P> = React$ComponentType<P>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":29,"offset":472},
+    "end":{"line":32,"column":41,"offset":485}
+  },
+  "path":"react_component.js",
+  "line":32,
+  "endline":32,
+  "start":29,
+  "end":41
 }
 react.js:2:7 = {
   "type":"React$CreateElement",
@@ -2326,7 +2674,7 @@ recursive.js:58:1 = {
   "end":1
 }
 recursive.js:60:6 = {
-  "type":"type CA<+T> = Array<CA<T>>",
+  "type":"type CA<+T> = $ReadOnlyArray<CA<T>>",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -2341,7 +2689,7 @@ recursive.js:60:6 = {
   "end":7
 }
 recursive.js:60:31 = {
-  "type":"type CA<+T> = Array<CA<T>>",
+  "type":"type CA<+T> = $ReadOnlyArray<CA<T>>",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -2910,6 +3258,21 @@ opaque.js:21:28 = {
   "start":25,
   "end":34
 }
+opaque.js:24:7 = {
+  "type":"Opaque",
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":7,"offset":538},
+    "end":{"line":24,"column":7,"offset":539}
+  },
+  "path":"opaque.js",
+  "line":24,
+  "endline":24,
+  "start":7,
+  "end":7
+}
 optional_chaining.js:16:7 = {
   "type":"void | number",
   "reasons":[],
@@ -2984,4 +3347,304 @@ optional_chaining.js:16:24 = {
   "endline":16,
   "start":24,
   "end":26
+}
+type-alias.js:3:6 = {
+  "type":"type A = empty",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":6,"offset":15},
+    "end":{"line":3,"column":6,"offset":16}
+  },
+  "path":"type-alias.js",
+  "line":3,
+  "endline":3,
+  "start":6,
+  "end":6
+}
+type-alias.js:4:6 = {
+  "type":"type B = B | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":6,"offset":27},
+    "end":{"line":4,"column":6,"offset":28}
+  },
+  "path":"type-alias.js",
+  "line":4,
+  "endline":4,
+  "start":6,
+  "end":6
+}
+type-alias.js:5:6 = {
+  "type":"type C = A",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":6,"offset":46},
+    "end":{"line":5,"column":6,"offset":47}
+  },
+  "path":"type-alias.js",
+  "line":5,
+  "endline":5,
+  "start":6,
+  "end":6
+}
+type-alias.js:6:6 = {
+  "type":"type D = {x: number}",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":6,"offset":58},
+    "end":{"line":6,"column":6,"offset":59}
+  },
+  "path":"type-alias.js",
+  "line":6,
+  "endline":6,
+  "start":6,
+  "end":6
+}
+type-alias.js:7:6 = {
+  "type":"type E = $Exact<D>",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":6,"offset":82},
+    "end":{"line":7,"column":6,"offset":83}
+  },
+  "path":"type-alias.js",
+  "line":7,
+  "endline":7,
+  "start":6,
+  "end":6
+}
+type-alias.js:7:6 (--expand-type-aliases) = {
+  "type":"type E = {|x: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":6,"offset":82},
+    "end":{"line":7,"column":6,"offset":83}
+  },
+  "path":"type-alias.js",
+  "line":7,
+  "endline":7,
+  "start":6,
+  "end":6
+}
+type-alias.js:8:6 = {
+  "type":"type F = ?D",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":6,"offset":102},
+    "end":{"line":8,"column":6,"offset":103}
+  },
+  "path":"type-alias.js",
+  "line":8,
+  "endline":8,
+  "start":6,
+  "end":6
+}
+type-alias.js:12:12 {
+  "type":"P<string>",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":12,"offset":188},
+    "end":{"line":12,"column":12,"offset":189}
+  },
+  "path":"type-alias.js",
+  "line":12,
+  "endline":12,
+  "start":12,
+  "end":12
+}
+type-alias.js:12:29 {
+  "type":"{t: string}",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":29,"offset":205},
+    "end":{"line":12,"column":29,"offset":206}
+  },
+  "path":"type-alias.js",
+  "line":12,
+  "endline":12,
+  "start":29,
+  "end":29
+}
+type-alias.js:15:8 {
+  "type":"type A = X",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":8,"offset":234},
+    "end":{"line":15,"column":8,"offset":235}
+  },
+  "path":"type-alias.js",
+  "line":15,
+  "endline":15,
+  "start":8,
+  "end":8
+}
+type-alias.js:16:8 {
+  "type":"type B = B | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":8,"offset":248},
+    "end":{"line":16,"column":8,"offset":249}
+  },
+  "path":"type-alias.js",
+  "line":16,
+  "endline":16,
+  "start":8,
+  "end":8
+}
+type-alias.js:17:8 {
+  "type":"type C = A",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":8,"offset":269},
+    "end":{"line":17,"column":8,"offset":270}
+  },
+  "path":"type-alias.js",
+  "line":17,
+  "endline":17,
+  "start":8,
+  "end":8
+}
+type-alias.js:18:8 {
+  "type":"type D = {x: X}",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":8,"offset":283},
+    "end":{"line":18,"column":8,"offset":284}
+  },
+  "path":"type-alias.js",
+  "line":18,
+  "endline":18,
+  "start":8,
+  "end":8
+}
+type-alias.js:19:8 {
+  "type":"type E = $Exact<X>",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":8,"offset":304},
+    "end":{"line":19,"column":8,"offset":305}
+  },
+  "path":"type-alias.js",
+  "line":19,
+  "endline":19,
+  "start":8,
+  "end":8
+}
+type-alias.js:20:8 {
+  "type":"type F = ?X",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":8,"offset":326},
+    "end":{"line":20,"column":8,"offset":327}
+  },
+  "path":"type-alias.js",
+  "line":20,
+  "endline":20,
+  "start":8,
+  "end":8
+}
+type-alias.js:24:6 {
+  "type":"type H = number | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":6,"offset":364},
+    "end":{"line":24,"column":6,"offset":365}
+  },
+  "path":"type-alias.js",
+  "line":24,
+  "endline":24,
+  "start":6,
+  "end":6
+}
+type-alias.js:25:6 {
+  "type":"type I = string | number | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":25,"column":6,"offset":384},
+    "end":{"line":25,"column":6,"offset":385}
+  },
+  "path":"type-alias.js",
+  "line":25,
+  "endline":25,
+  "start":6,
+  "end":6
+}
+type-alias.js:27:6 {
+  "type":"type K = (<X>(x: X) => void) | number | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":27,"column":6,"offset":459},
+    "end":{"line":27,"column":6,"offset":460}
+  },
+  "path":"type-alias.js",
+  "line":27,
+  "endline":27,
+  "start":6,
+  "end":6
+}
+type-alias.js:29:6 {
+  "type":"type M<Z> = (<X>(x: X, y: Z) => void) | number | Z | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":29,"column":6,"offset":536},
+    "end":{"line":29,"column":6,"offset":537}
+  },
+  "path":"type-alias.js",
+  "line":29,
+  "endline":29,
+  "start":6,
+  "end":6
+}
+type-alias.js:31:6 {
+  "type":"type O = {x: ({x: N<number>} | null)} | null",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":6,"offset":594},
+    "end":{"line":31,"column":6,"offset":595}
+  },
+  "path":"type-alias.js",
+  "line":31,
+  "endline":31,
+  "start":6,
+  "end":6
 }

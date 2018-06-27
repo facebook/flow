@@ -50,8 +50,9 @@ module TestID = struct
   let run f a =
     let test_id = current () in
     _current := Some (mk_id ());
-    f a;
-    _current := test_id
+    let b = f a in
+    _current := test_id;
+    b
 
 end
 
@@ -130,7 +131,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * reason_desc
+  | RTypeAlias of string * bool (* trust in normalization *) * reason_desc
   | ROpaqueType of string
   | RTypeParam of string * reason_desc * Loc.t
   | RTypeof of string
@@ -154,7 +155,10 @@ type reason_desc =
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
-  | RNamedImportedType of string
+  | RNamedImportedType of string (* module *) * string (* local name *)
+  | RImportStarType of string
+  | RImportStarTypeOf of string
+  | RImportStar of string
   | RDefaultImportedType of string * string
   | RCode of string
   | RCustom of string
@@ -482,7 +486,7 @@ let rec string_of_desc = function
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
   | RType x -> spf "`%s`" (prettify_react_util x)
-  | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
+  | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _, _) -> spf "`%s`" x
   | RTypeof x -> spf "`typeof %s`" x
@@ -516,7 +520,10 @@ let rec string_of_desc = function
     spf "undefined. Did you forget to declare %s?" (string_of_desc d)
   | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
-  | RNamedImportedType m -> spf "Named import from module `%s`" m
+  | RNamedImportedType (m, _) -> spf "Named import from module `%s`" m
+  | RImportStarType n ->  spf "import type * as %s" n
+  | RImportStarTypeOf n -> spf "import typeof * as %s" n
+  | RImportStar n -> spf "import * as %s" n
   | RCode x -> "`" ^ x ^ "`"
   | RDefaultImportedType (_, m) -> spf "Default import from `%s`" m
   | RCustom x -> x
@@ -601,7 +608,7 @@ let dump_reason ?(strip_root=None) r =
 
 let desc_of_reason =
   let rec loop = function
-  | RTypeAlias (_, desc)
+  | RTypeAlias (_, _, desc)
   | RPolyTest (_, desc)
     -> loop desc
   | desc
@@ -1198,6 +1205,9 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RFieldInitializer _
 | RUntypedModule _
 | RNamedImportedType _
+| RImportStarType _
+| RImportStarTypeOf _
+| RImportStar _
 | RDefaultImportedType _
 | RCode _
 | RCustom _
@@ -1248,3 +1258,7 @@ let is_scalar_reason r =
 
 let is_array_reason r =
   classification_of_reason r = `Array
+
+let invalidate_rtype_alias = function
+  | RTypeAlias (name, _, desc) -> RTypeAlias (name, false, desc)
+  | desc -> desc
