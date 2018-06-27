@@ -960,10 +960,11 @@ let run cx trace ~use_op reason_op l u
         class_id = 0;
         type_args = SMap.empty;
         arg_polarities = SMap.empty;
-        fields_tmap = Context.make_property_map cx props;
-        initialized_field_names = SSet.empty;
-        initialized_static_field_names = SSet.empty;
-        methods_tmap = Context.make_property_map cx SMap.empty;
+        (* TODO: props are actually installed on the prototype *)
+        own_props = Context.make_property_map cx props;
+        proto_props = Context.make_property_map cx SMap.empty;
+        initialized_fields = SSet.empty;
+        initialized_static_fields = SSet.empty;
         inst_call_t = None;
         has_unknown_react_mixins = spec.unknown_mixins <> [];
         structural = false;

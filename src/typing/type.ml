@@ -910,11 +910,11 @@ module rec TypeTerm : sig
     class_id: ident;
     type_args: (reason * t) SMap.t;
     arg_polarities: polarity SMap.t;
-    fields_tmap: Properties.id;
-    initialized_field_names: SSet.t;
-    initialized_static_field_names: SSet.t;
-    methods_tmap: Properties.id;
+    own_props: Properties.id;
+    proto_props: Properties.id;
     inst_call_t: int option;
+    initialized_fields: SSet.t;
+    initialized_static_fields: SSet.t;
     has_unknown_react_mixins: bool;
     structural: bool;
   }

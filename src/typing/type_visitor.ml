@@ -742,14 +742,14 @@ class ['a] t = object(self)
 
   method private inst_type cx pole acc i =
     let {
-      arg_polarities;
-      type_args;
-      fields_tmap;
-      methods_tmap;
-      inst_call_t;
       class_id = _;
-      initialized_field_names = _;
-      initialized_static_field_names = _;
+      type_args;
+      arg_polarities;
+      own_props;
+      proto_props;
+      inst_call_t;
+      initialized_fields = _;
+      initialized_static_fields = _;
       has_unknown_react_mixins = _;
       structural = _;
     } = i in
@@ -757,8 +757,8 @@ class ['a] t = object(self)
       let pole' = SMap.find_unsafe x arg_polarities in
       self#type_ cx (P.mult (pole, pole')) acc t
     ) type_args acc in
-    let acc = self#props cx pole acc fields_tmap in
-    let acc = self#props cx pole acc methods_tmap in
+    let acc = self#props cx pole acc own_props in
+    let acc = self#props cx pole acc proto_props in
     let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
     acc
 

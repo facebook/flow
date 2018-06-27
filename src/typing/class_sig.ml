@@ -348,13 +348,13 @@ let elements cx ~tparams_map ?constructor s =
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
-  let initialized_field_names = SMap.fold (fun x (_, _, field) acc ->
+  let initialized_fields = SMap.fold (fun x (_, _, field) acc ->
     match field with
     | Annot _ -> acc
     | Infer _ -> SSet.add x acc
   ) s.fields SSet.empty in
 
-  initialized_field_names, fields, methods, call
+  initialized_fields, fields, methods, call
 
 let arg_polarities x =
   List.fold_left Type.(fun acc tp ->
@@ -390,7 +390,7 @@ let statictype cx ~tparams_map x =
   | DefT (_, ObjT o) -> inited_fields, o
   | _ -> failwith "statics must be an ObjT"
 
-let insttype cx ~tparams_map ~initialized_static_field_names s =
+let insttype cx ~tparams_map ~initialized_static_fields s =
   let constructor =
     let ts = List.rev_map (fun (loc, t) -> loc, Func_sig.methodtype cx t) s.constructor in
     match ts with
@@ -402,16 +402,17 @@ let insttype cx ~tparams_map ~initialized_static_field_names s =
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some (loc0, t)
   in
-  let inited_fields, fields, methods, call = elements cx ~tparams_map ?constructor s.instance in
+  let initialized_fields, fields, methods, call =
+    elements cx ~tparams_map ?constructor s.instance in
   { Type.
     class_id = s.id;
     type_args = SMap.map (fun t -> (Type.reason_of_t t, t)) s.tparams_map;
     arg_polarities = arg_polarities s;
-    fields_tmap = Context.make_property_map cx fields;
-    initialized_field_names = inited_fields;
-    initialized_static_field_names;
-    methods_tmap = Context.make_property_map cx methods;
+    own_props = Context.make_property_map cx fields;
+    proto_props = Context.make_property_map cx methods;
     inst_call_t = Option.map call ~f:(Context.make_call_prop cx);
+    initialized_fields;
+    initialized_static_fields;
     has_unknown_react_mixins = false;
     structural = structural s;
   }
@@ -498,8 +499,8 @@ let thistype cx x =
   | Interface _ -> []
   | Class {implements; _} -> implements
   in
-  let initialized_static_field_names, static_objtype = statictype cx ~tparams_map x in
-  let insttype = insttype cx ~tparams_map:tparams_map_with_this ~initialized_static_field_names x in
+  let initialized_static_fields, static_objtype = statictype cx ~tparams_map x in
+  let insttype = insttype cx ~tparams_map:tparams_map_with_this ~initialized_static_fields x in
   let open Type in
   let static = DefT (sreason, ObjT static_objtype) in
   DefT (reason, InstanceT (static, super, implements, insttype))
@@ -525,8 +526,8 @@ let check_super cx def_reason x =
   let reason = x.instance.reason in
   let open Type in
   let tparams_map = x.tparams_map in
-  let initialized_static_field_names, static_objtype = statictype cx ~tparams_map x in
-  let insttype = insttype cx ~tparams_map ~initialized_static_field_names x in
+  let initialized_static_fields, static_objtype = statictype cx ~tparams_map x in
+  let insttype = insttype cx ~tparams_map ~initialized_static_fields x in
   let super = supertype cx x in
   let use_op = Op (ClassExtendsCheck {
     def = def_reason;

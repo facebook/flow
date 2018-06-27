@@ -968,12 +968,12 @@ module ResolvableTypeJob = struct
       collect_of_type ?log_unresolved cx reason acc elemt
     | DefT (_, ArrT EmptyAT) -> acc
     | DefT (_, InstanceT (static, super, _,
-        { class_id; type_args; fields_tmap; methods_tmap; inst_call_t; _ })) ->
+        { class_id; type_args; own_props; proto_props; inst_call_t; _ })) ->
       let ts = if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ (_, t) ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
-        (Context.find_props cx fields_tmap)
-        (Context.find_props cx methods_tmap)
+        (Context.find_props cx own_props)
+        (Context.find_props cx proto_props)
       in
       let ts = SMap.fold (fun _ p ts ->
         Property.fold_t (fun ts t -> t::ts) ts p
@@ -1909,7 +1909,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * InstanceT CommonJS export values have their properties turned into named
      * exports
      *)
-    | DefT (_, InstanceT(_, _, _, {fields_tmap; methods_tmap; _;})),
+    | DefT (_, InstanceT(_, _, _, {own_props; proto_props; _;})),
       CJSExtractNamedExportsT(
         reason, (module_t_reason, exporttypes, is_strict), t_out
       ) ->
@@ -1922,21 +1922,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         |> Properties.extract_named_exports
       in
 
-      (* Copy fields *)
+      (* Copy own props *)
       let module_t = Tvar.mk_where cx reason (fun t ->
         rec_flow cx trace (module_t, ExportNamedT(
           reason,
           false, (* skip_dupes *)
-          extract_named_exports fields_tmap,
+          extract_named_exports own_props,
           t
         ))
       ) in
 
-      (* Copy methods *)
+      (* Copy proto props *)
+      (* TODO: own props should take precedence *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
         false, (* skip_dupes *)
-        extract_named_exports methods_tmap,
+        extract_named_exports proto_props,
         t_out
       ))
 
@@ -2871,9 +2872,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_o, InstanceT (_, _, _, instance)),
       HasOwnPropT(use_op, reason_op, Literal (_, x)) ->
-      let fields_tmap = Context.find_props cx instance.fields_tmap in
-      let methods_tmap = Context.find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let fields = SMap.union own_props proto_props in
       (match SMap.get x fields with
       | Some _ -> ()
       | None ->
@@ -2905,8 +2906,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys) ->
       (* methods are not enumerable, so only walk fields *)
-      let fields_tmap = Context.find_props cx instance.fields_tmap in
-      fields_tmap |> SMap.iter (fun x _ ->
+      let own_props = Context.find_props cx instance.own_props in
+      own_props |> SMap.iter (fun x _ ->
         let reason = replace_reason_const (RStringLit x) reason_op in
         let t = DefT (reason, StrT (Literal (None, x))) in
         rec_flow cx trace (t, keys)
@@ -2970,9 +2971,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let values_l = union_of_ts reason ts in
       rec_flow_t cx trace (values_l, values)
 
-    | DefT (_, InstanceT (_, _, _, { fields_tmap = tmap; _; })), GetValuesT (reason, values) ->
+    | DefT (_, InstanceT (_, _, _, { own_props; _ })), GetValuesT (reason, values) ->
       (* Find all of the props. *)
-      let props = Context.find_props cx tmap in
+      let props = Context.find_props cx own_props in
       (* Get the read type for all readable properties and discard the rest. *)
       let ts = SMap.fold (fun key prop ts ->
         match Property.read_t prop with
@@ -4297,8 +4298,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* InstanceT -> ObjT *)
 
     | DefT (lreason, InstanceT (_, super, _, {
-        fields_tmap = lflds;
-        methods_tmap = lmethods;
+        own_props = lown;
+        proto_props = lproto;
         inst_call_t = lcall; _ })),
       UseT (use_op, (DefT (ureason, ObjT {
         props_tmap = uflds;
@@ -4307,9 +4308,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Type_inference_hooks_js.dispatch_instance_to_obj_hook cx l u_deft;
 
       let lflds =
-        let fields_tmap = Context.find_props cx lflds in
-        let methods_tmap = Context.find_props cx lmethods in
-        SMap.union fields_tmap methods_tmap
+        let own_props = Context.find_props cx lown in
+        let proto_props = Context.find_props cx lproto in
+        SMap.union own_props proto_props
       in
 
       Option.iter ucall ~f:(fun ucall ->
@@ -4756,9 +4757,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (lreason, InstanceT (_, super, _, instance)),
       LookupT (reason_op, kind, try_ts_on_failure, (Named (_, x) as propref), action) ->
-      let fields_pmap = Context.find_props cx instance.fields_tmap in
-      let methods_pmap = Context.find_props cx instance.methods_tmap in
-      let pmap = SMap.union fields_pmap methods_pmap in
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let pmap = SMap.union own_props proto_props in
       (match SMap.get x pmap with
       | None ->
         (* If there are unknown mixins, the lookup should become nonstrict, as
@@ -4787,9 +4788,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_c, InstanceT (_, super, _, instance)),
       SetPropT (use_op, reason_op, Named (reason_prop, x), wr_ctx, tin, prop_t) ->
-      let fields_tmap = Context.find_props cx instance.fields_tmap in
-      let methods_tmap = Context.find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let fields = SMap.union own_props proto_props in
       let strict = Strict reason_c in
       set_prop cx ~wr_ctx trace ~use_op reason_prop reason_op strict l super x
         fields tin prop_t;
@@ -4835,9 +4836,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_c, InstanceT (_, super, _, instance)),
       GetPropT (use_op, reason_op, Named (reason_prop, x), tout) ->
-      let fields_tmap = Context.find_props cx instance.fields_tmap in
-      let methods_tmap = Context.find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let fields = SMap.union own_props proto_props in
       let strict =
         if instance.has_unknown_react_mixins then NonstrictReturning (None, None)
         else Strict reason_c
@@ -4881,15 +4882,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x),
         funtype, prop_t)
       -> (* TODO: closure *)
-      let fields_tmap = Context.find_props cx instance.fields_tmap in
-      let methods_tmap = Context.find_props cx instance.methods_tmap in
-      let methods = SMap.union fields_tmap methods_tmap in
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let props = SMap.union own_props proto_props in
       let funt = Tvar.mk cx reason_lookup in
       let strict =
         if instance.has_unknown_react_mixins then NonstrictReturning (None, None)
         else Strict reason_c
       in
-      get_prop cx trace ~use_op reason_prop reason_lookup strict l super x methods funt;
+      get_prop cx trace ~use_op reason_prop reason_lookup strict l super x props funt;
       Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (funt, prop_t)) prop_t;
 
       (* suppress ops while calling the function. if `funt` is a `FunT`, then
@@ -5008,13 +5009,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (to_obj, t)
       end
 
-    | DefT (lreason, InstanceT (_, _, _, { fields_tmap; methods_tmap; _ })),
+    | DefT (lreason, InstanceT (_, _, _, { own_props; proto_props; _ })),
       ObjAssignFromT (reason_op, to_obj, t, ObjAssign _) ->
-      let fields_pmap = Context.find_props cx fields_tmap in
-      let methods_pmap = Context.find_props cx methods_tmap in
-      let pmap = SMap.union fields_pmap methods_pmap in
+      let own_props = Context.find_props cx own_props in
+      let proto_props = Context.find_props cx proto_props in
+      let props = SMap.union own_props proto_props in
       let props_to_skip = ["$key"; "$value"] in
-      pmap |> SMap.iter (fun x p ->
+      props |> SMap.iter (fun x p ->
         if not (List.mem x props_to_skip) then (
           match Property.read_t p with
           | Some t ->
@@ -5106,8 +5107,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (super, ReposLowerT (reason, false, u))
       ) in
 
-      (* Spread fields from the instance into another object *)
-      let props = Context.find_props cx insttype.fields_tmap in
+      (* Spread own props from the instance into another object *)
+      let props = Context.find_props cx insttype.own_props in
       let props = List.fold_left (fun props x -> SMap.remove x props) props xs in
       let proto = ObjProtoT reason_op in
       let obj_inst = Obj_type.mk_with_proto cx reason_op ~props proto in
@@ -5740,14 +5741,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* TODO: similar concern as above *)
     | DefT (reason, FunT (statics, _, _)),
       UseT (use_op, DefT (reason_inst, InstanceT (_, _, _, {
-        fields_tmap;
+        own_props;
         structural = true;
         _;
       }))) ->
       if not
         (quick_error_fun_as_obj cx trace ~use_op reason statics reason_inst
           (SMap.filter (fun x _ -> x = "constructor")
-            (Context.find_props cx fields_tmap)))
+            (Context.find_props cx own_props)))
       then
         rec_flow cx trace (statics, u)
 
@@ -5761,15 +5762,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjProtoT _ | FunProtoT _ | DefT (_, NullT)), ImplementsT _ -> ()
 
     | DefT (reason_inst, InstanceT (_, super, _, {
-        fields_tmap;
-        methods_tmap;
+        own_props;
+        proto_props;
         inst_call_t;
         structural = true;
         _;
       })),
       ImplementsT (use_op, t) ->
       structural_subtype cx trace ~use_op t reason_inst
-        (fields_tmap, methods_tmap, inst_call_t);
+        (own_props, proto_props, inst_call_t);
       rec_flow cx trace (super,
         ReposLowerT (reason_inst, false, ImplementsT (use_op, t)))
 
@@ -5791,9 +5792,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       SuperT (use_op, reason, Derived {instance=di; statics=ds}) ->
       let check_super l = check_super cx trace ~use_op reason ureason l in
       begin (* instance *)
-        let {fields_tmap; methods_tmap; _} = di in
-        Context.iter_props cx fields_tmap (check_super l);
-        Context.iter_props cx methods_tmap (fun x p ->
+        let {own_props; proto_props; _} = di in
+        Context.iter_props cx own_props (check_super l);
+        Context.iter_props cx proto_props (fun x p ->
           if inherited_method x then check_super l x p
         )
       end;
@@ -6279,14 +6280,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, NullT),
       ExtendsUseT (use_op, _, [], l, DefT (reason_inst, InstanceT (_, super, _, {
-        fields_tmap;
-        methods_tmap;
+        own_props;
+        proto_props;
         inst_call_t;
         structural = true;
         _;
       }))) ->
       structural_subtype cx trace ~use_op l reason_inst
-        (fields_tmap, methods_tmap, inst_call_t);
+        (own_props, proto_props, inst_call_t);
       rec_flow cx trace (l, UseT (use_op, super))
 
     | DefT (_, NullT),
@@ -7127,13 +7128,15 @@ and inherited_method x = x <> "constructor"
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
+(* TODO: own_props/proto_props is misleading, since they come from interfaces,
+   which don't have an own/proto distinction. *)
 and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
-  (fields_pmap, methods_pmap, call_id) =
+  (own_props, proto_props, call_id) =
   let lreason = reason_of_t lower in
-  let fields_pmap = Context.find_props cx fields_pmap in
-  let methods_pmap = Context.find_props cx methods_pmap in
+  let own_props = Context.find_props cx own_props in
+  let proto_props = Context.find_props cx proto_props in
   let call_t = Option.map call_id ~f:(Context.find_call cx) in
-  fields_pmap |> SMap.iter (fun s p ->
+  own_props |> SMap.iter (fun s p ->
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
       lower = lreason;
@@ -7162,7 +7165,7 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
         LookupT (reason_struct, Strict lreason, [], propref,
           LookupProp (use_op, p)))
   );
-  methods_pmap |> SMap.iter (fun s p ->
+  proto_props |> SMap.iter (fun s p ->
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
       lower = lreason;
@@ -7501,8 +7504,8 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, InstanceT (static, super, _, instance)) ->
     check_polarity cx ?trace polarity static;
     check_polarity cx ?trace polarity super;
-    check_polarity_propmap cx ?trace polarity instance.fields_tmap;
-    check_polarity_propmap cx ?trace ~skip_ctor:true polarity instance.methods_tmap
+    check_polarity_propmap cx ?trace polarity instance.own_props;
+    check_polarity_propmap cx ?trace ~skip_ctor:true polarity instance.proto_props
 
   | DefT (_, FunT (_, _, func)) ->
     let f = check_polarity cx ?trace (Polarity.inv polarity) in
@@ -9292,9 +9295,9 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         flow_sentinel sense props_tmap obj s
 
       (* instance.key ===/!== literal value *)
-      | DefT (_, InstanceT (_, _, _, { fields_tmap; _})) ->
+      | DefT (_, InstanceT (_, _, _, { own_props; _})) ->
         (* TODO: add test for sentinel test on implements *)
-        flow_sentinel sense fields_tmap obj s
+        flow_sentinel sense own_props obj s
 
       | DefT (_, IntersectionT rep) ->
         (* For an intersection of object types, try the test for each object
@@ -11787,8 +11790,8 @@ and object_kit =
     (* We take the fields from an InstanceT excluding methods (because methods
      * are always on the prototype). We also want to resolve fields from the
      * InstanceT's super class so we recurse. *)
-    | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
-      let resolve_tool = Super (interface_slice cx r fields_tmap, resolve_tool) in
+    | DefT (r, InstanceT (_, super, _, {own_props; _})) ->
+      let resolve_tool = Super (interface_slice cx r own_props, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     (* Statics of a class. TODO: This logic is unfortunately duplicated from the
      * top-level pattern matching against class lower bounds to object-like
@@ -11842,8 +11845,8 @@ and object_kit =
   in
 
   let super cx trace use_op reason resolve_tool tool tout acc = function
-    | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
-      let slice = interface_slice cx r fields_tmap in
+    | DefT (r, InstanceT (_, super, _, {own_props; _})) ->
+      let slice = interface_slice cx r own_props in
       let acc = intersect2 reason acc slice in
       let resolve_tool = Super (acc, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
@@ -12060,10 +12063,7 @@ end = struct
     | FailureNullishType -> FailureNullishType
     | FailureAnyType -> FailureAnyType
     | FailureUnhandledType t -> FailureUnhandledType t
-    | Success (DefT (_, InstanceT (_, super, _,
-                {fields_tmap = fields;
-                methods_tmap = methods;
-                _}))) ->
+    | Success (DefT (_, InstanceT (_, super, _, {own_props; proto_props; _}))) ->
         let members = SMap.fold (fun x p acc ->
           (* TODO: It isn't currently possible to return two types for a given
            * property in autocomplete, so for now we just return the getter
@@ -12078,14 +12078,15 @@ end = struct
                 (loc, t)
           in
           SMap.add x (loc, t) acc
-        ) (find_props cx fields) SMap.empty in
+        ) (find_props cx own_props) SMap.empty in
+        (* TODO: own props should take precedence *)
         let members = SMap.fold (fun x p acc ->
           match Property.read_t p with
           | Some t ->
               let loc = Property.read_loc p in
               SMap.add x (loc, t) acc
           | None -> acc
-        ) (find_props cx methods) members in
+        ) (find_props cx proto_props) members in
         let super_t = resolve_type cx super in
         let super_flds = extract_members_as_map cx super_t in
         Success (AugmentableSMap.augment super_flds ~with_bindings:members)
@@ -12253,43 +12254,43 @@ class assert_ground_visitor skip = object (self)
         );
         seen
       | DefT (_, InstanceT (static, _, _, i)) ->
-        let static_fields_id = match static with
+        let static_props_id = match static with
         | DefT (_, ObjT o) -> Some o.props_tmap
         | _ -> None
         in
-        let fields_refcnt =
-          try fst (Properties.Map.find_unsafe i.fields_tmap insts)
+        let own_refcnt =
+          try fst (Properties.Map.find_unsafe i.own_props insts)
           with Not_found -> 0
         in
-        let methods_refcnt =
-          try fst (Properties.Map.find_unsafe i.methods_tmap insts)
+        let proto_refcnt =
+          try fst (Properties.Map.find_unsafe i.proto_props insts)
           with Not_found -> 0
         in
-        let static_refcnt = Option.value_map static_fields_id ~default:0 ~f:(fun id ->
+        let static_refcnt = Option.value_map static_props_id ~default:0 ~f:(fun id ->
           try fst (Properties.Map.find_unsafe id insts)
           with Not_found -> 0
         ) in
-        insts <- Properties.Map.add i.fields_tmap (fields_refcnt+1, i.initialized_field_names) insts;
-        insts <- Properties.Map.add i.methods_tmap (methods_refcnt+1, SSet.empty) insts;
-        Option.iter static_fields_id (fun id ->
-          insts <- Properties.Map.add id (static_refcnt+1, i.initialized_static_field_names) insts
+        insts <- Properties.Map.add i.own_props (own_refcnt+1, i.initialized_fields) insts;
+        insts <- Properties.Map.add i.proto_props (proto_refcnt+1, SSet.empty) insts;
+        Option.iter static_props_id (fun id ->
+          insts <- Properties.Map.add id (static_refcnt+1, i.initialized_static_fields) insts
         );
         let seen = super#type_ cx pole seen t in
         insts <- (
-          if fields_refcnt = 0
-          then Properties.Map.remove i.fields_tmap insts
-          else Properties.Map.add i.fields_tmap (fields_refcnt, i.initialized_field_names) insts
+          if own_refcnt = 0
+          then Properties.Map.remove i.own_props insts
+          else Properties.Map.add i.own_props (own_refcnt, i.initialized_fields) insts
         );
         insts <- (
-          if methods_refcnt = 0
-          then Properties.Map.remove i.methods_tmap insts
-          else Properties.Map.add i.methods_tmap (fields_refcnt, SSet.empty) insts
+          if proto_refcnt = 0
+          then Properties.Map.remove i.proto_props insts
+          else Properties.Map.add i.proto_props (own_refcnt, SSet.empty) insts
         );
-        Option.iter static_fields_id (fun id ->
+        Option.iter static_props_id (fun id ->
           insts <- (
             if static_refcnt = 0
             then Properties.Map.remove id insts
-            else Properties.Map.add id (static_refcnt, i.initialized_static_field_names) insts
+            else Properties.Map.add id (static_refcnt, i.initialized_static_fields) insts
           )
         );
         seen

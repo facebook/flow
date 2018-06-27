@@ -294,11 +294,11 @@ class ['a] t = object(self)
       class_id;
       type_args;
       arg_polarities;
-      fields_tmap;
-      initialized_field_names;
-      initialized_static_field_names;
-      methods_tmap;
+      own_props;
+      proto_props;
       inst_call_t;
+      initialized_fields;
+      initialized_static_fields;
       has_unknown_react_mixins;
       structural
     } = i in
@@ -308,33 +308,33 @@ class ['a] t = object(self)
       if t == t' then x
       else (r, t')
     ) type_args in
-    let f_tmap = Context.find_props cx fields_tmap in
-    let f_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) f_tmap in
-    let fields_tmap' =
-      if f_tmap == f_tmap' then fields_tmap
-      else Context.make_property_map cx f_tmap' in
-    let m_tmap = Context.find_props cx methods_tmap in
-    let m_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) m_tmap in
-    let methods_tmap' =
-      if m_tmap == m_tmap' then methods_tmap
-      else Context.make_property_map cx m_tmap' in
+    let own_props' =
+      let map = Context.find_props cx own_props in
+      let map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) map in
+      if map == map' then own_props else Context.make_property_map cx map'
+    in
+    let proto_props' =
+      let map = Context.find_props cx proto_props in
+      let map' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) map in
+      if map == map' then proto_props else Context.make_property_map cx map'
+    in
     let inst_call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) inst_call_t in
     if (
       type_args == type_args' &&
-      methods_tmap == methods_tmap' &&
-      fields_tmap == fields_tmap' &&
-      inst_call_t = inst_call_t'
+      own_props == own_props' &&
+      proto_props == proto_props' &&
+      inst_call_t == inst_call_t'
     )
     then i
     else {
       class_id;
       type_args = type_args';
       arg_polarities;
-      fields_tmap = fields_tmap';
-      initialized_field_names;
-      initialized_static_field_names;
-      methods_tmap = methods_tmap';
+      own_props = own_props';
+      proto_props = proto_props';
       inst_call_t = inst_call_t';
+      initialized_fields;
+      initialized_static_fields;
       has_unknown_react_mixins;
       structural;
     }

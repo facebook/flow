@@ -1087,14 +1087,14 @@ and json_of_funcallarg_impl json_cx arg =
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Hh_json.(
-  let field_pmap = Context.find_props json_cx.cx insttype.fields_tmap in
-  let method_pmap = Context.find_props json_cx.cx insttype.methods_tmap in
+  let own_props = Context.find_props json_cx.cx insttype.own_props in
+  let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
     "classId", int_ insttype.class_id;
     "typeArgs", json_of_tmap json_cx (SMap.map snd insttype.type_args);
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
-    "fieldTypes", json_of_pmap json_cx field_pmap;
-    "methodTypes", json_of_pmap json_cx method_pmap;
+    "fieldTypes", json_of_pmap json_cx own_props;
+    "methodTypes", json_of_pmap json_cx proto_props;
     "mixins", JSON_Bool insttype.has_unknown_react_mixins;
     "structural", JSON_Bool insttype.structural;
   ]
