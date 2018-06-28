@@ -1,0 +1,48 @@
+
+Rename of an object property:
+{
+  "kind":"refactor-performed",
+  "edits":[
+    {
+      "oldRange":{
+        "source":"objects.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":1,"offset":10},
+        "end":{"line":13,"column":1,"offset":176}
+      },
+      "newText":"// @flow\n\nexport type Foo = {newName: string};\n\nfunction makeFoo(): Foo {\n  const bar = \"\";\n  return {newName: bar};\n}\n\nfunction takeFoo(x: Foo): string {\n  const {newName: bar} = x;\n  return bar;\n}\n"
+    }
+  ]
+}
+
+Rename of a local variable used in object shorthand:
+{
+  "kind":"refactor-performed",
+  "edits":[
+    {
+      "oldRange":{
+        "source":"objects.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":1,"offset":10},
+        "end":{"line":13,"column":1,"offset":176}
+      },
+      "newText":"// @flow\n\nexport type Foo = {bar: string};\n\nfunction makeFoo(): Foo {\n  const newName = \"\";\n  return {bar: newName};\n}\n\nfunction takeFoo(x: Foo): string {\n  const {bar} = x;\n  return bar;\n}\n"
+    }
+  ]
+}
+
+Rename of a local variable bound by destructuring shorthand:
+{
+  "kind":"refactor-performed",
+  "edits":[
+    {
+      "oldRange":{
+        "source":"objects.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":1,"offset":10},
+        "end":{"line":13,"column":1,"offset":176}
+      },
+      "newText":"// @flow\n\nexport type Foo = {bar: string};\n\nfunction makeFoo(): Foo {\n  const bar = \"\";\n  return {bar};\n}\n\nfunction takeFoo(x: Foo): string {\n  const {bar: newName} = x;\n  return newName;\n}\n"
+    }
+  ]
+}

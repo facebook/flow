@@ -421,6 +421,18 @@ let handle_ephemeral_unsafe
           ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
           |> respond;
           Lwt.return None
+      | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
+          let open ServerProt.Response in
+          let%lwt result =
+            Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+          in
+          let result =
+            result
+            |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
+          in
+          REFACTOR (result)
+          |> respond;
+          Lwt.return None
       | ServerProt.Request.STATUS (client_root, include_warnings) ->
           let genv = {genv with
             options = let open Options in {genv.options with
