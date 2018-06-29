@@ -152,7 +152,7 @@ let string_of_typecheck_status ~use_emoji = function
 | Finishing_typecheck _ ->
   spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
-let string_of_status ?(use_emoji=false) status =
+let string_of_status ?(use_emoji=false) ?(terse=false) status =
   let status_string = match status with
   | Starting_up ->
     spf "starting up%s" (render_emoji ~use_emoji ~pad:Before Sleeping_face)
@@ -169,7 +169,7 @@ let string_of_status ?(use_emoji=false) status =
   | Unknown ->
     spf "doing something%s" (render_emoji ~use_emoji ~pad:Before Panda_face)
   in
-  spf "Server is %s" status_string
+  spf "%s%s" (if terse then "" else "Server is ") status_string
 
 (* Transition function for the status state machine. Given the current status and the event,
  * pick a new status *)
@@ -261,3 +261,60 @@ let get_summary status =
   match status with
   | Typechecking (_mode, Finishing_typecheck summary) -> Some summary
   | _ -> None
+
+let log_of_summaries ~(root: Path.t) (summaries: summary list)
+  : FlowEventLogger.persistent_delay =
+  let open FlowEventLogger in
+  let init = {
+    init_duration = 0.0;
+    command_count = 0;
+    command_duration = 0.0;
+    command_worst = None;
+    command_worst_duration = None;
+    recheck_count = 0;
+    recheck_dependent_files = 0;
+    recheck_changed_files = 0;
+    recheck_duration = 0.0;
+    recheck_worst_duration = None;
+    recheck_worst_dependent_file_count = None;
+    recheck_worst_changed_file_count = None;
+    recheck_worst_cycle_leader = None;
+    recheck_worst_cycle_size = None;
+  } in
+  let f acc {duration; info} =
+    match info with
+    | InitSummary ->
+      let acc = { acc with
+        init_duration = acc.init_duration +. duration;
+      } in
+      acc
+    | CommandSummary cmd ->
+      let is_worst = match acc.command_worst_duration with None -> true | Some d -> duration >= d in
+      let acc = if not is_worst then acc else { acc with
+        command_worst = Some cmd;
+        command_worst_duration = Some duration;
+      } in
+      let acc = { acc with
+        command_count = acc.command_count + 1;
+        command_duration = acc.command_duration +. duration;
+      } in
+      acc
+    | RecheckSummary {dependent_file_count; changed_file_count; top_cycle} ->
+      let is_worst = match acc.recheck_worst_duration with None -> true | Some d -> duration >= d in
+      let acc = if not is_worst then acc else { acc with
+        recheck_worst_duration = Some duration;
+        recheck_worst_dependent_file_count = Some dependent_file_count;
+        recheck_worst_changed_file_count = Some changed_file_count;
+        recheck_worst_cycle_size = Option.map top_cycle ~f:(fun (_,size) -> size);
+        recheck_worst_cycle_leader = Option.map top_cycle
+          ~f:(fun (f,_) -> f |> File_key.to_string |> Files.relative_path (Path.to_string root));
+      } in
+      let acc = { acc with
+        recheck_count = acc.recheck_count + 1;
+        recheck_dependent_files = acc.recheck_dependent_files + dependent_file_count;
+        recheck_changed_files = acc.recheck_changed_files + changed_file_count;
+        recheck_duration = acc.recheck_duration +. duration;
+      } in
+      acc
+    in
+    Core_list.fold summaries ~init ~f

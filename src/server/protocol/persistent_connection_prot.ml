@@ -29,10 +29,10 @@ type metadata = {
 
   (* If handling the workitem resulted in error, what was that error? *)
   error_info: error_info option;
-  (* Once the workitem has been handling, how long did it take on the server? *)
-  profiling: Profiling_js.finished option;
-  (* and on the client? *)
-  client_profiling: Profiling_js.finished option;
+  (* If the workitem was handled on the server, how long did it take there? *)
+  server_profiling: Profiling_js.finished option;
+  (* and if it had work done on the client, how long there? *)
+  client_duration: float option;
   (* Did the handler for this workitem provide any extra data? *)
   extra_data: (string * Hh_json.json) list;
 }
@@ -52,16 +52,15 @@ let string_of_request = function
 | DidClose _ -> "didClose"
 | LspToServer _ -> "lspToServer"
 
-(* Whereas string_of_request returns a normalized description of the request, this returns a more
- * detailed description *)
-let denorm_string_of_request = function
-| Subscribe -> "subscribe"
-| Autocomplete (f, _) -> Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input f)
-| DidOpen files -> Printf.sprintf "didOpen %s" (String.concat " " (Nel.to_list files))
-| DidClose files -> Printf.sprintf "didClose %s" (String.concat " " (Nel.to_list files))
-| LspToServer (incoming, _) -> Printf.sprintf "lspToServer %s"
-    (Lsp_fmt.denorm_message_to_string incoming)
-
+let json_of_request = let open Hh_json in function
+| Subscribe -> JSON_Object ["method", JSON_String "subscribe"]
+| Autocomplete (f, _) -> JSON_Object ["method", JSON_String "autocomplete";
+    "file", JSON_String (File_input.filename_of_file_input f)]
+| DidOpen files -> JSON_Object ["method", JSON_String "didOpen";
+    "files", JSON_Array (files |> Nel.to_list |> List.map Hh_json.string_)]
+| DidClose files -> JSON_Object ["method", JSON_String "didClose";
+    "files", JSON_Array (files |> Nel.to_list |> List.map Hh_json.string_)]
+| LspToServer (_, metadata) -> metadata.start_json_truncated
 
 type response =
   | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}

@@ -50,6 +50,7 @@ val opt_string_to_json : string option -> json
 val opt_int_to_json : int option -> json
 
 val int_ : int -> json
+val float_ : float -> json
 val string_ : string -> json
 
 (** Types and functions for monadic API for traversing a JSON object. *)
