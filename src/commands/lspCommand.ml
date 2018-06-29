@@ -129,6 +129,7 @@ and connected_env = {
   c_ienv: initialized_env;
   c_conn: server_conn;
   c_server_status: ServerStatus.status * (FileWatcherStatus.status option);
+  c_recent_summaries: (float * ServerStatus.summary) list; (* newest at head of list *)
   c_about_to_exit_code: FlowExitStatus.t option;
   (* stateful handling of Errors+status from server... *)
   c_is_rechecking: bool;
@@ -495,6 +496,7 @@ let try_connect (env: disconnected_env) : state =
       c_diagnostics = SMap.empty;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
       c_outstanding_diagnostics = SSet.empty;
+      c_recent_summaries = [];
     } in
     (* send the initial messages to the server *)
     send_to_server new_env Persistent_connection_prot.Subscribe;
@@ -1442,7 +1444,15 @@ begin
   | Connected cenv, Server_message (Persistent_connection_prot.Please_hold status) ->
     let (server_status, watcher_status) = status in
     let c_server_status = (server_status, Some watcher_status) in
-    show_recheck_progress { cenv with c_server_status; }
+    (* We keep a log of typecheck summaries over the past 2mins. *)
+    let c_recent_summaries = cenv.c_recent_summaries in
+    let new_time = Unix.gettimeofday () in
+    let summary = ServerStatus.get_summary server_status in
+    let c_recent_summaries = Option.value_map summary ~default:c_recent_summaries ~f:(fun summary ->
+      (new_time, summary) :: cenv.c_recent_summaries
+        |> List.filter ~f:(fun (t,_) -> t >= new_time -. 120.0))
+    in
+    show_recheck_progress { cenv with c_server_status; c_recent_summaries; }
 
   | _, Server_message _ ->
     failwith (Printf.sprintf "Unexpected %s in state %s"
