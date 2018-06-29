@@ -169,12 +169,12 @@ let string_of_state (state: state) : string =
   | Post_shutdown -> "Post_shutdown"
 
 
-let string_of_event (event: event) : string =
+let denorm_string_of_event (event: event) : string =
   match event with
   | Server_message response ->
     Printf.sprintf "Server_message(%s)" (Persistent_connection_prot.string_of_response response)
   | Client_message c ->
-    Printf.sprintf "Client_message(%s)" (Lsp_fmt.message_to_string c)
+    Printf.sprintf "Client_message(%s)" (Lsp_fmt.denorm_message_to_string c)
   | Tick ->
     "Tick"
 
@@ -1337,7 +1337,7 @@ begin
       | ShowMessageRequestResult result, ShowMessageHandler handle -> handle result state
       | ShowStatusResult result, ShowStatusHandler handle -> handle result state
       | ErrorResult (e, msg), _ -> handle_error (e, msg) state
-      | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_to_string c))
+      | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_name_to_string c))
     with Not_found ->
       match state with
       | Connected cenv ->
@@ -1346,7 +1346,7 @@ begin
         if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
         state
       | _ ->
-        failwith (Printf.sprintf "Response %s has missing handler" (message_to_string c))
+        failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))
     end
 
   | _, Client_message (RequestMessage (id, DocumentSymbolRequest params)) ->
@@ -1383,7 +1383,7 @@ begin
 
   | Disconnected _, Client_message c ->
     let (state, _) = track_to_server state c in
-    let method_ = Lsp_fmt.message_to_string c in
+    let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     main_handle_error e stack state (Some event)
@@ -1455,8 +1455,8 @@ begin
     show_recheck_progress { cenv with c_server_status; c_recent_summaries; }
 
   | _, Server_message _ ->
-    failwith (Printf.sprintf "Unexpected %s in state %s"
-      (string_of_event event) (string_of_state state))
+    failwith (Printf.sprintf "In state %s, unexpected event %s"
+      (string_of_state state) (denorm_string_of_event event))
 
   | Disconnected env, Tick ->
     let state = try_connect env in

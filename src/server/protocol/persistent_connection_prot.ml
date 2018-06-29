@@ -28,7 +28,8 @@ let denorm_string_of_request = function
 | Autocomplete (f, _) -> Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input f)
 | DidOpen files -> Printf.sprintf "didOpen %s" (String.concat " " (Nel.to_list files))
 | DidClose files -> Printf.sprintf "didClose %s" (String.concat " " (Nel.to_list files))
-| LspToServer incoming -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_to_string incoming)
+| LspToServer incoming -> Printf.sprintf "lspToServer %s"
+    (Lsp_fmt.denorm_message_to_string incoming)
 
 type response =
   | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}

@@ -1016,7 +1016,7 @@ let result_name_to_string (result: lsp_result) : string =
   | DocumentRangeFormattingResult _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
-  | ErrorResult _ -> "ERROR"
+  | ErrorResult (e, _stack) -> "ERROR/" ^ (Printexc.to_string e)
 
 let notification_name_to_string (notification: lsp_notification) : string =
   match notification with
@@ -1035,7 +1035,13 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
   | UnknownNotification (method_, _params) -> method_
 
-let message_to_string (message: lsp_message) : string =
+let message_name_to_string (message: lsp_message) : string =
+  match message with
+  | RequestMessage (_, r) -> request_name_to_string r
+  | NotificationMessage n -> notification_name_to_string n
+  | ResponseMessage (_, r) -> result_name_to_string r
+
+let denorm_message_to_string (message: lsp_message) : string =
   match message with
   | RequestMessage (id, r) ->
     Printf.sprintf "request %s %s" (id_to_string id) (request_name_to_string r)
@@ -1045,7 +1051,6 @@ let message_to_string (message: lsp_message) : string =
     Printf.sprintf "error %s %s" (id_to_string id) (Printexc.to_string e)
   | ResponseMessage (id, r) ->
     Printf.sprintf "result %s %s" (id_to_string id) (result_name_to_string r)
-
 
 let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   match method_ with

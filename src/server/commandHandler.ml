@@ -862,7 +862,7 @@ let handle_persistent_unsafe genv env client profiling msg
 
   | Persistent_connection_prot.LspToServer unhandled ->
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-    let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_to_string unhandled) in
+    let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
     Lwt.return (Error (env, reason, Utils.Callstack stack))
 
 
