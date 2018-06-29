@@ -1301,18 +1301,19 @@ let rec main
   main_loop client state
 
 and main_loop (client: Jsonrpc.queue) (state: state) : unit =
-  let state = main_handle client state in
+  let event = try Ok (get_next_event state client (parse_json state))
+    with e -> Error (state, e, Utils.Callstack (Printexc.get_backtrace ()), None) in
+  let result = Core_result.bind event (fun event -> try main_handle_unsafe state event
+    with e -> Error (state, e, Utils.Callstack (Printexc.get_backtrace ()), Some event)) in
+  let state = match result with
+    | Ok state -> state
+    | Error (state, e, stack, event) -> main_handle_error e stack state event
+  in
   main_loop client state
 
-and main_handle (client: Jsonrpc.queue) (state: state) : state =
-  try
-    let event = get_next_event state client (parse_json state) in
-    try
-      main_handle_unsafe state event
-    with e -> main_handle_error e (Printexc.get_backtrace ()) state (Some event)
-  with e -> main_handle_error e (Printexc.get_backtrace ()) state None
 
-and main_handle_unsafe (state: state) (event: event) : state =
+and main_handle_unsafe (state: state) (event: event)
+  : (state, state * exn * Utils.callstack * event option) result =
 begin
   match state, event with
   | Pre_init i_connect_params,
@@ -1350,20 +1351,20 @@ begin
       d_autostart = true;
       d_server_status = None;
     } in
-    try_connect env
+    Ok (try_connect env)
 
   | _, Client_message (RequestMessage (id, ShutdownRequest), _metadata) ->
     begin match state with Connected env -> close_conn env | _ -> () end;
     let response = ResponseMessage (id, ShutdownResult) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
-    Post_shutdown
+    Ok Post_shutdown
 
   | _, Client_message (NotificationMessage ExitNotification, _metadata) ->
     if state = Post_shutdown then lsp_exit_ok () else lsp_exit_bad ()
 
   | _, Client_message (NotificationMessage (CancelRequestNotification _), _metadata) ->
-    state
+    Ok state
 
   | Pre_init _, Client_message _ ->
     raise (Error.ServerNotInitialized "Server not initialized")
@@ -1384,9 +1385,9 @@ begin
         | _ -> failwith "Didn't expect an LSP response to be found yet"
       in
       match result, handle with
-      | ShowMessageRequestResult result, ShowMessageHandler handle -> handle result state
-      | ShowStatusResult result, ShowStatusHandler handle -> handle result state
-      | ErrorResult (e, msg), _ -> handle_error (e, msg) state
+      | ShowMessageRequestResult result, ShowMessageHandler handle -> Ok (handle result state)
+      | ShowStatusResult result, ShowStatusHandler handle -> Ok (handle result state)
+      | ErrorResult (e, msg), _ -> Ok (handle_error (e, msg) state)
       | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_name_to_string c))
     with Not_found ->
       match state with
@@ -1394,7 +1395,7 @@ begin
         let (state, _) = track_to_server state c in
         let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
         if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv metadata c;
-        state
+        Ok state
       | _ ->
         failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))
     end
@@ -1403,14 +1404,13 @@ begin
     (* documentSymbols is handled in the client, not the server, since it's *)
     (* purely syntax-driven and we'd like it to work even if the server is  *)
     (* busy or disconnected *)
-    let state = do_documentSymbol state id params in
-    state
+    Ok (do_documentSymbol state id params)
 
   | Connected cenv, Client_message (c, metadata) ->
     let state, {changed_live_uri} = track_to_server state c in
     send_lsp_to_server cenv metadata c;
     let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
-    state
+    Ok state
 
   | _, Client_message (RequestMessage (id, RageRequest), _metadata) ->
     (* How to handle a rage request? If we're connected to a server, then the *)
@@ -1421,7 +1421,7 @@ begin
     let response = ResponseMessage (id, RageResult result) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
-    state
+    Ok state
 
   | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c, _metadata)
   | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c, _metadata)
@@ -1429,24 +1429,25 @@ begin
   | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c, _metadata) ->
     let state, {changed_live_uri} = track_to_server state c in
     let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
-    state
+    Ok state
 
   | Disconnected _, Client_message (c, _metadata) ->
     let (state, _) = track_to_server state c in
     let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-    main_handle_error e stack state (Some event)
+    Error (state, e, Utils.Callstack stack, Some event)
 
   | Post_shutdown, Client_message (_, _metadata) ->
     raise (Error.RequestCancelled "Server shutting down")
 
   | Connected cenv, Server_message (Persistent_connection_prot.ServerExit exit_code) ->
-    Connected { cenv with c_about_to_exit_code = Some exit_code; }
+    let state = Connected { cenv with c_about_to_exit_code = Some exit_code; } in
+    Ok state
 
   | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer (msg, _metadata)) ->
     begin match msg with
-      | None -> state
+      | None -> Ok state
       | Some outgoing ->
         let state = track_from_server state outgoing in
         let outgoing = match outgoing with
@@ -1458,7 +1459,7 @@ begin
           | _ -> outgoing
         in
         to_stdout (Lsp_fmt.print_lsp outgoing);
-        state
+        Ok state
     end
 
   | Connected cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
@@ -1485,15 +1486,23 @@ begin
     let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
     in
     if cenv.c_is_rechecking then
-      do_additional_diagnostics cenv all
+      Ok (do_additional_diagnostics cenv all)
     else
-      do_replacement_diagnostics cenv all
+      Ok (do_replacement_diagnostics cenv all)
 
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
-    show_recheck_progress { cenv with c_is_rechecking = true; c_lazy_stats = None; }
+    let state = show_recheck_progress { cenv with
+      c_is_rechecking = true;
+      c_lazy_stats = None;
+    } in
+    Ok state
 
   | Connected cenv, Server_message Persistent_connection_prot.EndRecheck lazy_stats ->
-    show_recheck_progress { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats; }
+    let state = show_recheck_progress { cenv with
+      c_is_rechecking = false;
+      c_lazy_stats = Some lazy_stats;
+    } in
+    Ok state
 
   | Connected cenv, Server_message (Persistent_connection_prot.Please_hold status) ->
     let (server_status, watcher_status) = status in
@@ -1506,7 +1515,8 @@ begin
       (new_time, summary) :: cenv.c_recent_summaries
         |> List.filter ~f:(fun (t,_) -> t >= new_time -. 120.0))
     in
-    show_recheck_progress { cenv with c_server_status; c_recent_summaries; }
+    let state = show_recheck_progress { cenv with c_server_status; c_recent_summaries; } in
+    Ok state
 
   | _, Server_message _ ->
     failwith (Printf.sprintf "In state %s, unexpected event %s"
@@ -1514,15 +1524,15 @@ begin
 
   | Disconnected env, Tick ->
     let state = try_connect env in
-    state
+    Ok state
 
   | _, Tick ->
-    state
+    Ok state
 end
 
 and main_handle_error
     (e: exn)
-    (stack: string)
+    (Utils.Callstack stack)
     (state: state)
     (event: event option)
   : state =
