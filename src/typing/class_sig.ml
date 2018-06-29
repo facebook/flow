@@ -326,15 +326,15 @@ let elements cx ~tparams_map ?constructor s =
     ) loc_type_opt
   ) s.fields;
 
-  (* Treat getters and setters as fields *)
-  let fields = SMap.union getters_and_setters fields in
-
   let methods = SMap.map (fun (loc, t) -> Type.Method (loc, t)) methods in
 
   (* Treat proto fields as methods, as they are on the proto object *)
   let methods = SMap.fold (fun name fld acc ->
     SMap.add name (to_field fld) acc
   ) s.proto_fields methods in
+
+  (* Treat getters and setters as methods *)
+  let methods = SMap.union getters_and_setters methods in
 
   (* Previously, call properties were stored in the props map under the key
      $call. Unfortunately, this made it possible to specify call properties
