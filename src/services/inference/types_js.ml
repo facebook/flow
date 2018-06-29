@@ -98,7 +98,8 @@ let collate_parse_results ~options { Parsing_service_js.parse_ok; parse_skips; p
      * them. *)
     if options.Options.opt_enforce_well_formed_exports then
       FilenameMap.fold (fun file file_sig_errors errors ->
-        let errset = Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file file_sig_errors in
+        let errset = Inference_utils.set_of_file_sig_tolerable_errors
+          ~source_file:file file_sig_errors in
         update_errset errors file errset
       ) parse_ok local_errors
     else
@@ -295,7 +296,8 @@ let typecheck
   let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let preliminary_to_merge = CheckedSet.all (CheckedSet.add ~dependents:all_dependent_files infer_input) in
+    let preliminary_to_merge = CheckedSet.all
+      (CheckedSet.add ~dependents:all_dependent_files infer_input) in
     (* So we want to prune our dependencies to only the dependencies which changed. However,
      * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
      * check both of them. So we need to calculate components before we can prune *)
@@ -462,7 +464,12 @@ let typecheck
   let checked = CheckedSet.union unchanged_checked to_merge in
   Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
 
-  Lwt.return (checked, { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set })
+  let errors = { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } in
+  let cycle_leaders = component_map
+    |> Utils_js.FilenameMap.elements
+    |> List.map (fun (leader, members) -> (leader, Nel.length members))
+    |> List.filter (fun (_, member_count) -> member_count > 1) in
+  Lwt.return (checked, cycle_leaders, errors)
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility.
@@ -493,7 +500,7 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
     let direct_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let dependency_graph = !env.ServerEnv.dependency_graph in
-    let%lwt checked, errors = typecheck
+    let%lwt checked, _cycle_leaders, errors = typecheck
       ~options ~profiling ~workers ~errors
       ~unchanged_checked ~infer_input
       ~dependency_graph ~all_dependent_files ~direct_dependent_files
@@ -980,7 +987,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
         let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
         let parsed = FilenameSet.union old_focus_targets freshparsed in
-        let%lwt updated_checked_files = unfocused_files_to_infer ~options ~parsed ~dependency_graph in
+        let%lwt updated_checked_files = unfocused_files_to_infer
+          ~options ~parsed ~dependency_graph in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
@@ -1030,7 +1038,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
     CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
 
   (* recheck *)
-  let%lwt checked, errors = typecheck
+  let%lwt checked, cycle_leaders, errors = typecheck
     ~options
     ~profiling
     ~workers
@@ -1087,23 +1095,31 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
       checked_files = checked;
       errors;
     },
-    (new_or_changed, deleted, all_dependent_files))
+    (new_or_changed, deleted, all_dependent_files, cycle_leaders))
   )
 
 let recheck ~options ~workers ~updates env ~force_focus =
   let should_print_summary = Options.should_profile options in
-  let%lwt profiling, (env, (modified, deleted, dependent_files)) =
+  let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders)) =
     Profiling_js.with_profiling_lwt ~should_print_summary (fun profiling ->
       recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focus
     )
   in
-  FlowEventLogger.recheck
-    (** TODO: update log to reflect current terminology **)
-    ~modified
-    ~deleted
-    ~dependent_files
-    ~profiling;
-  Lwt.return (profiling, env)
+  (** TODO: update log to reflect current terminology **)
+  FlowEventLogger.recheck ~modified ~deleted ~dependent_files ~profiling;
+
+  let duration = Profiling_js.get_profiling_duration profiling in
+  let dependent_file_count = Utils_js.FilenameSet.cardinal dependent_files in
+  let changed_file_count = (Utils_js.FilenameSet.cardinal modified)
+    + (Utils_js.FilenameSet.cardinal deleted) in
+  let top_cycle = Core_list.fold cycle_leaders ~init:None ~f:(fun top (f2, count2) ->
+    match top with
+    | Some (f1, count1) -> if f2 > f1 then Some (f2, count2) else Some (f1, count1)
+    | None -> Some (f2, count2)) in
+  let summary = ServerStatus.({
+      duration;
+      info = RecheckSummary {dependent_file_count; changed_file_count; top_cycle}; }) in
+  Lwt.return (profiling, summary, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -1189,7 +1205,7 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
   let%lwt infer_input = files_to_infer
     ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
-  typecheck
+  let%lwt (checked, _, errors) = typecheck
     ~options
     ~profiling
     ~workers
@@ -1201,3 +1217,5 @@ let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_gra
     ~direct_dependent_files:FilenameSet.empty
     ~persistent_connections:None
     ~prep_merge:None
+  in
+  Lwt.return (checked, errors)

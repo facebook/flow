@@ -39,7 +39,8 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
   let should_print_summary = Options.should_profile options in
-  let%lwt env = Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
+  let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~should_print_summary
+    begin fun profiling ->
     let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
       Types_js.init ~profiling ~workers options in
 
@@ -53,7 +54,8 @@ let init ~focus_targets genv =
       if not libs_ok || Options.is_lazy_mode options then
         Lwt.return (CheckedSet.empty, errors)
       else
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options parsed dependency_graph errors
+        Types_js.full_check ~profiling ~workers ~focus_targets ~options
+          parsed dependency_graph errors
     in
 
     sample_init_memory profiling;
@@ -63,7 +65,7 @@ let init ~focus_targets genv =
     (* Return an env that initializes invariants required and maintained by
        recheck, namely that `files` contains files that parsed successfully, and
        `errors` contains the current set of errors. *)
-    let env = { ServerEnv.
+    Lwt.return { ServerEnv.
       files = parsed;
       unparsed;
       dependency_graph;
@@ -73,11 +75,13 @@ let init ~focus_targets genv =
       errors;
       collated_errors = ref None;
       connections = Persistent_connection.empty;
-    } in
-    Lwt.return env
+    }
   end in
-  MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-  Lwt.return env
+  let event = ServerStatus.(Finishing_up {
+    duration = Profiling_js.get_profiling_duration profiling;
+    info = InitSummary}) in
+  MonitorRPC.status_update ~event;
+  Lwt.return (profiling, env)
 
 module Monitor : sig
   type workload = env -> env Lwt.t
@@ -191,7 +195,7 @@ let rec recheck_and_update_env_loop genv env =
   if Utils_js.FilenameSet.is_empty updates
   then Lwt.return env
   else begin
-    let%lwt _profiling, env = Rechecker.recheck genv env updates in
+    let%lwt _summary, env = Rechecker.recheck genv env updates in
     recheck_and_update_env_loop genv env
   end
 

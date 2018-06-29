@@ -464,7 +464,10 @@ let handle_ephemeral_unsafe
           Lwt.return None
     end
   in
-  MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+  let event = ServerStatus.(Finishing_up {
+    duration = Profiling_js.get_profiling_duration profiling;
+    info = CommandSummary (ServerProt.Request.to_string command)}) in
+  MonitorRPC.status_update ~event;
   Lwt.return (!env, profiling, json_data)
 
 let handle_ephemeral genv env (request_id, command) =
@@ -905,7 +908,10 @@ let handle_persistent
     let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
       (fun profiling -> handle_persistent_unsafe genv env client profiling msg) in
 
-    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+    let event = ServerStatus.(Finishing_up {
+      duration = Profiling_js.get_profiling_duration profiling;
+      info = CommandSummary (Persistent_connection_prot.string_of_request msg)}) in
+    MonitorRPC.status_update ~event;
     match result with
     | Ok (env, json_data) ->
       FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
@@ -927,5 +933,8 @@ let handle_persistent
     let json_data = Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ] in
     FlowEventLogger.persistent_command_failure ~request ~client_context ~json_data;
     report_lsp_error_if_necessary client msg exn backtrace;
-    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+    let event = ServerStatus.(Finishing_up {
+      duration = 0.0; (* unavailable here *)
+      info = CommandSummary (Persistent_connection_prot.string_of_request msg)}) in
+    MonitorRPC.status_update ~event;
     Lwt.return env

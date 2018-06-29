@@ -423,6 +423,14 @@ let with_profiling_lwt ~should_print_summary f =
   ] in
   Lwt.return (!profiling, ret)
 
+let get_profiling_duration profile =
+  (* every profiling created by the above function implicitly has a timer *)
+  (* named `profiling_timer_name` which tracks overall duration. *)
+  let results = Timing.get_results profile.timing in
+  let overall_timer = SMap.find_unsafe profiling_timer_name results in
+  overall_timer.wall.duration
+
+
 let check_for_reserved_timer_name f ~timer profile =
   if SSet.mem timer reserved_timer_names
   then failwith (Printf.sprintf "%s is a reserved timer name" timer);

@@ -164,16 +164,19 @@ let recheck genv env ?(force_focus=false) updates =
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
 
-    let%lwt profiling, env = Types_js.recheck ~options ~workers ~updates env ~force_focus in
+    let%lwt profiling, summary, env =
+      Types_js.recheck ~options ~workers ~updates env ~force_focus in
 
     let lazy_stats = get_lazy_stats genv env in
     Persistent_connection.send_end_recheck ~lazy_stats env.connections;
+    (* We must send "end_recheck" prior to sending errors+warnings so the client *)
+    (* knows that this set of errors+warnings are final ones, not incremental.   *)
     let calc_errors_and_warnings () =
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
       errors, warnings
     in
     Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;
 
-    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+    MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
     Lwt.return (Some profiling, env)
   end
