@@ -156,7 +156,7 @@ exception Server_fatal_connection_exception of Marshal_tools.remote_exception_da
 
 type event =
   | Server_message of Persistent_connection_prot.response
-  | Client_message of Lsp.lsp_message
+  | Client_message of Lsp.lsp_message * Persistent_connection_prot.metadata
   | Tick (* once per second, on idle *)
 
 
@@ -173,7 +173,7 @@ let denorm_string_of_event (event: event) : string =
   match event with
   | Server_message response ->
     Printf.sprintf "Server_message(%s)" (Persistent_connection_prot.string_of_response response)
-  | Client_message c ->
+  | Client_message (c, _) ->
     Printf.sprintf "Client_message(%s)" (Lsp_fmt.denorm_message_to_string c)
   | Tick ->
     "Tick"
@@ -207,6 +207,37 @@ let update_open_file (uri: string) (open_file_info: open_file_info option) (stat
   | _ -> failwith ("client shouldn't be updating files in state " ^ (string_of_state state))
 
 
+let new_metadata (state: state) (message: Jsonrpc.message) : Persistent_connection_prot.metadata =
+  let start_lsp_state, start_lsp_state_reason, start_server_status, start_watcher_status =
+    match state with
+    | Connected {c_server_status=(s,w); _} ->
+      None, None, Some s, w
+    | Disconnected {d_server_status=Some (s,w); _} ->
+      Some (string_of_state state), None, Some s, Some w
+    | Disconnected {d_server_status=None; d_ienv; _} ->
+      Some (string_of_state state), Some d_ienv.i_status, None, None
+    | _ ->
+      Some (string_of_state state), None, None, None in
+  let start_lsp_state_reason = match start_lsp_state_reason with
+    | None
+    | Some Never_shown -> None
+    | Some (Shown (_, params)) -> Some params.ShowStatus.request.ShowMessageRequest.message
+  in
+  { Persistent_connection_prot.
+    start_wall_time = message.Jsonrpc.timestamp;
+    start_server_status;
+    start_watcher_status;
+    start_json_truncated = Hh_json.json_truncate message.Jsonrpc.json
+      ~max_string_length:256 ~max_child_count:4;
+    start_lsp_state;
+    start_lsp_state_reason;
+    error_info = None;
+    profiling = None;
+    client_profiling = None;
+    extra_data = [];
+  }
+
+
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   let r = begin try
     Server_message (Marshal_tools.from_fd_with_preamble fd)
@@ -225,12 +256,13 @@ let get_next_event_from_server (fd: Unix.file_descr) : event =
     r
 
 let get_next_event_from_client
+    (state: state)
     (client: Jsonrpc.queue)
     (parser: Jsonrpc.message -> Lsp.lsp_message)
   : event =
   let message = Jsonrpc.get_message client in
   match message with
-  | `Message c -> Client_message (parser c)
+  | `Message message -> Client_message (parser message, new_metadata state message)
   | `Fatal_exception edata -> raise (Client_fatal_connection_exception edata)
   | `Recoverable_exception edata -> raise (Client_recoverable_connection_exception edata)
 
@@ -240,7 +272,7 @@ let get_next_event
     (parser: Jsonrpc.message -> Lsp.lsp_message)
   : event =
   if Jsonrpc.has_message client then
-    get_next_event_from_client client parser
+    get_next_event_from_client state client parser
   else
     let client_fd = Jsonrpc.get_read_fd client in
     match state with
@@ -249,11 +281,11 @@ let get_next_event
       let fds, _, _ = Unix.select [server_fd; client_fd] [] [] 1.0 in
       if fds = [] then Tick
       else if List.mem fds server_fd then get_next_event_from_server server_fd
-      else get_next_event_from_client client parser
+      else get_next_event_from_client state client parser
     | _ ->
       let fds, _, _ = Unix.select [client_fd] [] [] 1.0 in
       if fds = [] then Tick
-      else get_next_event_from_client client parser
+      else get_next_event_from_client state client parser
 
 let show_status
     ?(titles = [])
@@ -344,8 +376,13 @@ let send_to_server (env: connected_env) (request: Persistent_connection_prot.req
     Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) request in
   ()
 
-let send_lsp_to_server (env: connected_env) (message: lsp_message) : unit =
-  send_to_server env (Persistent_connection_prot.LspToServer message)
+
+let send_lsp_to_server
+    (cenv: connected_env)
+    (metadata: Persistent_connection_prot.metadata)
+    (message: lsp_message)
+  : unit =
+  send_to_server cenv (Persistent_connection_prot.LspToServer (message, metadata))
 
 
 (************************************************************************)
@@ -504,7 +541,20 @@ let try_connect (env: disconnected_env) : state =
       NotificationMessage (DidOpenNotification { DidOpen.textDocument; }) in
     let open_messages = env.d_ienv.i_open_files |> SMap.bindings
       |> List.map ~f:(fun (_, {o_open_doc; _}) -> make_open_message o_open_doc) in
-    List.iter open_messages ~f:(send_lsp_to_server new_env);
+    let open Hh_json in
+    let metadata = { Persistent_connection_prot.
+      start_wall_time = Unix.gettimeofday ();
+      start_server_status = Some (fst new_env.c_server_status);
+      start_watcher_status = snd new_env.c_server_status;
+      start_json_truncated = JSON_Object ["method", JSON_String "synthetic/open"];
+      start_lsp_state = None;
+      start_lsp_state_reason = None;
+      error_info = None;
+      profiling = None;
+      client_profiling = None;
+      extra_data = [];
+    } in
+    List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
     (* close the old UI and bring up the new *)
     let new_state = show_connected new_env in
     new_state
@@ -1266,7 +1316,7 @@ and main_handle_unsafe (state: state) (event: event) : state =
 begin
   match state, event with
   | Pre_init i_connect_params,
-    Client_message (RequestMessage (id, InitializeRequest i_initialize_params)) ->
+    Client_message (RequestMessage (id, InitializeRequest i_initialize_params), _metadata) ->
     let i_root = Lsp_helpers.get_root i_initialize_params |> Path.make in
     let d_ienv = {
       i_initialize_params;
@@ -1302,23 +1352,23 @@ begin
     } in
     try_connect env
 
-  | _, Client_message (RequestMessage (id, ShutdownRequest)) ->
+  | _, Client_message (RequestMessage (id, ShutdownRequest), _metadata) ->
     begin match state with Connected env -> close_conn env | _ -> () end;
     let response = ResponseMessage (id, ShutdownResult) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     Post_shutdown
 
-  | _, Client_message (NotificationMessage ExitNotification) ->
+  | _, Client_message (NotificationMessage ExitNotification, _metadata) ->
     if state = Post_shutdown then lsp_exit_ok () else lsp_exit_bad ()
 
-  | _, Client_message (NotificationMessage (CancelRequestNotification _)) ->
+  | _, Client_message (NotificationMessage (CancelRequestNotification _), _metadata) ->
     state
 
   | Pre_init _, Client_message _ ->
     raise (Error.ServerNotInitialized "Server not initialized")
 
-  | _, Client_message ((ResponseMessage (id, result)) as c) ->
+  | _, Client_message ((ResponseMessage (id, result)) as c, metadata) ->
     let ienv = match state with
       | Connected env -> env.c_ienv
       | Disconnected env -> env.d_ienv
@@ -1343,26 +1393,26 @@ begin
       | Connected cenv ->
         let (state, _) = track_to_server state c in
         let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
-        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
+        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv metadata c;
         state
       | _ ->
         failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))
     end
 
-  | _, Client_message (RequestMessage (id, DocumentSymbolRequest params)) ->
+  | _, Client_message (RequestMessage (id, DocumentSymbolRequest params), _metadata) ->
     (* documentSymbols is handled in the client, not the server, since it's *)
     (* purely syntax-driven and we'd like it to work even if the server is  *)
     (* busy or disconnected *)
     let state = do_documentSymbol state id params in
     state
 
-  | Connected cenv, Client_message c ->
+  | Connected cenv, Client_message (c, metadata) ->
     let state, {changed_live_uri} = track_to_server state c in
-    send_lsp_to_server cenv c;
+    send_lsp_to_server cenv metadata c;
     let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
     state
 
-  | _, Client_message (RequestMessage (id, RageRequest)) ->
+  | _, Client_message (RequestMessage (id, RageRequest), _metadata) ->
     (* How to handle a rage request? If we're connected to a server, then the *)
     (* above case will just have forwarded the message on to the server (and  *)
     (* we'll patch in our own extra information when the server replies). But *)
@@ -1373,39 +1423,43 @@ begin
     to_stdout json;
     state
 
-  | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c)
-  | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c)
-  | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c)
-  | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c) ->
+  | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c, _metadata)
+  | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c, _metadata)
+  | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c, _metadata)
+  | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c, _metadata) ->
     let state, {changed_live_uri} = track_to_server state c in
     let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
     state
 
-  | Disconnected _, Client_message c ->
+  | Disconnected _, Client_message (c, _metadata) ->
     let (state, _) = track_to_server state c in
     let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     main_handle_error e stack state (Some event)
 
-  | Post_shutdown, Client_message _ ->
+  | Post_shutdown, Client_message (_, _metadata) ->
     raise (Error.RequestCancelled "Server shutting down")
 
   | Connected cenv, Server_message (Persistent_connection_prot.ServerExit exit_code) ->
     Connected { cenv with c_about_to_exit_code = Some exit_code; }
 
-  | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer outgoing) ->
-    let state = track_from_server state outgoing in
-    let outgoing = match outgoing with
-      | RequestMessage (id, request) ->
-        let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
-        RequestMessage (encode_wrapped wrapped, request)
-      | ResponseMessage (id, RageResult items) ->
-        ResponseMessage (id, RageResult (items @ (do_rage state)))
-      | _ -> outgoing
-    in
-    to_stdout (Lsp_fmt.print_lsp outgoing);
-    state
+  | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer (msg, _metadata)) ->
+    begin match msg with
+      | None -> state
+      | Some outgoing ->
+        let state = track_from_server state outgoing in
+        let outgoing = match outgoing with
+          | RequestMessage (id, request) ->
+            let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
+            RequestMessage (encode_wrapped wrapped, request)
+          | ResponseMessage (id, RageResult items) ->
+            ResponseMessage (id, RageResult (items @ (do_rage state)))
+          | _ -> outgoing
+        in
+        to_stdout (Lsp_fmt.print_lsp outgoing);
+        state
+    end
 
   | Connected cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
     (* A note about the errors reported by this server message:               *)
@@ -1540,7 +1594,7 @@ and main_handle_error
       let (code, message, _data) = get_error_info e in
       let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" message code stack in
       match event with
-      | Some (Client_message (RequestMessage (id, _request))) ->
+      | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
         let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
         to_stdout json;
       | _ ->
