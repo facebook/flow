@@ -62,3 +62,7 @@ let negate_number_literal (value, raw) =
     else "-" ^ raw
   in
   ~-. value, raw
+
+let loc_of_statement = fst
+
+let loc_of_expression = fst
