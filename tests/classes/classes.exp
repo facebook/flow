@@ -1,144 +1,280 @@
-A.js:2
-  2:   foo(x:number):void { }
-             ^^^^^^ number. This type is incompatible with the expected param type of
-  4:   foo(x:string):void { }
-             ^^^^^^ string. See: C.js:4
+Error --------------------------------------------------------------------------------------------------------- B.js:6:2
 
-B.js:6
-  6: (b.foo: number); // error, number !~> function
-      ^^^^^ function. This type is incompatible with
-  6: (b.foo: number); // error, number !~> function
-             ^^^^^^ number
+Cannot cast `b.foo` to number because function [1] is incompatible with number [2].
 
-C.js:8
-  8: (c.foo: number); // error, number !~> function
-      ^^^^^ function. This type is incompatible with
-  8: (c.foo: number); // error, number !~> function
-             ^^^^^^ number
+   B.js:6:2
+   6| (b.foo: number); // error, number !~> function
+       ^^^^^
 
-D.js:3
-  3: new E().x
-             ^ property `x`. Property not found in
-  3: new E().x
-     ^^^^^^^ E
-
-class_shapes.js:4
-  4:   a: string;    // exists in TestClass
-          ^^^^^^ string. This type is incompatible with
- 27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number
-
-class_shapes.js:6
-  6:   c?: ?string;  // exists in TestClass, optional
-            ^^^^^^ string. This type is incompatible with
- 28:   c: ?number; // conflicts with cast to Foo
-           ^^^^^^ number
-
-class_shapes.js:18
- 18: x.b; // error, TestClass has no b
-       ^ property `b`. Property not found in
- 18: x.b; // error, TestClass has no b
-     ^ TestClass
-
-class_shapes.js:20
- 20: x.d; // error, TestClass has no d
-       ^ property `d`. Property not found in
- 20: x.d; // error, TestClass has no d
-     ^ TestClass
-
-class_shapes.js:22
- 22: var y : Foo = x;
-             ^^^ property `b`. Property not found in
- 22: var y : Foo = x;
-                   ^ TestClass
-
-class_shapes.js:27
- 27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number. This type is incompatible with
-  4:   a: string;    // exists in TestClass
-          ^^^^^^ string
-
-class_shapes.js:28
- 28:   c: ?number; // conflicts with cast to Foo
-           ^^^^^^ number. This type is incompatible with
-  6:   c?: ?string;  // exists in TestClass, optional
-            ^^^^^^ string
-
-class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ object type
-  Property `b` is incompatible:
-      5:   b: string;    // doesn't exist
-              ^^^^^^ string. This type is incompatible with
-     31:   b: number;  // conflicts with cast to Foo
-              ^^^^^^ number
-
-class_shapes.js:35
- 35: var w : Foo = z;
-                   ^ Test2Class. This type is incompatible with
- 35: var w : Foo = z;
-             ^^^ object type
-  Property `b` is incompatible:
-     31:   b: number;  // conflicts with cast to Foo
-              ^^^^^^ number. This type is incompatible with
-      5:   b: string;    // doesn't exist
-              ^^^^^^ string
-
-expr.js:14
- 14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
-                 ^^^ identifier `Baz`. Could not resolve name
-
-expr.js:17
- 17: var c: Qux = new C(); // error: Qux is not a type in this scope
-            ^^^ identifier `Qux`. Could not resolve name
-
-expr.js:29
- 29: var alias1: Alias = new _Alias(); // error: bad pun
-                         ^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
- 29: var alias1: Alias = new _Alias(); // error: bad pun
-                 ^^^^^ Alias
-
-expr.js:30
- 30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                         ^^^^^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
- 30: var alias2: Alias = _Alias.factory(); // error: bad pun
-                 ^^^^^ Alias
-
-loc.js:5
-  5: class Foo {} // error, shadows type Foo
-           ^^^ Foo. name is already bound
-  3: type Foo = number
-          ^^^ type Foo
-
-statics.js:10
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ statics of C. This type is incompatible with
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-         ^^^^^^^^^^ object type
-  Property `p` is incompatible:
-      4:   static p: string;
-                     ^^^^^^ string. This type is incompatible with
-     10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-                ^^^^^^ number
-
-statics.js:10
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-      ^ statics of C. This type is incompatible with
- 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-         ^^^^^^^^^^ object type
-  Property `p` is incompatible:
-     10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-                ^^^^^^ number. This type is incompatible with
-      4:   static p: string;
-                     ^^^^^^ string
-
-statics.js:13
- 13: (o: Class<C>); // error, object type incompatible with class type
-      ^ object type. This type is incompatible with
- 13: (o: Class<C>); // error, object type incompatible with class type
-         ^^^^^^^^ class type: C
+References:
+   A.js:2:3
+   2|   foo(x:number):void { }
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   B.js:6:9
+   6| (b.foo: number); // error, number !~> function
+              ^^^^^^ [2]
 
 
-Found 21 errors
+Error --------------------------------------------------------------------------------------------------------- C.js:3:1
+
+Cannot extend `B` [1] with `C` because string [2] is incompatible with number [3] in the first argument of property
+`foo`.
+
+   C.js:3:1
+      v------------------
+   3| class C extends B {
+   4|   foo(x:string):void { }
+   5| }
+      ^
+
+References:
+   C.js:3:17
+   3| class C extends B {
+                      ^ [1]
+   C.js:4:9
+   4|   foo(x:string):void { }
+              ^^^^^^ [2]
+   A.js:2:9
+   2|   foo(x:number):void { }
+              ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------------- C.js:8:2
+
+Cannot cast `c.foo` to number because function [1] is incompatible with number [2].
+
+   C.js:8:2
+   8| (c.foo: number); // error, number !~> function
+       ^^^^^
+
+References:
+   C.js:4:3
+   4|   foo(x:string):void { }
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   C.js:8:9
+   8| (c.foo: number); // error, number !~> function
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- D.js:3:1
+
+Cannot get `new E().x` because property `x` is missing in `E` [1].
+
+   D.js:3:1
+   3| new E().x
+      ^^^^^^^^^
+
+References:
+   D.js:3:1
+   3| new E().x
+      ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- class_shapes.js:18:1
+
+Cannot get `x.b` because property `b` is missing in `TestClass` [1].
+
+   class_shapes.js:18:1
+   18| x.b; // error, TestClass has no b
+       ^^^
+
+References:
+   class_shapes.js:15:9
+   15| var x = new TestClass();
+               ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- class_shapes.js:20:1
+
+Cannot get `x.d` because property `d` is missing in `TestClass` [1].
+
+   class_shapes.js:20:1
+   20| x.d; // error, TestClass has no d
+       ^^^
+
+References:
+   class_shapes.js:15:9
+   15| var x = new TestClass();
+               ^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- class_shapes.js:22:15
+
+Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2].
+
+   class_shapes.js:22:15
+   22| var y : Foo = x;
+                     ^
+
+References:
+   class_shapes.js:15:9
+   15| var x = new TestClass();
+               ^^^^^^^^^^^^^^^ [1]
+   class_shapes.js:22:9
+   22| var y : Foo = x;
+               ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
+
+Cannot assign `z` to `w` because:
+ - number [1] is incompatible with string [2] in property `a`.
+ - number [3] is incompatible with string [4] in property `b`.
+ - number [5] is incompatible with string [6] in property `c`.
+
+   class_shapes.js:35:15
+   35| var w : Foo = z;
+                     ^
+
+References:
+   class_shapes.js:27:6
+   27|   a: number;  // conflicts with cast to Foo
+            ^^^^^^ [1]
+   class_shapes.js:4:6
+    4|   a: string;    // exists in TestClass
+            ^^^^^^ [2]
+   class_shapes.js:31:6
+   31|   b: number;  // conflicts with cast to Foo
+            ^^^^^^ [3]
+   class_shapes.js:5:6
+    5|   b: string;    // doesn't exist
+            ^^^^^^ [4]
+   class_shapes.js:28:7
+   28|   c: ?number; // conflicts with cast to Foo
+             ^^^^^^ [5]
+   class_shapes.js:6:8
+    6|   c?: ?string;  // exists in TestClass, optional
+              ^^^^^^ [6]
+
+
+Error ---------------------------------------------------------------------------------------------------- expr.js:14:13
+
+Cannot resolve name `Baz`.
+
+   14| var b = new Baz(); // error: Baz is not a runtime binding in this scope
+                   ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- expr.js:17:8
+
+Cannot resolve name `Qux`.
+
+   17| var c: Qux = new C(); // error: Qux is not a type in this scope
+              ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- expr.js:29:21
+
+Cannot assign `new _Alias()` to `alias1` because `Alias` [1] is incompatible with `Alias` [2].
+
+   expr.js:29:21
+   29| var alias1: Alias = new _Alias(); // error: bad pun
+                           ^^^^^^^^^^^^ [1]
+
+References:
+   expr.js:29:13
+   29| var alias1: Alias = new _Alias(); // error: bad pun
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- expr.js:30:21
+
+Cannot assign `_Alias.factory()` to `alias2` because `Alias` [1] is incompatible with `Alias` [2].
+
+   expr.js:30:21
+   30| var alias2: Alias = _Alias.factory(); // error: bad pun
+                           ^^^^^^^^^^^^^^^^
+
+References:
+   expr.js:25:21
+   25|   static factory(): Alias {
+                           ^^^^^ [1]
+   expr.js:30:13
+   30| var alias2: Alias = _Alias.factory(); // error: bad pun
+                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- loc.js:5:7
+
+Cannot declare `Foo` [1] because the name is already bound.
+
+   loc.js:5:7
+   5| class Foo {} // error, shadows type Foo
+            ^^^
+
+References:
+   loc.js:3:6
+   3| type Foo = number
+           ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- statics.js:10:2
+
+Cannot cast `C` to object type because string [1] is incompatible with number [2] in property `p`.
+
+   statics.js:10:2
+   10| (C: {p:number}); // errors, string ~> number & vice versa (unify)
+        ^
+
+References:
+   statics.js:4:13
+    4|   static p: string;
+                   ^^^^^^ [1]
+   statics.js:10:8
+   10| (C: {p:number}); // errors, string ~> number & vice versa (unify)
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- statics.js:13:2
+
+Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2].
+
+   statics.js:13:2
+   13| (o: Class<C>); // error, object type incompatible with class type
+        ^
+
+References:
+   statics.js:12:16
+   12| declare var o: {p:number};
+                      ^^^^^^^^^^ [1]
+   statics.js:13:5
+   13| (o: Class<C>); // error, object type incompatible with class type
+           ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- statics.js:19:2
+
+Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2].
+
+   statics.js:19:2
+   19| (Dup1.x: empty); // function ~> empty
+        ^^^^^^
+
+References:
+   statics.js:17:3
+   17|   static x() {}
+         ^^^^^^^^^^^^^ [1]
+   statics.js:19:10
+   19| (Dup1.x: empty); // function ~> empty
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- statics.js:25:2
+
+Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2].
+
+   statics.js:25:2
+   25| (Dup2.x: empty); // string ~> empty
+        ^^^^^^
+
+References:
+   statics.js:23:13
+   23|   static x: string;
+                   ^^^^^^ [1]
+   statics.js:25:10
+   25| (Dup2.x: empty); // string ~> empty
+                ^^^^^ [2]
+
+
+
+Found 19 errors

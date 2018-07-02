@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 let id_nop _ _ _ = false
@@ -16,49 +13,56 @@ let member_nop _ _ _ _ = false
 
 let call_nop _ _ _ _ = ()
 
-let require_nop _ _ _ = ()
-
 let import_nop _ _ _ = ()
 
 let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
+let class_member_decl_nop _ _ _ _ _ = ()
+
+let obj_prop_decl_nop _ _ _ = ()
+
+let require_pattern_nop _ = ()
+
+let obj_to_obj_nop _ _ _ = ()
+
+let instance_to_obj_nop _ _ _ = ()
+
+let export_named_nop _ _ = ()
+
 (* This type represents the possible definition-points for an lvalue. *)
-type rhs_def =
+type def =
   (**
-   * Given a simple assignment/initialization such as:
+   * Given a variable declaration such as:
    *
    *   var a = 42; // <-- this
-   *   b = a;      // <-- also this
+   *   var b; // <-- this
    *
-   * We emit the raw location of the expression on the RHS of the equal sign as
-   * the "definition" for the lvalue.
+   * We emit the type of the variable, given as an annotation or inferred by
+   * looking at its assignments, as the "definition" for the lvalue.
    *)
-  | RHSLoc of Loc.t
+  | Val of Type.t
 
   (*
-   * Given a destructuring pattern for an assignment/initialization such as:
+   * Given a destructuring pattern for an initialization such as:
    *
    *  var {
    *    a // <-- this
    *  } = {a: {b: 42}};
-   *
-   *  ( {b} = a );
-   *  // ^-- this
    *
    * We emit the tvar for the "parent pattern" being destructured so that we
    * may extract the type of the corresponding property -- and thus the location
    * of that type -- as the "definition" for the binding generated from a
    * destructuring pattern.
    *)
-  | RHSType of Type.t
+  | Parent of Type.t
 
   (**
-   * Some lvalues have no RHS such as initializer-less variable declarations
-   * or function parameters.
+   * For assignments, we consider lvalues to have the same "definition" as
+   * corresponding rvalues: both kinds of references point to the declaration site.
    *)
-  | NoRHS
+  | Id
 
 type hook_state_t = {
   id_hook:
@@ -68,7 +72,7 @@ type hook_state_t = {
 
   lval_hook:
     (Context.t ->
-      string -> Loc.t -> rhs_def ->
+      string -> Loc.t -> def ->
       unit);
 
   member_hook:
@@ -84,14 +88,12 @@ type hook_state_t = {
       string -> Loc.t -> Type.t ->
       unit);
 
-  require_hook:
-     (Context.t ->
-      string -> Loc.t ->
-      unit);
-
   import_hook:
       (Context.t ->
-       string -> Loc.t ->
+       (* Location of the string identifiying the imported module, and the contents of that string. *)
+       (Loc.t * string) ->
+       (* Location of the entire import statement/require call *)
+       Loc.t ->
        unit);
 
   jsx_hook:
@@ -104,6 +106,38 @@ type hook_state_t = {
        Loc.t ->
        Loc.t ->
        unit);
+
+  class_member_decl_hook:
+     (Context.t ->
+      Type.t (* self *) ->
+      bool (* static *) ->
+      string -> Loc.t ->
+      unit);
+
+  obj_prop_decl_hook:
+      (Context.t ->
+        string -> Loc.t ->
+        unit);
+
+  require_pattern_hook:
+    Loc.t -> unit;
+
+  (* Called when ObjT 1 ~> ObjT 2 *)
+  obj_to_obj_hook:
+      (Context.t ->
+        Type.t (* ObjT 1 *) ->
+        Type.t (* ObjT 2 *) ->
+        unit);
+
+  (* Called when InstanceT ~> ObjT *)
+  instance_to_obj_hook:
+      (Context.t ->
+        Type.t (* InstanceT *) ->
+        Type.t (* ObjT *) ->
+        unit);
+
+  (* Dispatched with "default" for default exports *)
+  export_named_hook: string (* name *) -> Loc.t -> unit;
 }
 
 let nop_hook_state = {
@@ -111,10 +145,15 @@ let nop_hook_state = {
   lval_hook = lval_nop;
   member_hook = member_nop;
   call_hook = call_nop;
-  require_hook = require_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
   ref_hook = ref_nop;
+  class_member_decl_hook = class_member_decl_nop;
+  obj_prop_decl_hook = obj_prop_decl_nop;
+  require_pattern_hook = require_pattern_nop;
+  obj_to_obj_hook = obj_to_obj_nop;
+  instance_to_obj_hook = instance_to_obj_nop;
+  export_named_hook = export_named_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -131,9 +170,6 @@ let set_member_hook hook =
 let set_call_hook hook =
   hook_state := { !hook_state with call_hook = hook }
 
-let set_require_hook hook =
-  hook_state := { !hook_state with require_hook = hook }
-
 let set_import_hook hook =
   hook_state := { !hook_state with import_hook = hook }
 
@@ -142,6 +178,24 @@ let set_jsx_hook hook =
 
 let set_ref_hook hook =
   hook_state := { !hook_state with ref_hook = hook }
+
+let set_class_member_decl_hook hook =
+  hook_state := { !hook_state with class_member_decl_hook = hook }
+
+let set_obj_prop_decl_hook hook =
+  hook_state := { !hook_state with obj_prop_decl_hook = hook }
+
+let set_require_pattern_hook hook =
+  hook_state := { !hook_state with require_pattern_hook = hook }
+
+let set_obj_to_obj_hook hook =
+  hook_state := { !hook_state with obj_to_obj_hook = hook }
+
+let set_instance_to_obj_hook hook =
+  hook_state := { !hook_state with instance_to_obj_hook = hook }
+
+let set_export_named_hook hook =
+  hook_state := { !hook_state with export_named_hook = hook }
 
 let reset_hooks () =
   hook_state := nop_hook_state
@@ -158,9 +212,6 @@ let dispatch_member_hook cx name loc this_t =
 let dispatch_call_hook cx name loc this_t =
   !hook_state.call_hook cx name loc this_t
 
-let dispatch_require_hook cx name loc =
-  !hook_state.require_hook cx name loc
-
 let dispatch_import_hook cx name loc =
   !hook_state.import_hook cx name loc
 
@@ -169,3 +220,21 @@ let dispatch_jsx_hook cx name loc this_t =
 
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
+
+let dispatch_class_member_decl_hook cx self static name loc =
+  !hook_state.class_member_decl_hook cx self static name loc
+
+let dispatch_obj_prop_decl_hook cx name loc =
+  !hook_state.obj_prop_decl_hook cx name loc
+
+let dispatch_require_pattern_hook loc =
+  !hook_state.require_pattern_hook loc
+
+let dispatch_obj_to_obj_hook cx t1 t2 =
+  !hook_state.obj_to_obj_hook cx t1 t2
+
+let dispatch_instance_to_obj_hook cx t1 t2 =
+  !hook_state.instance_to_obj_hook cx t1 t2
+
+let dispatch_export_named_hook loc =
+  !hook_state.export_named_hook loc

@@ -1,14 +1,12 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandInfo
+open CommandUtils
 
 (***********************************************************************)
 (* flow status (report current error set) command impl *)
@@ -36,15 +34,16 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           A server will be started if none is running over ROOT.\n\
           \n\
           Status command options:"
-          CommandUtils.exe_name;
+          exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> CommandUtils.server_flags
-        |> CommandUtils.json_flags
-        |> CommandUtils.error_flags
-        |> CommandUtils.strip_root_flag
+        |> connect_and_json_flags
+        |> json_version_flag
+        |> error_flags
+        |> strip_root_flag
+        |> from_flag
         |> dummy false (* match --version below *)
-        |> anon "root" (optional string) ~doc:"Root directory"
+        |> anon "root" (optional string)
       )
     }
   else
@@ -75,17 +74,18 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
               \tstatus\n\
           \n\
           Status command options:"
-          CommandUtils.exe_name
+          exe_name
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> CommandUtils.server_flags
-        |> CommandUtils.json_flags
-        |> CommandUtils.error_flags
-        |> CommandUtils.strip_root_flag
+        |> connect_and_json_flags
+        |> json_version_flag
+        |> error_flags
+        |> strip_root_flag
+        |> from_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
-        |> anon "root" (optional string) ~doc:"Root directory"
+        |> anon "root" (optional string)
       )
     }
 
@@ -93,106 +93,99 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     from: string;
     output_json: bool;
+    output_json_version: Errors.Json_output.json_version option;
     pretty: bool;
-    error_flags: Options.error_flags;
+    error_flags: Errors.Cli_output.error_flags;
     strip_root: bool;
   }
 
-  let rec check_status (args:args) server_flags =
+  let check_status (args:args) connect_flags =
     let name = "flow" in
 
-    let ic, oc = CommandUtils.connect server_flags args.root in
-    ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
-    let response = ServerProt.response_from_channel ic in
+    let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
+    let request = ServerProt.Request.STATUS (args.root, include_warnings) in
+    let response, lazy_stats = match connect_and_make_request connect_flags args.root request with
+    | ServerProt.Response.STATUS {status_response; lazy_stats} -> status_response, lazy_stats
+    | response -> failwith_bad_response ~request ~response
+    in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
-      ~out_channel:stdout ~strip_root ~pretty:args.pretty
+      ~out_channel:stdout ~strip_root ~pretty:args.pretty ?version:args.output_json_version
+      ~suppressed_errors:([])
     in
+    let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
+    | Some mode -> Some (
+        Printf.sprintf
+          ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n" ^^
+          "To learn more, visit flow.org/en/docs/lang/lazy-modes")
+        Options.(match mode with | LAZY_MODE_FILESYSTEM -> "filesystem" | LAZY_MODE_IDE -> "IDE")
+        lazy_stats.ServerProt.Response.checked_files
+        lazy_stats.ServerProt.Response.total_files
+      )
+    | None -> None in
     match response with
-    | ServerProt.DIRECTORY_MISMATCH d ->
+    | ServerProt.Response.DIRECTORY_MISMATCH d ->
       let msg = Printf.sprintf
         ("%s is running on a different directory.\n" ^^
          "server_root: %s, client_root: %s")
         name
-        (Path.to_string d.ServerProt.server)
-        (Path.to_string d.ServerProt.client)
+        (Path.to_string d.ServerProt.Response.server)
+        (Path.to_string d.ServerProt.Response.client)
       in
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
-    | ServerProt.ERRORS errors ->
+    | ServerProt.Response.ERRORS {errors; warnings} ->
       let error_flags = args.error_flags in
       begin if args.output_json then
-        print_json errors
+        print_json ~errors ~warnings ()
       else if args.from = "vim" || args.from = "emacs" then
-        Errors.Vim_emacs_output.print_errors ~strip_root stdout errors
+        Errors.Vim_emacs_output.print_errors ~strip_root
+          stdout ~errors ~warnings ()
       else
         Errors.Cli_output.print_errors
           ~strip_root
           ~flags:error_flags
           ~out_channel:stdout
-          errors
+          ~errors
+          ~warnings
+          ~lazy_msg
+          ()
       end;
-      FlowExitStatus.(exit Type_error)
-    | ServerProt.NO_ERRORS ->
-      if args.output_json
-      then print_json Errors.ErrorSet.empty
-      else Printf.printf "No errors!\n%!";
+      FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+    | ServerProt.Response.NO_ERRORS ->
+      if args.output_json then
+        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
+      else begin
+        Printf.printf "No errors!\n%!";
+        Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
+      end;
       FlowExitStatus.(exit No_error)
-    | ServerProt.NOT_COVERED ->
+    | ServerProt.Response.NOT_COVERED ->
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
-    | ServerProt.PONG ->
-      let msg = "Why on earth did the server respond with a pong?" in
-      FlowExitStatus.(exit ~msg Unknown_error)
-    | ServerProt.SERVER_DYING ->
-      let msg = Utils_js.spf
-        "Server has been killed for %s"
-        (Path.to_string args.root) in
-      FlowExitStatus.(exit ~msg Server_dying)
-    | ServerProt.SERVER_OUT_OF_DATE ->
-      if server_flags.CommandUtils.no_auto_start
-      then Printf.printf "%s is outdated, killing it.\n" name
-      else Printf.printf "%s is outdated, going to launch a new one.\n" name;
-      flush stdout;
-      retry (args, server_flags) 3 "The flow server will be ready in a moment"
 
-
-  and retry (args, server_flags) sleep msg =
-    CommandUtils.check_timeout ();
-    let retries = server_flags.CommandUtils.retries in
-    if retries > 0
-    then begin
-      Printf.fprintf stderr "%s\n%!" msg;
-      CommandUtils.sleep sleep;
-      check_status args { server_flags with CommandUtils.retries = retries - 1 }
-    end else
-      FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
-
-  let main server_flags json pretty error_flags strip_root version root () =
+  let main connect_flags json pretty json_version error_flags strip_root from version root () =
+    FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
-      CommandUtils.print_version ();
+      print_version ();
       FlowExitStatus.(exit No_error)
     );
 
-    let root = CommandUtils.guess_root root in
-    let timeout_arg = server_flags.CommandUtils.timeout in
-    if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
+    let root = guess_root root in
 
-    let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
-
-    let json = json || pretty in
+    let json = json || Option.is_some json_version || pretty in
 
     let args = {
       root;
-      from = server_flags.CommandUtils.from;
+      from = connect_flags.CommandUtils.from;
       output_json = json;
+      output_json_version = json_version;
       pretty;
       error_flags;
       strip_root;
     } in
-    check_status args server_flags
+    check_status args connect_flags
 end
 
 module Status(CommandList : COMMAND_LIST) = struct

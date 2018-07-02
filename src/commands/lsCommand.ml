@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -28,14 +25,20 @@ let spec = {
     |> strip_root_flag
     |> ignore_flag
     |> include_flag
+    |> untyped_flag
+    |> declaration_flag
     |> root_flag
     |> json_flags
+    |> from_flag
     |> flag "--all" no_arg
-      ~doc:"Even list ignored files and lib files"
+      ~doc:"Even list ignored files"
+    |> flag "--imaginary" no_arg
+      ~doc:"Even list non-existent specified files (normally they are silently dropped). \
+            Non-existent files are never considered to be libs."
     |> flag "--explain" no_arg
       ~doc:"Output what kind of file each file is and why Flow cares about it"
+    |> input_file_flag "ls"
     |> anon "files or dirs" (list_of string)
-      ~doc:"Lists only these files or files in these directories"
   )
 }
 
@@ -46,6 +49,7 @@ type file_result =
   | ExplicitlyIgnored
   | ImplicitLib
   | ExplicitLib
+  | ConfigFile
 
 let string_of_file_result = function
 | ImplicitlyIncluded -> "ImplicitlyIncluded"
@@ -54,6 +58,7 @@ let string_of_file_result = function
 | ExplicitlyIgnored -> "ExplicitlyIgnored"
 | ImplicitLib -> "ImplicitLib"
 | ExplicitLib -> "ExplicitLib"
+| ConfigFile -> "ConfigFile"
 
 let string_of_file_result_with_padding = function
 | ImplicitlyIncluded -> "ImplicitlyIncluded"
@@ -62,10 +67,10 @@ let string_of_file_result_with_padding = function
 | ExplicitlyIgnored  -> "ExplicitlyIgnored "
 | ImplicitLib        -> "ImplicitLib       "
 | ExplicitLib        -> "ExplicitLib       "
+| ConfigFile         -> "ConfigFile        "
 
-let is_included ~options ~libs raw_file =
+let explain ~root ~options ~libs raw_file =
   let file = raw_file |> Path.make |> Path.to_string in
-  let root = Options.root options in
   let root_str = Path.to_string root in
   let result =
     if SSet.mem file libs
@@ -75,12 +80,14 @@ let is_included ~options ~libs raw_file =
       if String_utils.string_starts_with file (Path.to_string flowtyped_path)
       then ImplicitLib
       else ExplicitLib
-    end else if Files.is_ignored options file
+    end else if Server_files_js.config_file root = file
+    then ConfigFile
+    else if Files.is_ignored options file
     then ExplicitlyIgnored
-    else if Files.is_included options file
-    then ExplicitlyIncluded
     else if String_utils.string_starts_with file root_str
     then ImplicitlyIncluded
+    else if Files.is_included options file
+    then ExplicitlyIncluded
     else ImplicitlyIgnored
   in (raw_file, result)
 
@@ -100,143 +107,36 @@ let rec iter_get_next ~f get_next =
       List.iter f result;
       iter_get_next ~f get_next
 
-let make_options ~root ~strip_root ~ignore_flag ~include_flag =
+let make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
+  let temp_dir = FlowConfig.temp_dir flowconfig in
+  let includes = CommandUtils.list_of_string_arg include_flag in
+  let ignores = CommandUtils.list_of_string_arg ignore_flag in
+  let untyped = CommandUtils.list_of_string_arg untyped_flag in
+  let declarations = CommandUtils.list_of_string_arg declaration_flag in
+  let libs = [] in
+  CommandUtils.file_options flowconfig
+    ~root ~no_flowlib:true ~temp_dir ~ignores ~includes ~libs ~untyped ~declarations
 
-  let opt_temp_dir =
-    FlowConfig.(flowconfig.options.Opts.temp_dir)
-    |> Path.make
-    |> Path.to_string
-  in
-
-  let opt_shm_dirs =
-    FlowConfig.(flowconfig.options.Opts.shm_dirs)
-    |> List.map Path.(fun s -> s |> make |> to_string)
-  in
-
-  let opt_shm_min_avail = FlowConfig.(flowconfig.options.Opts.shm_min_avail) in
-
-  let opt_log_file = Server_files_js.log_file
-    ~tmp_dir:opt_temp_dir
-    root
-    flowconfig.FlowConfig.options
-  in
-
-  let opt_strip_root = strip_root ||
-    FlowConfig.(flowconfig.options.Opts.strip_root)
-  in
-
-  let opt_module = FlowConfig.(flowconfig.options.Opts.module_system) in
-
-  let opt_ignores = ignores_of_arg
-    root
-    flowconfig.FlowConfig.ignores
-    (list_of_string_arg ignore_flag) in
-
-  let opt_includes =
-    let includes = List.rev_append
-      flowconfig.FlowConfig.includes
-      (list_of_string_arg include_flag) in
-    includes_of_arg root includes in
-
-  { Options.
-    opt_check_mode = false;
-    opt_focus_check_target = None;
-    opt_server_mode = false;
-    opt_error_flags = Options.default_error_flags;
-    opt_log_file = opt_log_file;
-    opt_root = root;
-    opt_should_wait = false;
-    opt_debug = false;
-    opt_verbose = None;
-    opt_all = false;
-    opt_weak = false;
-    opt_traces = 0;
-    opt_json = false;
-    opt_quiet = false;
-    opt_module_file_exts = FlowConfig.(
-      flowconfig.options.Opts.module_file_exts
-    );
-    opt_module_resource_exts = FlowConfig.(
-      flowconfig.options.Opts.module_resource_exts
-    );
-    opt_module_name_mappers = FlowConfig.(
-      flowconfig.options.Opts.module_name_mappers
-    );
-    opt_modules_are_use_strict = FlowConfig.(
-      flowconfig.options.Opts.modules_are_use_strict
-    );
-    opt_node_resolver_dirnames = FlowConfig.(
-      flowconfig.options.Opts.node_resolver_dirnames
-    );
-    opt_output_graphml = false;
-    opt_profile = false;
-    opt_strip_root;
-    opt_module;
-    opt_libs = ServerCommands.CheckCommand.libs ~root flowconfig None;
-    opt_default_lib_dir = None;
-    opt_munge_underscores = false;
-    opt_temp_dir;
-    opt_shm_dirs;
-    opt_shm_min_avail;
-    opt_shm_dep_table_pow = FlowConfig.(
-      flowconfig.options.Opts.shm_dep_table_pow
-    );
-    opt_shm_hash_table_pow = FlowConfig.(
-      flowconfig.options.Opts.shm_hash_table_pow
-    );
-    opt_shm_log_level = FlowConfig.(
-      flowconfig.options.Opts.shm_log_level
-    );
-    opt_shm_global_size = FlowConfig.(
-      flowconfig.options.Opts.shm_global_size
-    );
-    opt_shm_heap_size = FlowConfig.(
-      flowconfig.options.Opts.shm_heap_size
-    );
-    opt_max_workers = 1;
-    opt_ignores;
-    opt_includes;
-    opt_suppress_comments = [];
-    opt_suppress_types = SSet.empty;
-    opt_enable_const_params = false;
-    opt_enable_unsafe_getters_and_setters = false;
-    opt_enforce_strict_type_args = false;
-    opt_enforce_strict_call_arity = false;
-    opt_esproposal_class_static_fields = Options.ESPROPOSAL_WARN;
-    opt_esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
-    opt_esproposal_decorators = Options.ESPROPOSAL_WARN;
-    opt_esproposal_export_star_as = Options.ESPROPOSAL_WARN;
-    opt_facebook_fbt = None;
-    opt_ignore_non_literal_requires = false;
-    opt_max_header_tokens = FlowConfig.(
-      flowconfig.options.Opts.max_header_tokens
-    );
-    opt_haste_name_reducers = FlowConfig.(
-      flowconfig.options.Opts.haste_name_reducers
-    );
-    opt_haste_paths_blacklist = FlowConfig.(
-      flowconfig.options.Opts.haste_paths_blacklist
-    );
-    opt_haste_paths_whitelist = FlowConfig.(
-      flowconfig.options.Opts.haste_paths_whitelist
-    );
-    opt_haste_use_name_reducers = FlowConfig.(
-      flowconfig.options.Opts.haste_use_name_reducers
-    )
-  }
+(* The problem with Files.wanted is that it says yes to everything except ignored files and libs.
+ * So implicitly ignored files (like files in another directory) pass the Files.wanted check *)
+let wanted ~root ~options libs file =
+  Files.wanted ~options libs file && (
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    String_utils.string_starts_with file root_str || Files.is_included options file
+  )
 
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
  *)
-let get_ls_files ~all ~options ~libs = function
+let get_ls_files ~root ~all ~options ~libs ~imaginary = function
 | None ->
-    Files.make_next_files ~all ~subdir:None ~options ~libs
+    Files.make_next_files ~root ~all ~subdir:None ~options ~libs
 | Some dir when try Sys.is_directory dir with _ -> false ->
     let subdir = Some (Path.make dir) in
-    Files.make_next_files ~all ~subdir ~options ~libs
+    Files.make_next_files ~root ~all ~subdir ~options ~libs
 | Some file ->
-    if all || (Sys.file_exists file && Files.wanted ~options libs file)
+    if (Sys.file_exists file || imaginary) && (all || wanted ~root ~options libs file)
     then begin
       let file = file |> Path.make |> Path.to_string in
       let rec cb = ref begin fun () ->
@@ -263,33 +163,65 @@ let concat_get_next get_nexts =
 
   in concat
 
-let main
-  strip_root ignore_flag include_flag root_flag json pretty all reason
-  root_or_files () =
+(* Append a constant list of files to the get_next function *)
+let get_next_append_const get_next const =
+  let const = ref const in
+  fun () ->
+    match get_next () with
+    | [] ->
+      let ret = !const in
+      const := [];
+      ret
+    | ret ->
+      ret
 
+let main
+  strip_root ignore_flag include_flag untyped_flag declaration_flag root_flag json pretty from all imaginary reason
+  input_file root_or_files () =
+
+  let files_or_dirs = get_filenames_from_input ~allow_imaginary:true input_file root_or_files in
+
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root_flag with
     | Some root -> Some root
-    | None -> (match root_or_files with
-      | Some (first_file::_) -> Some first_file
+    | None -> (match files_or_dirs with
+      | first_file::_ ->
+        (* If the first_file doesn't exist or if we can't find a .flowconfig, we'll error. If
+         * --strip-root is passed, we want the error to contain a relative path. *)
+        let first_file = if strip_root
+          then Files.relative_path (Sys.getcwd ()) first_file
+          else first_file in
+        Some first_file
       | _ -> None)
   ) in
 
-  let options = make_options ~root ~strip_root ~ignore_flag ~include_flag in
+  let options = make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag in
+  (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
+  let options = { options with Files.default_lib_dir = None; } in
   let _, libs = Files.init options in
-  (* `flow ls` and `flow ls dir` will list out all the flow files *)
-  let next_files = (match root_or_files with
-  | None
-  | Some [] ->
-      get_ls_files ~all ~options ~libs None
-  | Some files_or_dirs ->
+  (* `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
+   * we pass in ~libs:SSet.empty, which means we won't filter out any lib files *)
+  let next_files = (match files_or_dirs with
+  | [] ->
+      get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary None
+  | files_or_dirs ->
       files_or_dirs
-      |> List.map (fun f -> get_ls_files ~all ~options ~libs (Some f))
+      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+  let config_file_absolute = Server_files_js.config_file root in
+  let config_file_relative = Files.relative_path root_str config_file_absolute in
+  let include_config_file = files_or_dirs = [] || List.exists (fun file_or_dir ->
+      file_or_dir = config_file_relative || String_utils.string_starts_with root_str file_or_dir
+    ) files_or_dirs in
+  let next_files = if include_config_file
+    then get_next_append_const next_files [ config_file_absolute ]
+    else next_files in
+
   let normalize_filename filename =
-    if not options.Options.opt_strip_root then filename
+    if not strip_root then filename
     else Files.relative_path root_str filename
   in
 
@@ -300,17 +232,17 @@ let main
       if reason
       then
         files
-        |> List.map normalize_filename
-        |> List.map (is_included ~options ~libs)
+        |> List.map (explain ~root ~options ~libs)
+        |> List.map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
         List.map (fun f -> JSON_String (normalize_filename f)) files
       ) in
-    json_to_string ~pretty json |> print_endline
+    print_json_endline ~pretty json
   end) else begin
     let f = if reason
     then begin fun filename ->
-      let f, r = is_included ~options ~libs filename in
+      let f, r = explain ~root ~options ~libs filename in
       Printf.printf
         "%s    %s\n%!"
         (string_of_file_result_with_padding r)

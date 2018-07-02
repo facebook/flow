@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -87,6 +86,50 @@ let rpartition s c =
     String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
   first, second
 
+(** If s is longer than length len, return a copy of s truncated to length len. *)
+let truncate len s =
+  if String.length s <= len then
+    s
+  else
+    String.sub s 0 len
+
+(** [index_not_from_opt str i chars] is like [index_from_opt], but returns the index of the first
+    char in [str] after position [i] that is not in [chars] if it exists, or [None] otherwise. *)
+let index_not_from_opt =
+  let rec helper i len str chars =
+    if i = len then None
+    else if not (String.contains chars str.[i]) then Some i
+    else helper (i + 1) len str chars
+  in
+  fun str i chars ->
+    helper i (String.length str) str chars
+
+
+(** [index_not_opt str chars] is like [index_opt], but returns the index of the first char in
+    [str] that is not in [chars] if it exists, or [None] otherwise. *)
+let index_not_opt str chars = index_not_from_opt str 0 chars
+
+
+(** [rindex_not_from_opt str i chars] is like [rindex_from_opt], but returns the index of the last
+    char in [str] before position [i+1] that is not in [chars] if it exists, or [None] otherwise. *)
+let rec rindex_not_from_opt str i chars =
+  if i < 0 then None
+  else if not (String.contains chars str.[i]) then Some i
+  else rindex_not_from_opt str (i - 1) chars
+
+
+(** [rindex_not_opt str chars] is like [rindex_opt], but returns the index of the last char in
+    [str] that is not in [chars] if it exists, or [None] otherwise. *)
+let rindex_not_opt str chars = rindex_not_from_opt str (String.length str - 1) chars
+
+
+let zero_code, nine_code = Char.code '0', Char.code '9'
+
+let is_decimal_digit =
+  fun chr ->
+    let code = Char.code chr in
+    zero_code <= code && code <= nine_code
+
 let is_lowercase_char =
   let a_code, z_code = Char.code 'a', Char.code 'z' in
   fun chr ->
@@ -141,6 +184,15 @@ let split_into_lines str =
     []
     ((last_start, String.length str - last_start)::lines)
 
+(* Splits a string into lines, indents each non-empty line, and concats with newlines *)
+let indent indent_size str =
+  let padding = String.make indent_size ' ' in
+  str
+  |> split_into_lines
+  |> List.map (fun str -> if str = "" then "" else (padding ^ str))
+  |> String.concat "\n"
+
+
 (* Splits a string into a list of strings using only "\n" as a delimiter.
  * If the string ends with a delimiter, an empty string representing the
  * contents after the final delimiter is NOT included (unlike Str.split_delim).
@@ -152,3 +204,41 @@ let split_on_newlines content =
   match List.rev lines with
   | "" :: rest -> List.rev rest
   | _ -> lines
+
+
+(* TODO: remove after upgrading to ocaml 4.05 *)
+let split_on_char sep s =
+  let open String in
+  let r = ref [] in
+  let j = ref (length s) in
+  for i = length s - 1 downto 0 do
+    if unsafe_get s i = sep then begin
+      r := sub s (i + 1) (!j - i - 1) :: !r;
+      j := i
+    end
+  done;
+  sub s 0 !j :: !r
+
+
+module Internal = struct
+  let to_list s =
+    let rec loop acc i =
+      if i < 0 then acc
+      else (loop [@tailcall]) (s.[i] :: acc) (i - 1)
+    in
+    loop [] (String.length s - 1)
+
+  let of_list l =
+    let s = Bytes.create (List.length l) in
+    List.iteri (Bytes.set s) l;
+    Bytes.unsafe_to_string s
+end
+
+let to_list = Internal.to_list
+let of_list = Internal.of_list
+
+module CharSet = struct
+  include Set.Make(Char)
+  let of_string str = of_list (Internal.to_list str)
+  let to_string set = Internal.of_list (elements set)
+end

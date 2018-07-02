@@ -1,3 +1,4 @@
+dist/
 lex_test
 parse_test
 lexer_flow.ml

@@ -2,7 +2,7 @@
 layout: guide
 ---
 
-Objects are used many different ways in JavaScript. There's a number of
+Objects can be used in many different ways in JavaScript. There are a number of
 different ways to type them in order to support all the different use cases.
 
 ## Object type syntax <a class="toc" id="toc-object-type-syntax" href="#toc-object-type-syntax"></a>
@@ -59,7 +59,7 @@ In addition to their set value type, these optional properties can either be
 
 ```js
 // @flow
-function acceptsObject(value: { optionalProp?: string }) {
+function acceptsObject(value: { foo?: string }) {
   // ...
 }
 
@@ -79,7 +79,7 @@ how they are used.
 
 When you create an object with its properties, you create a _sealed_ object
 type in Flow. These sealed objects will know all of the properties you declared
-it with and the types of their values.
+them with and the types of their values.
 
 ```js
 // @flow
@@ -111,7 +111,7 @@ obj.bar = true;    // Error!
 obj.baz = 'three'; // Error!
 ```
 
-The work around here might be to turn your object into an _unsealed object_.
+The workaround here might be to turn your object into an _unsealed object_.
 
 ### Unsealed objects <a class="toc" id="toc-unsealed-objects" href="#toc-unsealed-objects"></a>
 
@@ -172,7 +172,7 @@ var val1: boolean = obj.prop; // Error!
 var val2: string  = obj.prop; // Works!
 ```
 
-As Flow gets smarter and smarter, there should be fewer of these scenarios.
+As Flow gets smarter and smarter, it will figure out the types of properties in more scenarios.
 
 ##### Unknown property lookup on unsealed objects is unsafe <a class="toc" id="toc-unknown-property-lookup-on-unsealed-objects-is-unsafe" href="#toc-unknown-property-lookup-on-unsealed-objects-is-unsafe"></a>
 
@@ -233,11 +233,11 @@ var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
 
 Newer versions of the JavaScript standard include a `Map` class, but it is
 still very common to use objects as maps as well. In this use case, an object
-will likely have properties added to it and retrieved throughout it's life.
+will likely have properties added to it and retrieved throughout its lifecycle.
 Furthermore, the property keys may not even be known statically, so writing out
 a type annotation would not be possible.
 
-For objects like this, Flow provides a special kind of property, called an
+For objects like these, Flow provides a special kind of property, called an
 "indexer property." An indexer property allows reads and writes using any key
 that matches the indexer key type.
 
@@ -285,4 +285,31 @@ function add(id: number, name: string) {
   obj[id] = name;
   obj.size++;
 }
+```
+
+### `Object` Type <a class="toc" id="toc-object-type" href="#toc-object-type"></a>
+
+Sometimes it is useful to write types that accept arbitrary objects, for
+those you should write `{}` like this:
+
+```js
+function method(obj: {}) {
+  // ...
+}
+```
+
+However, if you need to opt-out of the type checker, and don't want to go all
+the way to `any`, you can instead use `Object`. **`Object` is unsafe and
+should be avoided.**
+
+For example, the following code will not report any errors:
+
+```js
+function method(obj: Object) {
+  obj.foo = 42;               // Works.
+  let bar: boolean = obj.bar; // Works.
+  obj.baz.bat.bam.bop;        // Works.
+}
+
+method({ baz: 3.14, bar: "hello" });
 ```

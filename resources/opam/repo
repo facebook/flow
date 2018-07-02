@@ -1,2 +1,0 @@
-upstream: "https://github.com/ocaml/opam-repository/tree/master/"
-browse: "https://opam.ocaml.org/pkg/"

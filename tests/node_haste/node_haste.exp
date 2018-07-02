@@ -1,6 +1,10 @@
-foo/bar/client.js:7
-  7: var unreachable = require('annotation');
-                               ^^^^^^^^^^^^ annotation. Required module not found
+Error ------------------------------------------------------------------------------------------- foo/bar/client.js:7:27
+
+Cannot resolve module `annotation`.
+
+   7| var unreachable = require('annotation');
+                                ^^^^^^^^^^^^
+
 
 
 Found 1 error

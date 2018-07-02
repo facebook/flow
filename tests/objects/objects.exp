@@ -1,241 +1,306 @@
-compatibility.js:3
-  3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-             ^ object type. This type is incompatible with
-  2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                            ^^^^^^^^^^^^^^^ property `foo`. Property not found in
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                       ^^^^^^^^^^^^^^^ object type
+Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
-compatibility.js:3
-  3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-             ^ object type. This type is incompatible with
-  2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                       ^^^^^^^^^^^^^^^ property `bar`. Property not found in
-      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                            ^^^^^^^^^^^^^^^ object type
+Cannot assign `y` to `x` because:
+ - property `bar` is missing in object type [1] but exists in object type [2] in property `x`.
+ - property `foo` is missing in object type [2] but exists in object type [1] in property `x`.
 
-compatibility.js:7
-  7:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
-  6:   function(x: { foo: string }, y: { foo: number }) {
-                   ^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      6:   function(x: { foo: string }, y: { foo: number }) {
-                              ^^^^^^ string. This type is incompatible with
-      6:   function(x: { foo: string }, y: { foo: number }) {
-                                                  ^^^^^^ number
+   compatibility.js:3:9
+   3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
+              ^
 
-compatibility.js:7
-  7:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
-  6:   function(x: { foo: string }, y: { foo: number }) {
-                   ^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      6:   function(x: { foo: string }, y: { foo: number }) {
-                                                  ^^^^^^ number. This type is incompatible with
-      6:   function(x: { foo: string }, y: { foo: number }) {
-                              ^^^^^^ string
-
-compatibility.js:11
- 11:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
- 10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                            ^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                       ^^^^^^ string. This type is incompatible with
-         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                                                  ^^^^^^ number
-
-compatibility.js:11
- 11:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
- 10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                            ^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                                                  ^^^^^^ number. This type is incompatible with
-         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                       ^^^^^^ string
-
-compatibility.js:15
- 15:     x = y; // 1 error: number !~> string
-             ^ object type. This type is incompatible with
- 14:   function(x: { +foo: string }, y: { +foo: number }) {
-                   ^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     14:   function(x: { +foo: string }, y: { +foo: number }) {
-                                                    ^^^^^^ number. This type is incompatible with
-     14:   function(x: { +foo: string }, y: { +foo: number }) {
-                               ^^^^^^ string
-
-compatibility.js:19
- 19:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
- 18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                            ^^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                        ^^^^^^ string. This type is incompatible with
-         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                                                    ^^^^^^ number
-
-compatibility.js:19
- 19:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
- 18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                            ^^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                                                    ^^^^^^ number. This type is incompatible with
-         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                        ^^^^^^ string
-
-compatibility.js:23
- 23:     x = y; // 1 error: string !~> number
-             ^ object type. This type is incompatible with
- 22:   function(x: { -foo: string }, y: { -foo: number }) {
-                   ^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-     22:   function(x: { -foo: string }, y: { -foo: number }) {
-                               ^^^^^^ string. This type is incompatible with
-     22:   function(x: { -foo: string }, y: { -foo: number }) {
-                                                    ^^^^^^ number
-
-compatibility.js:27
- 27:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
- 26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                            ^^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                        ^^^^^^ string. This type is incompatible with
-         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                                                    ^^^^^^ number
-
-compatibility.js:27
- 27:     x = y; // 2 errors: string !~> number; number !~> string
-             ^ object type. This type is incompatible with
- 26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                            ^^^^^^^^^^^^^^^^ object type
-      Property `foo` is incompatible:
-         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                                                    ^^^^^^ number. This type is incompatible with
-         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                        ^^^^^^ string
-
-conversion.js:10
- 10: (Object(undefined): Number); // error
-      ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
- 10: (Object(undefined): Number); // error
-                         ^^^^^^ Number
-
-conversion.js:19
- 19: (z.charAt(0): string);
-        ^^^^^^ property `charAt`. Property not found in
- 19: (z.charAt(0): string);
-      ^ Number
-
-objects.js:4
-  4: (x.foo : string);     // error, key doesn't exist
-        ^^^ property `foo`. Property not found in
-  4: (x.foo : string);     // error, key doesn't exist
-      ^ object type
-
-objects.js:5
-  5: (x['foo'] : string);  // error, key doesn't exist
-        ^^^^^ property `foo`. Property not found in
-  5: (x['foo'] : string);  // error, key doesn't exist
-      ^ object type
-
-objects.js:7
-  7: (x.bar: boolean);     // error, string !~> boolean
-      ^^^^^ string. This type is incompatible with
-  7: (x.bar: boolean);     // error, string !~> boolean
-             ^^^^^^^ boolean
-
-objects.js:8
-  8: (x['123'] : boolean); // error, string !~> boolean
-      ^^^^^^^^ string. This type is incompatible with
-  8: (x['123'] : boolean); // error, string !~> boolean
-                 ^^^^^^^ boolean
-
-objects.js:9
-  9: x['123'] = false;     // error, boolean !~> string
-                ^^^^^ boolean. This type is incompatible with
-  3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
-                     ^^^^^^ string
-
-objects.js:12
- 12: (x[`foo`]: string);   // error, key doesn't exist
-        ^^^^^ property `foo`. Property not found in
- 12: (x[`foo`]: string);   // error, key doesn't exist
-      ^ object type
-
-objects.js:15
- 15: y['foo'] = 123; // error, number !~> string
-                ^^^ number. This type is incompatible with
- 14: var y : {foo: string} = {foo: 'bar'};
-                   ^^^^^^ string
-
-objects.js:16
- 16: y['bar'] = 'abc'; // error, property not found
-       ^^^^^ property `bar`. Property not found in
- 16: y['bar'] = 'abc'; // error, property not found
-     ^ object type
-
-objects.js:18
- 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-      ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
-                           ^^^^^^ string
-
-unaliased_assign.js:20
- 20:   glob = obj;    // error: subsequent assignment might make glob.x a number
-              ^^^ object literal. This type is incompatible with
- 15: var glob: { x: string } = { x: "hey" };
-               ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-     18:   var obj: { x: string | number };
-                                  ^^^^^^ number. This type is incompatible with
-     15: var glob: { x: string } = { x: "hey" };
-                        ^^^^^^ string
+References:
+   compatibility.js:2:20
+   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                         ^^^^^^^^^^^^^^^ [1]
+   compatibility.js:2:47
+   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                    ^^^^^^^^^^^^^^^ [2]
 
 
-Found 24 errors
+Error --------------------------------------------------------------------------------------------- compatibility.js:7:9
+
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `foo`.
+
+   compatibility.js:7:9
+   7|     x = y; // 2 errors: string !~> number; number !~> string
+              ^
+
+References:
+   compatibility.js:6:42
+   6|   function(x: { foo: string }, y: { foo: number }) {
+                                               ^^^^^^ [1]
+   compatibility.js:6:22
+   6|   function(x: { foo: string }, y: { foo: number }) {
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- compatibility.js:11:9
+
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`.
+
+   compatibility.js:11:9
+   11|     x = y; // 2 errors: string !~> number; number !~> string
+               ^
+
+References:
+   compatibility.js:10:54
+   10|   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                                            ^^^^^^ [1]
+   compatibility.js:10:27
+   10|   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- compatibility.js:15:9
+
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `foo`.
+
+   compatibility.js:15:9
+   15|     x = y; // 1 error: number !~> string
+               ^
+
+References:
+   compatibility.js:14:44
+   14|   function(x: { +foo: string }, y: { +foo: number }) {
+                                                  ^^^^^^ [1]
+   compatibility.js:14:23
+   14|   function(x: { +foo: string }, y: { +foo: number }) {
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- compatibility.js:19:9
+
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`.
+
+   compatibility.js:19:9
+   19|     x = y; // 2 errors: string !~> number; number !~> string
+               ^
+
+References:
+   compatibility.js:18:56
+   18|   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                                              ^^^^^^ [1]
+   compatibility.js:18:28
+   18|   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- compatibility.js:23:9
+
+Cannot assign `y` to `x` because string [1] is incompatible with number [2] in property `foo`.
+
+   compatibility.js:23:9
+   23|     x = y; // 1 error: string !~> number
+               ^
+
+References:
+   compatibility.js:22:23
+   22|   function(x: { -foo: string }, y: { -foo: number }) {
+                             ^^^^^^ [1]
+   compatibility.js:22:44
+   22|   function(x: { -foo: string }, y: { -foo: number }) {
+                                                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- compatibility.js:27:9
+
+Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`.
+
+   compatibility.js:27:9
+   27|     x = y; // 2 errors: string !~> number; number !~> string
+               ^
+
+References:
+   compatibility.js:26:56
+   26|   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                                              ^^^^^^ [1]
+   compatibility.js:26:28
+   26|   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- conversion.js:10:2
+
+Cannot cast `Object(...)` to `Number` because object type [1] is incompatible with `Number` [2].
+
+   conversion.js:10:2
+   10| (Object(undefined): Number); // error
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:39:24
+   39|     static (o: ?void): {[key: any]: any};
+                              ^^^^^^^^^^^^^^^^^ [1]
+   conversion.js:10:21
+   10| (Object(undefined): Number); // error
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- conversion.js:19:2
+
+Cannot call `z.charAt` because property `charAt` is missing in `Number` [1].
+
+   conversion.js:19:2
+   19| (z.charAt(0): string);
+        ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:41:25
+   41|     static (o: number): Number;
+                               ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- objects.js:4:2
+
+Cannot get `x.foo` because property `foo` is missing in object type [1].
+
+   objects.js:4:2
+   4| (x.foo : string);     // error, key doesn't exist
+       ^^^^^
+
+References:
+   objects.js:3:9
+   3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- objects.js:5:2
+
+Cannot get `x['foo']` because property `foo` is missing in object type [1].
+
+   objects.js:5:2
+   5| (x['foo'] : string);  // error, key doesn't exist
+       ^^^^^^^^
+
+References:
+   objects.js:3:9
+   3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- objects.js:7:2
+
+Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2].
+
+   objects.js:7:2
+   7| (x.bar: boolean);     // error, string !~> boolean
+       ^^^^^
+
+References:
+   objects.js:3:30
+   3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                                   ^^^^^^ [1]
+   objects.js:7:9
+   7| (x.bar: boolean);     // error, string !~> boolean
+              ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- objects.js:8:2
+
+Cannot cast `x['123']` to boolean because string [1] is incompatible with boolean [2].
+
+   objects.js:8:2
+   8| (x['123'] : boolean); // error, string !~> boolean
+       ^^^^^^^^
+
+References:
+   objects.js:3:17
+   3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                      ^^^^^^ [1]
+   objects.js:8:13
+   8| (x['123'] : boolean); // error, string !~> boolean
+                  ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:9:12
+
+Cannot assign `false` to `x['123']` because boolean [1] is incompatible with string [2].
+
+   objects.js:9:12
+   9| x['123'] = false;     // error, boolean !~> string
+                 ^^^^^ [1]
+
+References:
+   objects.js:3:17
+   3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:12:2
+
+Cannot get `x[`...`]` because property `foo` is missing in object type [1].
+
+   objects.js:12:2
+   12| (x[`foo`]: string);   // error, key doesn't exist
+        ^^^^^^^^
+
+References:
+   objects.js:3:9
+    3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:15:12
+
+Cannot assign `123` to `y['foo']` because number [1] is incompatible with string [2].
+
+   objects.js:15:12
+   15| y['foo'] = 123; // error, number !~> string
+                  ^^^ [1]
+
+References:
+   objects.js:14:15
+   14| var y : {foo: string} = {foo: 'bar'};
+                     ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:16:1
+
+Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in object type [1].
+
+   objects.js:16:1
+   16| y['bar'] = 'abc'; // error, property not found
+       ^^^^^^^^
+
+References:
+   objects.js:14:9
+   14| var y : {foo: string} = {foo: 'bar'};
+               ^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:18:2
+
+Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompatible with string [2].
+
+   objects.js:18:2
+   18| (y['hasOwnProperty']: string); // error, prototype method is not a string
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:63:5
+   63|     hasOwnProperty(prop: any): boolean;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   objects.js:18:23
+   18| (y['hasOwnProperty']: string); // error, prototype method is not a string
+                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- unaliased_assign.js:20:10
+
+Cannot assign `obj` to `glob` because number [1] is incompatible with string [2] in property `x`.
+
+   unaliased_assign.js:20:10
+   20|   glob = obj;    // error: subsequent assignment might make glob.x a number
+                ^^^
+
+References:
+   unaliased_assign.js:18:26
+   18|   var obj: { x: string | number };
+                                ^^^^^^ [1]
+   unaliased_assign.js:15:16
+   15| var glob: { x: string } = { x: "hey" };
+                      ^^^^^^ [2]
+
+
+
+Found 20 errors

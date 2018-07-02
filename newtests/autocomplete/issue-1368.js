@@ -15,7 +15,7 @@ class ExtendTest extends Test {
     this.extended = extended;
   }
 
-  method() {
+  method(): void {
     this.prop = 12;
     this./* here */
   }

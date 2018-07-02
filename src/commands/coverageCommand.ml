@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -28,37 +25,31 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> connect_and_json_flags
     |> root_flag
-    |> json_flags
+    |> from_flag
     |> flag "--color" no_arg
-        ~doc:"Print the file with colors showing which parts have unknown types"
+        ~doc:("Print the file with colors showing which parts have unknown types. " ^
+              "Cannot be used with --json or --pretty")
     |> flag "--debug" no_arg
-        ~doc:"Print debugging info about each range in the file to stderr"
-    |> flag "--strip-root" no_arg
-        ~doc:"Print paths without the root"
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
+        ~doc:("Print debugging info about each range in the file to stderr. " ^
+              "Cannot be used with --json or --pretty")
+    |> path_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
-    |> anon "file" (optional string) ~doc:"[FILE]"
+    |> anon "file" (optional string)
   )
 }
 
-let handle_error ~json ~pretty ~strip_root (loc, err) =
+let handle_error ~json ~pretty err =
   if json
   then (
     let open Hh_json in
-    let json = JSON_Object (
-      ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc ~strip_root loc) ::
-      (Errors.deprecated_json_props_of_loc ~strip_root loc)
-    ) in
-    prerr_endline (json_to_string ~pretty json);
+    let json = JSON_Object ["error", JSON_String err] in
+    prerr_json_endline ~pretty json;
   ) else (
-    let loc = Reason.string_of_loc ~strip_root loc in
-    prerr_endlinef "%s:\n%s" loc err;
+    prerr_endline err;
   )
 
 let accum_coverage (covered, total) (_loc, is_covered) =
@@ -185,54 +176,51 @@ let rec split_overlapping_ranges accum = Loc.(function
 )
 
 let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) content =
-  if color && json then
-    prerr_endline "Error: --color and --json flags cannot be used together"
-  else if debug && json then
-    prerr_endline "Error: --debug and --json flags cannot be used together"
-  else (
-    if debug then List.iter debug_range types;
+  if debug then List.iter debug_range types;
 
-    begin if color then
-      let types = split_overlapping_ranges [] types |> List.rev in
-      let colors, _ = colorize_file content 0 [] types in
-      Tty.cprint (List.rev colors);
-      print_endline ""
-    end;
+  begin if color then
+    let types = split_overlapping_ranges [] types |> List.rev in
+    let colors, _ = colorize_file content 0 [] types in
+    Tty.cprint (List.rev colors);
+    print_endline ""
+  end;
 
-    let covered, total = List.fold_left accum_coverage (0, 0) types in
-    let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
+  let covered, total = List.fold_left accum_coverage (0, 0) types in
+  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
-    if json then
-      let uncovered_locs = types
-        |> List.filter (fun (_, is_covered) -> not is_covered)
-        |> List.map (fun (loc, _) -> loc)
-      in
-      let open Hh_json in
-      JSON_Object [
-        "expressions", JSON_Object [
-          "covered_count", int_ covered;
-          "uncovered_count", int_ (total - covered);
-          "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
-        ];
-      ]
-      |> json_to_string ~pretty
-      |> print_endline
-    else
-      Utils_js.print_endlinef
-        "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
-  )
+  if json then
+    let covered_locs, uncovered_locs =
+      let covered, uncovered = List.partition (fun (_, is_covered) -> is_covered) types in
+      let locs_of = List.map (fun (loc, _) -> loc) in
+      locs_of covered, locs_of uncovered
+    in
+    let open Hh_json in
+    JSON_Object [
+      "expressions", JSON_Object [
+        "covered_count", int_ covered;
+        "covered_locs", JSON_Array (covered_locs |> List.map Reason.json_of_loc);
+        "uncovered_count", int_ (total - covered);
+        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
+      ];
+    ]
+    |> print_json_endline ~pretty
+  else
+    Utils_js.print_endlinef
+      "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main
-    option_values root json pretty color debug strip_root path respect_pragma
+    option_values json pretty root from color debug path respect_pragma
     all filename () =
-  let file = get_file_from_filename_or_stdin path filename in
+  FlowEventLogger.set_from from;
+  let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
+    path filename in
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
 
-  if not json && all && respect_pragma then prerr_endline
+  if not option_values.quiet && all && respect_pragma then prerr_endline
     "Warning: --all and --respect-pragma cannot be used together. --all wins.";
 
   (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
@@ -242,18 +230,22 @@ let main
      be removed. *)
   let all = all || not respect_pragma in
 
-  let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.COVERAGE (file, all));
-
   (* pretty implies json *)
   let json = json || pretty in
 
-  match (Timeout.input_value ic : ServerProt.coverage_response) with
-  | Err err ->
-      let strip_root = if strip_root then Some root else None in
-      handle_error ~json ~pretty ~strip_root err
-  | OK resp ->
-      let content = ServerProt.file_input_get_content file in
-      handle_response ~json ~pretty ~color ~debug resp content
+  if color && json
+  then raise (CommandSpec.Failed_to_parse ("--color", "Can't be used with json flags"));
+  if debug && json
+  then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
+
+  let request = ServerProt.Request.COVERAGE (file, all) in
+
+  match connect_and_make_request option_values root request with
+  | ServerProt.Response.COVERAGE (Error err) ->
+    handle_error ~json ~pretty err
+  | ServerProt.Response.COVERAGE (Ok resp) ->
+    let content = File_input.content_of_file_input_unsafe file in
+    handle_response ~json ~pretty ~color ~debug resp content
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

@@ -54,7 +54,7 @@ type Fish = Numbers | Colors;
 
 When calling our function that accepts a union type we must pass in ***one of
 those types***. But inside of our function we are required to handle ***all of
-the possible types****.
+the possible types***.
 
 Let's rewrite our function to handle each type individually.
 
@@ -113,7 +113,7 @@ updated.
 { success: true, value: false };
 ```
 
-When the request fails, we'll get back and object with `success` set to `false`
+When the request fails, we'll get back an object with `success` set to `false`
 and an `error` property describing the error.
 
 ```js

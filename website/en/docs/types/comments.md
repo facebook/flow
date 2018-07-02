@@ -23,7 +23,7 @@ function method(value /*: MyAlias */) /*: boolean */ {
 method({ foo: 1, bar: true, baz: ["oops"] });
 ```
 
-These comments allows Flow to work in plain JavaScript files without any
+These comments allow Flow to work in plain JavaScript files without any
 additional work.
 
 ## Comment types syntax <a class="toc" id="toc-comment-types-syntax" href="#toc-comment-types-syntax"></a>

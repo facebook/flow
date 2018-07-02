@@ -35,6 +35,32 @@ function identity<T>(value: T): T {
 Generics can be used within functions, function types, classes, type aliases,
 and interfaces.
 
+> **Warning:** Flow does not infer generic types. If you want something to have a
+generic type, **annotate it**. Otherwise, Flow may infer a type that is less
+polymorphic than you expect.
+
+In the following example, we forget to properly annotate `identity` with a generic type, so we run into trouble when we try to assign it to `func`. On the other hand, `genericIdentity` is properly typed, and we are able to use it as expected.
+
+```js
+// @flow
+
+type IdentityWrapper = {
+  func<T>(T): T
+}
+
+function identity(value) {
+  return value;
+}
+
+function genericIdentity<T>(value: T): T {
+  return value;
+}
+
+// $ExpectError
+const bad: IdentityWrapper = { func: identity }; // Error!
+const good: IdentityWrapper = { func: genericIdentity }; // Works!
+```
+
 ### Syntax of generics <a class="toc" id="toc-syntax-of-generics" href="#toc-syntax-of-generics"></a>
 
 There are a number of different places where generic types appear in syntax.
@@ -69,7 +95,7 @@ type (parameter or return types).
 <T>(param: T) => T
 ```
 
-Which then gets used as it's own type.
+Which then gets used as its own type.
 
 ```js
 function method(func: <T>(param: T) => T) {
@@ -335,9 +361,9 @@ class Item<T> {
   }
 }
 
-let item: Item<number> = new Item(42); // Works!
+let item1: Item<number> = new Item(42); // Works!
 // $ExpectError
-let item: Item = new Item(42); // Error!
+let item2: Item = new Item(42); // Error!
 ```
 
 ***Type Aliases***
@@ -348,9 +374,9 @@ type Item<T> = {
   prop: T,
 };
 
-let item: Item<number> = { prop: 42 }; // Works!
+let item1: Item<number> = { prop: 42 }; // Works!
 // $ExpectError
-let item: Item = { prop: 42 }; // Error!
+let item2: Item = { prop: 42 }; // Error!
 ```
 
 ***Interfaces***
@@ -380,7 +406,7 @@ type Item<T: number = 1> = {
   prop: T,
 };
 
-let foo: Item<> = { prop:1 };
+let foo: Item<> = { prop: 1 };
 let bar: Item<2> = { prop: 2 };
 ```
 

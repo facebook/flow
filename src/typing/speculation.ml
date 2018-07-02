@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* Various data structures and functions used to prepare for and execute
@@ -17,26 +14,31 @@ module Action = struct
 
   type t =
   | Flow of Type.t * Type.use_t
-  | Unify of Type.t * Type.t
+  | Unify of Type.use_op * Type.t * Type.t
+  | Error of Flow_error.error_message
 
-  (* Extract types involved in an action. Actually we're only interested in
-     tvars and filter the types further (see below); but for now we don't mind
-     the redundancy. *)
-  let types = Type.(function
-    | Flow ((AnyT _ | EmptyT _), _)
-    | Flow (_, UseT (_, (AnyT _ | MixedT _)))
-      -> []
-    | Flow (t1, UseT (_, t2)) -> [t1; t2]
-    | Flow (t1, _) -> [t1]
-    | Unify (t1, t2) -> [t1; t2]
-  )
+  (* Extract tvars involved in an action. *)
+  let tvars =
+    let open Type in
+    let f t acc = match t with
+    | OpenT (r, id) -> IMap.add id r acc
+    | _ -> acc
+    in
+    function
+    | Flow ((DefT (_, AnyT) | DefT (_, EmptyT)), _)
+    | Flow (_, UseT (_, (DefT (_, AnyT) | DefT (_, MixedT _))))
+      -> IMap.empty
+    | Flow (t1, UseT (_, t2)) -> f t1 (f t2 IMap.empty)
+    | Flow (t1, _) -> f t1 IMap.empty
+    | Unify (_, t1, t2) -> f t1 (f t2 IMap.empty)
+    | Error _ -> failwith "tvars of error actions don't make sense"
 
   (* Decide when two actions are the same. We use reasonless compare for types
      involved in the actions. *)
   let rec eq = function
     | Flow (t1, t2), Flow (t1_, t2_) ->
       eq_t (t1, t1_) && eq_use_t (t2, t2_)
-    | Unify (t1, t2), Unify (t1_, t2_) ->
+    | Unify (_, t1, t2), Unify (_, t1_, t2_) ->
       eq_t (t1, t1_) && eq_t (t2, t2_)
     | _ -> false
 
@@ -55,7 +57,7 @@ module Action = struct
 
 end
 
-type unresolved = Type.TypeSet.t
+type unresolved = ISet.t
 
 (* Next, a model for "cases." A case serves as the context for a speculative
    match. In other words, while we're trying to execute a flow in speculation
@@ -96,16 +98,15 @@ module Case = struct
     (* collect those unresolved tvars in ts1 that are involved in actions in
        diff_actions1 *)
     let diff_ts1 =
-      List.fold_left (fun diff_ts1 (_, diff_action1) ->
-        List.fold_left (fun diff_ts1 t1 ->
-          if Type.TypeSet.mem t1 ts1
-          then Type.TypeSet.add t1 diff_ts1
-          else diff_ts1
-        ) diff_ts1 (Action.types diff_action1)
-      ) Type.TypeSet.empty diff_actions1 in
+      List.fold_left (fun acc (_, diff_action1) ->
+        IMap.fold (fun id1 r1 acc ->
+          if ISet.mem id1 ts1
+          then IMap.add id1 r1 acc
+          else acc
+        ) (Action.tvars diff_action1) acc
+      ) IMap.empty diff_actions1 in
     (* return *)
-    Type.TypeSet.elements diff_ts1
-
+    IMap.elements diff_ts1
 end
 
 (* Functions used to initialize and add unresolved tvars during type resolution
@@ -113,26 +114,22 @@ end
 
 let init_speculation cx speculation_id =
   Context.set_all_unresolved cx
-    (IMap.add speculation_id Type.TypeSet.empty (Context.all_unresolved cx))
+    (IMap.add speculation_id ISet.empty (Context.all_unresolved cx))
 
-let add_unresolved_to_speculation cx speculation_id t =
-  let map = Context.all_unresolved cx in
-  let ts = IMap.find_unsafe speculation_id map in
-  Context.set_all_unresolved cx
-    (IMap.add speculation_id (Type.TypeSet.add t ts) map)
+let add_unresolved_to_speculation cx speculation_id id =
+  Context.all_unresolved cx
+  |> IMap.add speculation_id (ISet.singleton id) ~combine:ISet.union
+  |> Context.set_all_unresolved cx
 
 (* Actions that involve some "ignored" unresolved tvars are considered
    benign. Such tvars can be explicitly designated to be ignored. Also, tvars
    that instantiate type parameters, this types, existentials, etc. are
    ignored. *)
-type ignore = Type.t option
-let ignore_type ignore t =
+type ignore = Constraint.ident option
+let ignore_type ignore id r =
   match ignore with
-  | Some ignore_t when ignore_t = t -> true
-  | _ -> begin match t with
-    | Type.OpenT (r, _) -> Reason.is_instantiable_reason r
-    | _ -> false
-  end
+  | Some ignore_id when ignore_id = id -> true
+  | _ -> Reason.is_instantiable_reason r
 
 (* A branch is a wrapper around a case, that also carries the speculation id of
    the spec currently being processed, as well as any explicitly designated
@@ -186,21 +183,27 @@ end = struct
   *)
   let defer_if_relevant cx branch action =
     let { ignore; speculation_id; case } = branch in
-    let action_types = Action.types action in
-    let all_unresolved =
-      IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
-    let relevant_action_types =
-      List.filter (fun t -> Type.TypeSet.mem t all_unresolved) action_types in
-    let defer = relevant_action_types <> [] in
-    if defer then Case.(
-      let is_benign = List.exists (ignore_type ignore) action_types in
+    let open Case in
+    match action with
+    | Action.Error _ ->
+      case.actions <- case.actions @ [true, action];
+      true
+    | _ ->
+      let action_tvars = Action.tvars action in
+      let all_unresolved =
+        IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
+      let relevant_action_tvars =
+        IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
+      let defer = not (IMap.is_empty relevant_action_tvars) in
+      if defer then Case.(
+      let is_benign = IMap.exists (ignore_type ignore) action_tvars in
       if not is_benign
       then case.unresolved <-
-        List.fold_left (fun unresolved t -> Type.TypeSet.add t unresolved)
-          case.unresolved relevant_action_types;
+        IMap.fold (fun id _ acc -> ISet.add id acc)
+        relevant_action_tvars case.unresolved;
       case.actions <- case.actions @ [is_benign, action]
-    );
-    defer
+      );
+      defer
 
   let defer_action cx action =
     speculating() &&

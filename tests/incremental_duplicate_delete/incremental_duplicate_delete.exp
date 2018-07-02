@@ -3,9 +3,19 @@ Initial status:
 No errors!
 
 Copy A.js to B.js:
-B.js:0
-A. Duplicate module provider
-current provider. See: A.js:0
+Error --------------------------------------------------------------------------------------------------------- B.js:1:1
+
+Duplicate module provider for `A`. Change either this module provider or the current module provider [1].
+
+   B.js:1:1
+   1| /**
+      
+
+References:
+   A.js:1:1
+   1| /**
+       [1]
+
 
 
 Found 1 error

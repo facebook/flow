@@ -1,6 +1,16 @@
-sock file exists
-flowlib exists
-init file exists
-lock file exists
-log file exists
-.flowconfig: sock file exists
+--temp-dir:
+  sockv2 file exists
+  flowlib exists
+  lock file exists
+  log file exists
+  monitor log file exists
+
+.flowconfig temp_dir:
+  sockv2 file exists
+
+FLOW_TEMP_DIR:
+  sockv2 file exists
+  flowlib exists
+  lock file exists
+  log file exists
+  monitor log file exists

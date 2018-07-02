@@ -1,0 +1,42 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":4}},
+      "message":"The nullish coalescing plugin must be enabled in order to use the nullish coalescing operator (`??`). Nullish coalescing is an active early-stage feature proposal which may change and is not enabled by default. To enable support in the parser, use the `esproposal_nullish_coalescing` option."
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
+  "range":[0,6],
+  "body":[
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
+      "range":[0,6],
+      "expression":{
+        "type":"LogicalExpression",
+        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
+        "range":[0,6],
+        "operator":"??",
+        "left":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
+          "range":[0,1],
+          "name":"a",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "right":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":6}},
+          "range":[5,6],
+          "name":"b",
+          "typeAnnotation":null,
+          "optional":false
+        }
+      },
+      "directive":null
+    }
+  ],
+  "comments":[]
+}

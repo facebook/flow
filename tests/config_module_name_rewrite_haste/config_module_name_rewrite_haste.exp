@@ -1,10 +1,18 @@
-A.js:12
- 12: var m2 = require('2DoesntExist'); // Error
-                      ^^^^^^^^^^^^^^ 2DoesntExist. Required module not found
+Error ------------------------------------------------------------------------------------------------------- A.js:12:18
 
-A.js:13
- 13: import {numVal as numVal2} from '3DoesntExist'; // Error
-                                     ^^^^^^^^^^^^^^ 3DoesntExist. Required module not found
+Cannot resolve module `Exists3`.
+
+   12| var m2 = require('2DoesntExist'); // Error
+                        ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:13:33
+
+Cannot resolve module `Exists4`.
+
+   13| import {numVal as numVal2} from '3DoesntExist'; // Error
+                                       ^^^^^^^^^^^^^^
+
 
 
 Found 2 errors

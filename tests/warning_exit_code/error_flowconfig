@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+sketchy-null-bool=error
+sketchy-null-string=error
+sketchy-null-number=error
+sketchy-null-mixed=error
+
+[options]

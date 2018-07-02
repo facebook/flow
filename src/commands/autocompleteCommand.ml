@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -34,91 +31,69 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> connect_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
-    |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
+    |> from_flag
+    |> anon "args" (optional (list_of string))
   )
 }
-
-let add_autocomplete_token contents line column =
-  let (line, column) = convert_input_pos (line, column) in
-  let line = line - 1 in
-  Line.transform_nth contents line (fun line_str ->
-    let length = String.length line_str in
-    if length >= column
-    then (
-      let start = String.sub line_str 0 column in
-      let end_ = String.sub line_str column (length - column) in
-      start ^ Autocomplete_js.autocomplete_suffix ^ end_
-    ) else line_str
-  )
 
 let parse_args = function
   | None
   | Some [] ->
-      ServerProt.FileContent (None,
+      File_input.FileContent (None,
                               Sys_utils.read_stdin_to_string ())
   | Some [filename] ->
       let filename = get_path_of_file filename in
-      ServerProt.FileContent (Some filename,
+      File_input.FileContent (Some filename,
                               Sys_utils.read_stdin_to_string ())
   | Some [line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
       let contents = Sys_utils.read_stdin_to_string () in
-      ServerProt.FileContent (None,
-                              add_autocomplete_token contents line column)
+      let (line, column) = convert_input_pos (line, column) in
+      File_input.FileContent (None,
+                              AutocompleteService_js.add_autocomplete_token contents line column)
   | Some [filename; line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
       let contents = Sys_utils.read_stdin_to_string () in
       let filename = get_path_of_file filename in
-      ServerProt.FileContent (Some filename,
-                              add_autocomplete_token contents line column)
+      let (line, column) = convert_input_pos (line, column) in
+      File_input.FileContent (Some filename,
+                              AutocompleteService_js.add_autocomplete_token contents line column)
   | _ ->
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values root json pretty strip_root args () =
+let main option_values json pretty root strip_root from args () =
+  FlowEventLogger.set_from from;
   let file = parse_args args in
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
-  let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
   let strip_root = if strip_root then Some root else None in
-  let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
-  let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
+  let request = ServerProt.Request.AUTOCOMPLETE file in
+  let results = match connect_and_make_request option_values root request with
+  | ServerProt.Response.AUTOCOMPLETE response -> response
+  | response -> failwith_bad_response ~request ~response
+  in
   if json || pretty
   then (
-    let open Hh_json in
-    let json = match results with
-    | Err error ->
-      JSON_Object [
-        "error", JSON_String error;
-        "result", JSON_Array []; (* TODO: remove this? kept for BC *)
-      ]
-    | OK completions ->
-      let results = List.map
-        (AutocompleteService_js.autocomplete_result_to_json ~strip_root)
-        completions
-      in
-      JSON_Object ["result", JSON_Array results]
-    in
-    print_endline (json_to_string ~pretty json)
+    results
+      |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
+      |> Hh_json.print_json_endline ~pretty
   ) else (
     match results with
-    | Err error ->
+    | Error error ->
       prerr_endlinef "Error: %s" error
-    | OK completions ->
+    | Ok completions ->
       List.iter (fun res ->
-        let name = res.AutocompleteService_js.res_name in
-        let ty = res.AutocompleteService_js.res_ty in
+        let name = res.ServerProt.Response.res_name in
+        let ty = res.ServerProt.Response.res_ty in
         print_endline (Printf.sprintf "%s %s" name ty)
       ) completions
   )

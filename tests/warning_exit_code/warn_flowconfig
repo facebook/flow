@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+sketchy-null-bool=warn
+sketchy-null-string=warn
+sketchy-null-number=warn
+sketchy-null-mixed=warn
+
+[options]

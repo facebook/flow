@@ -1,9 +1,14 @@
+#!/bin/bash
+. ../assert.sh
 FLOW=$1
+
 mkdir tmp
 cp root.js tmp/
-$FLOW status .
+
+assert_errors "$FLOW" status .
 cp tmp1/root.js ./
-$FLOW force-recheck root.js
-$FLOW status .
+assert_ok "$FLOW" force-recheck root.js
+assert_errors "$FLOW" status .
+
 mv tmp/root.js ./
 rmdir tmp

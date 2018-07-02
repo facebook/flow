@@ -6,3 +6,8 @@ post: true
 ---
 
 {{content}}
+{% if page.medium-link %}
+  <a href={{page.medium-link}}>
+    Read more on Medium &rarr;
+  </a>
+{% endif %}

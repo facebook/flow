@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Scope
@@ -50,6 +47,10 @@ val update_env: Context.t -> Loc.t -> t -> unit
 
 (***)
 
+val promote_to_const_like: Context.t -> Loc.t -> bool
+
+val bind_class: Context.t -> int -> Type.Properties.id -> Type.Properties.id -> unit
+
 val bind_var: ?state:State.t -> Context.t -> string -> Type.t ->
   Loc.t -> unit
 
@@ -73,6 +74,10 @@ val bind_import: Context.t -> string -> Type.t -> Loc.t -> unit
 val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
   Loc.t -> unit
 
+val bind_type_param: Context.t -> bool (* static *) -> SMap.key -> Type.t -> unit
+
+val bind_import_type: Context.t -> string -> Type.t -> Loc.t -> unit
+
 val bind_declare_var: Context.t -> string -> Type.t -> Loc.t -> unit
 val bind_declare_fun: Context.t -> string -> Type.t -> Loc.t -> unit
 
@@ -82,18 +87,19 @@ val declare_let: Context.t -> string -> Loc.t -> unit
 val declare_implicit_let: Entry.let_binding_kind -> Context.t -> string ->
   Loc.t -> unit
 
-val init_var: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
-val init_let: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_var: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_let: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
 val init_implicit_let:
   Entry.let_binding_kind
     -> Context.t
+    -> use_op:Type.use_op
     -> string
     -> has_anno:bool
     -> Type.t
     -> Loc.t
     -> unit
-val init_fun: Context.t -> string -> Type.t -> Loc.t -> unit
-val init_const: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_fun: Context.t -> use_op:Type.use_op -> string -> Type.t -> Loc.t -> unit
+val init_const: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
 val init_type: Context.t -> string -> Type.t -> Loc.t -> unit
 
 val pseudo_init_declared_type: Context.t -> string -> Loc.t -> unit
@@ -108,6 +114,7 @@ val get_env_entry: string -> t -> Scope.Entry.t option
 val get_current_env_entry: string -> Scope.Entry.t option
 val get_env_refi: Key.t -> t -> Scope.refi_binding option
 val get_current_env_refi: Key.t -> Scope.refi_binding option
+val get_class_entries: unit -> Type.class_binding list
 
 val get_var:
   ?lookup_mode:LookupMode.t ->
@@ -144,7 +151,7 @@ val var_ref:
   Loc.t ->
   Type.t
 
-val set_var: Context.t -> string -> Type.t -> Loc.t ->
+val set_var: Context.t -> use_op:Type.use_op -> string -> Type.t -> Loc.t ->
   Changeset.EntryRef.t option
 
 val set_internal_var: Context.t -> string -> Type.t -> Loc.t ->
@@ -191,8 +198,25 @@ val reset_current_activation: Loc.t -> unit
 val havoc_vars: Changeset.t -> unit
 
 val havoc_heap_refinements: unit -> unit
-val havoc_heap_refinements_with_propname: string -> unit
+val havoc_heap_refinements_with_propname: private_:bool -> string -> unit
 
 val get_refinement: Context.t -> Key.t -> Loc.t -> Type.t option
 
 val is_global_var: Context.t -> string -> bool
+
+val get_tparams: unit -> (string * Loc.t) list
+
+val add_type_table:
+  Context.t ->
+  ?tparams_map:Type.t SMap.t ->
+  Loc.t ->
+  Type.t ->
+  unit
+
+val add_type_table_info:
+  Context.t ->
+  ?tparams_map:Type.t SMap.t ->
+  ?tparam:Type.typeparam ->
+  Loc.t ->
+  Type_table.type_entry ->
+  unit

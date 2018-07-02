@@ -1,9 +1,18 @@
 {% if include.package_manager == "yarn" %}
   {% assign install_command = "yarn add --dev" %}
-  {% assign run_command = "yarn run " %}
+  {% if include.compiler == "babel" %}
+    {% assign run_command = "yarn run babel src/ -- -d lib/" %}
+  {% elsif include.compiler == "flow-remove-types" %}
+    {% assign run_command = "yarn run flow-remove-types src/ -- -d lib/" %}
+  {% endif %}
+
 {% elsif include.package_manager == "npm" %}
   {% assign install_command = "npm install --save-dev" %}
-  {% assign run_command = "./node_modules/.bin/" %}
+  {% if include.compiler == "babel" %}
+    {% assign run_command = "./node_modules/.bin/babel src/ -d lib/" %}
+  {% elsif include.compiler == "flow-remove-types" %}
+    {% assign run_command = "./node_modules/.bin/flow-remove-types src/ -d lib/" %}
+  {% endif %}
 {% endif %}
 
 {% capture compiler_intro %}{% include_relative _install/compiler-intro.md %}{% endcapture %}

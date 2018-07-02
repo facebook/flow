@@ -1,14 +1,26 @@
-infer.js:4
-  4:   a: function(arg) {  // missing arg annotation
-                   ^^^ parameter `arg`. Missing annotation
+Error ---------------------------------------------------------------------------------------------------- infer.js:4:15
 
-infer.js:8
-  8:   b: function(arg) {  // missing arg annotation
-                   ^^^ parameter `arg`. Missing annotation
+Missing type annotation for `arg`.
 
-infer.js:32
- 32:     return function(x) {  // missing param annotation
-                         ^ parameter `x`. Missing annotation
+   4|   a: function(arg) {  // missing arg annotation
+                    ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- infer.js:8:15
+
+Missing type annotation for `arg`.
+
+   8|   b: function(arg) {  // missing arg annotation
+                    ^^^
+
+
+Error --------------------------------------------------------------------------------------------------- infer.js:32:21
+
+Missing type annotation for `x`.
+
+   32|     return function(x) {  // missing param annotation
+                           ^
+
 
 
 Found 3 errors

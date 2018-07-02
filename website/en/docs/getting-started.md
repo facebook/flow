@@ -16,7 +16,7 @@ function square(n: number): number {
   return n * n;
 }
 
-square("2", "2"); // Error!
+square("2"); // Error!
 ```
 
 Because Flow understands JavaScript so well, it doesn't need many of these
@@ -30,7 +30,7 @@ function square(n) {
   return n * n; // Error!
 }
 
-square("2", "2");
+square("2");
 ```
 
 You can also adopt Flow incrementally and easily remove it at

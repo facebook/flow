@@ -1,26 +1,67 @@
-test.js:18
- 18: ((new Foo).x: number); // error: Qux wins
-      ^^^^^^^^^^^ string. This type is incompatible with
- 18: ((new Foo).x: number); // error: Qux wins
-                   ^^^^^^ number
+Error ----------------------------------------------------------------------------------------------------- test.js:18:2
 
-test.js:19
- 19: ((new Foo).y: string); // error: Bar wins
-      ^^^^^^^^^^^ number. This type is incompatible with
- 19: ((new Foo).y: string); // error: Bar wins
-                   ^^^^^^ string
+Cannot cast `new Foo().x` to number because string [1] is incompatible with number [2].
 
-test.js:20
- 20: ((new Foo).z: number); // error: Qux wins
-      ^^^^^^^^^^^ string. This type is incompatible with
- 20: ((new Foo).z: number); // error: Qux wins
-                   ^^^^^^ number
+   test.js:18:2
+   18| ((new Foo).x: number); // error: Qux wins
+        ^^^^^^^^^^^
 
-test2.js:2
-  2: declare class C mixins I { }
-                            ^ I. type referenced from value position
-  1: declare interface I { }
-             ^^^^^^^^^^^^^^^ type I
+References:
+   test.js:1:31
+    1| declare class Foo extends Qux<string> mixins Bar<number> {
+                                     ^^^^^^ [1]
+   test.js:18:15
+   18| ((new Foo).x: number); // error: Qux wins
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+
+Cannot cast `new Foo().y` to string because number [1] is incompatible with string [2].
+
+   test.js:19:2
+   19| ((new Foo).y: string); // error: Bar wins
+        ^^^^^^^^^^^
+
+References:
+   test.js:1:50
+    1| declare class Foo extends Qux<string> mixins Bar<number> {
+                                                        ^^^^^^ [1]
+   test.js:19:15
+   19| ((new Foo).y: string); // error: Bar wins
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:2
+
+Cannot cast `new Foo().z` to number because string [1] is incompatible with number [2].
+
+   test.js:20:2
+   20| ((new Foo).z: number); // error: Qux wins
+        ^^^^^^^^^^^
+
+References:
+   test.js:1:31
+    1| declare class Foo extends Qux<string> mixins Bar<number> {
+                                     ^^^^^^ [1]
+   test.js:20:15
+   20| ((new Foo).z: number); // error: Qux wins
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:2:24
+
+Cannot reference type `I` [1] from a value position.
+
+   test2.js:2:24
+   2| declare class C mixins I { }
+                             ^
+
+References:
+   test2.js:1:19
+   1| declare interface I { }
+                        ^ [1]
+
 
 
 Found 4 errors

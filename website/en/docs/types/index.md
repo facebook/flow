@@ -29,7 +29,7 @@ be valid.
 concat(1, 2); // Works!
 ```
 
-But supposed you only want to allow strings in your function. For that you can
+But suppose you only want to allow strings in your function. For that you can
 add types.
 
 ```js

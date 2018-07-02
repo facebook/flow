@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (**
@@ -46,6 +43,7 @@ let next_class_name env =
   env.next_class_name <- id + 1;
   spf "Class%d" id
 let resolve_type t env = Flow_js.resolve_type env.flow_cx t
+let resolve_tvar tvar env = Flow_js.resolve_tvar env.flow_cx tvar
 let set_class_name class_id name env =
   {env with class_names = IMap.add class_id name env.class_names;}
 let to_string env = Buffer.contents env.buf
@@ -99,7 +97,7 @@ let gen_if conditional gen_fn env =
 let gen_builtin_class_type t env = Type.(
   (* AVERT YOUR EYES *)
   let reason = reason_of_t t in
-  let builtin_name = Reason.(string_of_desc (desc_of_reason reason)) in
+  let builtin_name = DescFormat.name_of_instance_reason reason in
 
   (**
    * Assert that the builtin name we found does match with the class_id we're
@@ -109,7 +107,7 @@ let gen_builtin_class_type t env = Type.(
    *)
   let classid =
     match t with
-    | InstanceT (_, _, _, _, {class_id; _;}) -> class_id
+    | DefT (_, InstanceT (_, _, _, {class_id; _;})) -> class_id
     | t -> failwith (
       spf
         ("Internal error: Expected an InstanceT while looking up a builtin " ^^
@@ -121,9 +119,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;})) ->
+    | ThisClassT(_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
       class_id
-    | PolyT(_, _, ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;}))) ->
+    | DefT (_, PolyT(_, ThisClassT(_, DefT (_, InstanceT(_, _, _, {class_id; _;}))), _)) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -149,15 +147,17 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
-  | AnnotT t -> gen_type t env
-  | AnyFunT _ -> add_str "Function" env
-  | AnyObjT _ -> add_str "Object" env
-  | AnyT _
+  | AnnotT (source_t, _) -> gen_type (resolve_type source_t env) env
+  | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
+  | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
+  | DefT (_, AnyFunT) -> add_str "Function" env
+  | DefT (_, AnyObjT) -> add_str "Object" env
+  | DefT (_, AnyT)
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
+  | MergedT _
     -> add_str "any" env
-  | ArrT (_, arrtype) ->
+  | DefT (_, ArrT arrtype) ->
     (match arrtype with
     | ArrayAT (elemt, None) ->
       add_str "Array<" env
@@ -178,18 +178,25 @@ let rec gen_type t env = Type.(
       add_str "Array<empty>" env
     )
 
-  | BoolT (_, Some _) ->
+  | DefT (_, BoolT (Some _)) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "boolean" env
-  | BoolT (_, None) ->
+  | DefT (_, BoolT None) ->
     add_str "boolean" env
   | BoundT {name; _;} -> add_str name env
-  | ClassT (_, t) ->
+  | DefT (_, ClassT t) ->
     add_str "Class<" env
       |> gen_type t
       |> add_str ">"
+  | DefT (_, CharSetT chars) ->
+    add_str "$CharSet<\"" env
+      |> add_str (String_utils.CharSet.to_string chars)
+      |> add_str "\">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
   | CustomFunT (_, ObjectGetPrototypeOf) -> add_str "Object$GetPrototypeOf" env
+  | CustomFunT (_, ObjectSetPrototypeOf) -> add_str "Object$SetPrototypeOf" env
+  | CustomFunT (_, Compose false) -> add_str "$Compose" env
+  | CustomFunT (_, Compose true) -> add_str "$ComposeReverse" env
   | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
     add_str "React$PropType$Primitive<" env
       |> gen_type t
@@ -205,36 +212,30 @@ let rec gen_type t env = Type.(
     ) env
   | CustomFunT (_, ReactCreateClass) -> add_str "React$CreateClass" env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
-  | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
-  | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env
-  | CustomFunT (_, MergeInto) -> add_str "$Facebookism$MergeInto" env
-  | CustomFunT (_, Mixin) -> add_str "$Facebookism$Mixin" env
+  | CustomFunT (_, ReactCloneElement) -> add_str "React$CloneElement" env
+  | CustomFunT (_, ReactElementFactory _) -> add_str "React$ElementFactory" env
   | CustomFunT (_, Idx) -> add_str "$Facebookism$Idx" env
   | CustomFunT (_, DebugPrint) -> add_str "$Flow$DebugPrint" env
+  | CustomFunT (_, DebugThrow) -> add_str "$Flow$DebugThrow" env
+  | CustomFunT (_, DebugSleep) -> add_str "$Flow$DebugSleep" env
   (* TODO: Once predicate types are a little more fleshed out, fill out this
    *       codegen.
    *)
   | OpenPredT (_, _, _, _) -> add_str "mixed /* TODO: OpenPredT */" env
-  | DiffT (t1, t2) ->
-    add_str "$Diff<" env
-      |> gen_type t1
-      |> add_str ", "
-      |> gen_type t2
-      |> add_str ">"
   | ExactT (_, t) -> add_str "$Exact<" env |> gen_type t |> add_str ">"
   | ObjProtoT _ -> add_str "typeof Object.prototype" env
   | FunProtoT _ -> add_str "typeof Function.prototype" env
   | FunProtoApplyT _ -> add_str "typeof Function.prototype.apply" env
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
-  | FunT (_, _static, _prototype, ft) ->
-    let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+  | DefT (_, FunT (_static, _prototype, ft)) ->
+    let {params; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
-      |> gen_func_params params_names params_tlist rest_param
+      |> gen_func_params params rest_param
       |> add_str ") => "
       |> gen_type return_t
-  | InstanceT (_, _static, _super, _, {class_id; _;}) -> (
+  | DefT (_, InstanceT (_static, _super, _, {class_id; _;})) -> (
     (* TODO: See if we can preserve class names *)
     let env =
       match IMap.get class_id env.class_names with
@@ -243,16 +244,16 @@ let rec gen_type t env = Type.(
     in
     gen_tparams_list env
   )
-  | IntersectionT (_, intersection) -> gen_intersection_list intersection env
+  | DefT (_, IntersectionT intersection) -> gen_intersection_list intersection env
   | KeysT (_, t) -> add_str "$Keys<" env |> gen_type t |> add_str ">"
-  | MaybeT (_, t) -> add_str "?" env |> gen_type t
-  | MixedT _ -> add_str "mixed" env
-  | NumT (_, Literal _) ->
+  | DefT (_, MaybeT t) -> add_str "?" env |> gen_type t
+  | DefT (_, MixedT _) -> add_str "mixed" env
+  | DefT (_, NumT (Literal _)) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "number" env
-  | NumT (_, (Truthy|AnyLiteral)) -> add_str "number" env
-  | NullT _ -> add_str "null" env
-  | ObjT (_, {flags = _; dict_t; props_tmap; proto_t = _;}) -> (
+  | DefT (_, NumT (Truthy|AnyLiteral)) -> add_str "number" env
+  | DefT (_, NullT) | NullProtoT _ -> add_str "null" env
+  | DefT (_, ObjT {flags = _; dict_t; call_t = _; props_tmap; proto_t = _;}) -> (
     let env = add_str "{" env in
 
     (* Generate prop entries *)
@@ -289,46 +290,27 @@ let rec gen_type t env = Type.(
 
     add_str "}" env
   )
-  | OptionalT (_, t) -> add_str "void | " env |> gen_type t
-  | OpenT _ -> gen_type (resolve_type t env) env
-  | PolyT (_, tparams, t) -> gen_type t (add_tparams tparams env)
+  | DefT (_, OptionalT t) -> add_str "void | " env |> gen_type t
+  | OpenT tvar -> gen_type (resolve_tvar tvar env) env
+  | DefT (_, PolyT (tparams, t, _)) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
-  | ReposUpperT (_, t) -> gen_type t env
+  | InternalT (ReposUpperT (_, t)) -> gen_type t env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
-  | SingletonBoolT (_, v) -> add_str (spf "%b" v) env
-  | SingletonNumT (_, (_, v)) -> add_str (spf "%s" v) env
-  | SingletonStrT (_, v) -> add_str (spf "%S" v) env
-  | StrT (_, Literal _) ->
+  | DefT (_, SingletonBoolT v) -> add_str (spf "%b" v) env
+  | DefT (_, SingletonNumT (_, v)) -> add_str (spf "%s" v) env
+  | DefT (_, SingletonStrT v) -> add_str (spf "%S" v) env
+  | DefT (_, StrT (Literal _)) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "string" env
-  | StrT (_, (Truthy|AnyLiteral)) -> add_str "string" env
+  | DefT (_, StrT (Truthy|AnyLiteral)) -> add_str "string" env
   | ThisClassT (_, t) -> gen_type t env
-  | ThisTypeAppT (_, t, _, ts) -> add_applied_tparams ts env |> gen_type t
-  | TypeAppT (_, t, ts) -> add_applied_tparams ts env |> gen_type t
-  | TypeT (_, t) -> gen_type t env
-  | UnionT (_, union) -> gen_union_list union env
-  | VoidT _ -> add_str "void" env
-
-  | TypeMapT (_, TupleMap, t1, t2) ->
-    add_str "$TupleMap<" env
-    |> gen_type t1
-    |> add_str ", "
-    |> gen_type t2
-    |> add_str ">"
-
-  | TypeMapT (_, ObjectMap, t1, t2) ->
-    add_str "$ObjMap<" env
-    |> gen_type t1
-    |> add_str ", "
-    |> gen_type t2
-    |> add_str ">"
-
-  | TypeMapT (_, ObjectMapi, t1, t2) ->
-    add_str "$ObjMapi<" env
-    |> gen_type t1
-    |> add_str ", "
-    |> gen_type t2
-    |> add_str ">"
+  | ThisTypeAppT (_, t, _, Some ts) -> add_applied_tparams ts env |> gen_type t
+  | ThisTypeAppT (_, t, _, None) -> gen_type t env
+  | DefT (_, TypeAppT (_, t, ts)) -> add_applied_tparams ts env |> gen_type t
+  | DefT (_, TypeT (_, t)) -> gen_type t env
+  | DefT (_, UnionT union) -> gen_union_list union env
+  | DefT (_, VoidT) -> add_str "void" env
+  | InternalT (OptionalChainVoidT _) -> add_str "void" env
 
   (**
    * These types can't be expressed in code well so we fail back to `mixed`.
@@ -339,14 +321,16 @@ let rec gen_type t env = Type.(
    *       handling for these types depening on the needs of the API user
    *       (i.e. raise, etc).
    *)
-  | ChoiceKitT _
-  | EmptyT _
+  | InternalT (ChoiceKitT _)
+  | TypeDestructorTriggerT _
+  | DefT (_, EmptyT)
   | EvalT _
   | ExistsT _
-  | ExtendsT _
-  | IdxWrapper _
+  | InternalT (ExtendsT _)
+  | DefT (_, IdxWrapper _)
   | ModuleT _
-  | TaintT _
+  | OpaqueT _
+  | MatchingPropT _
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
 )
 
@@ -364,56 +348,51 @@ and gen_prop k p env =
     add_str "set " env
       |> add_str k
       |> add_str "("
-      |> gen_func_param "value" t
+      |> gen_func_param (Some "value") t
       |> add_str "): void"
   in
 
   let rec gen_method k t env =
     match t with
-    | FunT (_, _static, _prototype, ft) ->
-      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+    | DefT (_, FunT (_static, _prototype, ft)) ->
+      let {params; rest_param; return_t; _;} = ft in
       add_str k env
         |> gen_tparams_list
         |> add_str "("
-        |> gen_func_params params_names params_tlist rest_param
+        |> gen_func_params params rest_param
         |> add_str "): "
         |> gen_type return_t
-    | PolyT (_, tparams, t) -> gen_method k t (add_tparams tparams env)
+    | DefT (_, PolyT (tparams, t, _)) -> gen_method k t (add_tparams tparams env)
     | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
   in
 
   match p with
-  | Field (t, polarity) ->
+  | Field (_, t, polarity) ->
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
-      | OptionalT (_, t) -> ("?: ", resolve_type t env)
+      | DefT (_, OptionalT t) -> ("?: ", resolve_type t env)
       | t -> (": ", t)
     in
     add_str sigil env
       |> add_str k
       |> add_str sep
       |> gen_type t
-  | Get t -> gen_getter k t env
-  | Set t -> gen_setter k t env
-  | GetSet (t1, t2) ->
+  | Get (_, t) -> gen_getter k t env
+  | Set (_, t) -> gen_setter k t env
+  | GetSet (_, t1, _, t2) ->
     gen_getter k t1 env |> gen_setter k t2
-  | Method t -> gen_method k t env
+  | Method (_, t) -> gen_method k t env
 
-and gen_func_params params_names params_tlist rest_param env =
-  let params =
-    match params_names with
-    | Some params_names ->
-      List.rev (List.fold_left2 (fun params name t ->
-        (name, t, false):: params
-      ) [] params_names params_tlist)
-    | None ->
-      List.mapi (fun idx t -> (spf "p%d" idx, t, false)) params_tlist
+and gen_func_params params rest_param env =
+  let params_rev = List.fold_left (fun acc (name, t) ->
+    (name, t, false) :: acc
+  ) [] params in
+  let params_rev = match rest_param with
+  | None -> params_rev
+  | Some (name, _, t) -> (name, t, true) :: params_rev
   in
-  let params = match rest_param with
-  | None -> params
-  | Some (name, _, t) ->
-    params @ [Option.value ~default:"rest" name, t, true] in
+  let params = List.rev params_rev in
   gen_separated_list params ", " (fun (name, t, is_rest) env ->
     if is_rest
     then gen_func_rest_param name t env
@@ -421,6 +400,7 @@ and gen_func_params params_names params_tlist rest_param env =
   ) env
 
 and gen_func_rest_param name t env =
+  let name = Option.value name ~default:"_" in
   add_str "..." env
   |> add_str name
   |> add_str ": "
@@ -428,8 +408,9 @@ and gen_func_rest_param name t env =
 
 and gen_func_param name t env =
   let open Type in
+  let name = Option.value name ~default:"_" in
   match t with
-  | OptionalT (_, t) ->
+  | DefT (_, OptionalT t) ->
     add_str name env
     |> add_str "?: "
     |> gen_type t
@@ -449,7 +430,7 @@ and gen_tparams_list = Type.(
     let env = add_str name env in
     let env = (
       match bound with
-      | MixedT _ -> env
+      | DefT (_, MixedT _) -> env
       | bound -> add_str ": " env |> gen_type bound
     ) in
     let env = (

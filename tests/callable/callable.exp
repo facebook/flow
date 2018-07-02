@@ -1,32 +1,72 @@
-primitives.js:6
-  6: dict(); // error, callable signature not found
-     ^^^^^^ function call. Callable signature not found in
-  6: dict(); // error, callable signature not found
-     ^^^^ object type
+Error ------------------------------------------------------------------------------------------------ primitives.js:6:1
 
-primitives.js:12
- 12: icall(0); // error, number ~> string
-           ^ number. This type is incompatible with the expected param type of
-  9:   (x: string): void;
-           ^^^^^^ string
+Cannot call `dict` because a callable signature is missing in object type [1].
 
-primitives.js:13
- 13: icall.call(null, 0); // error, number ~> string
-                      ^ number. This type is incompatible with the expected param type of
-  9:   (x: string): void;
-           ^^^^^^ string
+   primitives.js:6:1
+   6| dict(); // error, callable signature not found
+      ^^^^^^
 
-primitives.js:20
- 20: callable(0); // error, number ~> string
-              ^ number. This type is incompatible with the expected param type of
- 16:   (x: string): void;
-           ^^^^^^ string
+References:
+   primitives.js:5:11
+   5| var dict: { [k: string]: any } = {};
+                ^^^^^^^^^^^^^^^^^^^^ [1]
 
-primitives.js:21
- 21: callable.call(null, 0); // error, number ~> string
-                         ^ number. This type is incompatible with the expected param type of
- 16:   (x: string): void;
-           ^^^^^^ string
+
+Error ----------------------------------------------------------------------------------------------- primitives.js:12:7
+
+Cannot call `icall` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   primitives.js:12:7
+   12| icall(0); // error, number ~> string
+             ^ [1]
+
+References:
+   primitives.js:9:7
+    9|   (x: string): void;
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- primitives.js:13:18
+
+Cannot call `icall.call` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   primitives.js:13:18
+   13| icall.call(null, 0); // error, number ~> string
+                        ^ [1]
+
+References:
+   primitives.js:9:7
+    9|   (x: string): void;
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- primitives.js:20:10
+
+Cannot call `callable` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   primitives.js:20:10
+   20| callable(0); // error, number ~> string
+                ^ [1]
+
+References:
+   primitives.js:16:7
+   16|   (x: string): void;
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- primitives.js:21:21
+
+Cannot call `callable.call` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   primitives.js:21:21
+   21| callable.call(null, 0); // error, number ~> string
+                           ^ [1]
+
+References:
+   primitives.js:16:7
+   16|   (x: string): void;
+             ^^^^^^ [2]
+
 
 
 Found 5 errors

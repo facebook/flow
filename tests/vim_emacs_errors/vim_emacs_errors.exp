@@ -1,14 +1,8 @@
 from emacs:
 File "test.js", line 3, characters 2-4
-number
-This type is incompatible with
-File "test.js", line 3, characters 7-12
-string
+Error: Cannot cast `123` to string because number [1] is incompatible with string [2].
 
 from vim:
 File "test.js", line 3, characters 2-4
-number
-This type is incompatible with
-File "test.js", line 3, characters 7-12
-string
+Error: Cannot cast `123` to string because number [1] is incompatible with string [2].
 

@@ -87,9 +87,9 @@ type, it will be used in `typeof`.
 
 ```js
 // @flow
-var num1: 42 = 42;
+let num1: 42 = 42;
 // $ExpectError
-var num2: typeof num1 = 3.14;    // Error!
+let num2: typeof num1 = 3.14;    // Error!
 
 let bool1: true = true;
 // $ExpectError
@@ -125,5 +125,5 @@ class YourClass {
 
 // $ExpectError
 let test1: typeof MyClass = YourClass; // Error!
-let test1: typeof MyClass = MyClass;   // Works!
+let test2: typeof MyClass = MyClass;   // Works!
 ```

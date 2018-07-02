@@ -1,14 +1,22 @@
 syntax_error.js
-syntax_error.js:4
-  4: 
-     ^ Unexpected end of input
+Error ---------------------------------------------------------------------------------------------- syntax_error.js:4:1
+
+Unexpected end of input
+
+   4|
+      
+
 
 
 Found 1 error
 syntax_error.js (no filename)
--:4
-  4: 
-     ^ Unexpected end of input
+Error ------------------------------------------------------------------------------------------------------------ -:4:1
+
+Unexpected end of input
+
+   4|
+      
+
 
 
 Found 1 error
@@ -16,9 +24,13 @@ Found 1 error
 
 not_flow.js
 
-not_flow.js:1
-  1: 1 * 'foo';
-         ^^^^^ string. The operand of an arithmetic operation must be a number.
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error
@@ -26,9 +38,13 @@ Found 1 error
 
 not_flow.js with --all
 
-not_flow.js:1
-  1: 1 * 'foo';
-         ^^^^^ string. The operand of an arithmetic operation must be a number.
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error
@@ -41,10 +57,18 @@ File is not @flow!
 
 not_flow.js with --respect-pragma and --all
 
-Warning: --all and --respect-pragma cannot be used together. --all wins.
-not_flow.js:1
-  1: 1 * 'foo';
-         ^^^^^ string. The operand of an arithmetic operation must be a number.
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error
+
+
+unsaved_foo.js depends on bar.js which is still checked against foo.js
+
+No errors!

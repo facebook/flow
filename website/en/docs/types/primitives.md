@@ -25,9 +25,9 @@ undefined;
 Or as constructed wrapper objects.
 
 ```js
-Boolean(false);
-String("world");
-Number(42);
+new Boolean(false);
+new String("world");
+new Number(42);
 Symbol("foo");
 ```
 
@@ -50,7 +50,7 @@ function method(x: Number, y: String, z: Boolean) {
   // ...
 }
 
-method(Number(42), String("world"), Boolean(false));
+method(new Number(42), new String("world"), new Boolean(false));
 ```
 
 These wrapper objects are rarely used.
@@ -99,7 +99,7 @@ Remember that `boolean` and `Boolean` are different types.
 
 - A `boolean` is a literal value like `true` or `false` or the result of an
   expression like `a === b`.
-- A `Boolean` is a wrapper object created by the global `Boolean(x)`
+- A `Boolean` is a wrapper object created by the global `new Boolean(x)`
   constructor.
 
 ## Numbers <a class="toc" id="toc-numbers" href="#toc-numbers"></a>
@@ -126,7 +126,7 @@ Remember that `number` and `Number` are different types.
 
 - A `number` is a literal value like `42` or `3.14` or the result of an
   expression like `parseFloat(x)`.
-- A `Number` is a wrapper object created by the global `Number(x)` constructor.
+- A `Number` is a wrapper object created by the global `new Number(x)` constructor.
 
 ## Strings <a class="toc" id="toc-strings" href="#toc-strings"></a>
 
@@ -175,7 +175,7 @@ Remember that `string` and `String` are different types.
 
 - A `string` is a literal value like `"foo"` or the result of an expression
   like `"" + 42`.
-- A `String` is a wrapper object created by the global `String(x)` constructor.
+- A `String` is a wrapper object created by the global `new String(x)` constructor.
 
 ## `null` and `void` <a class="toc" id="toc-null-and-void" href="#toc-null-and-void"></a>
 
@@ -233,7 +233,7 @@ In addition to their set value type, these optional properties can either be
 
 ```js
 // @flow
-function acceptsObject(value: { optionalProp?: string }) {
+function acceptsObject(value: { foo?: string }) {
   // ...
 }
 
@@ -261,10 +261,10 @@ function acceptsOptionalString(value?: string) {
   // ...
 }
 
-acceptsOptionalString("bar");
-acceptsOptionalString(undefined);
-acceptsOptionalString(null);
-acceptsOptionalString();
+acceptsOptionalString("bar");     // Works!
+acceptsOptionalString(undefined); // Works!
+acceptsOptionalString(null);      // Error!
+acceptsOptionalString();          // Works!
 ```
 
 ### Function parameters with defaults <a class="toc" id="toc-function-parameters-with-defaults" href="#toc-function-parameters-with-defaults"></a>
@@ -285,10 +285,10 @@ function acceptsOptionalString(value: string = "foo") {
   // ...
 }
 
-acceptsOptionalString("bar");
-acceptsOptionalString(undefined);
-acceptsOptionalString(null);
-acceptsOptionalString();
+acceptsOptionalString("bar");     // Works!
+acceptsOptionalString(undefined); // Works!
+acceptsOptionalString(null);      // Error!
+acceptsOptionalString();          // Works!
 ```
 
 ## Symbols <a class="toc" id="toc-symbols" href="#toc-symbols"></a>

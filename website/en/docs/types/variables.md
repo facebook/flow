@@ -7,10 +7,10 @@ When you are declaring a new variable, you may optionally declare its type.
 JavaScript has three ways of declaring local variables:
 
 - `var` - declares a variable, optionally assigning a value.
-  ([MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let))
-- `let` - declares a block scoped variable, optionally assigning a value.
   ([MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var))
-- `const` - declares a block scoped variable, assigning a value that cannot be re-assigned.
+- `let` - declares a block-scoped variable, optionally assigning a value.
+  ([MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let))
+- `const` - declares a block-scoped variable, assigning a value that cannot be re-assigned.
   ([MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const))
 
 In Flow these fall into two groups:

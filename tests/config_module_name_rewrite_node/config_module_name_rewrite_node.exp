@@ -1,38 +1,104 @@
-A.js:5
-  5: var a_2: string = m1.numVal; // Error: number ~> string
-                       ^^^^^^^^^ number. This type is incompatible with
-  5: var a_2: string = m1.numVal; // Error: number ~> string
-              ^^^^^^ string
+Error -------------------------------------------------------------------------------------------------------- A.js:5:19
 
-A.js:8
-  8: var a_4: string = numVal; // Error: number ~> string
-                       ^^^^^^ number. This type is incompatible with
-  8: var a_4: string = numVal; // Error: number ~> string
-              ^^^^^^ string
+Cannot assign `m1.numVal` to `a_2` because number [1] is incompatible with string [2].
 
-A.js:14
- 14: var b_2: string = m2.numVal; // Error: number ~> string
-                       ^^^^^^^^^ number. This type is incompatible with
- 14: var b_2: string = m2.numVal; // Error: number ~> string
-              ^^^^^^ string
+   A.js:5:19
+   5| var a_2: string = m1.numVal; // Error: number ~> string
+                        ^^^^^^^^^
 
-A.js:17
- 17: var b_4: string = numVal2; // Error: number ~> string
-                       ^^^^^^^ number. This type is incompatible with
- 17: var b_4: string = numVal2; // Error: number ~> string
-              ^^^^^^ string
+References:
+   Exists.js:4:11
+   4|   numVal: 42
+                ^^ [1]
+   A.js:5:10
+   5| var a_2: string = m1.numVal; // Error: number ~> string
+               ^^^^^^ [2]
 
-A.js:22
- 22: var c_2: string = m3.numVal; // Error: number ~> string
-                       ^^^^^^^^^ number. This type is incompatible with
- 22: var c_2: string = m3.numVal; // Error: number ~> string
-              ^^^^^^ string
 
-A.js:25
- 25: var c_4: string = numVal3; // Error: number ~> string
-                       ^^^^^^^ number. This type is incompatible with
- 25: var c_4: string = numVal3; // Error: number ~> string
-              ^^^^^^ string
+Error -------------------------------------------------------------------------------------------------------- A.js:8:19
+
+Cannot assign `numVal` to `a_4` because number [1] is incompatible with string [2].
+
+   A.js:8:19
+   8| var a_4: string = numVal; // Error: number ~> string
+                        ^^^^^^
+
+References:
+   Exists.js:4:11
+   4|   numVal: 42
+                ^^ [1]
+   A.js:8:10
+   8| var a_4: string = numVal; // Error: number ~> string
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:14:19
+
+Cannot assign `m2.numVal` to `b_2` because number [1] is incompatible with string [2].
+
+   A.js:14:19
+   14| var b_2: string = m2.numVal; // Error: number ~> string
+                         ^^^^^^^^^
+
+References:
+   Exists.js:4:11
+    4|   numVal: 42
+                 ^^ [1]
+   A.js:14:10
+   14| var b_2: string = m2.numVal; // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:17:19
+
+Cannot assign `numVal2` to `b_4` because number [1] is incompatible with string [2].
+
+   A.js:17:19
+   17| var b_4: string = numVal2; // Error: number ~> string
+                         ^^^^^^^
+
+References:
+   Exists.js:4:11
+    4|   numVal: 42
+                 ^^ [1]
+   A.js:17:10
+   17| var b_4: string = numVal2; // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:22:19
+
+Cannot assign `m3.numVal` to `c_2` because number [1] is incompatible with string [2].
+
+   A.js:22:19
+   22| var c_2: string = m3.numVal; // Error: number ~> string
+                         ^^^^^^^^^
+
+References:
+   node_modules/Exists/index.js:4:11
+    4|   numVal: 42
+                 ^^ [1]
+   A.js:22:10
+   22| var c_2: string = m3.numVal; // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:25:19
+
+Cannot assign `numVal3` to `c_4` because number [1] is incompatible with string [2].
+
+   A.js:25:19
+   25| var c_4: string = numVal3; // Error: number ~> string
+                         ^^^^^^^
+
+References:
+   node_modules/Exists/index.js:4:11
+    4|   numVal: 42
+                 ^^ [1]
+   A.js:25:10
+   25| var c_4: string = numVal3; // Error: number ~> string
+                ^^^^^^ [2]
+
 
 
 Found 6 errors

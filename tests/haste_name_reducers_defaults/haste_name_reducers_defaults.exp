@@ -1,24 +1,61 @@
-Module1.js:5
-  5: (test: boolean);
-      ^^^^ Test. This type is incompatible with
-  5: (test: boolean);
-            ^^^^^^^ boolean
+Error --------------------------------------------------------------------------------------------------- Module1.js:5:2
 
-index.js:3
-  3: (require('Module1'): boolean);
-      ^^^^^^^^^^^^^^^^^^ Test. This type is incompatible with
-  3: (require('Module1'): boolean);
-                          ^^^^^^^ boolean
+Cannot cast `test` to boolean because `Test` [1] is incompatible with boolean [2].
 
-index.js:4
-  4: (require('Module2').foo(): boolean);
-      ^^^^^^^^^^^^^^^^^^^^^^^^ Test2. This type is incompatible with
-  4: (require('Module2').foo(): boolean);
-                                ^^^^^^^ boolean
+   Module1.js:5:2
+   5| (test: boolean);
+       ^^^^
 
-index.js:5
-  5: require('Module3');
-             ^^^^^^^^^ Module3. Required module not found
+References:
+   node_modules/test/Module1.js:4:18
+   4| module.exports = new Test();
+                       ^^^^^^^^^^ [1]
+   Module1.js:5:8
+   5| (test: boolean);
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- index.js:3:2
+
+Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with boolean [2].
+
+   index.js:3:2
+   3| (require('Module1'): boolean);
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   node_modules/test/Module1.js:4:18
+   4| module.exports = new Test();
+                       ^^^^^^^^^^ [1]
+   index.js:3:22
+   3| (require('Module1'): boolean);
+                           ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- index.js:4:2
+
+Cannot cast `require(...).foo()` to boolean because `Test2` [1] is incompatible with boolean [2].
+
+   index.js:4:2
+   4| (require('Module2').foo(): boolean);
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   foo/Module2.js.flow:2:32
+   2| declare export function foo(): Test2;
+                                     ^^^^^ [1]
+   index.js:4:28
+   4| (require('Module2').foo(): boolean);
+                                 ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- index.js:5:9
+
+Cannot resolve module `Module3`.
+
+   5| require('Module3');
+              ^^^^^^^^^
+
 
 
 Found 4 errors

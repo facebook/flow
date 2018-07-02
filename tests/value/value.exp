@@ -1,14 +1,33 @@
-value.js:3
-  3: var y:string = o["x"];
-                    ^^^^^^ number. This type is incompatible with
-  3: var y:string = o["x"];
-           ^^^^^^ string
+Error ---------------------------------------------------------------------------------------------------- value.js:3:16
 
-value.js:6
-  6: table["x"] = "hello";
-                  ^^^^^^^ string. This type is incompatible with
-  5: var table: { [_: string]: number } = {};
-                               ^^^^^^ number
+Cannot assign `o["x"]` to `y` because number [1] is incompatible with string [2].
+
+   value.js:3:16
+   3| var y:string = o["x"];
+                     ^^^^^^
+
+References:
+   value.js:2:10
+   2| o["x"] = 4;
+               ^ [1]
+   value.js:3:7
+   3| var y:string = o["x"];
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- value.js:6:14
+
+Cannot assign `"hello"` to `table["x"]` because string [1] is incompatible with number [2].
+
+   value.js:6:14
+   6| table["x"] = "hello";
+                   ^^^^^^^ [1]
+
+References:
+   value.js:5:27
+   5| var table: { [_: string]: number } = {};
+                                ^^^^^^ [2]
+
 
 
 Found 2 errors

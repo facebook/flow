@@ -1,8 +1,10 @@
-test.js:9
-  9: a.foo = function(): C { return new C(); }
-       ^^^ property `foo`. Covariant property `foo` incompatible with contravariant use in
-  9: a.foo = function(): C { return new C(); }
-     ^^^^^ assignment of property `foo`
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot assign function to `a.foo` because property `foo` is not writable.
+
+   9| a.foo = function(): C { return new C(); }
+      ^^^^^
+
 
 
 Found 1 error

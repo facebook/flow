@@ -1,54 +1,59 @@
-pred.js:16
- 16:     || options.readableObjectMode
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property cannot be accessed on any member of intersection type
- 16:     || options.readableObjectMode
-            ^^^^^^^ intersection
-  Member 1:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                  ^^^^^^^^^^^^^^^^^^^^^ ReadableStreamOptions
-  Error:
-   16:     || options.readableObjectMode
-                      ^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property not found in
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                  ^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 2:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                          ^^^^^^^^^^^^^^^^^^^^^ WritableStreamOptions
-  Error:
-   16:     || options.readableObjectMode
-                      ^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property not found in
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                          ^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 3:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                                                  ^ object type
-  Error:
-   17:     || options.writableObjectMode; // error, undefined ~> boolean
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with the expected return type of
-   14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
-                                                                 ^^^^^^^ boolean
+Error ---------------------------------------------------------------------------------------------------- pred.js:15:10
 
-test_obj.js:29
- 29: var e: E = c; // error
-                ^ intersection. This type is incompatible with
- 29: var e: E = c; // error
-            ^ object type
-  Member 1:
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-  Error:
-   28: type E = { [key: string]: string };
-                                 ^^^^^^ string. This type is incompatible with
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                                 ^^^^^^ number. See lib: lib/lib.js:33
-  Member 2:
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
-  Error:
-   28: type E = { [key: string]: string };
-                                 ^^^^^^ string. This type is incompatible with
-   33: type C = { [key: string]: number } & { [key: string]: number };
-                                                             ^^^^^^ number. See lib: lib/lib.js:33
+Cannot return `options.objectMode || options.readableObjectMode || options.writableObjectMode` because undefined [1] is
+incompatible with boolean [2].
+
+   pred.js:15:10
+                v-----------------
+   15|   return options.objectMode
+   16|     || options.readableObjectMode
+   17|     || options.writableObjectMode; // error, undefined ~> boolean
+           ----------------------------^
+
+References:
+   pred.js:11:25
+   11|   writableObjectMode? : boolean
+                               ^^^^^^^ [1]
+   pred.js:14:59
+   14| function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
+                                                                 ^^^^^^^ [2]
 
 
-Found 2 errors
+Error -------------------------------------------------------------------------------------------- proper_blaming.js:9:1
+
+Cannot get `x.nope` because property `nope` is missing in null [1].
+
+   proper_blaming.js:9:1
+   9| x.nope; // error here
+      ^^^^^^
+
+References:
+   proper_blaming.js:5:14
+   5| type O = {p: null} & E;
+                   ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ test_obj.js:29:12
+
+Cannot assign `c` to `e` because:
+ - Either number [1] is incompatible with string [2] in the indexer property.
+ - Or number [3] is incompatible with string [2] in the indexer property.
+
+   test_obj.js:29:12
+   29| var e: E = c; // error
+                  ^
+
+References:
+   lib/lib.js:33:27
+   33| type C = { [key: string]: number } & { [key: string]: number };
+                                 ^^^^^^ [1]
+   test_obj.js:28:27
+   28| type E = { [key: string]: string };
+                                 ^^^^^^ [2]
+   lib/lib.js:33:55
+   33| type C = { [key: string]: number } & { [key: string]: number };
+                                                             ^^^^^^ [3]
+
+
+
+Found 3 errors

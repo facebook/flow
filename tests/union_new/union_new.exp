@@ -1,312 +1,522 @@
-issue-1462-i.js:21
- 21:   print(val.foo);  // <--- foo could be an array
-             ^^^^^^^ array type. This type is incompatible with the expected param type of
- 16: function print(x: number) {
-                       ^^^^^^ number
+Error --------------------------------------------------------------------------------------------- issue-1462-i.js:21:9
 
-test1.js:39
- 39: const fun_result = fun(() => "");
-                            ^^^^^^^^ function. Could not decide which case to select
- 35: function fun(a: A3 | A4) {
-                     ^^^^^^^ union type
-  Case 1 may work:
-   35: function fun(a: A3 | A4) {
-                       ^^ A3
-  But if it doesn't, case 2 looks promising too:
-   35: function fun(a: A3 | A4) {
-                            ^^ A4
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   39: const fun_result = fun(() => "");
-                                    ^^ return
+Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
 
-test1.js:57
- 57: inst([new B6]);
-          ^^^^^^^^ array literal. Could not decide which case to select
- 53: function inst(a: A5 | A6) { }
-                      ^^^^^^^ union type
-  Case 1 may work:
-   53: function inst(a: A5 | A6) { }
-                        ^^ A5
-  But if it doesn't, case 2 looks promising too:
-   53: function inst(a: A5 | A6) { }
-                             ^^ A6
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   57: inst([new B6]);
-            ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
+   issue-1462-i.js:21:9
+   21|   print(val.foo);  // <--- foo could be an array
+               ^^^^^^^
 
-test10.js:38
- 38: check_fun((x) => x);
-               ^^^^^^^^ function. Could not decide which case to select
- 35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-   35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
-                              ^^^^^^^^^^^^^^^^^^^^^ function type
-  But if it doesn't, case 2 looks promising too:
-   35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
-                                                        ^^^^^^^^^^^^^^^^^^^^^ function type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   38: check_fun((x) => x);
-                        ^ return
-   38: check_fun((x) => x);
-                  ^ parameter `x`
-
-test10.js:50
- 50: check_obj({ x: id("") });
-               ^^^^^^^^^^^^^ object literal. Could not decide which case to select
- 44: function check_obj(_: { x: number } | { x: string }) { }
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-   44: function check_obj(_: { x: number } | { x: string }) { }
-                             ^^^^^^^^^^^^^ object type
-  But if it doesn't, case 2 looks promising too:
-   44: function check_obj(_: { x: number } | { x: string }) { }
-                                             ^^^^^^^^^^^^^ object type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   50: check_obj({ x: id("") });
-                      ^^^^^^ function call
-
-test10.js:59
- 59: check_arr([""]);
-               ^^^^ array literal. Could not decide which case to select
- 56: function check_arr(_: number[] | string[]) { }
-                           ^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-   56: function check_arr(_: number[] | string[]) { }
-                             ^^^^^^^^ array type
-  But if it doesn't, case 2 looks promising too:
-   56: function check_arr(_: number[] | string[]) { }
-                                        ^^^^^^^^ array type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   59: check_arr([""]);
-                 ^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
-
-test10.js:62
- 62: check_arr([id("")]);
-               ^^^^^^^^ array literal. Could not decide which case to select
- 56: function check_arr(_: number[] | string[]) { }
-                           ^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-   56: function check_arr(_: number[] | string[]) { }
-                             ^^^^^^^^ array type
-  But if it doesn't, case 2 looks promising too:
-   56: function check_arr(_: number[] | string[]) { }
-                                        ^^^^^^^^ array type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   62: check_arr([id("")]);
-                 ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
-
-test11.js:12
- 12: length({ kind: "cons" }); // missing `next`
-            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  5: function length(list: List) {
-                           ^^^^ union: Nil | Cons
-  Member 1:
-   16: type List = Nil | Cons;
-                   ^^^ Nil
-  Error:
-   12: length({ kind: "cons" }); // missing `next`
-                      ^^^^^^ string. Expected string literal `nil`, got `cons` instead
-   17: type Nil = { kind: "nil" };
-                          ^^^^^ string literal `nil`
-  Member 2:
-   16: type List = Nil | Cons;
-                         ^^^^ Cons
-  Error:
-   16: type List = Nil | Cons;
-                         ^^^^ property `next`. Property not found in
-   12: length({ kind: "cons" }); // missing `next`
-              ^^^^^^^^^^^^^^^^ object literal
-
-test11.js:14
- 14: length({ kind: "empty" }); // `kind` not found
-            ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  5: function length(list: List) {
-                           ^^^^ union: Nil | Cons
-  Member 1:
-   16: type List = Nil | Cons;
-                   ^^^ Nil
-  Error:
-   14: length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
-   17: type Nil = { kind: "nil" };
-                          ^^^^^ string literal `nil`
-  Member 2:
-   16: type List = Nil | Cons;
-                         ^^^^ Cons
-  Error:
-   14: length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
-   18: type Cons = { kind: "cons", next: List };
-                           ^^^^^^ string literal `cons`
-
-test14.js:12
- 12:   union({ x: c.get() });
-             ^^^^^^^^^^^^^^ object literal. Could not decide which case to select
-  9: function union(o: { x: string } | { x: number }) { }
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-    9: function union(o: { x: string } | { x: number }) { }
-                         ^^^^^^^^^^^^^ object type
-  But if it doesn't, case 2 looks promising too:
-    9: function union(o: { x: string } | { x: number }) { }
-                                         ^^^^^^^^^^^^^ object type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   12:   union({ x: c.get() });
-                    ^^^^^^^ call of method `get`
-
-test16.js:11
- 11: foo(() => qux());
-         ^^^^^^^^^^^ function. Could not decide which case to select
- 10: function foo(x: Foo) { }
-                     ^^^ union type
-  Case 1 may work:
-    6: type Foo = T | (() => bool);
-                  ^ T
-  But if it doesn't, case 2 looks promising too:
-    6: type Foo = T | (() => bool);
-                       ^^^^^^^^^^ function type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   11: foo(() => qux());
-                 ^^^^^ return
-
-test16.js:14
- 14: bar(() => qux());
-         ^^^^^^^^^^^ function. Could not decide which case to select
- 13: function bar(x: Bar) { }
-                     ^^^ union type
-  Case 2 may work:
-    8: type Bar = number | (() => string) | (() => bool);
-                            ^^^^^^^^^^^^ function type
-  But if it doesn't, case 3 looks promising too:
-    8: type Bar = number | (() => string) | (() => bool);
-                                             ^^^^^^^^^^ function type
-  Please provide additional annotation(s) to determine whether case 2 works (or consider merging it with case 3):
-   14: bar(() => qux());
-                 ^^^^^ return
-
-test17.js:7
-  7: ([].concat([0,1])[1]: string)
-                 ^ number. This type is incompatible with
-  7: ([].concat([0,1])[1]: string)
-                           ^^^^^^ string
-
-test17.js:7
-  7: ([].concat([0,1])[1]: string)
-                   ^ number. This type is incompatible with
-  7: ([].concat([0,1])[1]: string)
-                           ^^^^^^ string
-
-test20.js:14
- 14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^ string. The operand of an arithmetic operation must be a number.
-
-test20.js:14
- 14: [""].reduce((acc,str) => acc * str.length);
-                                        ^^^^^^ property `length`. Property not found in
- 14: [""].reduce((acc,str) => acc * str.length);
-                                    ^^^ Number
-
-test21.js:11
- 11: ({ type: bar(), x: str() }: T);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. Could not decide which case to select
- 11: ({ type: bar(), x: str() }: T);
-                                 ^ union type
-  Case 1 may work:
-    6:   | { type: "FOO", x: number }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  But if it doesn't, case 2 looks promising too:
-    7:   | { type: "BAR", x: string }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   11: ({ type: bar(), x: str() }: T);
-                ^^^^^ function call
-   11: ({ type: bar(), x: str() }: T);
-                          ^^^^^ function call
-
-test22.js:20
- 20:   else return x.result;
-                   ^^^^^^^^ property `result`. Property cannot be accessed on any member of intersection type
- 20:   else return x.result;
-                   ^ intersection
-  Member 1:
-   12: type Error = {
-                    ^ object type
-  Error:
-   20:   else return x.result;
-                       ^^^^^^ property `result`. Property not found in
-   12: type Error = {
-                    ^ object type
-  Member 2:
-   14: } & Empty;
-           ^^^^^ Empty
-  Error:
-   20:   else return x.result;
-                       ^^^^^^ property `result`. Property not found in
-   14: } & Empty;
-           ^^^^^ object type
-
-test26.js:20
- 20: new Record().set('foo', "42");
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 20: new Record().set('foo', "42");
-     ^^^^^^^^^^^^^^^^ intersection
-  Member 1:
-   16:   set(x: 'foo', y: number): void;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   20: new Record().set('foo', "42");
-                               ^^^^ string. This type is incompatible with the expected param type of
-   16:   set(x: 'foo', y: number): void;
-                          ^^^^^^ number
-  Member 2:
-   17:   set(x: 'bar', y: string): void;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   20: new Record().set('foo', "42");
-                        ^^^^^ string. Expected string literal `bar`, got `foo` instead
-   17:   set(x: 'bar', y: string): void;
-                ^^^^^ string literal `bar`
-
-test5.js:14
- 14: fun(a1);
-         ^^ function. Could not decide which case to select
- 11: function fun(a: ((x: number) => number) | ((x: string) => string)) { }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-   11: function fun(a: ((x: number) => number) | ((x: string) => string)) { }
-                        ^^^^^^^^^^^^^^^^^^^^^ function type
-  But if it doesn't, case 2 looks promising too:
-   11: function fun(a: ((x: number) => number) | ((x: string) => string)) { }
-                                                  ^^^^^^^^^^^^^^^^^^^^^ function type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   13: function a1(x) { return x; }
-                     ^ return
-   13: function a1(x) { return x; }
-                   ^ parameter `x`
-
-test5.js:25
- 25: arr(a2);
-         ^^ empty array literal. Could not decide which case to select
- 22: function arr(a: number[] | string[]) { }
-                     ^^^^^^^^^^^^^^^^^^^ union type
-  Case 1 may work:
-   22: function arr(a: number[] | string[]) { }
-                       ^^^^^^^^ array type
-  But if it doesn't, case 2 looks promising too:
-   22: function arr(a: number[] | string[]) { }
-                                  ^^^^^^^^ array type
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   24: var a2 = [];
-                ^^ unknown element type of empty array
-
-test9.js:12
- 12:   return x * x;
-              ^ null. The operand of an arithmetic operation must be a number.
-
-test9.js:12
- 12:   return x * x;
-                  ^ null. The operand of an arithmetic operation must be a number.
+References:
+   issue-1462-i.js:11:8
+   11|   foo: Array<number>
+              ^^^^^^^^^^^^^ [1]
+   issue-1462-i.js:16:19
+   16| function print(x: number) {
+                         ^^^^^^ [2]
 
 
-Found 23 errors
+Error ----------------------------------------------------------------------------------------------- issue-824.js:21:21
+
+Cannot call `this.foo` with `p` bound to `p` because:
+ - Either `I` [1] is incompatible with `B` [2].
+ - Or `C` [3] is incompatible with `B` [2].
+ - Or `I` [1] is incompatible with `C` [4].
+ - Or `B` [3] is incompatible with `C` [4].
+
+   issue-824.js:21:21
+   21|     return this.foo(p);
+                           ^
+
+References:
+   issue-824.js:13:17
+   13|   static bar(p: I & K): bool {
+                       ^ [1]
+   issue-824.js:3:10
+    3| type K = B | C;
+                ^ [2]
+   issue-824.js:13:21
+   13|   static bar(p: I & K): bool {
+                           ^ [3]
+   issue-824.js:3:14
+    3| type K = B | C;
+                    ^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- test1.js:39:24
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3].
+
+   test1.js:39:24
+   39| const fun_result = fun(() => "");
+                              ^^^^^^^^
+
+References:
+   test1.js:35:17
+   35| function fun(a: A3 | A4) {
+                       ^^ [1]
+   test1.js:35:22
+   35| function fun(a: A3 | A4) {
+                            ^^ [2]
+   test1.js:39:30
+   39| const fun_result = fun(() => "");
+                                    ^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test1.js:57:6
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
+the array element type) [3].
+
+   test1.js:57:6
+   57| inst([new B6]);
+            ^^^^^^^^ [3]
+
+References:
+   test1.js:53:18
+   53| function inst(a: A5 | A6) { }
+                        ^^ [1]
+   test1.js:53:23
+   53| function inst(a: A5 | A6) { }
+                             ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- test10.js:38:11
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3] or to `x` [4].
+
+   test10.js:38:11
+   38| check_fun((x) => x);
+                 ^^^^^^^^
+
+References:
+   test10.js:35:24
+   35| function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test10.js:35:50
+   35| function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
+                                                        ^^^^^^^^^^^^^^^^^^^^^ [2]
+   test10.js:38:18
+   38| check_fun((x) => x);
+                        ^ [3]
+   test10.js:38:12
+   38| check_fun((x) => x);
+                  ^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- test10.js:50:11
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to call of `id` [3].
+
+   test10.js:50:11
+   50| check_obj({ x: id("") });
+                 ^^^^^^^^^^^^^
+
+References:
+   test10.js:44:23
+   44| function check_obj(_: { x: number } | { x: string }) { }
+                             ^^^^^^^^^^^^^ [1]
+   test10.js:44:39
+   44| function check_obj(_: { x: number } | { x: string }) { }
+                                             ^^^^^^^^^^^^^ [2]
+   test10.js:50:16
+   50| check_obj({ x: id("") });
+                      ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- test10.js:59:11
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
+the array element type) [3].
+
+   test10.js:59:11
+   59| check_arr([""]);
+                 ^^^^ [3]
+
+References:
+   test10.js:56:23
+   56| function check_arr(_: number[] | string[]) { }
+                             ^^^^^^^^ [1]
+   test10.js:56:34
+   56| function check_arr(_: number[] | string[]) { }
+                                        ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- test10.js:62:11
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to inferred union of array element types (alternatively, provide an annotation to summarize
+the array element type) [3].
+
+   test10.js:62:11
+   62| check_arr([id("")]);
+                 ^^^^^^^^ [3]
+
+References:
+   test10.js:56:23
+   56| function check_arr(_: number[] | string[]) { }
+                             ^^^^^^^^ [1]
+   test10.js:56:34
+   56| function check_arr(_: number[] | string[]) { }
+                                        ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test11.js:12:8
+
+Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but
+exists in `Cons` [2].
+
+   test11.js:12:8
+   12| length({ kind: "cons" }); // missing `next`
+              ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test11.js:18:13
+   18| type Cons = { kind: "cons", next: List };
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test11.js:14:8
+
+Cannot call `length` with object literal bound to `list` because object literal [1] is incompatible with `List` [2].
+
+   test11.js:14:8
+   14| length({ kind: "empty" }); // `kind` not found
+              ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test11.js:5:23
+    5| function length(list: List) {
+                             ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test14.js:12:9
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to call of method `get` [3].
+
+   test14.js:12:9
+   12|   union({ x: c.get() });
+               ^^^^^^^^^^^^^^
+
+References:
+   test14.js:9:19
+    9| function union(o: { x: string } | { x: number }) { }
+                         ^^^^^^^^^^^^^ [1]
+   test14.js:9:35
+    9| function union(o: { x: string } | { x: number }) { }
+                                         ^^^^^^^^^^^^^ [2]
+   test14.js:12:14
+   12|   union({ x: c.get() });
+                    ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test16.js:11:5
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3].
+
+   test16.js:11:5
+   11| foo(() => qux());
+           ^^^^^^^^^^^
+
+References:
+   test16.js:6:12
+    6| type Foo = T | (() => bool);
+                  ^ [1]
+   test16.js:6:17
+    6| type Foo = T | (() => bool);
+                       ^^^^^^^^^^ [2]
+   test16.js:11:11
+   11| foo(() => qux());
+                 ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test16.js:14:5
+
+Could not decide which case to select. Since case 2 [1] may work but if it doesn't case 3 [2] looks promising too. To
+fix add a type annotation to return [3].
+
+   test16.js:14:5
+   14| bar(() => qux());
+           ^^^^^^^^^^^
+
+References:
+   test16.js:8:22
+    8| type Bar = number | (() => string) | (() => bool);
+                            ^^^^^^^^^^^^ [1]
+   test16.js:8:39
+    8| type Bar = number | (() => string) | (() => bool);
+                                             ^^^^^^^^^^ [2]
+   test16.js:14:11
+   14| bar(() => qux());
+                 ^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
+
+Cannot cast `[].concat(...)[1]` to string because:
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
+
+   test17.js:7:2
+   7| ([].concat([0,1])[1]: string)
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test17.js:7:13
+   7| ([].concat([0,1])[1]: string)
+                  ^ [1]
+   test17.js:7:23
+   7| ([].concat([0,1])[1]: string)
+                            ^^^^^^ [2]
+   test17.js:7:15
+   7| ([].concat([0,1])[1]: string)
+                    ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- test20.js:14:26
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   test20.js:14:26
+   14| [""].reduce((acc,str) => acc * str.length);
+                                ^^^
+
+References:
+   test20.js:14:2
+   14| [""].reduce((acc,str) => acc * str.length);
+        ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- test20.js:14:32
+
+Cannot get `str.length` because property `length` is missing in `Number` [1].
+
+   test20.js:14:32
+   14| [""].reduce((acc,str) => acc * str.length);
+                                      ^^^^^^^^^^
+
+References:
+   test20.js:14:26
+   14| [""].reduce((acc,str) => acc * str.length);
+                                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- test21.js:11:2
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to call of `bar` [3] or to call of `str` [4].
+
+   test21.js:11:2
+   11| ({ type: bar(), x: str() }: T);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test21.js:6:5
+    6|   | { type: "FOO", x: number }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test21.js:7:5
+    7|   | { type: "BAR", x: string }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   test21.js:11:10
+   11| ({ type: bar(), x: str() }: T);
+                ^^^^^ [3]
+   test21.js:11:20
+   11| ({ type: bar(), x: str() }: T);
+                          ^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- test22.js:20:15
+
+Cannot get `x.result` because:
+ - Either property `result` is missing in object type [1].
+ - Or property `result` is missing in `Empty` [2].
+
+   test22.js:20:15
+   20|   else return x.result;
+                     ^^^^^^^^
+
+References:
+   test22.js:12:14
+                    v
+   12| type Error = {
+   13|   type: 'ERROR';
+   14| } & Empty;
+       ^ [1]
+   test22.js:14:5
+   14| } & Empty;
+           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test26.js:20:1
+
+Cannot call `new Record().set` because string [1] is incompatible with number [2].
+
+   test26.js:20:1
+   20| new Record().set('foo', "42");
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test26.js:20:25
+   20| new Record().set('foo', "42");
+                               ^^^^ [1]
+   test26.js:16:20
+   16|   set(x: 'foo', y: number): void;
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test33.js:7:5
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3].
+
+   test33.js:7:5
+   7| foo(bar); // error: ambiguous speculation
+          ^^^
+
+References:
+   test33.js:5:19
+   5| function foo(cb: (() => string) | (() => number)) {}
+                        ^^^^^^^^^^^^ [1]
+   test33.js:5:36
+   5| function foo(cb: (() => string) | (() => number)) {}
+                                         ^^^^^^^^^^^^ [2]
+   test33.js:6:15
+   6| function bar() { return 0 }
+                    ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test33.js:8:2
+
+Cannot cast `bar()` to string because number [1] is incompatible with string [2].
+
+   test33.js:8:2
+   8| (bar(): string); // error: number ~> string
+       ^^^^^
+
+References:
+   test33.js:6:25
+   6| function bar() { return 0 }
+                              ^ [1]
+   test33.js:8:9
+   8| (bar(): string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test34.js:10:6
+
+Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2].
+
+   test34.js:10:6
+   10|     (x.foo: empty); // error: string ~> empty
+            ^^^^^
+
+References:
+   test34.js:16:18
+   16| type A = {| foo: string |};
+                        ^^^^^^ [1]
+   test34.js:10:13
+   10|     (x.foo: empty); // error: string ~> empty
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test35.js:8:2
+
+Cannot cast `ret` to empty because string [1] is incompatible with empty [2].
+
+   test35.js:8:2
+   8| (ret: empty); // err, string ~> empty (matched case 2)
+       ^^^
+
+References:
+   test35.js:4:31
+   4| declare function f(x: mixed): string;
+                                    ^^^^^^ [1]
+   test35.js:8:7
+   8| (ret: empty); // err, string ~> empty (matched case 2)
+            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test5.js:14:5
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to return [3] or to `x` [4].
+
+   test5.js:14:5
+   14| fun(a1);
+           ^^
+
+References:
+   test5.js:11:18
+   11| function fun(a: ((x: number) => number) | ((x: string) => string)) { }
+                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test5.js:11:44
+   11| function fun(a: ((x: number) => number) | ((x: string) => string)) { }
+                                                  ^^^^^^^^^^^^^^^^^^^^^ [2]
+   test5.js:13:15
+   13| function a1(x) { return x; }
+                     ^ [3]
+   test5.js:13:13
+   13| function a1(x) { return x; }
+                   ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- test5.js:25:5
+
+Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+fix add a type annotation to unknown element type of empty array [3].
+
+   test5.js:25:5
+   25| arr(a2);
+           ^^
+
+References:
+   test5.js:22:17
+   22| function arr(a: number[] | string[]) { }
+                       ^^^^^^^^ [1]
+   test5.js:22:28
+   22| function arr(a: number[] | string[]) { }
+                                  ^^^^^^^^ [2]
+   test5.js:24:10
+   24| var a2 = [];
+                ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- test9.js:12:10
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number.
+
+   test9.js:12:10
+   12|   return x * x;
+                ^
+
+References:
+   test9.js:15:22
+   15| function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- test9.js:12:14
+
+Cannot perform arithmetic operation because null or undefined [1] is not a number.
+
+   test9.js:12:14
+   12|   return x * x;
+                    ^
+
+References:
+   test9.js:15:22
+   15| function foo(f: ((_: ?number) => ?number) | (() => void)) { }
+                            ^^^^^^^ [1]
+
+
+
+Found 28 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -3,4 +3,4 @@ S src/**
 
 B _build/**
 
-PKG sedlex oUnit
+PKG sedlex oUnit lwt lwt.ppx js_of_ocaml

@@ -9,6 +9,14 @@
     <title>{{meta_title}}</title>
     <meta name="description" content="{{meta_description}}">
     <meta property="og:url" content="https://flow.org{{ page.url }}">
+    <meta property="og:title" content="{{meta_title}}">
+    <meta property="og:site_name" content="Flow">
+    <meta property="og:description" content="{{meta_description}}">
+    <meta property="og:image" content="http://flow.org/static/ogp-1200x630-1.png">
+    <meta property="og:image:secure_url" content="https://flow.org/static/ogp-1200x630-1.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <link rel="canonical" href="{{meta_canonical}}">
     <link rel="alternate" type="application/rss+xml" title="{{site.title}}" href="{{site.url}}/blog/feed.xml" />
     <link rel="shortcut icon" href="/static/favicon.png?t={{site.time | date_to_xmlschema}}">
@@ -19,9 +27,9 @@
     {% if page.codemirror or layout.codemirror %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.css" integrity="sha256-MdzaXfGXzZdeHw/XEV2LNNycipsLk4uZ0FYzO3hbuvI=" crossorigin="anonymous"/>
     {% endif %}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.3/require.min.js"></script>
+    <script type="text/javascript" src="{% asset_path 'require_2_3_3.js' %}"></script>
     <script type="text/javascript">
-      require.config({
+      requirejs.config({
         baseUrl: '/assets',
         waitSeconds: 30,
         shim: {
@@ -70,12 +78,12 @@
         return tether;
       });
 
-      require([
+      requirejs([
         'bootstrap',
         {% if page.search or layout.search %}'{% asset_name "search" %}',{% endif %}
       ]);
       {% if page.editor or layout.editor %}
-      require(['{% asset_name "editor" %}'], function(Editor) {
+      requirejs(['{% asset_name "editor" %}'], function(Editor) {
         Editor.init();
       });
       {% endif %}

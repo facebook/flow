@@ -1,0 +1,10 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+suppress_comment=.*\\$FlowFixMe
+no_flowlib=true
+include_warnings=true

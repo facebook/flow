@@ -29,7 +29,7 @@ class Foo { constructor(val: MyObject) { /* ... */ } }
 
 ## Type Alias Syntax <a class="toc" id="toc-type-alias-syntax" href="#toc-type-alias-syntax"></a>
 
-Interfaces are created using the keyword `type` followed by it's name, an
+Type aliases are created using the keyword `type` followed by its name, an
 equals sign `=`, and a type definition.
 
 ```js

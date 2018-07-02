@@ -2,9 +2,8 @@
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -12,12 +11,11 @@
 type report =
   (** Nothing to see here. *)
   | Move_along
-  (** Kill the server. *)
-  | Kill_server
   (** Kill the server (if one is running) and start a new one. *)
-  | Restart_server
+  | Restart_server of ServerMonitorUtils.target_mini_state option
 
 type server_state =
+  | Server_not_yet_started
   | Server_alive
   | Server_dead
 
@@ -33,4 +31,11 @@ module type S = sig
   type init_env
   val init : init_env -> t
   val report : t -> server_state -> report
+  (**
+   * Returns true if the informant is actually running and will
+   * manage server lifetime.
+   *)
+  val is_managing : t -> bool
+  val should_start_first_server : t -> bool
+  val should_ignore_hh_version : init_env -> bool
 end

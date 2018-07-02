@@ -1,18 +1,40 @@
-fail-flow-2.js:4
-  4: .
-     ^ Unexpected token .
+Error ----------------------------------------------------------------------------------------------- fail-flow-2.js:4:1
 
-fail-flow.js:3
-  3: .
-     ^ Unexpected token .
+Unexpected token .
 
-fail.js:1
-  1: .
-     ^ Unexpected token .
+   4| .
+      ^
 
-no_parse_error.js:6
-  6: var y = 5 / x;
-                 ^ string. The operand of an arithmetic operation must be a number.
+
+Error ------------------------------------------------------------------------------------------------- fail-flow.js:3:1
+
+Unexpected token .
+
+   3| .
+      ^
+
+
+Error ------------------------------------------------------------------------------------------------------ fail.js:1:1
+
+Unexpected token .
+
+   1| .
+      ^
+
+
+Error ------------------------------------------------------------------------------------------- no_parse_error.js:6:13
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   no_parse_error.js:6:13
+   6| var y = 5 / x;
+                  ^
+
+References:
+   no_parse_error.js:5:9
+   5| var x = 'Test';
+              ^^^^^^ [1]
+
 
 
 Found 4 errors

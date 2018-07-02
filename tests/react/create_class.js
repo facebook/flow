@@ -131,16 +131,16 @@ const L = React.createClass({
   },
   componentWillMount() {
     (this.props.foo: empty); // string ~> empty
-    return 0; // number ~> void
+    return 0; // number ~> mixed
   },
   componentDidMount() {
     (this.props.foo: empty); // string ~> empty
-    return 0; // number ~> void
+    return 0; // number ~> mixed
   },
   componentWillReceiveProps(nextProps) {
     (this.props.foo: empty); // string ~> empty
     (nextProps.foo: empty); // string ~> empty
-    return 0; // number ~> void
+    return 0; // number ~> mixed
   },
   shouldComponentUpdate(nextProps, nextState) {
     (this.props.foo: empty); // string ~> empty

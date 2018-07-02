@@ -1,0 +1,137 @@
+Error ---------------------------------------------------------------------------------------------- intersection.js:9:3
+
+Cannot cast `any` to `$Diff` because:
+ - Either property `a` is missing in object type [1] but exists in object type [2].
+ - Or property `a` is missing in object type [3] but exists in object type [2].
+
+   intersection.js:9:3
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   intersection.js:9:8
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+             ^^^^^^ [1]
+   intersection.js:9:32
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                     ^^^^^^^^^^^^ [2]
+   intersection.js:9:17
+   9| ((any: {c: C} & {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                      ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- intersection.js:12:3
+
+Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
+
+   intersection.js:12:3
+   12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+         ^^^^^^^^^^^
+
+References:
+   intersection.js:12:8
+   12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+              ^^^^^^ [1]
+   intersection.js:12:23
+   12| ((any: {b: B}): $Diff<{a: A} & {b: B}, {b: B}>); // Error
+                             ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- intersection.js:14:3
+
+Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
+
+   intersection.js:14:3
+   14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+         ^^^^^^^^^^^
+
+References:
+   intersection.js:14:8
+   14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+              ^^^^^^ [1]
+   intersection.js:14:23
+   14| ((any: {b: B}): $Diff<{a: A, b: B, c: C}, {b: B} & {c: C}>); // Error
+                             ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- lower.js:21:2
+
+Cannot get `y.age` because property `age` is missing in `Person` [1].
+
+   lower.js:21:2
+   21| (y.age: number); // Error -- could be void
+        ^^^^^
+
+References:
+   lower.js:18:16
+   18| declare var y: PersonWithoutAgeActual;
+                      ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- lower.js:22:2
+
+Cannot cast `y.name` to number because string [1] is incompatible with number [2].
+
+   lower.js:22:2
+   22| (y.name: number); // Error -- should be string
+        ^^^^^^
+
+References:
+   lower.js:4:9
+    4|   name: string,
+               ^^^^^^ [1]
+   lower.js:22:10
+   22| (y.name: number); // Error -- should be string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- lower.js:23:1
+
+Cannot get `y.bla` because property `bla` is missing in `Person` [1].
+
+   lower.js:23:1
+   23| y.bla; // Error -- key not found.
+       ^^^^^
+
+References:
+   lower.js:18:16
+   18| declare var y: PersonWithoutAgeActual;
+                      ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- undefined.js:8:3
+
+Cannot cast `any` to `$Diff` because property `a` is missing in object type [1] but exists in object type [2].
+
+   undefined.js:8:3
+   8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+        ^^^^^^^^^^^
+
+References:
+   undefined.js:8:8
+   8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+             ^^^^^^ [1]
+   undefined.js:8:23
+   8| ((any: {b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                            ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ undefined.js:10:3
+
+Cannot cast `any` to `$Diff` because undefined [1] is incompatible with `A` [2] in property `a`.
+
+   undefined.js:10:3
+   10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   undefined.js:10:12
+   10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                  ^^^^ [1]
+   undefined.js:10:36
+   10| ((any: {a: void, b: B}): $Diff<{a: A, b: B}, {b: B}>); // Error
+                                          ^ [2]
+
+
+
+Found 8 errors

@@ -1,14 +1,33 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (************** file filter utils ***************)
+
+type options = {
+  default_lib_dir: Path.t option;
+  ignores: (string * Str.regexp) list;
+  untyped: (string * Str.regexp) list;
+  declarations: (string * Str.regexp) list;
+  includes: Path_matcher.t;
+  lib_paths: Path.t list;
+  module_file_exts: SSet.t;
+  module_resource_exts: SSet.t;
+  node_resolver_dirnames: string list;
+}
+
+let default_lib_dir options = options.default_lib_dir
+let ignores options = options.ignores
+let untyped options = options.untyped
+let declarations options = options.declarations
+let includes options = options.includes
+let lib_paths options = options.lib_paths
+let module_file_exts options = options.module_file_exts
+let module_resource_exts options = options.module_resource_exts
+let node_resolver_dirnames options = options.node_resolver_dirnames
 
 let node_modules_containers = ref SSet.empty
 
@@ -16,18 +35,14 @@ let global_file_name = "(global)"
 let flow_ext = ".flow"
 
 let has_flow_ext file =
-  Loc.check_suffix file flow_ext
+  File_key.check_suffix file flow_ext
 
 let chop_flow_ext file =
   if has_flow_ext file
-  then Some (Loc.chop_suffix file flow_ext)
+  then Some (File_key.chop_suffix file flow_ext)
   else None
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
-
-let is_dot_file path =
-  let filename = Filename.basename path in
-  String.length filename > 0 && filename.[0] = '.'
 
 let is_prefix prefix =
   let prefix_with_sep = if String_utils.string_ends_with prefix Filename.dir_sep
@@ -39,26 +54,59 @@ let is_prefix prefix =
 let is_json_file filename =
   Utils_js.extension_of_filename filename = Some ".json"
 
-let is_valid_path ~options =
-  let file_exts = SSet.union
-    (Options.module_file_exts options)
-    (Options.module_resource_exts options) in
-  let is_valid_path_helper path =
-    not (is_dot_file path) &&
-    (SSet.exists (Filename.check_suffix path) file_exts ||
-      Filename.basename path = "package.json")
+(* This is the set of file extensions which we watch for changes *)
+let get_all_watched_extensions options =
+  SSet.union options.module_file_exts options.module_resource_exts
 
-  in fun path ->
-    if Filename.check_suffix path flow_ext
-    (* foo.js.flow is valid if foo.js is valid *)
-    then is_valid_path_helper (Filename.chop_suffix path flow_ext)
-    else is_valid_path_helper path
+let is_valid_path =
+  (* Given a file foo.bar.baz.bat, checks the extensions .bat, .baz.bat, and .bar.baz.bat *)
+  let check_ext =
+    (*    helper file_exts "foo.bar.baz" "" ".bat"
+     * -> helper file_exts "foo.bar" ".bat" ".baz"
+     * -> helper file_exts "foo" ".baz.bat" ".bar"
+     * -> helper file_exts "" ".bar.baz.bat" ""
+     * -> false
+     *)
+    let rec helper file_exts basename acc ext =
+      ext <> "" && (
+        let acc = ext ^ acc in
+        SSet.mem acc file_exts || (
+          let basename = Filename.chop_suffix basename ext in
+          let ext = Filename.extension basename in
+          helper file_exts basename acc ext
+        )
+      )
+    in
+
+    fun file_exts basename ->
+      let extension = Filename.extension basename in
+      let acc = "" in
+      if extension = flow_ext
+      then
+        (* We treat bar.foo.flow like bar.foo *)
+        let basename = Filename.chop_suffix basename flow_ext in
+        helper file_exts basename acc (Filename.extension basename)
+      else
+        helper file_exts basename acc extension
+  in
+
+  let is_dot_file basename =
+    basename <> "" && basename.[0] = '.'
+  in
+
+  fun ~options ->
+    let file_exts = get_all_watched_extensions options in
+
+    fun path ->
+      let basename = Filename.basename path in
+      not (is_dot_file basename) && (check_ext file_exts basename || basename = "package.json")
 
 let is_node_module options path =
-  List.mem (Filename.basename path) (Options.node_resolver_dirnames options)
+  List.mem (Filename.basename path) options.node_resolver_dirnames
 
-let is_flow_file ~options path =
-  is_valid_path ~options path && not (is_directory path)
+let is_flow_file ~options =
+  let is_valid_path = is_valid_path ~options in
+  fun path -> is_valid_path path && not (is_directory path)
 
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
@@ -223,14 +271,15 @@ let get_all =
   in
   fun next -> get_all_rec next SSet.empty
 
-let init options =
+let init ?(flowlibs_only=false) (options: options) =
   let node_module_filter = is_node_module options in
-  let libs = Options.lib_paths options in
-  let libs, filter = match Options.default_lib_dir options with
+  let libs = if flowlibs_only then [] else options.lib_paths in
+  let libs, filter = match options.default_lib_dir with
     | None -> libs, is_valid_path ~options
     | Some root ->
       let is_in_flowlib = is_prefix (Path.to_string root) in
-      let filter path = is_in_flowlib path || is_valid_path ~options path in
+      let is_valid_path = is_valid_path ~options in
+      let filter path = is_in_flowlib path || is_valid_path path in
       root::libs, filter
   in
   (* preserve enumeration order *)
@@ -251,23 +300,43 @@ let init options =
       |> List.map (fun lib -> SSet.elements (get_all (get_next lib)))
       |> List.flatten
   in
-  (libs, Utils_js.set_of_list libs)
+  (libs, SSet.of_list libs)
 
 (* Local reference to the module exported by a file. Like other local references
    to modules imported by the file, it is a member of Context.module_map. *)
 let module_ref file =
-  Loc.string_of_filename file
+  File_key.to_string file
 
 let lib_module_ref = ""
 
 let dir_sep = Str.regexp "[/\\\\]"
 let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
-let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
+let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
+
+let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
 (* true if a file path matches an [ignore] entry in config *)
-let is_ignored options =
-  let list = List.map snd (Options.ignores options) in
+let is_ignored (options: options) =
+  let list = List.map snd options.ignores in
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
+
+(* true if a file path matches an [untyped] entry in config *)
+let is_untyped (options: options) =
+  let list = List.map snd options.untyped in
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
+
+(* true if a file path matches a [declarations] entry in config *)
+let is_declaration (options: options) =
+  let list = List.map snd options.declarations in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
@@ -276,16 +345,14 @@ let is_ignored options =
 
 (* true if a file path matches an [include] path in config *)
 let is_included options f =
-  Path_matcher.matches (Options.includes options) f
+  Path_matcher.matches options.includes f
 
 let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
 let watched_paths options =
-  let root = Options.root options in
-  let others = Path_matcher.stems (Options.includes options) in
-  root::others
+  Path_matcher.stems options.includes
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
@@ -295,9 +362,8 @@ let watched_paths options =
  * If `all` is true, ignored files and libs are also returned.
  * If subdir is set, then we return the subset of files under subdir
  *)
-let make_next_files ~all ~subdir ~options ~libs =
+let make_next_files ~root ~all ~subdir ~options ~libs =
   let node_module_filter = is_node_module options in
-  let root = Options.root options in
   let filter = if all then fun _ -> true else wanted ~options libs in
 
   (* The directories from which we start our search *)
@@ -306,7 +372,8 @@ let make_next_files ~all ~subdir ~options ~libs =
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in
-  let realpath_filter path = is_valid_path ~options path && filter path in
+  let is_valid_path = is_valid_path ~options in
+  let realpath_filter path = is_valid_path path && filter path in
   let path_filter =
     (**
      * This function is very hot on large codebases, so specialize it up front
@@ -365,12 +432,24 @@ and normalize_path_ dir names =
 
 and construct_path = List.fold_left Filename.concat
 
-(* helper: make relative path from root to file *)
-let relative_path =
+(* relative_path: (/path/to/foo, /path/to/bar/baz) -> ../bar/baz
+ * absolute_path (/path/to/foo, ../bar/baz) -> /path/to/bar/baz
+ *
+ * Both of these are designed to avoid using Path and realpath so that we don't actually read the
+ * file system *)
+let relative_path, absolute_path =
   let split_path =
     let rec f acc rest =
       let dir = Filename.dirname rest in
-      if rest = dir then acc
+      if rest = dir
+      then begin
+        if Filename.is_relative dir (* True for things like ".", false for "/", "C:/" *)
+        then acc  (* "path/to/foo.js" becomes ["path"; "to"; "foo.js"] *)
+        else match acc with
+        | [] -> [dir] (* "/" becomes ["/"] *)
+        | last_dir::rest ->  (* "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"] *)
+          Filename.concat dir last_dir :: rest
+      end
       else f ((Filename.basename rest)::acc) dir
     in
     fun path -> f [] path
@@ -380,31 +459,48 @@ let relative_path =
     | (root, file) ->
         List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
   in
-  fun root file ->
-    (* This functions is only used for displaying error location.
-       We use '/' as file separator even on Windows. This simplify
-       the test-suite script... *)
+  let make_relative root file =
+    (* This functions is only used for displaying error location or creating saved state.
+       We use '/' as file separator even on Windows. This simplify the test-suite script... *)
     make_relative (split_path root, split_path file)
     |> String.concat "/"
+  in
+  let rec absolute_path = function
+  | (_::root, dir2::file) when dir2 = Filename.parent_dir_name ->
+    absolute_path (root, file)
+  | (root, file) ->
+    List.rev_append root file
+  in
+  let absolute_path root file =
+    (* Let's avoid creating paths like "/path/to/foo/." *)
+    if file = Filename.current_dir_name || file = ""
+    then root
+    else
+      absolute_path ((List.rev @@ split_path root), split_path file)
+      (* We may actually use these paths, so use the correct directory sep *)
+      |> String.concat Filename.dir_sep
+  in
+
+  make_relative, absolute_path
 
 (* helper to get the full path to the "flow-typed" library dir *)
 let get_flowtyped_path root =
   make_path_absolute root "flow-typed"
 
-(* helper: make different kinds of Loc.filename from a path string *)
+(* helper: make different kinds of File_key.t from a path string *)
 let filename_from_string ~options p =
-  let resource_file_exts = Options.module_resource_exts options in
+  let resource_file_exts = options.module_resource_exts in
   match Utils_js.extension_of_filename p with
-  | Some ".json" -> Loc.JsonFile p
-  | Some ext when SSet.mem ext resource_file_exts -> Loc.ResourceFile p
-  | _ -> Loc.SourceFile p
+  | Some ".json" -> File_key.JsonFile p
+  | Some ext when SSet.mem ext resource_file_exts -> File_key.ResourceFile p
+  | _ -> File_key.SourceFile p
 
 let mkdirp path_str perm =
   let parts = Str.split dir_sep path_str in
   (* If path_str is absolute, then path_prefix will be something like C:\ on
    * Windows and / on Linux *)
   let path_prefix =
-    if Str.string_match absolute_path path_str 0
+    if Str.string_match absolute_path_regexp path_str 0
     then Str.matched_string path_str
     else "" in
 
@@ -421,4 +517,12 @@ let mkdirp path_str perm =
       with Unix_error (EEXIST, "mkdir", _) -> ()
     );
     new_path_str
-  ) path_prefix parts);
+  ) path_prefix parts)
+
+(* Given a path, we want to know if it's in a node_modules/ directory or not. *)
+let is_within_node_modules ~root ~options path =
+  (* We use paths that are relative to the root, so that we ignore ancestor directories *)
+  let path = relative_path (Path.to_string root) path in
+  let directories = Str.split dir_sep path |> SSet.of_list in
+  let node_resolver_dirnames = node_resolver_dirnames options |> SSet.of_list in
+  not (SSet.inter directories node_resolver_dirnames |> SSet.is_empty)

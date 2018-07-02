@@ -1,6 +1,10 @@
-ParseError.js:3
-  3: function foo() { ### // invalid token
-                      ^ Unexpected token ILLEGAL
+Error ----------------------------------------------------------------------------------------------- ParseError.js:3:18
+
+Unexpected token #
+
+   3| function foo() { ### // invalid token
+                       ^
+
 
 
 Found 1 error

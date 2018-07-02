@@ -1,16 +1,15 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-type t
-val empty: t
-val add: 'a -> t -> t
-val add_type: Type.t -> t -> t
-val add_props_map: Type.Properties.t -> t -> t
-val add_exports_map: Type.Exports.t -> t -> t
+val add: Xx.state -> string -> unit
+val add_int: Xx.state -> int -> unit
+val add_type: Xx.state -> Type.t -> unit
+val add_use: Xx.state -> Type.use_t -> unit
+val add_reason: Xx.state -> Reason.t -> unit
+val add_polarity: Xx.state -> Type.polarity -> unit
+val add_props_map: Xx.state -> Type.Properties.t -> unit
+val add_exports_map: Xx.state -> Type.Exports.t -> unit

@@ -1,20 +1,48 @@
+(**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
+
 (** Intermediate representation for classes and interfaces *)
 
 type t
 
-type field = Type.t * Type.polarity * Ast.Expression.t option
+type set_asts =
+  Typed_ast.annot Ast.Function.body option *
+  Typed_ast.annot Ast.Expression.t option
+  -> unit
+
+type field = Loc.t option * Type.polarity * field'
+and field' =
+  | Annot of Type.t
+  | Infer of Func_sig.t * set_asts
+
+type super =
+  | Interface of {
+      extends: Type.t list;
+      callable: bool;
+    }
+  | Class of {
+      extends: extends;
+      mixins: Type.t list; (* declare class only *)
+      implements: Type.t list
+    }
+
+and extends =
+  | Explicit of Type.t
+  | Implicit of { null: bool }
 
 (** 1. Constructors **)
 
 (** Create signature with no elements. *)
 val empty:
-  ?structural:bool ->
   int -> (* id *)
   Reason.t ->
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
-  Type.t -> (* super *)
-  Type.t list -> (* implements *)
+  super ->
   t
 
 (** Add constructor to signature.
@@ -22,80 +50,127 @@ val empty:
     Overwrites any existing constructor. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_constructor: Func_sig.t -> t -> t
+val add_constructor:
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
+
+val add_default_constructor: Reason.t -> t -> t
 
 (** Add constructor override to signature.
 
     Does not overwrite existing constructors. This implements the behavior of
     interfaces, which interpret duplicate definitions as branches of a single
     overloaded constructor. *)
-val append_constructor: Func_sig.t -> t -> t
+val append_constructor:
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Add field to signature. *)
-val add_field: string -> field -> static:bool -> t -> t
+val add_field: static:bool -> string -> field -> t -> t
+
+(** Add proto field to signature. *)
+val add_proto_field: string -> field -> t -> t
+
+(** Add private field to signature. *)
+val add_private_field: string -> field -> static:bool -> t -> t
 
 (** Add method to signature.
 
     Overwrites any existing synonymous method. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_method: string -> Func_sig.t -> static:bool -> t -> t
+val add_method:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Add method override to signature.
 
     Does not overwrite existing synonymous methods. This implements the
     behavior of interfaces, which interpret duplicate definitions as branches
     of a single overloaded method. *)
-val append_method: string -> Func_sig.t -> static:bool -> t -> t
+val append_method:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
+
+val append_call: static:bool -> Type.t -> t -> t
+
+val add_call_deprecated: static:bool -> Type.t -> t -> t
 
 (** Add getter to signature. *)
-val add_getter: string -> Func_sig.t -> static:bool -> t -> t
+val add_getter:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
 (** Add setter to signature. *)
-val add_setter: string -> Func_sig.t -> static:bool -> t -> t
+val add_setter:
+  static:bool ->
+  string ->
+  Loc.t option ->
+  Func_sig.t ->
+  ?set_asts:set_asts ->
+  t -> t
 
-(** Create signature from class AST. *)
-val mk: Context.t ->
-  Loc.t ->
-  Reason.t ->
-  Type.t -> (* self *)
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
-  Ast.Class.t ->
-  t
+(** Check if this signature defines a given field *)
+val mem_field: string -> static:bool -> t -> bool
 
-(** Create signature from interface AST. *)
-val mk_interface: Context.t ->
-  Loc.t ->
-  Reason.t ->
-  bool -> (* structural *)
+(** Check if this signature defines a constructor *)
+val mem_constructor: t -> bool
+
+val add_this:
   Type.t -> (* self *)
-  Ast.Statement.Interface.t ->
-  t
+  Context.t ->
+  Reason.t ->
+  Type.typeparam list ->
+  Type.t SMap.t -> (* tparams_map *)
+  Type.typeparam list * Type.t SMap.t
 
 (** 1. Manipulation *)
 
 (** Emits constraints to ensure the signature is compatible with its declared
     interface implementations (classes) *)
-val check_implements: Context.t -> t -> unit
+val check_implements: Context.t -> Reason.reason -> t -> unit
 
 (** Emits constraints to ensure the signature is compatible with its declared
     superclass (classes) or extends/mixins (interfaces) *)
-val check_super: Context.t -> t -> unit
+val check_super: Context.t -> Reason.reason -> t -> unit
 
 (** Invoke callback with type parameters substituted by upper/lower bounds. *)
 val generate_tests: Context.t ->
-  (t -> unit) -> t -> unit
+  (t -> 'a) -> t -> 'a
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(Context.t -> Ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Ast.Statement.t list -> unit) ->
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
+
+val thistype: Context.t -> t -> Type.t
 
 (* Create a (polymorphic) class type. *)
 val classtype: Context.t ->
   ?check_polarity:bool ->
   t -> Type.t
+
+module This: sig
+  val is_bound_to_empty: t -> bool
+  val in_class: Loc.t Ast.Class.t -> bool
+end

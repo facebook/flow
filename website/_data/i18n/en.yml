@@ -1,7 +1,7 @@
 site_title: "Flow"
 site_description: "A Static Type Checker for JavaScript"
 blog_title: "Flow Blog"
-site_license: "Distributed under BSD License"
+site_license: "Distributed under MIT License"
 site_code_of_conduct: "Code of Conduct"
 site_edit_this_page: "Edit this page"
 
@@ -161,6 +161,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/config/libs/":
   title: ".flowconfig [libs]"
   description: "How to configure Flow to include your lib files"
+"/docs/config/lints/":
+  title: ".flowconfig [lints]"
+  description: "How to configure the Flow linter"
 "/docs/config/options/":
   title: ".flowconfig [options]"
   description: "How to configure Flow's various options"
@@ -197,6 +200,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/lang/width-subtyping/":
   title: "Width Subtyping"
   description: ""
+"/docs/lang/lazy-modes/":
+  title: "Lazy Modes"
+  description: "Explanation of Flow's lazy mode"
 "/docs/libdefs/":
   title: "Library Definitions"
   description: "Typing third-party libraries"
@@ -215,6 +221,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/aliases/":
   title: "Type Aliases"
   description: "Aliasing types for reuse"
+"/docs/types/opaque-types/":
+  title: "Opaque Type Aliases"
+  description: "Enforcing abstraction through the type system"
 "/docs/types/arrays/":
   title: "Array Types"
   description: "Typing arrays and the elements inside of them"
@@ -282,6 +291,34 @@ docs_additional_reading: "Additional Reading"
   title: "Comment Types"
   description: "Flow with plain JavaScript code by using a special comment syntax"
 
+"/docs/react/":
+  title: "Getting Started"
+  description: "Learn how to setup React with Flow"
+"/docs/react/components/":
+  title: "Components"
+  description: "Learn how to type React class components and stateless functional components with Flow"
+"/docs/react/events/":
+  title: "Event Handling"
+  description: "The types and best practices for typing React event handlers with Flow"
+"/docs/react/refs/":
+  title: "ref functions"
+  description: "How to use Flow's typed React ref functions"
+"/docs/react/children/":
+  title: "Children"
+  description: "Learn how to use Flow to strictly type the children of your React components"
+"/docs/react/hoc/":
+  title: "Higher-order Components"
+  description: "Learn how to use Flow to type React higher-order components"
+"/docs/react/context/":
+  title: "Context"
+  description: "Learn how to use Flow with the React context API"
+"/docs/react/redux/":
+  title: "Redux"
+  description: "Learn how to use Flow with Redux"
+"/docs/react/types/":
+  title: "Type Reference"
+  description: "A reference for all the utility Flow types exported by the React module"
+
 "/docs/frameworks/":
   title: "Frameworks"
   description: "Learn how to use Flow with various frameworks"
@@ -327,6 +364,23 @@ docs_additional_reading: "Additional Reading"
   title: "WebStorm"
   description: "Flow integration for the WebStorm editor"
 
+"/docs/linting/":
+  title: "Linting Overview"
+  description: "An introduction to linting in Flow"
+"/docs/linting/flowlint-comments/":
+  title: "Flowlint Comments"
+  description: "Fine-grained control"
+"/docs/linting/ide-integration/":
+  title: "IDE Integration"
+  description: "Warnings in your IDE"
+"/docs/linting/rule-reference/":
+  title: "Lint Rule Reference"
+  description: "More information"
+
+"/docs/strict/":
+  title: "Flow Strict"
+  description: "Enable stricter type checking on a file-by-file basis"
+
 "/try/":
   title: "Try Flow"
   description: "Interactive Flow REPL"
@@ -367,11 +421,11 @@ guides:
   #   description: >
   #     Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
   #     tempor incididunt ut labore et dolore.
-  frameworks:
-    title: "Frameworks"
+  react:
+    title: "React"
     description: >
-      Detailed guides, tips, and resources on how to use Flow with popular
-      JavaScript frameworks.
+      Learn how to use Flow to effectively type common and advanced React
+      patterns.
   tools:
     title: "Tools"
     description: >
@@ -382,3 +436,11 @@ guides:
     description: >
       Detailed guides, tips, and resources on how to integrate Flow with
       different code editors.
+  linting:
+    title: "Linting"
+    description: >
+      Learn how to configure Flow's linter to find potentially harmful code.
+  strict:
+    title: "Flow Strict"
+    description: >
+      Learn how to enable stricter type checking on a file-by-file basis.

@@ -1,242 +1,479 @@
-bound.js:9
-  9:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
-  9:     var y : string = x;  // not ok
-                 ^^^^^^ string
+Error ---------------------------------------------------------------------------------------------------- bound.js:9:22
 
-bound.js:9
-  9:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
-  9:     var y : string = x;  // not ok
-                 ^^^^^^ string
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
 
-bound.js:47
- 47:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
+   bound.js:9:22
+   9|     var y : string = x;  // not ok
+                           ^
 
-bound.js:47
- 47:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-bound.js:53
- 53:       var y : string = x;  // not ok
-                            ^ null. This type is incompatible with
- 53:       var y : string = x;  // not ok
-                   ^^^^^^ string
-
-bound.js:53
- 53:       var y : string = x;  // not ok
-                            ^ undefined. This type is incompatible with
- 53:       var y : string = x;  // not ok
-                   ^^^^^^ string
-
-heap.js:5
-  5:     var y : string = x.p;  // not ok
-                          ^^^ null. This type is incompatible with
-  5:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
-
-heap.js:5
-  5:     var y : string = x.p;  // not ok
-                          ^^^ undefined. This type is incompatible with
-  5:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
-
-heap.js:40
- 40:       var y : string = x.p;  // not ok
-                            ^^^ null. This type is incompatible with
- 40:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-heap.js:40
- 40:       var y : string = x.p;  // not ok
-                            ^^^ undefined. This type is incompatible with
- 40:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-heap.js:48
- 48:       var y : string = x.p;  // not ok
-                            ^^^ null. This type is incompatible with
- 48:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-heap.js:55
- 55:     var y : string = x.p;  // not ok
-                          ^^^ null. This type is incompatible with
- 55:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
-
-heap.js:55
- 55:     var y : string = x.p;  // not ok
-                          ^^^ undefined. This type is incompatible with
- 55:     var y : string = x.p;  // not ok
-                 ^^^^^^ string
-
-heap.js:62
- 62:       var y : string = x.p;  // not ok
-                            ^^^ null. This type is incompatible with
- 62:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-heap.js:62
- 62:       var y : string = x.p;  // not ok
-                            ^^^ undefined. This type is incompatible with
- 62:       var y : string = x.p;  // not ok
-                   ^^^^^^ string
-
-heap.js:105
-105:       x.y = 123; // error
-                 ^^^ number. This type is incompatible with
-103:     var x : {y: ?string} = {y: null};
-                      ^^^^^^ string
-
-heap.js:107
-107:     (x.y: string); // error, this got widened to a number
-          ^^^ number. This type is incompatible with
-107:     (x.y: string); // error, this got widened to a number
-               ^^^^^^ string
-
-heap.js:125
-125:     (x.y : string); // error, could also be boolean
-          ^^^ boolean. This type is incompatible with
-125:     (x.y : string); // error, could also be boolean
-                ^^^^^^ string
-
-heap.js:135
-135:     (x.y : boolean); // error, string
-          ^^^ string. This type is incompatible with
-135:     (x.y : boolean); // error, string
-                ^^^^^^^ boolean
-
-heap.js:146
-146:     (x.y : string); // error
-          ^^^ null. This type is incompatible with
-146:     (x.y : string); // error
-                ^^^^^^ string
-
-heap.js:159
-159:     (x.y : string); // error
-          ^^^ boolean. This type is incompatible with
-159:     (x.y : string); // error
-                ^^^^^^ string
-
-heap.js:172
-172:     (x.y : string); // error
-          ^^^ boolean. This type is incompatible with
-172:     (x.y : string); // error
-                ^^^^^^ string
-
-heap.js:172
-172:     (x.y : string); // error
-          ^^^ number. This type is incompatible with
-172:     (x.y : string); // error
-                ^^^^^^ string
-
-heap.js:188
-188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
-          ^ string. Expected string literal `b`
-188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
-             ^^^ string literal `b`
-
-heap.js:192
-192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
-                      ^^^ property `bar`. Property not found in
-192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
-                    ^ mixed
-
-heap.js:193
-193:     (x: string & number);
-          ^ mixed. This type is incompatible with
-193:     (x: string & number);
-             ^^^^^^ string
-
-heap.js:193
-193:     (x: string & number);
-          ^ mixed. This type is incompatible with
-193:     (x: string & number);
-                      ^^^^^^ number
-
-lex.js:6
-  6:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
-  6:   (x : string); // error: number ~> string
-            ^^^^^^ string
-
-lex.js:15
- 15:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 15:   (x : string); // error: number ~> string
-            ^^^^^^ string
-
-lex.js:25
- 25:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 25:   (x : string); // error: number ~> string
-            ^^^^^^ string
-
-lex.js:35
- 35:   (x : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 35:   (x : string); // error: number ~> string
-            ^^^^^^ string
-
-local.js:5
-  5:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
-  5:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-local.js:5
-  5:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
-  5:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-local.js:47
- 47:     var y : string = x;  // not ok
-                          ^ null. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-local.js:47
- 47:     var y : string = x;  // not ok
-                          ^ undefined. This type is incompatible with
- 47:     var y : string = x;  // not ok
-                 ^^^^^^ string
-
-local.js:54
- 54:       var y : string = x;  // not ok
-                            ^ null. This type is incompatible with
- 54:       var y : string = x;  // not ok
-                   ^^^^^^ string
-
-local.js:54
- 54:       var y : string = x;  // not ok
-                            ^ undefined. This type is incompatible with
- 54:       var y : string = x;  // not ok
-                   ^^^^^^ string
-
-null_tests.js:150
-150:       return super.p;  // not ok
-                  ^^^^^^^ null. This type is incompatible with the expected return type of
-147:   ensure103(): string {
-                    ^^^^^^ string
-
-null_tests.js:150
-150:       return super.p;  // not ok
-                  ^^^^^^^ undefined. This type is incompatible with the expected return type of
-147:   ensure103(): string {
-                    ^^^^^^ string
-
-switch.js:49
- 49:   return foo; // error, possibly uninitialized
-              ^^^ possibly uninitialized variable. This type is incompatible with the expected return type of
- 27: function exhaustion2(x, y): number {
-                                 ^^^^^^ number
+References:
+   bound.js:4:9
+   4| var x : ?string = "xxx";
+              ^^^^^^^ [1]
+   bound.js:9:13
+   9|     var y : string = x;  // not ok
+                  ^^^^^^ [2]
 
 
-Found 40 errors
+Error --------------------------------------------------------------------------------------------------- bound.js:47:22
+
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+
+   bound.js:47:22
+   47|     var y : string = x;  // not ok
+                            ^
+
+References:
+   bound.js:4:9
+    4| var x : ?string = "xxx";
+               ^^^^^^^ [1]
+   bound.js:47:13
+   47|     var y : string = x;  // not ok
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- bound.js:53:24
+
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+
+   bound.js:53:24
+   53|       var y : string = x;  // not ok
+                              ^
+
+References:
+   bound.js:4:9
+    4| var x : ?string = "xxx";
+               ^^^^^^^ [1]
+   bound.js:53:15
+   53|       var y : string = x;  // not ok
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- heap.js:5:22
+
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+
+   heap.js:5:22
+   5|     var y : string = x.p;  // not ok
+                           ^^^
+
+References:
+   heap.js:4:16
+   4|     var x : {p:?string} = {p:"xxx"};
+                     ^^^^^^^ [1]
+   heap.js:5:13
+   5|     var y : string = x.p;  // not ok
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:40:24
+
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+
+   heap.js:40:24
+   40|       var y : string = x.p;  // not ok
+                              ^^^
+
+References:
+   heap.js:37:16
+   37|     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]
+   heap.js:40:15
+   40|       var y : string = x.p;  // not ok
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:48:24
+
+Cannot assign `x.p` to `y` because null [1] is incompatible with string [2].
+
+   heap.js:48:24
+   48|       var y : string = x.p;  // not ok
+                              ^^^
+
+References:
+   heap.js:47:13
+   47|       x.p = null;
+                   ^^^^ [1]
+   heap.js:48:15
+   48|       var y : string = x.p;  // not ok
+                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:55:22
+
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+
+   heap.js:55:22
+   55|     var y : string = x.p;  // not ok
+                            ^^^
+
+References:
+   heap.js:53:16
+   53|     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]
+   heap.js:55:13
+   55|     var y : string = x.p;  // not ok
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:62:24
+
+Cannot assign `x.p` to `y` because null or undefined [1] is incompatible with string [2].
+
+   heap.js:62:24
+   62|       var y : string = x.p;  // not ok
+                              ^^^
+
+References:
+   heap.js:59:16
+   59|     var x : {p:?string} = {p:"xxx"};
+                      ^^^^^^^ [1]
+   heap.js:62:15
+   62|       var y : string = x.p;  // not ok
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- heap.js:105:13
+
+Cannot assign `123` to `x.y` because number [1] is incompatible with string [2].
+
+   heap.js:105:13
+   105|       x.y = 123; // error
+                    ^^^ [1]
+
+References:
+   heap.js:103:18
+   103|     var x : {y: ?string} = {y: null};
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:107:6
+
+Cannot cast `x.y` to string because number [1] is incompatible with string [2].
+
+   heap.js:107:6
+   107|     (x.y: string); // error, this got widened to a number
+             ^^^
+
+References:
+   heap.js:105:13
+   105|       x.y = 123; // error
+                    ^^^ [1]
+   heap.js:107:11
+   107|     (x.y: string); // error, this got widened to a number
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:125:6
+
+Cannot cast `x.y` to string because boolean [1] is incompatible with string [2].
+
+   heap.js:125:6
+   125|     (x.y : string); // error, could also be boolean
+             ^^^
+
+References:
+   heap.js:121:35
+   121|     var x : {y: string | number | boolean} = {y: false};
+                                          ^^^^^^^ [1]
+   heap.js:125:12
+   125|     (x.y : string); // error, could also be boolean
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:135:6
+
+Cannot cast `x.y` to boolean because:
+ - string [1] is incompatible with boolean [2].
+ - string [3] is incompatible with boolean [2].
+ - string [4] is incompatible with boolean [2].
+
+   heap.js:135:6
+   135|     (x.y : boolean); // error, string
+             ^^^
+
+References:
+   heap.js:129:17
+   129|     var x : {y: string | number | boolean} = {y: false};
+                        ^^^^^^ [1]
+   heap.js:135:12
+   135|     (x.y : boolean); // error, string
+                   ^^^^^^^ [2]
+   heap.js:131:13
+   131|       x.y = "foo";
+                    ^^^^^ [3]
+   heap.js:133:13
+   133|       x.y = "bar";
+                    ^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:146:6
+
+Cannot cast `x.y` to string because null [1] is incompatible with string [2].
+
+   heap.js:146:6
+   146|     (x.y : string); // error
+             ^^^
+
+References:
+   heap.js:144:13
+   144|       x.y = null;
+                    ^^^^ [1]
+   heap.js:146:12
+   146|     (x.y : string); // error
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:159:6
+
+Cannot cast `x.y` to string because:
+ - boolean [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
+
+   heap.js:159:6
+   159|     (x.y : string); // error
+             ^^^
+
+References:
+   heap.js:150:35
+   150|     var x : {y: string | number | boolean} = {y: false};
+                                          ^^^^^^^ [1]
+   heap.js:159:12
+   159|     (x.y : string); // error
+                   ^^^^^^ [2]
+   heap.js:156:13
+   156|       x.y = false;
+                    ^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:172:6
+
+Cannot cast `x.y` to string because:
+ - boolean [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
+
+   heap.js:172:6
+   172|     (x.y : string); // error
+             ^^^
+
+References:
+   heap.js:163:35
+   163|     var x : {y: string | number | boolean} = {y: false};
+                                          ^^^^^^^ [1]
+   heap.js:172:12
+   172|     (x.y : string); // error
+                   ^^^^^^ [2]
+   heap.js:169:13
+   169|       x.y = 123;
+                    ^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:188:6
+
+Cannot cast `x` to string literal `b` because string [1] is incompatible with string literal `b` [2].
+
+   heap.js:188:6
+   188|     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+             ^
+
+References:
+   heap.js:186:15
+   186|   function(x: string) {
+                      ^^^^^^ [1]
+   heap.js:188:9
+   188|     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- heap.js:192:18
+
+Property `bar` is missing in mixed [1].
+
+   heap.js:192:18
+   192|     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
+                         ^^^
+
+References:
+   heap.js:191:15
+   191|   function(x: mixed) {
+                      ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
+
+Cannot cast `x` to intersection type because:
+ - mixed [1] is incompatible with string [2].
+ - mixed [1] is incompatible with number [3].
+
+   heap.js:193:6
+   193|     (x: string & number);
+             ^
+
+References:
+   heap.js:191:15
+   191|   function(x: mixed) {
+                      ^^^^^ [1]
+   heap.js:193:9
+   193|     (x: string & number);
+                ^^^^^^ [2]
+   heap.js:193:18
+   193|     (x: string & number);
+                         ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------- lex.js:6:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2].
+
+   lex.js:6:4
+   6|   (x : string); // error: number ~> string
+         ^
+
+References:
+   lex.js:1:34
+   1| function block_scope(x: string | number) {
+                                       ^^^^^^ [1]
+   lex.js:6:8
+   6|   (x : string); // error: number ~> string
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lex.js:15:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2].
+
+   lex.js:15:4
+   15|   (x : string); // error: number ~> string
+          ^
+
+References:
+   lex.js:9:35
+    9| function switch_scope(x: string | number) {
+                                         ^^^^^^ [1]
+   lex.js:15:8
+   15|   (x : string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lex.js:25:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2].
+
+   lex.js:25:4
+   25|   (x : string); // error: number ~> string
+          ^
+
+References:
+   lex.js:18:32
+   18| function try_scope(x: string | number) {
+                                      ^^^^^^ [1]
+   lex.js:25:8
+   25|   (x : string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lex.js:35:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2].
+
+   lex.js:35:4
+   35|   (x : string); // error: number ~> string
+          ^
+
+References:
+   lex.js:28:38
+   28| function try_scope_catch(x: string | number) {
+                                            ^^^^^^ [1]
+   lex.js:35:8
+   35|   (x : string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:5:22
+
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+
+   local.js:5:22
+   5|     var y : string = x;  // not ok
+                           ^
+
+References:
+   local.js:4:13
+   4|     var x : ?string = "xxx";
+                  ^^^^^^^ [1]
+   local.js:5:13
+   5|     var y : string = x;  // not ok
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:47:22
+
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+
+   local.js:47:22
+   47|     var y : string = x;  // not ok
+                            ^
+
+References:
+   local.js:45:13
+   45|     var x : ?string = "xxx";
+                   ^^^^^^^ [1]
+   local.js:47:13
+   47|     var y : string = x;  // not ok
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:54:24
+
+Cannot assign `x` to `y` because null or undefined [1] is incompatible with string [2].
+
+   local.js:54:24
+   54|       var y : string = x;  // not ok
+                              ^
+
+References:
+   local.js:51:13
+   51|     var x : ?string = "xxx";
+                   ^^^^^^^ [1]
+   local.js:54:15
+   54|       var y : string = x;  // not ok
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- null_tests.js:150:14
+
+Cannot return `super.p` because null or undefined [1] is incompatible with string [2].
+
+   null_tests.js:150:14
+   150|       return super.p;  // not ok
+                     ^^^^^^^
+
+References:
+   null_tests.js:101:6
+   101|   p: ?string;
+             ^^^^^^^ [1]
+   null_tests.js:147:16
+   147|   ensure103(): string {
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- switch.js:49:10
+
+Cannot return `foo` because possibly uninitialized variable [1] is incompatible with number [2].
+
+   switch.js:49:10
+   49|   return foo; // error, possibly uninitialized
+                ^^^
+
+References:
+   switch.js:28:7
+   28|   var foo;
+             ^^^ [1]
+   switch.js:27:29
+   27| function exhaustion2(x, y): number {
+                                   ^^^^^^ [2]
+
+
+
+Found 32 errors

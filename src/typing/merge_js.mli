@@ -1,29 +1,42 @@
 (**
  * Copyright (c) 2014-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-val merge_component_strict: Context.t list -> Context.t list ->
-  (Context.t * string * string * Context.t) list ->
-  (string * string * Context.t) list ->
-  (string * Modulename.t * Context.t) list ->
-  Context.t ->
-  unit
+module Reqs : sig
+  type t
+  val empty: t
+  val add_impl: string -> File_key.t -> Utils_js.LocSet.t -> t -> t
+  val add_dep_impl: string -> File_key.t -> (Context.sig_t * Utils_js.LocSet.t) -> t -> t
+  val add_unchecked: string -> File_key.t -> Utils_js.LocSet.t -> t -> t
+  val add_res: string -> File_key.t -> Utils_js.LocSet.t -> t -> t
+  val add_decl:string -> File_key.t -> (Utils_js.LocSet.t * Modulename.t) -> t -> t
+end
 
-val restore: Context.t ->
-  Context.t list -> Context.t -> unit
+val merge_component_strict:
+  metadata: Context.metadata ->
+  lint_severities: Severity.severity LintSettings.t ->
+  file_options: Files.options option ->
+  strict_mode: StrictModeSettings.t ->
+  file_sigs: File_sig.t Utils_js.FilenameMap.t ->
+  get_ast_unsafe: (File_key.t -> Loc.t Ast.program) ->
+  get_docblock_unsafe: (File_key.t -> Docblock.t) ->
+  ?do_gc: bool ->
+  (* component *)
+  File_key.t Nel.t ->
+  (* requires *)
+  Reqs.t ->
+  (* dependency cxs *)
+  Context.sig_t list ->
+  (* master cx *)
+  Context.sig_t ->
+  (* cxs in component order, hd is merged leader *)
+  Context.t Nel.t
 
-val clear_master_shared: Context.t -> Context.t -> unit
-
-val merge_lib_file:
-  Context.t ->
-  Context.t ->
-  Errors.ErrorSet.t * Errors.ErrorSuppressions.t
+val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
-  val sig_context : Context.t list -> SigHash.t
+  val sig_context : Context.t -> string list -> Xx.hash
 end

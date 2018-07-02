@@ -29,9 +29,8 @@ module Jekyll
 
       # we generate these URLs manually instead of using
       # release.assets[...].browser_download_url because they may not be
-      # uploaded yet when generating the site; travis uploads the mac and linux
-      # binaries from separate workers, and the linux worker is the one that
-      # generates the site.
+      # uploaded yet when generating the site; Circle uploads the mac and linux
+      # binaries from separate workers.
       linux_binary = "https://github.com/#{repo}/releases/download/#{tag}/flow-linux64-#{tag}.zip"
       mac_binary = "https://github.com/#{repo}/releases/download/#{tag}/flow-osx-#{tag}.zip"
 

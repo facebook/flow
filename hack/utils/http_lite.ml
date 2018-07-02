@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
 *)
 
-open Core
+open Hh_core
 
 (* This is a lightweight library for reading and writing messages in the HTTP
    format, with headers and body. So far it only supports the small set of
@@ -85,6 +84,9 @@ let read_message_utf8 (reader: Buffered_line_reader.t) : string =
 
 (** write_message: writes "Content-Length:...body" *)
 let write_message (outchan: out_channel) (body: string) : unit =
+  (* Without this, Windows will change the \r\n to \r\r\n *)
+  Pervasives.set_binary_mode_out outchan true;
+
   Printf.fprintf outchan "Content-Length: %n\r\n" (String.length body);
   Printf.fprintf outchan "\r\n";
   Printf.fprintf outchan "%s" body;

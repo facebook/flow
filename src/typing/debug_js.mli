@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 val json_of_t: ?size:int -> ?depth:int -> ?strip_root:Path.t option -> Context.t -> Type.t -> Hh_json.json
@@ -33,13 +30,11 @@ val string_of_reason: Context.t -> Reason.t -> string
 val string_of_file: Context.t -> string
 val string_of_selector: Type.TypeTerm.selector -> string
 val string_of_destructor: Type.TypeTerm.destructor -> string
-val string_of_default: Ast.Expression.t Default.t -> string
+val string_of_default: Loc.t Ast.Expression.t Default.t -> string
 
 val dump_t: ?depth:int -> Context.t -> Type.t -> string
 val dump_use_t: ?depth:int -> Context.t -> Type.use_t -> string
 val dump_tvar: ?depth:int -> Context.t -> Constraint.ident -> string
 val dump_prop: ?depth:int -> Context.t -> Type.Property.t -> string
 val dump_reason: Context.t -> Reason.t -> string
-val dump_flow_error: ?depth:int -> Context.t -> Flow_error.error_message -> string
-
-val string_of_errors: Errors.ErrorSet.t -> string
+val dump_flow_error: Context.t -> Flow_error.error_message -> string

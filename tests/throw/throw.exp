@@ -1,6 +1,16 @@
-test.js:13
- 13:     return a*1; // a is not null
-                ^ string. The operand of an arithmetic operation must be a number.
+Error ---------------------------------------------------------------------------------------------------- test.js:13:12
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   test.js:13:12
+   13|     return a*1; // a is not null
+                  ^
+
+References:
+   test.js:9:16
+    9| function g(a: ?string) {
+                      ^^^^^^ [1]
+
 
 
 Found 1 error
