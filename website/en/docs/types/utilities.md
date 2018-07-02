@@ -307,7 +307,7 @@ type Tuple = [boolean, string];
 ('bar': $ElementType<Tuple, 2>); // Nope, can't access position 2
 ```
 
-In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
+In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T, k>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
 
 ```js
 // @flow
@@ -337,7 +337,7 @@ type NumberObj = {
 (42: $ElementType<$ElementType<NumberObj, 'nums'>, number>);
 ```
 
-Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T>`](#toc-propertytype) is that you can use it with generics. For example:
+Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T, k>`](#toc-propertytype) is that you can use it with generics. For example:
 
 ```js
 // @flow
