@@ -9,6 +9,10 @@
 (* flow ast command *)
 (***********************************************************************)
 
+type ast_file_type =
+  | File_json
+  | File_js
+
 let spec = {
   CommandSpec.
   name = "ast";
@@ -28,7 +32,7 @@ let spec = {
         ~doc:"Pretty-print JSON output"
     |> flag "--check" no_arg
         ~doc:"Checks whether the file parses, returning any errors but not the AST"
-    |> flag "--type" (enum ["js"; "json"])
+    |> flag "--type" (enum ["js", File_js; "json", File_json])
         ~doc:"Type of input file (js or json)"
     |> flag "--strict" no_arg
         ~doc:"Parse in strict mode"
@@ -37,10 +41,6 @@ let spec = {
     |> anon "file" (optional string)
   )
 }
-
-type ast_file_type =
-  | File_json
-  | File_js
 
 type ast_result_type =
   | Ast_json of Loc.t Ast.Expression.t
@@ -67,9 +67,8 @@ let main include_tokens pretty check file_type_opt use_strict from path filename
 
   let file_type =
     match file_type_opt with
-    | Some "json" -> File_json
-    | Some "js" -> File_js
-    | _ ->
+    | Some t -> t
+    | None ->
       begin match filename with
       | Some fn -> if Files.is_json_file fn then File_json else File_js
       | None -> File_js

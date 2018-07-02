@@ -13,9 +13,12 @@ open CommandUtils
 
 module Prot = Persistent_connection_prot
 
-let protocol_options = ["very-unstable"; "human-readable"]
+let protocol_options = [
+  "very-unstable", `Very_unstable;
+  "human-readable", `Human_readable;
+]
 
-let protocol_options_string = String.concat ", " protocol_options
+let protocol_options_string = String.concat ", " (List.map fst protocol_options)
 
 let spec = {
   CommandSpec.
@@ -381,9 +384,8 @@ let main option_values root from protocol strip_root json_version () =
   let ic_fd = Timeout.descr_of_in_channel ic in
   let oc_fd = Unix.descr_of_out_channel oc in
   let main_loop = match protocol with
-    | "very-unstable" -> VeryUnstableProtocol.main_loop
-    | "human-readable" -> HumanReadableProtocol.main_loop
-    | x -> failwith ("Internal error: unknown protocol '" ^ x ^ "'")
+    | `Very_unstable -> VeryUnstableProtocol.main_loop
+    | `Human_readable -> HumanReadableProtocol.main_loop
   in
   main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root ~json_version
 

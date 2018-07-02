@@ -107,22 +107,14 @@ let collect_error_flags main
   unicode
   message_width
 =
-  let color = match color with
-  | Some "never" -> Tty.Color_Never
-  | Some "always" -> Tty.Color_Always
-  | Some "auto"
-  | None -> Tty.Color_Auto
-  | _ -> assert false (* the enum type enforces this *)
-  in
   let include_warnings = match max_warnings with
   | Some _ -> true
   | None -> include_warnings
   in
   let unicode = match unicode with
-  | Some "never" -> false
-  | Some "always" -> true
-  | Some "auto" | None -> Tty.supports_emoji ()
-  | _ -> assert false (* the enum type enforces this *)
+  | `Never -> false
+  | `Always -> true
+  | `Auto -> Tty.supports_emoji ()
   in
   let message_width = match message_width with
   | Some message_width -> message_width
@@ -156,7 +148,12 @@ let profile_flag prev = CommandSpec.ArgSpec.(
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_error_flags
-  |> flag "--color" (enum ["auto"; "never"; "always"])
+  |> flag "--color"
+      (required ~default:Tty.Color_Auto (enum [
+        "never", Tty.Color_Never;
+        "always", Tty.Color_Always;
+        "auto", Tty.Color_Auto;
+      ]))
       ~doc:"Display terminal output in color. never, always, auto (default: auto)"
   |> warning_flags
   |> flag "--one-line" no_arg
@@ -165,7 +162,12 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
   |> flag "--show-all-branches" no_arg
       ~doc:"Print all branch errors (the default is to print the most relevant branches)"
-  |> flag "--unicode" (enum ["auto"; "never"; "always"])
+  |> flag "--unicode"
+      (required ~default:`Auto (enum [
+        "never", `Never;
+        "always", `Always;
+        "auto", `Auto;
+      ]))
       ~doc:"Display terminal output with unicode decoration. never, always, auto (default: auto)"
   |> flag "--message-width" int
       ~doc:(
@@ -195,8 +197,8 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
 let collect_lazy_flags main lazy_ lazy_mode =
   main (match lazy_mode with
   | None when lazy_ -> Some Options.LAZY_MODE_FILESYSTEM
-  | Some "fs" -> Some Options.LAZY_MODE_FILESYSTEM
-  | Some "ide" -> Some Options.LAZY_MODE_IDE
+  | Some `Fs -> Some Options.LAZY_MODE_FILESYSTEM
+  | Some `Ide -> Some Options.LAZY_MODE_IDE
   | _ -> None)
 
 let lazy_flags prev = CommandSpec.ArgSpec.(
@@ -204,7 +206,7 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
   |> collect collect_lazy_flags
   |> flag "--lazy" no_arg
       ~doc:"EXPERIMENTAL: Don't run a full check"
-  |> flag "--lazy-mode" (enum ["fs"; "ide"])
+  |> flag "--lazy-mode" (enum ["fs", `Fs; "ide", `Ide])
       ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
 )
 
@@ -746,24 +748,19 @@ let options_flags =
     |> flag "--no-saved-state" no_arg
       ~doc:"Do not load from a saved state even if one is available"
 
-let file_watcher_flag =
-  let collect_file_watcher_flag main file_watcher file_watcher_debug =
-    let file_watcher = match file_watcher with
-    | "none" -> FileWatcherStatus.NoFileWatcher
-    | "dfind" -> FileWatcherStatus.DFind
-    | "watchman" -> FileWatcherStatus.Watchman
-    | _ -> assert false in
-    main file_watcher file_watcher_debug
-  in
-  fun prev -> CommandSpec.ArgSpec.(
-    prev
-    |> collect collect_file_watcher_flag
-    |> flag "--file-watcher" (required ~default:"dfind" (enum ["none"; "dfind"; "watchman"]))
-      ~doc:("Which file watcher Flow should use (none, dfind, watchman). " ^
-        "Flow will ignore file system events if this is set to none. (default: dfind)")
-    |> flag "--file-watcher-debug" no_arg
-      ~doc:("Enable debug logging for the file watcher. This is very noisy")
-  )
+let file_watcher_flag prev =
+  let open CommandSpec.ArgSpec in
+  prev
+  |> flag "--file-watcher"
+    (required ~default:FileWatcherStatus.DFind (enum [
+      "none", FileWatcherStatus.NoFileWatcher;
+      "dfind", FileWatcherStatus.DFind;
+      "watchman", FileWatcherStatus.Watchman;
+    ]))
+    ~doc:("Which file watcher Flow should use (none, dfind, watchman). " ^
+      "Flow will ignore file system events if this is set to none. (default: dfind)")
+  |> flag "--file-watcher-debug" no_arg
+    ~doc:("Enable debug logging for the file watcher. This is very noisy")
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let options_and_json_flags =
@@ -778,16 +775,13 @@ let options_and_json_flags =
     |> options_flags
     |> json_flags
 
-let collect_json_version main = function
-| None -> main None
-| Some "1" -> main (Some Errors.Json_output.JsonV1)
-| Some "2" -> main (Some Errors.Json_output.JsonV2)
-| _ -> failwith "unreachable"
-
 let json_version_flag prev = CommandSpec.ArgSpec.(
   prev
-  |> collect collect_json_version
-  |> flag "--json-version" (optional (enum ["1"; "2"]))
+  |> flag "--json-version"
+      (enum [
+        "1", Errors.Json_output.JsonV1;
+        "2", Errors.Json_output.JsonV2;
+      ])
        ~doc:"The version of the JSON format (defaults to 1)"
 )
 
