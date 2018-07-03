@@ -828,8 +828,9 @@ module type NoCache = sig
   val find_unsafe      : key -> t
   val get_batch        : KeySet.t -> t option KeyMap.t
   val remove_batch     : KeySet.t -> unit
-  val string_of_key : key -> string
+  val string_of_key    : key -> string
   val mem              : key -> bool
+  val mem_old          : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
 
@@ -931,6 +932,8 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
     end xs KeyMap.empty
 
   let mem x = New.mem (Key.make Value.prefix x)
+
+  let mem_old x = Old.mem (Key.make_old Value.prefix x)
 
   let remove_old_batch xs =
     KeySet.iter begin fun str_key ->
@@ -1216,6 +1219,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
   let get_old_batch = Direct.get_old_batch
+  let mem_old = Direct.mem_old
 
   let find_unsafe x =
     match get x with
