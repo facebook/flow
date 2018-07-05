@@ -121,13 +121,13 @@ end = struct
     let rec loop i (remainder: int) acc =
       if i < 0 then acc
       else loop (i - 1) (remainder / 256)
-        (String.set acc i (Char.chr (remainder mod 256)); acc) in
-    loop (preamble_core_size - 1) size (String.create preamble_core_size)
+        (Bytes.set acc i (Char.chr (remainder mod 256)); acc) in
+    loop (preamble_core_size - 1) size (Bytes.create preamble_core_size)
 
   let make_preamble (size : int) =
     let preamble_core = get_preamble_core size in
-    let preamble = String.create (preamble_core_size + 1) in
-    String.set preamble 0 preamble_start_sentinel;
+    let preamble = Bytes.create (preamble_core_size + 1) in
+    Bytes.set preamble 0 preamble_start_sentinel;
     String.blit preamble_core 0 preamble 1 4;
     preamble
 
@@ -177,7 +177,7 @@ end = struct
     end
 
   let from_fd_with_preamble ?timeout fd =
-    let preamble = String.create expected_preamble_size in
+    let preamble = Bytes.create expected_preamble_size in
     WriterReader.read ?timeout fd ~buffer:preamble ~offset:0 ~size:expected_preamble_size
     >>= (fun bytes_read ->
       if bytes_read = 0
@@ -193,7 +193,7 @@ end = struct
     )
     >>= (fun () ->
       let payload_size = parse_preamble preamble in
-      let payload = String.create payload_size in
+      let payload = Bytes.create payload_size in
       read_payload ?timeout fd payload 0 payload_size
       >>= (fun payload_size_read ->
         if (payload_size_read <> payload_size)
