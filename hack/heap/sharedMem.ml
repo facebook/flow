@@ -648,7 +648,7 @@ end = struct
     let move stack_opt from_key to_key =
       match stack_opt with
       | None -> hh_move from_key to_key
-      | Some stack ->
+      | Some _stack ->
         assert (mem stack_opt from_key);
         assert (not @@ mem stack_opt to_key);
         let value = get stack_opt from_key in
@@ -1001,7 +1001,7 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
     failwith "FreqCache does not support 'string_of_key'"
 
 (* The cache itself *)
-  let (cache: (Key.t, int ref * Config.value) Hashtbl.t)
+  let (cache: (Key.t, int ref * value) Hashtbl.t)
       = Hashtbl.create (2 * Config.capacity)
   let size = ref 0
 
@@ -1027,7 +1027,7 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
     while !i < Config.capacity do
       match !l with
       | [] -> i := Config.capacity
-      | (k, freq, v) :: rl ->
+      | (k, _freq, v) :: rl ->
           Hashtbl.replace cache k (ref 0, v);
           l := rl;
           incr i;
@@ -1213,7 +1213,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
          Cache.add x v;
          result
       )
-    | Some v as result ->
+    | Some _ as result ->
       result
 
   (* We don't cache old objects, they are not accessed often enough. *)

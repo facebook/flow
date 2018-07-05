@@ -43,7 +43,7 @@ module Alarm_timeout = struct
   (** Channel *)
 
   type in_channel = Pervasives.in_channel * int option
-  let ignore_timeout f ?timeout (ic, _pid) = f ic
+  let ignore_timeout f ?timeout:_ (ic, _pid) = f ic
   let input = ignore_timeout Pervasives.input
   let really_input = ignore_timeout Pervasives.really_input
   let input_char = ignore_timeout Pervasives.input_char
@@ -107,7 +107,8 @@ module Alarm_timeout = struct
           try reader timeout ic oc
           with exn -> close_in ic; close_out oc; raise exn)
 
-  let open_connection ?timeout sockaddr =
+  let open_connection ?timeout:_ sockaddr =
+    (* timeout isn't used in this Alarm_timeout implementation, but is used in Select_timeout *)
     let (ic, oc) = Unix.open_connection sockaddr in
     ((ic, None), oc)
 
@@ -340,10 +341,10 @@ module Select_timeout = struct
   let marshal_magic = Bytes.of_string "\x84\x95\xA6\xBE"
   let input_value ?timeout tic =
     let magic = Bytes.create 4 in
-    magic.[0] <- input_char ?timeout tic;
-    magic.[1] <- input_char ?timeout tic;
-    magic.[2] <- input_char ?timeout tic;
-    magic.[3] <- input_char ?timeout tic;
+    Bytes.set magic 0 (input_char ?timeout tic);
+    Bytes.set magic 1 (input_char ?timeout tic);
+    Bytes.set magic 2 (input_char ?timeout tic);
+    Bytes.set magic 3 (input_char ?timeout tic);
     if magic <> marshal_magic then
       failwith "Select.input_value: bad object.";
     let b1 = int_of_char (input_char ?timeout tic) in
@@ -353,10 +354,10 @@ module Select_timeout = struct
     let len = ((b1 lsl 24) lor (b2 lsl 16) lor (b3 lsl 8) lor b4) + 12 in
     let data = Bytes.create (len + 8) in
     Bytes.blit magic 0 data 0 4;
-    data.[4] <- char_of_int b1;
-    data.[5] <- char_of_int b2;
-    data.[6] <- char_of_int b3;
-    data.[7] <- char_of_int b4;
+    Bytes.set data 4 (char_of_int b1);
+    Bytes.set data 5 (char_of_int b2);
+    Bytes.set data 6 (char_of_int b3);
+    Bytes.set data 7 (char_of_int b4);
     begin
       try unsafe_really_input ?timeout tic data 8 len
       with End_of_file ->
@@ -436,7 +437,7 @@ module Select_timeout = struct
           | _, [], _ ->
             failwith
             "This should be unreachable. How did select return with no fd when there is no timeout?"
-          | _, [sock], _ -> ()
+          | _, [_sock], _ -> ()
           | _, _, _ -> assert false
         end
       | exn -> Unix.close sock; raise exn in
@@ -453,7 +454,7 @@ module Select_timeout = struct
   let shutdown_connection { fd; _ } =
     Unix.(shutdown fd SHUTDOWN_SEND)
 
-  let is_timeout_exn {id; timeout=_;} = function
+  let is_timeout_exn {id; timeout = _;} = function
   | Timeout exn_id -> exn_id = id
   | _ -> false
 

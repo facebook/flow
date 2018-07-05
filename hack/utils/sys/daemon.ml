@@ -134,7 +134,7 @@ end = struct
         Sys.remove file;
         res
       with exn ->
-        failwith "Can't find daemon parameters." in
+        failwith ("Can't find daemon parameters: " ^ (Printexc.to_string exn)) in
     (entry, param,
      (Timeout.in_channel_of_descr in_handle,
       Unix.out_channel_of_descr out_handle))

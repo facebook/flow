@@ -257,7 +257,7 @@ let btw x1 x2 =
 let rec merge x1 x2 =
   match x1, x2 with
   | Pos_small { pos_file = file1; pos_start = start1; pos_end = end1; },
-    Pos_small { pos_file = file2; pos_start = start2; pos_end = end2; } ->
+    Pos_small { pos_file = _; pos_start = start2; pos_end = end2; } ->
     let pos_start =
       if File_pos_small.is_dummy start1
       then start2
@@ -274,7 +274,7 @@ let rec merge x1 x2 =
       else if end_cnum x1 < end_cnum x2 then end2 else end1 in
     Pos_small { pos_file = file1; pos_start = pos_start; pos_end = pos_end }
   | Pos_large { pos_file = file1; pos_start = start1; pos_end = end1; },
-    Pos_large { pos_file = file2; pos_start = start2; pos_end = end2; } ->
+    Pos_large { pos_file = _; pos_start = start2; pos_end = end2; } ->
     let pos_start =
       if File_pos_large.is_dummy start1
       then start2
@@ -298,9 +298,9 @@ let last_char p =
   then none
   else
   match p with
-  | Pos_small { pos_start; pos_end; pos_file } ->
+  | Pos_small { pos_start = _ ; pos_end; pos_file } ->
     Pos_small { pos_start = pos_end; pos_end; pos_file }
-  | Pos_large { pos_start; pos_end; pos_file } ->
+  | Pos_large { pos_start = _; pos_end; pos_file } ->
     Pos_large { pos_start = pos_end; pos_end; pos_file }
 
 let first_char_of_line p =
@@ -308,10 +308,10 @@ let first_char_of_line p =
   then none
   else
   match p with
-  | Pos_small { pos_start; pos_end; pos_file } ->
+  | Pos_small { pos_start; pos_end = _; pos_file } ->
     let start = File_pos_small.set_column 0 pos_start in
     Pos_small { pos_start = start; pos_end = start; pos_file }
-  | Pos_large { pos_start; pos_end; pos_file } ->
+  | Pos_large { pos_start; pos_end = _; pos_file } ->
     let start = File_pos_large.set_column 0 pos_start in
     Pos_large { pos_start = start; pos_end = start; pos_file }
 
