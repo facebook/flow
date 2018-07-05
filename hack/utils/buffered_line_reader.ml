@@ -101,7 +101,7 @@ struct
       Reader.return @@ trim_trailing_cr result
     )
 
-  let get_next_line ?approx_size r =
+  let get_next_line r =
     match !(r.unconsumed_buffer) with
     | None -> read_line [] r
     | Some remainder -> begin
