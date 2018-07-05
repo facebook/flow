@@ -166,6 +166,7 @@ The general idea is that we build in Cygwin, targeting mingw. This gives us a bi
 4. Install system dependencies `opam depext -u flowtype`
 5. Install Flow's dependencies `opam install flowtype --deps-only`
 7. Finally, build Flow: `make all`
+8. Create a `c:\\tmp` folder for tests
 
 ## Using Flow's parser from JavaScript
 
@@ -182,6 +183,8 @@ There is a `make test` target that compiles and runs tests.
 To run a subset of the tests you can pass a second argument to the `runtests.sh` file.
 
 For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
+
+Some tests do not pass on windows, mainly due to path differences between output and expectations.
 
 ## Join the Flow community
 * Website: [https://flow.org/](https://flow.org/)
