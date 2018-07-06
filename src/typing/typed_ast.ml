@@ -105,6 +105,40 @@ module Pattern = struct
   let unimplemented = Expression ((), Expression.unimplemented)
 end
 
+module Statement = struct
+  open Ast.Statement
+  let error = (), Labeled { Labeled.
+    label = (), "Error";
+    body = (), Empty;
+  }
+  module Try = struct
+    open Try
+    module CatchClause = struct
+      open CatchClause
+      let error = {
+        param = None;
+        body = (), { Ast.Statement.Block.body = [error] }
+      }
+    end
+  end
+  module ForIn = struct
+    open ForIn
+    let left_error = LeftPattern ((), Pattern.error)
+  end
+  module ForOf = struct
+    open ForOf
+    let left_error = LeftPattern ((), Pattern.error)
+  end
+  module DeclareFunction = struct
+    open DeclareFunction
+    let error = {
+      id = (), "Error";
+      annot = (), ((), Type.error);
+      predicate = None;
+    }
+  end
+end
+
 module Function = struct
   open Ast.Function
   let body_error = BodyExpression ((), Expression.error)
@@ -172,18 +206,4 @@ module Class = struct
       decorators = [];
     })
   end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end

@@ -44,6 +44,19 @@ let convert_targs cx = function
       |> List.split in
     Some targts, Some ((), List.map (fun t -> (), t) targs_ast)
 
+let convert_specifiers = Ast.Statement.ExportNamedDeclaration.(Option.map ~f:(function
+  | ExportSpecifiers specifiers -> ExportSpecifiers (
+      List.map (fun (_, { ExportSpecifier.local = _, local_name; exported;}) ->
+        (), { ExportSpecifier.
+          local = (), local_name;
+          exported = Option.map ~f:(fun (_, e) -> (), e) exported
+        })
+        specifiers
+    )
+  | ExportBatchSpecifier (_, ebs) ->
+    ExportBatchSpecifier ((), Option.map ~f:(fun (_, e) -> (), e) ebs)
+))
+
 (*********************************************************)
 (* Temporary -- to be deleted once AST threading is done *)
 (*********************************************************)
@@ -272,12 +285,11 @@ and statement_decl cx = Ast.Statement.(
       Env.add_type_table cx id_loc t;
       Env.bind_declare_var cx name t id_loc
 
-  | (loc, DeclareFunction { DeclareFunction.
-      id = (id_loc, name) as id;
+  | (loc, DeclareFunction ({ DeclareFunction.
+      id = (id_loc, name);
       annot;
-      predicate}) ->
-      (match declare_function_to_function_declaration
-        cx id annot predicate with
+      _; } as declare_function)) ->
+      (match declare_function_to_function_declaration cx declare_function with
       | None ->
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
           let t =
@@ -286,7 +298,7 @@ and statement_decl cx = Ast.Statement.(
           let id_info = name, t, Type_table.Other in
           Env.add_type_table_info cx id_loc id_info;
           Env.bind_declare_fun cx name t id_loc
-      | Some func_decl ->
+      | Some (func_decl, _) ->
           statement_decl cx (loc, func_decl)
       )
 
@@ -363,7 +375,7 @@ and statement_decl cx = Ast.Statement.(
   | _, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } -> (
       match declaration with
       | ExportDefaultDeclaration.Declaration stmt ->
-        statement_decl cx (nameify_default_export_decl stmt)
+        statement_decl cx (fst (nameify_default_export_decl stmt))
       | ExportDefaultDeclaration.Expression _ -> ()
     )
   | (_, ImportDeclaration { ImportDeclaration.importKind; specifiers; default; source = _ }) ->
@@ -419,21 +431,25 @@ and statement_decl cx = Ast.Statement.(
  * flow to check types/create graphs for merge-time checking
  ***************************************************************)
 
-and toplevels cx = function
-  | [] -> ()
-  | (_, Ast.Statement.Empty)::stmts -> toplevels cx stmts
+(* accumulates a list of previous statements' ASTs in reverse order *)
+(* can raise Abnormal.(Exn (Stmts _, _)). *)
+and toplevels =
+  let rec loop acc cx = function
+  | [] -> List.rev acc
+  | (_, Ast.Statement.Empty)::stmts ->
+      loop (((), Ast.Statement.Empty)::acc) cx stmts
   | stmt::stmts ->
-    match Abnormal.catch_control_flow_exception (fun () -> statement cx stmt) with
-    | Some exn ->
+    match Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx stmt) with
+    | stmt, Some abnormal ->
       (* control flow exit out of a flat list:
          check for unreachable code and rethrow *)
       let warn_unreachable loc =
         Flow.add_output cx (Flow_error.EUnreachable loc) in
-      List.iter Ast.Statement.(fun stmt ->
+      let rest_opts = List.map Ast.Statement.(fun stmt ->
         match stmt with
-        | (_, Empty) -> ()
+        | (_, Empty) -> Some ((), Empty)
         (* function declarations are hoisted, so not unreachable *)
-        | (_, FunctionDeclaration _ ) -> statement cx stmt;
+        | (_, FunctionDeclaration _ ) -> Some (statement cx stmt)
         (* variable declarations are hoisted, but associated assignments are
            not, so skip variable declarations with no assignments.
            Note: this does not seem like a practice anyone would use *)
@@ -441,24 +457,27 @@ and toplevels cx = function
             List.iter Declarator.(function
             | (_, { init = Some (loc, _); _ } ) -> warn_unreachable loc
             | _ -> ()
-          ))
-        | (loc, _) -> warn_unreachable loc
-      ) stmts;
-      Abnormal.throw_control_flow_exception exn
-    | None -> toplevels cx stmts
-
-and statement cx = Ast.Statement.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let module Anno = Old_Anno in
-  let expression cx e = fst (expression cx e) in
-  let mk_class cx loc reason c = fst (mk_class cx loc reason c) in
-  let mk_function id cx loc func = fst (mk_function id cx loc func) in
-  let predicates_of_condition cx test =
-    let (a, _), b, c, d = predicates_of_condition cx test in a, b, c, d
+          ));
+          None
+        | (loc, _) -> warn_unreachable loc; None
+      ) stmts in
+      let rest =
+        rest_opts
+        |> List.filter Option.is_some
+        |> List.map (fun stmt_opt -> Option.value_exn stmt_opt)
+      in
+      Abnormal.throw_stmts_control_flow_exception
+        (List.rev_append acc (stmt::rest))
+        abnormal
+    | stmt, None -> loop (stmt::acc) cx stmts
   in
+  fun cx -> loop [] cx
 
+(* can raise Abnormal.(Exn (Stmt _, _)) *)
+and statement cx = Ast.Statement.(
   let variables cx { VariableDeclaration.declarations; kind } =
-    List.iter (variable cx kind) declarations
+    let declarations = List.map (fun vdecl -> variable cx kind vdecl) declarations in
+    { VariableDeclaration.declarations; kind; }
   in
 
   let interface_helper cx loc (iface_sig, self) =
@@ -476,24 +495,26 @@ and statement cx = Ast.Statement.(
   let interface cx loc decl =
     let { Interface.id = (name_loc, name); _ } = decl in
     let reason = DescFormat.instance_reason name name_loc in
-    let iface_sig = Anno.mk_interface_sig cx reason decl in
-    let t = interface_helper cx loc iface_sig in
-    Env.init_type cx name t loc
+    let iface_sig, iface_t, decl_ast = Anno.mk_interface_sig cx reason decl in
+    let t = interface_helper cx loc (iface_sig, iface_t) in
+    Env.init_type cx name t loc;
+    decl_ast
   in
 
   let declare_class cx loc decl =
     let { DeclareClass.id = (name_loc, name); _ } = decl in
     let reason = DescFormat.instance_reason name name_loc in
-    let class_sig = Anno.mk_declare_class_sig cx reason decl in
-    let t = interface_helper cx loc class_sig in
+    let class_sig, class_t, decl_ast = Anno.mk_declare_class_sig cx reason decl in
+    let t = interface_helper cx loc (class_sig, class_t) in
     let use_op = Op (AssignVar {
       var = Some (mk_reason (RIdentifier name) loc);
       init = reason_of_t t;
     }) in
-    Env.init_var ~has_anno:false cx ~use_op name t loc
+    Env.init_var ~has_anno:false cx ~use_op name t loc;
+    decl_ast
   in
 
-  let check cx b = Abnormal.catch_control_flow_exception(fun () ->
+  let check cx b = Abnormal.catch_stmts_control_flow_exception(fun () ->
     toplevel_decls cx b.Block.body;
     toplevels cx b.Block.body) in
 
@@ -501,53 +522,75 @@ and statement cx = Ast.Statement.(
     Ast.Pattern.(match param with
       | Some p -> (match p with
         | loc, Identifier {
-            Identifier.name = (_, name); annot = None; _;
+            Identifier.name = (_, name); annot = None; optional;
           } ->
             let r = mk_reason (RCustom "catch") loc in
             let t = Tvar.mk cx r in
 
             Env.add_type_table cx loc t;
 
-            (match Env.in_lex_scope cx (fun () ->
+            let stmts, abnormal_opt = Env.in_lex_scope cx (fun () ->
               Scope.(Env.bind_implicit_let
                 ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
 
                check cx b
-            ) with
-            | Some exn -> Abnormal.throw_control_flow_exception exn
-            | None -> ()
-            )
+            ) in
+            { Try.CatchClause.
+              param = Some ((), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+                name = (), name;
+                annot = None;
+                optional;
+              });
+              body = (), { Block.body = stmts };
+            },
+            abnormal_opt
+
 
         | loc, Identifier _ ->
             Flow.add_output cx
-              Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation))
+              Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
+            Typed_ast.Statement.Try.CatchClause.error, None
 
         | loc, _ ->
             Flow.add_output cx
-              Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration))
+              Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
+            Typed_ast.Statement.Try.CatchClause.error, None
       )
       | None ->
-        (match Env.in_lex_scope cx (fun () ->
+        let stmts, abnormal_opt = Env.in_lex_scope cx (fun () ->
           check cx b
-        ) with
-        | Some exn -> Abnormal.throw_control_flow_exception exn
-        | None -> ()
-        )
+        ) in
+        { Try.CatchClause.
+          param = None;
+          body = (), { Block.body = stmts };
+        },
+        abnormal_opt
     )
   in
 
   function
 
-  | (_, Empty) -> ()
+  | (_, Empty) -> (), Empty
 
   | (_, Block { Block.body }) ->
-      Env.in_lex_scope cx (fun () ->
-        toplevel_decls cx body;
-        toplevels cx body
+    let body, abnormal_opt =
+      Abnormal.catch_stmts_control_flow_exception (fun () ->
+        Env.in_lex_scope cx (fun () ->
+          toplevel_decls cx body;
+          toplevels cx body
+        )
       )
+    in
+    Abnormal.check_stmt_control_flow_exception (
+      ((), Block { Block.body }),
+      abnormal_opt
+    )
 
-  | (_, Expression { Expression.expression = e; directive = _ }) ->
-      ignore (expression cx e)
+  | (_, Expression { Expression.expression = e; directive; }) ->
+    (), Expression { Expression.
+      expression = (), snd (expression cx e);
+      directive;
+    }
 
   (* Refinements for `if` are derived by the following Hoare logic rule:
 
@@ -559,7 +602,7 @@ and statement cx = Ast.Statement.(
   *)
   | (loc, If { If.test; consequent; alternate }) ->
       let loc_test, _ = test in
-      let _, preds, not_preds, xts =
+      let (_, test_ast), preds, not_preds, xts =
         predicates_of_condition cx test in
 
       (* grab a reference to the incoming env -
@@ -573,7 +616,7 @@ and statement cx = Ast.Statement.(
         ignore (refine_with_preds cx loc_test preds xts)
       );
 
-      let exception_then = Abnormal.catch_control_flow_exception
+      let then_ast, then_abnormal = Abnormal.catch_stmt_control_flow_exception
         (fun () -> statement cx consequent)
       in
 
@@ -586,11 +629,13 @@ and statement cx = Ast.Statement.(
         ignore (refine_with_preds cx loc_test not_preds xts)
       );
 
-      let exception_else = match alternate with
-        | None -> None
+      let else_ast, else_abnormal = match alternate with
+        | None -> None, None
         | Some st ->
-          Abnormal.catch_control_flow_exception
-            (fun () -> statement cx st)
+          let else_ast, else_abnormal =
+            Abnormal.catch_stmt_control_flow_exception
+              (fun () -> statement cx st)
+          in Some else_ast, else_abnormal
       in
 
       (* grab a reference to env after else branch *)
@@ -601,7 +646,7 @@ and statement cx = Ast.Statement.(
 
       (* adjust post-if environment. if we've returned from one arm,
          swap in the env generated by the other, otherwise merge *)
-      let end_env = match exception_then, exception_else with
+      let end_env = match then_abnormal, else_abnormal with
       | Some Abnormal.Return, None
       | Some Abnormal.Throw, None ->
         else_env
@@ -627,16 +672,22 @@ and statement cx = Ast.Statement.(
       in
       Env.update_env cx loc end_env;
 
+      let ast = (), If { If.
+        test = (), test_ast;
+        consequent = then_ast;
+        alternate = else_ast;
+      } in
+
       (* handle control flow in cases where we've thrown from both sides *)
-      begin match exception_then, exception_else with
+      begin match then_abnormal, else_abnormal with
       | Some Abnormal.Throw, Some Abnormal.Return
       | Some Abnormal.Return, Some Abnormal.Throw ->
-        Abnormal.throw_control_flow_exception Abnormal.Return;
+        Abnormal.throw_stmt_control_flow_exception ast Abnormal.Return;
 
       | Some then_exn, Some else_exn when then_exn = else_exn ->
-        Abnormal.throw_control_flow_exception then_exn
+        Abnormal.throw_stmt_control_flow_exception ast then_exn
 
-      | _ -> ()
+      | _ -> ast
       end
 
   | (_, Labeled { Labeled.label = _, name; body }) ->
@@ -657,10 +708,13 @@ and statement cx = Ast.Statement.(
         let loop_env = Env.clone_env env in
         Env.update_env cx loc loop_env;
 
-        Abnormal.(
-          check_control_flow_exception (
-            ignore_break_or_continue_to_label label (
-              fun () -> statement cx body)));
+        let body_ast, body_abnormal =
+          Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
+          |> Abnormal.ignore_break_or_continue_to_label label
+        in
+        let ast = (), Labeled { Labeled.label = (), name; body = body_ast } in
+        ignore (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+          : Typed_ast.annot Ast.Statement.t);
 
         let newset = Changeset.merge oldset in
 
@@ -670,50 +724,63 @@ and statement cx = Ast.Statement.(
         Env.copy_env cx loc (env,loop_env) newset;
 
         if Abnormal.swap_saved (Abnormal.Break label) save_break <> None
-        then Env.havoc_vars newset
+        then Env.havoc_vars newset;
+
+        ast
 
       | _ ->
         let oldset = Changeset.clear () in
         let label = Some name in
         let save_break = Abnormal.clear_saved (Abnormal.Break label) in
 
-        Abnormal.(
-          check_control_flow_exception (
-            ignore_break_to_label label (
-              fun () -> statement cx body)));
+        let body_ast, body_abnormal =
+          Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
+          |> Abnormal.ignore_break_to_label label
+        in
+        let ast = (), Labeled { Labeled.label = (), name; body = body_ast } in
+        ignore (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+          : Typed_ast.annot Ast.Statement.t);
 
         let newset = Changeset.merge oldset in
         if Abnormal.swap_saved (Abnormal.Break label) save_break <> None
-        then Env.havoc_vars newset
+        then Env.havoc_vars newset;
+
+        ast
       )
 
   | (loc, Break { Break.label }) ->
       (* save environment at unlabeled breaks, prior to activation clearing *)
-      let label_opt, env = match label with
-        | None -> None, Env.(clone_env (peek_env ()))
-        | Some (_, name) -> Some name, []
+      let label_opt, env, label_ast = match label with
+        | None -> None, Env.(clone_env (peek_env ())), None
+        | Some (_, name) -> Some name, [], Some ((), name)
       in
       Env.reset_current_activation loc;
-      Abnormal.save_and_throw (Abnormal.Break label_opt) ~env
+      let ast = (), Break { Break.label = label_ast } in
+      let abnormal = Abnormal.Break label_opt in
+      Abnormal.save abnormal ~env;
+      Abnormal.throw_stmt_control_flow_exception ast abnormal
 
   | (loc, Continue { Continue.label }) ->
-      let label_opt = match label with
-        | None -> None
-        | Some (_, name) -> Some name
+      let label_opt, label_ast = match label with
+        | None -> None, None
+        | Some (_, name) -> Some name, Some ((), name)
       in
       Env.reset_current_activation loc;
-      Abnormal.save_and_throw (Abnormal.Continue label_opt)
+      let ast = (), Continue { Continue.label = label_ast } in
+      let abnormal = Abnormal.Continue label_opt in
+      Abnormal.save abnormal;
+      Abnormal.throw_stmt_control_flow_exception ast abnormal
 
   | (_, With _) ->
       (* TODO or disallow? *)
-      ()
+      Typed_ast.Statement.error
 
-  | (loc, DeclareTypeAlias {TypeAlias.id=(name_loc, name); tparams; right;})
-  | (loc, TypeAlias {TypeAlias.id=(name_loc, name); tparams; right;}) ->
+  |((loc, DeclareTypeAlias {TypeAlias.id=(name_loc, name); tparams; right;})
+  | (loc, TypeAlias {TypeAlias.id=(name_loc, name); tparams; right;})) as stmt ->
       let r = DescFormat.type_reason name name_loc in
-      let typeparams, typeparams_map =
+      let typeparams, typeparams_map, tparams_ast =
         Anno.mk_type_param_declarations cx tparams in
-      let t = Anno.convert cx typeparams_map right in
+      let t, right_ast = Anno.convert cx typeparams_map right in
       let t =
         let mod_reason = replace_reason ~keep_def_loc:true
           (fun desc -> RTypeAlias (name, true, desc)) in
@@ -730,18 +797,38 @@ and statement cx = Ast.Statement.(
       Env.add_type_table cx loc type_;
       let id_info = name, type_, Type_table.Other in
       Env.add_type_table_info cx name_loc id_info;
-      Env.init_type cx name type_ name_loc
+      Env.init_type cx name type_ name_loc;
+      let type_alias_ast = { TypeAlias.
+        id = (), name;
+        tparams = tparams_ast;
+        right = (), right_ast;
+      } in
+      (match stmt with
+      | _, DeclareTypeAlias _ -> (), DeclareTypeAlias type_alias_ast
+      | _, TypeAlias _ -> (), TypeAlias type_alias_ast
+      | _ -> assert false)
 
-  | (loc, DeclareOpaqueType
+  |((loc, DeclareOpaqueType
     {OpaqueType.id=(name_loc, name); tparams; impltype; supertype})
-  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); tparams; impltype; supertype}) ->
+  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); tparams; impltype; supertype}))
+    as stmt ->
       let r = DescFormat.type_reason name name_loc in
-      let typeparams, typeparams_map =
+      let typeparams, typeparams_map, tparams_ast =
         Anno.mk_type_param_declarations cx tparams in
-      let underlying_t = Option.map ~f:(Anno.convert cx typeparams_map) impltype in
+      let underlying_t, impltype_ast = match impltype with
+        | Some impltype ->
+          let t, ast = Anno.convert cx typeparams_map impltype in
+          Some t, Some ((), ast)
+        | None -> None, None
+      in
       let opaque_arg_polarities = List.fold_left (fun acc tparam ->
         SMap.add tparam.name tparam.polarity acc) SMap.empty typeparams in
-      let super_t = Option.map supertype (Anno.convert cx typeparams_map) in
+      let super_t, supertype_ast = match supertype with
+        | Some supertype ->
+          let t, ast = Anno.convert cx typeparams_map supertype in
+          Some t, Some ((), ast)
+        | None -> None, None
+      in
       let opaquetype = { underlying_t;
                          super_t;
                          opaque_id = Context.make_nominal cx;
@@ -757,27 +844,37 @@ and statement cx = Ast.Statement.(
       | Some l, Some u ->
         generate_tests cx typeparams (fun map_ ->
           flow_t cx (subst cx map_ l, subst cx map_ u)
-        ) |> ignore (* TODO(vijayramamurthy) *)
+        ) |> ignore
       | _ -> ()
       in
       Env.add_type_table cx loc type_;
       let id_info = name, type_, Type_table.Other in
       Env.add_type_table_info cx name_loc id_info;
-      Env.init_type cx name type_ name_loc
+      Env.init_type cx name type_ name_loc;
+      let opaque_type_ast = { OpaqueType.
+        id = (), name;
+        tparams = tparams_ast;
+        impltype = impltype_ast;
+        supertype = supertype_ast;
+      } in
+      (match stmt with
+      | _, DeclareOpaqueType _ -> (), DeclareOpaqueType opaque_type_ast
+      | _, OpaqueType _ -> (), OpaqueType opaque_type_ast
+      | _ -> assert false)
 
   (*******************************************************)
 
-  | (switch_loc, Switch { Switch.discriminant; cases; _ }) ->
+  | (switch_loc, Switch { Switch.discriminant; cases; }) ->
 
     (* add default if absent *)
-    let cases = Switch.Case.(
+    let cases, added_default = Switch.Case.(
       if List.exists (fun (_, { test; _ }) -> test = None) cases
-      then cases
-      else cases @ [switch_loc, { test = None; consequent = [] }]
+      then cases, false
+      else cases @ [switch_loc, { test = None; consequent = [] }], true
     ) in
 
     (* typecheck discriminant *)
-    ignore (expression cx discriminant);
+    let discriminant_ast = (), snd (expression cx discriminant) in
 
     (* switch body is a single lexical scope *)
     Env.in_lex_scope cx (fun () ->
@@ -816,20 +913,25 @@ and statement cx = Ast.Statement.(
         in switch_state := Some state
       in
 
-      (* traverse case list, get list of control flow exits *)
-      let exits = cases |> List.map (
+      (* traverse case list, get list of control flow exits and list of ASTs *)
+      let exits, cases_ast = cases |> List.map (
         fun (loc, { Switch.Case.test; consequent }) ->
 
         (* compute predicates implied by case expr or default *)
-        let _, preds, not_preds, xtypes = match test with
+        let test_ast, preds, not_preds, xtypes = match test with
         | None ->
-          EmptyT.at loc, Key_map.empty, Key_map.empty, Key_map.empty
+          None, Key_map.empty, Key_map.empty, Key_map.empty
         | Some expr ->
-          let fake_ast = loc, Ast.Expression.(Binary {
+          let fake = loc, Ast.Expression.(Binary {
             Binary.operator = Binary.StrictEqual;
             left = discriminant; right = expr
           }) in
-          predicates_of_condition cx fake_ast
+          let (_, fake_ast), preds, not_preds, xtypes = predicates_of_condition cx fake in
+          let expr_ast = match fake_ast with
+          | Ast.Expression.(Binary { Binary.right; _ }) -> right
+          | _ -> assert false
+          in
+          Some expr_ast, preds, not_preds, xtypes
         in
 
         (* swap in case's starting env and clear changeset *)
@@ -849,7 +951,7 @@ and statement cx = Ast.Statement.(
         (** process statements, track control flow exits: exit will be an
             unconditional exit, break_opt will be any break *)
         let save_break = Abnormal.clear_saved (Abnormal.Break None) in
-        let exit = Abnormal.catch_control_flow_exception (
+        let consequent_ast, exit = Abnormal.catch_stmts_control_flow_exception (
           fun () -> toplevels cx consequent
         ) in
         let break_opt = Abnormal.swap_saved (Abnormal.Break None) save_break in
@@ -892,8 +994,14 @@ and statement cx = Ast.Statement.(
         Env.update_env cx loc case_start_env;
         let _ = Env.refine_with_preds cx loc not_preds xtypes in
 
-        exit
-      ) in
+        exit, ((), { Switch.Case.test = test_ast; consequent = consequent_ast})
+      ) |> List.split in
+
+    let cases_ast = List.(
+      if added_default
+      then cases_ast |> rev |> tl |> rev
+      else cases_ast
+    ) in
 
     (* if last case fell out, update terminal switch state with it *)
     Option.iter !fallthrough_case ~f:update_switch_state;
@@ -937,9 +1045,13 @@ and statement cx = Ast.Statement.(
         None
       in loop (None, false, case_exits)
     in
+    let ast = (), Switch { Switch.
+      discriminant = discriminant_ast;
+      cases = cases_ast;
+    } in
     begin match uniform_switch_exit exits with
-    | None -> ()
-    | Some exn -> Abnormal.throw_control_flow_exception exn
+    | None -> ast
+    | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal
     end
   )
 
@@ -948,17 +1060,18 @@ and statement cx = Ast.Statement.(
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason (RCustom "return") loc in
       let ret = Env.get_internal_var cx "return" loc in
-      let t = match argument with
-        | None -> VoidT.at loc
+      let t, argument_ast = match argument with
+        | None -> VoidT.at loc, None
         | Some expr ->
           if Env.in_predicate_scope () then
-            let (t, p_map, n_map, _) = predicates_of_condition cx expr in
+            let ((t, ast), p_map, n_map, _) = predicates_of_condition cx expr in
             let pred_reason = replace_reason (fun desc ->
               RPredicateOf desc
             ) reason in
-            OpenPredT (pred_reason, t, p_map, n_map)
+            OpenPredT (pred_reason, t, p_map, n_map), Some ((), ast)
           else
-            expression cx expr
+            let t, ast = expression cx expr in
+            t, Some ((), ast)
       in
       let t = match Env.var_scope_kind () with
       | Scope.Async ->
@@ -1004,12 +1117,18 @@ and statement cx = Ast.Statement.(
       }) in
       Flow.flow cx (t, UseT (use_op, ret));
       Env.reset_current_activation loc;
-      Abnormal.save_and_throw Abnormal.Return
+      Abnormal.save Abnormal.Return;
+      Abnormal.throw_stmt_control_flow_exception
+        ((), Return { Return.argument = argument_ast })
+        Abnormal.Return
 
   | (loc, Throw { Throw.argument }) ->
-      ignore (expression cx argument);
+      let argument_ast = (), snd (expression cx argument) in
       Env.reset_current_activation loc;
-      Abnormal.save_and_throw Abnormal.Throw
+      Abnormal.save Abnormal.Throw;
+      Abnormal.throw_stmt_control_flow_exception
+        ((), Throw { Throw.argument = argument_ast })
+        Abnormal.Throw
 
   (***************************************************************************)
   (* Try-catch-finally statements have a lot of control flow possibilities. (To
@@ -1079,8 +1198,8 @@ and statement cx = Ast.Statement.(
       let start_env = Env.peek_env () in
       Env.(update_env cx loc (clone_env start_env));
 
-      let exception_try = Env.in_lex_scope cx (fun () ->
-        Abnormal.catch_control_flow_exception (fun () ->
+      let try_block_ast, try_abnormal = Env.in_lex_scope cx (fun () ->
+        Abnormal.catch_stmts_control_flow_exception (fun () ->
           toplevel_decls cx b.Block.body;
           toplevels cx b.Block.body
         )
@@ -1090,10 +1209,10 @@ and statement cx = Ast.Statement.(
       let try_env = Env.peek_env () in
 
       (* traverse catch block, save exceptions *)
-      let exception_catch = match handler with
+      let catch_ast, catch_abnormal = match handler with
       | None ->
         (* a missing catch is equivalent to a catch that always throws *)
-        Some Abnormal.Throw
+        None, Some Abnormal.Throw
 
       | Some (_, h) ->
         (* if try throws to here, we need an env that's conservative
@@ -1104,15 +1223,15 @@ and statement cx = Ast.Statement.(
           update_env cx loc e
         );
 
-        Abnormal.catch_control_flow_exception
-          (fun () -> catch_clause cx h)
+        let catch_block_ast, catch_abnormal = catch_clause cx h in
+        Some ((), catch_block_ast), catch_abnormal
       in
 
       (* save ref to env at end of catch *)
       let catch_env = Env.peek_env () in
 
       (* build initial env for non-throwing finally *)
-      let nonthrow_finally_env = Env.(match exception_catch with
+      let nonthrow_finally_env = Env.(match catch_abnormal with
       | None ->
         (* if catch ends normally, then non-throwing finally can be
            reached via it or a non-throwing try. merge terminal states *)
@@ -1128,10 +1247,10 @@ and statement cx = Ast.Statement.(
       (* traverse finally block, save exceptions,
          and leave in place the terminal env of the non-throwing case
          (in which subsequent code is reachable) *)
-      let exception_finally = match finalizer with
+      let finally_ast, finally_abnormal = match finalizer with
       | None ->
         Env.update_env cx loc nonthrow_finally_env;
-        None
+        None, None
 
       | Some (_, { Block.body }) ->
         (* analyze twice, with different start states *)
@@ -1144,8 +1263,8 @@ and statement cx = Ast.Statement.(
           update_env cx loc e
         );
 
-        let result = Env.in_lex_scope cx (fun () ->
-          Abnormal.catch_control_flow_exception (fun () ->
+        let _, finally_abnormal = Env.in_lex_scope cx (fun () ->
+          Abnormal.catch_stmts_control_flow_exception (fun () ->
             toplevel_decls cx body;
             toplevels cx body
           )
@@ -1155,32 +1274,39 @@ and statement cx = Ast.Statement.(
         Env.update_env cx loc nonthrow_finally_env;
 
         (* (exceptions will be the same in both cases) *)
-        let _ = Env.in_lex_scope cx (fun () ->
-          Abnormal.catch_control_flow_exception (fun () ->
+        let finally_block_ast, _ = Env.in_lex_scope cx (fun () ->
+          Abnormal.catch_stmts_control_flow_exception (fun () ->
             toplevel_decls cx body;
             toplevels cx body
           )
         ) in
 
-        result
+        Some ((), { Block.body = finally_block_ast }), finally_abnormal
       in
 
       let newset = Changeset.merge oldset in
       ignore newset;
 
+      let ast = (), Try { Try.
+        block = (), { Block.body = try_block_ast };
+        handler = catch_ast;
+        finalizer = finally_ast;
+      } in
+
       (* if finally has abnormal control flow, we throw here *)
-      Abnormal.check_control_flow_exception exception_finally;
+      ignore (Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
+        : Typed_ast.annot Ast.Statement.t);
 
       (* other ways we throw due to try/catch abends *)
-      begin match exception_try, exception_catch with
-      | Some (Abnormal.Throw as try_exn), Some Abnormal.Throw
-      | Some (Abnormal.Return as try_exn), Some _ ->
-          Abnormal.throw_control_flow_exception try_exn
+      begin match try_abnormal, catch_abnormal with
+      | Some (Abnormal.Throw as try_abnormal), Some Abnormal.Throw
+      | Some (Abnormal.Return as try_abnormal), Some _ ->
+          Abnormal.throw_stmt_control_flow_exception ast try_abnormal
 
-      | Some Abnormal.Throw, Some (Abnormal.Return as catch_exn) ->
-          Abnormal.throw_control_flow_exception catch_exn
+      | Some Abnormal.Throw, Some (Abnormal.Return as catch_abnormal) ->
+          Abnormal.throw_stmt_control_flow_exception ast catch_abnormal
 
-      | _ -> ()
+      | _ -> ast
       end
 
 
@@ -1199,7 +1325,7 @@ and statement cx = Ast.Statement.(
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
 
       (* generate loop test preds and their complements *)
-      let _, preds, not_preds, orig_types =
+      let (_, test_ast), preds, not_preds, orig_types =
         predicates_of_condition cx test in
 
       (* save current changeset and install an empty one *)
@@ -1218,8 +1344,8 @@ and statement cx = Ast.Statement.(
       );
 
       (* traverse loop body - after this, body_env = Post' *)
-      ignore (Abnormal.catch_control_flow_exception
-        (fun () -> statement cx body));
+      let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
+        (fun () -> statement cx body) in
 
       (* save ref to env after loop body *)
       let body_env = Env.peek_env () in
@@ -1242,7 +1368,9 @@ and statement cx = Ast.Statement.(
 
       (* if we broke out of the loop, havoc vars changed by loop body *)
       if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
-      then Env.havoc_vars newset
+      then Env.havoc_vars newset;
+
+      (), While { While.test = (), test_ast; body = body_ast }
 
   (***************************************************************************)
   (* Refinements for `do-while` are derived by the following Hoare logic rule:
@@ -1270,15 +1398,15 @@ and statement cx = Ast.Statement.(
       (* body_env = Pre' *)
       (* ENV = [body_env] *)
 
-      let exception_ = Abnormal.(
-        ignore_break_or_continue_to_label None (
-          fun () -> statement cx body)
-      ) in
+      let body_ast, body_abnormal =
+        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
+        |> Abnormal.ignore_break_or_continue_to_label None
+      in
 
       if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None
       then Env.havoc_vars (Changeset.peek ());
 
-      let _, preds, not_preds, xtypes =
+      let (_, test_ast), preds, not_preds, xtypes =
         predicates_of_condition cx test in
       (* body_env = Post' *)
 
@@ -1299,7 +1427,8 @@ and statement cx = Ast.Statement.(
       (* ENV = [done_env] *)
       (* done_env = Post' & ~c *)
 
-      Abnormal.check_control_flow_exception exception_
+      let ast = (), DoWhile { DoWhile.body = body_ast; test = (), test_ast } in
+      Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
 
   (***************************************************************************)
   (* Refinements for `for` are derived by the following Hoare logic rule:
@@ -1318,14 +1447,14 @@ and statement cx = Ast.Statement.(
       Env.in_lex_scope cx (fun () ->
         let save_break = Abnormal.clear_saved (Abnormal.Break None) in
         let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
-        (match init with
-          | None -> ()
+        let init_ast = match init with
+          | None -> None
           | Some (For.InitDeclaration (_, decl)) ->
               variable_decl cx decl;
-              variables cx decl
+              Some (For.InitDeclaration ((), variables cx decl))
           | Some (For.InitExpression expr) ->
-              ignore (expression cx expr)
-        );
+              Some (For.InitExpression ((), snd (expression cx expr)))
+        in
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
@@ -1334,29 +1463,28 @@ and statement cx = Ast.Statement.(
         let do_env = Env.clone_env env in
         Env.update_env cx loc do_env;
 
-        let _, preds, not_preds, xtypes = match test with
+        let test_ast, preds, not_preds, xtypes = match test with
           | None ->
-              EmptyT.at loc, Key_map.empty, Key_map.empty,
+              None, Key_map.empty, Key_map.empty,
               Key_map.empty (* TODO: prune the "not" case *)
           | Some expr ->
-              predicates_of_condition cx expr
+              let (_, expr_ast), preds, not_preds, xtypes =
+                predicates_of_condition cx expr in
+              Some ((), expr_ast), preds, not_preds, xtypes
         in
 
         let body_env = Env.clone_env do_env in
         Env.update_env cx loc body_env;
         let _ = Env.refine_with_preds cx loc preds xtypes in
 
-        ignore (Abnormal.catch_control_flow_exception
-          (fun () -> statement cx body));
+        let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
+          (fun () -> statement cx body) in
 
         if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None
         then Env.havoc_vars (Changeset.peek ());
 
-        (match update with
-          | None -> ()
-          | Some expr ->
-              ignore (expression cx expr)
-        );
+        let update_ast =
+          Option.map ~f:(fun expr -> (), snd (expression cx expr)) update in
 
         let newset = Changeset.merge oldset in
         Env.copy_env cx loc (env, body_env) newset;
@@ -1364,7 +1492,14 @@ and statement cx = Ast.Statement.(
         Env.update_env cx loc do_env;
         let _ = Env.refine_with_preds cx loc not_preds xtypes in
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
-        then Env.havoc_vars newset
+        then Env.havoc_vars newset;
+
+        (), For { For.
+          init = init_ast;
+          test = test_ast;
+          update = update_ast;
+          body = body_ast;
+        }
       )
 
   (***************************************************************************)
@@ -1378,12 +1513,13 @@ and statement cx = Ast.Statement.(
      [Pre] for (i in o) S [Post]
   *)
   (***************************************************************************)
-  | (loc, ForIn { ForIn.left; right; body; _ }) ->
+  | (loc, ForIn { ForIn.left; right; body; each; }) ->
       let reason = mk_reason (RCustom "for-in") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
 
-      Flow.flow cx (expression cx right, AssertForInRHST reason);
+      let right_t, right_ast = expression cx right in
+      Flow.flow cx (right_t, AssertForInRHST reason);
 
       Env.in_lex_scope cx (fun () ->
 
@@ -1396,17 +1532,21 @@ and statement cx = Ast.Statement.(
 
         let _, preds, _, xtypes =
           predicates_of_condition cx right in
-        let _ = Env.refine_with_preds cx loc preds xtypes in
+        ignore (Env.refine_with_preds cx loc preds xtypes : Changeset.t);
 
-        (match left with
+        let left_ast = match left with
           | ForIn.LeftDeclaration (_, ({ VariableDeclaration.
               kind; declarations = [vdecl]
             } as decl)) ->
               variable_decl cx decl;
-              variable cx kind ~if_uninitialized:StrT.at vdecl
+              let vdecl_ast = variable cx kind ~if_uninitialized:StrT.at vdecl in
+              ForIn.LeftDeclaration ((), { VariableDeclaration.
+                kind;
+                declarations = [vdecl_ast];
+              })
 
           | ForIn.LeftPattern (loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-              name; _
+              name; optional; annot;
             }) ->
               let name = ident_name name in
               let t = StrT.at loc in
@@ -1414,14 +1554,21 @@ and statement cx = Ast.Statement.(
                 var = Some (mk_reason (RIdentifier name) loc);
                 init = reason_of_t t;
               }) in
-              ignore Env.(set_var cx ~use_op name t loc)
+              ignore Env.(set_var cx ~use_op name t loc);
+              ForIn.LeftPattern ((), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+                name = (), name;
+                annot =
+                  Option.map ~f:(Fn.const ((), ((), Typed_ast.Type.error))) annot;
+                optional;
+              })
 
           | _ ->
-              Flow.add_output cx Flow_error.(EInternal (loc, ForInLHS))
-        );
+              Flow.add_output cx Flow_error.(EInternal (loc, ForInLHS));
+              Typed_ast.Statement.ForIn.left_error
+        in
 
-        ignore (Abnormal.catch_control_flow_exception
-          (fun () -> statement cx body));
+        let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
+          (fun () -> statement cx body) in
 
         let newset = Changeset.merge oldset in
 
@@ -1431,7 +1578,14 @@ and statement cx = Ast.Statement.(
 
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
-        then Env.havoc_vars newset
+        then Env.havoc_vars newset;
+
+        (), ForIn { ForIn.
+          left = left_ast;
+          right = (), right_ast;
+          body = body_ast;
+          each;
+        }
       )
 
   | (loc, ForOf { ForOf.left; right; body; async; }) ->
@@ -1446,7 +1600,7 @@ and statement cx = Ast.Statement.(
       let reason = mk_reason reason_desc loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
-      let t = expression cx right in
+      let t, _ = expression cx right in
 
       let element_tvar = Tvar.mk cx reason in
       let o =
@@ -1472,34 +1626,45 @@ and statement cx = Ast.Statement.(
         let body_env = Env.clone_env env in
         Env.update_env cx loc body_env;
 
-        let _, preds, _, xtypes =
+        let (_, right_ast), preds, _, xtypes =
           predicates_of_condition cx right in
         let _ = Env.refine_with_preds cx loc preds xtypes in
 
-        (match left with
+        let left_ast = match left with
           | ForOf.LeftDeclaration (_, ({ VariableDeclaration.
               kind; declarations = [vdecl]
             } as decl)) ->
               let repos_tvar _ = Flow.reposition cx (loc_of_t t) element_tvar in
               variable_decl cx decl;
-              variable cx kind ~if_uninitialized:repos_tvar vdecl
+              let vdecl_ast = variable cx kind ~if_uninitialized:repos_tvar vdecl in
+              ForOf.LeftDeclaration ((), { VariableDeclaration.
+                kind;
+                declarations = [vdecl_ast]
+              })
 
           | ForOf.LeftPattern (loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-              name; _
+              name; optional; annot;
             }) ->
               let name = ident_name name in
               let use_op = Op (AssignVar {
                 var = Some (mk_reason (RIdentifier name) loc);
                 init = reason_of_t element_tvar;
               }) in
-              ignore Env.(set_var cx ~use_op name element_tvar loc)
+              ignore Env.(set_var cx ~use_op name element_tvar loc);
+              ForOf.LeftPattern ((), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+                name = (), name;
+                annot =
+                  Option.map ~f:(Fn.const ((), ((), Typed_ast.Type.error))) annot;
+                optional;
+              })
 
           | _ ->
-              Flow.add_output cx Flow_error.(EInternal (loc, ForOfLHS))
-        );
+              Flow.add_output cx Flow_error.(EInternal (loc, ForOfLHS));
+              Typed_ast.Statement.ForOf.left_error
+        in
 
-        ignore (Abnormal.catch_control_flow_exception
-          (fun () -> statement cx body));
+        let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
+          (fun () -> statement cx body) in
 
         let newset = Changeset.merge oldset in
 
@@ -1509,11 +1674,18 @@ and statement cx = Ast.Statement.(
 
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
-        then Env.havoc_vars newset
+        then Env.havoc_vars newset;
+
+        (), ForOf { ForOf.
+          left = left_ast;
+          right = (), right_ast;
+          body = body_ast;
+          async;
+        }
       )
 
   | (_, Debugger) ->
-      ()
+      (), Debugger
 
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; params; return; _} = func in
@@ -1522,7 +1694,7 @@ and statement cx = Ast.Statement.(
       | (end_loc, _), None
          -> Loc.btwn loc end_loc
       in
-      let fn_type = mk_function None cx sig_loc func in
+      let fn_type, func_ast = mk_function None cx sig_loc func in
       let type_table_loc = Type_table.function_decl_loc id loc in
       Env.add_type_table cx type_table_loc fn_type;
       (match id with
@@ -1534,38 +1706,39 @@ and statement cx = Ast.Statement.(
           init = reason_of_t fn_type
         }) in
         Env.init_fun cx ~use_op name fn_type loc
-      | None -> ())
+      | None -> ());
+      (), FunctionDeclaration func_ast
 
   | (loc, DeclareVariable { DeclareVariable.
       id = (id_loc, name);
       annot;
     }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
-      let t = Anno.mk_type_annotation cx SMap.empty r annot in
+      let t, annot_ast = Anno.mk_type_annotation cx SMap.empty r annot in
       let id_info = name, t, Type_table.Other in
       Env.add_type_table_info cx id_loc id_info;
       Env.unify_declared_type cx name t;
+      (), DeclareVariable { DeclareVariable.
+        id = (), name;
+        annot = Option.map ~f:(fun a -> (), ((), a)) annot_ast;
+      }
 
-  | (loc, DeclareFunction { DeclareFunction.
-      id;
-      annot;
-      predicate;
-    }) ->
-      (match declare_function_to_function_declaration
-        cx id annot predicate with
-      | Some func_decl ->
-          statement cx (loc, func_decl)
+  | (loc, DeclareFunction declare_function) ->
+      (match declare_function_to_function_declaration cx declare_function with
+      | Some (func_decl, reconstruct_ast) ->
+          (), DeclareFunction (reconstruct_ast (statement cx (loc, func_decl)))
       | _ ->
-          ())
+          (), DeclareFunction Typed_ast.Statement.DeclareFunction.error
+      )
 
   | (_, VariableDeclaration decl) ->
-      variables cx decl
+      (), VariableDeclaration (variables cx decl)
 
   | (class_loc, ClassDeclaration c) ->
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = DescFormat.instance_reason name name_loc in
       Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
-      let class_t = mk_class cx class_loc reason c in
+      let class_t, c_ast = mk_class cx class_loc reason c in
       Env.add_type_table cx class_loc class_t;
       Option.iter c.Ast.Class.id ~f:(fun (id_loc, id_name) ->
         let id_info = id_name, class_t, Type_table.Other in
@@ -1581,16 +1754,18 @@ and statement cx = Ast.Statement.(
         name
         ~has_anno:false
         class_t
-        name_loc
+        name_loc;
+      (), ClassDeclaration c_ast
 
   | (loc, DeclareClass decl) ->
-    declare_class cx loc decl
+    (), DeclareClass (declare_class cx loc decl)
 
-  | (loc, DeclareInterface decl)
+  | (loc, DeclareInterface decl) ->
+    (), DeclareInterface (interface cx loc decl)
   | (loc, InterfaceDeclaration decl) ->
-    interface cx loc decl
+    (), InterfaceDeclaration (interface cx loc decl)
 
-  | (loc, DeclareModule { DeclareModule.id; body; kind=_; }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
     let id_loc, name = match id with
     | DeclareModule.Identifier (id_loc, value)
     | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
@@ -1616,8 +1791,25 @@ and statement cx = Ast.Statement.(
 
     let initial_module_t = module_t_of_cx cx in
 
-    toplevel_decls cx elements;
-    toplevels cx elements;
+    let elements_ast, elements_abnormal =
+      Abnormal.catch_stmts_control_flow_exception (fun () ->
+        toplevel_decls cx elements;
+        toplevels cx elements;
+      )
+    in
+    let ast = (), DeclareModule { DeclareModule.
+      id = (match id with
+            | DeclareModule.Identifier (_, name) ->
+              DeclareModule.Identifier ((), name)
+            | DeclareModule.Literal (_, lit) ->
+              DeclareModule.Literal ((), lit));
+      body = (), { Block.body = elements_ast };
+      kind = DeclareModule.(match kind with
+            | CommonJS _ -> CommonJS ()
+            | ES _ -> ES ());
+    } in
+    ignore (Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
+      : Typed_ast.annot Ast.Statement.t);
 
     let reason = mk_reason (RModule name) loc in
     let module_t = match Context.module_kind cx with
@@ -1664,6 +1856,8 @@ and statement cx = Ast.Statement.(
     Context.set_module_kind cx outer_module_exports_kind;
     Env.pop_var_scope ();
 
+    ast
+
 
 
   | (loc, DeclareExportDeclaration {
@@ -1673,51 +1867,86 @@ and statement cx = Ast.Statement.(
       DeclareExportDeclaration.source;
     }) ->
       let open DeclareExportDeclaration in
-      let export_info, export_kind =
+      let export_info, export_kind, declaration =
+      (*  error-handling around calls to `statement` is omitted here because we
+          don't expect declarations to have abnormal control flow *)
         match declaration with
         | Some (Variable (loc, v)) ->
             let { DeclareVariable.id = (_, name); _; } = v in
-            statement cx (loc, DeclareVariable v);
-            [(spf "var %s" name, loc, name, None)], ExportValue
+            let dec_var = statement cx (loc, DeclareVariable v) in
+            let ast = match dec_var with
+              | _, DeclareVariable v_ast -> Some (Variable ((), v_ast))
+              | _ -> assert_false "DeclareVariable typed AST doesn't preserve structure"
+            in
+            [(spf "var %s" name, loc, name, None)], ExportValue, ast
         | Some (Function (loc, f)) ->
             let { DeclareFunction.id = (_, name); _ } = f in
-            statement cx (loc, DeclareFunction f);
-            [(spf "function %s() {}" name, loc, name, None)], ExportValue
+            let dec_fun = statement cx (loc, DeclareFunction f) in
+            let ast = match dec_fun with
+              | _, DeclareFunction f_ast -> Some (Function ((), f_ast))
+              | _ -> assert_false "DeclareFunction typed AST doesn't preserve structure"
+            in
+            [(spf "function %s() {}" name, loc, name, None)], ExportValue, ast
         | Some (Class (loc, c)) ->
             let { DeclareClass.id = (name_loc, name); _; } = c in
-            statement cx (loc, DeclareClass c);
-            [(spf "class %s {}" name, name_loc, name, None)], ExportValue
+            let dec_class = statement cx (loc, DeclareClass c) in
+            let ast = match dec_class with
+              | _, DeclareClass c_ast -> Some (Class ((), c_ast))
+              | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
+            in
+            [(spf "class %s {}" name, name_loc, name, None)], ExportValue, ast
         | Some (DefaultType (loc, t)) ->
-            let _type = Anno.convert cx SMap.empty (loc, t) in
-            [( "<<type>>", loc, "default", Some _type)], ExportValue
+            let _type, t_ast = Anno.convert cx SMap.empty (loc, t) in
+            let ast = Some (DefaultType ((), t_ast)) in
+            [( "<<type>>", loc, "default", Some _type)], ExportValue, ast
         | Some (NamedType (talias_loc, ({
             TypeAlias.
             id = (name_loc, name);
             _;
           } as talias))) ->
-            statement cx (talias_loc, TypeAlias talias);
-            [(spf "type %s = ..." name, name_loc, name, None)], ExportType
+            let type_alias = statement cx (talias_loc, TypeAlias talias) in
+            let ast = match type_alias with
+              | _, TypeAlias talias -> Some (NamedType ((), talias))
+              | _ -> assert_false "TypeAlias typed AST doesn't preserve structure"
+            in
+            [(spf "type %s = ..." name, name_loc, name, None)], ExportType, ast
         | Some (NamedOpaqueType (opaque_loc, ({
             OpaqueType.
             id = (name_loc, name);
             _;
           } as opaque_t))) ->
-            statement cx (opaque_loc, OpaqueType opaque_t);
-            [(spf "opauqe type %s = ..." name, name_loc, name, None)], ExportType
+            let opaque_type = statement cx (opaque_loc, OpaqueType opaque_t) in
+            let ast = match opaque_type with
+              | _, OpaqueType opaque_t -> Some (NamedOpaqueType ((), opaque_t))
+              | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
+            in
+            [(spf "opauqe type %s = ..." name, name_loc, name, None)], ExportType, ast
         | Some (Interface (loc, i)) ->
             let {Interface.id = (name_loc, name); _;} = i in
-            statement cx (loc, InterfaceDeclaration i);
-            [(spf "interface %s {}" name, name_loc, name, None)], ExportType
+            let int_dec = statement cx (loc, InterfaceDeclaration i) in
+            let ast = match int_dec with
+              | _, InterfaceDeclaration i_ast -> Some (Interface ((), i_ast))
+              | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
+            in
+            [(spf "interface %s {}" name, name_loc, name, None)], ExportType, ast
         | None ->
-            [], ExportValue
+            [], ExportValue, None
       in
 
-      export_statement cx loc ~default export_info specifiers source export_kind
+      export_statement cx loc ~default export_info specifiers source export_kind;
+
+      (), DeclareExportDeclaration { DeclareExportDeclaration.
+        default = Option.map ~f:(Fn.const ()) default;
+        declaration;
+        specifiers = convert_specifiers specifiers;
+        source = Option.map ~f:(fun (_, lit) -> (), lit) source;
+      }
 
   | (loc, DeclareModuleExports annot) ->
-    let t = Anno.convert cx SMap.empty (snd annot) in
+    let t, t_ast = Anno.convert cx SMap.empty (snd annot) in
     set_module_kind cx loc (Context.CommonJSModule(Some loc));
-    set_module_exports cx loc t
+    set_module_exports cx loc t;
+    (), DeclareModuleExports ((), ((), t_ast))
 
   | (loc, ExportNamedDeclaration { ExportNamedDeclaration.
       declaration;
@@ -1725,9 +1954,9 @@ and statement cx = Ast.Statement.(
       source;
       exportKind;
     }) ->
-      let export_info = match declaration with
+      let declaration, export_info = match declaration with
       | Some decl ->
-          statement cx decl;
+          Some (statement cx decl),
           (match decl with
           | _, FunctionDeclaration {Ast.Function.id = None; _} ->
             failwith (
@@ -1766,17 +1995,24 @@ and statement cx = Ast.Statement.(
             [(spf "interface %s = ..." name, loc, name, None)]
           | _ -> failwith "Parser Error: Invalid export-declaration type!")
 
-      | None -> [] in
+      | None -> None, [] in
 
-      export_statement cx loc
-        ~default:None export_info specifiers source exportKind
+      export_statement cx loc ~default:None export_info specifiers source exportKind;
+
+      (), ExportNamedDeclaration { ExportNamedDeclaration.
+        declaration;
+        specifiers = convert_specifiers specifiers;
+        source = Option.map ~f:(fun (_, lit) -> (), lit) source;
+        exportKind;
+      }
+
 
   | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration }) ->
       Type_inference_hooks_js.dispatch_export_named_hook "default" default;
-      let export_info = match declaration with
+      let declaration, export_info = match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
-          let decl = nameify_default_export_decl decl in
-          statement cx decl;
+          let decl, undo_nameify = nameify_default_export_decl decl in
+          ExportDefaultDeclaration.Declaration (undo_nameify (statement cx decl)),
           (match decl with
           | loc, FunctionDeclaration {Ast.Function.id = None; _} ->
             [("function() {}", loc, internal_name "*default*", None)]
@@ -1809,14 +2045,20 @@ and statement cx = Ast.Statement.(
           | _ -> failwith "Parser Error: Invalid export-declaration type!")
 
       | ExportDefaultDeclaration.Expression expr ->
-          let expr_t = expression cx expr in
+          let expr_t, expr_ast = expression cx expr in
+          ExportDefaultDeclaration.Expression ((), expr_ast),
           [( "<<expression>>", fst expr, "default", Some expr_t)]
       in
 
       (* export default is always a value *)
       let exportKind = Ast.Statement.ExportValue in
 
-      export_statement cx loc ~default:(Some default) export_info None None exportKind
+      export_statement cx loc ~default:(Some default) export_info None None exportKind;
+
+      (), ExportDefaultDeclaration { ExportDefaultDeclaration.
+        default = ();
+        declaration;
+      }
 
   | (import_loc, ImportDeclaration import_decl) ->
     Context.add_import_stmt cx import_decl;
@@ -1847,9 +2089,10 @@ and statement cx = Ast.Statement.(
       )
     in
 
-    let specifiers = match specifiers with
+    let specifiers, specifiers_ast = match specifiers with
       | Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers) ->
-        named_specifiers |> List.map (function { ImportDeclaration.local; remote; kind;} ->
+        let specifiers, named_specifiers = named_specifiers
+        |> List.map (function { ImportDeclaration.local; remote; kind;} ->
           let (remote_name_loc, remote_name) = remote in
           let local_loc_opt = Option.map ~f:fst local in
           let (loc, local_name) = (
@@ -1877,8 +2120,15 @@ and statement cx = Ast.Statement.(
             let id_info = local_name, imported_t, id_kind in
             Env.add_type_table_info cx local_loc id_info
           ) local_loc_opt;
-          (loc, local_name, imported_t, kind)
-        )
+          (loc, local_name, imported_t, kind),
+          { ImportDeclaration.
+            local = Option.map ~f:(fun (_, local_name) -> (), local_name) local;
+            remote = (), remote_name;
+            kind;
+          }
+        ) |> List.split
+        in
+        specifiers, Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers)
 
       | Some (ImportDeclaration.ImportNamespaceSpecifier (ns_loc, local)) ->
         let local_name = ident_name local in
@@ -1920,11 +2170,12 @@ and statement cx = Ast.Statement.(
             in
             Context.add_imported_t cx local_name module_ns_t;
             [fst local, local_name, module_ns_t, None]
-        )
-      | None -> []
+        ),
+        Some (ImportDeclaration.ImportNamespaceSpecifier ((), ((), local_name)))
+      | None -> [], None
     in
 
-    let specifiers = match default with
+    let specifiers, default = match default with
       | Some local ->
           let local_name = ident_name local in
           let loc = fst local in
@@ -1939,8 +2190,9 @@ and statement cx = Ast.Statement.(
           in
           let id_info = local_name, imported_t, Type_table.Import ("default", module_t) in
           Env.add_type_table_info cx loc id_info;
-          (loc, local_name, imported_t, None) :: specifiers
-      | None -> specifiers
+          (loc, local_name, imported_t, None) :: specifiers,
+          Some ((), local_name)
+      | None -> specifiers, None
     in
 
     List.iter (fun (loc, local_name, t, specifier_kind) ->
@@ -1955,6 +2207,13 @@ and statement cx = Ast.Statement.(
       in
       Flow.unify cx t t_generic
     ) specifiers;
+
+    (), ImportDeclaration { ImportDeclaration.
+      importKind;
+      source = (), snd source;
+      default;
+      specifiers = specifiers_ast;
+    }
 )
 
 
@@ -2436,11 +2695,6 @@ and object_ cx reason ?(allow_sealed=true) props =
   List.rev rev_prop_asts
 
 and variable cx kind ?if_uninitialized (_, vdecl) = Ast.Statement.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let open Destructuring.Old in
-  let module Anno = Old_Anno in
-  let expression cx e = fst (expression cx e) in
-
   let init_var, declare_var = Env.(match kind with
     | VariableDeclaration.Const -> init_const, declare_const
     | VariableDeclaration.Let -> init_let, declare_let
@@ -2464,7 +2718,7 @@ and variable cx kind ?if_uninitialized (_, vdecl) = Ast.Statement.(
         }) ->
         (* simple lvalue *)
         (* make annotation, unify with declared type created in variable_decl *)
-        let t =
+        let t, annot_ast =
           let desc = RIdentifier name in
           let anno_reason = mk_reason desc loc in
           Anno.mk_type_annotation cx SMap.empty anno_reason annot in
@@ -2473,22 +2727,29 @@ and variable cx kind ?if_uninitialized (_, vdecl) = Ast.Statement.(
         Env.unify_declared_type cx name t;
         let has_anno = not (annot = None) in
         Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
+        let id = (), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+          name = (), name;
+          annot = Option.map ~f:(fun a -> (), ((), a)) annot_ast;
+          optional;
+        } in
         (match init with
           | Some ((rhs_loc, _) as expr) ->
-            let rhs = expression cx expr in
+            let rhs_t, rhs_ast = expression cx expr in
             (**
              * Const and let variables are not declared during evaluation of
              * their initializer expressions.
              *)
             declare_var cx name id_loc;
-            let rhs = Flow.reposition cx rhs_loc rhs in
+            let rhs = Flow.reposition cx rhs_loc rhs_t in
             let use_op = Op (AssignVar {
               var = Some (mk_reason (RIdentifier name) id_loc);
               init = mk_expression_reason expr;
             }) in
-            init_var cx ~use_op name ~has_anno rhs id_loc
+            init_var cx ~use_op name ~has_anno rhs id_loc;
+            let init = Some ((), rhs_ast) in
+            (), { VariableDeclaration.Declarator.id; init }
           | None ->
-            match if_uninitialized with
+            (match if_uninitialized with
             | Some f ->
               if not optional then
                 let t = f loc in
@@ -2500,20 +2761,23 @@ and variable cx kind ?if_uninitialized (_, vdecl) = Ast.Statement.(
             | None ->
               if has_anno
               then Env.pseudo_init_declared_type cx name id_loc
-              else declare_var cx name id_loc;
+              else declare_var cx name id_loc);
+            (), { VariableDeclaration.Declarator.id; init = None }
         )
     | loc, _ ->
         (* compound lvalue *)
         let pattern_name = internal_pattern_name loc in
         let annot = type_of_pattern id in
         let has_anno = not (annot = None) in
-        let (t, init_reason) = match init with
-          | Some expr -> (expression cx expr, mk_expression_reason expr)
+        let t, init_ast, init_reason = match init with
+          | Some expr ->
+            let t, expr_ast = expression cx expr in
+            t, Some ((), expr_ast), mk_expression_reason expr
           | None -> (
             let t = match if_uninitialized with
             | Some f -> f loc
             | None -> VoidT.at loc in
-            (t, reason_of_t t)
+            t, None, reason_of_t t
           )
         in
         let use_op = Op (AssignVar {
@@ -2521,15 +2785,22 @@ and variable cx kind ?if_uninitialized (_, vdecl) = Ast.Statement.(
           init = init_reason;
         }) in
         init_var cx ~use_op pattern_name ~has_anno t loc;
-        destructuring cx ~expr:expression ~f:(fun ~use_op loc name default t ->
-          let reason = mk_reason (RIdentifier name) loc in
-          Option.iter default (fun d ->
-            let default_t = Flow.mk_default cx reason d ~expr:expression in
-            Flow.flow_t cx (default_t, t)
-          );
-          Flow.flow cx (t, AssertImportIsValueT(reason, name));
-          init_var cx ~use_op name ~has_anno t loc
-        ) t init None id
+        let id_ast =
+          destructuring cx ~expr:expression ~f:(fun ~use_op loc name default t ->
+            let reason = mk_reason (RIdentifier name) loc in
+            Option.iter default (fun d ->
+              let default_t = Flow.mk_default cx reason d
+                ~expr:(fun cx e -> fst (expression cx e)) in
+              Flow.flow_t cx (default_t, t)
+            );
+            Flow.flow cx (t, AssertImportIsValueT(reason, name));
+            init_var cx ~use_op name ~has_anno t loc
+          ) t init None id
+        in
+        (), { VariableDeclaration.Declarator.
+          id = (), id_ast;
+          init = init_ast;
+        }
 )
 
 and mixin_element cx undef_loc el = Ast.Expression.(
@@ -2577,6 +2848,7 @@ and mixin_element_spread cx (loc, e) =
     Flow.flow_t cx (arr, DefT (reason, ArrT (ArrayAT(tvar, None))));
   )
 
+(* can raise Abnormal.(Exn (Stmt _, _)) *)
 and expression ?(is_cond=false) cx (loc, e) : Type.t * unit Ast.Expression.t' =
   let t, e' = expression_ ~is_cond cx loc e in
   Env.add_type_table cx loc t;
@@ -3461,18 +3733,50 @@ and subscript =
             (), snd (Anno.convert cx SMap.empty arg)
           ) args
         ) in
+        (* NOTE: if an invariant expression throws abnormal control flow, the
+            entire statement it was in is reconstructed in the typed AST as an
+            expression statement containing just the invariant call. This should
+            be ok for the most part since this is the most common way to call
+            invariant. It's worth experimenting with whether people use invariant
+            in other ways, and if not, restricting it to this pattern. *)
         let arguments = match targs, arguments with
           | None, [] ->
             (* invariant() is treated like a throw *)
             Env.reset_current_activation loc;
-            Abnormal.save_and_throw Abnormal.Throw
+            Abnormal.save Abnormal.Throw;
+            Abnormal.throw_stmt_control_flow_exception
+              ((), Ast.Statement.Expression { Ast.Statement.Expression.
+                expression = (), Call { Call.
+                  callee = (), callee;
+                  targs;
+                  arguments = [];
+                };
+                directive = None;
+              })
+              Abnormal.Throw
           | None, (Expression (_, Ast.Expression.Literal {
-              Ast.Literal.value = Ast.Literal.Boolean false; _;
+              Ast.Literal.value = Ast.Literal.Boolean false; raw;
             }))::arguments ->
             (* invariant(false, ...) is treated like a throw *)
-            ignore (List.map (expression_or_spread cx) arguments);
+            let arguments =
+              List.map (Fn.compose snd (expression_or_spread cx)) arguments in
             Env.reset_current_activation loc;
-            Abnormal.save_and_throw Abnormal.Throw
+            Abnormal.save Abnormal.Throw;
+            Abnormal.throw_stmt_control_flow_exception
+              ((), Ast.Statement.Expression { Ast.Statement.Expression.
+                expression = (), Call { Call.
+                  callee = (), callee;
+                  targs;
+                  arguments =
+                    Expression ((), Ast.Expression.Literal { Ast.Literal.
+                      value = Ast.Literal.Boolean false;
+                      raw;
+                    })
+                    ::arguments;
+                };
+                directive = None;
+              })
+              Abnormal.Throw
           | None, (Expression cond)::arguments ->
             let arguments = List.map (Fn.compose snd (expression_or_spread cx)) arguments in
             let (_, cond), preds, _, xtypes = predicates_of_condition cx cond in
@@ -4171,11 +4475,11 @@ and assignment_lhs cx = Ast.Pattern.(function
       Flow.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
       AnyT.at loc, Typed_ast.Pattern.error
 
-  | _, Identifier { Identifier.name = (loc, name); optional; _; } ->
+  | _, Identifier { Identifier.name = (loc, name); optional; annot; } ->
       identifier cx name loc,
       Identifier { Identifier.
         name = (), name;
-        annot = None;
+        annot = Option.map ~f:(Fn.const ((), ((), Typed_ast.Type.error))) annot;
         optional;
       }
 
@@ -5670,7 +5974,7 @@ and mk_class cx loc reason c =
         Class_sig.toplevels cx class_sig
         ~decls:toplevel_decls
         ~stmts:toplevels
-        ~expr:(fun cx e -> fst (expression cx e))
+        ~expr:expression
     );
     let class_t = Class_sig.classtype cx class_sig in
     Flow.unify cx self class_t;
@@ -6117,7 +6421,7 @@ and function_decl id cx loc func this super =
     Func_sig.toplevels id cx this super false
       ~decls:toplevel_decls
       ~stmts:toplevels
-      ~expr:(fun cx e -> fst (expression cx e))
+      ~expr:expression
   ) in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
@@ -6152,7 +6456,10 @@ and mk_arrow cx loc func =
 
 (* Transform predicate declare functions to functions whose body is the
    predicate declared for the funcion *)
-and declare_function_to_function_declaration cx id annot predicate =
+(* Also returns a function for reversing this process, for the sake of
+   typed AST construction. *)
+and declare_function_to_function_declaration cx
+  { Ast.Statement.DeclareFunction.id; annot; predicate; } =
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
       Flow.add_output cx Flow_error.(
@@ -6201,14 +6508,51 @@ and declare_function_to_function_declaration cx id annot predicate =
           Some (Ast.Statement.FunctionDeclaration { Ast.Function.
             id = Some id;
             params = (params_loc, { Ast.Function.Params.params; rest });
-            body = body;
+            body;
             async = false;
             generator = false;
             predicate = Some (loc, Ast.Type.Predicate.Inferred);
             expression = false;
             return;
             tparams;
-          })
+          }, function
+          | _, Ast.Statement.FunctionDeclaration { Ast.Function.
+              id = Some id;
+              tparams;
+              params = _, { Ast.Function.Params.params; rest };
+              return = Some (_, return);
+              body = Ast.Function.BodyBlock (_, { Ast.Statement.Block.
+                body = [_, Ast.Statement.Return { Ast.Statement.Return.
+                  argument = Some e;
+                }]
+              });
+              _;
+            } ->
+              let param_to_param_type = function
+                | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+                    name;
+                    annot = Some (_, annot);
+                    optional;
+                  } ->
+                  (), { Ast.Type.Function.Param.name = Some name; annot; optional; }
+                | _ -> assert_false "Function declaration AST has unexpected shape"
+              in
+              let params = List.map param_to_param_type params in
+              let rest = Option.map ~f:(fun (_, { Ast.Function.RestElement.argument }) ->
+                (), { Ast.Type.Function.RestParam.argument = param_to_param_type argument }
+              ) rest in
+              let annot = (), ((), Ast.Type.Function { Ast.Type.Function.
+                params = (), { Ast.Type.Function.Params.params; rest; };
+                return;
+                tparams;
+              }) in
+              { Ast.Statement.DeclareFunction.
+                id;
+                annot;
+                predicate = Some ((), Ast.Type.Predicate.Declared e)
+              }
+          | _ -> Typed_ast.Statement.DeclareFunction.error
+          )
 
       | _ ->
         None

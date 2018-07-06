@@ -29,6 +29,24 @@ module Type : sig
   end
 end
 
+module Statement : sig
+  val error : annot Ast.Statement.t
+  module Try : sig
+    module CatchClause : sig
+      val error : annot Ast.Statement.Try.CatchClause.t'
+    end
+  end
+  module ForIn : sig
+    val left_error : annot Ast.Statement.ForIn.left
+  end
+  module ForOf : sig
+    val left_error : annot Ast.Statement.ForOf.left
+  end
+  module DeclareFunction : sig
+    val error : annot Ast.Statement.DeclareFunction.t
+  end
+end
+
 module Expression : sig
   val error : annot Ast.Expression.t'
   val expression_or_spread_list_error : annot Ast.Expression.expression_or_spread list
@@ -67,9 +85,4 @@ module Class : sig
   module Body : sig
     val element_error : annot Ast.Class.Body.element
   end
-
-
-
-
-
 end
