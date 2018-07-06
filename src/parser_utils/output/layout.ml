@@ -162,62 +162,126 @@ let fuse_with_space =
   in
   fun nodes -> fuse (helper [] nodes)
 
-let rec debug_string_of_layout (node: layout_node) =
-  let spf = Printf.sprintf in
+module Debug : sig
+  val string_of_layout: layout_node -> string
+  val layout_of_layout: layout_node -> layout_node
+end = struct
+  let spf = Printf.sprintf
+
   let debug_string_of_loc loc =
     let open Loc in
     spf "%d:%d-%d:%d"
       loc.start.line loc.start.column
       loc._end.line loc._end.column
-  in
+
   let debug_string_of_when_to_break = function
   | Break_if_needed -> "Break_if_needed"
   | Break_if_pretty -> "Break_if_pretty"
   | Break_always -> "Break_always"
-  in
-  match node with
-  | SourceLocation (loc, child) ->
-    spf "SourceLocation (%s, %s)"
-      (debug_string_of_loc loc)
-      (debug_string_of_layout child)
 
-  | Concat items ->
-    let items =
-      items
-      |> List.map debug_string_of_layout
-      |> String.concat "; "
-    in
-    spf "Concat [%s]" items
+  let rec string_of_layout = function
+    | SourceLocation (loc, child) ->
+      spf "SourceLocation (%s, %s)"
+        (debug_string_of_loc loc)
+        (string_of_layout child)
 
-  | Sequence ({ break; inline=(inline_before, inline_after); indent; }, node_list) ->
-    let config = spf
-      "{break=%s; inline=(%b, %b); indent=%d}"
-      (debug_string_of_when_to_break break)
-      inline_before inline_after
-      indent
-    in
-    let nodes =
-      node_list
-      |> List.map debug_string_of_layout
-      |> String.concat "; "
-    in
-    spf "Sequence (%s, [%s])" config nodes
+    | Concat items ->
+      let items =
+        items
+        |> List.map string_of_layout
+        |> String.concat "; "
+      in
+      spf "Concat [%s]" items
 
-  | Atom str ->
-    spf "Atom %S" str
+    | Sequence ({ break; inline=(inline_before, inline_after); indent; }, node_list) ->
+      let config = spf
+        "{break=%s; inline=(%b, %b); indent=%d}"
+        (debug_string_of_when_to_break break)
+        inline_before inline_after
+        indent
+      in
+      let nodes =
+        node_list
+        |> List.map string_of_layout
+        |> String.concat "; "
+      in
+      spf "Sequence (%s, [%s])" config nodes
 
-  | Identifier (loc, str) ->
-    spf "Identifier (%s, %S)" (debug_string_of_loc loc) str
+    | Atom str ->
+      spf "Atom %S" str
 
-  | IfPretty (left, right) ->
-    spf "IfPretty (%s, %s)"
-      (debug_string_of_layout left)
-      (debug_string_of_layout right)
+    | Identifier (loc, str) ->
+      spf "Identifier (%s, %S)" (debug_string_of_loc loc) str
 
-  | IfBreak (left, right) ->
-    spf "IfBreak (%s, %s)"
-      (debug_string_of_layout left)
-      (debug_string_of_layout right)
+    | IfPretty (left, right) ->
+      spf "IfPretty (%s, %s)"
+        (string_of_layout left)
+        (string_of_layout right)
 
-  | Empty ->
-    spf "Empty"
+    | IfBreak (left, right) ->
+      spf "IfBreak (%s, %s)"
+        (string_of_layout left)
+        (string_of_layout right)
+
+    | Empty -> "Empty"
+
+  let rec layout_of_layout = function
+    | SourceLocation (loc, child) ->
+      Concat [
+        Atom "SourceLocation";
+        pretty_space;
+        list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",")
+          [Atom (debug_string_of_loc loc); layout_of_layout child];
+      ]
+
+    | Concat items ->
+      Concat [
+        Atom "Concat";
+        pretty_space;
+        list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
+          (List.map layout_of_layout items);
+      ]
+
+    | Sequence ({ break; inline=(inline_before, inline_after); indent; }, node_list) ->
+      let config = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") [
+        Atom (spf "break=%s" (debug_string_of_when_to_break break));
+        Atom (spf "inline=(%b, %b)" inline_before inline_after);
+        Atom (spf "indent=%d" indent);
+      ] in
+      let nodes = list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
+        (List.map layout_of_layout node_list) in
+      Concat [
+        Atom "Sequence";
+        pretty_space;
+        list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",")
+          [config; nodes];
+      ]
+
+    | Atom str ->
+      Atom (spf "Atom %S" str)
+
+    | Identifier (loc, str) ->
+      Atom (spf "Identifier (%s, %S)" (debug_string_of_loc loc) str)
+
+    | IfPretty (left, right) ->
+      Concat [
+        Atom "IfPretty";
+        pretty_space;
+        list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [
+          (layout_of_layout left);
+          (layout_of_layout right);
+        ];
+      ]
+
+    | IfBreak (left, right) ->
+      Concat [
+        Atom "IfBreak";
+        pretty_space;
+        list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [
+          (layout_of_layout left);
+          (layout_of_layout right);
+        ];
+      ]
+
+    | Empty -> Atom "Empty"
+end
