@@ -87,7 +87,6 @@ val error_on_decorators : env -> (Loc.t * 'a) list -> unit
 val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
 val function_as_statement_error_at : env -> Loc.t -> unit
-val comment_list : env -> Loc.t Ast.Comment.t list -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 val record_export: env -> Loc.t * string -> unit
 val enter_class : env -> unit

@@ -276,8 +276,6 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-let comment_list env =
-  List.iter (fun c -> env.comments := c :: !(env.comments))
 let record_export env (loc, export_name) =
   if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
@@ -747,7 +745,7 @@ module Eat = struct
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
-    comment_list env (Peek.comments env);
+    env.comments := List.rev_append (Peek.comments env) !(env.comments);
     env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
