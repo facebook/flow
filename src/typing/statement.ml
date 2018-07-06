@@ -57,32 +57,6 @@ let convert_specifiers = Ast.Statement.ExportNamedDeclaration.(Option.map ~f:(fu
     ExportBatchSpecifier ((), Option.map ~f:(fun (_, e) -> (), e) ebs)
 ))
 
-(*********************************************************)
-(* Temporary -- to be deleted once AST threading is done *)
-(*********************************************************)
-module Old_Anno = struct
-  include Anno
-  let convert cx tparams_map t =
-    fst (convert cx tparams_map t)
-  let convert_qualification ?(lookup_mode=ForType) cx reason_prefix i =
-    fst (convert_qualification ~lookup_mode cx reason_prefix i)
-  let mk_interface_super cx tparams_map t =
-    fst (mk_interface_super cx tparams_map t)
-  let mk_super cx tparams_map c targs =
-    fst (mk_super cx tparams_map c targs)
-  let mk_type_annotation cx tparams_map reason annot =
-    fst (mk_type_annotation cx tparams_map reason annot)
-  let mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
-    fst (mk_nominal_type ~for_type cx reason tparams_map (c, targs))
-  let fst2 (a, b, _) = (a, b)
-  let mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
-    fst2 (mk_type_param_declarations cx ~tparams_map tparams)
-  let mk_interface_sig cx reason decl =
-    fst2 (mk_interface_sig cx reason decl)
-  let mk_declare_class_sig cx reason decl =
-    fst2 (mk_declare_class_sig cx reason decl)
-end
-
 (************)
 (* Visitors *)
 (************)
@@ -94,10 +68,6 @@ end
  ********************************************************************)
 
 let rec variable_decl cx entry = Ast.Statement.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let open Destructuring.Old in
-  let module Anno = Old_Anno in
-
   let value_kind, bind = match entry.VariableDeclaration.kind with
     | VariableDeclaration.Const ->
       Scope.Entry.(Const ConstVarBinding), Env.bind_const
@@ -127,10 +97,12 @@ let rec variable_decl cx entry = Ast.Statement.(
       let r = mk_reason desc loc in
       let annot = type_of_pattern p in
       (* TODO: delay resolution of type annotation like above? *)
-      let t = Anno.mk_type_annotation cx SMap.empty r annot in
+      let t, _ = Anno.mk_type_annotation cx SMap.empty r annot in
       bind cx pattern_name t loc;
-      let expr _ _ = EmptyT.at loc in (* don't eval computed property keys *)
-      destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
+      let expr _ _ =
+        (* don't eval computed property keys *)
+        EmptyT.at loc, Typed_ast.Expression.error in
+      (destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
         let t = match annot with
         | None -> t
         | Some _ ->
@@ -139,7 +111,7 @@ let rec variable_decl cx entry = Ast.Statement.(
         in
         Env.add_type_table cx loc t;
         bind cx name t loc
-      )
+      ) : Typed_ast.annot Ast.Pattern.t') |> ignore;
   ) in
 
   VariableDeclaration.(entry.declarations |> List.iter (function
@@ -152,9 +124,6 @@ and toplevel_decls cx =
 
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx = Ast.Statement.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let module Anno = Old_Anno in
-
   let block_body cx { Block.body } =
     Env.in_lex_scope cx (fun () ->
       toplevel_decls cx body
@@ -292,7 +261,7 @@ and statement_decl cx = Ast.Statement.(
       (match declare_function_to_function_declaration cx declare_function with
       | None ->
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
-          let t =
+          let t, _ =
             Anno.mk_type_annotation cx SMap.empty r (Some annot) in
           Env.add_type_table cx id_loc t;
           let id_info = name, t, Type_table.Other in
