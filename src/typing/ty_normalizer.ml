@@ -1386,41 +1386,44 @@ end = struct
     | T.Negative -> Ty.Negative
     | T.Neutral -> Ty.Neutral
 
-  and eval_t =
+  and destructuring_t ~env t id r s =
+    get_cx >>= fun cx ->
+    let result =
+      (* eval_selector may throw for BoundT. Catching here. *)
+      try Ok (Flow_js.eval_selector cx r t s id)
+      with exn -> Error (spf "Exception:%s" (Printexc.to_string exn))
+    in
+    match result with
+    | Ok tout -> type__ ~env tout
+    | Error msg -> terr ~kind:BadEvalT ~msg (Some t)
+
+  and type_destructor_t ~env t id d =
+    let open Type in
     let from_name env name t =
       type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t name [ty]
-    in
-    fun ~env t id d ->
+      Ty.generic_builtin_t name [ty] in
     match d with
-    | T.DestructuringT (r, s) ->
+    | NonMaybeType -> from_name env "NonMaybeType" t
+    | ReactElementPropsType -> from_name env "React$ElementProps" t
+    | ReactElementConfigType -> from_name env "React$ElementConfig" t
+    | ReactElementRefType -> from_name env "React$ElementRef" t
+    | PropertyType _ | ElementType _ | Bind _ | ReadOnlyType
+    | SpreadType _ | RestType _ | ValuesType | CallType _ | TypeMap _ ->
       get_cx >>= fun cx ->
-      begin try
-        (* `eval_selector` may throw for `BoundT`. Catching here. *)
-        return (Flow_js.eval_selector cx r t s id)
-      with exn ->
-        let msg = spf "Exception:%s" (Printexc.to_string exn) in
-        terr ~kind:BadEvalT ~msg (Some t)
+      let evaluated = Context.evaluated cx in
+      begin match IMap.get id evaluated with
+      | Some cached_t -> type__ ~env cached_t
+        (* this happens when, for example, the RHS of a destructuring is
+           unconstrained, so we never evaluate the destructuring. so, make the
+           destructured value also unconstrained... *)
+      | None -> return Ty.Bot
       end
-      >>= type__ ~env
 
-    | T.TypeDestructorT (_, _, d) ->
-      begin match d with
-      | T.NonMaybeType -> from_name env "NonMaybeType" t
-      | T.ReactElementPropsType -> from_name env "React$ElementProps" t
-      | T.ReactElementConfigType -> from_name env "React$ElementConfig" t
-      | T.ReactElementRefType -> from_name env "React$ElementRef" t
-      | _ ->
-        get_cx >>= fun cx ->
-        let evaluated = Context.evaluated cx in
-        begin match IMap.get id evaluated with
-        | Some cached_t -> type__ ~env cached_t
-          (* this happens when, for example, the RHS of a destructuring is
-             unconstrained, so we never evaluate the destructuring. so, make the
-             destructured value also unconstrained... *)
-        | _ -> return Ty.Bot
-        end
-      end
+  and eval_t ~env t id = function
+    | Type.DestructuringT (r, s) ->
+      destructuring_t ~env t id r s
+    | Type.TypeDestructorT (_, _, d) ->
+      type_destructor_t ~env t id d
 
   and module_t env reason t =
     match desc_of_reason reason with
