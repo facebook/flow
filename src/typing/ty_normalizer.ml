@@ -167,6 +167,16 @@ end = struct
       *)
       tvar_cache: (Ty.t, error) result IMap.t;
 
+      (* A cache for resolved EvalTs
+
+         It is important to cache these results because we should only invoke
+         Flow_js.evaluate_type_destructor once for every EvalT. If we fail to do
+         so the result for calls that result to exceptions will not be cached in
+         Context.evaluated and subsequent calls may result to different results.
+         In particular we might get Empty instead of an exception.
+      *)
+      eval_t_cache: (Ty.t, error) result IMap.t;
+
       (* Hide the context in State to avoid clutter *)
       cx: Context.t;
 
@@ -185,6 +195,7 @@ end = struct
     let empty ~cx = {
       counter = 0;
       tvar_cache = IMap.empty;
+      eval_t_cache = IMap.empty;
       cx;
       free_tvars = VSet.empty;
     }
@@ -227,7 +238,7 @@ end = struct
 
 
   (***************)
-  (* Type cache  *)
+  (* Type caches *)
   (***************)
 
   let update_tvar_cache i t =
@@ -240,6 +251,17 @@ end = struct
     let open State in
     get >>| fun st ->
     IMap.get root_id st.tvar_cache
+
+  let update_eval_t_cache i t =
+    let open State in
+    get >>= fun st ->
+    let eval_t_cache = IMap.add i t st.eval_t_cache in
+    put { st with eval_t_cache }
+
+  let find_eval_t id =
+    let open State in
+    get >>| fun st ->
+    IMap.get id st.eval_t_cache
 
 
   (****************)
@@ -694,28 +716,36 @@ end = struct
   and type_with_alias_reason ~env t =
     if C.opt_expand_type_aliases then type_after_reason ~env t else
     let reason = Type.reason_of_t t in
-    match desc_of_reason ~unwrap:false reason with
-    | RTypeAlias (name, true, _) ->
-      (* The default action is to avoid expansion by using the type alias name,
-         when this can be trusted. The one case where we want to skip this process
-         is when recovering the body of a type alias A. In that case the environment
-         field under_type_alias will be 'Some A'. If the type alias name in the reason
-         is also A, then we are still at the top-level of the type-alias, so we
-         proceed by expanding one level preserving the same environment. *)
-      let continue =
-        match env.Env.under_type_alias with
-        | Some name' -> name = name'
-        | None -> false
-      in
-      if continue then type_after_reason ~env t else
-      let symbol = symbol_from_reason env reason name in
-      return (Ty.named_t symbol)
-    | _ ->
-      (* We are now beyond the point of the one-off expansion. Reset the environment
-         assigning None to under_type_alias, so that aliases are used in subsequent
-         invocations. *)
-      let env = Env.{ env with under_type_alias = None } in
+    let open Type in
+    (* These type are treated as transparent when it comes to the type alias
+       annotation. *)
+    match t with
+    | OpenT _ | EvalT _ ->
       type_after_reason ~env t
+    | _ ->
+      begin match desc_of_reason ~unwrap:false reason with
+      | RTypeAlias (name, true, _) ->
+        (* The default action is to avoid expansion by using the type alias name,
+           when this can be trusted. The one case where we want to skip this process
+           is when recovering the body of a type alias A. In that case the environment
+           field under_type_alias will be 'Some A'. If the type alias name in the reason
+           is also A, then we are still at the top-level of the type-alias, so we
+           proceed by expanding one level preserving the same environment. *)
+        let continue =
+          match env.Env.under_type_alias with
+          | Some name' -> name = name'
+          | None -> false
+        in
+        if continue then type_after_reason ~env t else
+        let symbol = symbol_from_reason env reason name in
+        return (Ty.named_t symbol)
+      | _ ->
+        (* We are now beyond the point of the one-off expansion. Reset the environment
+           assigning None to under_type_alias, so that aliases are used in subsequent
+           invocations. *)
+        let env = Env.{ env with under_type_alias = None } in
+        type_after_reason ~env t
+      end
 
   and type_after_reason ~env t =
     let open Type in
@@ -1386,44 +1416,94 @@ end = struct
     | T.Negative -> Ty.Negative
     | T.Neutral -> Ty.Neutral
 
+  (************)
+  (* EvalT    *)
+  (************)
+
   and destructuring_t ~env t id r s =
     get_cx >>= fun cx ->
-    let result =
+    let result = try
       (* eval_selector may throw for BoundT. Catching here. *)
-      try Ok (Flow_js.eval_selector cx r t s id)
-      with exn -> Error (spf "Exception:%s" (Printexc.to_string exn))
+      Ok (Flow_js.eval_selector cx r t s id)
+    with
+      exn -> Error (spf "Exception:%s" (Printexc.to_string exn))
     in
     match result with
     | Ok tout -> type__ ~env tout
     | Error msg -> terr ~kind:BadEvalT ~msg (Some t)
 
-  and type_destructor_t ~env t id d =
+  and named_type_destructor_t ~env t d =
     let open Type in
-    let from_name env name t =
-      type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t name [ty] in
+    let from_name n ts =
+      mapM (type__ ~env) ts >>| fun tys ->
+      Ty.generic_builtin_t n tys
+    in
     match d with
-    | NonMaybeType -> from_name env "NonMaybeType" t
-    | ReactElementPropsType -> from_name env "React$ElementProps" t
-    | ReactElementConfigType -> from_name env "React$ElementConfig" t
-    | ReactElementRefType -> from_name env "React$ElementRef" t
-    | PropertyType _ | ElementType _ | Bind _ | ReadOnlyType
-    | SpreadType _ | RestType _ | ValuesType | CallType _ | TypeMap _ ->
-      get_cx >>= fun cx ->
-      let evaluated = Context.evaluated cx in
-      begin match IMap.get id evaluated with
-      | Some cached_t -> type__ ~env cached_t
-        (* this happens when, for example, the RHS of a destructuring is
-           unconstrained, so we never evaluate the destructuring. so, make the
-           destructured value also unconstrained... *)
-      | None -> return Ty.Bot
-      end
+    | NonMaybeType -> from_name "$NonMaybeType" [t]
+    | ReadOnlyType -> from_name "$ReadOnlyType" [t]
+    | ValuesType -> from_name "$Values" [t]
+    | ElementType t' -> from_name "$ElementType" [t; t']
+    | CallType ts -> from_name "$Call" (t::ts)
+    | ReactElementPropsType -> from_name "React$ElementProps" [t]
+    | ReactElementConfigType -> from_name "React$ElementConfig" [t]
+    | ReactElementRefType -> from_name "React$ElementRef" [t]
+    | PropertyType k ->
+      let r = mk_reason (RStringLit k) Loc.none in
+      from_name "$PropertyType" [t; DefT (r, SingletonStrT k)]
+    | TypeMap (ObjectMap t') -> from_name "$ObjMap" [t; t']
+    | TypeMap (ObjectMapi t') -> from_name "$ObjMapi" [t; t']
+    | TypeMap (TupleMap t') -> from_name "$TupleMap" [t; t']
+    | RestType (Object.Rest.Sound, t') -> from_name "$Rest" [t; t']
+    | RestType (Object.Rest.IgnoreExactAndOwn, t') -> from_name "$Diff" [t; t']
+    | RestType (Object.Rest.ReactConfigMerge, _) | Bind _ | SpreadType _ ->
+      terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
+
+  and resolve_type_destructor_t ~env t id use_op reason d =
+    get_cx >>= fun cx ->
+    let trace = Trace.dummy_trace in
+    let result =
+      try
+        Ok (snd (Flow_js.mk_type_destructor cx ~trace use_op reason t d id))
+      with
+        (* Allow bounds *)
+        | Flow_js.Not_expect_bound s -> Error s
+        (* But re-raise any other exception *)
+        | exn -> raise exn
+    in
+    match result with
+    | Ok t -> type__ ~env t
+    | Error _s -> named_type_destructor_t ~env t d
+
+  and evaluate_type_destructor ~env t id use_op reason d =
+    get_cx >>= fun cx ->
+    let evaluated = Context.evaluated cx in
+    match IMap.get id evaluated with
+    | Some cached_t -> type__ ~env cached_t
+    | None -> resolve_type_destructor_t ~env t id use_op reason d
+
+  and type_destructor_t ~env t id use_op reason d =
+    find_eval_t id >>= function
+    | Some (Ok t) -> return t
+    | Some (Error e) -> error e
+    | None ->
+      get >>= fun in_st ->
+      (* To store the complete result (including error case) we need to run
+         evaluation outside the monad and then update the state of the main monad.
+      *)
+      let result, out_st = run in_st (
+        evaluate_type_destructor ~env t id use_op reason d
+      ) in
+      put out_st >>= fun _ ->
+      update_eval_t_cache id result >>= fun _ ->
+      begin match result with
+      | Ok ty -> return ty
+      | Error e -> error e end
 
   and eval_t ~env t id = function
     | Type.DestructuringT (r, s) ->
       destructuring_t ~env t id r s
-    | Type.TypeDestructorT (_, _, d) ->
-      type_destructor_t ~env t id d
+    | Type.TypeDestructorT (use_op, reason, d) ->
+      type_destructor_t ~env t id use_op reason d
 
   and module_t env reason t =
     match desc_of_reason reason with

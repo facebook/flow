@@ -51,6 +51,12 @@ val check_polarity:
 val eval_selector : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> int -> Type.t
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
+(* destructors *)
+exception Not_expect_bound of string
+
+val mk_type_destructor : Context.t -> trace:Trace.t -> Type.use_op -> Reason.t -> Type.t ->
+  Type.destructor -> int -> bool * Type.t
+
 (* ... *)
 
 val mk_default: Context.t -> reason ->

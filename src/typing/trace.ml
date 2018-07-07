@@ -61,6 +61,8 @@ let trace_depth trace =
 let unit_trace lower upper =
   [lower, upper, Parent [], 1]
 
+let dummy_trace = []
+
 (* Single-step trace with a parent. This corresponds to a
    recursive invocation of the flow function.
    Optimization: only embed when modes.trace > 0,

@@ -497,10 +497,67 @@ assert_ok "$FLOW" type-at-pos test.js 14 7 --strip-root --pretty
 # printf "trycatch.js:5:10 = "
 # assert_ok "$FLOW" type-at-pos trycatch.js 5 10 --strip-root --pretty
 
-# typedestruct.js
-# TODO see eval_t - TypeDestructorT - non-evaluated ids
-# printf "typedestruct.js:8:3 = "
-# assert_ok "$FLOW" type-at-pos typedestruct.js 8 3 --strip-root --pretty
+# type-destructor.js
+printf "type-destructor.js:3:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 3 6 --strip-root --pretty
+printf "type-destructor.js:4:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 4 6 --strip-root --pretty
+printf "type-destructor.js:5:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 5 6 --strip-root --pretty
+printf "type-destructor.js:8:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 8 6 --strip-root --pretty
+printf "type-destructor.js:10:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 10 6 --strip-root --pretty
+printf "type-destructor.js:12:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 12 6 --strip-root --pretty
+printf "type-destructor.js:13:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 13 6 --strip-root --pretty
+printf "type-destructor.js:15:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 15 6 --strip-root --pretty
+printf "type-destructor.js:16:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 16 6 --strip-root --pretty
+printf "type-destructor.js:17:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 17 6 --strip-root --pretty
+printf "type-destructor.js:19:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 19 6 --strip-root --pretty
+printf "type-destructor.js:20:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 20 6 --strip-root --pretty
+printf "type-destructor.js:21:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 21 6 --strip-root --pretty
+printf "type-destructor.js:23:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 23 6 --strip-root --pretty
+printf "type-destructor.js:27:5 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 27 5 --strip-root --pretty
+printf "type-destructor.js:28:5 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 28 5 --strip-root --pretty
+printf "type-destructor.js:29:5 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 28 5 --strip-root --pretty
+printf "type-destructor.js:33:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 33 6 --strip-root --pretty
+printf "type-destructor.js:34:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 34 6 --strip-root --pretty
+printf "type-destructor.js:36:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 36 6 --strip-root --pretty
+printf "type-destructor.js:37:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 37 6 --strip-root --pretty
+printf "type-destructor.js:41:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 41 6 --strip-root --pretty
+printf "type-destructor.js:42:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 42 6 --strip-root --pretty
+printf "type-destructor.js:44:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 44 6 --strip-root --pretty
+printf "type-destructor.js:45:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 45 6 --strip-root --pretty
+printf "type-destructor.js:47:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 47 6 --strip-root --pretty
+printf "type-destructor.js:48:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 48 6 --strip-root --pretty
+printf "type-destructor.js:62:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 62 6 --strip-root --pretty
+printf "type-destructor.js:63:6 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 63 6 --strip-root --pretty
+printf "type-destructor.js:68:13 = "
+assert_ok "$FLOW" type-at-pos type-destructor.js 68 13 --strip-root --pretty
 
 # unions.js
 printf "unions.js:9:3 = "
