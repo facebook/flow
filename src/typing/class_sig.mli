@@ -176,3 +176,5 @@ module This: sig
   val is_bound_to_empty: t -> bool
   val in_class: Loc.t Ast.Class.t -> bool
 end
+
+val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a

@@ -253,7 +253,7 @@ end = struct
       (* For debugging purposes mostly *)
       depth: int;
       (* Type parameters in scope *)
-      tparams: (string * Loc.t) list;
+      tparams: Type.typeparam list;
       (* File the query originated from *)
       file: File_key.t;
 
@@ -304,21 +304,31 @@ end = struct
           - false: return the type normally ignoring the warning.
        3. The type parameter is not in env. Do the default action.
     *)
-    let lookup_tparam ~default env t name loc =
-      let pred (tp_name, _) = (name = tp_name) in
+    let lookup_tparam ~default env t tp_name tp_loc =
+      let open Type in
+      let pred { name; reason; _ } = (
+        name = tp_name &&
+        Reason.def_loc_of_reason reason = tp_loc
+      ) in
       match List.find_opt pred env.tparams with
-      | Some (_, tp_loc) ->
-        if loc = tp_loc || not C.opt_flag_shadowed_type_params
-        then return Ty.(Bound (Symbol (Local loc, name)))
+      | Some _ ->
         (* If we care about shadowing of type params, then flag an error *)
-        else terr ~kind:ShadowTypeParam (Some t)
-      | None -> default t
+        if C.opt_flag_shadowed_type_params then
+          let shadow_pred { name; _ } = (name = tp_name) in
+          match List.find_opt shadow_pred env.tparams with
+          | Some { reason; _ }
+            when Reason.def_loc_of_reason reason <> tp_loc ->
+            terr ~kind:ShadowTypeParam (Some t)
+          | Some _ ->
+            return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+          | None -> assert false
+        else
+          return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+      | None ->
+        default t
 
-    let add_typeparam env typeparam = Type.(
-      let loc = Reason.loc_of_reason typeparam.reason in
-      let name = typeparam.name in
-      { env with tparams = (name, loc) :: env.tparams }
-    )
+    let add_typeparam env typeparam =
+      { env with tparams = typeparam :: env.tparams }
   end
 
 
@@ -712,7 +722,7 @@ end = struct
     let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
-    | BoundT tparam -> bound_t ~env t tparam
+    | BoundT tparam -> bound_t ~env tparam
     | AnnotT (t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
@@ -899,12 +909,10 @@ end = struct
       mapM (type__ ~env) ts >>|
       uniq_union
 
-  and bound_t ~env t tparam =
-    let open Type in
-    let { reason; name; _ } = tparam in
-    let loc = Reason.def_loc_of_reason reason in
-    let default t = terr ~kind:BadBoundT (Some t) in
-    Env.lookup_tparam ~default env t name loc
+  and bound_t ~env tparam =
+    let Type.{ reason; name; _ } = tparam in
+    let symbol = symbol_from_reason env reason name in
+    return (Ty.Bound symbol)
 
   and fun_ty ~env f fun_type_params =
     let {T.params; rest_param; return_t; _} = f in
@@ -1027,7 +1035,7 @@ end = struct
       return (Ty.Class (name, structural, ps))
     | Ty.Generic (name, structural, _) ->
       return (Ty.Class (name, structural, ps))
-    | (Ty.Bot | Ty.Exists | Ty.Any | Ty.Top) as b ->
+    | (Ty.Bot | Ty.Exists | Ty.Any | Ty.AnyObj | Ty.Top) as b ->
       return b
     | Ty.Union (t0,t1,ts) ->
       class_t_aux t0 >>= fun t0 ->
@@ -1039,11 +1047,17 @@ end = struct
       class_t_aux t1 >>= fun t1 ->
       mapM class_t_aux ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
-    | Ty.Bound (Ty.Symbol (_, "this")) as t ->
-      return t
+    | Ty.Bound (Ty.Symbol (prov, sym_name)) ->
+      let pred Type.{ name; reason; _ } = (
+        name = sym_name &&
+        Reason.def_loc_of_reason reason = Ty.loc_of_provenance prov
+      ) in
+      begin match List.find_opt pred env.Env.tparams with
+      | Some Type.{ bound; _ } -> type__ ~env bound >>= class_t_aux
+      | _ -> terr ~kind:BadClassT ~msg:"bound" (Some t)
+      end
     | ty ->
-      let msg = spf "normalized class arg: %s" (Ty_debug.dump_t ty) in
-      terr ~kind:BadClassT ~msg (Some t)
+      terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t)
     in
     type__ ~env t >>= class_t_aux
 

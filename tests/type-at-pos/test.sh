@@ -94,6 +94,10 @@ assert_ok "$FLOW" type-at-pos class-3.js 9 9 --strip-root --pretty
 printf "class-3.js:10:9 = "
 assert_ok "$FLOW" type-at-pos class-3.js 10 9 --strip-root --pretty
 
+# class-bound.js
+printf "class-bound.js:4:6 = "
+assert_ok "$FLOW" type-at-pos class-bound.js 4 6 --strip-root --pretty
+
 # class-getters-setters.js
 printf "class-getters-setters.js:6:7 = "
 assert_ok "$FLOW" type-at-pos class-getters-setters.js 6 7 --strip-root --pretty
@@ -138,7 +142,7 @@ printf "class-statics.js:16:5 = "
 assert_ok "$FLOW" type-at-pos class-statics.js 16 5 --strip-root --pretty
 printf "class-statics.js:17:5 = "
 assert_ok "$FLOW" type-at-pos class-statics.js 17 5 --strip-root --pretty
-# TODO this fails
+# NOTE here Flow infers 'this', even though this is a static member
 printf "class-statics.js:20:11 = "
 assert_ok "$FLOW" type-at-pos class-statics.js 20 11 --strip-root --pretty
 

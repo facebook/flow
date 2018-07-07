@@ -200,7 +200,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       | desc -> desc
       )) curr_t in
       let id_info = name, curr_t, Type_table.Other in
-      Env.add_type_table_info cx id_loc id_info;
+      Type_table.set_info id_loc id_info (Context.type_table cx);
       let use_op = Op (AssignVar {
         var = Some (mk_reason (RIdentifier name) loc);
         init = (match init with

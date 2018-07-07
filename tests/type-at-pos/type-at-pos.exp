@@ -493,6 +493,21 @@ class-3.js:10:9 = {
   "start":9,
   "end":9
 }
+class-bound.js:4:6 = {
+  "type":"type C<T: R<any>> = class R",
+  "reasons":[],
+  "loc":{
+    "source":"class-bound.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":6,"offset":29},
+    "end":{"line":4,"column":6,"offset":30}
+  },
+  "path":"class-bound.js",
+  "line":4,
+  "endline":4,
+  "start":6,
+  "end":6
+}
 class-getters-setters.js:6:7 = {
   "type":"string",
   "reasons":[],
@@ -749,7 +764,7 @@ class-statics.js:17:5 = {
   "end":5
 }
 class-statics.js:20:11 = {
-  "type":"(unknown)",
+  "type":"this",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
