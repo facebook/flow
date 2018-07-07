@@ -87,11 +87,15 @@ module CheckCommand = struct
     if Options.should_profile options
     then begin
       Flow_server_profile.init ();
-      let rec sample_processor_info () =
-        Flow_server_profile.processor_sample ();
-        Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
-      in
-      sample_processor_info ()
+      if Sys.win32 then
+        Flow_server_profile.processor_sample ()
+      else begin
+        let rec sample_processor_info () =
+          Flow_server_profile.processor_sample ();
+          Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
+        in
+        sample_processor_info ();
+      end;
     end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
