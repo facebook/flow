@@ -1220,10 +1220,13 @@ end = struct
     ret
 end
 
+exception Not_expect_bound of string
+
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
    been substituted away. *)
 let not_expect_bound t = match t with
-  | BoundT _ -> assert_false (spf "Did not expect %s" (string_of_ctor t))
+  | BoundT _ ->
+    raise (Not_expect_bound (spf "Did not expect %s" (string_of_ctor t)))
   | _ -> ()
 
 let not_expect_bound_use t =
