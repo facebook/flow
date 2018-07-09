@@ -537,11 +537,19 @@ class mapper = object(this)
     if value' == value then opt
     else loc, { key; value = value'; optional; static; proto; _method; variance }
 
+  method object_spread_property_type (opt: Loc.t Ast.Type.Object.SpreadProperty.t) =
+    let open Ast.Type.Object.SpreadProperty in
+    let loc, { argument; } = opt in
+    let argument' = this#type_ argument in
+    if argument' == argument then opt
+    else loc, { argument = argument'; }
+
   method object_type (ot: Loc.t Ast.Type.Object.t) =
     let open Ast.Type.Object in
     let { properties ; exact; } = ot in
     let properties' = ListUtils.ident_map (fun p -> match p with
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
+      | SpreadProperty p' -> id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
       | _ -> p (* TODO *)
     ) properties in
     if properties' == properties then ot
