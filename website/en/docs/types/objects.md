@@ -229,6 +229,21 @@ properties to an exact object type.
 var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
 ```
 
+Intersections of exact object types may not work as you expect. If you need to combine exact object types, use object type spread:
+
+```js
+// @flow
+
+type FooT = {| foo: string |};
+type BarT = {| bar: number |};
+
+type FooBarFailT = FooT & BarT;
+type FooBarT = {| ...FooT, ...BarT |};
+
+const fooBarFail: FooBarFailT = { foo: '123', bar: 12 }; // Error!
+const fooBar: FooBarT = { foo: '123', bar: 12 }; // Works!
+```
+
 ## Objects as maps <a class="toc" id="toc-objects-as-maps" href="#toc-objects-as-maps"></a>
 
 Newer versions of the JavaScript standard include a `Map` class, but it is
