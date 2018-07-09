@@ -124,18 +124,21 @@ let make
   (* For each leader, specifies whether to recheck its component *)
   let to_recheck: bool FilenameMap.t ref = ref recheck_leader_map in
 
-
-  (* take n files from stream *)
-  let rec take n =
-    if n = 0 then []
-    else begin
-      let (x, rest) = Stream.pop_unsafe !stream in
-      stream := rest;
-      x::(take (n-1))
-    end
+  (* Take n files from stream. We take an entire component at once, which might
+     cause us to take more than n files. *)
+  let take =
+    let rec loop acc len n =
+      if n <= 0 then (acc, len)
+      else begin
+        let (f, stream') = Stream.pop_unsafe !stream in
+        stream := stream';
+        let fs = FilenameMap.find_unsafe f !components in
+        let fs_len = Nel.length fs in
+        loop ((Component fs)::acc) (fs_len+len) (n-fs_len)
+      end
+    in
+    loop [] 0
   in
-
-  let component f = Component (FilenameMap.find_unsafe f !components) in
 
   (* leader_map is a map from files to leaders *)
   (* component_map is a map from leaders to components *)
@@ -152,17 +155,14 @@ let make
           else max_bucket_size
         in
         let n = min bucket_size jobs in
-        let result = take n |> List.map component in
-        if result <> [] then begin
-          let length = List.fold_left (fun acc (Component files) ->
-            Nel.length files + acc
-          ) 0 result in
+        let components, num_files = take n in
+        if components <> [] then begin
           MonitorRPC.status_update ServerStatus.(Merging_progress {
             finished = !files_merged_so_far;
             total = Some !total_number_of_files;
           });
-          files_merged_so_far := !files_merged_so_far + length;
-          Bucket.Job result
+          files_merged_so_far := !files_merged_so_far + num_files;
+          Bucket.Job components
         end else
           Bucket.Done
   in
