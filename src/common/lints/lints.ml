@@ -6,10 +6,10 @@
  *)
 
 type sketchy_null_kind =
-  | SketchyBool
-  | SketchyString
-  | SketchyNumber
-  | SketchyMixed
+  | SketchyNullBool
+  | SketchyNullString
+  | SketchyNullNumber
+  | SketchyNullMixed
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
@@ -24,10 +24,10 @@ type lint_kind =
   | DeprecatedCallSyntax
 
 let string_of_sketchy_null_kind = function
-  | SketchyBool -> "sketchy-null-bool"
-  | SketchyString -> "sketchy-null-string"
-  | SketchyNumber -> "sketchy-null-number"
-  | SketchyMixed -> "sketchy-null-mixed"
+  | SketchyNullBool -> "sketchy-null-bool"
+  | SketchyNullString -> "sketchy-null-string"
+  | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullMixed -> "sketchy-null-mixed"
 
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
@@ -43,15 +43,15 @@ let string_of_kind = function
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
-      SketchyNull SketchyBool;
-      SketchyNull SketchyString;
-      SketchyNull SketchyNumber;
-      SketchyNull SketchyMixed;
+      SketchyNull SketchyNullBool;
+      SketchyNull SketchyNullString;
+      SketchyNull SketchyNullNumber;
+      SketchyNull SketchyNullMixed;
     ]
-  | "sketchy-null-bool" -> Some [SketchyNull SketchyBool]
-  | "sketchy-null-string" -> Some [SketchyNull SketchyString]
-  | "sketchy-null-number" -> Some [SketchyNull SketchyNumber]
-  | "sketchy-null-mixed" -> Some [SketchyNull SketchyMixed]
+  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
+  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
+  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
+  | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | "nonstrict-import" -> Some [NonstrictImport]
   | "untyped-import" -> Some [UntypedImport]

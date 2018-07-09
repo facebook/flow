@@ -6,10 +6,10 @@
  *)
 
 type sketchy_null_kind =
- | SketchyBool
- | SketchyString
- | SketchyNumber
- | SketchyMixed
+ | SketchyNullBool
+ | SketchyNullString
+ | SketchyNullNumber
+ | SketchyNullMixed
 
 type lint_kind =
  | SketchyNull of sketchy_null_kind

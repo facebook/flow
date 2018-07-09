@@ -153,13 +153,13 @@ let detect_sketchy_null_checks cx =
       | Some null_loc ->
         let add_error = add_error ~loc ~null_loc in
         if (Option.is_none exists_excuse.bool_loc) then
-          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyBool);
+          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyNullBool);
         if (Option.is_none exists_excuse.number_loc) then
-          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNumber);
+          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNullNumber);
         if (Option.is_none exists_excuse.string_loc) then
-          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyString);
+          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
         if (Option.is_none exists_excuse.mixed_loc) then
-          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyMixed);
+          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
         ()
     end
   in

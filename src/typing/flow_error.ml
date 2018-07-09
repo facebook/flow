@@ -1985,10 +1985,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   | ESketchyNullLint { kind; loc; falsy_loc; null_loc } ->
     let type_str, value_str = match kind with
-    | Lints.SketchyBool -> "boolean", "false"
-    | Lints.SketchyNumber -> "number", "0"
-    | Lints.SketchyString -> "string", "an empty string"
-    | Lints.SketchyMixed -> "mixed", "false"
+    | Lints.SketchyNullBool -> "boolean", "false"
+    | Lints.SketchyNullNumber -> "number", "0"
+    | Lints.SketchyNullString -> "string", "an empty string"
+    | Lints.SketchyNullMixed -> "mixed", "false"
     in
     mk_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) loc [
       text "Sketchy null check on "; ref (mk_reason (RCustom type_str) falsy_loc); text " ";

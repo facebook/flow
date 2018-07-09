@@ -2771,10 +2771,10 @@ let dump_flow_error =
     | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
       let open Lints in
       let kind_str = match kind with
-      | SketchyBool -> "SketchyBool"
-      | SketchyString -> "SketchyString"
-      | SketchyNumber -> "SketchyNumber"
-      | SketchyMixed -> "SketchyMixed"
+      | SketchyNullBool -> "SketchyNullBool"
+      | SketchyNullString -> "SketchyNullString"
+      | SketchyNullNumber -> "SketchyNullNumber"
+      | SketchyNullMixed -> "SketchyNullMixed"
       in
       spf "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
         kind_str
