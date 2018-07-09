@@ -4,7 +4,7 @@ Likely to cause new Flow errors:
 * Flow now only allows subtyping polymorphic types with the same number of type parameters. This added strictness lets Flow avoid some slow typing code and shouldn't cause too many problems.
 
 New Features:
-* New `[silence]` section in the `.flowconfig` which can suppress all errors in 1 or more files. Thanks [@LegNeato](https://github.com/LegNeato)! ([#4916](https://github.com/facebook/flow/pull/4916))
+* New `[declarations]` section in the `.flowconfig` which can suppress all errors in 1 or more files. Thanks [@LegNeato](https://github.com/LegNeato)! ([#4916](https://github.com/facebook/flow/pull/4916))
 * Added `flow server --file-watcher watchman` flag which uses [Watchman](https://facebook.github.io/watchman/) for file watching instead of the builtin file-watcher, dfind
 * Added a `--expand-type-aliases` flag to `type-at-pos`. It replaces type aliases with their bodies in the returned type.
 * Added `flow save-state` command to generate a saved state file (experimental & loading a saved state isn't ready yet)
