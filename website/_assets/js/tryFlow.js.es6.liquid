@@ -23,7 +23,8 @@ function appendMsg(container, msg, editor) {
 
   if (msg.loc && msg.context != null) {
     const div = document.createElement('div');
-    const filename = msg.loc.source !== '-' ? `${msg.loc.source}:` : '';
+    const basename = msg.loc.source.replace(/.*\//, '');
+    const filename = basename !== '-' ? `${msg.loc.source}:` : '';
     const prefix = `${filename}${msg.loc.start.line}: `;
 
     const before = msg.context.slice(0, msg.loc.start.column - 1);
