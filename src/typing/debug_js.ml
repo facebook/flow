@@ -2781,6 +2781,12 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
+    | ESketchyNumberLint (kind, reason) ->
+      let open Lints in
+      let kind_str = match kind with
+      | SketchyNumberAnd -> "SketchyNumberAnd"
+      in
+      spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->

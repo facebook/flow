@@ -11,8 +11,12 @@ type sketchy_null_kind =
  | SketchyNullNumber
  | SketchyNullMixed
 
+type sketchy_number_kind =
+  | SketchyNumberAnd
+
 type lint_kind =
  | SketchyNull of sketchy_null_kind
+ | SketchyNumber of sketchy_number_kind
  | UntypedTypeImport
  | UntypedImport
  | NonstrictImport

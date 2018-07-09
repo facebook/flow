@@ -160,6 +160,7 @@ type error_message =
       null_loc: Loc.t;
       falsy_loc: Loc.t;
     }
+  | ESketchyNumberLint of Lints.sketchy_number_kind * reason
   | EInvalidPrototype of reason
   | EExperimentalOptionalChaining of Loc.t
   | EOptionalChainingMethods of Loc.t
@@ -382,6 +383,7 @@ let util_use_op_of_msg nope util = function
 | EUnusedSuppression (_)
 | ELintSetting (_)
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
+| ESketchyNumberLint _
 | EInvalidPrototype (_)
 | EExperimentalOptionalChaining _
 | EOptionalChainingMethods _
@@ -1996,6 +1998,13 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
     ]
 
+  | ESketchyNumberLint (Lints.SketchyNumberAnd, reason) ->
+    mk_error ~trace_infos ~kind:Lints.(LintError (SketchyNumber SketchyNumberAnd)) (loc_of_reason reason) [
+      text "Avoid using "; code "&&"; text " to check the value of "; ref reason; text ". ";
+      text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
+      text "explicit default instead.";
+    ]
+
   | EInvalidPrototype reason ->
     mk_error ~trace_infos (loc_of_reason reason)
       [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."]
@@ -2038,6 +2047,7 @@ let is_lint_error = function
   | EDeprecatedType _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
+  | ESketchyNumberLint _
   | EInexactSpread _
   | EUnnecessaryOptionalChain _ ->
     true

@@ -2516,6 +2516,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (DefT (reason, BoolT (Some false)), tout)
 
     | (left, AndT(_, right, u)) ->
+      begin match left with
+      | DefT (reason, NumT _) ->
+        add_output cx ~trace (FlowError.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
+      | _ -> ()
+      end;
       (* a falsy && b ~> a
          a truthy && b ~> b
          a && b ~> a falsy | b *)

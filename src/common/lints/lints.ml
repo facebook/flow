@@ -11,8 +11,12 @@ type sketchy_null_kind =
   | SketchyNullNumber
   | SketchyNullMixed
 
+type sketchy_number_kind =
+  | SketchyNumberAnd
+
 type lint_kind =
   | SketchyNull of sketchy_null_kind
+  | SketchyNumber of sketchy_number_kind
   | UntypedTypeImport
   | UntypedImport
   | NonstrictImport
@@ -29,8 +33,12 @@ let string_of_sketchy_null_kind = function
   | SketchyNullNumber -> "sketchy-null-number"
   | SketchyNullMixed -> "sketchy-null-mixed"
 
+let string_of_sketchy_number_kind = function
+  | SketchyNumberAnd -> "sketchy-number-and"
+
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
+  | SketchyNumber kind -> string_of_sketchy_number_kind kind
   | UntypedTypeImport -> "untyped-type-import"
   | UntypedImport -> "untyped-import"
   | NonstrictImport -> "nonstrict-import"
@@ -52,6 +60,10 @@ let kinds_of_string = function
   | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
   | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
+  | "sketchy-number" -> Some [
+      SketchyNumber SketchyNumberAnd;
+    ]
+  | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | "nonstrict-import" -> Some [NonstrictImport]
   | "untyped-import" -> Some [UntypedImport]
