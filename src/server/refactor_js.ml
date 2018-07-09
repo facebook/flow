@@ -100,18 +100,10 @@ class rename_mapper refs new_name = object(this)
     | _ -> super#object_property prop
 end
 
-let print_ast ast =
-  let layout = Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast in
-  let source = Pretty_printer.print ~source_maps:None layout in
-  Source.contents source
-
 let mapper_to_edits (ast_mapper: Flow_ast_mapper.mapper) (ast: Loc.t Ast.program) =
   let new_ast = ast_mapper#program ast in
-  (* location for the whole file *)
-  let loc, _, _ = ast in
-  let text = print_ast new_ast in
-  (* TODO give out minimal diffs *)
-  [(loc, text)]
+  let changes = Flow_ast_differ.program ast new_ast in
+  Ast_diff_printer.edits_of_changes changes
 
 let get_with_default default key map =
   FilenameMap.find_opt key map
@@ -139,6 +131,7 @@ let apply_rename_to_files refs_by_file new_name =
     let file_edits = apply_rename_to_file file ast refs new_name in
     List.rev_append file_edits edits
   end refs_by_file (Ok [])
+  >>| List.rev
 
 type refactor_result = ((Loc.t * string) list option, string) result Lwt.t
 
