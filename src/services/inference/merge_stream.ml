@@ -7,6 +7,23 @@
 
 open Utils_js
 
+module Stream: sig
+  type 'a t
+  val empty: 'a t
+  val push: 'a -> 'a t -> 'a t
+  val pop_unsafe: 'a t -> ('a * 'a t)
+  val length: 'a t -> int
+end = struct
+  type 'a t = int * 'a list
+  let empty = (0, [])
+  let push x (n, xs) = (n+1, x::xs)
+  let pop_unsafe xs =
+    match xs with
+    | (_, []) -> assert_false "pop_unsafe"
+    | (n, x::xs) -> x, (n-1, xs)
+  let length (n, _) = n
+end
+
 type element = Component of File_key.t Nel.t
 
 type 'a merge_result = (File_key.t * 'a) list
@@ -67,7 +84,7 @@ let make
   let files_merged_so_far = ref 0 in
 
   (* stream of files available to schedule *)
-  let stream = ref [] in
+  let stream = ref Stream.empty in
 
   (* For each leader, maps other leaders that are dependent on it. *)
   let dependents =
@@ -92,7 +109,7 @@ let make
       Hashtbl.add blocking leader_f n;
       if n = 0
       then (* leader_f isn't blocked, add to stream *)
-        stream := leader_f::!stream
+        stream := Stream.push leader_f !stream
       else (* one more blocked *)
         incr blocked
     ) dependency_dag;
@@ -111,11 +128,11 @@ let make
   (* take n files from stream *)
   let rec take n =
     if n = 0 then []
-    else match !stream with
-    | [] -> assert false
-    | x::rest ->
-        stream := rest;
-        x::(take (n-1))
+    else begin
+      let (x, rest) = Stream.pop_unsafe !stream in
+      stream := rest;
+      x::(take (n-1))
+    end
   in
 
   let component f = Component (FilenameMap.find_unsafe f !components) in
@@ -126,7 +143,7 @@ let make
   let next =
     let procs = Sys_utils.nbr_procs in
     fun () ->
-      let jobs = List.length !stream in
+      let jobs = Stream.length !stream in
       if jobs = 0 && !blocked <> 0 then Bucket.Wait
       else
         let bucket_size =
@@ -170,7 +187,7 @@ let make
           decr blocked;
           if recheck
           then (
-            stream := dep_leader_f::!stream;
+            stream := Stream.push dep_leader_f !stream;
             skipped
           ) else push (dep_leader_f::skipped) dep_leader_f false
         ) else skipped
