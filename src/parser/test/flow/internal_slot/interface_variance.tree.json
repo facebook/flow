@@ -45,7 +45,29 @@
             },
             "optional":false,
             "static":false,
-            "method":true
+            "method":true,
+            "value":{
+              "type":"FunctionTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":27}},
+              "range":[14,27],
+              "params":[],
+              "returnType":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":27}},
+                "range":[26,27],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":27}},
+                  "range":[26,27],
+                  "name":"X",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              },
+              "rest":null,
+              "typeParameters":null
+            }
           }
         ]
       },
