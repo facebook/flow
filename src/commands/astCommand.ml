@@ -32,6 +32,8 @@ let spec = {
         ~doc:"Pretty-print JSON output"
     |> flag "--check" no_arg
         ~doc:"Checks whether the file parses, returning any errors but not the AST"
+    |> flag "--debug" no_arg
+        ~doc:"" (* undocumented *)
     |> flag "--type" (enum ["js", File_js; "json", File_json])
         ~doc:"Type of input file (js or json)"
     |> flag "--strict" no_arg
@@ -59,7 +61,7 @@ end)
 
 module Token_translator = Token_translator.Translate (Json_of_estree)
 
-let main include_tokens pretty check file_type_opt use_strict from path filename () =
+let main include_tokens pretty check debug file_type_opt use_strict from path filename () =
   FlowEventLogger.set_from from;
   let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
@@ -114,12 +116,20 @@ let main include_tokens pretty check file_type_opt use_strict from path filename
           let (ocaml_ast, errors) =
             Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
           in
+          if debug then begin
+            Ast.pp_program Loc.pp Format.err_formatter ocaml_ast;
+            Printf.eprintf "\n%!"
+          end;
           Ast_js ocaml_ast, errors
         | File_json ->
           let filekey = Option.map filename ~f:(fun s -> File_key.JsonFile s) in
           let (ocaml_ast, errors) =
             Parser_flow.json_file ~fail:false ~parse_options ~token_sink content filekey
           in
+          if debug then begin
+            Ast.Expression.pp Loc.pp Format.err_formatter ocaml_ast;
+            Printf.eprintf "\n%!"
+          end;
           Ast_json ocaml_ast, errors
       in
       if check then
