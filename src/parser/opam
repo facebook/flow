@@ -13,6 +13,8 @@ remove: ["ocamlfind" "remove" "flow_parser"]
 depends: [
   "ocamlfind" {build}
   "ocamlbuild" {build}
+  "ppx_deriving" {build}
+  "ppx_gen_rec" {build}
   "sedlex"
   "wtf8"
 ]
