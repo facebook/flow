@@ -1397,6 +1397,7 @@ CAMLprim value hh_assert_allow_dependency_table_reads (void) {
 }
 
 void check_should_exit(void) {
+  assert(workers_should_exit != NULL);
   if(worker_can_exit && *workers_should_exit) {
     static value *exn = NULL;
     if (!exn) exn = caml_named_value("worker_should_exit");
