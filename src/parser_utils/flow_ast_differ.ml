@@ -42,6 +42,23 @@ let list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) 
   if old_list == new_list then Some []
   else helper 0 old_list new_list
 
+(* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs. *)
+let diff_and_recurse
+    (f: 'a -> 'a -> 'b change list option)
+    (old_list: 'a list)
+    (new_list: 'a list)
+    : 'b change list option =
+  let changes = list_diff old_list new_list in
+  Option.bind changes begin fun changes ->
+    changes
+    |> List.map begin function
+    | _, Replace (x1, x2) ->
+      f x1 x2
+    end
+    |> Option.all
+    |> Option.map ~f:List.concat
+  end
+
 (* We need a variant here for every node that we want to be able to store a diff for. The more we
  * have here, the more granularly we can diff. *)
 type node =
@@ -77,15 +94,7 @@ let rec program (program1: Loc.t Ast.program) (program2: Loc.t Ast.program) : no
 
 and statement_list (stmts1: Loc.t Ast.Statement.t list) (stmts2: Loc.t Ast.Statement.t list)
     : node change list option =
-  let changes = list_diff stmts1 stmts2 in
-  Option.map changes ~f:begin fun changes ->
-    changes
-    |> List.map begin function
-    | _, Replace (stmt1, stmt2) ->
-      statement stmt1 stmt2
-    end
-    |> List.concat
-  end
+  diff_and_recurse (fun x y -> Some (statement x y)) stmts1 stmts2
 
 and statement (stmt1: Loc.t Ast.Statement.t) (stmt2: Loc.t Ast.Statement.t)
     : node change list =
