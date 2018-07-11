@@ -667,10 +667,13 @@ class mapper = object(this)
   method function_params (params: Loc.t Ast.Function.Params.t) =
     let open Ast.Function in
     let (loc, { Params.params = params_list; rest }) = params in
-    let params_list' = ListUtils.ident_map this#function_param_pattern params_list in
+    let params_list' = this#function_param_patterns params_list in
     let rest' = map_opt this#function_rest_element rest in
     if params_list == params_list' && rest == rest' then params
     else (loc, { Params.params = params_list'; rest = rest' })
+
+  method function_param_patterns (params_list: Loc.t Ast.Pattern.t list) =
+    ListUtils.ident_map this#function_param_pattern params_list
 
   method function_body (block: Loc.t Ast.Statement.Block.t) =
     this#block block
