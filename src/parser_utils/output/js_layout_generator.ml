@@ -2219,7 +2219,7 @@ and type_ ((loc, t): Loc.t Ast.Type.t) =
         func
     | T.Object obj -> type_object obj
     | T.Interface i -> type_interface i
-    | T.Array t -> fuse [type_ t; Atom "[]"]
+    | T.Array t -> fuse [Atom "Array<"; type_ t; Atom ">"]
     | T.Generic generic -> type_generic generic
     | T.Union (t1, t2, ts) ->
       type_union_or_intersection ~sep:(Atom "|") (t1::t2::ts)

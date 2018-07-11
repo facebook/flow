@@ -15,6 +15,7 @@ do_file() {
 }
 
 mkdir $TEMP_DIR
+do_file "array.js"
 do_file "arrow-0.js"
 do_file "arrow-1.js"
 do_file "class-0.js"
