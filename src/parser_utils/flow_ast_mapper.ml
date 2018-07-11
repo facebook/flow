@@ -649,12 +649,7 @@ class mapper = object(this)
     let ident' = map_opt this#function_identifier ident in
     let params' = this#function_params params in
     let return' = map_opt this#type_annotation return in
-    let body' = match body with
-      | BodyBlock (loc, block) ->
-        id this#function_body block body (fun block -> BodyBlock (loc, block))
-      | BodyExpression expr ->
-        id this#expression expr body (fun expr -> BodyExpression expr)
-    in
+    let body' = this#function_body_any body in
     (* TODO: walk predicate *)
     let tparams' = map_opt this#type_parameter_declaration tparams in
     if ident == ident' && params == params' && body == body' && return == return'
@@ -674,6 +669,13 @@ class mapper = object(this)
 
   method function_param_patterns (params_list: Loc.t Ast.Pattern.t list) =
     ListUtils.ident_map this#function_param_pattern params_list
+
+  method function_body_any (body: Loc.t Ast.Function.body) =
+    match body with
+      | Ast.Function.BodyBlock (loc, block) ->
+        id this#function_body block body (fun block -> Ast.Function.BodyBlock (loc, block))
+      | Ast.Function.BodyExpression expr ->
+        id this#expression expr body (fun expr -> Ast.Function.BodyExpression expr)
 
   method function_body (block: Loc.t Ast.Statement.Block.t) =
     this#block block
