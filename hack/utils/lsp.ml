@@ -660,6 +660,7 @@ module FindReferences = struct
 
   and referenceContext = {
     includeDeclaration: bool;  (* include declaration of current symbol *)
+    includeIndirectReferences: bool;
   }
 end
 

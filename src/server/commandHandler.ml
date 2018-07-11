@@ -823,12 +823,12 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     end
 
   | LspToServer (RequestMessage (id, FindReferencesRequest params), metadata) ->
+    let open FindReferences in
     let env = ref env in
-    let loc = FindReferences.(params.loc) in
-    let _includeDeclaration = FindReferences.(params.context.includeDeclaration) in
+    let { loc; context = { includeDeclaration=_; includeIndirectReferences=multi_hop } } = params in
     (* TODO: respect includeDeclaration *)
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
-    let global, multi_hop = true, false in
+    let global = true in
     let%lwt result, extra_data =
       find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in

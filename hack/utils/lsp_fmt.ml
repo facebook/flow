@@ -657,6 +657,7 @@ let parse_findReferences (params: json option) : FindReferences.params =
     context =
       { FindReferences.
         includeDeclaration = Jget.bool_d context "includeDeclaration" true;
+        includeIndirectReferences = Jget.bool_d context "includeIndirectReferences" false;
       }
   }
 
