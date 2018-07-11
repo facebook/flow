@@ -43,6 +43,9 @@ type results = {
 
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+
+  (* set of unchanged files *)
+  parse_unchanged: FilenameSet.t;
 }
 
 val docblock_max_tokens: int
@@ -60,8 +63,8 @@ val parse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
-  lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
+  parse_unchanged: bool ->
   MultiWorkerLwt.worker list option ->       (* Some=parallel, None=serial *)
   File_key.t list Bucket.next ->  (* delivers buckets of filenames *)
   results Lwt.t                       (* job results, not asts *)
@@ -82,8 +85,8 @@ val reparse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
-  lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
+  parse_unchanged: bool ->
   ?with_progress: bool ->
   MultiWorkerLwt.worker list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)

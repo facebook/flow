@@ -79,7 +79,8 @@ let with_timer_lwt =
       (fun () -> Profiling_js.with_timer_lwt ~timer ~f profiling)
       (fun () -> print_timer ?options timer profiling; Lwt.return_unit)
 
-let collate_parse_results ~options { Parsing_service_js.parse_ok; parse_skips; parse_fails } =
+let collate_parse_results ~options parse_results =
+  let { Parsing_service_js.parse_ok; parse_skips; parse_fails; parse_unchanged } = parse_results in
   let local_errors = List.fold_left (fun errors (file, _, fail) ->
     let errset = match fail with
     | Parsing_service_js.Parse_error err ->
@@ -110,7 +111,9 @@ let collate_parse_results ~options { Parsing_service_js.parse_ok; parse_skips; p
     (file, info) :: unparsed
   ) parse_skips parse_fails in
 
-  parse_ok, unparsed, local_errors
+  let parse_ok = parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
+
+  parse_ok, unparsed, parse_unchanged, local_errors
 
 let parse ~options ~profiling ~workers parse_next =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -122,8 +125,8 @@ let reparse ~options ~profiling ~workers modified =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
     let%lwt new_or_changed, results =
       Parsing_service_js.reparse_with_defaults ~with_progress:true options workers modified in
-    let parse_ok, unparsed, local_errors = collate_parse_results ~options results in
-    Lwt.return (new_or_changed, parse_ok, unparsed, local_errors)
+    let parse_ok, unparsed, unchanged, local_errors = collate_parse_results ~options results in
+    Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors)
   )
 
 let parse_contents ~options ~profiling ~check_syntax filename contents =
@@ -751,9 +754,25 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
      removal of unchanged files *)
-  let%lwt new_or_changed, freshparsed, unparsed, new_local_errors =
+  let%lwt new_or_changed, freshparsed, unparsed, unchanged_parse, new_local_errors =
      reparse ~options ~profiling ~workers modified in
-  let freshparsed = freshparsed |> FilenameMap.keys |> FilenameSet.of_list in
+
+  let new_or_changed, freshparsed =
+    if force_focus then begin
+      (* Normally we can ignore files which are unmodified. However, if someone passed force_focus,
+       * then we may need to ressurect some unmodified files into the new_or_changed and freshparsed
+       * sets. For example, if someone ran `flow force-recheck --focus a.js` and a.js is not
+       * focused, then we need to recheck it even if the file is unchanged
+       *
+       * We avoid rechecking already-focused unmodified files since they're already focused and
+       * haven't changed :P *)
+      let files_to_focus =
+        FilenameSet.diff unchanged_parse (CheckedSet.focused env.ServerEnv.checked_files)
+      in
+      FilenameSet.union new_or_changed files_to_focus, FilenameSet.union freshparsed files_to_focus
+    end else new_or_changed, freshparsed
+  in
+
   let unparsed_set =
     List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
   in
@@ -1159,9 +1178,10 @@ let init ~profiling ~workers options =
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
 
   Hh_logger.info "Parsing";
-  let%lwt parsed, unparsed, local_errors =
+  let%lwt parsed, unparsed, unchanged, local_errors =
     parse ~options ~profiling ~workers next_files in
-  let parsed = parsed |> FilenameMap.keys |> FilenameSet.of_list in
+
+  assert (FilenameSet.is_empty unchanged);
 
   Hh_logger.info "Building package heap";
   let%lwt () = init_package_heap ~options ~profiling parsed in
