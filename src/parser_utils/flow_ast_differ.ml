@@ -66,6 +66,12 @@ type node =
   | Program of Loc.t Ast.program
   | Expression of Loc.t Ast.Expression.t
 
+(* This is needed because all of the functions assume that if they are called, there is some
+ * difference between their arguments and they will often report that even if no difference actually
+ * exists. This allows us to easily avoid calling the diffing function if there is no difference. *)
+let diff_if_changed f x1 x2 =
+  if x1 == x2 then [] else f x1 x2
+
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
 * - Each function for an AST node represented in the `node` type above should return a list of
@@ -214,5 +220,24 @@ and expression_statement
 
 and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
     : node change list =
+  let changes =
+    (* The open is here to avoid ambiguity with the use of the local `Expression` constructor
+     * below *)
+    let open Ast.Expression in
+    match expr1, expr2 with
+    | (_, Binary b1), (_, Binary b2) ->
+      binary b1 b2
+    | _, _ ->
+      None
+  in
   let old_loc = Ast_utils.loc_of_expression expr1 in
-  [(old_loc, Replace (Expression expr1, Expression expr2))]
+  Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+and binary (b1: Loc.t Ast.Expression.Binary.t) (b2: Loc.t Ast.Expression.Binary.t): node change list option =
+  let open Ast.Expression.Binary in
+  let { operator = op1; left = left1; right = right1 } = b1 in
+  let { operator = op2; left = left2; right = right2 } = b2 in
+  if op1 <> op2 then
+    None
+  else
+    Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)

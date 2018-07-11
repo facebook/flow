@@ -24,6 +24,8 @@ class useless_mapper = object
     match operator with
     | Plus ->
       { expr with operator=Minus }
+    | Mult ->
+      { expr with operator=Plus }
     | _ -> expr
 end
 
@@ -47,7 +49,7 @@ let debug_string_of_edits edits =
 
 let tests = "ast_differ" >::: [
   "simple" >:: begin fun ctxt ->
-    let source = "function foo() { (5 * 3); 4; (6 + 4); }" in
+    let source = "function foo() { (5 - 3); 4; (6 + 4); }" in
     let edits = edits_of_source source in
     assert_equal ~ctxt [((26, 27), "(5)"); ((30, 35), "(6 - 5)")] edits
   end;
@@ -55,5 +57,11 @@ let tests = "ast_differ" >::: [
     let source = "class Foo { bar() { 4; } }" in
     let edits = edits_of_source source in
     assert_equal ~ctxt [((20, 21), "(5)")] edits
+  end;
+  "precedence" >:: begin fun ctxt ->
+    let source = "5 - 3 * 3" in
+    let edits = edits_of_source source in
+    (* It is mandatory to insert the parens here *)
+    assert_equal ~ctxt [((4, 9), "(3 + 3)")] edits
   end;
 ]
