@@ -913,7 +913,8 @@ let handle_persistent
 
   let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
     (fun profiling ->
-      try handle_persistent_unsafe genv env client profiling request
+      try%lwt
+        handle_persistent_unsafe genv env client profiling request
       with e ->
         let stack = Utils.Callstack (Printexc.get_backtrace ()) in
         let reason = Printexc.to_string e in
