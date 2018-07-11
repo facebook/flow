@@ -37,6 +37,14 @@ let edits_of_source source =
   (* Extract columns from the locs *)
   List.map (fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) edits
 
+let debug_string_of_edit ((start, end_), text) =
+  Printf.sprintf "((%d, %d), %s)" start end_ text
+
+let debug_string_of_edits edits =
+  edits
+  |> List.map debug_string_of_edit
+  |> String.concat ", "
+
 let tests = "ast_differ" >::: [
   "simple" >:: begin fun ctxt ->
     let source = "function foo() { (5 * 3); 4; (6 + 4); }" in
