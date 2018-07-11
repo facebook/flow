@@ -49,11 +49,11 @@ let tests = "ast_differ" >::: [
   "simple" >:: begin fun ctxt ->
     let source = "function foo() { (5 * 3); 4; (6 + 4); }" in
     let edits = edits_of_source source in
-    assert_equal ~ctxt [((26, 28), "5;"); ((29, 37), "6 - 5;")] edits
+    assert_equal ~ctxt [((26, 27), "(5)"); ((30, 35), "(6 - 5)")] edits
   end;
   "class" >:: begin fun ctxt ->
     let source = "class Foo { bar() { 4; } }" in
     let edits = edits_of_source source in
-    assert_equal ~ctxt [((20, 22), "5;")] edits
+    assert_equal ~ctxt [((20, 21), "(5)")] edits
   end;
 ]

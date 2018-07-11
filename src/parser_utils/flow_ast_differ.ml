@@ -64,6 +64,7 @@ let diff_and_recurse
 type node =
   | Statement of Loc.t Ast.Statement.t
   | Program of Loc.t Ast.program
+  | Expression of Loc.t Ast.Expression.t
 
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
@@ -104,6 +105,8 @@ and statement (stmt1: Loc.t Ast.Statement.t) (stmt2: Loc.t Ast.Statement.t)
     function_declaration func1 func2
   | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
     class_ class1 class2
+  | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
+    expression_statement expr1 expr2
   | _, _ ->
     None
   in
@@ -196,3 +199,20 @@ and block (block1: Loc.t Ast.Statement.Block.t) (block2: Loc.t Ast.Statement.Blo
   let { body = body1 } = block1 in
   let { body = body2 } = block2 in
   statement_list body1 body2
+
+and expression_statement
+    (stmt1: Loc.t Ast.Statement.Expression.t)
+    (stmt2: Loc.t Ast.Statement.Expression.t)
+    : node change list option =
+  let open Ast.Statement.Expression in
+  let { expression = expr1; directive = dir1 } = stmt1 in
+  let { expression = expr2; directive = dir2 } = stmt2 in
+  if dir1 <> dir2 then
+    None
+  else
+    Some (expression expr1 expr2)
+
+and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
+    : node change list =
+  let old_loc = Ast_utils.loc_of_expression expr1 in
+  [(old_loc, Replace (Expression expr1, Expression expr2))]

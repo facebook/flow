@@ -10,6 +10,15 @@ open Flow_ast_differ
 let layout_of_node = function
   | Statement stmt -> Js_layout_generator.statement stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
+  | Expression expr ->
+    (* Wrap the expression in parentheses because we don't know what context we are in. *)
+    (* TODO keep track of the expression context for printing, which will only insert parens when
+     * actually needed. *)
+    Layout.fuse [
+      Layout.Atom "(";
+      Js_layout_generator.expression expr;
+      Layout.Atom ")";
+    ]
 
 let text_of_node node =
   let layout = layout_of_node node in

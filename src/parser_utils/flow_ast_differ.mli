@@ -13,5 +13,6 @@ type 'a change = (Loc.t * 'a change')
 type node =
   | Statement of Loc.t Ast.Statement.t
   | Program of Loc.t Ast.program
+  | Expression of Loc.t Ast.Expression.t
 
 val program: Loc.t Ast.program -> Loc.t Ast.program -> node change list
