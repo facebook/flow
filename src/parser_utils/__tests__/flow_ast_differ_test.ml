@@ -46,6 +46,6 @@ let tests = "ast_differ" >::: [
   "class" >:: begin fun ctxt ->
     let source = "class Foo { bar() { 4; } }" in
     let edits = edits_of_source source in
-    assert_equal ~ctxt [((0, 26), "class Foo {\n  bar() {\n    5;\n  }\n}")] edits
+    assert_equal ~ctxt [((20, 22), "5;")] edits
   end;
 ]

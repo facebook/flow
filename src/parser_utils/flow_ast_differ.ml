@@ -102,13 +102,17 @@ and statement (stmt1: Loc.t Ast.Statement.t) (stmt2: Loc.t Ast.Statement.t)
   let changes = match stmt1, stmt2 with
   | (_, FunctionDeclaration func1), (_, FunctionDeclaration func2) ->
     function_declaration func1 func2
+  | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
+    class_ class1 class2
   | _, _ ->
     None
   in
   let old_loc = Ast_utils.loc_of_statement stmt1 in
   Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
 
-and function_declaration (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Function.t)
+and function_declaration func1 func2 = function_ func1 func2
+
+and function_ (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Function.t)
     : node change list option =
   let open Ast.Function in
   let {
@@ -133,6 +137,58 @@ and function_declaration (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Functio
       None
     | BodyBlock (_, block1), BodyBlock (_, block2) ->
       block block1 block2
+
+and class_ (class1: Loc.t Ast.Class.t) (class2: Loc.t Ast.Class.t) =
+  let open Ast.Class in
+  let {
+    id=id1; body=body1; tparams=tparams1; super=super1; super_targs=super_targs1;
+    implements=implements1; classDecorators=classDecorators1;
+  } = class1 in
+  let {
+    id=id2; body=body2; tparams=tparams2; super=super2; super_targs=super_targs2;
+    implements=implements2; classDecorators=classDecorators2;
+  } = class2 in
+  if id1 <> id2 || (* body handled below *) tparams1 <> tparams2 || super1 <> super2 ||
+      super_targs1 <> super_targs2 || implements1 <> implements2 ||
+      classDecorators1 <> classDecorators2
+  then
+    None
+  else
+    (* just body changed *)
+    class_body body1 body2
+
+and class_body (class_body1: Loc.t Ast.Class.Body.t) (class_body2: Loc.t Ast.Class.Body.t)
+    : node change list option =
+  let open Ast.Class.Body in
+  let _, { body=body1 } = class_body1 in
+  let _, { body=body2 } = class_body2 in
+  diff_and_recurse class_element body1 body2
+
+and class_element (elem1: Loc.t Ast.Class.Body.element) (elem2: Loc.t Ast.Class.Body.element)
+    : node change list option =
+  let open Ast.Class.Body in
+  match elem1, elem2 with
+  | Method (_, m1), Method (_, m2) ->
+    class_method m1 m2
+  | _ -> None (* TODO *)
+
+and class_method
+    (m1: Loc.t Ast.Class.Method.t')
+    (m2: Loc.t Ast.Class.Method.t')
+    : node change list option =
+  let open Ast.Class.Method in
+  let { kind = kind1; key = key1; value = (_loc, value1); static = static1; decorators = decorators1 } =
+    m1
+  in
+  let { kind = kind2; key = key2; value = (_loc, value2); static = static2; decorators = decorators2 } =
+    m2
+  in
+  if kind1 <> kind2 || key1 <> key2 || (* value handled below *) static1 <> static2 ||
+      decorators1 <> decorators2
+  then
+    None
+  else
+    function_ value1 value2
 
 and block (block1: Loc.t Ast.Statement.Block.t) (block2: Loc.t Ast.Statement.Block.t)
     : node change list option =
