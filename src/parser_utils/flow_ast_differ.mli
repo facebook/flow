@@ -15,4 +15,7 @@ type node =
   | Program of Loc.t Ast.program
   | Expression of Loc.t Ast.Expression.t
 
+(* Diffs the given ASTs using referential equality to determine whether two nodes are different.
+ * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
+ * does not work well for e.g. parsing two programs and determining their differences. *)
 val program: Loc.t Ast.program -> Loc.t Ast.program -> node change list
