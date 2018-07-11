@@ -647,13 +647,7 @@ class mapper = object(this)
       predicate; return; tparams;
     } = expr in
     let ident' = map_opt this#function_identifier ident in
-    let params' =
-      let (loc, { Params.params = params_list; rest }) = params in
-      let params_list' = ListUtils.ident_map this#function_param_pattern params_list in
-      let rest' = map_opt this#function_rest_element rest in
-      if params_list == params_list' && rest == rest' then params
-      else (loc, { Params.params = params_list'; rest = rest' })
-    in
+    let params' = this#function_params params in
     let return' = map_opt this#type_annotation return in
     let body' = match body with
       | BodyBlock (loc, block) ->
@@ -669,6 +663,14 @@ class mapper = object(this)
       id = ident'; params = params'; return = return'; body = body';
       async; generator; expression; predicate; tparams = tparams';
     }
+
+  method function_params (params: Loc.t Ast.Function.Params.t) =
+    let open Ast.Function in
+    let (loc, { Params.params = params_list; rest }) = params in
+    let params_list' = ListUtils.ident_map this#function_param_pattern params_list in
+    let rest' = map_opt this#function_rest_element rest in
+    if params_list == params_list' && rest == rest' then params
+    else (loc, { Params.params = params_list'; rest = rest' })
 
   method function_body (block: Loc.t Ast.Statement.Block.t) =
     this#block block
