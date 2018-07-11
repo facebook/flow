@@ -22,6 +22,12 @@ Simple object property multi-hop find-refs:
       "end":{"line":6,"column":8,"offset":85}
     },
     {
+      "source":"usesBar.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":17,"offset":106},
+      "end":{"line":9,"column":20,"offset":110}
+    },
+    {
       "source":"usesFoo.js",
       "type":"SourceFile",
       "start":{"line":6,"column":5,"offset":81},
