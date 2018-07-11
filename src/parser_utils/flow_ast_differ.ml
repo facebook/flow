@@ -65,6 +65,7 @@ type node =
   | Statement of Loc.t Ast.Statement.t
   | Program of Loc.t Ast.program
   | Expression of Loc.t Ast.Expression.t
+  | Identifier of Loc.t Ast.Identifier.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -227,6 +228,8 @@ and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
     match expr1, expr2 with
     | (_, Binary b1), (_, Binary b2) ->
       binary b1 b2
+    | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
+      Some (identifier id1 id2)
     | _, _ ->
       None
   in
@@ -241,3 +244,7 @@ and binary (b1: Loc.t Ast.Expression.Binary.t) (b2: Loc.t Ast.Expression.Binary.
     None
   else
     Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
+
+and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
+  let (old_loc, _) = id1 in
+  [(old_loc, Replace (Identifier id1, Identifier id2))]

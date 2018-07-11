@@ -27,6 +27,13 @@ class useless_mapper = object
     | Mult ->
       { expr with operator=Plus }
     | _ -> expr
+
+  method! identifier id =
+    let (loc, name) = id in
+    if name = "rename" then
+      (loc, "gotRenamed")
+    else
+      id
 end
 
 let edits_of_source source =
@@ -63,5 +70,10 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     (* It is mandatory to insert the parens here *)
     assert_equal ~ctxt [((4, 9), "(3 + 3)")] edits
+  end;
+  "identifier" >:: begin fun ctxt ->
+    let source = "5 - rename" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
   end;
 ]

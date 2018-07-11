@@ -14,6 +14,7 @@ type node =
   | Statement of Loc.t Ast.Statement.t
   | Program of Loc.t Ast.program
   | Expression of Loc.t Ast.Expression.t
+  | Identifier of Loc.t Ast.Identifier.t
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it

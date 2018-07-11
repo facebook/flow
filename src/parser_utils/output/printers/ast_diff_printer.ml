@@ -19,6 +19,7 @@ let layout_of_node = function
       Js_layout_generator.expression expr;
       Layout.Atom ")";
     ]
+  | Identifier id -> Js_layout_generator.identifier id
 
 let text_of_node node =
   let layout = layout_of_node node in
