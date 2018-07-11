@@ -445,6 +445,17 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
+let hash_content content =
+  let state = Xx.init () in
+  Xx.update state content;
+  Xx.digest state
+
+let does_content_match_file_hash file content =
+  let content_hash = hash_content content in
+  match FileHashHeap.get file with
+  | None -> false
+  | Some hash -> hash = content_hash
+
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
@@ -468,11 +479,7 @@ let reducer
       None in
   match content with
   | Some content ->
-      let new_hash =
-        let state = Xx.init () in
-        Xx.update state content;
-        Xx.digest state
-      in
+      let new_hash = hash_content content in
       let unchanged =
         match FileHashHeap.get_old file with
         | Some old_hash when old_hash = new_hash ->

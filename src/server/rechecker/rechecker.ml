@@ -47,30 +47,13 @@ let process_updates genv env updates =
    * watchman file watcher! *)
   let is_incompatible filename_str =
     let filename = File_key.JsonFile filename_str in
-    let filename_set = FilenameSet.singleton filename in
-    let ast_opt =
-      (*
-       * If the file no longer exists, this will log a harmless error to
-       * stderr and the get_ast call below will return None, which will
-       * cause the server to exit.
-       *
-       * If the file has come into existence, reparse (true to its name)
-       * will not actually parse the file. Again, this will cause get_ast
-       * to return None and the server to exit.
-       *
-       * In both cases, this is desired behavior since a package.json file
-       * has changed considerably.
-       *)
-      let _ = Parsing_service_js.reparse_with_defaults
-        options
-        (* workers *) None
-        filename_set
-      in
-      Parsing_service_js.get_ast filename
-    in
-    match ast_opt with
-      | None -> true
-      | Some ast -> Module_js.package_incompatible filename_str ast
+    match Sys_utils.cat_or_failed filename_str with
+    | None -> true (* Failed to read package.json *)
+    | Some content ->
+      try
+        let ast = Parsing_service_js.parse_json_file ~fail:true content filename in
+        Module_js.package_incompatible filename_str ast
+      with _ -> true (* Failed to parse package.json *)
   in
 
   let is_incompatible_package_json f = (
@@ -111,21 +94,11 @@ let process_updates genv env updates =
     let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
     is_lib &&
       let file = File_key.LibFile filename in
-      let old_ast = Parsing_service_js.get_ast file in
-      let new_ast =
-        let filename_set = FilenameSet.singleton file in
-        let _ = Parsing_service_js.reparse_with_defaults
-          (* types are always allowed in lib files *)
-          ~types_mode:Parsing_service_js.TypesAllowed
-          (* lib files are always "use strict" *)
-          ~use_strict:true
-          options
-          (* workers *) None
-          filename_set
-        in
-        Parsing_service_js.get_ast file
-      in
-      old_ast <> new_ast
+      match Sys_utils.cat_or_failed filename with
+      | None -> true (* Failed to read lib file *)
+      | Some content ->
+        (* Check if the lib file's hash has changed *)
+        not (Parsing_service_js.does_content_match_file_hash file content)
   in
 
   (* Die if a lib file changed *)

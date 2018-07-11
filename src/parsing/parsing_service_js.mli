@@ -121,6 +121,12 @@ val parse_docblock:
   string ->
   docblock_error list * Docblock.t
 
+val parse_json_file :
+  fail:bool ->
+  string ->
+  File_key.t ->
+  Loc.t * (Loc.t * Loc.t Ast.Statement.t') list * Loc.t Ast.Comment.t list
+
 (* parse contents of a file *)
 val do_parse:
   ?fail:bool ->
@@ -137,6 +143,8 @@ val next_of_filename_set:
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
   File_key.t list Bucket.next
+
+val does_content_match_file_hash: File_key.t -> string -> bool
 
 (* APIs for loading saved state *)
 val add_file_sig_from_saved_state: File_key.t -> File_sig.t -> unit
