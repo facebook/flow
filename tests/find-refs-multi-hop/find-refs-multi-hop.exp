@@ -35,6 +35,19 @@ Simple object property multi-hop find-refs:
     }
   ]
 }
+multi-hop find-refs starting on an object literal property:
+{
+  "kind":"symbol-found",
+  "name":"prop",
+  "locs":[
+    {
+      "source":"usesBar.js",
+      "type":"SourceFile",
+      "start":{"line":9,"column":17,"offset":106},
+      "end":{"line":9,"column":20,"offset":110}
+    }
+  ]
+}
 Superclass member:
 {
   "kind":"symbol-found",

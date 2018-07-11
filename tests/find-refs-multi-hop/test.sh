@@ -5,6 +5,10 @@ FLOW=$1
 echo "Simple object property multi-hop find-refs:"
 assert_ok "$FLOW" find-refs --multi-hop --json --pretty --strip-root usesFoo.js 6 5
 
+echo "multi-hop find-refs starting on an object literal property:"
+# TODO this should return more than the property location itself
+assert_ok "$FLOW" find-refs --multi-hop --json --pretty --strip-root usesBar.js 9 18
+
 echo "Superclass member:"
 assert_ok "$FLOW" find-refs --multi-hop --json --pretty --strip-root classes.js 4 3
 
