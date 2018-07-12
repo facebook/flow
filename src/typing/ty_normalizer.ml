@@ -387,7 +387,7 @@ end = struct
   *)
   let simplify_unions_inters_visitor =
     let open Ty_visitor.AnyVisitor in
-    object(self) inherit c
+    object(self) inherit visitor
     method private simplify env ~break ~zero ~one ~make ts =
       mapM (self#type_ env) ts >>= fun ts' ->
       let ts' = List.concat (List.map break ts') in
@@ -451,13 +451,13 @@ end = struct
 
     (* Replace a recursive type variable r with a symbol sym in the type t. *)
     let subst r sym t =
-      let visitor = object inherit Ty_visitor.UnitVisitor.c as super
+      let subst_visitor = object inherit Ty_visitor.UnitVisitor.visitor as super
         method! type_ env = function
         | Ty.TVar (i, ts) when r = i ->
           super#type_ env (Ty.Generic (sym, true, ts))
         | t -> super#type_ env t
       end in
-      visitor#map_type () t
+      subst_visitor#map_type () t
 
     (* We shouldn't really create bare Mu types for two reasons.
 
@@ -525,7 +525,7 @@ end = struct
       open M
 
       let run v =
-        let visitor = object(self) inherit c
+        let remove_toplevel_tvar_visitor = object(self) inherit visitor
           method! type_ env = function
           | Ty.Union (t0,t1,ts) ->
             mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
@@ -537,7 +537,7 @@ end = struct
             self#type_ env t >>| mk_mu ~check_recursive:true v
           | t -> return t
         end in
-        visitor#type_ Env.init
+        remove_toplevel_tvar_visitor#type_ Env.init
     end
 
 
@@ -607,7 +607,7 @@ end = struct
       | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
       in
       let open Visitor in
-      let visitor = object inherit c as super
+      let subst_visitor = object inherit visitor as super
         method! type_ env t =
           match t with
           | TypeAlias { ta_tparams=ps; _ }
@@ -627,7 +627,7 @@ end = struct
       in
       fun vs ts t_body ->
         let env = init_env vs ts in
-        let t, changed = visitor#type_ env t_body in
+        let t, changed = subst_visitor#type_ env t_body in
         if changed then simplify_unions_inters t else t
 
   end

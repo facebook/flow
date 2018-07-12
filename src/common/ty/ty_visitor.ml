@@ -25,7 +25,7 @@ module Make(M: Monoid.S)(E: Env) = struct
     | Some t -> f t >>| fun t -> Some t
     | _ -> return None
 
-  class c = object(self)
+  class visitor = object(self)
 
     method map_type (env: E.t) t =
       fst (self#type_ env t)

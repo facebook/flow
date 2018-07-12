@@ -64,7 +64,7 @@ end = struct
   let from_type =
     let open Env in
     (* The visitor class is also a mapper. This visitor does not alter its input. *)
-    let visitor = object(self) inherit c as super
+    let free_vars_visitor = object(self) inherit visitor as super
       method! type_ env = function
       | Ty.TVar (Ty.RVar i, _) as t when not (TVarSet.mem i env.skip) ->
         tell (TVarSet.singleton i) >>= fun _ ->
@@ -99,7 +99,7 @@ end = struct
         super#type_ env t
     end
     in fun ~is_top t ->
-    snd (visitor#type_ { is_top; skip = TVarSet.empty} t)
+    snd (free_vars_visitor#type_ { is_top; skip = TVarSet.empty} t)
 
   let is_free_in ~is_top v t = TVarSet.mem v (from_type ~is_top t)
 
