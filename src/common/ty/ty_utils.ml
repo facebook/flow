@@ -104,3 +104,22 @@ end = struct
   let is_free_in ~is_top v t = TVarSet.mem v (from_type ~is_top t)
 
 end
+
+
+(*************)
+(* Ty.t size *)
+(*************)
+
+module Size : sig
+  val calculate : Ty.t -> int
+end = struct
+  open Ty_visitor.CountVisitor
+
+  let size_visitor = object(_) inherit visitor as super
+    method! type_ env t =
+      tell 1 >>= fun _ ->
+      super#type_ env t
+  end
+
+  let calculate t = snd (size_visitor#type_ () t)
+end
