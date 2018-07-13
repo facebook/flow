@@ -38,7 +38,7 @@ each have some unique items.
 
 ```js
 type TypeA = 1 | 2 | 3;
-type TypeB =         3 | 4 | 5;
+type TypeB = 3 | 4 | 5;
 ```
 
 ## When are subtypes used? <a class="toc" id="toc-when-are-subtypes-used" href="#toc-when-are-subtypes-used"></a>
@@ -113,22 +113,34 @@ recursively until we can decide if we have a subtype or not.
 
 #### Subtypes of functions <a class="toc" id="toc-subtypes-of-functions" href="#toc-subtypes-of-functions"></a>
 
-Flow compares two functions by comparing its inputs and outputs. If all the
-inputs and outputs are a subset of the other function, then it is a subtype.
+Subtyping rules for functions are more complicated. So far, we've seen that `A`
+is a subtype of `B` if `B` contains all possible values for `A`. For functions,
+it's not clear how this relationship would apply. To simplify things, you can think
+of a function type `A` as being a subtype of a function type `B` if functions of type
+`A` can be used wherever a function of type `B` is expected.
+
+Let's say we have a function type and a few functions. Which of the functions can
+be used safely in code that expects the given function type?
 
 ```js
-type Func1 = (1 | 2)     => "A" | "B";
-type Func2 = (1 | 2 | 3) => "A" | "B" | "C";
+type FuncType = (1 | 2) => "A" | "B";
+
+let f1: (1 | 2) => "A" | "B" | "C" = (x) => /* ... */
+let f2: (1 | null) => "A" | "B" = (x) => /* ... */
+let f3: (1 | 2 | 3) => "A" = (x) => /* ... */
 ```
 
-This also applies to the number of parameters in the functions. If one function
-contains a subset of the parameters of the other, then the other is a subtype.
+- `f1` can return a value that `FuncType` never does, so code that relies on `FuncType`
+might not be safe if `f1` is used. Its type is not a subtype of `FuncType`.
+- `f2` can't handle all the argument values that `FuncType` does, so code that relies on
+`FuncType` can't safely use `f2`. Its type is also not a subtype of `FuncType`.
+- `f3` can accept all the argument values that `FuncType` does, and only returns
+values that `FuncType` does, so its type is a subtype of `FuncType`.
 
-```js
-// @flow
-type Func1 = (number) => void;
-type Func2 = (number, string) => void;
+In general, the function subtyping rule is this: A function type `B` is a subtype
+of a function type `A` if and only if `B`'s inputs are a superset of `A`'s, and `B`'s outputs
+are a subset of `A`'s. The subtype must accept _at least_ the same inputs as its parent,
+and must return _at most_ the same outputs.
 
-let func1: Func1 = (a: number) => {};
-let func2: Func2 = func1;
-```
+The decision of which direction to apply the subtyping rule on inputs and outputs is
+governed by variance, which is the topic of the next section.

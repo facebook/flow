@@ -1,817 +1,784 @@
-Error: FormData.js:5
-  5: new FormData(''); // incorrect
-                  ^^ string. This type is incompatible with the expected param type of
-317:     constructor(form?: HTMLFormElement): void;
-                            ^^^^^^^^^^^^^^^ HTMLFormElement. See lib: <BUILTINS>/bom.js:317
+Error ------------------------------------------------------------------------------------------------- FormData.js:5:14
 
-Error: FormData.js:6
-  6: new FormData(document.createElement('input')); // incorrect
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ HTMLInputElement. This type is incompatible with the expected param type of
-317:     constructor(form?: HTMLFormElement): void;
-                            ^^^^^^^^^^^^^^^ HTMLFormElement. See lib: <BUILTINS>/bom.js:317
+Cannot call `FormData` with empty string bound to `form` because string [1] is incompatible with `HTMLFormElement` [2].
 
-Error: FormData.js:14
- 14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ File. This type is incompatible with
- 14: const d: string = a.get('foo'); // incorrect
-              ^^^^^^ string
+   FormData.js:5:14
+     5| new FormData(''); // incorrect
+                     ^^ [1]
 
-Error: FormData.js:14
- 14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ null. This type is incompatible with
- 14: const d: string = a.get('foo'); // incorrect
-              ^^^^^^ string
-
-Error: FormData.js:14
- 14: const d: string = a.get('foo'); // incorrect
-                       ^^^^^^^^^^^^ undefined. This type is incompatible with
- 14: const d: string = a.get('foo'); // incorrect
-              ^^^^^^ string
-
-Error: FormData.js:15
- 15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ null. This type is incompatible with
- 15: const e: Blob = a.get('foo'); // incorrect
-              ^^^^ Blob
-
-Error: FormData.js:15
- 15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ string. This type is incompatible with
- 15: const e: Blob = a.get('foo'); // incorrect
-              ^^^^ Blob
-
-Error: FormData.js:15
- 15: const e: Blob = a.get('foo'); // incorrect
-                     ^^^^^^^^^^^^ undefined. This type is incompatible with
- 15: const e: Blob = a.get('foo'); // incorrect
-              ^^^^ Blob
-
-Error: FormData.js:17
- 17: a.get(2); // incorrect
-           ^ number. This type is incompatible with the expected param type of
-320:     get(name: string): ?FormDataEntryValue;
-                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:320
-
-Error: FormData.js:21
- 21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                                     ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                       ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                       ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-
-Error: FormData.js:22
- 22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                              ^^^^ Blob. This type is incompatible with
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                                     ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-
-Error: FormData.js:23
- 23: a.getAll(23); // incorrect
-              ^^ number. This type is incompatible with the expected param type of
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:321
-
-Error: FormData.js:27
- 27: a.set('foo', {}); // incorrect
-     ^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 27: a.set('foo', {}); // incorrect
-     ^^^^^ intersection
-  Member 1:
-  323:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:323
-  Error:
-   27: a.set('foo', {}); // incorrect
-                    ^^ object literal. This type is incompatible with the expected param type of
-  323:     set(name: string, value: string): void;
-                                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:323
-  Member 2:
-  324:     set(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:324
-  Error:
-   27: a.set('foo', {}); // incorrect
-                    ^^ object literal. This type is incompatible with the expected param type of
-  324:     set(name: string, value: Blob, filename?: string): void;
-                                    ^^^^ Blob. See lib: <BUILTINS>/bom.js:324
-  Member 3:
-  325:     set(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:325
-  Error:
-   27: a.set('foo', {}); // incorrect
-                    ^^ object literal. This type is incompatible with the expected param type of
-  325:     set(name: string, value: File, filename?: string): void;
-                                    ^^^^ File. See lib: <BUILTINS>/bom.js:325
-
-Error: FormData.js:28
- 28: a.set(2, 'bar'); // incorrect
-     ^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 28: a.set(2, 'bar'); // incorrect
-     ^^^^^ intersection
-  Member 1:
-  323:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:323
-  Error:
-   28: a.set(2, 'bar'); // incorrect
-             ^ number. This type is incompatible with the expected param type of
-  323:     set(name: string, value: string): void;
-                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:323
-  Member 2:
-  324:     set(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:324
-  Error:
-   28: a.set(2, 'bar'); // incorrect
-             ^ number. This type is incompatible with the expected param type of
-  324:     set(name: string, value: Blob, filename?: string): void;
-                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:324
-  Member 3:
-  325:     set(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:325
-  Error:
-   28: a.set(2, 'bar'); // incorrect
-             ^ number. This type is incompatible with the expected param type of
-  325:     set(name: string, value: File, filename?: string): void;
-                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:325
-
-Error: FormData.js:29
- 29: a.set('foo', 'bar', 'baz'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 29: a.set('foo', 'bar', 'baz'); // incorrect
-     ^^^^^ intersection
-  Member 1:
-  323:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:323
-  Error:
-   29: a.set('foo', 'bar', 'baz'); // incorrect
-                           ^^^^^ unused function argument
-    323:     set(name: string, value: string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/bom.js:323
-  Member 2:
-  324:     set(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:324
-  Error:
-   29: a.set('foo', 'bar', 'baz'); // incorrect
-                    ^^^^^ string. This type is incompatible with the expected param type of
-  324:     set(name: string, value: Blob, filename?: string): void;
-                                    ^^^^ Blob. See lib: <BUILTINS>/bom.js:324
-  Member 3:
-  325:     set(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:325
-  Error:
-   29: a.set('foo', 'bar', 'baz'); // incorrect
-                    ^^^^^ string. This type is incompatible with the expected param type of
-  325:     set(name: string, value: File, filename?: string): void;
-                                    ^^^^ File. See lib: <BUILTINS>/bom.js:325
-
-Error: FormData.js:32
- 32: a.set('bar', new File([], 'q'), 2) // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 32: a.set('bar', new File([], 'q'), 2) // incorrect
-     ^^^^^ intersection
-  Member 1:
-  323:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:323
-  Error:
-   32: a.set('bar', new File([], 'q'), 2) // incorrect
-                    ^^^^^^^^^^^^^^^^^ File. This type is incompatible with the expected param type of
-  323:     set(name: string, value: string): void;
-                                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:323
-  Member 2:
-  324:     set(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:324
-  Error:
-   32: a.set('bar', new File([], 'q'), 2) // incorrect
-                                       ^ number. This type is incompatible with the expected param type of
-  324:     set(name: string, value: Blob, filename?: string): void;
-                                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:324
-  Member 3:
-  325:     set(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:325
-  Error:
-   32: a.set('bar', new File([], 'q'), 2) // incorrect
-                                       ^ number. This type is incompatible with the expected param type of
-  325:     set(name: string, value: File, filename?: string): void;
-                                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:325
-
-Error: FormData.js:35
- 35: a.set('bar', new Blob, 2) // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
- 35: a.set('bar', new Blob, 2) // incorrect
-     ^^^^^ intersection
-  Member 1:
-  323:     set(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:323
-  Error:
-   35: a.set('bar', new Blob, 2) // incorrect
-                    ^^^^^^^^ Blob. This type is incompatible with the expected param type of
-  323:     set(name: string, value: string): void;
-                                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:323
-  Member 2:
-  324:     set(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:324
-  Error:
-   35: a.set('bar', new Blob, 2) // incorrect
-                              ^ number. This type is incompatible with the expected param type of
-  324:     set(name: string, value: Blob, filename?: string): void;
-                                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:324
-  Member 3:
-  325:     set(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:325
-  Error:
-   35: a.set('bar', new Blob, 2) // incorrect
-                    ^^^^^^^^ Blob. This type is incompatible with the expected param type of
-  325:     set(name: string, value: File, filename?: string): void;
-                                    ^^^^ File. See lib: <BUILTINS>/bom.js:325
-
-Error: FormData.js:39
- 39: a.append('foo', {}); // incorrect
-     ^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
- 39: a.append('foo', {}); // incorrect
-     ^^^^^^^^ intersection
-  Member 1:
-  327:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:327
-  Error:
-   39: a.append('foo', {}); // incorrect
-                       ^^ object literal. This type is incompatible with the expected param type of
-  327:     append(name: string, value: string): void;
-                                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:327
-  Member 2:
-  328:     append(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   39: a.append('foo', {}); // incorrect
-                       ^^ object literal. This type is incompatible with the expected param type of
-  328:     append(name: string, value: Blob, filename?: string): void;
-                                       ^^^^ Blob. See lib: <BUILTINS>/bom.js:328
-  Member 3:
-  329:     append(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
-  Error:
-   39: a.append('foo', {}); // incorrect
-                       ^^ object literal. This type is incompatible with the expected param type of
-  329:     append(name: string, value: File, filename?: string): void;
-                                       ^^^^ File. See lib: <BUILTINS>/bom.js:329
-
-Error: FormData.js:40
- 40: a.append(2, 'bar'); // incorrect
-     ^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
- 40: a.append(2, 'bar'); // incorrect
-     ^^^^^^^^ intersection
-  Member 1:
-  327:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:327
-  Error:
-   40: a.append(2, 'bar'); // incorrect
-                ^ number. This type is incompatible with the expected param type of
-  327:     append(name: string, value: string): void;
-                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:327
-  Member 2:
-  328:     append(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   40: a.append(2, 'bar'); // incorrect
-                ^ number. This type is incompatible with the expected param type of
-  328:     append(name: string, value: Blob, filename?: string): void;
-                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:328
-  Member 3:
-  329:     append(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
-  Error:
-   40: a.append(2, 'bar'); // incorrect
-                ^ number. This type is incompatible with the expected param type of
-  329:     append(name: string, value: File, filename?: string): void;
-                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:329
-
-Error: FormData.js:41
- 41: a.append('foo', 'bar', 'baz'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
- 41: a.append('foo', 'bar', 'baz'); // incorrect
-     ^^^^^^^^ intersection
-  Member 1:
-  327:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:327
-  Error:
-   41: a.append('foo', 'bar', 'baz'); // incorrect
-                              ^^^^^ unused function argument
-    327:     append(name: string, value: string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/bom.js:327
-  Member 2:
-  328:     append(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   41: a.append('foo', 'bar', 'baz'); // incorrect
-                       ^^^^^ string. This type is incompatible with the expected param type of
-  328:     append(name: string, value: Blob, filename?: string): void;
-                                       ^^^^ Blob. See lib: <BUILTINS>/bom.js:328
-  Member 3:
-  329:     append(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
-  Error:
-   41: a.append('foo', 'bar', 'baz'); // incorrect
-                       ^^^^^ string. This type is incompatible with the expected param type of
-  329:     append(name: string, value: File, filename?: string): void;
-                                       ^^^^ File. See lib: <BUILTINS>/bom.js:329
-
-Error: FormData.js:45
- 45: a.append('bar', new File([], 'q'), 2) // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
- 45: a.append('bar', new File([], 'q'), 2) // incorrect
-     ^^^^^^^^ intersection
-  Member 1:
-  327:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:327
-  Error:
-   45: a.append('bar', new File([], 'q'), 2) // incorrect
-                       ^^^^^^^^^^^^^^^^^ File. This type is incompatible with the expected param type of
-  327:     append(name: string, value: string): void;
-                                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:327
-  Member 2:
-  328:     append(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   45: a.append('bar', new File([], 'q'), 2) // incorrect
-                                          ^ number. This type is incompatible with the expected param type of
-  328:     append(name: string, value: Blob, filename?: string): void;
-                                                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:328
-  Member 3:
-  329:     append(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
-  Error:
-   45: a.append('bar', new File([], 'q'), 2) // incorrect
-                                          ^ number. This type is incompatible with the expected param type of
-  329:     append(name: string, value: File, filename?: string): void;
-                                                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:329
-
-Error: FormData.js:48
- 48: a.append('bar', new Blob, 2) // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
- 48: a.append('bar', new Blob, 2) // incorrect
-     ^^^^^^^^ intersection
-  Member 1:
-  327:     append(name: string, value: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:327
-  Error:
-   48: a.append('bar', new Blob, 2) // incorrect
-                       ^^^^^^^^ Blob. This type is incompatible with the expected param type of
-  327:     append(name: string, value: string): void;
-                                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:327
-  Member 2:
-  328:     append(name: string, value: Blob, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:328
-  Error:
-   48: a.append('bar', new Blob, 2) // incorrect
-                                 ^ number. This type is incompatible with the expected param type of
-  328:     append(name: string, value: Blob, filename?: string): void;
-                                                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:328
-  Member 3:
-  329:     append(name: string, value: File, filename?: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:329
-  Error:
-   48: a.append('bar', new Blob, 2) // incorrect
-                       ^^^^^^^^ Blob. This type is incompatible with the expected param type of
-  329:     append(name: string, value: File, filename?: string): void;
-                                       ^^^^ File. See lib: <BUILTINS>/bom.js:329
-
-Error: FormData.js:52
- 52: a.delete(3); // incorrect
-              ^ number. This type is incompatible with the expected param type of
-331:     delete(name: string): void;
-                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:331
-
-Error: FormData.js:56
- 56: for (let x: number of a.keys()) {} // incorrect
-              ^^^^^^^^^ string. This type is incompatible with
- 56: for (let x: number of a.keys()) {} // incorrect
-                 ^^^^^^ number
-
-Error: FormData.js:64
- 64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                               ^^^^ Blob. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:335
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                 ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
-                                                 ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-
-Error: FormData.js:65
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-               ^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:65
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                  ^ string. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:65
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                       ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:65
- 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                               ^^^^^^ string. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:66
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:66
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:66
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:66
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:66
- 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:335
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-               ^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                       ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ File. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/bom.js:335
-
-Error: FormData.js:67
- 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                               ^^^^^^ number. This type is incompatible with
-335:     entries(): Iterator<[string, FormDataEntryValue]>;
-                                      ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:335
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                 ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-
-Error: MutationObserver.js:10
- 10: new MutationObserver(); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 10: new MutationObserver(); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:363
-
-Error: MutationObserver.js:11
- 11: new MutationObserver(42); // incorrect
-                          ^^ number. This type is incompatible with the expected param type of
-363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:363
-
-Error: MutationObserver.js:12
- 12: new MutationObserver((n: number) => {}); // incorrect
-                              ^^^^^^ number. This type is incompatible with an argument type of
-363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:363
-
-Error: MutationObserver.js:18
- 18: o.observe(); // incorrect
-     ^^^^^^^^^^^ call of method `observe`
- 18: o.observe(); // incorrect
-     ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
-  Member 1:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Error:
-   18: o.observe(); // incorrect
-       ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Member 2:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Error:
-   18: o.observe(); // incorrect
-       ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Member 3:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-  Error:
-   18: o.observe(); // incorrect
-       ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-
-Error: MutationObserver.js:18
- 18: o.observe(); // incorrect
-     ^^^^^^^^^^^ call of method `observe`
- 18: o.observe(); // incorrect
-     ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-                                                                        v
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-356:     subtree?: boolean;
-357:     attributeOldValue?: boolean;
-...:
-360: }
-     ^ object type. See lib: <BUILTINS>/bom.js:355
-
-Error: MutationObserver.js:18
- 18: o.observe(); // incorrect
-     ^^^^^^^^^^^ call of method `observe`
- 18: o.observe(); // incorrect
-     ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-364:     observe(target: Node, options: MutationObserverInit): void;
-                         ^^^^ Node. See lib: <BUILTINS>/bom.js:364
-
-Error: MutationObserver.js:19
- 19: o.observe('invalid'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^ call of method `observe`
- 19: o.observe('invalid'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
-  Member 1:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Error:
-   19: o.observe('invalid'); // incorrect
-       ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Member 2:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Error:
-   19: o.observe('invalid'); // incorrect
-       ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Member 3:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-  Error:
-   19: o.observe('invalid'); // incorrect
-       ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-
-Error: MutationObserver.js:19
- 19: o.observe('invalid'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^ call of method `observe`
- 19: o.observe('invalid'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-                                                                        v
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-356:     subtree?: boolean;
-357:     attributeOldValue?: boolean;
-...:
-360: }
-     ^ object type. See lib: <BUILTINS>/bom.js:355
-
-Error: MutationObserver.js:19
- 19: o.observe('invalid'); // incorrect
-               ^^^^^^^^^ string. This type is incompatible with the expected param type of
-364:     observe(target: Node, options: MutationObserverInit): void;
-                         ^^^^ Node. See lib: <BUILTINS>/bom.js:364
-
-Error: MutationObserver.js:20
- 20: o.observe(div); // incorrect
-     ^^^^^^^^^^^^^^ call of method `observe`
- 20: o.observe(div); // incorrect
-     ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
-  Member 1:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Error:
-   20: o.observe(div); // incorrect
-       ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Member 2:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Error:
-   20: o.observe(div); // incorrect
-       ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Member 3:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-  Error:
-   20: o.observe(div); // incorrect
-       ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-
-Error: MutationObserver.js:20
- 20: o.observe(div); // incorrect
-     ^^^^^^^^^^^^^^ call of method `observe`
- 20: o.observe(div); // incorrect
-     ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-                                                                        v
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-356:     subtree?: boolean;
-357:     attributeOldValue?: boolean;
-...:
-360: }
-     ^ object type. See lib: <BUILTINS>/bom.js:355
-
-Error: MutationObserver.js:21
- 21: o.observe(div, {}); // incorrect
-     ^^^^^^^^^^^^^^^^^^ call of method `observe`
- 21: o.observe(div, {}); // incorrect
-                    ^^ object literal. This type is incompatible with
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
-  Member 1:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Error:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
-   21: o.observe(div, {}); // incorrect
-                      ^^ object literal
-  Member 2:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Error:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
-   21: o.observe(div, {}); // incorrect
-                      ^^ object literal
-  Member 3:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-  Error:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
-   21: o.observe(div, {}); // incorrect
-                      ^^ object literal
-
-Error: MutationObserver.js:22
- 22: o.observe(div, { subtree: true }); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `observe`
- 22: o.observe(div, { subtree: true }); // incorrect
-                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
-  Member 1:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
-  Error:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
-   22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
-  Member 2:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
-  Error:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
-   22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
-  Member 3:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
-  Error:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
-   22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
-
-Error: MutationObserver.js:23
- 23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
-                                                                        v
-355: declare type MutationObserverInit = MutationObserverInitRequired & {
-356:     subtree?: boolean;
-357:     attributeOldValue?: boolean;
-...:
-360: }
-     ^ object type. See lib: <BUILTINS>/bom.js:355
-  Property `attributeFilter` is incompatible:
-     23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
-                                                             ^^^^ boolean. This type is incompatible with
-    359:     attributeFilter?: Array<string>;
-                               ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:359
+References:
+   <BUILTINS>/bom.js:330:24
+   330|     constructor(form?: HTMLFormElement): void;
+                               ^^^^^^^^^^^^^^^ [2]
 
 
-Found 55 errors
+Error ------------------------------------------------------------------------------------------------- FormData.js:6:14
+
+Cannot call `FormData` with `document.createElement(...)` bound to `form` because `HTMLInputElement` [1] is incompatible
+with `HTMLFormElement` [2].
+
+   FormData.js:6:14
+     6| new FormData(document.createElement('input')); // incorrect
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/dom.js:617:36
+   617|   createElement(tagName: 'input'): HTMLInputElement;
+                                           ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:330:24
+   330|     constructor(form?: HTMLFormElement): void;
+                               ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
+
+Cannot assign `a.get(...)` to `d` because:
+ - null or undefined [1] is incompatible with string [2].
+ - `File` [3] is incompatible with string [2].
+
+   FormData.js:14:19
+    14| const d: string = a.get('foo'); // incorrect
+                          ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:333:24
+   333|     get(name: string): ?FormDataEntryValue;
+                               ^^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:14:10
+    14| const d: string = a.get('foo'); // incorrect
+                 ^^^^^^ [2]
+   <BUILTINS>/bom.js:333:25
+   333|     get(name: string): ?FormDataEntryValue;
+                                ^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:15:17
+
+Cannot assign `a.get(...)` to `e` because:
+ - null or undefined [1] is incompatible with `Blob` [2].
+ - string [3] is incompatible with `Blob` [2].
+
+   FormData.js:15:17
+    15| const e: Blob = a.get('foo'); // incorrect
+                        ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:333:24
+   333|     get(name: string): ?FormDataEntryValue;
+                               ^^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:15:10
+    15| const e: Blob = a.get('foo'); // incorrect
+                 ^^^^ [2]
+   <BUILTINS>/bom.js:333:25
+   333|     get(name: string): ?FormDataEntryValue;
+                                ^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:17:7
+
+Cannot call `a.get` with `2` bound to `name` because number [1] is incompatible with string [2].
+
+   FormData.js:17:7
+    17| a.get(2); // incorrect
+              ^ [1]
+
+References:
+   <BUILTINS>/bom.js:333:15
+   333|     get(name: string): ?FormDataEntryValue;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:21:43
+
+Cannot assign `a.getAll(...)` to `a2` because number [1] is incompatible with string [2] in array element.
+
+   FormData.js:21:43
+    21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                                  ^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:21:33
+    21| const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                        ^^^^^^ [1]
+   <BUILTINS>/bom.js:327:27
+   327| type FormDataEntryValue = string | File
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:22:41
+
+Cannot assign `a.getAll(...)` to `a3` because `Blob` [1] is incompatible with `File` [2] in array element.
+
+   FormData.js:22:41
+    22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                                ^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:22:26
+    22| const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                 ^^^^ [1]
+   <BUILTINS>/bom.js:327:36
+   327| type FormDataEntryValue = string | File
+                                           ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:23:10
+
+Cannot call `a.getAll` with `23` bound to `name` because number [1] is incompatible with string [2].
+
+   FormData.js:23:10
+    23| a.getAll(23); // incorrect
+                 ^^ [1]
+
+References:
+   <BUILTINS>/bom.js:334:18
+   334|     getAll(name: string): Array<FormDataEntryValue>;
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:27:1
+
+Cannot call `a.set` because:
+ - Either object literal [1] is incompatible with `Blob` [2].
+ - Or object literal [1] is incompatible with `File` [3].
+
+   FormData.js:27:1
+    27| a.set('foo', {}); // incorrect
+        ^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:27:14
+    27| a.set('foo', {}); // incorrect
+                     ^^ [1]
+   <BUILTINS>/bom.js:337:30
+   337|     set(name: string, value: Blob, filename?: string): void;
+                                     ^^^^ [2]
+   <BUILTINS>/bom.js:338:30
+   338|     set(name: string, value: File, filename?: string): void;
+                                     ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:28:1
+
+Cannot call `a.set` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+ - Or number [1] is incompatible with string [4].
+
+   FormData.js:28:1
+    28| a.set(2, 'bar'); // incorrect
+        ^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:28:7
+    28| a.set(2, 'bar'); // incorrect
+              ^ [1]
+   <BUILTINS>/bom.js:336:15
+   336|     set(name: string, value: string): void;
+                      ^^^^^^ [2]
+   <BUILTINS>/bom.js:337:15
+   337|     set(name: string, value: Blob, filename?: string): void;
+                      ^^^^^^ [3]
+   <BUILTINS>/bom.js:338:15
+   338|     set(name: string, value: File, filename?: string): void;
+                      ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:29:1
+
+Cannot call `a.set` because:
+ - Either string [1] is incompatible with `Blob` [2].
+ - Or string [1] is incompatible with `File` [3].
+
+   FormData.js:29:1
+    29| a.set('foo', 'bar', 'baz'); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:29:14
+    29| a.set('foo', 'bar', 'baz'); // incorrect
+                     ^^^^^ [1]
+   <BUILTINS>/bom.js:337:30
+   337|     set(name: string, value: Blob, filename?: string): void;
+                                     ^^^^ [2]
+   <BUILTINS>/bom.js:338:30
+   338|     set(name: string, value: File, filename?: string): void;
+                                     ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:32:1
+
+Cannot call `a.set` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+
+   FormData.js:32:1
+    32| a.set('bar', new File([], 'q'), 2) // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:32:33
+    32| a.set('bar', new File([], 'q'), 2) // incorrect
+                                        ^ [1]
+   <BUILTINS>/bom.js:337:47
+   337|     set(name: string, value: Blob, filename?: string): void;
+                                                      ^^^^^^ [2]
+   <BUILTINS>/bom.js:338:47
+   338|     set(name: string, value: File, filename?: string): void;
+                                                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:35:1
+
+Cannot call `a.set` because number [1] is incompatible with string [2].
+
+   FormData.js:35:1
+    35| a.set('bar', new Blob, 2) // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:35:24
+    35| a.set('bar', new Blob, 2) // incorrect
+                               ^ [1]
+   <BUILTINS>/bom.js:337:47
+   337|     set(name: string, value: Blob, filename?: string): void;
+                                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:39:1
+
+Cannot call `a.append` because:
+ - Either object literal [1] is incompatible with `Blob` [2].
+ - Or object literal [1] is incompatible with `File` [3].
+
+   FormData.js:39:1
+    39| a.append('foo', {}); // incorrect
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:39:17
+    39| a.append('foo', {}); // incorrect
+                        ^^ [1]
+   <BUILTINS>/bom.js:341:33
+   341|     append(name: string, value: Blob, filename?: string): void;
+                                        ^^^^ [2]
+   <BUILTINS>/bom.js:342:33
+   342|     append(name: string, value: File, filename?: string): void;
+                                        ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:40:1
+
+Cannot call `a.append` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+ - Or number [1] is incompatible with string [4].
+
+   FormData.js:40:1
+    40| a.append(2, 'bar'); // incorrect
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:40:10
+    40| a.append(2, 'bar'); // incorrect
+                 ^ [1]
+   <BUILTINS>/bom.js:340:18
+   340|     append(name: string, value: string): void;
+                         ^^^^^^ [2]
+   <BUILTINS>/bom.js:341:18
+   341|     append(name: string, value: Blob, filename?: string): void;
+                         ^^^^^^ [3]
+   <BUILTINS>/bom.js:342:18
+   342|     append(name: string, value: File, filename?: string): void;
+                         ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:41:1
+
+Cannot call `a.append` because:
+ - Either string [1] is incompatible with `Blob` [2].
+ - Or string [1] is incompatible with `File` [3].
+
+   FormData.js:41:1
+    41| a.append('foo', 'bar', 'baz'); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:41:17
+    41| a.append('foo', 'bar', 'baz'); // incorrect
+                        ^^^^^ [1]
+   <BUILTINS>/bom.js:341:33
+   341|     append(name: string, value: Blob, filename?: string): void;
+                                        ^^^^ [2]
+   <BUILTINS>/bom.js:342:33
+   342|     append(name: string, value: File, filename?: string): void;
+                                        ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:45:1
+
+Cannot call `a.append` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+
+   FormData.js:45:1
+    45| a.append('bar', new File([], 'q'), 2) // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:45:36
+    45| a.append('bar', new File([], 'q'), 2) // incorrect
+                                           ^ [1]
+   <BUILTINS>/bom.js:341:50
+   341|     append(name: string, value: Blob, filename?: string): void;
+                                                         ^^^^^^ [2]
+   <BUILTINS>/bom.js:342:50
+   342|     append(name: string, value: File, filename?: string): void;
+                                                         ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- FormData.js:48:1
+
+Cannot call `a.append` because number [1] is incompatible with string [2].
+
+   FormData.js:48:1
+    48| a.append('bar', new Blob, 2) // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   FormData.js:48:27
+    48| a.append('bar', new Blob, 2) // incorrect
+                                  ^ [1]
+   <BUILTINS>/bom.js:341:50
+   341|     append(name: string, value: Blob, filename?: string): void;
+                                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:52:10
+
+Cannot call `a.delete` with `3` bound to `name` because number [1] is incompatible with string [2].
+
+   FormData.js:52:10
+    52| a.delete(3); // incorrect
+                 ^ [1]
+
+References:
+   <BUILTINS>/bom.js:344:18
+   344|     delete(name: string): void;
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:56:23
+
+Cannot assign `x` to `x` because string [1] is incompatible with number [2].
+
+   FormData.js:56:23
+    56| for (let x: number of a.keys()) {} // incorrect
+                              ^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:346:22
+   346|     keys(): Iterator<string>;
+                             ^^^^^^ [1]
+   FormData.js:56:13
+    56| for (let x: number of a.keys()) {} // incorrect
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:64:52
+
+Cannot assign for-of element to variable because `Blob` [1] is incompatible with `File` [2] in index 1.
+
+   FormData.js:64:52
+    64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                           ^^^^^^^^^^^
+
+References:
+   FormData.js:64:43
+    64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                  ^^^^ [1]
+   <BUILTINS>/bom.js:327:36
+   327| type FormDataEntryValue = string | File
+                                           ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:65:11
+
+Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
+
+   FormData.js:65:11
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                  ^
+
+References:
+   <BUILTINS>/bom.js:348:26
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                 ^^^^^^ [1]
+   FormData.js:65:19
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:65:14
+
+Cannot assign element 1 to `y` because `File` [1] is incompatible with string [2].
+
+   FormData.js:65:14
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                     ^
+
+References:
+   <BUILTINS>/bom.js:348:34
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:65:27
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
+
+Cannot assign for-of element to variable because:
+ - string [1] is incompatible with number [2] in index 0.
+ - `File` [3] is incompatible with string [4] in index 1.
+
+   FormData.js:65:38
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:348:26
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                 ^^^^^^ [1]
+   FormData.js:65:19
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                          ^^^^^^ [2]
+   <BUILTINS>/bom.js:348:34
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [3]
+   FormData.js:65:27
+    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                                  ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:66:14
+
+Cannot assign element 1 to `y` because:
+ - `File` [1] is incompatible with number [2].
+ - string [1] is incompatible with number [2].
+
+   FormData.js:66:14
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                     ^
+
+References:
+   <BUILTINS>/bom.js:348:34
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:66:27
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
+
+Cannot assign for-of element to variable because:
+ - `File` [1] is incompatible with number [2] in index 1.
+ - string [1] is incompatible with number [2] in index 1.
+ - number [2] is incompatible with string [3] in index 1.
+
+   FormData.js:66:38
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:348:34
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:66:27
+    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+   <BUILTINS>/bom.js:327:27
+   327| type FormDataEntryValue = string | File
+                                  ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:11
+
+Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
+
+   FormData.js:67:11
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                  ^
+
+References:
+   <BUILTINS>/bom.js:348:26
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                 ^^^^^^ [1]
+   FormData.js:67:19
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:14
+
+Cannot assign element 1 to `y` because:
+ - `File` [1] is incompatible with number [2].
+ - string [1] is incompatible with number [2].
+
+   FormData.js:67:14
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                     ^
+
+References:
+   <BUILTINS>/bom.js:348:34
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   FormData.js:67:27
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
+
+Cannot assign for-of element to variable because:
+ - string [1] is incompatible with number [2] in index 0.
+ - `File` [3] is incompatible with number [4] in index 1.
+ - string [3] is incompatible with number [4] in index 1.
+ - number [4] is incompatible with string [5] in index 1.
+
+   FormData.js:67:38
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                             ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:348:26
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                 ^^^^^^ [1]
+   FormData.js:67:19
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                          ^^^^^^ [2]
+   <BUILTINS>/bom.js:348:34
+   348|     entries(): Iterator<[string, FormDataEntryValue]>;
+                                         ^^^^^^^^^^^^^^^^^^ [3]
+   FormData.js:67:27
+    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                  ^^^^^^ [4]
+   <BUILTINS>/bom.js:327:27
+   327| type FormDataEntryValue = string | File
+                                  ^^^^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:10:1
+
+Cannot call `MutationObserver` because function [1] requires another argument.
+
+   MutationObserver.js:10:1
+    10| new MutationObserver(); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:376:5
+   376|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- MutationObserver.js:11:22
+
+Cannot call `MutationObserver` with `42` bound to `callback` because number [1] is incompatible with function type [2].
+
+   MutationObserver.js:11:22
+    11| new MutationObserver(42); // incorrect
+                             ^^ [1]
+
+References:
+   <BUILTINS>/bom.js:376:27
+   376|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- MutationObserver.js:12:22
+
+Cannot call `MutationObserver` with function bound to `callback` because number [1] is incompatible with array type [2]
+in the first argument.
+
+   MutationObserver.js:12:22
+    12| new MutationObserver((n: number) => {}); // incorrect
+                             ^^^^^^^^^^^^^^^^^
+
+References:
+   MutationObserver.js:12:26
+    12| new MutationObserver((n: number) => {}); // incorrect
+                                 ^^^^^^ [1]
+   <BUILTINS>/bom.js:376:33
+   376|     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
+                                        ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:18:1
+
+Cannot call `o.observe` because:
+ - function [1] requires another argument.
+ - all branches are incompatible:
+    - Either undefined [2] is incompatible with object type [3].
+    - Or undefined [2] is incompatible with object type [4].
+    - Or undefined [2] is incompatible with object type [5].
+
+   MutationObserver.js:18:1
+    18| o.observe(); // incorrect
+        ^^^^^^^^^^^ [2]
+
+References:
+   <BUILTINS>/bom.js:377:5
+   377|     observe(target: Node, options: MutationObserverInit): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:364:7
+   364|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:365:7
+   365|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:366:7
+   366|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:19:1
+
+Cannot call `o.observe` because:
+ - function [1] requires another argument.
+ - all branches are incompatible:
+    - Either undefined [2] is incompatible with object type [3].
+    - Or undefined [2] is incompatible with object type [4].
+    - Or undefined [2] is incompatible with object type [5].
+
+   MutationObserver.js:19:1
+    19| o.observe('invalid'); // incorrect
+        ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   <BUILTINS>/bom.js:377:5
+   377|     observe(target: Node, options: MutationObserverInit): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:364:7
+   364|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:365:7
+   365|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:366:7
+   366|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------- MutationObserver.js:19:11
+
+Cannot call `o.observe` with `'invalid'` bound to `target` because string [1] is incompatible with `Node` [2].
+
+   MutationObserver.js:19:11
+    19| o.observe('invalid'); // incorrect
+                  ^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:377:21
+   377|     observe(target: Node, options: MutationObserverInit): void;
+                            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- MutationObserver.js:20:1
+
+Cannot call `o.observe` because:
+ - function [1] requires another argument.
+ - all branches are incompatible:
+    - Either undefined [2] is incompatible with object type [3].
+    - Or undefined [2] is incompatible with object type [4].
+    - Or undefined [2] is incompatible with object type [5].
+
+   MutationObserver.js:20:1
+    20| o.observe(div); // incorrect
+        ^^^^^^^^^^^^^^ [2]
+
+References:
+   <BUILTINS>/bom.js:377:5
+   377|     observe(target: Node, options: MutationObserverInit): void;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/bom.js:364:7
+   364|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:365:7
+   365|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/bom.js:366:7
+   366|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------- MutationObserver.js:21:16
+
+Cannot call `o.observe` with object literal bound to `options` because:
+ - Either property `childList` is missing in object literal [1] but exists in object type [2].
+ - Or property `attributes` is missing in object literal [1] but exists in object type [3].
+ - Or property `characterData` is missing in object literal [1] but exists in object type [4].
+
+   MutationObserver.js:21:16
+    21| o.observe(div, {}); // incorrect
+                       ^^ [1]
+
+References:
+   <BUILTINS>/bom.js:364:7
+   364|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:365:7
+   365|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:366:7
+   366|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------- MutationObserver.js:22:16
+
+Cannot call `o.observe` with object literal bound to `options` because:
+ - Either property `childList` is missing in object literal [1] but exists in object type [2].
+ - Or property `attributes` is missing in object literal [1] but exists in object type [3].
+ - Or property `characterData` is missing in object literal [1] but exists in object type [4].
+
+   MutationObserver.js:22:16
+    22| o.observe(div, { subtree: true }); // incorrect
+                       ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/bom.js:364:7
+   364|     | { childList: true }
+              ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/bom.js:365:7
+   365|     | { attributes: true }
+              ^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/bom.js:366:7
+   366|     | { characterData: true }
+              ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------- MutationObserver.js:23:16
+
+Cannot call `o.observe` with object literal bound to `options` because boolean [1] is incompatible with array type [2]
+in property `attributeFilter`.
+
+   MutationObserver.js:23:16
+    23| o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   MutationObserver.js:23:53
+    23| o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
+                                                            ^^^^ [1]
+   <BUILTINS>/bom.js:372:23
+   372|     attributeFilter?: Array<string>;
+                              ^^^^^^^^^^^^^ [2]
+
+
+
+Found 52 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

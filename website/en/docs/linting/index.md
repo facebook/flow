@@ -40,19 +40,19 @@ more details see [Flowlint Comments](./flowlint-comments).
   */
 const x: ?number = 0;
 
-if (x) {} //Error
-import type {Foo} from './untyped.js'; //Error
+if (x) {} // Error
+import type {Foo} from './untyped.js'; // Error
 
-//flowlint-next-line sketchy-null:off
-if (x) {} //No Error
+// flowlint-next-line sketchy-null:off
+if (x) {} // No Error
 
-if (x) {} /*flowlint-line sketchy-null:off*/ //No Error
+if (x) {} /* flowlint-line sketchy-null:off */ // No Error
 
-//flowlint sketchy-null:off
-if (x) {} //No Error
-if (x) {} //No Error
-import type {Bar} from './untyped.js'; //Error; unlike a $FlowFixMe, a flowlint comment only suppresses one particular type of error.
-//flowlint sketchy-null:error
+// flowlint sketchy-null:off
+if (x) {} // No Error
+if (x) {} // No Error
+import type {Bar} from './untyped.js'; // Error; unlike a $FlowFixMe, a flowlint comment only suppresses one particular type of error.
+// flowlint sketchy-null:error
 ```
 
 ### Lint Settings Precedence <a class="toc" id="toc-lint-settings-precedence" href="#toc-lint-settings-precedence"></a>

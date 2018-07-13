@@ -21,7 +21,7 @@ export interface MyInterface { /* ... */ };
 import type Foo, {MyObject, MyInterface} from './exports';
 ```
 
-> ***Don't forget to mention `@flow` on top of file, otherwise flow won't report error.***.
+> ***Don't forget to mention `@flow` on top of file, otherwise flow won't report errors***.
 
 ### Importing and exporting values <a class="toc" id="toc-importing-and-exporting-values" href="#toc-importing-and-exporting-values"></a>
 

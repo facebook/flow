@@ -1,10 +1,10 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 const files = [
   'other/explicitly_included.js',
@@ -15,7 +15,7 @@ const files = [
   'src/flow-typed/implicit_lib.js',
 ];
 
-export default suite(({flowCmd, removeFile}) => [
+export default suite(({addFile, flowCmd, removeFile}) => [
   test('No --all flag and implicit root', [
     flowCmd(['ls'])
       .stderr(
@@ -31,8 +31,10 @@ export default suite(({flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
+          .flowconfig
+          explicit_lib.js
+          flow-typed/implicit_lib.js
           implicitly_included.js
-
         `,
       )
       .because('Infers root and only shows included files in src directory'),
@@ -41,8 +43,10 @@ export default suite(({flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
-
           ../other/explicitly_included.js
+          .flowconfig
+          explicit_lib.js
+          flow-typed/implicit_lib.js
           implicitly_included.js
         `,
       )
@@ -63,7 +67,7 @@ export default suite(({flowCmd, removeFile}) => [
       .sortedStdout('')
       .because("Won't show files that don't exist")
   ]),
-  test('Explicit root will not filter',[
+  test('Explicit root will not filter out files in other/',[
     flowCmd([
       'ls',
       '--strip-root',
@@ -74,8 +78,10 @@ export default suite(({flowCmd, removeFile}) => [
       .sortedStdout(
         `
           ../other/explicitly_included.js
+          .flowconfig
+          explicit_lib.js
+          flow-typed/implicit_lib.js
           implicitly_included.js
-
         `,
       ),
   ]),
@@ -90,8 +96,8 @@ export default suite(({flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
-
           ../other/explicitly_included.js
+          .flowconfig
           explicit_lib.js
           explicitly_ignored.js
           flow-typed/implicit_lib.js
@@ -126,13 +132,14 @@ export default suite(({flowCmd, removeFile}) => [
        '--strip-root',
        '--root', 'src',
        '--all',
-     ].concat(files))
+     ].concat(files).concat(['src/.flowconfig']))
       .stderr('')
       .stdout(
         `
           [
             "../other/explicitly_included.js",
             "../other/implicitly_ignored.js",
+            ".flowconfig",
             "explicit_lib.js",
             "explicitly_ignored.js",
             "flow-typed/implicit_lib.js",
@@ -149,32 +156,160 @@ export default suite(({flowCmd, removeFile}) => [
        '--root', 'src',
        '--all',
        '--explain'
-     ].concat(files))
+     ].concat(files).concat(['src/.flowconfig']))
       .stderr('')
       .stdout(
         `
           {
             "../other/explicitly_included.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ExplicitlyIncluded"
             },
             "../other/implicitly_ignored.js": {
               "explanation": "ImplicitlyIgnored"
             },
+            ".flowconfig": {
+              "explanation": "ConfigFile"
+            },
             "explicit_lib.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ExplicitLib"
             },
             "explicitly_ignored.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ExplicitlyIgnored"
             },
             "flow-typed/implicit_lib.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ImplicitLib"
             },
             "implicitly_included.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ImplicitlyIncluded"
             }
           }
         `,
       ),
+  ]),
+  test('Listing files over stdin', [
+    addFile('stdin_file.txt'),
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', '-'], 'stdin_file.txt')
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          .flowconfig
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('Same as if we passed src/ and other/explicitly_include.js from the command line'),
+
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', '-', 'other/implicitly_ignored.js'], 'stdin_file.txt')
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          ../other/implicitly_ignored.js
+          .flowconfig
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('flow ls will combine command line with the input file'),
+  ]),
+  test('Input file on disk', [
+    addFile('stdin_file.txt'),
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', 'stdin_file.txt'])
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          .flowconfig
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('Same as if we passed src/ and other/explicitly_include.js from the command line'),
+
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', 'stdin_file.txt', 'other/implicitly_ignored.js'])
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          ../other/implicitly_ignored.js
+          .flowconfig
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('flow ls will combine command line with the input file'),
+  ]),
+  test('Non-existent files and directories', [
+    flowCmd(['ls', '--strip-root', 'src/foobar'])
+      .stderr(
+        `
+          Could not find file or directory src/foobar; canceling search for .flowconfig.
+          See "flow init --help" for more info
+
+        `,
+      )
+      .because('We try to use foobar to infer the root, so we complain when it doesnt exist'),
+    flowCmd(['ls', '--strip-root', '--root', 'src', 'src/foobar', 'src/implicitly_included.js'])
+      .stderr(``)
+      .stdout(
+        `
+          implicitly_included.js
+
+        `,
+      )
+      .because('We just filter out non-existent files'),
+    flowCmd(['ls', '--strip-root', '--imaginary', '--root', 'src', 'src/foobar', 'src/implicitly_included.js', 'src/flow-typed/baz.js'])
+      .stderr(``)
+      .stdout(
+        `
+          foobar
+          implicitly_included.js
+          flow-typed/baz.js
+
+        `,
+      )
+      .because('With --imaginary we include non-existent files. Non-existent files are never considered to be libs.'),
+    flowCmd(['ls', '--strip-root', '--explain', '--imaginary', '--root', 'src', 'src/foobar', 'src/baz', 'src/implicitly_included.js', 'src/flow-typed/baz'])
+      .stderr(``)
+      .stdout(
+        `
+          ImplicitlyIncluded    foobar
+          ImplicitlyIncluded    baz
+          ImplicitlyIncluded    implicitly_included.js
+          ImplicitlyIncluded    flow-typed/baz
+
+        `,
+      )
+      .because('--explain should work with --imaginary as expected. Non-existent files are never considered to be libs.'),
+    flowCmd(['ls', '--all', '--strip-root', '--root', 'src', 'src/foobar', 'src/implicitly_included.js'])
+      .stderr(``)
+      .stdout(
+        `
+          implicitly_included.js
+
+        `,
+      )
+      .because('We just filter out non-existent files. --all does not imply --imaginary'),
+    flowCmd(['ls', '--all', '--imaginary', '--strip-root', '--explain', '--root', 'src', 'foobar', 'src/foobar', 'src/implicitly_included.js'])
+      .stderr(``)
+      .stdout(
+        `
+          ImplicitlyIgnored     ../foobar
+          ImplicitlyIncluded    foobar
+          ImplicitlyIncluded    implicitly_included.js
+
+        `,
+      )
+      .because('../foobar is implicitly ignored and only listed with the --all flag'),
   ]),
 ]).beforeEach(({addFile, addFiles, removeFile}) => [
   addFile('src/_flowconfig', 'src/.flowconfig')

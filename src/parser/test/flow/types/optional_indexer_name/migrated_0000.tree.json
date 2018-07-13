@@ -42,7 +42,8 @@
             "variance":null
           }
         ],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Config_utils = Flowtestgen_utils.Config;;
@@ -19,8 +16,9 @@ type t = {
   log_to_console : bool;
   (* Whether we want to type check using Flow *)
   type_check : bool;
-  (* how many time we want to iterate all the rules *)
-  rule_iter : int;
+
+  (* Whether we want to generate programs randomly *)
+  random : bool;
 
   (* which engine to use *)
   engine : string
@@ -31,7 +29,7 @@ let default_config : t = {
   num_prog = 10;
   log_to_console = false;
   type_check = false;
-  rule_iter = 5;
+  random = true;
   engine = "base";
 };;
 
@@ -42,7 +40,7 @@ let string_of_config (conf : t) : string =
   let plist = Config_utils.(
       [("num_prog", Int conf.num_prog);
        ("type_check", Bool conf.type_check);
-       ("rule_iter", Int conf.rule_iter);
+       ("random", Bool conf.random);
        ("engine", Str conf.engine);
        ("log_to_console", Bool conf.log_to_console)]) in
   Config_utils.string_of_config plist;;
@@ -62,11 +60,6 @@ let load_config () : t =
          ~default:dc.num_prog
          conf
          "num_prog");
-    rule_iter =
-      (Config_utils.get_int
-         ~default:dc.rule_iter
-         conf
-         "rule_iter");
     engine =
       (Config_utils.get_str
          ~default:dc.engine
@@ -77,6 +70,11 @@ let load_config () : t =
          ~default:dc.type_check
          conf
          "type_check");
+    random =
+      (Config_utils.get_bool
+         ~default:dc.random
+         conf
+         "random");
     log_to_console =
       (Config_utils.get_bool
          ~default:dc.log_to_console

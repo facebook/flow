@@ -32,7 +32,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
             "range":[87,88],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -40,7 +40,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":22}},
             "range":[87,88],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

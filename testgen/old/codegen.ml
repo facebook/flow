@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* Main module for generating code *)
@@ -22,7 +19,7 @@ open Code
 
 (* Check the expression is of the given type *)
 let mk_type_assertion (etype : T.t') (expr : t') : t =
-  (* Make a variable decalration first *)
+  (* Make a variable declaration first *)
   let final_id = E.Identifier (Loc.none, "t") in
   let final_decl = Mutator.mk_vardecl_code "t" (Some etype) (Some expr) in
   let callee = E.Identifier (Loc.none, "assert_type") in

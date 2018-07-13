@@ -1,15 +1,11 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
-module LocMap = Map.Make (Loc)
 open Flow_ast_visitor
 
 (* Hoister class. Does a shallow visit of statements, looking for binding
@@ -21,22 +17,36 @@ open Flow_ast_visitor
 *)
 module Bindings: sig
   type t
-  type entry = Loc.t * string
+  type entry = Loc.t Ast.Identifier.t
   val empty: t
   val singleton: entry -> t
   val add: entry -> t -> t
   val push: t -> t -> t
   val exists: (entry -> bool) -> t -> bool
-  val to_list: t -> entry list
+  val to_assoc: t -> (string * Loc.t Nel.t) list
+  val to_map: t -> Loc.t list SMap.t
 end = struct
-  type entry = Loc.t * string
+  type entry = Loc.t Ast.Identifier.t
   type t = entry list
   let empty = []
   let singleton x = [x]
   let add = List.cons
   let push = List.append
   let exists = List.exists
-  let to_list = List.rev
+  let to_assoc t =
+    let xs, map = List.fold_left (fun (xs, map) (loc, x) ->
+      match SMap.get x map with
+        | Some locs -> xs, SMap.add x (Nel.cons loc locs) map
+        | None -> x::xs, SMap.add x (Nel.one loc) map
+    ) ([], SMap.empty) (List.rev t) in
+    List.rev_map (fun x -> x, Nel.rev @@ SMap.find x map) xs
+  let to_map t =
+    let map = List.fold_left (fun map (loc, x) ->
+      match SMap.get x map with
+        | Some locs -> SMap.add x (loc::locs) map
+        | None -> SMap.add x [loc] map
+    ) SMap.empty (List.rev t) in
+    SMap.map List.rev map
 end
 
 (* TODO: It should be possible to vastly simplify hoisting by overriding the
@@ -64,51 +74,28 @@ class hoister = object(this)
     if x = "event" then () else
       this#update_acc (Bindings.add entry)
 
-  val mutable bad_catch_params = []
-  method bad_catch_params = bad_catch_params
-
   (* Ignore expressions. This includes, importantly, function expressions (whose
-     ids should not be hoisted) and assignment expressions (whose targets should
-     not be hoisted). *)
-  method! expression (expr: Ast.Expression.t) =
+     ids should not be hoisted). *)
+  method! expression (expr: Loc.t Ast.Expression.t) =
     expr
 
-  (* The scoping rule for catch clauses is special. Hoisting for the current
-     scope continues in catch blocks, but the catch pattern also introduces a
-     local scope. *)
-  method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
-    let open Ast.Statement.Try.CatchClause in
-    let { param; body } = clause in
-    let saved_bindings = this#acc in
-    this#set_acc Bindings.empty;
-    let _, block = body in
-    let _ = this#block block in
-    let local_bindings = this#acc in
-    let open Ast.Pattern in
-    let _, patt = param in
-    begin match patt with
-    | Identifier { Identifier.name; _ } ->
-      let loc, x = name in
-      if Bindings.exists (fun (_loc, x') -> x = x') local_bindings
-      then bad_catch_params <- loc :: bad_catch_params
-    | _ -> ();
-    end;
-    this#set_acc (Bindings.push local_bindings saved_bindings);
-    clause
+  (* Ignore assignment patterns, whose targets should not be hoisted. *)
+  method! assignment_pattern (patt: Loc.t Ast.Pattern.t) =
+    patt
 
   (* Ignore class declarations, since they are lexical bindings (thus not
      hoisted). *)
-  method! class_ (cls: Ast.Class.t) =
+  method! class_ (cls: Loc.t Ast.Class.t) =
     cls
 
   (* Ignore import declarations, since they are lexical bindings (thus not
      hoisted). *)
-  method! import_declaration (decl: Ast.Statement.ImportDeclaration.t) =
+  method! import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     decl
 
-  (* This is visited by function parameters and variable declarations (but not
-     assignment expressions or catch patterns). *)
-  method! pattern ?kind (expr: Ast.Pattern.t) =
+  (* This is visited by function parameters, variable declarations, and catch patterns (but not
+     assignment expressions). *)
+  method! pattern ?kind (expr: Loc.t Ast.Pattern.t) =
     match Utils.unsafe_opt kind with
     | Ast.Statement.VariableDeclaration.Var ->
       let open Ast.Pattern in
@@ -125,7 +112,22 @@ class hoister = object(this)
     | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
       expr (* don't hoist let/const bindings *)
 
-  method! function_declaration (expr: Ast.Function.t) =
+  method! declare_variable (decl: Loc.t Ast.Statement.DeclareVariable.t) =
+    let open Ast.Statement.DeclareVariable in
+    this#add_binding decl.id;
+    super#declare_variable decl
+
+  method! declare_class (decl: Loc.t Ast.Statement.DeclareClass.t) =
+    let open Ast.Statement.DeclareClass in
+    this#add_binding decl.id;
+    super#declare_class decl
+
+  method! declare_function (decl: Loc.t Ast.Statement.DeclareFunction.t) =
+    let open Ast.Statement.DeclareFunction in
+    this#add_binding decl.id;
+    super#declare_function decl
+
+  method! function_declaration (expr: Loc.t Ast.Function.t) =
     let open Ast.Function in
     let { id; _ } = expr in
     begin match id with
@@ -146,23 +148,27 @@ class lexical_hoister = object(this)
   (* Ignore all statements except variable declarations, class declarations, and
      import declarations. The ignored statements cannot contain lexical
      bindings in the current scope. *)
-  method! statement (stmt: Ast.Statement.t) =
+  method! statement (stmt: Loc.t Ast.Statement.t) =
     let open Ast.Statement in
     match stmt with
     | (_, VariableDeclaration _)
     | (_, ClassDeclaration _)
+    | (_, ExportNamedDeclaration _)
+    | (_, ExportDefaultDeclaration _)
     | (_, ImportDeclaration _) -> super#statement stmt
     | _ -> stmt
 
   (* Ignore expressions. This includes, importantly, initializers of variable
      declarations. *)
-  method! expression (expr: Ast.Expression.t) =
+  method! expression (expr: Loc.t Ast.Expression.t) =
     expr
 
-  (* This is visited by variable declarations. *)
-  method! variable_declarator_pattern ~kind (expr: Ast.Pattern.t) =
+  (* This is visited by variable declarations, as well as other kinds of
+     patterns that we ignore. *)
+  method! pattern ?kind (expr: Loc.t Ast.Pattern.t) =
     match kind with
-    | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
+    | None -> expr
+    | Some (Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const) ->
       let open Ast.Pattern in
       let _, patt = expr in
       begin match patt with
@@ -170,17 +176,18 @@ class lexical_hoister = object(this)
         this#add_binding name
       | Object _
       | Array _
-      | Assignment _ -> run (super#variable_declarator_pattern ~kind) expr
+      | Assignment _ -> run (super#pattern ?kind) expr
       | _ -> ()
       end;
       expr
-    | Ast.Statement.VariableDeclaration.Var -> expr
+    | Some Ast.Statement.VariableDeclaration.Var -> expr
 
-  method! class_ (cls: Ast.Class.t) =
+  method! class_ (cls: Loc.t Ast.Class.t) =
     let open Ast.Class in
     let {
-      id; body = _; superClass = _;
-      typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
+      id; body = _; tparams = _;
+      super = _; super_targs = _; implements = _;
+      classDecorators = _;
     } = cls in
     begin match id with
     | Some name ->
@@ -189,15 +196,22 @@ class lexical_hoister = object(this)
     end;
     cls
 
-  method! import_named_specifier ~ident (local: Ast.Identifier.t option) =
-    this#add_binding ident;
-    local
+  method! import_named_specifier
+    (specifier: Loc.t Ast.Statement.ImportDeclaration.named_specifier) =
+    let open Ast.Statement.ImportDeclaration in
+    let binding = match specifier with
+    | { local = Some binding; remote = _; kind = _ }
+    | { local = None; remote = binding; kind = _ } ->
+      binding
+    in
+    this#add_binding binding;
+    specifier
 
-  method! import_default_specifier (id: Ast.Identifier.t) =
+  method! import_default_specifier (id: Loc.t Ast.Identifier.t) =
     this#add_binding id;
     id
 
-  method! import_namespace_specifier (id: Ast.Identifier.t) =
+  method! import_namespace_specifier (id: Loc.t Ast.Identifier.t) =
     this#add_binding id;
     id
 

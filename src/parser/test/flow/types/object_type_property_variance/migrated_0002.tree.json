@@ -48,14 +48,22 @@
               },
               "typeParameters":null
             },
+            "method":false,
             "optional":false,
             "static":false,
-            "variance":"minus",
+            "proto":false,
+            "variance":{
+              "type":"Variance",
+              "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
+              "range":[10,11],
+              "kind":"minus"
+            },
             "kind":"init"
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],

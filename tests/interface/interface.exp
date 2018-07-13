@@ -1,140 +1,479 @@
-Error: indexer.js:9
-  9:   [k2: number]: number; // error: not supported (yet)
-       ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
+Error ------------------------------------------------------------------------------------------------------ fun.js:5:13
 
-Error: interface.js:3
-  3: var x: string = new C().x;
-                     ^^^^^^^^^ number. This type is incompatible with
-  3: var x: string = new C().x;
-            ^^^^^^ string
+Cannot assign function to `f0` because number [1] is incompatible with undefined [2] in the return value.
 
-Error: interface.js:7
-  7: var i = new I(); // error
-                 ^ I. type referenced from value position
-  5: interface I { x: number; }
-               ^ type I
+   fun.js:5:13
+   5| var f0: F = () => 0; // error: number ~> void
+                  ^^^^^^^
 
-Error: interface.js:10
- 10:   (o.name: string); // error, name is static
-          ^^^^ property `name`. Property not found in
- 10:   (o.name: string); // error, name is static
-        ^ I
-
-Error: test.js:2
-  2: interface I_ { x: number }
-                       ^^^^^^ number. This type is incompatible with
-  6: var k: K = { x: "", y: "" }; // error: x should be number
-                     ^^ string
-
-Error: test.js:6
-  6: var k: K = { x: "", y: "" }; // error: x should be number
-                     ^^ string. This type is incompatible with
-  2: interface I_ { x: number }
-                       ^^^^^^ number
-
-Error: test.js:7
-  7: (k.x: string); // error: x is number
-      ^^^ number. This type is incompatible with
-  7: (k.x: string); // error: x is number
-           ^^^^^^ string
-
-Error: test.js:11
- 11: declare class D extends C, Other { } // error: multiple extends
-                             ^ A class cannot extend multiple classes!
-
-Error: test.js:19
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                             ^^ string
-
-Error: test.js:19
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                                           ^^ string
-
-Error: test.js:19
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                             ^^ string. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number
-
-Error: test.js:19
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                                           ^^ string. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number
-
-Error: test.js:20
- 20: (e.x: string); // error: x is number
-      ^^^ number. This type is incompatible with
- 20: (e.x: string); // error: x is number
-           ^^^^^^ string
-
-Error: test.js:22
- 22: (e.z: string); // error: z is number
-      ^^^ number. This type is incompatible with
- 22: (e.z: string); // error: z is number
-           ^^^^^^ string
-
-Error: test2.js:5
-  5: function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
-                                      ^ property `z`. Property not found in
-  5: function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
-                                    ^ L
-
-Error: test3.js:1
-  1: interface I { x: number, y : string }
-                      ^^^^^^ number. This type is incompatible with
-  3: interface K extends I, J { x: string } // error: x is number in I
-                                   ^^^^^^ string
-
-Error: test3.js:3
-  3: interface K extends I, J { x: string } // error: x is number in I
-                                   ^^^^^^ string. This type is incompatible with
-  1: interface I { x: number, y : string }
-                      ^^^^^^ number
-
-Error: test3.js:5
-  5:   (k.x: number); // error: x is string in K
-        ^^^ string. This type is incompatible with
-  5:   (k.x: number); // error: x is string in K
-             ^^^^^^ number
-
-Error: test3.js:6
-  6:   (k.y: number); // error: y is string in I
-        ^^^ string. This type is incompatible with
-  6:   (k.y: number); // error: y is string in I
-             ^^^^^^ number
-
-Error: test4.js:2
-  2: (function foo(x: number) { }: I); // error, property `foo` not found function
-                                   ^ property `foo` of I. Property not found in
-  2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
-
-Error: test4.js:9
-  9: new C().bar((x: string) => { }); // error, number ~/~> string
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
-  9: new C().bar((x: string) => { }); // error, number ~/~> string
-     ^^^^^^^^^^^ intersection
-  Member 1:
-    5:   bar(i: I): void;
-         ^^^^^^^^^^^^^^^ function type
-  Error:
-    5:   bar(i: I): void;
-                ^ property `foo` of I. Property not found in
-    9: new C().bar((x: string) => { }); // error, number ~/~> string
-                   ^^^^^^^^^^^^^^^^^^ function
-  Member 2:
-    6:   bar(f: (x: number) => void): void;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-    6:   bar(f: (x: number) => void): void;
-                    ^^^^^^ number. This type is incompatible with the expected param type of
-    9: new C().bar((x: string) => { }); // error, number ~/~> string
-                       ^^^^^^ string
+References:
+   fun.js:5:19
+   5| var f0: F = () => 0; // error: number ~> void
+                        ^ [1]
+   fun.js:2:7
+   2|   (): void;
+            ^^^^ [2]
 
 
-Found 21 errors
+Error --------------------------------------------------------------------------------------------------- indexer.js:9:3
+
+Multiple indexers are not supported.
+
+   9|   [k2: number]: number; // error: not supported (yet)
+        ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- inline.js:5:2
+
+Cannot cast object literal to `A` because string [1] is incompatible with number [2] in property `p`.
+
+   inline.js:5:2
+   5| ({p: "bad"}: A); // error: string ~> number
+       ^^^^^^^^^^
+
+References:
+   inline.js:5:6
+   5| ({p: "bad"}: A); // error: string ~> number
+           ^^^^^ [1]
+   inline.js:1:25
+   1| type A = interface { p: number }
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- inline.js:8:2
+
+Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `p`.
+
+   inline.js:8:2
+   8| ({p: "bad", q: 0}: B); // error: string ~> number
+       ^^^^^^^^^^^^^^^^
+
+References:
+   inline.js:8:6
+   8| ({p: "bad", q: 0}: B); // error: string ~> number
+           ^^^^^ [1]
+   inline.js:1:25
+   1| type A = interface { p: number }
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- inline.js:9:2
+
+Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `q`.
+
+   inline.js:9:2
+   9| ({p: 0, q: "bad"}: B); // error: string ~> number
+       ^^^^^^^^^^^^^^^^
+
+References:
+   inline.js:9:12
+   9| ({p: 0, q: "bad"}: B); // error: string ~> number
+                 ^^^^^ [1]
+   inline.js:2:35
+   2| type B = interface extends A { q: number }
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- inline.js:10:2
+
+Cannot cast object literal to `B` because property `p` is missing in object literal [1] but exists in `A` [2].
+
+   inline.js:10:2
+   10| ({q: 0}: B); // error: missing property p
+        ^^^^^^ [1]
+
+References:
+   inline.js:2:28
+    2| type B = interface extends A { q: number }
+                                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- inline.js:11:2
+
+Cannot cast object literal to `B` because property `q` is missing in object literal [1] but exists in `B` [2].
+
+   inline.js:11:2
+   11| ({p: 0}: B); // error: missing property q
+        ^^^^^^ [1]
+
+References:
+   inline.js:11:10
+   11| ({p: 0}: B); // error: missing property q
+                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- inline.js:16:4
+
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
+
+   inline.js:16:4
+   16|   (o.p: empty); // error: number ~> empty
+          ^^^
+
+References:
+   inline.js:13:18
+   13| interface J { p: number }
+                        ^^^^^^ [1]
+   inline.js:16:9
+   16|   (o.p: empty); // error: number ~> empty
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- inline.js:17:4
+
+Cannot cast `o.q` to empty because string [1] is incompatible with empty [2].
+
+   inline.js:17:4
+   17|   (o.q: empty); // error: string ~> empty
+          ^^^
+
+References:
+   inline.js:14:18
+   14| interface K { q: string }
+                        ^^^^^^ [1]
+   inline.js:17:9
+   17|   (o.q: empty); // error: string ~> empty
+               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- inline.js:18:3
+
+Cannot get `o.z` because property `z` is missing in interface type [1].
+
+   inline.js:18:3
+   18|   o.z; // error: undeclared property z
+         ^^^
+
+References:
+   inline.js:15:15
+   15| function f(o: interface extends J, K {}) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- inline.js:21:3
+
+Cannot get `o.name` because property `name` is missing in interface type [1].
+
+   inline.js:21:3
+   21|   o.name;
+         ^^^^^^
+
+References:
+   inline.js:15:15
+   15| function f(o: interface extends J, K {}) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- inline.js:25:29
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+
+   inline.js:25:29
+   25| type C<+T> = interface { p: T }
+                                   ^
+
+References:
+   inline.js:25:9
+   25| type C<+T> = interface { p: T }
+               ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- inline.js:28:16
+
+Cannot extend `Base` [1] with interface type because string [2] is incompatible with number [3] in property `p`.
+
+   inline.js:28:16
+                      v-----------------------
+   28| type Derived = interface extends Base {
+   29|   p: string, // error: string ~> number
+   30| }
+       ^
+
+References:
+   inline.js:28:34
+   28| type Derived = interface extends Base {
+                                        ^^^^ [1]
+   inline.js:29:6
+   29|   p: string, // error: string ~> number
+            ^^^^^^ [2]
+   inline.js:27:21
+   27| interface Base { p: number }
+                           ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:3:17
+
+Cannot assign `new C().x` to `x` because number [1] is incompatible with string [2].
+
+   interface.js:3:17
+   3| var x: string = new C().x;
+                      ^^^^^^^^^
+
+References:
+   interface.js:1:22
+   1| declare class C { x: number; }
+                           ^^^^^^ [1]
+   interface.js:3:8
+   3| var x: string = new C().x;
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:7:13
+
+Cannot reference type `I` [1] from a value position.
+
+   interface.js:7:13
+   7| var i = new I(); // error
+                  ^
+
+References:
+   interface.js:5:11
+   5| interface I { x: number; }
+                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:10:4
+
+Cannot get `o.name` because property `name` is missing in `I` [1].
+
+   interface.js:10:4
+   10|   (o.name: string); // error, name is static
+          ^^^^^^
+
+References:
+   interface.js:9:31
+    9| function testInterfaceName(o: I) {
+                                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:12
+
+Cannot assign object literal to `k` because string [1] is incompatible with number [2] in property `x`.
+
+   test.js:6:12
+   6| var k: K = { x: "", y: "" }; // error: x should be number
+                 ^^^^^^^^^^^^^^^^
+
+References:
+   test.js:6:17
+   6| var k: K = { x: "", y: "" }; // error: x should be number
+                      ^^ [1]
+   test.js:2:19
+   2| interface I_ { x: number }
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+
+Cannot cast `k.x` to string because number [1] is incompatible with string [2].
+
+   test.js:7:2
+   7| (k.x: string); // error: x is number
+       ^^^
+
+References:
+   test.js:2:19
+   2| interface I_ { x: number }
+                        ^^^^^^ [1]
+   test.js:7:7
+   7| (k.x: string); // error: x is number
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:20
+
+Cannot assign object literal to `e` because:
+ - string [1] is incompatible with number [2] in property `x`.
+ - string [3] is incompatible with number [2] in property `z`.
+
+   test.js:17:20
+   17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:17:25
+   17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                               ^^ [1]
+   test.js:17:10
+   17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [2]
+   test.js:17:39
+   17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                             ^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:2
+
+Cannot cast `e.x` to string because number [1] is incompatible with string [2].
+
+   test.js:18:2
+   18| (e.x: string); // error: x is number
+        ^^^
+
+References:
+   test.js:17:10
+   17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [1]
+   test.js:18:7
+   18| (e.x: string); // error: x is number
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:2
+
+Cannot cast `e.z` to string because number [1] is incompatible with string [2].
+
+   test.js:20:2
+   20| (e.z: string); // error: z is number
+        ^^^
+
+References:
+   test.js:17:10
+   17| var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                ^^^^^^ [1]
+   test.js:20:7
+   20| (e.z: string); // error: z is number
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test2.js:5:32
+
+Cannot get `l.z` because property `z` is missing in `L` [1].
+
+   test2.js:5:32
+   5| function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
+                                     ^^^
+
+References:
+   test2.js:5:17
+   5| function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
+                      ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:3:1
+
+Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`.
+
+   test3.js:3:1
+   3| interface K extends I, J { x: string } // error: x is number in I
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test3.js:3:21
+   3| interface K extends I, J { x: string } // error: x is number in I
+                          ^ [1]
+   test3.js:3:31
+   3| interface K extends I, J { x: string } // error: x is number in I
+                                    ^^^^^^ [2]
+   test3.js:1:18
+   1| interface I { x: number, y : string }
+                       ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:4
+
+Cannot cast `k.x` to number because string [1] is incompatible with number [2].
+
+   test3.js:5:4
+   5|   (k.x: number); // error: x is string in K
+         ^^^
+
+References:
+   test3.js:3:31
+   3| interface K extends I, J { x: string } // error: x is number in I
+                                    ^^^^^^ [1]
+   test3.js:5:9
+   5|   (k.x: number); // error: x is string in K
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:6:4
+
+Cannot cast `k.y` to number because string [1] is incompatible with number [2].
+
+   test3.js:6:4
+   6|   (k.y: number); // error: y is string in I
+         ^^^
+
+References:
+   test3.js:1:30
+   1| interface I { x: number, y : string }
+                                   ^^^^^^ [1]
+   test3.js:6:9
+   6|   (k.y: number); // error: y is string in I
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test4.js:2:2
+
+Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2].
+
+   test4.js:2:2
+   2| (function foo(x: number) { }: I); // error, property `foo` not found function
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test4.js:2:2
+   2| (function foo(x: number) { }: I); // error, property `foo` not found function
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test4.js:2:31
+   2| (function foo(x: number) { }: I); // error, property `foo` not found function
+                                    ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test4.js:9:1
+
+Cannot call `new C().bar` because string [1] is incompatible with number [2] in the first argument.
+
+   test4.js:9:1
+   9| new C().bar((x: string) => { }); // error, number ~/~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test4.js:9:17
+   9| new C().bar((x: string) => { }); // error, number ~/~> string
+                      ^^^^^^ [1]
+   test4.js:6:14
+   6|   bar(f: (x: number) => void): void;
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test5.js:12:2
+
+Cannot cast `a.x` to empty because function type [1] is incompatible with empty [2].
+
+   test5.js:12:2
+   12| (a.x: empty); // error: function ~> empty
+        ^^^
+
+References:
+   test5.js:3:3
+    3|   x(): void;
+         ^^^^^^^^^ [1]
+   test5.js:12:7
+   12| (a.x: empty); // error: function ~> empty
+             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test5.js:15:2
+
+Cannot cast `b.x` to empty because number [1] is incompatible with empty [2].
+
+   test5.js:15:2
+   15| (b.x: empty); // error: number ~> empty
+        ^^^
+
+References:
+   test5.js:8:6
+    8|   x: number;
+            ^^^^^^ [1]
+   test5.js:15:7
+   15| (b.x: empty); // error: number ~> empty
+             ^^^^^ [2]
+
+
+
+Found 30 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

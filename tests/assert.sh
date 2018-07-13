@@ -21,6 +21,7 @@ assert_exit_on_line() {
 
 export EXIT_OK=0
 export EXIT_ERRS=2
+export EXIT_COULD_NOT_FIND_FLOWCONFIG=12
 export EXIT_USAGE=64
 
 assert_exit() {

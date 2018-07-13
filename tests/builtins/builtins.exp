@@ -1,20 +1,53 @@
-Error: array.js:3
-  3: var c: string = b[0]; // error: number !~> string
-                     ^^^^ number. This type is incompatible with
-  3: var c: string = b[0]; // error: number !~> string
-            ^^^^^^ string
+Error ---------------------------------------------------------------------------------------------------- array.js:3:17
 
-Error: array.js:8
-  8:     var x:number = array[0]; // error: string !~> number
-                        ^^^^^^^^ string. This type is incompatible with
-  8:     var x:number = array[0]; // error: string !~> number
-               ^^^^^^ number
+Cannot assign `b[0]` to `c` because number [1] is incompatible with string [2].
 
-Error: array.js:15
- 15:     var x:number = foo1.get(); // error: string !~> number
-                        ^^^^^^^^^^ string. This type is incompatible with
- 15:     var x:number = foo1.get(); // error: string !~> number
-               ^^^^^^ number
+   array.js:3:17
+   3| var c: string = b[0]; // error: number !~> string
+                      ^^^^
+
+References:
+   array.js:2:38
+   2| var b = a.map (function (x) { return 0; });
+                                           ^ [1]
+   array.js:3:8
+   3| var c: string = b[0]; // error: number !~> string
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:8:20
+
+Cannot assign `array[0]` to `x` because string [1] is incompatible with number [2].
+
+   array.js:8:20
+   8|     var x:number = array[0]; // error: string !~> number
+                         ^^^^^^^^
+
+References:
+   array.js:7:45
+   7|     array = array.map (function () { return "..."; });
+                                                  ^^^^^ [1]
+   array.js:8:11
+   8|     var x:number = array[0]; // error: string !~> number
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:15:20
+
+Cannot assign `foo1.get()` to `x` because string [1] is incompatible with number [2].
+
+   array.js:15:20
+   15|     var x:number = foo1.get(); // error: string !~> number
+                          ^^^^^^^^^^
+
+References:
+   array.js:14:45
+   14|     var foo1 = foo.map (function() { return "..."; });
+                                                   ^^^^^ [1]
+   array.js:15:11
+   15|     var x:number = foo1.get(); // error: string !~> number
+                 ^^^^^^ [2]
+
 
 
 Found 3 errors

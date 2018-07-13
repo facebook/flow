@@ -54,9 +54,12 @@
               "variance":null
             }
           ],
-          "callProperties":[]
+          "callProperties":[],
+          "internalSlots":[]
         },
-        "extends":[]
+        "extends":[],
+        "implements":[],
+        "mixins":[]
       },
       "specifiers":[],
       "source":null

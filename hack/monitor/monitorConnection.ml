@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -29,7 +28,7 @@ let wait_on_server_restart ic =
 
 let send_version oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
-    Build_id.build_revision;
+    Build_id.build_revision |> ignore;
   (** For backwards-compatibility, newline has always followed the version *)
   let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
   ()
@@ -37,10 +36,12 @@ let send_version oc =
 let send_server_handoff_rpc handoff_options oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
     (MonitorRpc.HANDOFF_TO_SERVER handoff_options)
+  |> ignore
 
 let send_shutdown_rpc oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
     MonitorRpc.SHUT_DOWN
+  |> ignore
 
 let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
@@ -52,27 +53,27 @@ let establish_connection ~timeout config =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  try Result.Ok (Timeout.open_connection ~timeout sockaddr) with
+  try Ok (Timeout.open_connection ~timeout sockaddr) with
   | Unix.Unix_error (Unix.ECONNREFUSED, _, _)
   | Unix.Unix_error (Unix.ENOENT, _, _) ->
-    if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Error Monitor_socket_not_ready
+    if not (server_exists config.lock_file) then Error Server_missing
+    else Error Monitor_socket_not_ready
 
 let get_cstate config (ic, oc) =
   try
     send_version oc;
     let cstate : connection_state = from_channel_without_buffering ic in
-    Result.Ok (ic, oc, cstate)
+    Ok (ic, oc, cstate)
   with _ ->
     Timeout.shutdown_connection ic;
     Timeout.close_in_noerr ic;
-    if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Error Monitor_connection_failure
+    if not (server_exists config.lock_file) then Error Server_missing
+    else Error Monitor_connection_failure
 
 let verify_cstate ic cstate =
   match cstate with
-  | Connection_ok -> Result.Ok ()
-  | Build_id_mismatch | Build_id_mismatch_ex _ ->
+  | Connection_ok -> Ok ()
+  | Build_id_mismatch_ex mismatch_info ->
       (* The server is out of date and is going to exit. Subsequent calls
        * to connect on the Unix Domain Socket might succeed, connecting to
        * the server that is about to die, and eventually we will be hung
@@ -83,40 +84,32 @@ let verify_cstate ic cstate =
        * has exited and the OS has cleaned up after it, then we try again.
        *
        * See also: ServerMonitor.client_out_of_date
-       *
-       * TODO: around September 2017, add an assert that the Build_id_mismatch
-       * form will never arise; only the _ex form will be emitted.
-       * At that point we can make Build_id_mismatched take a non-optional.
-       * Why that date? As of early July, the server started emitting only the
-       * _ex form. We'll give the change time to percolate, until no one
-       * will realistically be running the old form of the server, and by that
-       * time we can add the assert.
        *)
       wait_on_server_restart ic;
       Timeout.close_in_noerr ic;
-      let mismatch_info = match cstate with
-        | Build_id_mismatch_ex mismatch_info -> Some mismatch_info
-        | _ -> None
-      in
-      Result.Error (Build_id_mismatched mismatch_info)
+      Error (Build_id_mismatched (Some mismatch_info))
+  | Build_id_mismatch ->
+      (* The server no longer ever sends this message, as of July 2017 *)
+      failwith "Ancient version of server sent old Build_id_mismatch"
 
 (** Consume sequence of Prehandoff messages. *)
 let rec consume_prehandoff_messages ic oc =
   let module PH = Prehandoff in
   let m: PH.msg = from_channel_without_buffering ic in
   match m with
-  | PH.Sentinel -> Result.Ok (ic, oc)
-  | PH.Server_name_not_found ->
-    Printf.eprintf
-      "Requested server name not found. This is probably a bug in Hack.";
-    raise (Exit_status.Exit_with (Exit_status.Server_name_not_found));
+  | PH.Sentinel -> Ok (ic, oc)
   | PH.Server_dormant_connections_limit_reached ->
     Printf.eprintf @@ "Connections limit on dormant server reached."^^
       " Be patient waiting for a server to be started.";
-    Result.Error Server_dormant
+    Error Server_dormant
   | PH.Server_not_alive_dormant _ ->
-    Printf.eprintf "Waiting for a server to be started...\n%!";
+    Printf.eprintf "Waiting for a server to be started...%s\n%!"
+      ClientMessages.waiting_for_server_to_be_started_doc;
     consume_prehandoff_messages ic oc
+  | PH.Server_died_config_change ->
+    Printf.eprintf ("Last server exited due to config change. Please re-run client" ^^
+      " to force discovery of the correct version of the client.");
+    Error Server_died
   | PH.Server_died {PH.status; PH.was_oom} ->
     (match was_oom, status with
     | true, _ ->
@@ -127,11 +120,13 @@ let rec consume_prehandoff_messages ic oc =
       Printf.eprintf "Last server killed by signal: %d.\n%!" signal
     | false, Unix.WSTOPPED signal ->
       Printf.eprintf "Last server stopped by signal: %d.\n%!" signal);
+    (** Monitor will exit now that it has provided a client with a reason
+     * for the last server dying. Wait for the Monitor to exit. *)
     wait_on_server_restart ic;
-    Result.Error Server_died
+    Error Server_died
 
 let connect_to_monitor ~timeout config =
-  let open Result in
+  let open Core_result in
   Timeout.with_timeout
     ~timeout
     ~on_timeout:(fun _ ->
@@ -167,8 +162,8 @@ let connect_to_monitor ~timeout config =
         *    (many seconds) and by not auto-retrying connections to the Monitor.
       * *)
       HackEventLogger.client_connect_to_monitor_timeout ();
-      if not (server_exists config.lock_file) then Result.Error Server_missing
-      else Result.Error ServerMonitorUtils.Monitor_establish_connection_timeout
+      if not (server_exists config.lock_file) then Error Server_missing
+      else Error ServerMonitorUtils.Monitor_establish_connection_timeout
     )
     ~do_:begin fun timeout ->
       establish_connection ~timeout config >>= fun (ic, oc) ->
@@ -176,19 +171,19 @@ let connect_to_monitor ~timeout config =
     end
 
 let connect_and_shut_down config =
-  let open Result in
+  let open Core_result in
   connect_to_monitor ~timeout:3 config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
   send_shutdown_rpc oc;
   Timeout.with_timeout
     ~timeout:3
     ~on_timeout:(fun () ->
-      if not (server_exists config.lock_file) then Result.Error Server_missing
-      else Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED
+      if not (server_exists config.lock_file) then Error Server_missing
+      else Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED
     )
     ~do_:begin fun _ ->
       wait_on_server_restart ic;
-      Result.Ok ServerMonitorUtils.SHUTDOWN_VERIFIED
+      Ok ServerMonitorUtils.SHUTDOWN_VERIFIED
     end
 
 let connect_once ~timeout config handoff_options =
@@ -199,7 +194,7 @@ let connect_once ~timeout config handoff_options =
   (* 1. OPEN SOCKET. After this point we have a working stdin/stdout to the  *)
   (* process. Implemented in establish_connection.                           *)
   (*   | catch EConnRefused/ENoEnt/Timeout 1s when lockfile present ->       *)
-  (*     Result.Error Monitor_socket_not_ready.                              *)
+  (*     Error Monitor_socket_not_ready.                                     *)
   (*       This is unexpected! But can happen if you manage to catch the     *)
   (*       monitor in the short timeframe after it has grabbed its lock but  *)
   (*       before it has started listening in on its socket.                 *)
@@ -208,7 +203,7 @@ let connect_once ~timeout config handoff_options =
   (*       -> "hh_client start" -> print "replacing unresponsive server"     *)
   (*              kill_server; start_server; exit.                           *)
   (*   | catch Timeout <retries>s when lockfile present ->                   *)
-  (*     Result.Error Monitor_establish_connection_timeout                   *)
+  (*     Error Monitor_establish_connection_timeout                          *)
   (*       This is unexpected! after all the monitor is always responsive,   *)
   (*       and indeed start_server waits until responsive before returning.  *)
   (*       But this can happen during a DDOS.                                *)
@@ -218,7 +213,7 @@ let connect_once ~timeout config handoff_options =
   (*       -> "hh_client start" -> print "replacing unresponsive server"     *)
   (*              kill_server; start_server; exit.                           *)
   (*   | catch EConnRefused/ENoEnt/Timeout when lockfile absent ->           *)
-  (*     Result.Error Server_missing.                                        *)
+  (*     Error Server_missing.                                               *)
   (*       -> "hh_client ide" -> raise Exit_with IDE_no_server.              *)
   (*       -> "hh_client check" -> start_server; retry step 1, up to 800x.   *)
   (*       -> "hh_client start" -> start_server; exit.                       *)
@@ -228,18 +223,18 @@ let connect_once ~timeout config handoff_options =
   (* safely marshal OCaml types back and forth. Implemented in get_cstate    *)
   (* and verify_cstate.                                                      *)
   (*   | catch any exception when lockfile present ->                        *)
-  (*     close_connection; Result.Error Monitor_connection_failure.          *)
+  (*     close_connection; Error Monitor_connection_failure.                 *)
   (*       This is unexpected!                                               *)
   (*       -> "hh_client check/ide" -> retry from step 1, up to 800 times.   *)
   (*       -> "hh_client start" -> print "replacing unresponsive server"     *)
   (*              kill_server; start_server; exit.                           *)
   (*   | catch any exception when lockfile absent ->                         *)
-  (*     close_connection; Result.Error Server_missing.                      *)
+  (*     close_connection; Error Server_missing.                             *)
   (*       -> "hh_client ide" -> raise Exit_with IDE_no_server               *)
   (*       -> "hh_client check" -> start_server; retry step 1, up to 800x.   *)
   (*       -> "hh_client start" -> start_server; exit.                       *)
   (*   | if version numbers differ ->                                        *)
-  (*     Result.Error Build_mismatch.                                        *)
+  (*     Error Build_mismatch.                                               *)
   (*       -> "hh_client ide" -> raise Exit_with IDE_no_server.              *)
   (*       -> "hh_client check" -> close_log_tailer; retry from step 1.      *)
   (*       -> "hh_client start" -> start_server; exit.                       *)
@@ -254,7 +249,7 @@ let connect_once ~timeout config handoff_options =
   (*   | response Server_not_alive_dormant ->                                *)
   (*     print "Waiting for server to start"; retry step 5, unlimited times. *)
   (*   | response Server_dormant_connections_limit_reached ->                *)
-  (*     Result.Error Server_dormant.                                        *)
+  (*     Error Server_dormant.                                               *)
   (*       -> "hh_client ide" -> raise Exit_with IDE_no_server.              *)
   (*       -> "hh_client start" -> print "Server already exists but is       *)
   (*         dormant"; exit.                                                 *)
@@ -263,7 +258,7 @@ let connect_once ~timeout config handoff_options =
   (*         Please wait patiently." raise Exit_with No_server_running.      *)
   (*   | response Server_died ->                                             *)
   (*     print "Last killed by OOM / signal / stopped by signal / exited";   *)
-  (*     wait for server to close; Result.Error Server_died.                 *)
+  (*     wait for server to close; Error Server_died.                        *)
   (*       -> "hh_client ide" -> raise Exit_with IDE_no_server.              *)
   (*       -> "hh_client start" -> start_server.                             *)
   (*       -> "hh_client check" -> retry from step 1, up to 800 times.       *)
@@ -287,11 +282,11 @@ let connect_once ~timeout config handoff_options =
   (* 5. SEND CONNECTION TYPE; READ RESPONSE. After this point we have        *)
   (* evidence that the server is able to handle our connection. The          *)
   (* connection type indicates Persistent vs Non-persistent.                 *)
-  (*   | reponse Denied_due_to_existing_persistent_connection.               *)
+  (*   | response Denied_due_to_existing_persistent_connection.               *)
   (*       -> "hh_client lsp" -> raise Lsp.Error_server_start.               *)
   (*   | catch any exception -> unhandled.                                   *)
   (***************************************************************************)
-  let open Result in
+  let open Core_result in
   connect_to_monitor ~timeout config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
   send_server_handoff_rpc handoff_options oc;

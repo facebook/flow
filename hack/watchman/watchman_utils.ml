@@ -6,9 +6,9 @@ let rev_in_state_change json =
   let open Hh_json.Access in
   (return json) >>=
     get_string "rev" |> function
-    | Result.Error _ ->
+    | Error _ ->
       let () = Hh_logger.log
         "Watchman_utils failed to get rev in json: %s"
         (Hh_json.json_to_string json) in
       None
-    | Result.Ok (v, _) -> Some v
+    | Ok (v, _) -> Some v

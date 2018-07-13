@@ -2,7 +2,7 @@
 import React from 'react';
 import type {Node} from 'react';
 
-class Hello extends React.Component<void, {name: string}, void> {
+class Hello extends React.Component<{name: string}> {
   defaultProps = {};
   propTypes = {
     name: React.PropTypes.string.isRequired,

@@ -2,9 +2,8 @@
  * Copyright (c) 2017, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -49,3 +48,18 @@ let pop_unsafe t =
 let iter t ~f =
   List.iter f t.outgoing;
   List.iter f (List.rev t.incoming)
+
+let from_list x =
+  { incoming = [];
+    outgoing = x;
+    length = List.length x;
+  }
+
+let to_list x =
+  x.outgoing @ (List.rev x.incoming)
+
+let concat t =
+  { incoming = [];
+    outgoing = List.map to_list t |> List.concat;
+    length = List.map (fun u -> u.length) t |> List.fold_left (+) 0;
+  }

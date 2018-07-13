@@ -1,0 +1,6 @@
+[version]
+^0.74.0
+
+[ignore]
+.*/node_modules/.*
+.*/__tests__/fixtures/.*

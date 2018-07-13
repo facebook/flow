@@ -56,33 +56,39 @@
             "computed":false,
             "decorators":[
               {
-                "type":"CallExpression",
-                "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":37}},
-                "range":[13,37],
-                "callee":{
-                  "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":24}},
-                  "range":[13,24],
-                  "name":"myDecorator",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "arguments":[
-                  {
-                    "type":"Literal",
-                    "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":36}},
-                    "range":[25,36],
-                    "value":"someParam",
-                    "raw":"\"someParam\""
-                  }
-                ]
+                "type":"Decorator",
+                "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":37}},
+                "range":[12,37],
+                "expression":{
+                  "type":"CallExpression",
+                  "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":37}},
+                  "range":[13,37],
+                  "callee":{
+                    "type":"Identifier",
+                    "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":24}},
+                    "range":[13,24],
+                    "name":"myDecorator",
+                    "typeAnnotation":null,
+                    "optional":false
+                  },
+                  "typeArguments":null,
+                  "arguments":[
+                    {
+                      "type":"Literal",
+                      "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":36}},
+                      "range":[25,36],
+                      "value":"someParam",
+                      "raw":"\"someParam\""
+                    }
+                  ]
+                }
               }
             ]
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

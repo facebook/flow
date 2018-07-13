@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -19,6 +16,8 @@ let default_shm_dirs =
 
 (* Half a gig *)
 let default_shm_min_avail = 1024 * 1024 * 512
+
+let version_regex = Str.regexp_string "<VERSION>"
 
 let map_add map (key, value) = SMap.add key value map
 
@@ -35,14 +34,16 @@ let error ln msg = multi_error [(ln, msg)]
 module Opts = struct
   type t = {
     emoji: bool;
+    max_literal_length: int;
     enable_const_params: bool;
-    enable_unsafe_getters_and_setters: bool;
-    enforce_strict_type_args: bool;
     enforce_strict_call_arity: bool;
+    enforce_well_formed_exports: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
+    esproposal_optional_chaining: Options.esproposal_feature_mode;
+    esproposal_nullish_coalescing: Options.esproposal_feature_mode;
     facebook_fbt: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_blacklist: string list;
@@ -50,9 +51,11 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    module_resolver: Path.t option;
     module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
+    merge_timeout: int option;
     munge_underscores: bool;
     module_file_exts: SSet.t;
     module_resource_exts: SSet.t;
@@ -67,6 +70,7 @@ module Opts = struct
     max_workers: int;
     no_flowlib: bool;
     temp_dir: string;
+    saved_state_load_script: string option;
     shm_global_size: int;
     shm_heap_size: int;
     shm_dirs: string list;
@@ -122,6 +126,7 @@ module Opts = struct
     |> SSet.add ".js"
     |> SSet.add ".jsx"
     |> SSet.add ".json"
+    |> SSet.add ".mjs"
 
   let module_resource_exts = SSet.empty
     |> SSet.add ".css"
@@ -138,14 +143,16 @@ module Opts = struct
 
   let default_options = {
     emoji = false;
+    max_literal_length = 100;
     enable_const_params = false;
-    enable_unsafe_getters_and_setters = false;
-    enforce_strict_type_args = true;
     enforce_strict_call_arity = true;
+    enforce_well_formed_exports = false;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
+    esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
+    esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
     facebook_fbt = None;
     haste_name_reducers = [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
     haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
@@ -153,6 +160,8 @@ module Opts = struct
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     include_warnings = false;
+    merge_timeout = Some 100;
+    module_resolver = None;
     module_system = Options.Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
@@ -170,6 +179,7 @@ module Opts = struct
     max_workers = Sys_utils.nbr_procs;
     no_flowlib = false;
     temp_dir = default_temp_dir;
+    saved_state_load_script = None;
     shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
     shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
     shm_dirs = default_shm_dirs;
@@ -301,14 +311,20 @@ module Opts = struct
 end
 
 type config = {
-  (* file blacklist *)
+  (* completely ignored files (both module resolving and typing) *)
   ignores: string list;
+  (* files that should be treated as untyped *)
+  untyped: string list;
+  (* files that should be treated as declarations *)
+  declarations: string list;
   (* non-root include paths *)
   includes: string list;
   (* library paths. no wildcards *)
   libs: string list;
-  (* lint settings *)
-  lint_settings: LintSettings.t;
+  (* lint severities *)
+  lint_severities: Severity.severity LintSettings.t;
+  (* strict mode *)
+  strict_mode: StrictModeSettings.t;
   (* config options *)
   options: Opts.t;
 }
@@ -323,6 +339,12 @@ end = struct
 
   let ignores o ignores =
     List.iter (fun ex -> (fprintf o "%s\n" ex)) ignores
+
+  let untyped o untyped =
+    List.iter (fun ex -> (fprintf o "%s\n" ex)) untyped
+
+  let declarations o declarations =
+    List.iter (fun ex -> (fprintf o "%s\n" ex)) declarations
 
   let includes o includes =
     List.iter (fun inc -> (fprintf o "%s\n" inc)) includes
@@ -352,21 +374,40 @@ end = struct
     )
 
   let lints o config =
-    let lint_settings = config.lint_settings in
-    let lint_default = LintSettings.get_default lint_settings in
+    let open Lints in
+    let open Severity in
+    let lint_severities = config.lint_severities in
+    let lint_default = LintSettings.get_default lint_severities in
     (* Don't print an 'all' setting if it matches the default setting. *)
-    if (lint_default <> LintSettings.get_default LintSettings.default_settings) then
-      fprintf o "all=%s\n" (LintSettings.string_of_state lint_default);
+    if (lint_default <> LintSettings.get_default LintSettings.empty_severities) then
+      fprintf o "all=%s\n" (string_of_severity lint_default);
     LintSettings.iter (fun kind (state, _) ->
         (fprintf o "%s=%s\n"
-          (LintSettings.string_of_kind kind)
-          (LintSettings.string_of_state state)))
-      lint_settings
+          (string_of_kind kind)
+          (string_of_severity state)))
+      lint_severities
+
+  let strict o config =
+    let open Lints in
+    let strict_mode = config.strict_mode in
+    StrictModeSettings.iter (fun kind ->
+      (fprintf o "%s\n"
+         (string_of_kind kind)))
+      strict_mode
+
+  let section_if_nonempty o header f = function
+    | [] -> ()
+    | xs ->
+      section_header o header;
+      f o xs;
+      fprintf o "\n"
 
   let config o config =
     section_header o "ignore";
     ignores o config.ignores;
     fprintf o "\n";
+    section_if_nonempty o "untyped" untyped config.untyped;
+    section_if_nonempty o "declarations" declarations config.declarations;
     section_header o "include";
     includes o config.includes;
     fprintf o "\n";
@@ -377,14 +418,20 @@ end = struct
     lints o config;
     fprintf o "\n";
     section_header o "options";
-    options o config
+    options o config;
+    fprintf o "\n";
+    section_header o "strict";
+    strict o config
 end
 
 let empty_config = {
   ignores = [];
+  untyped = [];
+  declarations = [];
   includes = [];
   libs = [];
-  lint_settings = LintSettings.default_settings;
+  lint_severities = LintSettings.empty_severities;
+  strict_mode = StrictModeSettings.empty;
   options = Opts.default_options
 }
 
@@ -415,6 +462,8 @@ let trim_labeled_lines lines =
   |> List.map (fun (label, line) -> (label, String.trim line))
   |> List.filter (fun (_, s) -> s <> "")
 
+let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Flow_version.version)
+
 (* parse [include] lines *)
 let parse_includes config lines =
   let includes = trim_lines lines in
@@ -428,8 +477,17 @@ let parse_ignores config lines =
   let ignores = trim_lines lines in
   { config with ignores; }
 
+let parse_untyped config lines =
+  let untyped = trim_lines lines in
+  { config with untyped; }
+
+let parse_declarations config lines =
+  let declarations = trim_lines lines in
+  { config with declarations; }
+
 let parse_options config lines =
   let open Opts in
+  let (>>=) = Core_result.(>>=) in
   let options = parse config.options lines
     |> define_opt "emoji" {
       initializer_ = USE_DEFAULT;
@@ -476,6 +534,24 @@ let parse_options config lines =
       });
     }
 
+    |> define_opt "esproposal.optional_chaining" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
+      setter = (fun opts v -> Ok {
+        opts with esproposal_optional_chaining = v;
+      });
+    }
+
+    |> define_opt "esproposal.nullish_coalescing" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
+      setter = (fun opts v -> Ok {
+        opts with esproposal_nullish_coalescing = v;
+      });
+    }
+
     |> define_opt "facebook.fbt" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -491,6 +567,16 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         Ok {opts with include_warnings = v;}
+      );
+    }
+
+    |> define_opt "merge_timeout" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts v ->
+        let merge_timeout = if v = 0 then None else Some v in
+        Ok {opts with merge_timeout}
       );
     }
 
@@ -620,6 +706,15 @@ let parse_options config lines =
       );
     }
 
+    |> define_opt "module.resolver" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_filepath;
+      setter = (fun opts v -> Ok {
+        opts with module_resolver = Some v;
+      });
+    }
+
     |> define_opt "module.system" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -694,10 +789,15 @@ let parse_options config lines =
         {opts with suppress_comments = [];}
       );
       flags = [ALLOW_DUPLICATE];
-      optparser = optparse_regexp;
-      setter = (fun opts v -> Ok {
-        opts with suppress_comments = v::(opts.suppress_comments);
-      });
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        Str.split_delim version_regex v
+        |> String.concat (">=" ^ less_or_equal_curr_version)
+        |> String.escaped
+        |> Core_result.return
+        >>= optparse_regexp
+        >>= fun v -> Ok { opts with suppress_comments = v::(opts.suppress_comments) }
+      );
     }
 
     |> define_opt "suppress_type" {
@@ -717,6 +817,15 @@ let parse_options config lines =
       optparser = optparse_string;
       setter = (fun opts v -> Ok {
         opts with temp_dir = v;
+      });
+    }
+
+    |> define_opt "saved_state.load_script" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_string;
+      setter = (fun opts v -> Ok {
+        opts with saved_state_load_script = Some v;
       });
     }
 
@@ -774,12 +883,12 @@ let parse_options config lines =
       );
     }
 
-    |> define_opt "unsafe.enable_getters_and_setters" {
+    |> define_opt "max_literal_length" {
       initializer_ = USE_DEFAULT;
       flags = [];
-      optparser = optparse_boolean;
+      optparser = optparse_uint;
       setter = (fun opts v ->
-        Ok {opts with enable_unsafe_getters_and_setters = v;}
+        Ok {opts with max_literal_length = v;}
       );
     }
 
@@ -792,21 +901,21 @@ let parse_options config lines =
       );
     }
 
-    |> define_opt "experimental.strict_type_args" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with enforce_strict_type_args = v;}
-      );
-    }
-
     |> define_opt "experimental.strict_call_arity" {
       initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
         Ok {opts with enforce_strict_call_arity = v;}
+      );
+    }
+
+    |> define_opt "experimental.well_formed_exports" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        Ok {opts with enforce_well_formed_exports = v;}
       );
     }
 
@@ -843,8 +952,13 @@ let parse_version config lines =
   | _ -> config
 
 let parse_lints config lines =
-  match lines |> trim_labeled_lines |> LintSettings.of_lines LintSettings.default_settings with
-  | Ok lint_settings -> {config with lint_settings}
+  match lines |> trim_labeled_lines |> LintSettings.of_lines config.lint_severities with
+  | Ok lint_severities -> {config with lint_severities}
+  | Error (ln, msg) -> error ln msg
+
+let parse_strict config lines =
+  match lines |> trim_labeled_lines |> StrictModeSettings.of_lines with
+  | Ok strict_mode -> {config with strict_mode}
   | Error (ln, msg) -> error ln msg
 
 let parse_section config ((section_ln, section), lines) =
@@ -856,7 +970,10 @@ let parse_section config ((section_ln, section), lines) =
   | "ignore", _ -> parse_ignores config lines
   | "libs", _ -> parse_libs config lines
   | "lints", _ -> parse_lints config lines
+  | "declarations", _ -> parse_declarations config lines
+  | "strict", _ -> parse_strict config lines
   | "options", _ -> parse_options config lines
+  | "untyped", _ -> parse_untyped config lines
   | "version", _ -> parse_version config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
@@ -875,20 +992,40 @@ let is_not_comment =
       (fun (regexp) -> Str.string_match regexp line 0)
       comment_regexps)
 
+let default_lint_severities = [
+  Lints.DeprecatedCallSyntax, (Severity.Err, None);
+]
+
 let read filename =
-  let lines = Sys_utils.cat_no_fail filename
+  let contents = Sys_utils.cat_no_fail filename in
+  let hash =
+    let xx_state = Xx.init () in
+    Xx.update xx_state contents;
+    Xx.digest xx_state
+  in
+  let lines = contents
     |> Sys_utils.split_lines
     |> List.mapi (fun i line -> (i+1, String.trim line))
     |> List.filter is_not_comment in
-  parse empty_config lines
+  let config = {
+    empty_config with
+    lint_severities = List.fold_left (fun acc (lint, severity) ->
+      LintSettings.set_value lint severity acc
+    ) empty_config.lint_severities default_lint_severities
+  } in
+  parse config lines, hash
 
-let init ~ignores ~includes ~libs ~options ~lints =
+let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
+  let untyped_lines = List.map (fun s -> (1, s)) untyped in
+  let declarations_lines = List.map (fun s -> (1, s)) declarations in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
   let lint_lines = List.map (fun s -> (1, s)) lints in
   let config = parse_ignores empty_config ignores_lines in
+  let config = parse_untyped config untyped_lines in
+  let config = parse_declarations config declarations_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
@@ -897,26 +1034,36 @@ let init ~ignores ~includes ~libs ~options ~lints =
 
 let write config oc = Pp.config oc config
 
-(* We should restart every time the config changes, so it's cool to cache it *)
+(* We should restart every time the config changes, so it's generally cool to cache it *)
 let cache = ref None
 
-let get filename =
+let get_from_cache ?(allow_cache=true) filename =
   match !cache with
-  | None ->
-      let config = read filename in
-      cache := Some (filename, config);
-      config
-  | Some (cached_filename, config) ->
+  | Some (cached_filename, _, _ as cached_data) when allow_cache ->
       assert (filename = cached_filename);
-      config
+      cached_data
+  | _ ->
+      let config, hash = read filename in
+      let cached_data = filename, config, hash in
+      cache := Some cached_data;
+      filename, config, hash
 
-let restore (filename, config) = cache := Some (filename, config)
+let get ?allow_cache filename =
+  let (_, config, _) = get_from_cache ?allow_cache filename in
+  config
 
+let get_hash ?allow_cache filename =
+  let (_, _, hash) = get_from_cache ?allow_cache filename in
+  hash
 
 (* Accessors *)
 
-(* file blacklist *)
+(* completely ignored files (both module resolving and typing) *)
 let ignores config = config.ignores
+(* files that should be treated as untyped *)
+let untyped config = config.untyped
+(* files that should be treated as declarations *)
+let declarations config = config.declarations
 (* non-root include paths *)
 let includes config = config.includes
 (* library paths. no wildcards *)
@@ -925,14 +1072,16 @@ let libs config = config.libs
 (* options *)
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji
+let max_literal_length c = c.options.Opts.max_literal_length
 let enable_const_params c = c.options.Opts.enable_const_params
-let enable_unsafe_getters_and_setters c = c.options.Opts.enable_unsafe_getters_and_setters
-let enforce_strict_type_args c = c.options.Opts.enforce_strict_type_args
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
+let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports
 let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators
 let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
+let esproposal_optional_chaining c = c.options.Opts.esproposal_optional_chaining
+let esproposal_nullish_coalescing c = c.options.Opts.esproposal_nullish_coalescing
 let facebook_fbt c = c.options.Opts.facebook_fbt
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
@@ -943,14 +1092,17 @@ let include_warnings c = c.options.Opts.include_warnings
 let log_file c = c.options.Opts.log_file
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers
+let merge_timeout c = c.options.Opts.merge_timeout
 let module_file_exts c = c.options.Opts.module_file_exts
 let module_name_mappers c = c.options.Opts.module_name_mappers
+let module_resolver c = c.options.Opts.module_resolver
 let module_resource_exts c = c.options.Opts.module_resource_exts
 let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+let saved_state_load_script c = c.options.Opts.saved_state_load_script
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs
 let shm_global_size c = c.options.Opts.shm_global_size
@@ -965,5 +1117,6 @@ let traces c = c.options.Opts.traces
 let required_version c = c.options.Opts.version
 let weak c = c.options.Opts.weak
 
-(* global defaults for lint suppressions *)
-let lint_settings c = c.lint_settings
+(* global defaults for lint severities and strict mode *)
+let lint_severities c = c.lint_severities
+let strict_mode c = c.strict_mode

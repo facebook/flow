@@ -1,11 +1,8 @@
-(*
+(**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Token
@@ -18,18 +15,18 @@ module SSet = Set.Make(String)
 module type DECLARATION = sig
   val async: env -> bool
   val generator: env -> bool
-  val variance: env -> bool -> bool -> Variance.t option
-  val function_params: env -> Pattern.t list * Function.RestElement.t option
-  val function_body: env -> async:bool -> generator:bool -> Loc.t * Function.body * bool
-  val is_simple_function_params: Pattern.t list * Function.RestElement.t option -> bool
-  val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Pattern.t list * Function.RestElement.t option -> unit
-  val concise_function_body: env -> async:bool -> generator:bool -> Function.body * bool
-  val variable: env -> Statement.t * (Loc.t * Error.t) list
-  val variable_declaration_list: env -> Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
-  val let_: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val const: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val var: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val _function: env -> Statement.t
+  val variance: env -> bool -> bool -> Loc.t Variance.t option
+  val function_params: await:bool -> yield:bool -> env -> Loc.t Ast.Function.Params.t
+  val function_body: env -> async:bool -> generator:bool -> Loc.t * Loc.t Function.body * bool
+  val is_simple_function_params: Loc.t Ast.Function.Params.t -> bool
+  val strict_post_check: env -> strict:bool -> simple:bool -> Loc.t Identifier.t option -> Loc.t Ast.Function.Params.t -> unit
+  val concise_function_body: env -> async:bool -> generator:bool -> Loc.t Function.body * bool
+  val variable: env -> Loc.t Statement.t * (Loc.t * Error.t) list
+  val variable_declaration_list: env -> Loc.t Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
+  val let_: env -> Loc.t Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val const: env -> Loc.t Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val var: env -> Loc.t Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val _function: env -> Loc.t Statement.t
 end
 
 module Declaration
@@ -98,7 +95,7 @@ module Declaration
   (* Strict is true if we were already in strict mode or if we are newly in
    * strict mode due to a directive in the function.
    * Simple is the IsSimpleParameterList thing from the ES6 spec *)
-  let strict_post_check env ~strict ~simple id (params, rest) =
+  let strict_post_check env ~strict ~simple id (_, { Ast.Function.Params.params; rest }) =
     if strict || not simple
     then
       (* If we are doing this check due to strict mode than there are two
@@ -154,18 +151,24 @@ module Declaration
           in
           if Peek.token env <> T_RPAREN
           then error env Error.ParameterAfterRestParameter;
-          List.rev acc, rest
+          { Ast.Function.Params.params = List.rev acc; rest }
       | _ ->
           let the_param = param env in
           if Peek.token env <> T_RPAREN
           then Expect.token env T_COMMA;
           param_list env (the_param::acc)
 
-    in fun env ->
+    in fun ~await ~yield -> with_loc (fun env ->
+      let env = env
+        |> with_allow_await await
+        |> with_allow_yield yield
+        |> with_in_formal_parameters true
+      in
       Expect.token env T_LPAREN;
       let params = param_list env [] in
       Expect.token env T_RPAREN;
       params
+    )
 
   let function_body env ~async ~generator =
     let env = enter_function env ~async ~generator in
@@ -211,7 +214,7 @@ module Declaration
     | _, Pattern.Identifier _ ->  true
     | _ -> false
 
-    in fun (params, rest) ->
+    in fun (_, { Ast.Function.Params.params; rest }) ->
       rest = None && List.for_all is_simple_param params
 
   let _function env =
@@ -219,7 +222,7 @@ module Declaration
     let async = async env in
     Expect.token env T_FUNCTION;
     let generator = generator env in
-    let (typeParameters, id) = (
+    let (tparams, id) = (
       match in_export env, Peek.token env with
       | true, T_LPAREN -> (None, None)
       | true, T_LESS_THAN ->
@@ -234,8 +237,16 @@ module Declaration
         in
         (Type.type_parameter_declaration env, Some id)
     ) in
-    let params = function_params env in
-    let (returnType, predicate) = Type.annotation_and_predicate_opt env in
+    let params =
+      let yield, await = match async, generator with
+      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorDeclaration *)
+      | true, false -> false, allow_await env (* #prod-AsyncFunctionDeclaration *)
+      | false, true -> true, false (* #prod-GeneratorDeclaration *)
+      | false, false -> false, false (* #prod-FunctionDeclaration *)
+      in
+      function_params ~await ~yield env
+    in
+    let (return, predicate) = Type.annotation_and_predicate_opt env in
     let _, body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
@@ -251,8 +262,8 @@ module Declaration
       async;
       predicate;
       expression;
-      returnType;
-      typeParameters;
+      return;
+      tparams;
     }))
 
   let variable_declaration_list =

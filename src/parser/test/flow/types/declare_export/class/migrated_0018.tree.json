@@ -59,14 +59,17 @@
                 "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":50}},
                 "range":[44,50]
               },
+              "method":false,
               "optional":false,
               "static":false,
+              "proto":false,
               "variance":null,
               "kind":"init"
             }
           ],
           "indexers":[],
-          "callProperties":[]
+          "callProperties":[],
+          "internalSlots":[]
         },
         "extends":[
           {
@@ -103,7 +106,9 @@
               ]
             }
           }
-        ]
+        ],
+        "implements":[],
+        "mixins":[]
       },
       "specifiers":[],
       "source":null

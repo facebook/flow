@@ -58,8 +58,8 @@
               "range":[85,96],
               "typeAnnotation":{
                 "type":"NullableTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":13},"end":{"line":2,"column":21}},
-                "range":[87,95],
+                "loc":{"source":null,"start":{"line":2,"column":13},"end":{"line":2,"column":22}},
+                "range":[87,96],
                 "typeAnnotation":{
                   "type":"NumberTypeAnnotation",
                   "loc":{"source":null,"start":{"line":2,"column":15},"end":{"line":2,"column":21}},

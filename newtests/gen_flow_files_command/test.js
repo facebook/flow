@@ -1,49 +1,52 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, flowCmd}) => [
   test('named class exports', [
     addFile('named_class_exports', 'named_class_exports.js'),
-    flowCmd(['gen-flow-files', '--quiet', 'named_class_exports.js']).stdout(`
-      // @flow
+    flowCmd(['gen-flow-files', '--quiet', 'named_class_exports.js'])
+      .stdout(
+        `
+          // @flow
 
-      declare class Class0 {
+          declare class Class0 {
 
-        map<U>(f: (x: T) => U): Class0<U>;
-      }
-      declare interface Class1 {
+            map<U>(f: (x: T) => U): Class0<U>;
+          }
+          declare interface Class1 {
 
-        foo: string;
-      }
-      declare export class Base<A, B, C> {
-        static baseStaticMethod(a: number, b: string): number;
-        static overriddenStaticMethod(a: {b: number, c: number}): number;
+            foo: string;
+          }
+          declare export class Base<A, B, C> {
+            static baseStaticMethod(a: number, b: string): number;
+            static overriddenStaticMethod(a: {b: number, c: number}): number;
 
-        baseInst: Base<number, string, mixed>;
-        childInst: Child<string, number>;
-        baseMethod(a: number, b: string): number;
-        overriddenMethod(a: {b: number, c: number}): number;
-      }
+            baseInst: Base<number, string, mixed>;
+            childInst: Child<string, number>;
+            baseMethod(a: number, b: string): number;
+            overriddenMethod(a: {b: number, c: number}): number;
+          }
 
-      declare export class Child<A, B> extends Base<A, B, mixed> {
-        static overriddenStaticMethod(a: {b: number}): number;
+          declare export class Child<A, B> extends Base<A, B, mixed> {
+            static overriddenStaticMethod(a: {b: number}): number;
 
-        notExported: Class0<number>;
-        overriddenMethod(a: {b: number}): number;
-      }
+            notExported: Class0<number>;
+            overriddenMethod(a: {b: number}): number;
+          }
 
-      declare export class Foo implements Class1 {
+          declare export class Foo implements Class1 {
 
-        foo: string;
-      }
+            foo: string;
+          }
 
 
-    `)
+        `,
+      )
     .stderr('')
   ]),
 
@@ -169,7 +172,12 @@ export default suite(({addFile, addFiles, flowCmd}) => [
 
   test('non-@flow files', [
     addFile('non_flow_file.js'),
-    flowCmd(['gen-flow-files', '--quiet', '--strip-root', 'non_flow_file.js'])
+    flowCmd([
+      'gen-flow-files',
+      '--quiet',
+      '--strip-root',
+      'non_flow_file.js',
+    ])
       .stderr('')
       .stdout(
         `
@@ -182,19 +190,27 @@ export default suite(({addFile, addFiles, flowCmd}) => [
   test('type errors halt and print to stderr', [
     addFile('type_error.js'),
     flowCmd(['gen-flow-files', '--quiet', 'type_error.js']).stdout('').stderr(
-      `
-        Error: type_error.js:3
-          3: export var a: string = 42;
-                                    ^^ number. This type is incompatible with
-          3: export var a: string = 42;
-                           ^^^^^^ string
+                                                                        `
+                                                                          Error ----------------------------------------------------------------------------------------------- type_error.js:3:24
 
-        Found 1 error
+                                                                          Cannot assign \`42\` to \`a\` because number [1] is incompatible with string [2].
 
-        In order to generate a shadow file there must be no type errors!
+                                                                             type_error.js:3:24
+                                                                             3| export var a: string = 42;
+                                                                                                       ^^ [1]
 
-      `,
-    )
+                                                                          References:
+                                                                             type_error.js:3:15
+                                                                             3| export var a: string = 42;
+                                                                                              ^^^^^^ [2]
+
+
+                                                                          Found 1 error
+
+                                                                          In order to generate a shadow file there must be no type errors!
+
+                                                                        `,
+                                                                      )
   ]),
 
   test('imported class types arent redefined', [
@@ -400,10 +416,13 @@ export default suite(({addFile, addFiles, flowCmd}) => [
     addFile('object_literal_method.js'),
     flowCmd(['gen-flow-files', '--quiet', 'object_literal_method.js']).stdout(`
       // @flow
-      declare export var a: {bar(): void};
+
+      declare export var a: {bar: () => void};
       declare export var b: {bar: () => void};
-      declare export var c: {m<T>(x: T): T};
+      declare export var c: {m: <T>(x: T) => T};
       declare export var d: {m: <T>(x: T) => T};
+
+
     `)
     .stderr('')
   ]),

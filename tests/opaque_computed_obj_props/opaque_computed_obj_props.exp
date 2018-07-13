@@ -1,0 +1,16 @@
+Error ------------------------------------------------------------------------------------------------- computed.js:26:4
+
+Cannot assign computed property using object type [1].
+
+   computed.js:26:4
+   26|   [z]: 3,
+          ^
+
+References:
+   computed.js:22:10
+   22| const z: BadID = ('0': any)
+                ^^^^^ [1]
+
+
+
+Found 1 error

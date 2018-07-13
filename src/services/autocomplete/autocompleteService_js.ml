@@ -1,34 +1,20 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Autocomplete_js
-open Type_printer
+open Core_result
+open ServerProt.Response
 
-(* Details about functions to be added in json output *)
-type func_param_result = {
-    param_name     : string;
-    param_ty       : string;
-  }
-
-type func_details_result = {
-    params    : func_param_result list;
-    return_ty : string;
-  }
-
-(* Results ready to be displayed to the user *)
-type complete_autocomplete_result = {
-    res_loc      : Loc.t;
-    res_ty       : string;
-    res_name     : string;
-    func_details : func_details_result option;
-  }
+module AutocompleteTypeNormalizer = Ty_normalizer.Make(struct
+  let opt_fall_through_merged = true
+  let opt_expand_internal_types = true
+  let opt_expand_type_aliases = false
+  let opt_flag_shadowed_type_params = true
+end)
 
 let add_autocomplete_token contents line column =
   let line = line - 1 in
@@ -52,9 +38,9 @@ let autocomplete_result_to_json ~strip_root result =
   let func_details_to_json details =
     match details with
      | Some fd -> Hh_json.JSON_Object [
-             "return_type", Hh_json.JSON_String fd.return_ty;
-             "params", Hh_json.JSON_Array (List.map func_param_to_json fd.params);
-           ]
+         "return_type", Hh_json.JSON_String fd.return_ty;
+         "params", Hh_json.JSON_Array (List.map func_param_to_json fd.param_tys);
+       ]
      | None -> Hh_json.JSON_Null
   in
   let name = result.res_name in
@@ -81,58 +67,34 @@ let autocomplete_response_to_json ~strip_root response =
       in
       JSON_Object ["result", JSON_Array results]
 
-let print_type cx type_ =
-  if is_printed_type_parsable ~weak:true cx type_
-  then string_of_t cx type_
-  else ""
+let parameter_name is_opt name =
+  let opt = if is_opt then "?" else "" in
+  (Option.value name ~default:"_") ^ opt
 
-let rec autocomplete_create_result cx name type_ loc =
-  Type.(match type_ with
-  | DefT (_, FunT (_, _, {params_tlist = params;
-                    params_names = pnames;
-                    rest_param;
-                    return_t = return; _})) ->
-      let pnames =
-        match pnames with
-        | Some pnames -> pnames
-        | None -> List.map (fun _ -> "_") params in
-      let params = List.map2 (fun name type_ ->
-        let param_name = parameter_name cx name type_ in
-        let param_ty =
-          if is_printed_param_type_parsable ~weak:true cx type_
-          then string_of_param_t cx type_
-          else ""
-        in
+let autocomplete_create_result ((name, loc), ty) =
+  Ty.(match ty with
+  | Fun {fun_params; fun_rest_param; fun_return; _} ->
+      let param_tys = List.map (fun (n, t, fp) ->
+        let param_name = parameter_name fp.prm_optional n in
+        let param_ty = Ty_printer.string_of_t t in
         { param_name; param_ty }
-      ) pnames params in
-      let params = match rest_param with
-      | None -> params
-      | Some (name, _, t) ->
-          let name = Option.value ~default:"_" name in
-          let param_name = rest_parameter_name cx name t in
-          let param_ty =
-            if is_printed_param_type_parsable ~weak:true cx t
-            then string_of_param_t cx t
-            else ""
-          in
-          params @ [ { param_name; param_ty; }] in
-      let return = print_type cx return in
+      ) fun_params in
+      let param_tys = match fun_rest_param with
+      | None -> param_tys
+      | Some (name, t) ->
+        let param_name = "..." ^ parameter_name false name in
+        let param_ty = Ty_printer.string_of_t t in
+        param_tys @ [{ param_name; param_ty; }]
+      in
+      let return = Ty_printer.string_of_t fun_return in
       { res_loc = loc;
         res_name = name;
-        res_ty = (print_type cx type_);
-        func_details = Some { params; return_ty = return } }
-  | DefT (_, PolyT (_, sub_type)) ->
-      let result = autocomplete_create_result cx name sub_type loc in
-      (* This is not exactly pretty but we need to replace the type to
-         be sure to use the same format for poly types as print_type *)
-      { res_loc = result.res_loc;
-        res_name = result.res_name;
-        res_ty = (print_type cx type_);
-        func_details = result.func_details; }
+        res_ty = Ty_printer.string_of_t ty;
+        func_details = Some { param_tys; return_ty = return } }
   | _ ->
       { res_loc = loc;
         res_name = name;
-        res_ty = (print_type cx type_);
+        res_ty = Ty_printer.string_of_t ty;
         func_details = None }
   )
 
@@ -144,19 +106,12 @@ let autocomplete_filter_members members =
     (* filter out constructor, it shouldn't be called manually *)
     not (key = "constructor")
     &&
-    (* strip out members from prototypes which are implicity created for
+    (* strip out members from prototypes which are implicitly created for
        internal reasons *)
     not (Reason.is_internal_name key)
   ) members
 
-let autocomplete_member
-  profiling
-  client_logging_context
-  cx
-  this
-  ac_name
-  ac_loc
-  docblock = Flow_js.(
+let autocomplete_member ~ac_type cx this ac_name ac_loc docblock = Flow_js.(
 
   let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
@@ -166,45 +121,39 @@ let autocomplete_member
 
   let open Hh_json in
 
-  let json_data_list = [
-    "ac_name", JSON_String ac_name;
-    "ac_loc",
-      (* don't need to strip root for logging *)
-      JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc);
-    "loc", Reason.json_of_loc ac_loc;
-    "docblock", Docblock.json_of_docblock docblock;
-  ] in
-
   let result_str, t = Members.(match result with
     | Success _ -> "SUCCESS", this
     | SuccessModule _ -> "SUCCESS", this
-    | FailureMaybeType -> "FAILURE_NULLABLE", this
+    | FailureNullishType -> "FAILURE_NULLABLE", this
     | FailureAnyType -> "FAILURE_NO_COVERAGE", this
     | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
 
-  let json_data = JSON_Object (
-    ("type", Debug_js.json_of_t ~depth:3 cx t)::json_data_list
-  ) in
-  FlowEventLogger.autocomplete_member_result
-    ~client_context:client_logging_context
-    ~result_str
-    ~json_data
-    ~profiling;
+  let json_data_to_log = JSON_Object [
+    "ac_type", JSON_String ac_type;
+    "ac_name", JSON_String ac_name;
+    (* don't need to strip root for logging *)
+    "ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc);
+    "loc", Reason.json_of_loc ac_loc;
+    "docblock", Docblock.json_of_docblock docblock;
+    "result", JSON_String result_str;
+    "type", Debug_js.json_of_t ~depth:3 cx t;
+  ] in
 
   match Members.to_command_result result with
-  | Error error -> Error error
+  | Error error -> Error (error, Some json_data_to_log)
   | Ok result_map ->
-    Ok (
-      result_map
-      |> autocomplete_filter_members
-      |> SMap.mapi (fun name t ->
-          let loc = Type.loc_of_t t in
-          let gt = Type_normalizer.normalize_type cx t in
-          autocomplete_create_result cx name gt loc
-        )
-      |> SMap.values
-      |> List.rev
-    )
+    let result = result_map
+    |> autocomplete_filter_members
+    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t), t))
+    |> SMap.values
+    |> AutocompleteTypeNormalizer.from_types ~cx
+    |> Core_list.filter_map ~f:(function
+     | l, Ok s -> Some (l, s)
+     | _ -> None
+     )
+    |> List.map autocomplete_create_result
+    |> List.rev in
+    Ok (result, Some json_data_to_log)
 )
 
 (* env is all visible bound names at cursor *)
@@ -227,55 +176,35 @@ let autocomplete_id cx env =
       in
 
       let type_ = Scope.Entry.actual_type entry in
-      let type_ = Type_normalizer.normalize_type cx type_ in
-      let result =
-        autocomplete_create_result cx name type_ loc in
-      result :: acc
+      match AutocompleteTypeNormalizer.from_type ~cx type_ with
+      | Ok t -> autocomplete_create_result ((name, loc), t) :: acc
+      | Error _ -> acc
     )
   ) env [] in
-  Ok result
+  Ok (result, None)
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx
-  profiling
-  client_logging_context
-  cx
-  cls
-  ac_name
-  ac_loc
-  parse_result = Flow_js.(
+let autocomplete_jsx cx cls ac_name ac_loc docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
-    let props_object = mk_tvar_where cx reason (fun tvar ->
+    let props_object = Tvar.mk_where cx reason (fun tvar ->
+      let use_op = Type.Op Type.UnknownUse in
       flow cx (
         component_instance,
-        Type.GetPropT (reason, Type.Named (reason, "props"), tvar))
+        Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar))
     ) in
-    autocomplete_member
-      profiling
-      client_logging_context
-      cx
-      props_object
-      ac_name
-      ac_loc
-      parse_result
+    autocomplete_member ~ac_type:"Acjsx" cx props_object ac_name ac_loc docblock
   )
 
-let autocomplete_get_results
-  profiling client_logging_context cx state parse_result =
-  (* FIXME: See #5375467 *)
-  Type_normalizer.suggested_type_cache := IMap.empty;
+let autocomplete_get_results cx state docblock =
   match !state with
   | Some { ac_type = Acid (env); _; } ->
-      autocomplete_id cx env
+    autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-      autocomplete_member
-        profiling client_logging_context cx this ac_name ac_loc
-  parse_result
+    autocomplete_member ~ac_type:"Acmem" cx this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-      autocomplete_jsx
-        profiling client_logging_context cx cls ac_name ac_loc parse_result
-  | None -> Ok []
+    autocomplete_jsx cx cls ac_name ac_loc docblock
+  | None -> Ok ([], None)

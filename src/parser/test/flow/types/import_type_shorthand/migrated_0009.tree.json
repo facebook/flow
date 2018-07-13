@@ -34,7 +34,7 @@
             "typeAnnotation":null,
             "optional":false
           },
-          "importKind":"type"
+          "importKind":null
         }
       ],
       "source":{

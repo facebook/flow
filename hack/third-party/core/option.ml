@@ -13,6 +13,9 @@ let iter o ~f =
   match o with
   | None -> ()
   | Some a -> f a
+;;
+
+let invariant f t = iter t ~f
 
 let map2 o1 o2 ~f =
   match o1, o2 with
@@ -30,6 +33,17 @@ let value t ~default =
   | Some x -> x
 ;;
 
+let value_exn ?here ?error ?message t =
+  (* this function has been modified from the original form to remove *)
+  (* the dependency on Ppx and the Error module: we don't handle the  *)
+  (* 'here' parameter, and can't combine 'error' with 'message'.      *)
+  match t, here, error, message with
+  | Some x, _, _,      _      -> x
+  | _,      _, Some e, _      -> raise e
+  | _,      _, _,      Some m -> failwith m
+  | _,      _, _,      _      -> failwith "Option.value_exn None"
+;;
+
 let to_array t =
   match t with
   | None -> [||]
@@ -44,7 +58,6 @@ let to_list t =
 
 let min_elt t ~cmp:_ = t
 let max_elt t ~cmp:_ = t
-
 let sum (type a) (module M : Commutative_group.S with type t = a) t ~f =
   match t with
   | None -> M.zero
@@ -63,7 +76,7 @@ let exists t ~f =
   | Some x -> f x
 ;;
 
-let mem ?(equal = (=)) t a =
+let mem t a ~equal =
   match t with
   | None -> false
   | Some a' -> equal a a'
@@ -145,7 +158,23 @@ include Monad.Make (struct
   ;;
   let map = `Custom map
   let bind o f =
+    (* signature of bind has been modified from the original to fit *)
+    (* with what's expected here. *)
     match o with
     | None -> None
     | Some x -> f x
 end)
+
+(* Following methods from the original have been omitted because they *)
+(* depend on modules we haven't yet included *)
+(*
+let fold_result t ~init ~f = Container.fold_result ~fold ~init ~f t
+let fold_until  t ~init ~f = Container.fold_until  ~fold ~init ~f t
+
+let validate ~none ~some t =
+  let module V = Validate in
+  match t with
+  | None   -> V.name "none" (V.protect none ())
+  | Some x -> V.name "some" (V.protect some x )
+;;
+*)

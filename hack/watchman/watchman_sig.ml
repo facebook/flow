@@ -2,9 +2,8 @@
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -12,6 +11,7 @@ module Types = struct
 
   exception Timeout
   exception Watchman_error of string
+  exception Subscription_canceled_by_watchman
 
 
   type subscribe_mode =
@@ -23,16 +23,18 @@ module Types = struct
      * know which files were changed. This is useful for the monitor to
      * aggressively kill the server. *)
     | Drop_changes
+    | Scm_aware
 
   type init_settings = {
     (** None for query mode, otherwise specify subscriptions mode. *)
     subscribe_mode: subscribe_mode option;
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
-    sync_directory: string;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
-    root: Path.t;
+    debug_logging: bool;
+    roots: Path.t list;
+    subscription_prefix: string;
   }
 
   type pushed_changes =
@@ -53,6 +55,7 @@ module Types = struct
      *)
     | State_enter of string * Hh_json.json option
     | State_leave of string * Hh_json.json option
+    | Changed_merge_base of string * SSet.t
     | Files_changed of SSet.t
 
   type changes =
@@ -76,29 +79,60 @@ module Abstract_types = struct
     | Watchman_alive of env
 end
 
+
+module type WATCHMAN_PROCESS = sig
+  type 'a result
+  type conn
+
+  exception Read_payload_too_long
+
+  val (>>=): 'a result -> ('a -> 'b result) -> 'b result
+  val (>|=): 'a result -> ('a -> 'b) -> 'b result
+  val return: 'a -> 'a result
+  val catch: f:(unit -> 'b result) -> catch:(exn -> 'b result) -> 'b result
+
+  val map_fold_values: 'a SMap.t -> init:'b -> f:('a -> 'b -> 'b result) -> 'b result
+  val map_iter_values_s: 'a SMap.t -> f:('a -> unit result) -> unit result
+
+  val open_connection: timeout:float -> conn result
+  val request:
+    debug_logging:bool -> ?conn:conn -> ?timeout:float -> Hh_json.json -> Hh_json.json result
+  val send_request_and_do_not_wait_for_response:
+    debug_logging:bool -> conn:conn -> Hh_json.json -> unit result
+  val blocking_read: debug_logging:bool -> ?timeout:float -> conn:conn -> Hh_json.json option result
+  val close_connection: conn -> unit result
+
+  module Testing: sig
+    val get_test_conn: unit -> conn result
+  end
+end
+
 module type S = sig
 
   include module type of Types
   include module type of Abstract_types
 
-  val crash_marker_path: Path.t -> string
+  type 'a result
+  type conn
 
-  val init: init_settings -> env option
+  val init: init_settings -> env option result
 
-  val get_all_files: env -> string list
+  val get_all_files: env -> string list result
 
   val get_changes: ?deadline:float ->
-    watchman_instance -> watchman_instance * changes
+    watchman_instance -> (watchman_instance * changes) result
   val get_changes_synchronously: timeout:int ->
-    watchman_instance -> watchman_instance * SSet.t
+    watchman_instance -> (watchman_instance * SSet.t) result
+
+  val conn_of_instance: watchman_instance -> conn option
 
   (** Expose some things for testing. *)
   module Testing : sig
-    val test_env : env
+    val get_test_env : unit -> env result
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :
-      env -> Hh_json.json -> env * pushed_changes
+      env -> Hh_json.json option -> env * pushed_changes
   end
 
   module Mocking : sig

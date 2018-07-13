@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module S = Ast.Statement;;
@@ -45,7 +42,7 @@ let rec prop_read_of_list (plist : string list) : E.Member.t =
      property = PropertyExpression (Loc.none, E.Member (prop_read_of_list tl));
      computed = false}
 
-(* Make an experssion code into a statement code *)
+(* Make an expression code into a statement code *)
 let mk_expr_code (e : t') : t =
   let stmt = let open S.Expression in
     S.Expression {expression = (Loc.none, e.expr); directive = None} in

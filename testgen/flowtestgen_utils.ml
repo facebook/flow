@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This file contains util functions*)
@@ -13,76 +10,20 @@ module S = Ast.Statement;;
 module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
+module F = Ast.Function;;
 
 module StrSet = Set.Make(struct
     type t = string
     let compare = Pervasives.compare
   end)
 
-(* This is a special "random" number generator used for code
-   generation. It is special in a way that it ensures that it doesn't
-   generate the same random number given the same history.
+let random_choice (arr : 'a array) : 'a = arr.(Random.int (Array.length arr))
 
-   For example, if it gives 0,0,0,0 during the first program
-   generation, it will give 1,0,0,0 for the second program
-   generation.
-
-   The algorithm simply keeps track of histories when generating
-   numbers. When we want to generate a number and the generator has
-   already generated 0,1,0, the generator will return 0 for the first
-   time because it is the first time it generates a number under the
-   history 0,1,0. If later on it is asked to generate another number
-   under the history 0,1,0, it will generate (0 + 1) % max.
-
-   Essentially this random number generator turns a random walk
-   algorithm into a combinatorial search algorithm without
-   stopping. The reason why we need this is that we don't want to
-   generate repetative programs.
-*)
-module FRandom = struct
-  (* A hash table storing history counts *)
-  let hist_tbl = Hashtbl.create 10000
-
-  (* The current history for a codegen session *)
-  let history = ref ""
-
-  (* init functions *)
-  let init_hist () = history := ""
-  let init_all_hist ()  = Hashtbl.clear hist_tbl
-
-  (* The most important function in this module *)
-  let int (limit : int) : int =
-    (* insert a new history if necessary *)
-    if not (Hashtbl.mem hist_tbl !history) then
-      Hashtbl.add hist_tbl !history 0;
-
-    (* get the count of seeing this history *)
-    let count = Hashtbl.find hist_tbl !history in
-
-    (* increment the history count *)
-    Hashtbl.replace hist_tbl !history (count + 1);
-
-    (* return a number and update the current history *)
-    let result = if limit = 0 then 0 else count mod limit in
-    history := !history ^ (string_of_int result) ^ ",";
-    result
-
-  (* The rest are based on int function *)
-  let bool () : bool = int 2 = 0
-  let choice (arr : 'a array) : 'a =
-    let index = int (Array.length arr) in
-    Array.get arr index
-
-  (* Real randomness here *)
-  let rint (limit : int) : int =
-    if limit = 0
-    then 0
-    else Random.int limit
-  let rbool () : bool = Random.bool ()
-  let rchoice (arr : 'a array) : 'a =
-    let index = rint (Array.length arr) in
-    Array.get arr index
-end;;
+(* Generate a sequence of numbers *)
+let sequence i j =
+  let rec helper n acc =
+    if n < i then acc else helper (n - 1) (n :: acc) in
+  helper j [];;
 
 (* Read all lines from the in_channel *)
 let read_all ic : string list =
@@ -102,6 +43,7 @@ let read_file filename =
   String.concat "\n" lines
 
 (* convert an AST into a string for printing *)
+    (*
 let string_of_ast endline func =
   fun (ast) ->
     let layout = func (Loc.none, ast) in
@@ -115,6 +57,210 @@ let string_of_expr =
   string_of_ast false Js_layout_generator.expression;;
 let string_of_type =
   string_of_ast false Js_layout_generator.type_;;
+*)
+
+
+(* A hacky version of string_of function for AST nodes.
+   This will be replaced once we have a better solution.
+*)
+let rec string_of_pattern (pattern : Loc.t P.t') =
+  match pattern with
+  | P.Identifier id ->
+    let open P.Identifier in
+    (snd id.name) ^
+    (if id.optional then "?" else "") ^ " " ^
+    (match id.annot with
+     | Some (_, (_, t)) -> " : " ^ (string_of_type t)
+     | None -> "")
+  | P.Expression (_, e) -> string_of_expr e
+  | P.Assignment assign ->
+    let open P.Assignment in
+    (string_of_pattern (snd assign.left)) ^
+    " = " ^
+    (string_of_expr (snd assign.right))
+  | _ -> failwith "[string_of_pattern] unsupported pattern"
+
+and string_of_expr (expr : Loc.t E.t') =
+  let string_of_proplist plist =
+    let helper prop = match prop with
+      | E.Object.Property (_, E.Object.Property.Init p) ->
+        let open E.Object.Property in
+        (match p.key, p.value with
+         | Identifier (_, name), (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | _ -> failwith "Unsupported expression")
+      | _ -> failwith "Unsupported property" in
+    String.concat ", " (List.map helper plist) in
+
+  let string_of_assign_op op =
+    let open E.Assignment in
+    match op with
+    | Assign -> "="
+    | PlusAssign -> "+="
+    | MinusAssign -> "-="
+    | MultAssign -> "*="
+    | ExpAssign -> "^="
+    | DivAssign -> "/="
+    | _ -> failwith "unsupported assign" in
+
+  match expr with
+  | E.Object o ->
+    "{" ^ (string_of_proplist E.Object.(o.properties)) ^ "}"
+  | E.Literal lit -> Ast.Literal.(lit.raw)
+  | E.Assignment assign ->
+    let open E.Assignment in
+    [(string_of_pattern (snd assign.left));
+     (string_of_assign_op assign.operator);
+     (string_of_expr (snd assign.right))]
+    |> String.concat " "
+  | E.Call call ->
+    let open E.Call in
+    let callee_str = string_of_expr (snd call.callee) in
+    let arglist_str =
+      call.arguments
+      |> List.map (fun a -> match a with
+          | E.Expression (_, e) -> e
+          | E.Spread _ -> failwith "[string_of_expr] call does not support spread argument.")
+      |> List.map string_of_expr
+      |> String.concat ", " in
+    callee_str ^ "(" ^ arglist_str ^ ")"
+  | E.Identifier (_, id) -> id
+  | E.Member mem ->
+    let open E.Member in
+    let obj_str = string_of_expr (snd mem._object) in
+    let prop_str = match mem.property with
+      | PropertyIdentifier (_, id) -> id
+      | PropertyExpression (_, e) -> string_of_expr e
+      | PropertyPrivateName (_, (_, id)) -> id in
+    obj_str ^ "." ^ prop_str
+  | E.TypeCast cast ->
+    let open E.TypeCast in
+    (string_of_expr (snd cast.expression)) ^
+    " : " ^
+    (string_of_type (snd (snd cast.annot)))
+  | E.Array array ->
+    let open E.Array in
+    "[" ^
+    (List.map (fun elt -> match elt with
+         | Some (E.Expression (_, e)) -> string_of_expr e
+         | Some (E.Spread (_, e)) -> string_of_expr (E.SpreadElement.((snd e.argument)))
+         | None -> "") array.elements
+     |> (String.concat ", ")) ^
+      "]"
+  | _ -> failwith "unknown expr"
+
+and string_of_stmt (stmt : Loc.t S.t') =
+  match stmt with
+  | S.Block b ->
+    S.Block.(b.body)
+    |> List.map snd
+    |> List.map string_of_stmt
+    |> String.concat "\n"
+  | S.Empty -> "\n"
+  | S.FunctionDeclaration func ->
+    let open Ast.Function in
+    let fname = match func.id with
+      | Some (_, n) -> n
+      | None -> "" in
+    let params_str =
+      let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
+      params
+      |> List.map snd
+      |> List.map string_of_pattern
+      |> String.concat ", " in
+    let body_str = match func.body with
+      | BodyBlock (_, s) -> string_of_stmt (S.Block s)
+      | BodyExpression (_, e) -> string_of_expr e in
+    let ret_type_str = match func.return with
+      | Some (_, (_, t)) -> ": " ^ string_of_type t
+      | None -> "" in
+    "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
+    body_str ^
+    "}\n"
+  | S.Return r ->
+    let open S.Return in
+    (match r.argument with
+     | Some (_, e) -> "return " ^ (string_of_expr e) ^ "\n;"
+     | None -> "return;\n")
+  | S.VariableDeclaration decl ->
+    let open S.VariableDeclaration in
+    let string_of_dtor dtor =
+      let open S.VariableDeclaration.Declarator in
+      let init_str = match dtor.init with
+        | Some (_, e) -> "= " ^ (string_of_expr e)
+        | None -> "" in
+      (string_of_pattern (snd dtor.id)) ^ init_str in
+    let kind_str = match decl.kind with
+      | Var -> "var"
+      | Let -> "let"
+      | Const -> "const" in
+    let dlist = List.map snd decl.declarations in
+    let dlist_str = String.concat ", " (List.map string_of_dtor dlist) in
+    kind_str ^ " " ^ dlist_str ^ "\n"
+  | S.Expression e ->
+    let open S.Expression in
+    (string_of_expr (snd e.expression)) ^ ";\n"
+  | _ -> failwith "[string_of_stmt] Unspported stmt"
+
+and string_of_type (t : Loc.t T.t') =
+
+  match t with
+  | T.Any -> "any"
+  | T.Mixed -> "mixed"
+  | T.Empty -> "empty"
+  | T.Void -> "void"
+  | T.Null -> "null"
+  | T.Number -> "number"
+  | T.String -> "string"
+  | T.Boolean -> "boolean"
+  | T.Object ot ->
+    let open T.Object in
+    let string_of_prop prop = match prop with
+      | T.Object.Property (_, p) ->
+        let open T.Object.Property in
+        let key_str = match p.key with
+          | E.Object.Property.Literal (_, lit)  -> Ast.Literal.(lit.raw)
+          | E.Object.Property.Identifier (_, name) -> name
+          | E.Object.Property.PrivateName (_, (_, name)) -> name
+          | E.Object.Property.Computed (_, e) -> string_of_expr e in
+        let t_str = match p.value with
+          | Init (_, init_t) -> string_of_type init_t
+          | Get (_, ft) -> string_of_type (T.Function ft)
+          | Set (_, ft) -> string_of_type (T.Function ft) in
+        let opt = if p.optional then "?" else "" in
+        key_str ^ opt ^ " : " ^ t_str
+      | _ -> failwith "[string_of_prop] unsupported property" in
+    let prop_str_list = ot.properties
+      |> List.map string_of_prop
+      |> String.concat ", " in
+    if ot.exact then "{|" ^ prop_str_list ^ "|}"
+    else "{" ^ prop_str_list ^ "}"
+  | T.Union ((_, t1), (_, t2), trest) ->
+    let t_strlist =
+      [(string_of_type t1); (string_of_type t2)]
+      @ (trest |> (List.map snd) |> (List.map string_of_type)) in
+    String.concat " | " t_strlist
+  | T.StringLiteral st -> Ast.StringLiteral.(st.raw)
+  | T.NumberLiteral nt -> Ast.NumberLiteral.(nt.raw)
+  | T.BooleanLiteral bt -> if bt then "true" else "false"
+  | T.Function func ->
+    let open T.Function in
+    let string_of_param param =
+      let open T.Function.Param in
+      let opt_str = if param.optional then "?" else "" in
+      let name_str = match param.name with
+        | Some (_, id) -> id ^ opt_str ^ " : "
+        | None -> "" in
+      name_str ^ (string_of_type (snd param.annot)) in
+    let params_str =
+      let (_, { T.Function.Params.params; rest = _ }) = func.params in
+      params
+      |> List.map snd
+      |> List.map string_of_param
+      |> String.concat ", " in
+    let ret_type_str = (string_of_type (snd func.return)) in
+    "(" ^ params_str ^ ") => " ^ ret_type_str
+  | _ -> failwith "[string_of_type] unsupported type"
+
 
 (* A generator function for creating functions that makes variables and
  * properties
@@ -135,7 +281,7 @@ let mk_obj_cons = mk_gen "Obj";;
 (* Convert a code and its dependencies into a list
    CAUTION: This function will lose some independencies between
    codes *)
-let list_of_code (code : Code.t) : Ast.Statement.t list =
+let list_of_code (code : Code.t) : Loc.t Ast.Statement.t list =
   let open Code in
   let rec helper acc lst = match lst with
     | [] -> acc
@@ -147,7 +293,7 @@ let list_of_code (code : Code.t) : Ast.Statement.t list =
 (* Convert a list of statements into a code object. Dependencies
    are based on the order of the statements. Thus, it will create
    unnecessary dependnecies. USE THIS WITH CAUTION. *)
-let code_of_stmt_list (slist : Ast.Statement.t list) : Code.t option =
+let code_of_stmt_list (slist : Loc.t Ast.Statement.t list) : Code.t option =
   let open Code in
 
   let rec helper lst = match lst with
@@ -164,7 +310,7 @@ let code_of_stmt_list (slist : Ast.Statement.t list) : Code.t option =
    assignments will appear after empty object init.
 *)
 let rm_prop_write
-    (prop : E.Member.t)
+    (prop : Loc.t E.Member.t)
     (clist : Code.t list) : Code.t list =
   let open S.Expression in
   let open Code in
@@ -188,7 +334,7 @@ let rm_vardecl
   let open S.VariableDeclaration in
 
   (* Check whether this declaration defines the target variable *)
-  let is_target (decl : S.VariableDeclaration.Declarator.t) =
+  let is_target (decl : Loc.t S.VariableDeclaration.Declarator.t) =
     let decl' = (snd decl) in
     match decl'.id with
     | (_, P.Identifier { P.Identifier.name = (_, name); _;})
@@ -243,10 +389,10 @@ module Config = struct
   and t = (string * value) list;;
 
   (* Convert a JSON ast into a config *)
-  let rec to_config (ast : E.Object.t) : t =
+  let rec to_config (ast : Loc.t E.Object.t) : t =
 
     (* get config value from an expression *)
-    let get_value (expr : E.t') : value = match expr with
+    let get_value (expr : Loc.t E.t') : value = match expr with
       | E.Object o -> Obj (to_config o)
       | E.Literal lit -> let open Ast.Literal in
         (match lit.value with
@@ -260,8 +406,7 @@ module Config = struct
 
     (* get all the properties *)
     let prop_list = (List.map (fun p -> match p with
-        | Property (_, prop) ->
-          let k = E.Object.Property.(prop.key) in
+        | Property (_, E.Object.Property.Init { key = k; value = (_, e); _ }) ->
           let k = (match k with
               | E.Object.Property.Literal (_, id) -> Ast.Literal.(match id.value with
                   | String s ->
@@ -272,18 +417,21 @@ module Config = struct
                     s
                   | _ -> failwith "Config key can only be a string")
               | _ -> failwith "Config key can only be a string literal.") in
-          let v = E.Object.Property.(prop.value) in
-          let v = (match v with
-              | E.Object.Property.Init (_, e) -> get_value e
-              | _ -> failwith "Config values can only be expressions.") in
+          let v = get_value e in
           (k, v)
-        | _ -> failwith "Spread properties are not allowed") ast.properties) in
+        | Property (_, E.Object.Property.Get _) ->
+          failwith "Getter properties are not allowed"
+        | Property (_, E.Object.Property.Set _) ->
+          failwith "Setter properties are not allowed"
+        | _ ->
+          failwith "Spread properties are not allowed"
+    ) ast.properties) in
     prop_list
 
   (* Convert a config into an expression ast. Mainly used for printing *)
-  let rec ast_of_config (c : t) : E.Object.t =
+  let rec ast_of_config (c : t) : Loc.t E.Object.t =
 
-    let expr_of_value (v : value) : E.t' = let open Ast.Literal in
+    let expr_of_value (v : value) : Loc.t E.t' = let open Ast.Literal in
       match v with
       | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i}
       | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""}
@@ -296,10 +444,9 @@ module Config = struct
       let open E.Object.Property in
       List.map (fun (k, v) ->
           let key = Identifier (Loc.none, "\"" ^ k ^ "\"") in
-          let value = Init (Loc.none, expr_of_value v) in
-          Property (Loc.none, {key;
+          let value = Loc.none, expr_of_value v in
+          Property (Loc.none, Init {key;
                                value;
-                               _method = false;
                                shorthand = false})) c in
     {properties = prop_list};;
 
@@ -356,7 +503,7 @@ module Config = struct
         json_str
         (match filename with
          | None -> None
-         | Some f -> (Some (Loc.JsonFile f))) in
+         | Some f -> (Some (File_key.JsonFile f))) in
     to_config (match (fst expr_ast) with
         | (_, E.Object o) -> o
         | _ -> failwith "Can only be an object")
@@ -366,3 +513,273 @@ module Config = struct
     let content = read_file filename in
     load_json_config_string ~filename content;;
 end
+
+(* Metadata for involing flow type checking *)
+let stub_metadata ~root ~checked = { Context.
+  (* local *)
+  checked;
+  munge_underscores = false;
+  (*
+  verbose = Some { Verbose.depth = 2; indent = 2 };
+     *)
+  verbose = None;
+  weak = false;
+  jsx = Options.Jsx_react;
+  strict = true;
+  strict_local = false;
+  (* global *)
+  max_literal_length = 100;
+  enable_const_params = false;
+  enforce_strict_call_arity = true;
+  esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+  esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+  esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
+  esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  facebook_fbt = None;
+  ignore_non_literal_requires = false;
+  max_trace_depth = 0;
+  max_workers = 0;
+  root;
+  strip_root = true;
+  suppress_comments = [];
+  suppress_types = SSet.empty;
+}
+
+(* Invoke flow for type checking *)
+let flow_check (code : string) : string option =
+  if code = "" then
+    None
+  else
+    try
+      let root = Path.dummy_path in
+      let master_sig_cx = Context.make_sig () in
+      let master_cx = Context.make master_sig_cx
+        (stub_metadata ~root ~checked:false)
+        File_key.Builtins
+        Files.lib_module_ref in
+
+      (* Merge builtins *)
+      let builtin_metadata = stub_metadata ~root ~checked:true in
+      let lint_severities = LintSettings.empty_severities in
+      let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
+      let builtins_file_sig = match File_sig.program ~ast:builtins_ast with
+      | Ok file_sig -> file_sig
+      | Error _ -> failwith "error calculating builtins file sig"
+      in
+      let builtins_sig_cx = Context.make_sig () in
+      let builtins_cx = Context.make builtins_sig_cx builtin_metadata
+        File_key.Builtins Files.lib_module_ref in
+      let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
+        ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:builtins_file_sig in
+      let () =
+        let from_t = Context.find_module master_cx Files.lib_module_ref in
+        let to_t = Context.find_module builtins_cx Files.lib_module_ref in
+        Context.merge_into master_sig_cx builtins_sig_cx;
+        Flow_js.flow_t master_cx (from_t, to_t)
+      in
+      let reason = Reason.builtin_reason (Reason.RCustom "module") in
+      let builtin_module = Obj_type.mk master_cx reason in
+      Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
+      Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
+
+      (* Merge the input program into the context *)
+      let strict_mode = StrictModeSettings.empty in
+      let stub_docblock = { Docblock.
+                            flow = Docblock.(Some OptIn);
+                            preventMunge = None;
+                            providesModule = None;
+                            isDeclarationFile = false;
+                            jsx = None;
+                          } in
+      let input_ast, _ = Parser_flow.program code in
+      let filename = File_key.SourceFile "/tmp/foo.js" in
+      let file_sig = match File_sig.program ~ast:input_ast with
+      | Ok file_sig -> file_sig
+      | Error _ -> failwith "error calculating implementation file sig"
+      in
+      let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+      let reqs = Merge_js.Reqs.empty in
+      (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
+      let final_cx, _other_cxs = Merge_js.merge_component_strict
+          ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
+          ~get_ast_unsafe:(fun _ -> input_ast)
+          ~get_docblock_unsafe:(fun _ -> stub_docblock)
+          (Nel.one filename) reqs [] master_sig_cx in
+      let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
+          Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
+      in
+      let error_num = Errors.ErrorSet.cardinal errors in
+      if error_num = 0 then
+        None
+      else begin
+
+        (* This is used for pringing errors *)
+        let string_of_errors (json : Hh_json.json) : string =
+          let open Hh_json in
+          let string_of_error (error_json : json) : string =
+            let error = get_object_exn error_json in
+            let msg_helper (msg_json : json) : string =
+              let msg = get_object_exn msg_json in
+              let desc = get_string_exn (List.assoc "descr" msg) in
+              let loc = get_object_exn (List.assoc "loc" msg) in
+              let start =
+                let start_json = get_object_exn (List.assoc "start" loc) in
+                (Printf.sprintf
+                   "line %d\tcolumn %d\toffset %d"
+                   (int_of_string (get_number_exn (List.assoc "line" start_json)))
+                   (int_of_string (get_number_exn (List.assoc "column" start_json)))
+                   (int_of_string (get_number_exn (List.assoc "offset" start_json)))) in
+              let eend =
+                let end_json = get_object_exn (List.assoc "end" loc) in
+                (Printf.sprintf
+                   "line %d\tcolumn %d\toffset %d"
+                   (int_of_string (get_number_exn (List.assoc "line" end_json)))
+                   (int_of_string (get_number_exn (List.assoc "column" end_json)))
+                   (int_of_string (get_number_exn (List.assoc "offset" end_json)))) in
+              Printf.sprintf "Error: %sStart: %s\nEnd: %s\n" desc start eend
+            in
+            String.concat "" (List.map msg_helper (get_array_exn (List.assoc "message" error)))
+          in
+          (List.assoc "errors" (get_object_exn json))
+          |> get_array_exn
+          |> List.map string_of_error
+          |> String.concat "\n"
+        in
+
+        (* Return error message *)
+        let error_msg =
+          let stdin_file = None in
+          let strip_root = None in
+          let profiling = None in
+          let suppressed_errors = [] in
+          let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~profiling ~stdin_file
+              ~suppressed_errors ~errors ~warnings () in
+        (*
+        Printf.printf "%s\n" (Hh_json.json_to_string ~pretty:false res);
+           *)
+          string_of_errors res in
+    (*
+      Printf.printf "'%s'\n" error_msg;
+  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errors warnings ();
+       *)
+        Some error_msg
+      end
+    with _ -> Some "Failed to type check."
+
+let assert_func = "
+// from http://tinyurl.com/y93dykzv
+const util = require('util');
+function assert_type(actual: any, expected: any) {
+    if(typeof(actual) != 'object' || typeof(expected) != 'object') {
+        if(Array.isArray(expected)) {
+            if(expected.indexOf(actual) === -1) {
+                var message = '';
+                var expected_str = expected.toString();
+
+                var actual_str = 'null';
+                if(actual != null) {
+                    actual_str = actual.toString();
+                }
+                message = message.concat('Not contain: ',
+                                         'Actual : ',
+                                         actual_str,
+                                         ' != Expected: ',
+                                         expected_str);
+                console.log(message);
+                throw new Error(message);
+            }
+        } else if(actual != expected) {
+            var expected_str = 'null';
+            if(expected != null) {
+                expected_str = expected.toString();
+            }
+
+            var actual_str = 'null';
+            if(actual != null) {
+                actual_str = actual.toString();
+            }
+            var message = '';
+            message = message.concat('Not equal: ',
+                                     'Actual : ',
+                                     actual_str,
+                                     ' != Expected: ',
+                                     expected_str);
+            console.log(message);
+            throw new Error(message);
+        }
+    } else {
+        for(var prop in expected) {
+            if(expected.hasOwnProperty(prop)) {
+                if(!actual.hasOwnProperty(prop)) {
+                    var message = '';
+                    message = message.concat('Missing property: ', prop.toString());
+                    console.log(message);
+                    throw new Error(message);
+                }
+                assert_type(actual[prop], expected[prop]);
+            }
+        }
+    }
+}
+function check_opt_prop(obj_list : any, actual : any, expected : any) {
+    var len = obj_list.length;
+    for(var i = 0; i < len; ++i) {
+        if(obj_list[i] === undefined) {
+            return;
+        }
+    }
+    if(actual === undefined) {
+        return;
+    }
+    assert_type(actual, expected);
+}
+\n\n
+";;
+
+(* type check a piece of code.
+ * Return true if this code doesn't have type error.
+ *)
+let type_check (code : string) : string option =
+  (Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ code))
+  |> flow_check
+
+let is_typecheck engine_name = engine_name = "union"
+
+(* Run Javascript programs in batch mode *)
+let batch_run (code_list : string list) : (string option) list =
+  (* Wrap the input program into a stand alont scope with try-catch block *)
+  let to_stmt (code : string) : string =
+    Printf.sprintf
+"(function () {
+    try {
+      %s
+      console.log('Done');
+    } catch (_err_) {
+      console.log(_err_.message);
+    }
+})();\n" code in
+
+  (* Split the batch run output into a list of single-program outputs *)
+  let to_msg_list (output : string) : (string option) list =
+    let msg_list = Str.split (Str.regexp "====\n") output in
+    List.map (fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
+
+  (* Convert all programs into a string for batch run *)
+  let progs = List.map to_stmt code_list in
+  let progs_string = String.concat "console.log('====');\n" progs in
+
+  (* run all the programs *)
+  let cmd = "./node_modules/.bin/flow-remove-types" ^ " -a -p | node" in
+  let content = progs_string in
+  let ic, oc = Unix.open_process cmd in
+  let out_str = Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ content) in
+  Printf.fprintf oc "%s" out_str;
+  close_out oc;
+  let lines = read_all ic in
+  close_in ic;
+  let _  = match (Unix.close_process (ic, oc)) with
+    | Unix.WEXITED code -> code
+    | _ -> failwith "Command exited abnormally." in
+  String.concat "\n" lines |> to_msg_list

@@ -9,8 +9,24 @@
       "message":"Unexpected token type"
     },
     {
+      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":26}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
       "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":26}},
       "message":"Unexpected token :"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":33}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
+      "message":"Missing comma between export specifiers"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
@@ -86,7 +102,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":26}},
             "range":[25,26],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -94,7 +110,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":26}},
             "range":[25,26],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -128,7 +144,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
             "range":[33,34],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -136,7 +152,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
             "range":[33,34],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

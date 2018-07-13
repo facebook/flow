@@ -1,14 +1,22 @@
 syntax_error.js
-Error: syntax_error.js:4
-  4: 
-     ^ Unexpected end of input
+Error ---------------------------------------------------------------------------------------------- syntax_error.js:4:1
+
+Unexpected end of input
+
+   4|
+      
+
 
 
 Found 1 error
 syntax_error.js (no filename)
-Error: -:4
-  4: 
-     ^ Unexpected end of input
+Error ------------------------------------------------------------------------------------------------------------ -:4:1
+
+Unexpected end of input
+
+   4|
+      
+
 
 
 Found 1 error
@@ -16,9 +24,13 @@ Found 1 error
 
 not_flow.js
 
-Error: not_flow.js:1
-  1: 1 * 'foo';
-         ^^^^^ string. The operand of an arithmetic operation must be a number.
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error
@@ -26,9 +38,13 @@ Found 1 error
 
 not_flow.js with --all
 
-Error: not_flow.js:1
-  1: 1 * 'foo';
-         ^^^^^ string. The operand of an arithmetic operation must be a number.
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error
@@ -41,10 +57,13 @@ File is not @flow!
 
 not_flow.js with --respect-pragma and --all
 
-Warning: --all and --respect-pragma cannot be used together. --all wins.
-Error: not_flow.js:1
-  1: 1 * 'foo';
-         ^^^^^ string. The operand of an arithmetic operation must be a number.
+Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   1| 1 * 'foo';
+          ^^^^^ [1]
+
 
 
 Found 1 error

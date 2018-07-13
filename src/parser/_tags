@@ -1,2 +1,2 @@
-true: package(sedlex)
-<lexer.ml>: warn(-39)
+true: package(ppx_gen_rec), package(ppx_deriving.show), package(sedlex), package(wtf8)
+<dist>: -traverse

@@ -74,7 +74,7 @@ let tests = [
   },
 
   function(num: number, obj: { foo: number }) {
-    if (num === obj.bar) { // ok, typos allowed in conditionals
+    if (num === obj.bar) { // Error, accessing unknown property
     }
   },
 

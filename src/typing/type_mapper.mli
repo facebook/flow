@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 class ['a] t :
   object
@@ -18,7 +15,9 @@ class ['a] t :
     method choice_use_tool :
       Context.t ->
       'a -> Type.choice_use_tool -> Type.choice_use_tool
+    method class_binding : Context.t -> 'a -> Type.class_binding -> Type.class_binding
     method cont : Context.t -> 'a -> Type.cont -> Type.cont
+    method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
     method create_class_knot :
       Context.t ->
       'a ->
@@ -71,12 +70,12 @@ class ['a] t :
       Context.t -> 'a -> Type.lookup_kind -> Type.lookup_kind
     method obj_type :
       Context.t -> 'a -> Type.objtype -> Type.objtype
-    method object_spread_state :
+    method object_kit_resolve_tool :
       Context.t ->
-      'a -> Type.ObjectSpread.state -> Type.ObjectSpread.state
-    method object_spread_tool :
+      'a -> Type.Object.resolve_tool -> Type.Object.resolve_tool
+    method object_kit_tool :
       Context.t ->
-      'a -> Type.ObjectSpread.tool -> Type.ObjectSpread.tool
+      'a -> Type.Object.tool -> Type.Object.tool
     method predicate :
       Context.t -> 'a -> Type.predicate -> Type.predicate
     method prop_ref :
@@ -85,7 +84,7 @@ class ['a] t :
       Context.t -> 'a -> Type.React.tool -> Type.React.tool
     method resolve :
       Context.t ->
-      'a -> Type.ObjectSpread.resolve -> Type.ObjectSpread.resolve
+      'a -> Type.Object.resolve -> Type.Object.resolve
     method resolve_array :
       Context.t ->
       'a -> Type.React.resolve_array -> Type.React.resolve_array
@@ -95,9 +94,12 @@ class ['a] t :
     method resolve_spread :
       Context.t ->
       'a -> Type.resolve_spread_type -> Type.resolve_spread_type
+    method resolved_prop :
+      Context.t ->
+      'a -> Type.Object.prop -> Type.Object.prop
     method resolved :
       Context.t ->
-      'a -> Type.ObjectSpread.resolved -> Type.ObjectSpread.resolved
+      'a -> Type.Object.resolved -> Type.Object.resolved
     method resolved_object :
       Context.t ->
       'a -> Type.React.resolved_object -> Type.React.resolved_object
@@ -132,6 +134,8 @@ class ['a] t :
       Type.React.CreateClass.stack_head * Type.t list *
       Type.React.CreateClass.spec Type.React.CreateClass.maybe_known
       list
+    method tvar :
+      Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
     method type_ : Context.t -> 'a -> Type.t -> Type.t
     method type_param :
       Context.t -> 'a -> Type.typeparam -> Type.typeparam
@@ -141,3 +145,5 @@ class ['a] t :
     method use_type :
       Context.t -> 'a -> Type.UseTypeMap.key -> Type.UseTypeMap.key
 end
+
+val union_flatten: Context.t -> Type.t list -> Type.t list

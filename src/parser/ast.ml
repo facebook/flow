@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (*
@@ -13,9 +10,15 @@
  * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
  *)
 
-module rec Identifier : sig
-  type t = Loc.t * string
+module%gen rec Identifier : sig
+  type 'M t = 'M * string
+  [@@deriving show]
 end = Identifier
+
+and PrivateName : sig
+  type 'M t = 'M * 'M Identifier.t
+  [@@deriving show]
+end = PrivateName
 
 and Literal : sig
   module RegExp : sig
@@ -23,6 +26,7 @@ and Literal : sig
       pattern: string;
       flags: string;
     }
+    [@@deriving show]
   end
 
   (* Literals also carry along their raw value *)
@@ -36,128 +40,165 @@ and Literal : sig
     | Null
     | Number of float
     | RegExp of RegExp.t
+  [@@deriving show]
 end = Literal
 
+and StringLiteral : sig
+  type t = {
+    value: string;
+    raw: string;
+  }
+  [@@deriving show]
+end = StringLiteral
+
+and NumberLiteral : sig
+  type t = {
+    value: float;
+    raw: string;
+  }
+  [@@deriving show]
+end = NumberLiteral
+
 and Variance : sig
-  type t = Loc.t * t'
+  type 'M t = 'M * t'
   and t' = Plus | Minus
+  [@@deriving show]
 end = Variance
 
 and Type : sig
   module Function : sig
     module Param : sig
-      type t = Loc.t * t'
-      and t' = {
-        name: Identifier.t option;
-        typeAnnotation: Type.t;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        name: 'M Identifier.t option;
+        annot: 'M Type.t;
         optional: bool;
       }
+      [@@deriving show]
     end
     module RestParam : sig
-      type t = Loc.t * t'
-      and t' = {
-        argument: Param.t
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        argument: 'M Param.t
       }
+      [@@deriving show]
     end
-    type t = {
-      params: Param.t list * RestParam.t option;
-      returnType: Type.t;
-      typeParameters: Type.ParameterDeclaration.t option;
+    module Params : sig
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        params: 'M Param.t list;
+        rest: 'M RestParam.t option;
+      }
+      [@@deriving show]
+    end
+    type 'M t = {
+      tparams: 'M Type.ParameterDeclaration.t option;
+      params: 'M Params.t;
+      return: 'M Type.t;
     }
+    [@@deriving show]
   end
 
   module Generic : sig
     module Identifier : sig
-      type t =
-      | Unqualified of Identifier.t
-      | Qualified of qualified
-      and qualified = Loc.t * qualified'
-      and qualified' = {
-        qualification: t;
-        id: Identifier.t
+      type 'M t =
+        | Unqualified of 'M Identifier.t
+        | Qualified of 'M qualified
+      and 'M qualified = 'M * 'M qualified'
+      and 'M qualified' = {
+        qualification: 'M t;
+        id: 'M Identifier.t
       }
+      [@@deriving show]
     end
-    type t = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterInstantiation.t option;
+    type 'M t = {
+      id: 'M Identifier.t;
+      targs: 'M Type.ParameterInstantiation.t option;
     }
+    [@@deriving show]
   end
 
   module Object : sig
     module Property : sig
-      type value =
-        | Init of Type.t
-        | Get of (Loc.t * Function.t)
-        | Set of (Loc.t * Function.t)
-      type t' = {
-        key: Expression.Object.Property.key;
-        value: value;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        key: 'M Expression.Object.Property.key;
+        value: 'M value;
+        optional: bool;
+        static: bool;
+        proto: bool;
+        _method: bool;
+        variance: 'M Variance.t option;
+      }
+      and 'M value =
+        | Init of 'M Type.t
+        | Get of ('M * 'M Function.t)
+        | Set of ('M * 'M Function.t)
+      [@@deriving show]
+    end
+    module SpreadProperty : sig
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        argument: 'M Type.t;
+      }
+      [@@deriving show]
+    end
+    module Indexer: sig
+      type 'M t' = {
+        id: 'M Identifier.t option;
+        key: 'M Type.t;
+        value: 'M Type.t;
+        static: bool;
+        variance: 'M Variance.t option;
+      }
+      and 'M t = 'M * 'M t'
+      [@@deriving show]
+    end
+    module CallProperty: sig
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        value: 'M * 'M Function.t;
+        static: bool;
+      }
+      [@@deriving show]
+    end
+    module InternalSlot: sig
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        id: 'M Identifier.t;
+        value: 'M Type.t;
         optional: bool;
         static: bool;
         _method: bool;
-        variance: Variance.t option;
       }
-      type t = Loc.t * t'
+      [@@deriving show]
     end
-    module SpreadProperty : sig
-      type t = Loc.t * t'
-      and t' = {
-        argument: Type.t;
-      }
-    end
-    module Indexer: sig
-      type t' = {
-        id: Identifier.t option;
-        key: Type.t;
-        value: Type.t;
-        static: bool;
-        variance: Variance.t option;
-      }
-      and t = Loc.t * t'
-    end
-    module CallProperty: sig
-      type t = Loc.t * t'
-      and t' = {
-        value: Loc.t * Function.t;
-        static: bool;
-      }
-    end
-    type property =
-      | Property of Property.t
-      | SpreadProperty of SpreadProperty.t
-      | Indexer of Indexer.t
-      | CallProperty of CallProperty.t
-    type t = {
+
+    type 'M t = {
       exact: bool;
-      properties: property list;
+      properties: 'M property list;
     }
+    and 'M property =
+      | Property of 'M Property.t
+      | SpreadProperty of 'M SpreadProperty.t
+      | Indexer of 'M Indexer.t
+      | CallProperty of 'M CallProperty.t
+      | InternalSlot of 'M InternalSlot.t
+    [@@deriving show]
   end
 
-  module StringLiteral : sig
-    type t = {
-      value: string;
-      raw: string;
+  module Interface : sig
+    type 'M t = {
+      body: 'M * 'M Object.t;
+      extends: ('M * 'M Generic.t) list;
     }
+    [@@deriving show]
   end
 
-  module NumberLiteral : sig
-    type t = {
-      value: float;
-      raw: string;
-    }
-  end
-
-  module BooleanLiteral : sig
-    type t = {
-      value: bool;
-      raw: string;
-    }
-  end
-
-  type t = Loc.t * t'
+  type 'M t = 'M * 'M t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
-  and t' =
+  and 'M t' =
     | Any
     | Mixed
     | Empty
@@ -166,295 +207,341 @@ and Type : sig
     | Number
     | String
     | Boolean
-    | Nullable of t
-    | Function of Function.t
-    | Object of Object.t
-    | Array of t
-    | Generic of Generic.t
-    | Union of t * t * t list
-    | Intersection of t * t * t list
-    | Typeof of t
-    | Tuple of t list
+    | Nullable of 'M t
+    | Function of 'M Function.t
+    | Object of 'M Object.t
+    | Interface of 'M Interface.t
+    | Array of 'M t
+    | Generic of 'M Generic.t
+    | Union of 'M t * 'M t * 'M t list
+    | Intersection of 'M t * 'M t * 'M t list
+    | Typeof of 'M t
+    | Tuple of 'M t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
-    | BooleanLiteral of BooleanLiteral.t
+    | BooleanLiteral of bool
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the
-   * identifier a would have a property typeAnnotation which contains a
+   * identifier a would have a property annot which contains a
    * Type.annotation with a location from column 6-14 *)
-  and annotation = Loc.t * t
+  and 'M annotation = 'M * 'M t
+
+  [@@deriving show]
 
   module ParameterDeclaration : sig
     module TypeParam : sig
-      type t = Loc.t * t'
-      and t' = {
-        name: string;
-        bound: Type.annotation option;
-        variance: Variance.t option;
-        default: Type.t option;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        name: 'M Identifier.t;
+        bound: 'M Type.annotation option;
+        variance: 'M Variance.t option;
+        default: 'M Type.t option;
       }
+      [@@deriving show]
     end
-    type t = Loc.t * t'
-    and t' = {
-      params: TypeParam.t list;
-    }
+    type 'M t = 'M * 'M t'
+    and 'M t' = 'M TypeParam.t list
+    [@@deriving show]
   end
   module ParameterInstantiation : sig
-    type t = Loc.t * t'
-    and t' = {
-      params: Type.t list;
-    }
+    type 'M t = 'M * 'M t'
+    and 'M t' = 'M Type.t list
+    [@@deriving show]
   end
 
   module Predicate : sig
-    type t = Loc.t * t'
-    and t' =
-      | Declared of Expression.t
+    type 'M t = 'M * 'M t'
+    and 'M t' =
+      | Declared of 'M Expression.t
       | Inferred
+    [@@deriving show]
   end
 
 end = Type
 
 and Statement : sig
   module Block : sig
-    type t = {
-      body: Statement.t list
+    type 'M t = {
+      body: 'M Statement.t list
     }
+    [@@deriving show]
   end
   module If : sig
-    type t = {
-      test: Expression.t;
-      consequent: Statement.t;
-      alternate: Statement.t option;
+    type 'M t = {
+      test: 'M Expression.t;
+      consequent: 'M Statement.t;
+      alternate: 'M Statement.t option;
     }
+    [@@deriving show]
   end
   module Labeled : sig
-    type t = {
-      label: Identifier.t;
-      body: Statement.t;
+    type 'M t = {
+      label: 'M Identifier.t;
+      body: 'M Statement.t;
     }
+    [@@deriving show]
   end
   module Break : sig
-    type t = {
-      label: Identifier.t option;
+    type 'M t = {
+      label: 'M Identifier.t option;
     }
+    [@@deriving show]
   end
   module Continue : sig
-    type t = {
-      label: Identifier.t option;
+    type 'M t = {
+      label: 'M Identifier.t option;
     }
+    [@@deriving show]
   end
   module With : sig
-    type t = {
-      _object: Expression.t;
-      body: Statement.t;
+    type 'M t = {
+      _object: 'M Expression.t;
+      body: 'M Statement.t;
     }
+    [@@deriving show]
   end
   module TypeAlias : sig
-    type t = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterDeclaration.t option;
-      right: Type.t;
+    type 'M t = {
+      id: 'M Identifier.t;
+      tparams: 'M Type.ParameterDeclaration.t option;
+      right: 'M Type.t;
     }
+    [@@deriving show]
   end
   module OpaqueType: sig
-    type t = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterDeclaration.t option;
-      impltype: Type.t option;
-      supertype: Type.t option;
+    type 'M t = {
+      id: 'M Identifier.t;
+      tparams: 'M Type.ParameterDeclaration.t option;
+      impltype: 'M Type.t option;
+      supertype: 'M Type.t option;
     }
+    [@@deriving show]
   end
   module Switch : sig
     module Case : sig
-      type t = Loc.t * t'
-      and t' = {
-        test: Expression.t option;
-        consequent: Statement.t list;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        test: 'M Expression.t option;
+        consequent: 'M Statement.t list;
       }
+      [@@deriving show]
     end
-    type t = {
-      discriminant: Expression.t;
-      cases: Case.t list;
+    type 'M t = {
+      discriminant: 'M Expression.t;
+      cases: 'M Case.t list;
     }
+    [@@deriving show]
   end
   module Return : sig
-    type t = {
-      argument: Expression.t option;
+    type 'M t = {
+      argument: 'M Expression.t option;
     }
+    [@@deriving show]
   end
   module Throw : sig
-    type t = {
-      argument: Expression.t;
+    type 'M t = {
+      argument: 'M Expression.t;
     }
+    [@@deriving show]
   end
   module Try : sig
     module CatchClause : sig
-      type t = Loc.t * t'
-      and t' = {
-        param: Pattern.t;
-        body: Loc.t * Block.t;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        param: 'M Pattern.t option;
+        body: 'M * 'M Block.t;
       }
+      [@@deriving show]
     end
-    type t = {
-      block: Loc.t * Block.t;
-      handler: CatchClause.t option;
-      finalizer: (Loc.t * Block.t) option;
+    type 'M t = {
+      block: 'M * 'M Block.t;
+      handler: 'M CatchClause.t option;
+      finalizer: ('M * 'M Block.t) option;
     }
+    [@@deriving show]
   end
   module VariableDeclaration : sig
     module Declarator : sig
-      type t = Loc.t * t'
-      and t' = {
-        id: Pattern.t;
-        init: Expression.t option;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        id: 'M Pattern.t;
+        init: 'M Expression.t option;
       }
+      [@@deriving show]
     end
-    type kind =
+
+    type 'M t = {
+      declarations: 'M Declarator.t list;
+      kind: kind;
+    }
+    and kind =
       | Var
       | Let
       | Const
-    type t = {
-      declarations: Declarator.t list;
-      kind: kind;
-    }
+    [@@deriving show]
   end
   module While : sig
-    type t = {
-      test: Expression.t;
-      body: Statement.t;
+    type 'M t = {
+      test: 'M Expression.t;
+      body: 'M Statement.t;
     }
+    [@@deriving show]
   end
   module DoWhile : sig
-    type t = {
-      body: Statement.t;
-      test: Expression.t;
+    type 'M t = {
+      body: 'M Statement.t;
+      test: 'M Expression.t;
     }
+    [@@deriving show]
   end
   module For : sig
-    type init =
-      | InitDeclaration of (Loc.t * VariableDeclaration.t)
-      | InitExpression of Expression.t
-    type t = {
-      init: init option;
-      test: Expression.t option;
-      update: Expression.t option;
-      body: Statement.t;
+    type 'M t = {
+      init: 'M init option;
+      test: 'M Expression.t option;
+      update: 'M Expression.t option;
+      body: 'M Statement.t;
     }
+    and 'M init =
+      | InitDeclaration of ('M * 'M VariableDeclaration.t)
+      | InitExpression of 'M Expression.t
+    [@@deriving show]
   end
   module ForIn : sig
-    type left =
-      | LeftDeclaration of (Loc.t * VariableDeclaration.t)
-      | LeftExpression of Expression.t
-    type t = {
-      left: left;
-      right: Expression.t;
-      body: Statement.t;
+    type 'M t = {
+      left: 'M left;
+      right: 'M Expression.t;
+      body: 'M Statement.t;
       each: bool;
     }
+    and 'M left =
+      | LeftDeclaration of ('M * 'M VariableDeclaration.t)
+      | LeftPattern of 'M Pattern.t
+    [@@deriving show]
   end
   module ForOf : sig
-    type left =
-      | LeftDeclaration of (Loc.t * VariableDeclaration.t)
-      | LeftExpression of Expression.t
-    type t = {
-      left: left;
-      right: Expression.t;
-      body: Statement.t;
+    type 'M t = {
+      left: 'M left;
+      right: 'M Expression.t;
+      body: 'M Statement.t;
       async: bool;
     }
+    and 'M left =
+      | LeftDeclaration of ('M * 'M VariableDeclaration.t)
+      | LeftPattern of 'M Pattern.t
+    [@@deriving show]
   end
   module Interface : sig
-    type t = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterDeclaration.t option;
-      body: Loc.t * Type.Object.t;
-      extends: (Loc.t * Type.Generic.t) list;
-      mixins: (Loc.t * Type.Generic.t) list;
+    type 'M t = {
+      id: 'M Identifier.t;
+      tparams: 'M Type.ParameterDeclaration.t option;
+      extends: ('M * 'M Type.Generic.t) list;
+      body: 'M * 'M Type.Object.t;
     }
+    [@@deriving show]
+  end
+  module DeclareClass : sig
+    type 'M t = {
+      id: 'M Identifier.t;
+      tparams: 'M Type.ParameterDeclaration.t option;
+      body: 'M * 'M Type.Object.t;
+      extends: ('M * 'M Type.Generic.t) option;
+      mixins: ('M * 'M Type.Generic.t) list;
+      implements: 'M Class.Implements.t list;
+    }
+    [@@deriving show]
   end
   module DeclareVariable : sig
-    type t = {
-      id: Identifier.t;
-      typeAnnotation: Type.annotation option;
+    type 'M t = {
+      id: 'M Identifier.t;
+      annot: 'M Type.annotation option;
     }
+    [@@deriving show]
   end
   module DeclareFunction : sig
-    type t = {
-      id: Identifier.t;
-      typeAnnotation: Type.annotation;
-      predicate: Type.Predicate.t option;
+    type 'M t = {
+      id: 'M Identifier.t;
+      annot: 'M Type.annotation;
+      predicate: 'M Type.Predicate.t option;
     }
+    [@@deriving show]
   end
   module DeclareModule : sig
-    type id =
-      | Identifier of Identifier.t
-      | Literal of (Loc.t * Literal.t)
+    type 'M id =
+      | Identifier of 'M Identifier.t
+      | Literal of ('M * StringLiteral.t)
 
-    type module_kind =
-      | CommonJS of Loc.t
-      | ES of Loc.t
+    and 'M module_kind =
+      | CommonJS of 'M
+      | ES of 'M
 
-    type t = {
-      id: id;
-      body: Loc.t * Block.t;
-      kind: module_kind;
+    and 'M t = {
+      id: 'M id;
+      body: 'M * 'M Block.t;
+      kind: 'M module_kind;
     }
+
+    [@@deriving show]
   end
   module ExportNamedDeclaration : sig
     module ExportSpecifier : sig
-      type t = Loc.t * t'
-      and t' = {
-        local: Identifier.t;
-        exported: Identifier.t option;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        local: 'M Identifier.t;
+        exported: 'M Identifier.t option;
       }
+      [@@deriving show]
     end
-    type specifier =
-      | ExportSpecifiers of ExportSpecifier.t list
-      | ExportBatchSpecifier of Loc.t * Identifier.t option
-    type t = {
-      declaration: Statement.t option;
-      specifiers: specifier option;
-      source: (Loc.t * Literal.t) option; (* This will always be a string *)
+
+    type 'M t = {
+      declaration: 'M Statement.t option;
+      specifiers: 'M specifier option;
+      source: ('M * StringLiteral.t) option;
       exportKind: Statement.exportKind;
     }
+    and 'M specifier =
+      | ExportSpecifiers of 'M ExportSpecifier.t list
+      | ExportBatchSpecifier of 'M * 'M Identifier.t option
+    [@@deriving show]
   end
   module ExportDefaultDeclaration : sig
-    type declaration =
-      | Declaration of Statement.t
-      | Expression of Expression.t
-    type t = {
-      declaration: declaration;
-      exportKind: Statement.exportKind;
+    type 'M t = {
+      default: 'M;
+      declaration: 'M declaration;
     }
+    and 'M declaration =
+      | Declaration of 'M Statement.t
+      | Expression of 'M Expression.t
+    [@@deriving show]
   end
   module DeclareExportDeclaration : sig
-    type declaration =
+    type 'M declaration =
       (* declare export var *)
-      | Variable of (Loc.t * DeclareVariable.t)
+      | Variable of ('M * 'M DeclareVariable.t)
       (* declare export function *)
-      | Function of (Loc.t * DeclareFunction.t)
+      | Function of ('M * 'M DeclareFunction.t)
       (* declare export class *)
-      | Class of (Loc.t * Interface.t)
+      | Class of ('M * 'M DeclareClass.t)
       (* declare export default [type]
        * this corresponds to things like
        * export default 1+1; *)
-      | DefaultType of Type.t
+      | DefaultType of 'M Type.t
       (* declare export type *)
-      | NamedType of (Loc.t * TypeAlias.t)
+      | NamedType of ('M * 'M TypeAlias.t)
       (* declare export opaque type *)
-      | NamedOpaqueType of (Loc.t * OpaqueType.t)
+      | NamedOpaqueType of ('M * 'M OpaqueType.t)
       (* declare export interface *)
-      | Interface of (Loc.t * Interface.t)
+      | Interface of ('M * 'M Interface.t)
 
-    type t = {
-      default: bool;
-      declaration: declaration option;
-      specifiers: ExportNamedDeclaration.specifier option;
-      source: (Loc.t * Literal.t) option; (* This will always be a string *)
+    and 'M t = {
+      default: 'M option;
+      declaration: 'M declaration option;
+      specifiers: 'M ExportNamedDeclaration.specifier option;
+      source: ('M * StringLiteral.t) option;
     }
+
+    [@@deriving show]
   end
   module ImportDeclaration : sig
     type importKind =
@@ -462,88 +549,98 @@ and Statement : sig
       | ImportTypeof
       | ImportValue
 
-    type specifier =
-      | ImportNamedSpecifier of named_specifier
-      | ImportDefaultSpecifier of Identifier.t
-      | ImportNamespaceSpecifier of (Loc.t * Identifier.t)
-    and named_specifier = {
+    and 'M specifier =
+      | ImportNamedSpecifiers of 'M named_specifier list
+      | ImportNamespaceSpecifier of ('M * 'M Identifier.t)
+
+    and 'M named_specifier = {
       kind: importKind option;
-      local: Identifier.t option;
-      remote: Identifier.t;
+      local: 'M Identifier.t option;
+      remote: 'M Identifier.t;
     }
 
-    type t = {
+    and 'M t = {
       importKind: importKind;
-      source: (Loc.t * Literal.t); (* Always a string literal *)
-      specifiers: specifier list;
+      source: ('M * StringLiteral.t);
+      default: 'M Identifier.t option;
+      specifiers: 'M specifier option;
     }
+
+    [@@deriving show]
   end
   module Expression : sig
-    type t = {
-      expression: Expression.t;
+    type 'M t = {
+      expression: 'M Expression.t;
       directive: string option;
     }
+    [@@deriving show]
   end
 
   type exportKind =
     | ExportType
     | ExportValue
 
-  type t = Loc.t * t'
-  and t' =
-    | Block of Block.t
-    | Break of Break.t
-    | ClassDeclaration of Class.t
-    | Continue of Continue.t
+  and 'M t = 'M * 'M t'
+  and 'M t' =
+    | Block of 'M Block.t
+    | Break of 'M Break.t
+    | ClassDeclaration of 'M Class.t
+    | Continue of 'M Continue.t
     | Debugger
-    | DeclareClass of Interface.t
-    | DeclareExportDeclaration of DeclareExportDeclaration.t
-    | DeclareFunction of DeclareFunction.t
-    | DeclareInterface of Interface.t
-    | DeclareModule of DeclareModule.t
-    | DeclareModuleExports of Type.annotation
-    | DeclareTypeAlias of TypeAlias.t
-    | DeclareOpaqueType of OpaqueType.t
-    | DeclareVariable of DeclareVariable.t
-    | DoWhile of DoWhile.t
+    | DeclareClass of 'M DeclareClass.t
+    | DeclareExportDeclaration of 'M DeclareExportDeclaration.t
+    | DeclareFunction of 'M DeclareFunction.t
+    | DeclareInterface of 'M Interface.t
+    | DeclareModule of 'M DeclareModule.t
+    | DeclareModuleExports of 'M Type.annotation
+    | DeclareTypeAlias of 'M TypeAlias.t
+    | DeclareOpaqueType of 'M OpaqueType.t
+    | DeclareVariable of 'M DeclareVariable.t
+    | DoWhile of 'M DoWhile.t
     | Empty
-    | ExportDefaultDeclaration of ExportDefaultDeclaration.t
-    | ExportNamedDeclaration of ExportNamedDeclaration.t
-    | Expression of Expression.t
-    | For of For.t
-    | ForIn of ForIn.t
-    | ForOf of ForOf.t
-    | FunctionDeclaration of Function.t
-    | If of If.t
-    | ImportDeclaration of ImportDeclaration.t
-    | InterfaceDeclaration of Interface.t
-    | Labeled of Labeled.t
-    | Return of Return.t
-    | Switch of Switch.t
-    | Throw of Throw.t
-    | Try of Try.t
-    | TypeAlias of TypeAlias.t
-    | OpaqueType of OpaqueType.t
-    | VariableDeclaration of VariableDeclaration.t
-    | While of While.t
-    | With of With.t
+    | ExportDefaultDeclaration of 'M ExportDefaultDeclaration.t
+    | ExportNamedDeclaration of 'M ExportNamedDeclaration.t
+    | Expression of 'M Expression.t
+    | For of 'M For.t
+    | ForIn of 'M ForIn.t
+    | ForOf of 'M ForOf.t
+    | FunctionDeclaration of 'M Function.t
+    | If of 'M If.t
+    | ImportDeclaration of 'M ImportDeclaration.t
+    | InterfaceDeclaration of 'M Interface.t
+    | Labeled of 'M Labeled.t
+    | Return of 'M Return.t
+    | Switch of 'M Switch.t
+    | Throw of 'M Throw.t
+    | Try of 'M Try.t
+    | TypeAlias of 'M TypeAlias.t
+    | OpaqueType of 'M OpaqueType.t
+    | VariableDeclaration of 'M VariableDeclaration.t
+    | While of 'M While.t
+    | With of 'M With.t
+
+  [@@deriving show]
 end = Statement
 
 and Expression : sig
   module SpreadElement : sig
-    type t = Loc.t * t'
-    and t' = {
-      argument: Expression.t;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      argument: 'M Expression.t;
     }
+    [@@deriving show]
   end
-  type expression_or_spread =
-    | Expression of Expression.t
-    | Spread of SpreadElement.t
+
+  type 'M expression_or_spread =
+    | Expression of 'M Expression.t
+    | Spread of 'M SpreadElement.t
+    [@@deriving show]
 
   module Array : sig
-    type t = {
-      elements: expression_or_spread option list;
+    type 'M t = {
+      elements: 'M expression_or_spread option list;
     }
+    [@@deriving show]
   end
   module TemplateLiteral : sig
     module Element : sig
@@ -551,62 +648,78 @@ and Expression : sig
         raw: string;
         cooked: string;
       }
-      type t = Loc.t * t'
+      and 'M t = 'M * t'
       and t' = {
         value: value;
         tail: bool;
       }
+      [@@deriving show]
     end
-    type t = {
-      quasis: Element.t list;
-      expressions: Expression.t list;
+    type 'M t = {
+      quasis: 'M Element.t list;
+      expressions: 'M Expression.t list;
     }
+    [@@deriving show]
   end
   module TaggedTemplate : sig
-    type t = {
-      tag: Expression.t;
-      quasi: Loc.t * TemplateLiteral.t;
+    type 'M t = {
+      tag: 'M Expression.t;
+      quasi: 'M * 'M TemplateLiteral.t;
     }
+    [@@deriving show]
   end
   module Object : sig
-    (* This is a slight deviation from the Mozilla spec. In the spec, an object
-      * property is not a proper node, and lacks a location and a "type" field.
-      * Esprima promotes it to a proper node and that is useful, so I'm
-      * following their example *)
     module Property : sig
-      type key =
-        | Literal of (Loc.t * Literal.t)
-        | Identifier of Identifier.t
-        | Computed of Expression.t
-      type value =
-        | Init of Expression.t
-        | Get of (Loc.t * Function.t)
-        | Set of (Loc.t * Function.t)
-      type t = Loc.t * t'
-      and t' = {
-        key: key;
-        value: value;
-        _method: bool;
-        shorthand: bool;
-      }
+      type 'M key =
+        | Literal of ('M * Literal.t)
+        | Identifier of 'M Identifier.t
+        | PrivateName of 'M PrivateName.t
+        | Computed of 'M Expression.t
+      and 'M t = 'M * 'M t'
+      and 'M t' =
+        | Init of {
+            key: 'M key;
+            value: 'M Expression.t;
+            shorthand: bool;
+          }
+        | Method of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+        | Get of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+        | Set of {
+            key: 'M key;
+            value: 'M * 'M Function.t;
+          }
+
+      [@@deriving show]
     end
     module SpreadProperty : sig
-      type t = Loc.t * t'
-      and t' = {
-        argument: Expression.t;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        argument: 'M Expression.t;
       }
+      [@@deriving show]
     end
-    type property =
-      | Property of Property.t
-      | SpreadProperty of SpreadProperty.t
-    type t = {
-      properties: property list;
+
+    type 'M property =
+      | Property of 'M Property.t
+      | SpreadProperty of 'M SpreadProperty.t
+
+    and 'M t = {
+      properties: 'M property list;
     }
+
+    [@@deriving show]
   end
   module Sequence : sig
-    type t = {
-      expressions: Expression.t list;
+    type 'M t = {
+      expressions: 'M Expression.t list;
     }
+    [@@deriving show]
   end
   module Unary : sig
     type operator =
@@ -618,11 +731,14 @@ and Expression : sig
       | Void
       | Delete
       | Await
-    type t = {
+
+    and 'M t = {
       operator: operator;
       prefix: bool;
-      argument: Expression.t
+      argument: 'M Expression.t
     }
+
+    [@@deriving show]
   end
   module Binary : sig
     type operator =
@@ -648,11 +764,14 @@ and Expression : sig
       | BitAnd
       | In
       | Instanceof
-    type t = {
+
+    and 'M t = {
       operator: operator;
-      left: Expression.t;
-      right: Expression.t;
+      left: 'M Expression.t;
+      right: 'M Expression.t;
     }
+
+    [@@deriving show]
   end
   module Assignment : sig
     type operator =
@@ -669,155 +788,204 @@ and Expression : sig
       | BitOrAssign
       | BitXorAssign
       | BitAndAssign
-    type t = {
+
+    and 'M t = {
       operator: operator;
-      left: Pattern.t;
-      right: Expression.t;
+      left: 'M Pattern.t;
+      right: 'M Expression.t;
     }
+
+    [@@deriving show]
   end
   module Update : sig
     type operator =
       | Increment
       | Decrement
-    type t = {
+
+    and 'M t = {
       operator: operator;
-      argument: Expression.t;
+      argument: 'M Expression.t;
       prefix: bool;
     }
+
+    [@@deriving show]
   end
   module Logical : sig
     type operator =
       | Or
       | And
-    type t = {
+      | NullishCoalesce
+
+    and 'M t = {
       operator: operator;
-      left: Expression.t;
-      right: Expression.t;
+      left: 'M Expression.t;
+      right: 'M Expression.t;
     }
+
+    [@@deriving show]
   end
   module Conditional : sig
-    type t = {
-      test: Expression.t;
-      consequent: Expression.t;
-      alternate: Expression.t;
+    type 'M t = {
+      test: 'M Expression.t;
+      consequent: 'M Expression.t;
+      alternate: 'M Expression.t;
     }
+    [@@deriving show]
   end
   module New : sig
-    type t = {
-      callee: Expression.t;
-      arguments: expression_or_spread list;
+    type 'M t = {
+      callee: 'M Expression.t;
+      targs: 'M Type.ParameterInstantiation.t option;
+      arguments: 'M expression_or_spread list;
     }
+    [@@deriving show]
   end
   module Call : sig
-    type t = {
-      callee: Expression.t;
-      arguments: expression_or_spread list;
+    type 'M t = {
+      callee: 'M Expression.t;
+      targs: 'M Type.ParameterInstantiation.t option;
+      arguments: 'M expression_or_spread list;
     }
+    [@@deriving show]
+  end
+  module OptionalCall : sig
+    type 'M t = {
+      call: 'M Call.t;
+      optional: bool;
+    }
+    [@@deriving show]
   end
   module Member : sig
-    type property =
-      | PropertyIdentifier of Identifier.t
-      | PropertyExpression of Expression.t
-    type t = {
-      _object: Expression.t;
-      property: property;
+    type 'M property =
+      | PropertyIdentifier of 'M Identifier.t
+      | PropertyPrivateName of 'M PrivateName.t
+      | PropertyExpression of 'M Expression.t
+
+    and 'M t = {
+      _object: 'M Expression.t;
+      property: 'M property;
       computed: bool;
     }
+
+    [@@deriving show]
+  end
+  module OptionalMember : sig
+    type 'M t = {
+      member: 'M Member.t;
+      optional: bool;
+    }
+    [@@deriving show]
   end
   module Yield : sig
-    type t = {
-      argument: Expression.t option;
+    type 'M t = {
+      argument: 'M Expression.t option;
       delegate: bool;
     }
+    [@@deriving show]
   end
   module Comprehension : sig
     module Block : sig
-      type t = Loc.t * t'
-      and t' = {
-        left: Pattern.t;
-        right: Expression.t;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        left: 'M Pattern.t;
+        right: 'M Expression.t;
         each: bool;
       }
+      [@@deriving show]
     end
-    type t = {
-      blocks: Block.t list;
-      filter: Expression.t option;
+    type 'M t = {
+      blocks: 'M Block.t list;
+      filter: 'M Expression.t option;
     }
+    [@@deriving show]
   end
   module Generator : sig
-    type t = {
-      blocks: Comprehension.Block.t list;
-      filter: Expression.t option;
+    type 'M t = {
+      blocks: 'M Comprehension.Block.t list;
+      filter: 'M Expression.t option;
     }
+    [@@deriving show]
   end
   module TypeCast : sig
-    type t = {
-      expression: Expression.t;
-      typeAnnotation: Type.annotation;
+    type 'M t = {
+      expression: 'M Expression.t;
+      annot: 'M Type.annotation;
     }
+    [@@deriving show]
   end
   module MetaProperty : sig
-    type t = {
-      meta: Identifier.t;
-      property: Identifier.t;
+    type 'M t = {
+      meta: 'M Identifier.t;
+      property: 'M Identifier.t;
     }
+    [@@deriving show]
   end
 
-  type t = Loc.t * t'
-  and t' =
-    | Array of Array.t
-    | ArrowFunction of Function.t
-    | Assignment of Assignment.t
-    | Binary of Binary.t
-    | Call of Call.t
-    | Class of Class.t
-    | Comprehension of Comprehension.t
-    | Conditional of Conditional.t
-    | Function of Function.t
-    | Generator of Generator.t
-    | Identifier of Identifier.t
-    | Import of t
-    | JSXElement of JSX.element
+  type 'M t = 'M * 'M t'
+  and 'M t' =
+    | Array of 'M Array.t
+    | ArrowFunction of 'M Function.t
+    | Assignment of 'M Assignment.t
+    | Binary of 'M Binary.t
+    | Call of 'M Call.t
+    | Class of 'M Class.t
+    | Comprehension of 'M Comprehension.t
+    | Conditional of 'M Conditional.t
+    | Function of 'M Function.t
+    | Generator of 'M Generator.t
+    | Identifier of 'M Identifier.t
+    | Import of 'M t
+    | JSXElement of 'M JSX.element
+    | JSXFragment of 'M JSX.fragment
     | Literal of Literal.t
-    | Logical of Logical.t
-    | Member of Member.t
-    | MetaProperty of MetaProperty.t
-    | New of New.t
-    | Object of Object.t
-    | Sequence of Sequence.t
+    | Logical of 'M Logical.t
+    | Member of 'M Member.t
+    | MetaProperty of 'M MetaProperty.t
+    | New of 'M New.t
+    | Object of 'M Object.t
+    | OptionalCall of 'M OptionalCall.t
+    | OptionalMember of 'M OptionalMember.t
+    | Sequence of 'M Sequence.t
     | Super
-    | TaggedTemplate of TaggedTemplate.t
-    | TemplateLiteral of TemplateLiteral.t
+    | TaggedTemplate of 'M TaggedTemplate.t
+    | TemplateLiteral of 'M TemplateLiteral.t
     | This
-    | TypeCast of TypeCast.t
-    | Unary of Unary.t
-    | Update of Update.t
-    | Yield of Yield.t
+    | TypeCast of 'M TypeCast.t
+    | Unary of 'M Unary.t
+    | Update of 'M Update.t
+    | Yield of 'M Yield.t
+
+  [@@deriving show]
 end = Expression
 
 and JSX : sig
   module Identifier : sig
-    type t = Loc.t * t'
+    type 'M t = 'M * t'
     and t' = {
       name: string;
     }
+    [@@deriving show]
   end
 
   module NamespacedName : sig
-    type t = Loc.t * t'
-    and t' = {
-      namespace: Identifier.t;
-      name: Identifier.t;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      namespace: 'M Identifier.t;
+      name: 'M Identifier.t;
     }
+    [@@deriving show]
   end
 
   module ExpressionContainer : sig
-    type t = {
-      expression: expression;
+    type 'M t = {
+      expression: 'M expression;
     }
-    and expression =
-    | Expression of Expression.t
-    | EmptyExpression of Loc.t
+
+    and 'M expression =
+      | Expression of 'M Expression.t
+      | EmptyExpression of 'M
+
+    [@@deriving show]
   end
 
   module Text : sig
@@ -825,225 +993,297 @@ and JSX : sig
       value: string;
       raw: string;
     }
+    [@@deriving show]
   end
 
   module Attribute : sig
-    type t = Loc.t * t'
-    and name =
-    | Identifier of Identifier.t
-    | NamespacedName of NamespacedName.t
-    and value =
-    | Literal of Loc.t * Literal.t
-    | ExpressionContainer of Loc.t * ExpressionContainer.t
-    and t' = {
-      name: name;
-      value: value option;
+    type 'M t = 'M * 'M t'
+
+    and 'M name =
+      | Identifier of 'M Identifier.t
+      | NamespacedName of 'M NamespacedName.t
+
+    and 'M value =
+      | Literal of 'M * Literal.t
+      | ExpressionContainer of 'M * 'M ExpressionContainer.t
+
+    and 'M t' = {
+      name: 'M name;
+      value: 'M value option;
     }
+
+    [@@deriving show]
   end
 
   module SpreadAttribute : sig
-    type t = Loc.t * t'
-    and t' = {
-      argument: Expression.t;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      argument: 'M Expression.t;
     }
+    [@@deriving show]
   end
 
   module MemberExpression : sig
-    type t = Loc.t * t'
-    and _object =
-    | Identifier of Identifier.t
-    | MemberExpression of t
-    and t' = {
-      _object: _object;
-      property: Identifier.t;
+    type 'M t = 'M * 'M t'
+
+    and 'M _object =
+      | Identifier of 'M Identifier.t
+      | MemberExpression of 'M t
+
+    and 'M t' = {
+      _object: 'M _object;
+      property: 'M Identifier.t;
     }
+
+    [@@deriving show]
   end
 
-  type name =
-    | Identifier of Identifier.t
-    | NamespacedName of NamespacedName.t
-    | MemberExpression of MemberExpression.t
+  type 'M name =
+    | Identifier of 'M Identifier.t
+    | NamespacedName of 'M NamespacedName.t
+    | MemberExpression of 'M MemberExpression.t
+    [@@deriving show]
 
   module Opening : sig
-    type t = Loc.t * t'
+    type 'M t = 'M * 'M t'
 
-    and attribute =
-      | Attribute of Attribute.t
-      | SpreadAttribute of SpreadAttribute.t
+    and 'M attribute =
+      | Attribute of 'M Attribute.t
+      | SpreadAttribute of 'M SpreadAttribute.t
 
-    and t' = {
-      name: name;
+    and 'M t' = {
+      name: 'M name;
       selfClosing: bool;
-      attributes: attribute list;
+      attributes: 'M attribute list;
     }
+
+    [@@deriving show]
   end
 
   module Closing : sig
-    type t = Loc.t * t'
-    and t' = {
-      name: name;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      name: 'M name;
     }
+    [@@deriving show]
   end
 
-  type child = Loc.t * child'
-  and child' =
-    | Element of element
-    | ExpressionContainer of ExpressionContainer.t
+  type 'M child = 'M * 'M child'
+  and 'M child' =
+    | Element of 'M element
+    | Fragment of 'M fragment
+    | ExpressionContainer of 'M ExpressionContainer.t
+    | SpreadChild of 'M Expression.t
     | Text of Text.t
 
-  and element = {
-    openingElement: Opening.t;
-    closingElement: Closing.t option;
-    children: child list
+  and 'M element = {
+    openingElement: 'M Opening.t;
+    closingElement: 'M Closing.t option;
+    children: 'M child list
   }
+
+  and 'M fragment = {
+    frag_openingElement: 'M;
+    frag_closingElement: 'M option;
+    frag_children: 'M child list;
+  }
+
+  [@@deriving show]
 end = JSX
 
 and Pattern : sig
   module Object : sig
     module Property : sig
-      type key =
-        | Literal of (Loc.t * Literal.t)
-        | Identifier of Identifier.t
-        | Computed of Expression.t
-      type t = Loc.t * t'
-      and t' = {
-        key: key;
-        pattern: Pattern.t;
+      type 'M key =
+        | Literal of ('M * Literal.t)
+        | Identifier of 'M Identifier.t
+        | Computed of 'M Expression.t
+      and 'M t = 'M * 'M t'
+      and 'M t' = {
+        key: 'M key;
+        pattern: 'M Pattern.t;
         shorthand: bool;
       }
+      [@@deriving show]
     end
     module RestProperty : sig
-      type t = Loc.t * t'
-      and t' = {
-        argument: Pattern.t;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        argument: 'M Pattern.t;
       }
+      [@@deriving show]
     end
-    type property =
-      | Property of Property.t
-      | RestProperty of RestProperty.t
-    type t = {
-      properties: property list;
-      typeAnnotation: Type.annotation option;
+    type 'M property =
+      | Property of 'M Property.t
+      | RestProperty of 'M RestProperty.t
+    and 'M t = {
+      properties: 'M property list;
+      annot: 'M Type.annotation option;
     }
+    [@@deriving show]
   end
   module Array : sig
     module RestElement : sig
-      type t = Loc.t * t'
-      and t' = {
-        argument: Pattern.t;
+      type 'M t = 'M * 'M t'
+      and 'M t' = {
+        argument: 'M Pattern.t;
       }
+      [@@deriving show]
     end
-    type element =
-      | Element of Pattern.t
-      | RestElement of RestElement.t
-    type t = {
-      elements: element option list;
-      typeAnnotation: Type.annotation option;
+    type 'M element =
+      | Element of 'M Pattern.t
+      | RestElement of 'M RestElement.t
+    and 'M t = {
+      elements: 'M element option list;
+      annot: 'M Type.annotation option;
     }
+    [@@deriving show]
   end
   module Assignment : sig
-    type t = {
-      left: Pattern.t;
-      right: Expression.t;
+    type 'M t = {
+      left: 'M Pattern.t;
+      right: 'M Expression.t;
     }
+    [@@deriving show]
   end
   module Identifier : sig
-    type t = {
-      name: Identifier.t;
-      typeAnnotation: Type.annotation option;
+    type 'M t = {
+      name: 'M Identifier.t;
+      annot: 'M Type.annotation option;
       optional: bool;
     }
+    [@@deriving show]
   end
-  type t = Loc.t * t'
-  and t' =
-    | Object of Object.t
-    | Array of Array.t
-    | Assignment of Assignment.t
-    | Identifier of Identifier.t
-    | Expression of Expression.t
+  type 'M t = 'M * 'M t'
+  and 'M t' =
+    | Object of 'M Object.t
+    | Array of 'M Array.t
+    | Assignment of 'M Assignment.t
+    | Identifier of 'M Identifier.t
+    | Expression of 'M Expression.t
+  [@@deriving show]
 end = Pattern
 
 and Comment : sig
-  type t = Loc.t * t'
+  type 'M t = 'M * t'
   and t' =
     | Block of string
     | Line of string
+  [@@deriving show]
 end = Comment
 
 and Class : sig
   module Method : sig
-    type t = Loc.t * t'
+    type 'M t = 'M * 'M t'
     and kind =
       | Constructor
       | Method
       | Get
       | Set
-    and t' = {
+    and 'M t' = {
       kind: kind;
-      key: Expression.Object.Property.key;
-      value: Loc.t * Function.t;
+      key: 'M Expression.Object.Property.key;
+      value: 'M * 'M Function.t;
       static: bool;
-      decorators: Expression.t list;
+      decorators: 'M Class.Decorator.t list;
     }
+    [@@deriving show]
   end
   module Property : sig
-    type t = Loc.t * t'
-    and t' = {
-      key: Expression.Object.Property.key;
-      value: Expression.t option;
-      typeAnnotation: Type.annotation option;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      key: 'M Expression.Object.Property.key;
+      value: 'M Expression.t option;
+      annot: 'M Type.annotation option;
       static: bool;
-      variance: Variance.t option;
+      variance: 'M Variance.t option;
     }
+    [@@deriving show]
+  end
+  module PrivateField: sig
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      key: 'M PrivateName.t;
+      value: 'M Expression.t option;
+      annot: 'M Type.annotation option;
+      static: bool;
+      variance: 'M Variance.t option;
+    }
+    [@@deriving show]
   end
   module Implements : sig
-    type t = Loc.t * t'
-    and t' = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterInstantiation.t option;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      id: 'M Identifier.t;
+      targs: 'M Type.ParameterInstantiation.t option;
     }
+    [@@deriving show]
   end
   module Body : sig
-    type element =
-      | Method of Method.t
-      | Property of Property.t
-    type t = Loc.t * t'
-    and t' = {
-      body: element list;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      body: 'M element list;
     }
+    and 'M element =
+      | Method of 'M Method.t
+      | Property of 'M Property.t
+      | PrivateField of 'M PrivateField.t
+    [@@deriving show]
   end
-  type t = {
-    id: Identifier.t option;
-    body: Class.Body.t;
-    superClass: Expression.t option;
-    typeParameters: Type.ParameterDeclaration.t option;
-    superTypeParameters: Type.ParameterInstantiation.t option;
-    implements: Class.Implements.t list;
-    classDecorators: Expression.t list;
+  module Decorator : sig
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      expression: 'M Expression.t;
+    }
+    [@@deriving show]
+  end
+  type 'M t = {
+    id: 'M Identifier.t option;
+    body: 'M Class.Body.t;
+    tparams: 'M Type.ParameterDeclaration.t option;
+    super: 'M Expression.t option;
+    super_targs: 'M Type.ParameterInstantiation.t option;
+    implements: 'M Class.Implements.t list;
+    classDecorators: 'M Decorator.t list;
   }
+  [@@deriving show]
 end = Class
 
 and Function : sig
   module RestElement : sig
-    type t = Loc.t * t'
-    and t' = {
-      argument: Pattern.t;
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      argument: 'M Pattern.t;
     }
+    [@@deriving show]
   end
-  type body =
-    | BodyBlock of (Loc.t * Statement.Block.t)
-    | BodyExpression of Expression.t
-  type t = {
-    id: Identifier.t option;
-    params: Pattern.t list * RestElement.t option;
-    body: body;
+  module Params : sig
+    type 'M t = 'M * 'M t'
+    and 'M t' = {
+      params: 'M Pattern.t list;
+      rest: 'M RestElement.t option;
+    }
+    [@@deriving show]
+  end
+
+  type 'M t = {
+    id: 'M Identifier.t option;
+    params: 'M Params.t;
+    body: 'M body;
     async: bool;
     generator: bool;
-    predicate: Type.Predicate.t option;
+    predicate: 'M Type.Predicate.t option;
     expression: bool;
-    returnType: Type.annotation option;
-    typeParameters: Type.ParameterDeclaration.t option;
+    return: 'M Type.annotation option;
+    tparams: 'M Type.ParameterDeclaration.t option;
   }
+
+  and 'M body =
+    | BodyBlock of ('M * 'M Statement.Block.t)
+    | BodyExpression of 'M Expression.t
+
+  [@@deriving show]
+
 end = Function
 
-type program = Loc.t * Statement.t list * Comment.t list
+type 'M program = 'M * 'M Statement.t list * 'M Comment.t list [@@deriving show]

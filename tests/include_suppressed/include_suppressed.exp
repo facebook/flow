@@ -1,50 +1,139 @@
 Without --include-suppressed
-Error: test.js:3
-  3: (123: string); // Normal error
-      ^^^ number. This type is incompatible with
-  3: (123: string); // Normal error
-           ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Error: test.js:8
-  8: // $FlowFixMe - unused suppression comment
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+Cannot cast `123` to string because number [1] is incompatible with string [2].
+
+   test.js:3:2
+   3| (123: string); // Normal error
+       ^^^ [1]
+
+References:
+   test.js:3:7
+   3| (123: string); // Normal error
+            ^^^^^^ [2]
 
 
-Found 2 errors
+Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
+
+Unused suppression comment.
+
+   8| // $FlowFixMe - unused suppression comment
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error and 1 warning
 
 
 With --include-suppressed
-Error: test.js:3
-  3: (123: string); // Normal error
-      ^^^ number. This type is incompatible with
-  3: (123: string); // Normal error
-           ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Error: test.js:6
-  6: (123: string); // Suppressed error
-      ^^^ number. This type is incompatible with
-  6: (123: string); // Suppressed error
-           ^^^^^^ string
+Cannot cast `123` to string because number [1] is incompatible with string [2].
 
-Error: test.js:8
-  8: // $FlowFixMe - unused suppression comment
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+   test.js:3:2
+   3| (123: string); // Normal error
+       ^^^ [1]
+
+References:
+   test.js:3:7
+   3| (123: string); // Normal error
+            ^^^^^^ [2]
 
 
-Found 3 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:6:2
+
+Cannot cast `123` to string because number [1] is incompatible with string [2].
+
+   test.js:6:2
+   6| (123: string); // Suppressed error
+       ^^^ [1]
+
+References:
+   test.js:6:7
+   6| (123: string); // Suppressed error
+            ^^^^^^ [2]
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
+
+Unused suppression comment.
+
+   8| // $FlowFixMe - unused suppression comment
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors and 1 warning
 
 
 JSON without --include-suppressed
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"infer",
       "level":"error",
       "suppressions":[],
+      "extra":[
+        {
+          "message":[
+            {
+              "context":null,
+              "descr":"References:",
+              "type":"Blame",
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"(123: string); // Normal error",
+              "descr":"[1]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":3,"column":2,"offset":11},
+                "end":{"line":3,"column":4,"offset":14}
+              },
+              "path":"test.js",
+              "line":3,
+              "endline":3,
+              "start":2,
+              "end":4
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"(123: string); // Normal error",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":3,"column":7,"offset":16},
+                "end":{"line":3,"column":12,"offset":22}
+              },
+              "path":"test.js",
+              "line":3,
+              "endline":3,
+              "start":7,
+              "end":12
+            }
+          ]
+        }
+      ],
       "message":[
         {
           "context":"(123: string); // Normal error",
-          "descr":"number",
+          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2].",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -57,43 +146,17 @@ JSON without --include-suppressed
           "endline":3,
           "start":2,
           "end":4
-        },
-        {
-          "context":null,
-          "descr":"This type is incompatible with",
-          "type":"Comment",
-          "path":"",
-          "line":0,
-          "endline":0,
-          "start":1,
-          "end":0
-        },
-        {
-          "context":"(123: string); // Normal error",
-          "descr":"string",
-          "type":"Blame",
-          "loc":{
-            "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":3,"column":7,"offset":16},
-            "end":{"line":3,"column":12,"offset":22}
-          },
-          "path":"test.js",
-          "line":3,
-          "endline":3,
-          "start":7,
-          "end":12
         }
       ]
     },
     {
       "kind":"infer",
-      "level":"error",
+      "level":"warning",
       "suppressions":[],
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
-          "descr":"Error suppressing comment",
+          "descr":"Unused suppression comment.",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -106,16 +169,6 @@ JSON without --include-suppressed
           "endline":8,
           "start":1,
           "end":42
-        },
-        {
-          "context":null,
-          "descr":"Unused suppression",
-          "type":"Comment",
-          "path":"",
-          "line":0,
-          "endline":0,
-          "start":1,
-          "end":0
         }
       ]
     }
@@ -126,15 +179,72 @@ JSON without --include-suppressed
 
 JSON with --include-suppressed
 {
+  "jsonVersion":"1",
   "errors":[
     {
       "kind":"infer",
       "level":"error",
       "suppressions":[],
+      "extra":[
+        {
+          "message":[
+            {
+              "context":null,
+              "descr":"References:",
+              "type":"Blame",
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"(123: string); // Normal error",
+              "descr":"[1]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":3,"column":2,"offset":11},
+                "end":{"line":3,"column":4,"offset":14}
+              },
+              "path":"test.js",
+              "line":3,
+              "endline":3,
+              "start":2,
+              "end":4
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"(123: string); // Normal error",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":3,"column":7,"offset":16},
+                "end":{"line":3,"column":12,"offset":22}
+              },
+              "path":"test.js",
+              "line":3,
+              "endline":3,
+              "start":7,
+              "end":12
+            }
+          ]
+        }
+      ],
       "message":[
         {
           "context":"(123: string); // Normal error",
-          "descr":"number",
+          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2].",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -147,43 +257,17 @@ JSON with --include-suppressed
           "endline":3,
           "start":2,
           "end":4
-        },
-        {
-          "context":null,
-          "descr":"This type is incompatible with",
-          "type":"Comment",
-          "path":"",
-          "line":0,
-          "endline":0,
-          "start":1,
-          "end":0
-        },
-        {
-          "context":"(123: string); // Normal error",
-          "descr":"string",
-          "type":"Blame",
-          "loc":{
-            "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":3,"column":7,"offset":16},
-            "end":{"line":3,"column":12,"offset":22}
-          },
-          "path":"test.js",
-          "line":3,
-          "endline":3,
-          "start":7,
-          "end":12
         }
       ]
     },
     {
       "kind":"infer",
-      "level":"error",
+      "level":"warning",
       "suppressions":[],
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
-          "descr":"Error suppressing comment",
+          "descr":"Unused suppression comment.",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -196,16 +280,6 @@ JSON with --include-suppressed
           "endline":8,
           "start":1,
           "end":42
-        },
-        {
-          "context":null,
-          "descr":"Unused suppression",
-          "type":"Comment",
-          "path":"",
-          "line":0,
-          "endline":0,
-          "start":1,
-          "end":0
         }
       ]
     },
@@ -222,10 +296,66 @@ JSON with --include-suppressed
           }
         }
       ],
+      "extra":[
+        {
+          "message":[
+            {
+              "context":null,
+              "descr":"References:",
+              "type":"Blame",
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"(123: string); // Suppressed error",
+              "descr":"[1]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":6,"column":2,"offset":57},
+                "end":{"line":6,"column":4,"offset":60}
+              },
+              "path":"test.js",
+              "line":6,
+              "endline":6,
+              "start":2,
+              "end":4
+            }
+          ]
+        },
+        {
+          "message":[
+            {
+              "context":"(123: string); // Suppressed error",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":6,"column":7,"offset":62},
+                "end":{"line":6,"column":12,"offset":68}
+              },
+              "path":"test.js",
+              "line":6,
+              "endline":6,
+              "start":7,
+              "end":12
+            }
+          ]
+        }
+      ],
       "message":[
         {
           "context":"(123: string); // Suppressed error",
-          "descr":"number",
+          "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2].",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -238,32 +368,6 @@ JSON with --include-suppressed
           "endline":6,
           "start":2,
           "end":4
-        },
-        {
-          "context":null,
-          "descr":"This type is incompatible with",
-          "type":"Comment",
-          "path":"",
-          "line":0,
-          "endline":0,
-          "start":1,
-          "end":0
-        },
-        {
-          "context":"(123: string); // Suppressed error",
-          "descr":"string",
-          "type":"Blame",
-          "loc":{
-            "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":6,"column":7,"offset":62},
-            "end":{"line":6,"column":12,"offset":68}
-          },
-          "path":"test.js",
-          "line":6,
-          "endline":6,
-          "start":7,
-          "end":12
         }
       ]
     }

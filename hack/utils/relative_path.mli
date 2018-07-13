@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -14,6 +13,7 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  | Tmp
 
 val set_path_prefix : prefix -> Path.t -> unit
 val path_of_prefix : prefix -> string
@@ -31,14 +31,22 @@ val pp : Format.formatter -> t -> unit
 val default : t
 (* Checks that string indeed has the given prefix before constructing path *)
 val create : prefix -> string -> t
+(** Creates a new path, inferring the prefix. Will default to Dummy. *)
+val create_detect_prefix : string -> t
 (* Creates a Relative_path.t relative to the root *)
 val from_root : string -> t
 val prefix : t -> prefix
 val suffix : t -> string
 val to_absolute : t -> string
+val to_tmp : t -> t
+val to_root : t -> t
+val strip_root_if_possible : string -> string
 
 module Set : module type of Reordered_argument_set(Set.Make(S))
 module Map : module type of Reordered_argument_map(MyMap.Make(S))
 
 val relativize_set : prefix -> SSet.t -> Set.t
 val set_of_list : t list -> Set.t
+
+val storage_to_string : t -> string
+val storage_of_string : string -> t

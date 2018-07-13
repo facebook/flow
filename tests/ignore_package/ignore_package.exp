@@ -1,6 +1,10 @@
-Error: foo.js:8
-  8: var _ = require('underscore');
-                     ^^^^^^^^^^^^ underscore. Required module not found
+Error ------------------------------------------------------------------------------------------------------ foo.js:8:17
+
+Cannot resolve module `underscore`.
+
+   8| var _ = require('underscore');
+                      ^^^^^^^^^^^^
+
 
 
 Found 1 error

@@ -1,0 +1,11 @@
+// @flow
+type NonstrictLibFooType = {foo: string};
+type NonstrictLibBarType = {bar: number};
+
+declare var NonstrictLibFoo: NonstrictLibFooType;
+declare var NonstrictLibBar: NonstrictLibBarType;
+
+export default {
+  NonstrictLibFoo,
+  NonstrictLibBar,
+};
