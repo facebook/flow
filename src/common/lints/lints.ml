@@ -25,6 +25,7 @@ type lint_kind =
   | UnsafeGettersSetters
   | InexactSpread
   | UnnecessaryOptionalChain
+  | UnnecessaryInvariant
   | DeprecatedCallSyntax
 
 let string_of_sketchy_null_kind = function
@@ -47,6 +48,7 @@ let string_of_kind = function
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | InexactSpread -> "inexact-spread"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
+  | UnnecessaryInvariant -> "unnecessary-invariant"
   | DeprecatedCallSyntax -> "deprecated-call-syntax"
 
 let kinds_of_string = function
@@ -72,6 +74,7 @@ let kinds_of_string = function
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "inexact-spread" -> Some [InexactSpread]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
+  | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "deprecated-call-syntax" -> Some [DeprecatedCallSyntax]
   | _ -> None
 

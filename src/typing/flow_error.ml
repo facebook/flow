@@ -165,6 +165,7 @@ type error_message =
   | EExperimentalOptionalChaining of Loc.t
   | EOptionalChainingMethods of Loc.t
   | EUnnecessaryOptionalChain of Loc.t * reason
+  | EUnnecessaryInvariant of Loc.t * reason
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
 
@@ -388,6 +389,7 @@ let util_use_op_of_msg nope util = function
 | EExperimentalOptionalChaining _
 | EOptionalChainingMethods _
 | EUnnecessaryOptionalChain _
+| EUnnecessaryInvariant _
 | EInexactSpread _
 | EDeprecatedCallSyntax _
   -> nope
@@ -2030,6 +2032,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text " will short-circuit the nullish case.";
     ]
 
+  | EUnnecessaryInvariant (loc, reason) ->
+    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryInvariant) loc [
+      text "This use of `invariant` is unnecessary because "; ref reason;
+      text " is always truthy."
+    ]
+
   | EInexactSpread (reason, reason_op) ->
     mk_error ~kind:(LintError Lints.InexactSpread) (loc_of_reason reason) [
       text "Cannot determine the type of "; ref reason_op; text " because ";
@@ -2049,6 +2057,7 @@ let is_lint_error = function
   | ESketchyNullLint _
   | ESketchyNumberLint _
   | EInexactSpread _
-  | EUnnecessaryOptionalChain _ ->
-    true
+  | EUnnecessaryOptionalChain _
+  | EUnnecessaryInvariant _
+      -> true
   | _ -> false

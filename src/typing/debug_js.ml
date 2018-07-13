@@ -797,6 +797,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) uses);
     ]
 
+  | InvariantT _ -> []
+
   | CallLatentPredT (_, sense, offset, l, t) -> [
       "sense", JSON_Bool sense;
       "offset", JSON_Number (spf "%d" offset);
@@ -2100,6 +2102,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ImportTypeofT _ -> p t
   | ImportTypeT _ -> p t
   | IntersectionPreprocessKitT _ -> p t
+  | InvariantT _ -> p t
   | LookupT (_, kind, _, prop, action) -> p ~extra:(spf "%S, %s, %s"
       (propref prop)
       (lookup_kind kind)
@@ -2795,6 +2798,8 @@ let dump_flow_error =
         spf "EOptionalChainingMethods (%s)" (string_of_loc loc)
     | EUnnecessaryOptionalChain (loc, _) ->
         spf "EUnnecessaryOptionalChain (%s)" (string_of_loc loc)
+    | EUnnecessaryInvariant (loc, _) ->
+        spf "EUnnecessaryInvariant (%s)" (string_of_loc loc)
     | EInexactSpread (reason, reason_op) ->
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)

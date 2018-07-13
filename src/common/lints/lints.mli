@@ -25,6 +25,7 @@ type lint_kind =
  | UnsafeGettersSetters
  | InexactSpread
  | UnnecessaryOptionalChain
+ | UnnecessaryInvariant
  | DeprecatedCallSyntax
 
 val string_of_kind: lint_kind -> string

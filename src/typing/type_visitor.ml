@@ -561,6 +561,8 @@ class ['a] t = object(self)
       self#use_type_ cx acc (apply_opt_use use tout)
     ) acc uses
 
+  | InvariantT _ -> acc
+
   | CallLatentPredT (_, _, _, t1, t2)
   | CallOpenPredT (_, _, _, t1, t2) ->
     let acc = self#type_ cx pole_TODO acc t1 in

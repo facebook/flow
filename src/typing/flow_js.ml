@@ -2424,6 +2424,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InternalT (OptionalChainVoidT r), u ->
       rec_flow cx trace (DefT (r, VoidT), u);
 
+    (*************)
+    (* invariant *)
+    (*************)
+
+    | _, InvariantT r' -> Context.mark_invariant cx (loc_of_reason r') (reason_of_t l) ~useful:(
+        match Type_filter.not_exists l with
+        | DefT (_, EmptyT) -> false
+        | _ -> true
+      )
+
     (***************)
     (* maybe types *)
     (***************)
