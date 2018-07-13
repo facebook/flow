@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-39"] (* sedlex inserts some unnecessary `rec`s *)
 
 open Token
 open Lex_env
