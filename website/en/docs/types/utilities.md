@@ -9,6 +9,7 @@ Table of contents:
 - [`$Keys<T>`](#toc-keys)
 - [`$Values<T>`](#toc-values)
 - [`$ReadOnly<T>`](#toc-readonly)
+- [`$ReadOnlyArray<T>`](#toc-readonlyarray)
 - [`$Exact<T>`](#toc-exact)
 - [`$Diff<A, B>`](#toc-diff)
 - [`$Rest<A, B>`](#toc-rest)
@@ -143,6 +144,19 @@ type Obj = {
 };
 
 type MappedObj = $ReadOnly<$ObjMap<Obj, TypeFn>> // Still read-only
+```
+
+## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
+
+Similar to `$ReadOnly<T>`, it is the supertype of all arrays and all tuples and represents an immutable array. It does not contain any methods that will allow an object of this type to be mutated (no `push()`, `pop()`, etc.)
+
+```js
+// @flow
+const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
+
+const first = readonlyArray[0] // Ok to read
+readonlyArray[1] = 20          // Error
+readonlyArray.push(4)          // Error
 ```
 
 ## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
