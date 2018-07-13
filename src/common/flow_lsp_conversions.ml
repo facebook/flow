@@ -77,6 +77,10 @@ let lsp_position_to_flow (position: Lsp.position): int * int =
   in
   (line, char)
 
+let flow_edit_to_textedit (edit: Loc.t * string): Lsp.TextEdit.t =
+  let loc, text = edit in
+  { Lsp.TextEdit.range = loc_to_lsp_range loc; newText = text }
+
 let lsp_DocumentIdentifier_to_flow
     (textDocument: Lsp.TextDocumentIdentifier.t)
     ~(client: Persistent_connection.single_client)
