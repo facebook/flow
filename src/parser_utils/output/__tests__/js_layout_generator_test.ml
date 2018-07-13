@@ -55,6 +55,7 @@ let tests = "js_layout_generator" >::: [
   "operator_precedence" >:: Operator_precedence_test.test;
   "assignment_precedence" >:: Assignment_precedence_test.test;
   "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
+  "objects" >::: Object_test.tests;
 
   "unary_plus_binary" >::
     begin fun ctxt ->
