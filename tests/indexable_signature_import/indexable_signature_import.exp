@@ -1,0 +1,26 @@
+A.js:5
+  5: const a: number = input.bar;
+                       ^^^^^^^^^ string. This type is incompatible with
+  5: const a: number = input.bar;
+              ^^^^^^ number
+
+A.js:7
+  7:   const b:number = input.foo; // should be an error
+                        ^^^^^^^^^ string. This type is incompatible with
+  7:   const b:number = input.foo; // should be an error
+               ^^^^^^ number
+
+A.js:8
+  8:   const c:number = input.bar; // checked earlier, so okay
+                        ^^^^^^^^^ string. This type is incompatible with
+  8:   const c:number = input.bar; // checked earlier, so okay
+               ^^^^^^ number
+
+A.js:14
+ 14:   const d:number = input.foo; // error as expected
+                        ^^^^^^^^^ string. This type is incompatible with
+ 14:   const d:number = input.foo; // error as expected
+               ^^^^^^ number
+
+
+Found 4 errors
