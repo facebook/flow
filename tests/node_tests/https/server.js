@@ -6,7 +6,7 @@ const server = https.createServer((req, res) => {
   res.end();
 });
 
-// server.listen(handle[, callback])
+// server.listen(handle[, backlog][, callback])
 // -
 // server.listen(handle);
 server.listen({});
@@ -19,37 +19,44 @@ server.listen({port: 8443, host: 'localhost', backlog: 123, exclusive: true}, ()
 server.listen({port: 8443, host: 'localhost', backlog: 123, exclusive: true}, function() {});
 server.listen({fd: '/var/run/mysocket'}, () => {});
 server.listen({fd: '/var/run/mysocket'}, function() {});
+// server.listen(handle, backlog);
+server.listen({fd: '/var/run/mysocket'}, 512);
+// server.listen(handle, backlog, callback)
+server.listen({fd: '/var/run/mysocket'}, 512, () => {});
 
-// server.listen(path[, callback])
+// server.listen(path[, backlog][, callback])
 // -
 // server.listen(path);
 server.listen('/var/run/mysocket');
+// server.listen(path, backlog);
+server.listen('/var/run/mysocket', 123);
 // server.listen(path, callback);
 server.listen('/var/run/mysocket', () => {});
 server.listen('/var/run/mysocket', function() {});
+// server.listen(path, backlog, callback);
+server.listen('/var/run/mysocket', 123, () => {});
 
-// server.listen([port][, hostname][, backlog][, callback])
+// server.listen([port[, host[, backlog]]][, callback])
 // -
 // server.listen()
 server.listen();
 // server.listen(port)
 server.listen(8000);
+// server.listen(port, callback)
+server.listen(8000, () => {});
 // server.listen(callback)
 server.listen(() => {});
 server.listen(function() {});
-// server.listen(hostname)
-server.listen('localhost');
 // server.listen(port, callback)
 server.listen(8000, () => {});
 server.listen(8000, function() {});
+// server.listen(port, hostname)
+server.listen(8000, 'localhost');
 // server.listen(port, hostname, callback)
 server.listen(8000, 'localhost', function() {});
-server.listen(8000, 'localhost');
-// server.listen(port, backlog, callback)
-server.listen(8000, 123, () => {});
-server.listen(8000, 123, function() {});
+// server.listen(port, hostname, backlog)
+server.listen(8000, 'localhost', 123);
 // server.listen(port, hostname, backlog, callback)
-server.listen(8000, 'localhost', 123, function() {});
 server.listen(8000, 'localhost', 123, function() {});
 
 // These should pass to ensure we don't break code passing undefined
@@ -70,8 +77,6 @@ server.listen({}, () => {}, 'localhost', 123);
 server.listen({}, function() {}, 'localhost', 123);
 server.listen({}, () => {}, 123);
 server.listen({}, function() {}, 123);
-server.listen(() => {}, 123);
-server.listen(function() {}, 123);
 server.listen(() => {}, 'localhost', 123);
 server.listen(function() {}, 'localhost', 123);
 server.listen(() => {}, 'localhost');

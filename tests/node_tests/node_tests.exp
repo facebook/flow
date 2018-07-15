@@ -44,17 +44,17 @@ Cannot cast `hmac.read()` to number because:
                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1597:24
-   1597|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1633:24
+   1633|   read(size?: number): ?(string | Buffer);
                                 ^^^^^^^^^^^^^^^^^^ [1]
    crypto/crypto.js:12:21
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1597:26
-   1597|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1633:26
+   1633|   read(size?: number): ?(string | Buffer);
                                   ^^^^^^ [3]
-   <BUILTINS>/node.js:1597:35
-   1597|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1633:35
+   1633|   read(size?: number): ?(string | Buffer);
                                            ^^^^^^ [4]
 
 
@@ -67,8 +67,8 @@ Cannot call `hmac.write` with `123` bound to `chunk` because number [1] is incom
                         ^^^ [1]
 
 References:
-   <BUILTINS>/node.js:1648:21
-   1648|     chunk: Buffer | string,
+   <BUILTINS>/node.js:1684:21
+   1684|     chunk: Buffer | string,
                              ^^^^^^ [2]
 
 
@@ -243,764 +243,552 @@ References:
                                            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- http/server.js:67:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:74:1
 
 Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
 type [2].
 
-   http/server.js:67:1
-     67| server.listen(() => {}, {});
+   http/server.js:74:1
+     74| server.listen(() => {}, {});
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:67:25
-     67| server.listen(() => {}, {});
+   http/server.js:74:25
+     74| server.listen(() => {}, {});
                                  ^^ [1]
-   <BUILTINS>/node.js:1266:39
-   1266|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:68:1
-
-Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
-type [2].
-
-   http/server.js:68:1
-     68| server.listen(function() {}, {});
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:68:30
-     68| server.listen(function() {}, {});
-                                      ^^ [1]
-   <BUILTINS>/node.js:1266:39
-   1266|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:69:1
-
-Cannot call `server.listen` because object literal [1] is incompatible with number [2].
-
-   http/server.js:69:1
-     69| server.listen({}, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:69:15
-     69| server.listen({}, () => {}, 'localhost', 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1260:19
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:70:1
-
-Cannot call `server.listen` because object literal [1] is incompatible with number [2].
-
-   http/server.js:70:1
-     70| server.listen({}, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:70:15
-     70| server.listen({}, function() {}, 'localhost', 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1260:19
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:71:1
-
-Cannot call `server.listen` because:
- - Either object literal [1] is incompatible with number [2].
- - Or object literal [1] is incompatible with number [3].
- - Or object literal [1] is incompatible with number [4].
-
-   http/server.js:71:1
-     71| server.listen({}, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:71:15
-     71| server.listen({}, () => {}, 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1260:19
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:19
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:19
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:72:1
-
-Cannot call `server.listen` because:
- - Either object literal [1] is incompatible with number [2].
- - Or object literal [1] is incompatible with number [3].
- - Or object literal [1] is incompatible with number [4].
-
-   http/server.js:72:1
-     72| server.listen({}, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:72:15
-     72| server.listen({}, function() {}, 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1260:19
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:19
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:19
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:73:1
-
-Cannot call `server.listen` because number [1] is incompatible with function type [2].
-
-   http/server.js:73:1
-     73| server.listen(() => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:73:25
-     73| server.listen(() => {}, 123);
-                                 ^^^ [1]
-   <BUILTINS>/node.js:1266:39
-   1266|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- http/server.js:74:1
-
-Cannot call `server.listen` because number [1] is incompatible with function type [2].
-
-   http/server.js:74:1
-     74| server.listen(function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   http/server.js:74:30
-     74| server.listen(function() {}, 123);
-                                      ^^^ [1]
-   <BUILTINS>/node.js:1266:39
-   1266|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   <BUILTINS>/node.js:1381:37
+   1381|   listen(handle: Object, callback?: Function): this;
+                                             ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:75:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with number [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with number [4].
+Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
+type [2].
 
    http/server.js:75:1
-     75| server.listen(() => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     75| server.listen(function() {}, {});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:75:15
-     75| server.listen(() => {}, 'localhost', 123);
-                       ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:19
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:19
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:19
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
+   http/server.js:75:30
+     75| server.listen(function() {}, {});
+                                      ^^ [1]
+   <BUILTINS>/node.js:1381:37
+   1381|   listen(handle: Object, callback?: Function): this;
+                                             ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:76:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with number [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with number [4].
+Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
    http/server.js:76:1
-     76| server.listen(function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     76| server.listen({}, () => {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    http/server.js:76:15
-     76| server.listen(function() {}, 'localhost', 123);
-                       ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:19
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:19
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:19
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
+     76| server.listen({}, () => {}, 'localhost', 123);
+                       ^^ [1]
+   <BUILTINS>/node.js:1377:16
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:77:1
 
-Cannot call `server.listen` because string [1] is incompatible with function type [2].
+Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
    http/server.js:77:1
-     77| server.listen(() => {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     77| server.listen({}, function() {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:77:25
-     77| server.listen(() => {}, 'localhost');
-                                 ^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1266:39
-   1266|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   http/server.js:77:15
+     77| server.listen({}, function() {}, 'localhost', 123);
+                       ^^ [1]
+   <BUILTINS>/node.js:1377:16
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:78:1
 
-Cannot call `server.listen` because string [1] is incompatible with function type [2].
+Cannot call `server.listen` because function [1] is incompatible with number [2].
 
    http/server.js:78:1
-     78| server.listen(function() {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     78| server.listen({}, () => {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:78:30
-     78| server.listen(function() {}, 'localhost');
-                                      ^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1266:39
-   1266|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   http/server.js:78:19
+     78| server.listen({}, () => {}, 123);
+                           ^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:79:1
 
-Cannot call `server.listen` because function [1] is incompatible with string [2].
+Cannot call `server.listen` because function [1] is incompatible with number [2].
 
    http/server.js:79:1
-     79| server.listen(8080, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     79| server.listen({}, function() {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:79:21
-     79| server.listen(8080, () => {}, 'localhost', 123);
-                             ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:38
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
+   http/server.js:79:19
+     79| server.listen({}, function() {}, 123);
+                           ^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:80:1
 
-Cannot call `server.listen` because function [1] is incompatible with string [2].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    http/server.js:80:1
-     80| server.listen(8080, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     80| server.listen(() => {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:80:21
-     80| server.listen(8080, function() {}, 'localhost', 123);
-                             ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:38
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
+   http/server.js:80:25
+     80| server.listen(() => {}, 'localhost', 123);
+                                 ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:81:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    http/server.js:81:1
-     81| server.listen(8080, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     81| server.listen(function() {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:81:21
-     81| server.listen(8080, () => {}, 123);
-                             ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:38
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:37
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:38
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   http/server.js:81:30
+     81| server.listen(function() {}, 'localhost', 123);
+                                      ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:82:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    http/server.js:82:1
-     82| server.listen(8080, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     82| server.listen(() => {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:82:21
-     82| server.listen(8080, function() {}, 123);
-                             ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:38
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:37
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:38
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   http/server.js:82:25
+     82| server.listen(() => {}, 'localhost');
+                                 ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:83:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    http/server.js:83:1
-     83| server.listen(8080, () => {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     83| server.listen(function() {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   http/server.js:83:21
-     83| server.listen(8080, () => {}, 'localhost');
-                             ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:38
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:37
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:38
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   http/server.js:83:30
+     83| server.listen(function() {}, 'localhost');
+                                      ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- http/server.js:84:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because function [1] is incompatible with string [2].
 
    http/server.js:84:1
-     84| server.listen(8080, function() {}, 'localhost');
+     84| server.listen(8080, () => {}, 'localhost', 123);
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    http/server.js:84:21
-     84| server.listen(8080, function() {}, 'localhost');
+     84| server.listen(8080, () => {}, 'localhost', 123);
+                             ^^^^^^^^ [1]
+   <BUILTINS>/node.js:1377:31
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- http/server.js:85:1
+
+Cannot call `server.listen` because function [1] is incompatible with string [2].
+
+   http/server.js:85:1
+     85| server.listen(8080, function() {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   http/server.js:85:21
+     85| server.listen(8080, function() {}, 'localhost', 123);
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1260:38
-   1260|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1262:37
-   1262|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1263:38
-   1263|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   <BUILTINS>/node.js:1377:31
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:67:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:86:1
 
-Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
-type [2].
+Cannot call `server.listen` because number [1] is incompatible with string [2].
 
-   https/server.js:67:1
-     67| server.listen(() => {}, {});
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   http/server.js:86:1
+     86| server.listen(8080, () => {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:67:25
-     67| server.listen(() => {}, {});
-                                 ^^ [1]
-   <BUILTINS>/node.js:1306:39
-   1306|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   http/server.js:86:15
+     86| server.listen(8080, () => {}, 123);
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:68:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:87:1
 
-Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
-type [2].
+Cannot call `server.listen` because number [1] is incompatible with string [2].
 
-   https/server.js:68:1
-     68| server.listen(function() {}, {});
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   https/server.js:68:30
-     68| server.listen(function() {}, {});
-                                      ^^ [1]
-   <BUILTINS>/node.js:1306:39
-   1306|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- https/server.js:69:1
-
-Cannot call `server.listen` because object literal [1] is incompatible with number [2].
-
-   https/server.js:69:1
-     69| server.listen({}, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   http/server.js:87:1
+     87| server.listen(8080, function() {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:69:15
-     69| server.listen({}, () => {}, 'localhost', 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1300:19
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
+   http/server.js:87:15
+     87| server.listen(8080, function() {}, 123);
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:70:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:88:1
 
-Cannot call `server.listen` because object literal [1] is incompatible with number [2].
+Cannot call `server.listen` because number [1] is incompatible with string [2].
 
-   https/server.js:70:1
-     70| server.listen({}, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   https/server.js:70:15
-     70| server.listen({}, function() {}, 'localhost', 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1300:19
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- https/server.js:71:1
-
-Cannot call `server.listen` because:
- - Either object literal [1] is incompatible with number [2].
- - Or object literal [1] is incompatible with number [3].
- - Or object literal [1] is incompatible with number [4].
-
-   https/server.js:71:1
-     71| server.listen({}, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   http/server.js:88:1
+     88| server.listen(8080, () => {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:71:15
-     71| server.listen({}, () => {}, 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1300:19
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:19
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:19
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
+   http/server.js:88:15
+     88| server.listen(8080, () => {}, 'localhost');
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- https/server.js:72:1
+Error ---------------------------------------------------------------------------------------------- http/server.js:89:1
 
-Cannot call `server.listen` because:
- - Either object literal [1] is incompatible with number [2].
- - Or object literal [1] is incompatible with number [3].
- - Or object literal [1] is incompatible with number [4].
+Cannot call `server.listen` because number [1] is incompatible with string [2].
 
-   https/server.js:72:1
-     72| server.listen({}, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   http/server.js:89:1
+     89| server.listen(8080, function() {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:72:15
-     72| server.listen({}, function() {}, 123);
-                       ^^ [1]
-   <BUILTINS>/node.js:1300:19
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:19
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:19
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
-
-
-Error --------------------------------------------------------------------------------------------- https/server.js:73:1
-
-Cannot call `server.listen` because number [1] is incompatible with function type [2].
-
-   https/server.js:73:1
-     73| server.listen(() => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   https/server.js:73:25
-     73| server.listen(() => {}, 123);
-                                 ^^^ [1]
-   <BUILTINS>/node.js:1306:39
-   1306|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   http/server.js:89:15
+     89| server.listen(8080, function() {}, 'localhost');
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:74:1
 
-Cannot call `server.listen` because number [1] is incompatible with function type [2].
+Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
+type [2].
 
    https/server.js:74:1
-     74| server.listen(function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     74| server.listen(() => {}, {});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:74:30
-     74| server.listen(function() {}, 123);
-                                      ^^^ [1]
-   <BUILTINS>/node.js:1306:39
-   1306|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   https/server.js:74:25
+     74| server.listen(() => {}, {});
+                                 ^^ [1]
+   <BUILTINS>/node.js:1381:37
+   1381|   listen(handle: Object, callback?: Function): this;
+                                             ^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:75:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with number [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with number [4].
+Cannot call `server.listen` because a callable signature is missing in object literal [1] but exists in function
+type [2].
 
    https/server.js:75:1
-     75| server.listen(() => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     75| server.listen(function() {}, {});
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:75:15
-     75| server.listen(() => {}, 'localhost', 123);
-                       ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:19
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:19
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:19
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
+   https/server.js:75:30
+     75| server.listen(function() {}, {});
+                                      ^^ [1]
+   <BUILTINS>/node.js:1381:37
+   1381|   listen(handle: Object, callback?: Function): this;
+                                             ^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:76:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with number [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with number [4].
+Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
    https/server.js:76:1
-     76| server.listen(function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     76| server.listen({}, () => {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    https/server.js:76:15
-     76| server.listen(function() {}, 'localhost', 123);
-                       ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:19
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:19
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                           ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:19
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                           ^^^^^^ [4]
+     76| server.listen({}, () => {}, 'localhost', 123);
+                       ^^ [1]
+   <BUILTINS>/node.js:1377:16
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:77:1
 
-Cannot call `server.listen` because string [1] is incompatible with function type [2].
+Cannot call `server.listen` because object literal [1] is incompatible with number [2].
 
    https/server.js:77:1
-     77| server.listen(() => {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     77| server.listen({}, function() {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:77:25
-     77| server.listen(() => {}, 'localhost');
-                                 ^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1306:39
-   1306|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   https/server.js:77:15
+     77| server.listen({}, function() {}, 'localhost', 123);
+                       ^^ [1]
+   <BUILTINS>/node.js:1377:16
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:78:1
 
-Cannot call `server.listen` because string [1] is incompatible with function type [2].
+Cannot call `server.listen` because function [1] is incompatible with number [2].
 
    https/server.js:78:1
-     78| server.listen(function() {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     78| server.listen({}, () => {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:78:30
-     78| server.listen(function() {}, 'localhost');
-                                      ^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1306:39
-   1306|     listen(handle: Object, callback?: Function): Server;
-                                               ^^^^^^^^ [2]
+   https/server.js:78:19
+     78| server.listen({}, () => {}, 123);
+                           ^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:79:1
 
-Cannot call `server.listen` because function [1] is incompatible with string [2].
+Cannot call `server.listen` because function [1] is incompatible with number [2].
 
    https/server.js:79:1
-     79| server.listen(8443, () => {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     79| server.listen({}, function() {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:79:21
-     79| server.listen(8443, () => {}, 'localhost', 123);
-                             ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:38
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
+   https/server.js:79:19
+     79| server.listen({}, function() {}, 123);
+                           ^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:80:1
 
-Cannot call `server.listen` because function [1] is incompatible with string [2].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    https/server.js:80:1
-     80| server.listen(8443, function() {}, 'localhost', 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     80| server.listen(() => {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:80:21
-     80| server.listen(8443, function() {}, 'localhost', 123);
-                             ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:38
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
+   https/server.js:80:25
+     80| server.listen(() => {}, 'localhost', 123);
+                                 ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:81:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    https/server.js:81:1
-     81| server.listen(8443, () => {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     81| server.listen(function() {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:81:21
-     81| server.listen(8443, () => {}, 123);
-                             ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:38
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:37
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:38
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   https/server.js:81:30
+     81| server.listen(function() {}, 'localhost', 123);
+                                      ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:82:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    https/server.js:82:1
-     82| server.listen(8443, function() {}, 123);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     82| server.listen(() => {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:82:21
-     82| server.listen(8443, function() {}, 123);
-                             ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:38
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:37
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:38
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   https/server.js:82:25
+     82| server.listen(() => {}, 'localhost');
+                                 ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:83:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because string [1] is incompatible with number [2].
 
    https/server.js:83:1
-     83| server.listen(8443, () => {}, 'localhost');
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     83| server.listen(function() {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   https/server.js:83:21
-     83| server.listen(8443, () => {}, 'localhost');
-                             ^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:38
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:37
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:38
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   https/server.js:83:30
+     83| server.listen(function() {}, 'localhost');
+                                      ^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1380:36
+   1380|   listen(handle: Object, backlog?: number, callback?: Function): this;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- https/server.js:84:1
 
-Cannot call `server.listen` because:
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
- - Or function [1] is incompatible with string [4].
+Cannot call `server.listen` because function [1] is incompatible with string [2].
 
    https/server.js:84:1
-     84| server.listen(8443, function() {}, 'localhost');
+     84| server.listen(8443, () => {}, 'localhost', 123);
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    https/server.js:84:21
-     84| server.listen(8443, function() {}, 'localhost');
+     84| server.listen(8443, () => {}, 'localhost', 123);
+                             ^^^^^^^^ [1]
+   <BUILTINS>/node.js:1377:31
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- https/server.js:85:1
+
+Cannot call `server.listen` because function [1] is incompatible with string [2].
+
+   https/server.js:85:1
+     85| server.listen(8443, function() {}, 'localhost', 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   https/server.js:85:21
+     85| server.listen(8443, function() {}, 'localhost', 123);
                              ^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1300:38
-   1300|     listen(port?: number, hostname?: string, backlog?: number, callback?: Function): Server;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1302:37
-   1302|     listen(port?: number, backlog?: number, callback?: Function): Server;
-                                             ^^^^^^ [3]
-   <BUILTINS>/node.js:1303:38
-   1303|     listen(port?: number, hostname?: string, callback?: Function): Server;
-                                              ^^^^^^ [4]
+   <BUILTINS>/node.js:1377:31
+   1377|   listen(port: number, host?: string, backlog?: number, callback?: Function): this;
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- https/server.js:86:1
+
+Cannot call `server.listen` because number [1] is incompatible with string [2].
+
+   https/server.js:86:1
+     86| server.listen(8443, () => {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   https/server.js:86:15
+     86| server.listen(8443, () => {}, 123);
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- https/server.js:87:1
+
+Cannot call `server.listen` because number [1] is incompatible with string [2].
+
+   https/server.js:87:1
+     87| server.listen(8443, function() {}, 123);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   https/server.js:87:15
+     87| server.listen(8443, function() {}, 123);
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- https/server.js:88:1
+
+Cannot call `server.listen` because number [1] is incompatible with string [2].
+
+   https/server.js:88:1
+     88| server.listen(8443, () => {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   https/server.js:88:15
+     88| server.listen(8443, () => {}, 'localhost');
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- https/server.js:89:1
+
+Cannot call `server.listen` because number [1] is incompatible with string [2].
+
+   https/server.js:89:1
+     89| server.listen(8443, function() {}, 'localhost');
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   https/server.js:89:15
+     89| server.listen(8443, function() {}, 'localhost');
+                       ^^^^ [1]
+   <BUILTINS>/node.js:1378:16
+   1378|   listen(path: string, backlog?: number, callback?: Function): this;
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------- invalid_package_file/package.json:1:1
@@ -1223,8 +1011,8 @@ Cannot cast `u1.username` to `Buffer` because string [1] is incompatible with `B
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1464:13
-   1464|   username: string,
+   <BUILTINS>/node.js:1500:13
+   1500|   username: string,
                      ^^^^^^ [1]
    os/userInfo.js:7:15
       7| (u1.username: Buffer); // error
@@ -1240,8 +1028,8 @@ Cannot cast `u2.username` to `Buffer` because string [1] is incompatible with `B
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1464:13
-   1464|   username: string,
+   <BUILTINS>/node.js:1500:13
+   1500|   username: string,
                      ^^^^^^ [1]
    os/userInfo.js:11:15
      11| (u2.username: Buffer); // error
@@ -1257,8 +1045,8 @@ Cannot cast `u3.username` to string because `Buffer` [1] is incompatible with st
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1456:13
-   1456|   username: Buffer,
+   <BUILTINS>/node.js:1492:13
+   1492|   username: Buffer,
                      ^^^^^^ [1]
    os/userInfo.js:14:15
      14| (u3.username: string); // error
@@ -1334,8 +1122,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2225:21
-   2225|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2257:21
+   2257|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1353,26 +1141,26 @@ Cannot call `process.emitWarning` because:
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2197:24
-   2197|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2229:24
+   2229|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2197:33
-   2197|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2229:33
+   2229|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2198:3
-   2198|   emitWarning(warning: string, typeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:2230:3
+   2230|   emitWarning(warning: string, typeOrCtor: string | Function): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2199:3
-   2199|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:2231:3
+   2231|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2200:3
+   <BUILTINS>/node.js:2232:3
            v-----------
-   2200|   emitWarning(
-   2201|     warning: string,
-   2202|     type: string,
-   2203|     code: string,
-   2204|     ctor?: Function
-   2205|   ): void;
+   2232|   emitWarning(
+   2233|     warning: string,
+   2234|     type: string,
+   2235|     code: string,
+   2236|     ctor?: Function
+   2237|   ): void;
            ------^ [6]
 
 
@@ -1391,14 +1179,14 @@ References:
    process/process.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2198:24
-   2198|   emitWarning(warning: string, typeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:2230:24
+   2230|   emitWarning(warning: string, typeOrCtor: string | Function): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2199:24
-   2199|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:2231:24
+   2231|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2201:14
-   2201|     warning: string,
+   <BUILTINS>/node.js:2233:14
+   2233|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1416,11 +1204,11 @@ References:
    process/process.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2199:38
-   2199|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   <BUILTINS>/node.js:2231:38
+   2231|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2202:11
-   2202|     type: string,
+   <BUILTINS>/node.js:2234:11
+   2234|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1436,8 +1224,8 @@ References:
    process/process.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2203:11
-   2203|     code: string,
+   <BUILTINS>/node.js:2235:11
+   2235|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1450,8 +1238,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2197:41
-   2197|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2229:41
+   2229|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/process.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -1459,7 +1247,7 @@ References:
 
 
 
-Found 77 errors
+Found 73 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
