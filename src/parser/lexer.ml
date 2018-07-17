@@ -147,8 +147,10 @@ let loc_of_lexbuf env (lexbuf: Sedlexing.lexbuf) =
   let end_offset = Sedlexing.lexeme_end lexbuf in
   loc_of_offsets env start_offset end_offset
 
-let get_result_and_clear_state (env, lex_token) =
-  let env, state = get_and_clear_state env in
+let get_result_and_clear_state (env, lex_token, lex_comments) =
+  let env, {
+    lex_errors_acc;
+  } = get_and_clear_state env in
   let lex_loc = match lex_token with
   | T_STRING (loc, _, _, _) -> loc
   | T_JSX_TEXT (loc, _, _) -> loc
@@ -156,16 +158,16 @@ let get_result_and_clear_state (env, lex_token) =
   | T_REGEXP (loc, _, _) -> loc
   | _ -> loc_of_lexbuf env env.lex_lb
   in
-  env, {
-    Lex_result.lex_token;
+  env, { Lex_result.
+    lex_token;
     lex_loc;
-    lex_errors = List.rev state.lex_errors_acc;
-    lex_comments = List.rev state.lex_comments_acc;
+    lex_errors = List.rev lex_errors_acc;
+    lex_comments;
   }
 
 let lex_error (env: Lex_env.t) loc err: Lex_env.t =
   let lex_errors_acc = (loc, err)::env.lex_state.lex_errors_acc in
-  { env with lex_state = { env.lex_state with lex_errors_acc; } }
+  { env with lex_state = { lex_errors_acc; } }
 
 let unexpected_error (env: Lex_env.t) (loc: Loc.t) value =
   lex_error env loc (Parse_error.UnexpectedToken value)
@@ -1742,22 +1744,6 @@ let type_token env lexbuf =
   | _ -> failwith "unreachable"
 
 
-let save_comment
-  (env: Lex_env.t)
-  (comment: Loc.t Ast.Comment.t)
-: Lex_env.t =
-  let lex_comments_acc = comment :: env.lex_state.lex_comments_acc in
-  { env with lex_state = { env.lex_state with lex_comments_acc; } }
-
-let regexp =
-  let rec helper env =
-    match regexp env env.lex_lb with
-    | Token (env, t) -> env, t
-    | Comment (env, comment) -> helper (save_comment env comment)
-    | Continue env -> helper env
-  in
-  fun env -> get_result_and_clear_state (helper env)
-
 (* Lexing JSX children requires a string buffer to keep track of whitespace
  * *)
 let jsx_child env =
@@ -1766,40 +1752,19 @@ let jsx_child env =
   let buf = Buffer.create 127 in
   let raw = Buffer.create 127 in
   let env, child = jsx_child env start buf raw env.lex_lb in
-  get_result_and_clear_state (env, child)
+  get_result_and_clear_state (env, child, [])
 
-let jsx_tag =
-  let rec helper env =
-    match jsx_tag env env.lex_lb with
-    | Token (env, t) -> env, t
-    | Comment (env, comment) -> helper (save_comment env comment)
-    | Continue env -> helper env
+let wrap f =
+  let rec helper comments env =
+    match f env env.lex_lb with
+    | Token (env, t) -> env, t, List.rev comments
+    | Comment (env, comment) -> helper (comment::comments) env
+    | Continue env -> helper comments env
   in
-  fun env -> get_result_and_clear_state (helper env)
+  fun env -> get_result_and_clear_state (helper [] env)
 
-let template_tail =
-  let rec helper env =
-    match template_tail env env.lex_lb with
-    | Token (env, t) -> env, t
-    | Comment (env, comment) -> helper (save_comment env comment)
-    | Continue env -> helper env
-  in
-  fun env -> get_result_and_clear_state (helper env)
-
-let type_token =
-  let rec helper env =
-    match type_token env env.lex_lb with
-    | Token (env, t) -> env, t
-    | Comment (env, comment) -> helper (save_comment env comment)
-    | Continue env -> helper env
-  in
-  fun env -> get_result_and_clear_state (helper env)
-
-let token =
-  let rec helper env =
-    match token env env.lex_lb with
-    | Token (env, t) -> env, t
-    | Comment (env, comment) -> helper (save_comment env comment)
-    | Continue env -> helper env
-  in
-  fun env -> get_result_and_clear_state (helper env)
+let regexp = wrap regexp
+let jsx_tag = wrap jsx_tag
+let template_tail = wrap template_tail
+let type_token = wrap type_token
+let token = wrap token
