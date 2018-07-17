@@ -1005,30 +1005,30 @@ let rec regexp_body env buf lexbuf =
   | _ -> failwith "unreachable"
 
 
-let rec regexp env lexbuf =
+let regexp env lexbuf =
   match%sedlex lexbuf with
-  | eof -> env, T_EOF
+  | eof -> Token (env, T_EOF)
 
   | line_terminator_sequence ->
     let env = new_line env lexbuf in
-    regexp env lexbuf
+    Continue env
 
   | Plus whitespace ->
-    regexp env lexbuf
+    Continue env
 
   | "//" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
     let env = save_comment env start_pos end_pos buf false in
-    regexp env lexbuf
+    Continue env
 
   | "/*" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
     let env = save_comment env start_pos end_pos buf true in
-    regexp env lexbuf
+    Continue env
 
   | '/' ->
     let start = start_pos_of_lexbuf env lexbuf in
@@ -1036,11 +1036,11 @@ let rec regexp env lexbuf =
     let env, flags = regexp_body env buf lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    env, T_REGEXP (loc, Buffer.contents buf, flags)
+    Token (env, T_REGEXP (loc, Buffer.contents buf, flags))
 
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, T_ERROR (lexeme lexbuf)
+    Token (env, T_ERROR (lexeme lexbuf))
 
   | _ -> failwith "unreachable"
 
@@ -1457,28 +1457,28 @@ let jsx_child env start buf raw lexbuf =
   | _ -> failwith "unreachable"
 
 
-let rec template_tail env lexbuf =
+let template_tail env lexbuf =
   match%sedlex lexbuf with
   | line_terminator_sequence ->
     let env = new_line env lexbuf in
-    template_tail env lexbuf
+    Continue env
 
   | Plus whitespace ->
-    template_tail env lexbuf
+    Continue env
 
   | "//" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
     let env = save_comment env start_pos end_pos buf false in
-    template_tail env lexbuf
+    Continue env
 
   | "/*" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
     let env = save_comment env start_pos end_pos buf true in
-    template_tail env lexbuf
+    Continue env
 
   | '}' ->
     let start = start_pos_of_lexbuf env lexbuf in
@@ -1489,7 +1489,7 @@ let rec template_tail env lexbuf =
     let env, is_tail = template_part env cooked raw literal lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    env, (T_TEMPLATE_PART (loc, {
+    Token (env, T_TEMPLATE_PART (loc, {
       cooked = Buffer.contents cooked;
       raw = Buffer.contents raw;
       literal = Buffer.contents literal;
@@ -1497,7 +1497,7 @@ let rec template_tail env lexbuf =
 
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, (T_TEMPLATE_PART (
+    Token (env, T_TEMPLATE_PART (
       loc_of_lexbuf env lexbuf,
       { cooked = ""; raw = ""; literal = ""; },
       true
@@ -1753,8 +1753,13 @@ let type_token env lexbuf =
 
   | _ -> failwith "unreachable"
 
-let regexp env =
-  get_result_and_clear_state (regexp env env.lex_lb)
+let regexp =
+  let rec helper env =
+    match regexp env env.lex_lb with
+    | Token (env, t) -> env, t
+    | Continue env -> helper env
+  in
+  fun env -> get_result_and_clear_state (helper env)
 
 (* Lexing JSX children requires a string buffer to keep track of whitespace
  * *)
@@ -1766,24 +1771,29 @@ let jsx_child env =
   let env, child = jsx_child env start buf raw env.lex_lb in
   get_result_and_clear_state (env, child)
 
-let jsx_tag env =
+let jsx_tag =
   let rec helper env =
     match jsx_tag env env.lex_lb with
     | Token (env, t) -> env, t
     | Continue env -> helper env
   in
-  get_result_and_clear_state (helper env)
+  fun env -> get_result_and_clear_state (helper env)
 
-let template_tail env =
-  get_result_and_clear_state (template_tail env env.lex_lb)
+let template_tail =
+  let rec helper env =
+    match template_tail env env.lex_lb with
+    | Token (env, t) -> env, t
+    | Continue env -> helper env
+  in
+  fun env -> get_result_and_clear_state (helper env)
 
-let type_token env =
+let type_token =
   let rec helper env =
     match type_token env env.lex_lb with
     | Token (env, t) -> env, t
     | Continue env -> helper env
   in
-  get_result_and_clear_state (helper env)
+  fun env -> get_result_and_clear_state (helper env)
 
 let token =
   let rec helper env =
