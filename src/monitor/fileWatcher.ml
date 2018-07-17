@@ -18,20 +18,24 @@ exception FileWatcherDied of exn
 class type watcher =
   object
     method name: string
-    method init: unit Lwt.t
+    method start_init: unit
+    method wait_for_init: unit Lwt.t
     method get_and_clear_changed_files: SSet.t Lwt.t
     method wait_for_changed_files: unit Lwt.t
     method stop: unit Lwt.t
     method waitpid: Unix.process_status Lwt.t
+    method getpid: int option
   end
 
 class dummy : watcher = object
   method name = "dummy"
-  method init = Lwt.return_unit
+  method start_init = ()
+  method wait_for_init = Lwt.return_unit
   method get_and_clear_changed_files = Lwt.return SSet.empty
   method wait_for_changed_files = Lwt.return_unit
   method stop = Lwt.return_unit
   method waitpid = let wait_forever_thread, _ = Lwt.task () in wait_forever_thread
+  method getpid = None
 end
 
 class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
@@ -46,7 +50,7 @@ class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
       | None -> failwith "Dfind was not initialized"
       | Some dfind -> dfind
 
-    method init =
+    method start_init =
       let file_options =
         Options.file_options monitor_options.FlowServerMonitorOptions.server_options
       in
@@ -54,9 +58,10 @@ class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
       let null_fd = Daemon.null_fd () in
       let fds = (null_fd, null_fd, null_fd) in
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
-      let%lwt () = DfindLibLwt.wait_until_ready dfind in
-      dfind_instance <- Some dfind;
-      Lwt.return_unit
+      dfind_instance <- Some dfind
+
+    method wait_for_init =
+      DfindLibLwt.wait_until_ready (self#get_dfind)
 
     (* We don't want two threads to talk to dfind at the same time. And we don't want those two
      * threads to get the same file change events *)
@@ -102,6 +107,10 @@ class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
       let pid = DfindLibLwt.pid dfind in
       let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
       Lwt.return status
+
+    method getpid =
+      let dfind = self#get_dfind in
+      Some (DfindLibLwt.pid dfind)
   end
 
 module WatchmanFileWatcher : sig
@@ -202,6 +211,7 @@ end = struct
   class watchman (monitor_options: FlowServerMonitorOptions.t) : watcher =
     object (self)
       val mutable env = None
+      val mutable init_thread = None
 
       method name = "watchman"
 
@@ -210,7 +220,7 @@ end = struct
         | None -> failwith "Watchman was not initialized"
         | Some env -> env
 
-      method init =
+      method start_init =
         let { FlowServerMonitorOptions.server_options; file_watcher_debug; _; } = monitor_options in
         let file_options = Options.file_options server_options in
 
@@ -265,7 +275,7 @@ end = struct
           ]
         in
 
-        let%lwt watchman = Watchman_lwt.init {
+        init_thread <- Some (Watchman_lwt.init {
           (* Defer updates during `hg.update` *)
           Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
           (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
@@ -275,7 +285,11 @@ end = struct
           subscription_prefix = "flow_watcher";
           roots = Files.watched_paths file_options;
           debug_logging = file_watcher_debug;
-        } in
+        })
+
+      method wait_for_init =
+        let%lwt watchman = Option.value_exn init_thread in
+        init_thread <- None;
 
         begin match watchman with
         | Some watchman ->
@@ -316,6 +330,8 @@ end = struct
          * dies and this method can just wait forever *)
         let waiter, _ = Lwt.task () in
         waiter
+
+      method getpid = None
     end
 
 end
