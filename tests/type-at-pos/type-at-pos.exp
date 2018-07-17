@@ -493,6 +493,21 @@ class-3.js:10:9 = {
   "start":9,
   "end":9
 }
+class-bound.js:4:6 = {
+  "type":"type C<T: R<any>> = class R",
+  "reasons":[],
+  "loc":{
+    "source":"class-bound.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":6,"offset":29},
+    "end":{"line":4,"column":6,"offset":30}
+  },
+  "path":"class-bound.js",
+  "line":4,
+  "endline":4,
+  "start":6,
+  "end":6
+}
 class-getters-setters.js:6:7 = {
   "type":"string",
   "reasons":[],
@@ -749,7 +764,7 @@ class-statics.js:17:5 = {
   "end":5
 }
 class-statics.js:20:11 = {
-  "type":"(unknown)",
+  "type":"this",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -1750,6 +1765,27 @@ import-default.js:3:16 = {
   "start":13,
   "end":25
 }
+import-typeof-class.js:5:16 {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "structural":false,
+    "typeParams":null
+  },
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"import-typeof-class.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":16,"offset":69},
+    "end":{"line":5,"column":16,"offset":70}
+  },
+  "path":"import-typeof-class.js",
+  "line":5,
+  "endline":5,
+  "start":16,
+  "end":16
+}
 object_special_cases.js:6:32 = {
   "type":"string",
   "reasons":[],
@@ -2396,7 +2432,7 @@ predicates.js - if (Array.isArray(y.FOO)): {
   "end":23
 }
 react_component.js:3:9 = {
-  "type":"{|Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T, Component: class React$Component<Props, State = void>, ComponentType: type ComponentType<P> = React$ComponentType<P>, DOM: any, Element: type Element<+C> = React$Element<C>, ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, ElementProps: type ElementProps<C> = React$ElementProps<C>, ElementRef: type ElementRef<C> = React$ElementRef<C>, ElementType: type ElementType = React$ElementType, Fragment: ({children: React$Node}) => React$Node, Key: type Key = React$Key, Node: type Node = React$Node, Portal: type Portal = React$Portal, PropTypes: ReactPropTypes, PureComponent: class React$PureComponent<Props, State = void>, Ref: type Ref<C> = React$Ref<C>, StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, cloneElement: React$CloneElement, createClass: React$CreateClass, createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, createElement: React$CreateElement, createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +Fragment: ({children: React$Node}) => React$Node, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => {Consumer: React$ComponentType<{children: (value: T) => React$Node}>, Provider: React$ComponentType<{value: T}>}, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +isValidElement: (element: any) => boolean, +version: string|}, isValidElement: (element: any) => boolean, version: string|}",
+  "type":"{|Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T, Component: class React$Component<Props, State = void>, ComponentType: type ComponentType<P> = React$ComponentType<P>, Context: type Context<T> = React$Context<T>, DOM: any, Element: type Element<+C> = React$Element<C>, ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, ElementProps: type ElementProps<C> = React$ElementProps<C>, ElementRef: type ElementRef<C> = React$ElementRef<C>, ElementType: type ElementType = React$ElementType, Fragment: ({children: React$Node}) => React$Node, Key: type Key = React$Key, Node: type Node = React$Node, Portal: type Portal = React$Portal, PropTypes: ReactPropTypes, PureComponent: class React$PureComponent<Props, State = void>, Ref: type Ref<C> = React$Ref<C>, StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, cloneElement: React$CloneElement, createClass: React$CreateClass, createContext: <T>(defaultValue: T) => React$Context<T>, createElement: React$CreateElement, createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +Fragment: ({children: React$Node}) => React$Node, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +isValidElement: (element: any) => boolean, +version: string|}, isValidElement: (element: any) => boolean, version: string|}",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -2502,7 +2538,7 @@ react_component.js:32:13 = {
     "kind":"Generic",
     "typeArgs":[{"kind":"Num"}],
     "type":{
-      "provenance":{"kind":"Library","loc":"[LIB] react.js:236:42-63"},
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:242:42-63"},
       "name":"ComponentType"
     },
     "structural":false
@@ -2525,7 +2561,7 @@ react_component.js:32:29 = {
   "expanded_type":{
     "kind":"TypeAlias",
     "name":{
-      "provenance":{"kind":"Library","loc":"[LIB] react.js:236:42-63"},
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:242:42-63"},
       "name":"ComponentType"
     },
     "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}],
@@ -2807,6 +2843,456 @@ test.js:14:7 = {
   "endline":14,
   "start":7,
   "end":7
+}
+type-destructor.js:3:6 = {
+  "type":"type C = {|f: ?string|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":6,"offset":15},
+    "end":{"line":3,"column":6,"offset":16}
+  },
+  "path":"type-destructor.js",
+  "line":3,
+  "endline":3,
+  "start":6,
+  "end":6
+}
+type-destructor.js:4:6 = {
+  "type":"type D = {|f: ?string|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":6,"offset":42},
+    "end":{"line":4,"column":6,"offset":43}
+  },
+  "path":"type-destructor.js",
+  "line":4,
+  "endline":4,
+  "start":6,
+  "end":6
+}
+type-destructor.js:5:6 = {
+  "type":"type E = {+x: number}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":6,"offset":83},
+    "end":{"line":5,"column":6,"offset":84}
+  },
+  "path":"type-destructor.js",
+  "line":5,
+  "endline":5,
+  "start":6,
+  "end":6
+}
+type-destructor.js:8:6 = {
+  "type":"type F = {|vs: (\"b\" | \"a\")|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":6,"offset":173},
+    "end":{"line":8,"column":6,"offset":174}
+  },
+  "path":"type-destructor.js",
+  "line":8,
+  "endline":8,
+  "start":6,
+  "end":6
+}
+type-destructor.js:10:6 = {
+  "type":"type G<R> = empty",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":6,"offset":214},
+    "end":{"line":10,"column":6,"offset":215}
+  },
+  "path":"type-destructor.js",
+  "line":10,
+  "endline":10,
+  "start":6,
+  "end":6
+}
+type-destructor.js:12:6 = {
+  "type":"type H = {|a: string, b: number|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":6,"offset":249},
+    "end":{"line":12,"column":6,"offset":250}
+  },
+  "path":"type-destructor.js",
+  "line":12,
+  "endline":12,
+  "start":6,
+  "end":6
+}
+type-destructor.js:13:6 = {
+  "type":"type I<K> = any",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":6,"offset":286},
+    "end":{"line":13,"column":6,"offset":287}
+  },
+  "path":"type-destructor.js",
+  "line":13,
+  "endline":13,
+  "start":6,
+  "end":6
+}
+type-destructor.js:15:6 = {
+  "type":"type J<K> = $ElementType<H, K>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":6,"offset":340},
+    "end":{"line":15,"column":6,"offset":341}
+  },
+  "path":"type-destructor.js",
+  "line":15,
+  "endline":15,
+  "start":6,
+  "end":6
+}
+type-destructor.js:16:6 = {
+  "type":"type K = J<\"a\">",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":6,"offset":372},
+    "end":{"line":16,"column":6,"offset":373}
+  },
+  "path":"type-destructor.js",
+  "line":16,
+  "endline":16,
+  "start":6,
+  "end":6
+}
+type-destructor.js:17:6 = {
+  "type":"type L = J<mixed>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":6,"offset":389},
+    "end":{"line":17,"column":6,"offset":390}
+  },
+  "path":"type-destructor.js",
+  "line":17,
+  "endline":17,
+  "start":6,
+  "end":6
+}
+type-destructor.js:19:6 = {
+  "type":"type Ma<K: \"a\", L: K> = $ElementType<H, L>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":6,"offset":409},
+    "end":{"line":19,"column":7,"offset":411}
+  },
+  "path":"type-destructor.js",
+  "line":19,
+  "endline":19,
+  "start":6,
+  "end":7
+}
+type-destructor.js:20:6 = {
+  "type":"type Mb<K: \"b\", L: K> = $ElementType<H, L>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":6,"offset":453},
+    "end":{"line":20,"column":7,"offset":455}
+  },
+  "path":"type-destructor.js",
+  "line":20,
+  "endline":20,
+  "start":6,
+  "end":7
+}
+type-destructor.js:21:6 = {
+  "type":"type Mc<K: \"c\", L: K> = $ElementType<H, L>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":6,"offset":497},
+    "end":{"line":21,"column":7,"offset":499}
+  },
+  "path":"type-destructor.js",
+  "line":21,
+  "endline":21,
+  "start":6,
+  "end":7
+}
+type-destructor.js:23:6 = {
+  "type":"type N = any",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":6,"offset":551},
+    "end":{"line":23,"column":6,"offset":552}
+  },
+  "path":"type-destructor.js",
+  "line":23,
+  "endline":23,
+  "start":6,
+  "end":6
+}
+type-destructor.js:27:5 = {
+  "type":"$ElementType<H, O>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":27,"column":5,"offset":675},
+    "end":{"line":27,"column":5,"offset":676}
+  },
+  "path":"type-destructor.js",
+  "line":27,
+  "endline":27,
+  "start":5,
+  "end":5
+}
+type-destructor.js:28:5 = {
+  "type":"$ElementType<H, A>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":28,"column":5,"offset":702},
+    "end":{"line":28,"column":5,"offset":703}
+  },
+  "path":"type-destructor.js",
+  "line":28,
+  "endline":28,
+  "start":5,
+  "end":5
+}
+type-destructor.js:29:5 = {
+  "type":"$ElementType<H, A>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":28,"column":5,"offset":702},
+    "end":{"line":28,"column":5,"offset":703}
+  },
+  "path":"type-destructor.js",
+  "line":28,
+  "endline":28,
+  "start":5,
+  "end":5
+}
+type-destructor.js:33:6 = {
+  "type":"type Q = number",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":33,"column":6,"offset":771},
+    "end":{"line":33,"column":6,"offset":772}
+  },
+  "path":"type-destructor.js",
+  "line":33,
+  "endline":33,
+  "start":6,
+  "end":6
+}
+type-destructor.js:34:6 = {
+  "type":"type QP<X> = $NonMaybeType<X>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":6,"offset":804},
+    "end":{"line":34,"column":7,"offset":806}
+  },
+  "path":"type-destructor.js",
+  "line":34,
+  "endline":34,
+  "start":6,
+  "end":7
+}
+type-destructor.js:36:6 = {
+  "type":"type R = number | string",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":36,"column":6,"offset":836},
+    "end":{"line":36,"column":6,"offset":837}
+  },
+  "path":"type-destructor.js",
+  "line":36,
+  "endline":36,
+  "start":6,
+  "end":6
+}
+type-destructor.js:37:6 = {
+  "type":"type RP<X> = $Values<X>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":37,"column":6,"offset":857},
+    "end":{"line":37,"column":7,"offset":859}
+  },
+  "path":"type-destructor.js",
+  "line":37,
+  "endline":37,
+  "start":6,
+  "end":7
+}
+type-destructor.js:41:6 = {
+  "type":"type S = {|y?: OY|}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":41,"column":6,"offset":931},
+    "end":{"line":41,"column":6,"offset":932}
+  },
+  "path":"type-destructor.js",
+  "line":41,
+  "endline":41,
+  "start":6,
+  "end":6
+}
+type-destructor.js:42:6 = {
+  "type":"type SP<X> = $Rest<{|y: X|}, {|[string]: X|}>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":42,"column":6,"offset":976},
+    "end":{"line":42,"column":7,"offset":978}
+  },
+  "path":"type-destructor.js",
+  "line":42,
+  "endline":42,
+  "start":6,
+  "end":7
+}
+type-destructor.js:44:6 = {
+  "type":"type U = {a: Array<number>, b?: Array<number>}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":44,"column":6,"offset":1024},
+    "end":{"line":44,"column":6,"offset":1025}
+  },
+  "path":"type-destructor.js",
+  "line":44,
+  "endline":44,
+  "start":6,
+  "end":6
+}
+type-destructor.js:45:6 = {
+  "type":"type UP<X, Y> = {a: $Call<<T>(T) => Array<T>, X>, b?: $Call<<T>(T) => Array<T>, Y>}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":45,"column":6,"offset":1087},
+    "end":{"line":45,"column":7,"offset":1089}
+  },
+  "path":"type-destructor.js",
+  "line":45,
+  "endline":45,
+  "start":6,
+  "end":7
+}
+type-destructor.js:47:6 = {
+  "type":"type V = [\"FOO\", \"FOO\"]",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":47,"column":6,"offset":1148},
+    "end":{"line":47,"column":6,"offset":1149}
+  },
+  "path":"type-destructor.js",
+  "line":47,
+  "endline":47,
+  "start":6,
+  "end":6
+}
+type-destructor.js:48:6 = {
+  "type":"type VP<X> = [$Call<<K>(k: K) => \"FOO\", X>, \"FOO\"]",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":48,"column":6,"offset":1204},
+    "end":{"line":48,"column":7,"offset":1206}
+  },
+  "path":"type-destructor.js",
+  "line":48,
+  "endline":48,
+  "start":6,
+  "end":7
+}
+type-destructor.js:62:6 = {
+  "type":"type ReactA = ElementProps<class MyComponent>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":62,"column":6,"offset":1446},
+    "end":{"line":62,"column":11,"offset":1452}
+  },
+  "path":"type-destructor.js",
+  "line":62,
+  "endline":62,
+  "start":6,
+  "end":11
+}
+type-destructor.js:63:6 = {
+  "type":"type ReactAP<X> = ElementProps<X>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":63,"column":6,"offset":1500},
+    "end":{"line":63,"column":12,"offset":1507}
+  },
+  "path":"type-destructor.js",
+  "line":63,
+  "endline":63,
+  "start":6,
+  "end":12
+}
+type-destructor.js:68:13 = {
+  "type":"{x: {+m: <T>(x: $NonMaybeType<T>) => T}, y: {+m: <T>(x: $NonMaybeType<T>) => T}}",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor.js",
+    "type":"SourceFile",
+    "start":{"line":68,"column":13,"offset":1728},
+    "end":{"line":68,"column":13,"offset":1729}
+  },
+  "path":"type-destructor.js",
+  "line":68,
+  "endline":68,
+  "start":13,
+  "end":13
 }
 unions.js:9:3 = {
   "type":"(() => number) | (() => string)",
@@ -3647,4 +4133,30 @@ type-alias.js:31:6 {
   "endline":31,
   "start":6,
   "end":6
+}
+type-alias.js:34:6 {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:15-26"},"name":"TKlass"},
+    "typeParams":null,
+    "body":{
+      "kind":"Class",
+      "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"},
+      "structural":false,
+      "typeParams":null
+    }
+  },
+  "type":"type TKlass = class Klass",
+  "reasons":[],
+  "loc":{
+    "source":"type-alias.js",
+    "type":"SourceFile",
+    "start":{"line":34,"column":6,"offset":630},
+    "end":{"line":34,"column":11,"offset":636}
+  },
+  "path":"type-alias.js",
+  "line":34,
+  "endline":34,
+  "start":6,
+  "end":11
 }

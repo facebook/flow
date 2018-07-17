@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type position = { line : int; column : int; offset : int; }
-type t = { source : File_key.t option; start : position; _end : position; }
+type position = { line : int; column : int; offset : int; } [@@deriving show]
+type t = { source : File_key.t option; start : position; _end : position; } [@@deriving show]
 val none : t
 val btwn : t -> t -> t
 val btwn_exclusive : t -> t -> t

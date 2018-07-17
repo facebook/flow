@@ -56,10 +56,30 @@ let query_type ~expand_aliases ?type_table cx loc =
     | Ok ty -> Success (loc, ty)
     | Error err ->
       let msg = Ty_normalizer.error_to_string err in
-      print_endline msg;
       let Type_table.Scheme (_, t) = scheme in
       FailureUnparseable (loc, t, msg))
 
+let query_coverage_type ~expand_aliases ?type_table cx loc =
+
+  let module QueryTypeNormalizer = Ty_normalizer.Make(struct
+    let opt_fall_through_merged = false
+    let opt_expand_internal_types = false
+    let opt_expand_type_aliases = expand_aliases
+    let opt_flag_shadowed_type_params = false
+  end) in
+
+  let type_table = match type_table with
+    | Some type_table -> type_table
+    | None -> Context.type_table cx in
+  match Type_table.find_unsafe_coverage type_table loc with
+  | exception Not_found -> FailureNoMatch
+  | scheme ->
+    (match QueryTypeNormalizer.from_scheme ~cx scheme with
+    | Ok ty -> Success (loc, ty)
+    | Error err ->
+      let msg = Ty_normalizer.error_to_string err in
+      let Type_table.Scheme (_, t) = scheme in
+      FailureUnparseable (loc, t, msg))
 
 module DumpTypeNormalizer = Ty_normalizer.Make(struct
   let opt_fall_through_merged = false

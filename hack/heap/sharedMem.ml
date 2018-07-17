@@ -648,7 +648,7 @@ end = struct
     let move stack_opt from_key to_key =
       match stack_opt with
       | None -> hh_move from_key to_key
-      | Some stack ->
+      | Some _stack ->
         assert (mem stack_opt from_key);
         assert (not @@ mem stack_opt to_key);
         let value = get stack_opt from_key in
@@ -828,8 +828,9 @@ module type NoCache = sig
   val find_unsafe      : key -> t
   val get_batch        : KeySet.t -> t option KeyMap.t
   val remove_batch     : KeySet.t -> unit
-  val string_of_key : key -> string
+  val string_of_key    : key -> string
   val mem              : key -> bool
+  val mem_old          : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
 
@@ -932,6 +933,8 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   let mem x = New.mem (Key.make Value.prefix x)
 
+  let mem_old x = Old.mem (Key.make_old Value.prefix x)
+
   let remove_old_batch xs =
     KeySet.iter begin fun str_key ->
       let key = Key.make_old Value.prefix str_key in
@@ -983,6 +986,7 @@ module type CacheType = sig
   val clear: unit -> unit
 
   val string_of_key : key -> string
+  val get_size : unit -> int
 end
 
 (*****************************************************************************)
@@ -998,19 +1002,21 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
     failwith "FreqCache does not support 'string_of_key'"
 
 (* The cache itself *)
-  let (cache: (Key.t, int ref * Config.value) Hashtbl.t)
+  let (cache: (Key.t, int ref * value) Hashtbl.t)
       = Hashtbl.create (2 * Config.capacity)
   let size = ref 0
+  let get_size () =
+    !size
 
   let clear() =
     Hashtbl.clear cache;
     size := 0
 
-(* The collection function is called when we reach twice original capacity
- * in size. When the collection is triggered, we only keep the most recent
- * object.
+(* The collection function is called when we reach twice original
+ * capacity in size. When the collection is triggered, we only keep
+ * the most frequently used objects.
  * So before collection: size = 2 * capacity
- * After collection: size = capacity (with the most recent objects)
+ * After collection: size = capacity (with the most frequently used objects)
  *)
   let collect() =
     if !size < 2 * Config.capacity then () else
@@ -1024,7 +1030,7 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
     while !i < Config.capacity do
       match !l with
       | [] -> i := Config.capacity
-      | (k, freq, v) :: rl ->
+      | (k, _freq, v) :: rl ->
           Hashtbl.replace cache k (ref 0, v);
           l := rl;
           incr i;
@@ -1075,6 +1081,8 @@ module OrderedCache (Key : sig type t end) (Config:ConfigType):
 
   let queue = Queue.create()
   let size = ref 0
+  let get_size () =
+    !size
 
   let clear() =
     Hashtbl.clear cache;
@@ -1083,18 +1091,21 @@ module OrderedCache (Key : sig type t end) (Config:ConfigType):
     ()
 
   let add x y =
-    if !size < Config.capacity
+    if !size >= Config.capacity
     then begin
-      incr size;
-      let () = Queue.push x queue in
-      ()
-    end
-    else begin
+      (* Remove oldest element - if it's still around. *)
       let elt = Queue.pop queue in
-      Hashtbl.remove cache elt;
-      Queue.push x queue;
-      Hashtbl.replace cache x y
-    end
+      if Hashtbl.mem cache elt
+      then begin
+        decr size;
+        Hashtbl.remove cache elt
+      end;
+    end;
+    (* Add the new element, but bump the size only if it's a new addition. *)
+    Queue.push x queue;
+    if not (Hashtbl.mem cache x)
+    then incr size;
+    Hashtbl.replace cache x y
 
   let find x = Hashtbl.find cache x
   let get x = try Some (find x) with Not_found -> None
@@ -1210,12 +1221,13 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
          Cache.add x v;
          result
       )
-    | Some v as result ->
+    | Some _ as result ->
       result
 
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
   let get_old_batch = Direct.get_old_batch
+  let mem_old = Direct.mem_old
 
   let find_unsafe x =
     match get x with

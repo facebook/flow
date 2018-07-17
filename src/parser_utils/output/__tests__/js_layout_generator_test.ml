@@ -55,6 +55,7 @@ let tests = "js_layout_generator" >::: [
   "operator_precedence" >:: Operator_precedence_test.test;
   "assignment_precedence" >:: Assignment_precedence_test.test;
   "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
+  "objects" >::: Object_test.tests;
 
   "unary_plus_binary" >::
     begin fun ctxt ->
@@ -1469,7 +1470,7 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt "type a=a;";
       assert_statement_string ~ctxt "type a=?a;";
       assert_statement_string ~ctxt ~pretty:true "type a = ?a;";
-      assert_statement_string ~ctxt "type a=a[];";
+      assert_statement_string ~ctxt "type a=Array<a>;";
       assert_statement_string ~ctxt "type a=a.b;";
       assert_statement_string ~ctxt "type a=a.b.c;";
       assert_statement_string ~ctxt "type a=a<b>;";

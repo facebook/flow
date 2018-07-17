@@ -37,13 +37,13 @@ let empty = {
   bindings_rev = [];
 }
 
-let add_simple cx ~tparams_map ~optional ?default loc id t x =
+let add_simple cx ~optional ?default loc id t x =
   let param_t = if optional || default <> None then Type.optional t else t in
   let bound_t = if default <> None then t else param_t in
-  Env.add_type_table cx ~tparams_map loc t;
+  Type_table.set (Context.type_table cx) loc t;
   let name = Option.map id ~f:(fun (id_loc, name) ->
     let id_info = name, bound_t, Type_table.Other in
-    Env.add_type_table_info cx ~tparams_map id_loc id_info;
+    Type_table.set_info id_loc id_info (Context.type_table cx);
     name
   ) in
   let params_rev = (name, param_t) :: x.params_rev in
@@ -55,7 +55,7 @@ let add_simple cx ~tparams_map ~optional ?default loc id t x =
   in
   { x with params_rev; bindings_rev }
 
-let add_complex cx ~tparams_map ~expr ?default patt t x =
+let add_complex cx ~expr ?default patt t x =
   let default = Option.map default Default.expr in
   let bindings_rev = ref x.bindings_rev in
   let patt = destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
@@ -65,7 +65,7 @@ let add_complex cx ~tparams_map ~expr ?default patt t x =
       let reason = mk_reason (RIdentifier name) loc in
       EvalT (t, DestructuringT (reason, Become), mk_id())
     in
-    Env.add_type_table cx ~tparams_map loc t;
+    Type_table.set (Context.type_table cx) loc t;
     bindings_rev := (name, loc, t, default) :: !bindings_rev
   ) in
   let t = if default <> None then Type.optional t else t in
@@ -73,10 +73,10 @@ let add_complex cx ~tparams_map ~expr ?default patt t x =
   let bindings_rev = !bindings_rev in
   { x with params_rev; bindings_rev }, patt
 
-let add_rest cx ~tparams_map loc id t x =
+let add_rest cx loc id t x =
   let name = Option.map id ~f:(fun (id_loc, name) ->
     let id_info = name, t, Type_table.Other in
-    Env.add_type_table_info cx ~tparams_map id_loc id_info;
+    Type_table.set_info id_loc id_info (Context.type_table cx);
     name
   ) in
   let rest = Some (name, loc, t) in

@@ -53,7 +53,7 @@ type Bar = Type3 & Type4;
 type Baz = Foo & Bar;
 ```
 
-Intersection types require all in, but one out
+## Intersection types require all in, but one out
 
 Intersection types are the opposite of union types. When calling a function
 that accepts an intersection type, we must pass in ***all of those types***. But
@@ -76,7 +76,7 @@ function method(value: A & B & C) {
 Even as we treat our value as just one of the types, we do not get an error
 because it satisfies all of them.
 
-### Impossible intersection types <a class="toc" id="toc-impossible-intersection-types" href="#toc-impossible-intersection-types"></a>
+## Impossible intersection types <a class="toc" id="toc-impossible-intersection-types" href="#toc-impossible-intersection-types"></a>
 
 Using intersection types, it is possible to create types which are impossible
 to create at runtime. Intersection types will allow you to combine any set of
@@ -102,7 +102,7 @@ But you can't possibly create a value which is both a *number and a string*,
 but you can create a type for it. There's no practical use for creating types
 like this, but it's a side effect of how intersection types work.
 
-### Intersections of object types <a class="toc" id="toc-intersections-of-object-types" href="#toc-intersections-of-object-types"></a>
+## Intersections of object types <a class="toc" id="toc-intersections-of-object-types" href="#toc-intersections-of-object-types"></a>
 
 When you create an intersection of object types, you merge all of their
 properties together.

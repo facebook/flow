@@ -147,6 +147,30 @@ export default suite(
         ['textDocument/references{line":3,"line":5,"line":9}'],
         [...lspIgnoreStatusAndCancellation],
       ),
+      ideRequestAndWaitUntilResponse('textDocument/references', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        position: {
+          line: 9,
+          character: 17,
+        }, // on an identifier
+        context: {includeIndirectReferences: true},
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/references{line":3,"line":5,"line":6,"line":9}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+
+    test('textDocument/rename', [
+      addFiles('references.js', 'references2.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/rename', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>references.js'},
+        position: {line: 9, character: 17}, // on an identifier
+        newName: 'foobar',
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/rename{"line":3,"line":5,"line":9}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
     ]),
 
     test('textDocument/documentSymbol', [

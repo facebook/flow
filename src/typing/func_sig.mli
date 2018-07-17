@@ -73,12 +73,14 @@ val toplevels:
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)
-  bool -> (* static *)
   decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
-  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+  stmts:(Context.t -> Loc.t Ast.Statement.t list ->
+                      Typed_ast.annot Ast.Statement.t list) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t ->
+                      Type.t * Typed_ast.annot Ast.Expression.t') ->
   t ->
-  Typed_ast.annot Ast.Function.body
+  Typed_ast.annot Ast.Function.body option *
+  Typed_ast.annot Ast.Expression.t option
 
 (** 1. Type Conversion *)
 
@@ -107,3 +109,5 @@ val settertype: t -> Type.t
 (** The location of the return type for a function. *)
 val return_loc: Loc.t Ast.Function.t -> Loc.t
 val to_ctor_sig: t -> t
+
+val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a

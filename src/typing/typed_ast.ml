@@ -85,15 +85,17 @@ module Expression = struct
 
   module Object = struct
     open Object
+    module Property = struct
+      open Property
+      let key_error = Property.Identifier ((), "Error")
+      let error = Init {
+        key = key_error;
+        value = (), error;
+        shorthand = false;
+      }
+    end
     let property_error =
-      Property (
-        (),
-        Property.Init {
-          key = Property.Identifier ((), "Error");
-          value = (), error;
-          shorthand = false;
-        }
-      )
+      Property ((), Property.error)
   end
 end
 
@@ -103,8 +105,43 @@ module Pattern = struct
   let unimplemented = Expression ((), Expression.unimplemented)
 end
 
+module Statement = struct
+  open Ast.Statement
+  let error = (), Labeled { Labeled.
+    label = (), "Error";
+    body = (), Empty;
+  }
+  module Try = struct
+    open Try
+    module CatchClause = struct
+      open CatchClause
+      let error = {
+        param = None;
+        body = (), { Ast.Statement.Block.body = [error] }
+      }
+    end
+  end
+  module ForIn = struct
+    open ForIn
+    let left_error = LeftPattern ((), Pattern.error)
+  end
+  module ForOf = struct
+    open ForOf
+    let left_error = LeftPattern ((), Pattern.error)
+  end
+  module DeclareFunction = struct
+    open DeclareFunction
+    let error = {
+      id = (), "Error";
+      annot = (), ((), Type.error);
+      predicate = None;
+    }
+  end
+end
+
 module Function = struct
   open Ast.Function
+  let body_error = BodyExpression ((), Expression.error)
   let body_unimplemented = BodyExpression ((), Expression.unimplemented)
   let unimplemented = {
       id = Some ((), "Unimplemented");
@@ -117,6 +154,34 @@ module Function = struct
       return = None;
       tparams = None;
     }
+
+  module RestElement = struct
+    open RestElement
+    let error = {
+      argument = (), Pattern.error
+    }
+  end
+
+  module Params = struct
+    (* open Params *)
+    let error = { Params.
+      params = [];
+      rest = None;
+    }
+  end
+
+  let error = {
+    id = Some ((), "Error");
+    params = (), Params.error;
+    body = BodyExpression ((), Expression.error);
+    async = false;
+    generator = false;
+    predicate = None;
+    expression = false;
+    return = None;
+    tparams = None;
+  }
+
 end
 
 module Class = struct
@@ -130,4 +195,15 @@ module Class = struct
     implements = [];
     classDecorators = [];
   }
+
+  module Body = struct
+    open Body
+    let element_error = Method ((), { Method.
+      kind = Method.Method;
+      key = Expression.Object.Property.key_error;
+      value = (), Function.error;
+      static = false;
+      decorators = [];
+    })
+  end
 end

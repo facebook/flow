@@ -274,7 +274,6 @@ type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
-  mutable tparam_entries: Loc.t SMap.t;  (* used to populate the type tables *)
   mutable refis: refi_binding Key_map.t;
 }
 
@@ -283,7 +282,6 @@ let fresh_impl kind = {
   id = mk_id ();
   kind;
   entries = SMap.empty;
-  tparam_entries = SMap.empty;
   refis = Key_map.empty;
 }
 
@@ -297,8 +295,8 @@ let fresh_lex () = fresh_impl LexScope
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
  *)
-let clone { id; kind; entries; tparam_entries; refis } =
-  { id; kind; entries; tparam_entries; refis }
+let clone { id; kind; entries; refis } =
+  { id; kind; entries; refis }
 
 (* use passed f to iterate over all scope entries *)
 let iter_entries f scope =
@@ -311,9 +309,6 @@ let update_entries f scope =
 (* add entry to scope *)
 let add_entry name entry scope =
   scope.entries <- SMap.add name entry scope.entries
-
-let add_tparam_entry name entry scope =
-  scope.tparam_entries <- SMap.add name entry scope.tparam_entries
 
 (* remove entry from scope *)
 let remove_entry name scope =

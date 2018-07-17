@@ -13,18 +13,6 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
 
-(* JSON numbers must not end in a `.`, but string_of_float returns things like
-   `1.` instead of `1.0`, so we want to truncate the `.` *)
-(* TODO: ocaml's string_of_float in general differs from JavaScript's. once
-   we fix that (e.g. by pulling in double-conversion or dtoa), we can use that
-   when printing JSON. *)
-let string_of_float_trunc x =
-  let result = string_of_float x in
-  if String.get result (String.length result - 1) = '.' then
-    String.sub result 0 (String.length result - 1)
-  else
-    result
-
 module LocSet = Set.Make(Loc)
 
 module LocMap = MyMap.Make(Loc)

@@ -178,6 +178,8 @@ val test_prop_get_never_hit: t -> (string option * (Reason.t * Reason.t) * Type.
 
 val mark_optional_chain: t -> Loc.t -> Reason.t -> useful:bool -> unit
 val unnecessary_optional_chains: t -> (Loc.t * Reason.t) list
+val mark_invariant: t -> Loc.t -> Reason.t -> useful:bool -> unit
+val unnecessary_invariants: t -> (Loc.t * Reason.t) list
 
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit

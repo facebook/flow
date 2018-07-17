@@ -657,6 +657,7 @@ let parse_findReferences (params: json option) : FindReferences.params =
     context =
       { FindReferences.
         includeDeclaration = Jget.bool_d context "includeDeclaration" true;
+        includeIndirectReferences = Jget.bool_d context "includeIndirectReferences" false;
       }
   }
 
@@ -995,6 +996,7 @@ let request_name_to_string (request: lsp_request) : string =
   | DocumentRangeFormattingRequest _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingRequest _ -> "textDocument/onTypeFormatting"
   | RageRequest -> "telemetry/rage"
+  | RenameRequest _ -> "textDocument/rename"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result: lsp_result) : string =
@@ -1016,7 +1018,8 @@ let result_name_to_string (result: lsp_result) : string =
   | DocumentRangeFormattingResult _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
-  | ErrorResult _ -> "ERROR"
+  | RenameResult _ -> "textDocument/rename"
+  | ErrorResult (e, _stack) -> "ERROR/" ^ (Printexc.to_string e)
 
 let notification_name_to_string (notification: lsp_notification) : string =
   match notification with
@@ -1035,7 +1038,13 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
   | UnknownNotification (method_, _params) -> method_
 
-let message_to_string (message: lsp_message) : string =
+let message_name_to_string (message: lsp_message) : string =
+  match message with
+  | RequestMessage (_, r) -> request_name_to_string r
+  | NotificationMessage n -> notification_name_to_string n
+  | ResponseMessage (_, r) -> result_name_to_string r
+
+let denorm_message_to_string (message: lsp_message) : string =
   match message with
   | RequestMessage (id, r) ->
     Printf.sprintf "request %s %s" (id_to_string id) (request_name_to_string r)
@@ -1045,7 +1054,6 @@ let message_to_string (message: lsp_message) : string =
     Printf.sprintf "error %s %s" (id_to_string id) (Printexc.to_string e)
   | ResponseMessage (id, r) ->
     Printf.sprintf "result %s %s" (id_to_string id) (result_name_to_string r)
-
 
 let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   match method_ with
@@ -1057,6 +1065,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   | "workspace/symbol" -> WorkspaceSymbolRequest (parse_workspaceSymbol params)
   | "textDocument/documentSymbol" -> DocumentSymbolRequest (parse_documentSymbol params)
   | "textDocument/references" -> FindReferencesRequest (parse_findReferences params)
+  | "textDocument/rename" -> RenameRequest (parse_documentRename params)
   | "textDocument/documentHighlight" -> DocumentHighlightRequest (parse_documentHighlight params)
   | "textDocument/typeCoverage" -> TypeCoverageRequest (parse_typeCoverage params)
   | "textDocument/formatting" -> DocumentFormattingRequest (parse_documentFormatting params)
@@ -1108,6 +1117,7 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | DocumentRangeFormattingRequest _
   | DocumentOnTypeFormattingRequest _
   | RageRequest
+  | RenameRequest _
   | UnknownRequest _ ->
     raise (Error.Parse ("Don't know how to parse LSP response " ^ method_))
 
@@ -1152,6 +1162,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     | DocumentRangeFormattingRequest _
     | DocumentOnTypeFormattingRequest _
     | RageRequest
+    | RenameRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -1179,6 +1190,7 @@ let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
     | DocumentRangeFormattingResult r -> print_documentRangeFormatting r
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
+    | RenameResult r -> print_documentRename r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->

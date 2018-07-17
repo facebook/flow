@@ -80,7 +80,7 @@ struct
 
     Reader.read r.fd ~buffer:b ~offset:0 ~size:chunk_size >>= (fun bytes_read ->
     if bytes_read == 0 then raise End_of_file;
-    let b = String.sub b 0 bytes_read in
+    let b = Bytes.sub_string b 0 bytes_read in
     match index b '\n' with
     | `No_appearance ->
       read_line (b :: chunks) r
@@ -101,7 +101,7 @@ struct
       Reader.return @@ trim_trailing_cr result
     )
 
-  let get_next_line ?approx_size r =
+  let get_next_line r =
     match !(r.unconsumed_buffer) with
     | None -> read_line [] r
     | Some remainder -> begin
@@ -130,11 +130,13 @@ struct
     Reader.read r.fd ~buffer:b ~offset:0 ~size:bytes_desired >>= (fun bytes_read ->
     if bytes_read == 0 then raise End_of_file;
     if bytes_read < size then
-      let b = String.sub b 0 bytes_read in
+      let b = Bytes.sub_string b 0 bytes_read in
       read_bytes r (size - bytes_read) (b :: chunks)
     else
       let () = set_buffer r None in
-      Reader.return @@ merge_chunks b chunks
+      (* `unsafe_to_string` is acceptable here because `merge_chunks`
+         immediately makes a copy via `concat` *)
+      Reader.return @@ merge_chunks (Bytes.unsafe_to_string b) chunks
     )
 
   let get_next_bytes r size =

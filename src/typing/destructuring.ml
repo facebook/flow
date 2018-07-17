@@ -200,7 +200,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       | desc -> desc
       )) curr_t in
       let id_info = name, curr_t, Type_table.Other in
-      Env.add_type_table_info cx id_loc id_info;
+      Type_table.set_info id_loc id_info (Context.type_table cx);
       let use_op = Op (AssignVar {
         var = Some (mk_reason (RIdentifier name) loc);
         init = (match init with
@@ -246,14 +246,3 @@ let destructuring_assignment cx ~expr rhs_t init =
     ignore Env.(set_var cx ~use_op name t loc)
   in
   destructuring cx ~expr rhs_t (Some init) None ~f
-
-(* temporary, until modules relying on this one are updated to accommodate the new interface *)
-module Old = struct
-  let destructuring cx ~expr ~f t init default pattern =
-    ignore (destructuring cx ~expr:(fun cx e -> expr cx e, Typed_ast.Expression.unimplemented)
-      ~f t init default pattern)
-  let type_of_pattern = type_of_pattern
-  let destructuring_assignment cx ~expr rhs_t init pattern =
-    ignore (destructuring_assignment cx
-      ~expr:(fun cx e -> expr cx e, Typed_ast.Expression.unimplemented) rhs_t init pattern)
-end

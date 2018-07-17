@@ -17,6 +17,17 @@ type progress = {
   finished: int;
 }
 
+type summary_info =
+  | RecheckSummary of {
+      dependent_file_count: int;
+      changed_file_count: int;
+      top_cycle: (File_key.t * int) option; (* name of cycle leader, and size of cycle *)
+    }
+  | CommandSummary of string
+  | InitSummary
+
+type summary = { duration: float; info: summary_info;}
+
 type event =
 | Ready (* The server is free *)
 | Init_start (* The server is starting to initialize *)
@@ -26,7 +37,7 @@ type event =
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
-| Finishing_up (* The server is finishing up some typechecking or other work *)
+| Finishing_up of summary (* Server's finishing up typechecking or other work *)
 | Recheck_start (* The server is starting to recheck *)
 | Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
 | GC_start (* The server is starting to GC *)
@@ -42,7 +53,7 @@ type typecheck_status =
 | Merging of progress
 | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
 | Collating_errors (* We sometimes collate errors during typecheck *)
-| Finishing_typecheck (* Typecheck is done but we haven't reach a free state yet *)
+| Finishing_typecheck of summary (* haven't reached free state yet *)
 
 type typecheck_mode =
 | Initializing (* Flow is busy starting up *)
@@ -113,7 +124,7 @@ let string_of_event = function
 | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
 | Merging_progress progress ->
   spf "Merging_progress %s" (string_of_progress progress)
-| Finishing_up -> "Finishing_up"
+| Finishing_up _ -> "Finishing_up"
 | Recheck_start -> "Recheck_start"
 | Handling_request_start -> "Handling_request_start"
 | GC_start -> "GC_start"
@@ -138,10 +149,10 @@ let string_of_typecheck_status ~use_emoji = function
   spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
 | Collating_errors ->
   spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
-| Finishing_typecheck ->
+| Finishing_typecheck _ ->
   spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
-let string_of_status ?(use_emoji=false) status =
+let string_of_status ?(use_emoji=false) ?(terse=false) status =
   let status_string = match status with
   | Starting_up ->
     spf "starting up%s" (render_emoji ~use_emoji ~pad:Before Sleeping_face)
@@ -158,7 +169,7 @@ let string_of_status ?(use_emoji=false) status =
   | Unknown ->
     spf "doing something%s" (render_emoji ~use_emoji ~pad:Before Panda_face)
   in
-  spf "Server is %s" status_string
+  spf "%s%s" (if terse then "" else "Server is ") status_string
 
 (* Transition function for the status state machine. Given the current status and the event,
  * pick a new status *)
@@ -181,7 +192,7 @@ let update ~event ~status =
   | Merging_progress progress, Typechecking (mode, _) -> Typechecking (mode, Merging progress)
   | GC_start, Typechecking (mode, _) -> Typechecking (mode, Garbage_collecting_typecheck)
   | Collating_errors_start, Typechecking (mode, _) -> Typechecking (mode, Collating_errors)
-  | Finishing_up, Typechecking (mode, _) -> Typechecking (mode, Finishing_typecheck)
+  | Finishing_up summary, Typechecking (mode, _) -> Typechecking (mode, Finishing_typecheck summary)
 
   | GC_start, _ -> Garbage_collecting
   | _ ->
@@ -224,7 +235,7 @@ let is_significant_transition old_status new_status =
     | _, Merging _
     | _, Garbage_collecting_typecheck
     | _, Collating_errors
-    | _, Finishing_typecheck -> true
+    | _, Finishing_typecheck _ -> true
     end
   (* Switching to a completely different status is always significant *)
   | _, Starting_up
@@ -244,3 +255,66 @@ let get_progress status =
   | Typechecking (_, Parsing progress)
   | Typechecking (_, Merging progress) -> print progress
   | _ -> None, None, None
+
+
+let get_summary status =
+  match status with
+  | Typechecking (_mode, Finishing_typecheck summary) -> Some summary
+  | _ -> None
+
+let log_of_summaries ~(root: Path.t) (summaries: summary list)
+  : FlowEventLogger.persistent_delay =
+  let open FlowEventLogger in
+  let init = {
+    init_duration = 0.0;
+    command_count = 0;
+    command_duration = 0.0;
+    command_worst = None;
+    command_worst_duration = None;
+    recheck_count = 0;
+    recheck_dependent_files = 0;
+    recheck_changed_files = 0;
+    recheck_duration = 0.0;
+    recheck_worst_duration = None;
+    recheck_worst_dependent_file_count = None;
+    recheck_worst_changed_file_count = None;
+    recheck_worst_cycle_leader = None;
+    recheck_worst_cycle_size = None;
+  } in
+  let f acc {duration; info} =
+    match info with
+    | InitSummary ->
+      let acc = { acc with
+        init_duration = acc.init_duration +. duration;
+      } in
+      acc
+    | CommandSummary cmd ->
+      let is_worst = match acc.command_worst_duration with None -> true | Some d -> duration >= d in
+      let acc = if not is_worst then acc else { acc with
+        command_worst = Some cmd;
+        command_worst_duration = Some duration;
+      } in
+      let acc = { acc with
+        command_count = acc.command_count + 1;
+        command_duration = acc.command_duration +. duration;
+      } in
+      acc
+    | RecheckSummary {dependent_file_count; changed_file_count; top_cycle} ->
+      let is_worst = match acc.recheck_worst_duration with None -> true | Some d -> duration >= d in
+      let acc = if not is_worst then acc else { acc with
+        recheck_worst_duration = Some duration;
+        recheck_worst_dependent_file_count = Some dependent_file_count;
+        recheck_worst_changed_file_count = Some changed_file_count;
+        recheck_worst_cycle_size = Option.map top_cycle ~f:(fun (_,size) -> size);
+        recheck_worst_cycle_leader = Option.map top_cycle
+          ~f:(fun (f,_) -> f |> File_key.to_string |> Files.relative_path (Path.to_string root));
+      } in
+      let acc = { acc with
+        recheck_count = acc.recheck_count + 1;
+        recheck_dependent_files = acc.recheck_dependent_files + dependent_file_count;
+        recheck_changed_files = acc.recheck_changed_files + changed_file_count;
+        recheck_duration = acc.recheck_duration +. duration;
+      } in
+      acc
+    in
+    Core_list.fold summaries ~init ~f

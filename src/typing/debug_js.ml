@@ -797,6 +797,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) uses);
     ]
 
+  | InvariantT _ -> []
+
   | CallLatentPredT (_, sense, offset, l, t) -> [
       "sense", JSON_Bool sense;
       "offset", JSON_Number (spf "%d" offset);
@@ -1087,14 +1089,14 @@ and json_of_funcallarg_impl json_cx arg =
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Hh_json.(
-  let field_pmap = Context.find_props json_cx.cx insttype.fields_tmap in
-  let method_pmap = Context.find_props json_cx.cx insttype.methods_tmap in
+  let own_props = Context.find_props json_cx.cx insttype.own_props in
+  let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
     "classId", int_ insttype.class_id;
     "typeArgs", json_of_tmap json_cx (SMap.map snd insttype.type_args);
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
-    "fieldTypes", json_of_pmap json_cx field_pmap;
-    "methodTypes", json_of_pmap json_cx method_pmap;
+    "fieldTypes", json_of_pmap json_cx own_props;
+    "methodTypes", json_of_pmap json_cx proto_props;
     "mixins", JSON_Bool insttype.has_unknown_react_mixins;
     "structural", JSON_Bool insttype.structural;
   ]
@@ -2100,6 +2102,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ImportTypeofT _ -> p t
   | ImportTypeT _ -> p t
   | IntersectionPreprocessKitT _ -> p t
+  | InvariantT _ -> p t
   | LookupT (_, kind, _, prop, action) -> p ~extra:(spf "%S, %s, %s"
       (propref prop)
       (lookup_kind kind)
@@ -2771,16 +2774,22 @@ let dump_flow_error =
     | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
       let open Lints in
       let kind_str = match kind with
-      | SketchyBool -> "SketchyBool"
-      | SketchyString -> "SketchyString"
-      | SketchyNumber -> "SketchyNumber"
-      | SketchyMixed -> "SketchyMixed"
+      | SketchyNullBool -> "SketchyNullBool"
+      | SketchyNullString -> "SketchyNullString"
+      | SketchyNullNumber -> "SketchyNullNumber"
+      | SketchyNullMixed -> "SketchyNullMixed"
       in
       spf "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
         kind_str
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
+    | ESketchyNumberLint (kind, reason) ->
+      let open Lints in
+      let kind_str = match kind with
+      | SketchyNumberAnd -> "SketchyNumberAnd"
+      in
+      spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->
@@ -2789,6 +2798,8 @@ let dump_flow_error =
         spf "EOptionalChainingMethods (%s)" (string_of_loc loc)
     | EUnnecessaryOptionalChain (loc, _) ->
         spf "EUnnecessaryOptionalChain (%s)" (string_of_loc loc)
+    | EUnnecessaryInvariant (loc, _) ->
+        spf "EUnnecessaryInvariant (%s)" (string_of_loc loc)
     | EInexactSpread (reason, reason_op) ->
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)

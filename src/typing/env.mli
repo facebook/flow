@@ -74,8 +74,6 @@ val bind_import: Context.t -> string -> Type.t -> Loc.t -> unit
 val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
   Loc.t -> unit
 
-val bind_type_param: Context.t -> bool (* static *) -> SMap.key -> Type.t -> unit
-
 val bind_import_type: Context.t -> string -> Type.t -> Loc.t -> unit
 
 val bind_declare_var: Context.t -> string -> Type.t -> Loc.t -> unit
@@ -203,20 +201,3 @@ val havoc_heap_refinements_with_propname: private_:bool -> string -> unit
 val get_refinement: Context.t -> Key.t -> Loc.t -> Type.t option
 
 val is_global_var: Context.t -> string -> bool
-
-val get_tparams: unit -> (string * Loc.t) list
-
-val add_type_table:
-  Context.t ->
-  ?tparams_map:Type.t SMap.t ->
-  Loc.t ->
-  Type.t ->
-  unit
-
-val add_type_table_info:
-  Context.t ->
-  ?tparams_map:Type.t SMap.t ->
-  ?tparam:Type.typeparam ->
-  Loc.t ->
-  Type_table.type_entry ->
-  unit

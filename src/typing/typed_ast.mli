@@ -29,6 +29,24 @@ module Type : sig
   end
 end
 
+module Statement : sig
+  val error : annot Ast.Statement.t
+  module Try : sig
+    module CatchClause : sig
+      val error : annot Ast.Statement.Try.CatchClause.t'
+    end
+  end
+  module ForIn : sig
+    val left_error : annot Ast.Statement.ForIn.left
+  end
+  module ForOf : sig
+    val left_error : annot Ast.Statement.ForOf.left
+  end
+  module DeclareFunction : sig
+    val error : annot Ast.Statement.DeclareFunction.t
+  end
+end
+
 module Expression : sig
   val error : annot Ast.Expression.t'
   val expression_or_spread_list_error : annot Ast.Expression.expression_or_spread list
@@ -37,6 +55,10 @@ module Expression : sig
   val expression_or_spread_list_unimplemented : annot Ast.Expression.expression_or_spread list
   module Object : sig
     val property_error : annot Ast.Expression.Object.property
+    module Property : sig
+      val error : annot Ast.Expression.Object.Property.t'
+      val key_error : annot Ast.Expression.Object.Property.key
+    end
   end
 end
 
@@ -46,10 +68,21 @@ module Pattern : sig
 end
 
 module Function : sig
+  val body_error : annot Ast.Function.body
+  val error : annot Ast.Function.t
   val body_unimplemented : annot Ast.Function.body
   val unimplemented : annot Ast.Function.t
+  module RestElement : sig
+    val error : annot Ast.Function.RestElement.t'
+  end
+  module Params : sig
+    val error : annot Ast.Function.Params.t'
+  end
 end
 
 module Class : sig
   val unimplemented : annot Ast.Class.t
+  module Body : sig
+    val element_error : annot Ast.Class.Body.element
+  end
 end

@@ -10,6 +10,7 @@ layout: guide
 
 * [`all`](#toc-all)
 * [`sketchy-null`](#toc-sketchy-null)
+* [`sketchy-number`](#toc-sketchy-number)
 * [`untyped-type-import`](#toc-untyped-type-import)
 * [`untyped-import`](#toc-untyped-import)
 * [`unclear-type`](#toc-unclear-type)
@@ -17,6 +18,7 @@ layout: guide
 * [`deprecated-declare-exports`](#toc-deprecated-declare-exports)
 * [`nonstrict-import`](#toc-nonstrict-import)
 * [`unnecessary-optional-chain`](#toc-unnecessary-optional-chain)
+* [`unnecessary-invariant`](#toc-unnecessary-invariant)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -73,6 +75,32 @@ const x: ?(number | bool) = 0;
 if (x) {}
 ```
 would still have a sketchy-null-number warning on line 3.
+
+#### `sketchy-number` <a class="toc" id="toc-sketchy-number" href="#toc-sketchy-number"></a>
+
+Triggers when a `number` is used in a manner which may lead to unexpected results if the value is falsy.
+Currently, this lint triggers if a `number` appears in:
+* the left-hand side of an `&&` expression.
+
+As a motivating example, consider this common idiom in React:
+
+```js
+{showFoo && <Foo />}
+```
+
+Here, `showFoo` is a boolean which controls whether or not to display the `<Foo />` element. If `showFoo` is true, then this evaluates to `{<Foo />}`. If `showFoo` is false, then this evaluates to `{false}`, which doesn't display anything.
+
+Now suppose that instead of a boolean, we have a numerical value representing, say, the number of comments on a post. We want to display a count of the comments, unless there are no comments. We might naively try to do something similar to the boolean case:
+
+```js
+{count && <>[{count} comments]</>}
+```
+
+If `count` is, say, `5`, then this displays "[5 comments]". However, if `count` is `0`, then this displays "0" instead of displaying nothing. (This problem is unique to `number` because `0` and `NaN` are the only falsy values which React renders with a visible result.) This could be subtly dangerous: if this immediately follows another numerical value, it might appear to the user that we have multiplied that value by 10! Instead, we should do a proper conditional check:
+
+```js
+{count ? <>[{count} comments]</> : null}
+```
 
 #### `untyped-type-import` <a class="toc" id="toc-untyped-type-import" href="#toc-untyped-type-import"></a>
 
@@ -174,3 +202,9 @@ foo?.bar.baz;
 ```
 
 This makes it clear to the reader that `bar` is not a potentially nullish property.
+
+#### `unnecessary-invariant` <a class="toc" id="toc-unnecessary-invariant" href="#toc-unnecessary-invariant"></a>
+
+Triggers when you use `invariant` to check a condition which we know must be truthy based on the available type information. This is quite conservative: for example, if all we know about the condition is that it is a `boolean`, then the lint will not fire even if the condition must be `true` at runtime.
+
+Note that this lint does not trigger when we know a condition is always `false`. It is a common idiom to use `invariant()` or `invariant(false, ...)` to throw in code that should be unreachable.

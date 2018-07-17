@@ -25,9 +25,9 @@ let force_annotations cx =
 let infer_core cx statements =
   try
     statements |> Statement.toplevel_decls cx;
-    statements |> Statement.toplevels cx;
+    statements |> Statement.toplevels cx |> ignore;
   with
-  | Abnormal.Exn Abnormal.Throw ->
+  | Abnormal.Exn (_, Abnormal.Throw) ->
     (* throw is allowed as a top-level statement *)
     ()
   | Abnormal.Exn _ ->

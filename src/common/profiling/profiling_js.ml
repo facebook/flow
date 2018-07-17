@@ -183,15 +183,13 @@ end = struct
 
   let json_of_time_measurement { start_age; duration; } =
     let open Hh_json in
-    let open Utils_js in
     JSON_Object [
-      "start_age", JSON_Number (string_of_float_trunc start_age);
-      "duration", JSON_Number (string_of_float_trunc duration);
+      "start_age", JSON_Number (Dtoa.ecma_string_of_float start_age);
+      "duration", JSON_Number (Dtoa.ecma_string_of_float duration);
     ]
 
   let json_of_processor_info ~abridged info =
     let open Hh_json in
-    let open Utils_js in
     if abridged
     then
       let total =  info.cpu_user +. info.cpu_nice_user +. info.cpu_system +. info.cpu_idle in
@@ -199,27 +197,26 @@ end = struct
        * busy = total * usage
        * idle = total - busy *)
       JSON_Object [
-        "total", JSON_Number (string_of_float_trunc total);
-        "usage", JSON_Number (string_of_float_trunc info.cpu_usage);
+        "total", JSON_Number (Dtoa.ecma_string_of_float total);
+        "usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage);
       ]
     else
       JSON_Object [
-        "user", JSON_Number (string_of_float_trunc info.cpu_user);
-        "nice", JSON_Number (string_of_float_trunc info.cpu_nice_user);
-        "system", JSON_Number (string_of_float_trunc info.cpu_system);
-        "idle", JSON_Number (string_of_float_trunc info.cpu_idle);
-        "usage", JSON_Number (string_of_float_trunc info.cpu_usage);
+        "user", JSON_Number (Dtoa.ecma_string_of_float info.cpu_user);
+        "nice", JSON_Number (Dtoa.ecma_string_of_float info.cpu_nice_user);
+        "system", JSON_Number (Dtoa.ecma_string_of_float info.cpu_system);
+        "idle", JSON_Number (Dtoa.ecma_string_of_float info.cpu_idle);
+        "usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage);
       ]
 
   let json_of_result ~abridged
     { wall; user; system; worker_user; worker_system; processor_totals; flow_cpu_usage; } =
     let open Hh_json in
-    let open Utils_js in
     let cpu = [user; system; worker_user; worker_system] in
     let common_fields = [
       "wall", json_of_time_measurement wall;
       "cpu", json_of_time_measurement (combine_time_measurements cpu);
-      "flow_cpu_usage", JSON_Number (string_of_float_trunc flow_cpu_usage);
+      "flow_cpu_usage", JSON_Number (Dtoa.ecma_string_of_float flow_cpu_usage);
       "processor_totals", json_of_processor_info ~abridged processor_totals;
     ] in
     let fields =
@@ -232,8 +229,8 @@ end = struct
         "worker_user", json_of_time_measurement worker_user;
         "worker_system", json_of_time_measurement worker_system;
         (* legacy fields *)
-        "start_wall_age", JSON_Number (string_of_float_trunc wall.start_age);
-        "wall_duration", JSON_Number (string_of_float_trunc wall.duration);
+        "start_wall_age", JSON_Number (Dtoa.ecma_string_of_float wall.start_age);
+        "wall_duration", JSON_Number (Dtoa.ecma_string_of_float wall.duration);
       ]
     in JSON_Object fields
 
@@ -263,7 +260,7 @@ end = struct
   let to_json results =
     let open Hh_json in
     let results = results
-    |> SMap.map (fun v -> JSON_Number (Utils_js.string_of_float_trunc v))
+    |> SMap.map (fun v -> JSON_Number (Dtoa.ecma_string_of_float v))
     |> SMap.elements in
     JSON_Object results
 end
@@ -422,6 +419,14 @@ let with_profiling_lwt ~should_print_summary f =
     Lwt.return_unit
   ] in
   Lwt.return (!profiling, ret)
+
+let get_profiling_duration profile =
+  (* every profiling created by the above function implicitly has a timer *)
+  (* named `profiling_timer_name` which tracks overall duration. *)
+  let results = Timing.get_results profile.timing in
+  let overall_timer = SMap.find_unsafe profiling_timer_name results in
+  overall_timer.wall.duration
+
 
 let check_for_reserved_timer_name f ~timer profile =
   if SSet.mem timer reserved_timer_names

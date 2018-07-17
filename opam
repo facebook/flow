@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flowtype"
-version: "0.75.0"
+version: "0.76.0"
 maintainer: "flow@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
@@ -18,6 +18,8 @@ depends: [
   "lwt" { >= "3.3.0" }
   "lwt_log" { = "1.0.0" }
   "lwt_ppx" { >= "1.1.0" }
+  "ppx_deriving" {build}
+  "ppx_gen_rec" {build}
   "wtf8"
 ]
 available: [ocaml-version >= "4.05.0"]

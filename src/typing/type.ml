@@ -569,6 +569,8 @@ module rec TypeTerm : sig
 
     | OptionalChainT of reason * reason * (opt_use_t * t_out) Nel.t
 
+    | InvariantT of reason
+
     (* Function predicate uses *)
 
     (**
@@ -910,11 +912,11 @@ module rec TypeTerm : sig
     class_id: ident;
     type_args: (reason * t) SMap.t;
     arg_polarities: polarity SMap.t;
-    fields_tmap: Properties.id;
-    initialized_field_names: SSet.t;
-    initialized_static_field_names: SSet.t;
-    methods_tmap: Properties.id;
+    own_props: Properties.id;
+    proto_props: Properties.id;
     inst_call_t: int option;
+    initialized_fields: SSet.t;
+    initialized_static_fields: SSet.t;
     has_unknown_react_mixins: bool;
     structural: bool;
   }
@@ -2163,6 +2165,7 @@ end = struct
     | ImportTypeofT (reason, _, _) -> reason
     | ImportTypeT (reason, _, _) -> reason
     | IntersectionPreprocessKitT (reason, _) -> reason
+    | InvariantT reason -> reason
     | LookupT(reason, _, _, _, _) -> reason
     | MakeExactT (reason, _) -> reason
     | MapTypeT (reason, _, _) -> reason
@@ -2324,6 +2327,7 @@ end = struct
     | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
     | IntersectionPreprocessKitT (reason, tool) ->
         IntersectionPreprocessKitT (f reason, tool)
+    | InvariantT reason -> InvariantT (f reason)
     | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
     | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
@@ -2482,6 +2486,7 @@ end = struct
   | IdxUnwrap (_, _)
   | IdxUnMaybeifyT (_, _)
   | OptionalChainT (_, _, _)
+  | InvariantT _
   | CallLatentPredT (_, _, _, _, _)
   | CallOpenPredT (_, _, _, _, _)
   | SubstOnPredT (_, _, _)
@@ -2784,6 +2789,7 @@ let any_propagating_use_t = function
   | EqT _
   | HasOwnPropT _
   | ImplementsT _
+  | InvariantT _
   | SetPrivatePropT _
   | SetProtoT _
   | SuperT _
@@ -3063,6 +3069,7 @@ let string_of_use_ctor = function
     | SentinelPropTest _ -> "SentinelPropTest"
     | PropExistsTest _ -> "PropExistsTest"
     end
+  | InvariantT _ -> "InvariantT"
   | LookupT _ -> "LookupT"
   | MakeExactT _ -> "MakeExactT"
   | MapTypeT _ -> "MapTypeT"

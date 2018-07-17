@@ -79,12 +79,14 @@ module ArgSpec = struct
   let enum values = {
     parse = (fun ~name -> function
     | Some [x] ->
-        if List.mem x values
-        then Some x
-        else raise (Failed_to_parse (name, Utils_js.spf
-          "expected one of: %s"
-          (String.concat ", " values)
-        ))
+        begin match List.find_opt (fun (s, _) -> s = x) values with
+        | Some (_, v) -> Some v
+        | None ->
+          raise (Failed_to_parse (name, Utils_js.spf
+            "expected one of: %s"
+            (String.concat ", " (List.map fst values))
+          ))
+        end
     | _ -> None
     );
     arg = Arg;

@@ -10,7 +10,7 @@ Flow works with:
 
 * Mac OS X
 * Linux (64-bit)
-* Windows (64-bit)
+* Windows (64-bit, Windows 10 recommended)
 
 There are [binary distributions](https://github.com/facebook/flow/releases) for each of these platforms and you can also build it from source on any of them as well.
 

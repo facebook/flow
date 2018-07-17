@@ -45,9 +45,16 @@ let handle_error err =
   prerr_endline err;
   FlowExitStatus.(exit Unknown_error)
 
+let layout_prettier ast =
+  let attached_comments = Flow_prettier_comments.attach_comments ast in
+  Js_layout_generator.with_attached_comments := Some attached_comments ;
+  let layout = Js_layout_generator.program_simple ast in
+  Js_layout_generator.with_attached_comments := None ;
+  layout
+
 let print_annotated_program annot_ast =
   annot_ast
-  |> Js_layout_generator.program ~preserve_docblock:true ~checksum:None
+  |> layout_prettier
   |> Pretty_printer.print ~source_maps:None
   |> Source.contents
   |> print_endline

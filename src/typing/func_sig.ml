@@ -126,7 +126,7 @@ let settertype {fparams; _} =
   | [(_, param_t)] -> param_t
   | _ -> failwith "Setter property with unexpected type"
 
-let toplevels id cx this super static ~decls ~stmts ~expr
+let toplevels id cx this super ~decls ~stmts ~expr
   {reason=reason_fn; kind; tparams_map; fparams; body; return_t; _} =
 
   let loc = Ast.Function.(match body with
@@ -169,7 +169,10 @@ let toplevels id cx this super static ~decls ~stmts ~expr
 
   (* bind type params *)
   SMap.iter (fun name t ->
-    Env.bind_type_param cx static name t
+    let r = reason_of_t t in
+    let loc = loc_of_reason r in
+    Env.bind_type cx name (DefT (r, TypeT (TypeParamKind, t))) loc
+      ~state:Scope.State.Initialized
   ) tparams_map;
 
   (* Check the rest parameter annotation *)
@@ -187,7 +190,8 @@ let toplevels id cx this super static ~decls ~stmts ~expr
     let reason = mk_reason (RParameter (Some name)) loc in
     (* add default value as lower bound, if provided *)
     Option.iter ~f:(fun default ->
-      let default_t = Flow.mk_default cx reason default ~expr in
+      let default_t = Flow.mk_default cx reason default
+        ~expr:(fun cx e -> fst (expr cx e)) in
       Flow.flow_t cx (default_t, t)
     ) default;
     (* add to scope *)
@@ -230,13 +234,18 @@ let toplevels id cx this super static ~decls ~stmts ~expr
   Scope.add_entry (internal_name "next") next function_scope;
   Scope.add_entry (internal_name "return") return function_scope;
 
-  let statements = Ast.Statement.(
+  let statements, reconstruct_body = Ast.Statement.(
     match body with
-    | None -> []
-    | Some (Ast.Function.BodyBlock (_, {Block.body})) ->
-      body
+    | None -> [], Fn.const None
+    | Some (Ast.Function.BodyBlock (_, { Block.body })) ->
+      body, (fun body -> Some (Ast.Function.BodyBlock ((), { Block.body })))
     | Some (Ast.Function.BodyExpression expr) ->
-      [fst expr, Return {Return.argument = Some expr}]
+      [fst expr, Return {Return.argument = Some expr}],
+      (function
+      | [_, Return { Return.argument = Some expr }]
+      | [_, Expression { Expression.expression = expr; _ }] ->
+        Some (Ast.Function.BodyExpression expr)
+      | _ -> failwith "expected return body")
   ) in
 
   (* NOTE: Predicate functions can currently only be of the form:
@@ -259,63 +268,79 @@ let toplevels id cx this super static ~decls ~stmts ~expr
   decls cx statements;
 
   (* statement visit pass *)
+  let statements_ast, statements_abnormal =
+    Abnormal.catch_stmts_control_flow_exception (fun () -> stmts cx statements) in
   let is_void = Abnormal.(
-    match catch_control_flow_exception (fun () -> stmts cx statements) with
+    match statements_abnormal with
     | Some Return -> false
     | Some Throw -> false (* NOTE *)
-    | Some exn -> throw_control_flow_exception exn (* NOTE *)
+    | Some exn ->
+        (* TODO: look into where this throws to. Is it ok that this throws? *)
+        throw_stmt_control_flow_exception Typed_ast.Statement.error exn
     | None -> true
   ) in
+  let body_ast = reconstruct_body statements_ast in
 
   (* build return type for void funcs *)
-  (if is_void then
+  let init_ast = if is_void then
     let loc = loc_of_t return_t in
     (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
      * algorithm to pick use_ops outside the provided loc. *)
-    let use_op, void_t = match kind with
+    let use_op, void_t, init_ast = match kind with
     | Ordinary
     | Ctor ->
       let t = VoidT.at loc in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
-      use_op, t
+      use_op, t, None
     | Async ->
       let reason = annot_reason (mk_reason (RType "Promise") loc) in
       let void_t = VoidT.at loc in
       let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam (loc_of_t return_t), use_op) in
-      use_op, t
+      use_op, t, None
     | Generator ->
       let reason = annot_reason (mk_reason (RType "Generator") loc) in
       let void_t = VoidT.at loc in
       let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam (loc_of_t return_t), use_op) in
-      use_op, t
+      use_op, t, None
     | AsyncGenerator ->
       let reason = annot_reason (mk_reason (RType "AsyncGenerator") loc) in
       let void_t = VoidT.at loc in
       let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam (loc_of_t return_t), use_op) in
-      use_op, t
+      use_op, t, None
     | FieldInit e ->
-      unknown_use, expr cx e
+      let t, ast = expr cx e in
+      unknown_use, t, Some ((), ast)
     | Predicate ->
       let loc = loc_of_reason reason in
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
       let t = VoidT.at loc in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
-      use_op, t
+      use_op, t, None
     in
-    Flow.flow cx (void_t, UseT (use_op, return_t))
-  );
+    Flow.flow cx (void_t, UseT (use_op, return_t));
+    init_ast
+  else None in
 
   Env.pop_var_scope ();
 
   Env.update_env cx loc env;
 
-  Typed_ast.Function.body_unimplemented
+  (*  return a tuple of (function body AST option, field initializer AST option).
+      - the function body option is Some _ if the func sig's body was Some, and
+        None if the func sig's body was None.
+      - the field initializer is Some expr' if the func sig's kind was FieldInit expr,
+        where expr' is the typed AST translation of expr.
+  *)
+  body_ast, init_ast
 
 let to_ctor_sig f = { f with kind = Ctor }
+
+let with_typeparams cx f x =
+  Type_table.with_typeparams x.tparams (Context.type_table cx) f

@@ -11,8 +11,8 @@ assert_ok "$FLOW" start --lazy --file-watcher none .
 printf "\nExpect no errors.\n"
 assert_ok "$FLOW" status --no-auto-start .
 
-printf "\nTouch @flow file with dependency on a @flow file, expect no error.\n"
-touch b.js
+printf "\nChange @flow file with dependency on a @flow file, expect no error.\n"
+echo "// change" >> b.js
 assert_ok "$FLOW" force-recheck b.js
 assert_ok "$FLOW" status --no-auto-start .
 

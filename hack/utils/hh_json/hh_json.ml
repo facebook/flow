@@ -473,6 +473,13 @@ let json_of_file ?strict filename =
 
 let int_ n = JSON_Number (string_of_int n)
 
+let float_ n =
+  let s = string_of_float n in
+  (* ocaml strings can end in '.', which isn't allowed in json *)
+  let len = String.length s in
+  let s = if String.get s (len - 1) = '.' then String.sub s 0 (len - 1) else s in
+  JSON_Number s
+
 let string_ s = JSON_String s
 
 let get_object_exn = function

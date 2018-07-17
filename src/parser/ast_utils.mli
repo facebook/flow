@@ -23,3 +23,9 @@ val partition_directives:
 val negate_number_literal:
   float * string ->
   float * string
+
+val loc_of_expression:
+  'a Ast.Expression.t -> 'a
+
+val loc_of_statement:
+  'a Ast.Statement.t -> 'a

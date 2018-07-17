@@ -198,8 +198,8 @@ class unexported_class_visitor = object(self)
 
       | DefT (r, InstanceT (static, extends, implements, {
           class_id;
-          fields_tmap;
-          methods_tmap;
+          own_props;
+          proto_props;
           structural;
           _
         })) when not (has_class_name class_id env || Reason.is_lib_reason r) ->
@@ -242,8 +242,8 @@ class unexported_class_visitor = object(self)
           |> gen_separated_list ts ", " gen_type
         in
 
-        let fields = find_props fields_tmap env in
-        let methods = find_props methods_tmap env in
+        let fields = find_props own_props env in
+        let methods = find_props proto_props env in
         let env = gen_class_body static fields methods env |> add_str "\n" in
         (env, seen, imported_classids)
 
@@ -318,14 +318,14 @@ let gen_named_exports =
         add_tparams tparams env |> fold_named_export name t
 
       | ThisClassT (_, DefT (_, InstanceT (static, super, implements, {
-          fields_tmap;
-          methods_tmap;
+          own_props;
+          proto_props;
           has_unknown_react_mixins = _;
           structural;
           _;
         }))) ->
-        let fields = Codegen.find_props fields_tmap env in
-        let methods = Codegen.find_props methods_tmap env in
+        let fields = Codegen.find_props own_props env in
+        let methods = Codegen.find_props proto_props env in
         let env = add_str "declare export " env in
         let env = add_str (
           if structural then "interface"

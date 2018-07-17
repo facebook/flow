@@ -537,12 +537,30 @@ class mapper = object(this)
     if value' == value then opt
     else loc, { key; value = value'; optional; static; proto; _method; variance }
 
+  method object_spread_property_type (opt: Loc.t Ast.Type.Object.SpreadProperty.t) =
+    let open Ast.Type.Object.SpreadProperty in
+    let loc, { argument; } = opt in
+    let argument' = this#type_ argument in
+    if argument' == argument then opt
+    else loc, { argument = argument'; }
+
+  method object_indexer_property_type (opt: Loc.t Ast.Type.Object.Indexer.t) =
+    let open Ast.Type.Object.Indexer in
+    let loc, { id; key; value; static; variance; } = opt in
+    let key' = this#type_ key in
+    let value' = this#type_ value in
+    if key' == key && value' == value then opt
+    else loc, { id; key = key'; value = value'; static; variance; }
+
   method object_type (ot: Loc.t Ast.Type.Object.t) =
     let open Ast.Type.Object in
     let { properties ; exact; } = ot in
     let properties' = ListUtils.ident_map (fun p -> match p with
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
-      | _ -> p (* TODO *)
+      | SpreadProperty p' -> id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
+      | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
+      | CallProperty _
+      | InternalSlot _ -> p (* TODO *)
     ) properties in
     if properties' == properties then ot
     else { properties = properties'; exact }
@@ -639,20 +657,9 @@ class mapper = object(this)
       predicate; return; tparams;
     } = expr in
     let ident' = map_opt this#function_identifier ident in
-    let params' =
-      let (loc, { Params.params = params_list; rest }) = params in
-      let params_list' = ListUtils.ident_map this#function_param_pattern params_list in
-      let rest' = map_opt this#function_rest_element rest in
-      if params_list == params_list' && rest == rest' then params
-      else (loc, { Params.params = params_list'; rest = rest' })
-    in
+    let params' = this#function_params params in
     let return' = map_opt this#type_annotation return in
-    let body' = match body with
-      | BodyBlock (loc, block) ->
-        id this#function_body block body (fun block -> BodyBlock (loc, block))
-      | BodyExpression expr ->
-        id this#expression expr body (fun expr -> BodyExpression expr)
-    in
+    let body' = this#function_body_any body in
     (* TODO: walk predicate *)
     let tparams' = map_opt this#type_parameter_declaration tparams in
     if ident == ident' && params == params' && body == body' && return == return'
@@ -661,6 +668,24 @@ class mapper = object(this)
       id = ident'; params = params'; return = return'; body = body';
       async; generator; expression; predicate; tparams = tparams';
     }
+
+  method function_params (params: Loc.t Ast.Function.Params.t) =
+    let open Ast.Function in
+    let (loc, { Params.params = params_list; rest }) = params in
+    let params_list' = this#function_param_patterns params_list in
+    let rest' = map_opt this#function_rest_element rest in
+    if params_list == params_list' && rest == rest' then params
+    else (loc, { Params.params = params_list'; rest = rest' })
+
+  method function_param_patterns (params_list: Loc.t Ast.Pattern.t list) =
+    ListUtils.ident_map this#function_param_pattern params_list
+
+  method function_body_any (body: Loc.t Ast.Function.body) =
+    match body with
+      | Ast.Function.BodyBlock (loc, block) ->
+        id this#function_body block body (fun block -> Ast.Function.BodyBlock (loc, block))
+      | Ast.Function.BodyExpression expr ->
+        id this#expression expr body (fun expr -> Ast.Function.BodyExpression expr)
 
   method function_body (block: Loc.t Ast.Statement.Block.t) =
     this#block block

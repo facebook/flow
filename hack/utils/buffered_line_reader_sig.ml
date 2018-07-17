@@ -43,7 +43,7 @@ module type S = sig
 
   val get_fd: t -> fd
 
-  val get_next_line: ?approx_size: int -> t -> string result
+  val get_next_line: t -> string result
 
   val get_next_bytes: t -> int -> string result
 end

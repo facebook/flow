@@ -167,6 +167,16 @@ end = struct
       *)
       tvar_cache: (Ty.t, error) result IMap.t;
 
+      (* A cache for resolved EvalTs
+
+         It is important to cache these results because we should only invoke
+         Flow_js.evaluate_type_destructor once for every EvalT. If we fail to do
+         so the result for calls that result to exceptions will not be cached in
+         Context.evaluated and subsequent calls may result to different results.
+         In particular we might get Empty instead of an exception.
+      *)
+      eval_t_cache: (Ty.t, error) result IMap.t;
+
       (* Hide the context in State to avoid clutter *)
       cx: Context.t;
 
@@ -185,6 +195,7 @@ end = struct
     let empty ~cx = {
       counter = 0;
       tvar_cache = IMap.empty;
+      eval_t_cache = IMap.empty;
       cx;
       free_tvars = VSet.empty;
     }
@@ -227,7 +238,7 @@ end = struct
 
 
   (***************)
-  (* Type cache  *)
+  (* Type caches *)
   (***************)
 
   let update_tvar_cache i t =
@@ -241,6 +252,17 @@ end = struct
     get >>| fun st ->
     IMap.get root_id st.tvar_cache
 
+  let update_eval_t_cache i t =
+    let open State in
+    get >>= fun st ->
+    let eval_t_cache = IMap.add i t st.eval_t_cache in
+    put { st with eval_t_cache }
+
+  let find_eval_t id =
+    let open State in
+    get >>| fun st ->
+    IMap.get id st.eval_t_cache
+
 
   (****************)
   (* Environment  *)
@@ -253,7 +275,7 @@ end = struct
       (* For debugging purposes mostly *)
       depth: int;
       (* Type parameters in scope *)
-      tparams: (string * Loc.t) list;
+      tparams: Type.typeparam list;
       (* File the query originated from *)
       file: File_key.t;
 
@@ -304,21 +326,31 @@ end = struct
           - false: return the type normally ignoring the warning.
        3. The type parameter is not in env. Do the default action.
     *)
-    let lookup_tparam ~default env t name loc =
-      let pred (tp_name, _) = (name = tp_name) in
+    let lookup_tparam ~default env t tp_name tp_loc =
+      let open Type in
+      let pred { name; reason; _ } = (
+        name = tp_name &&
+        Reason.def_loc_of_reason reason = tp_loc
+      ) in
       match List.find_opt pred env.tparams with
-      | Some (_, tp_loc) ->
-        if loc = tp_loc || not C.opt_flag_shadowed_type_params
-        then return Ty.(Bound (Symbol (Local loc, name)))
+      | Some _ ->
         (* If we care about shadowing of type params, then flag an error *)
-        else terr ~kind:ShadowTypeParam (Some t)
-      | None -> default t
+        if C.opt_flag_shadowed_type_params then
+          let shadow_pred { name; _ } = (name = tp_name) in
+          match List.find_opt shadow_pred env.tparams with
+          | Some { reason; _ }
+            when Reason.def_loc_of_reason reason <> tp_loc ->
+            terr ~kind:ShadowTypeParam (Some t)
+          | Some _ ->
+            return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+          | None -> assert false
+        else
+          return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+      | None ->
+        default t
 
-    let add_typeparam env typeparam = Type.(
-      let loc = Reason.loc_of_reason typeparam.reason in
-      let name = typeparam.name in
-      { env with tparams = (name, loc) :: env.tparams }
-    )
+    let add_typeparam env typeparam =
+      { env with tparams = typeparam :: env.tparams }
   end
 
 
@@ -355,7 +387,7 @@ end = struct
   *)
   let simplify_unions_inters_visitor =
     let open Ty_visitor.AnyVisitor in
-    object(self) inherit c
+    object(self) inherit visitor
     method private simplify env ~break ~zero ~one ~make ts =
       mapM (self#type_ env) ts >>= fun ts' ->
       let ts' = List.concat (List.map break ts') in
@@ -419,13 +451,13 @@ end = struct
 
     (* Replace a recursive type variable r with a symbol sym in the type t. *)
     let subst r sym t =
-      let visitor = object inherit Ty_visitor.UnitVisitor.c as super
+      let subst_visitor = object inherit Ty_visitor.UnitVisitor.visitor as super
         method! type_ env = function
         | Ty.TVar (i, ts) when r = i ->
           super#type_ env (Ty.Generic (sym, true, ts))
         | t -> super#type_ env t
       end in
-      visitor#map_type () t
+      subst_visitor#map_type () t
 
     (* We shouldn't really create bare Mu types for two reasons.
 
@@ -493,7 +525,7 @@ end = struct
       open M
 
       let run v =
-        let visitor = object(self) inherit c
+        let remove_toplevel_tvar_visitor = object(self) inherit visitor
           method! type_ env = function
           | Ty.Union (t0,t1,ts) ->
             mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
@@ -505,7 +537,7 @@ end = struct
             self#type_ env t >>| mk_mu ~check_recursive:true v
           | t -> return t
         end in
-        visitor#type_ Env.init
+        remove_toplevel_tvar_visitor#type_ Env.init
     end
 
 
@@ -575,7 +607,7 @@ end = struct
       | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
       in
       let open Visitor in
-      let visitor = object inherit c as super
+      let subst_visitor = object inherit visitor as super
         method! type_ env t =
           match t with
           | TypeAlias { ta_tparams=ps; _ }
@@ -595,7 +627,7 @@ end = struct
       in
       fun vs ts t_body ->
         let env = init_env vs ts in
-        let t, changed = visitor#type_ env t_body in
+        let t, changed = subst_visitor#type_ env t_body in
         if changed then simplify_unions_inters t else t
 
   end
@@ -684,35 +716,43 @@ end = struct
   and type_with_alias_reason ~env t =
     if C.opt_expand_type_aliases then type_after_reason ~env t else
     let reason = Type.reason_of_t t in
-    match desc_of_reason ~unwrap:false reason with
-    | RTypeAlias (name, true, _) ->
-      (* The default action is to avoid expansion by using the type alias name,
-         when this can be trusted. The one case where we want to skip this process
-         is when recovering the body of a type alias A. In that case the environment
-         field under_type_alias will be 'Some A'. If the type alias name in the reason
-         is also A, then we are still at the top-level of the type-alias, so we
-         proceed by expanding one level preserving the same environment. *)
-      let continue =
-        match env.Env.under_type_alias with
-        | Some name' -> name = name'
-        | None -> false
-      in
-      if continue then type_after_reason ~env t else
-      let symbol = symbol_from_reason env reason name in
-      return (Ty.named_t symbol)
-    | _ ->
-      (* We are now beyond the point of the one-off expansion. Reset the environment
-         assigning None to under_type_alias, so that aliases are used in subsequent
-         invocations. *)
-      let env = Env.{ env with under_type_alias = None } in
+    let open Type in
+    (* These type are treated as transparent when it comes to the type alias
+       annotation. *)
+    match t with
+    | OpenT _ | EvalT _ ->
       type_after_reason ~env t
+    | _ ->
+      begin match desc_of_reason ~unwrap:false reason with
+      | RTypeAlias (name, true, _) ->
+        (* The default action is to avoid expansion by using the type alias name,
+           when this can be trusted. The one case where we want to skip this process
+           is when recovering the body of a type alias A. In that case the environment
+           field under_type_alias will be 'Some A'. If the type alias name in the reason
+           is also A, then we are still at the top-level of the type-alias, so we
+           proceed by expanding one level preserving the same environment. *)
+        let continue =
+          match env.Env.under_type_alias with
+          | Some name' -> name = name'
+          | None -> false
+        in
+        if continue then type_after_reason ~env t else
+        let symbol = symbol_from_reason env reason name in
+        return (Ty.named_t symbol)
+      | _ ->
+        (* We are now beyond the point of the one-off expansion. Reset the environment
+           assigning None to under_type_alias, so that aliases are used in subsequent
+           invocations. *)
+        let env = Env.{ env with under_type_alias = None } in
+        type_after_reason ~env t
+      end
 
   and type_after_reason ~env t =
     let open Type in
     let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
-    | BoundT tparam -> bound_t ~env t tparam
+    | BoundT tparam -> bound_t ~env tparam
     | AnnotT (t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
@@ -899,12 +939,10 @@ end = struct
       mapM (type__ ~env) ts >>|
       uniq_union
 
-  and bound_t ~env t tparam =
-    let open Type in
-    let { reason; name; _ } = tparam in
-    let loc = Reason.def_loc_of_reason reason in
-    let default t = terr ~kind:BadBoundT (Some t) in
-    Env.lookup_tparam ~default env t name loc
+  and bound_t ~env tparam =
+    let Type.{ reason; name; _ } = tparam in
+    let symbol = symbol_from_reason env reason name in
+    return (Ty.Bound symbol)
 
   and fun_ty ~env f fun_type_params =
     let {T.params; rest_param; return_t; _} = f in
@@ -1027,7 +1065,7 @@ end = struct
       return (Ty.Class (name, structural, ps))
     | Ty.Generic (name, structural, _) ->
       return (Ty.Class (name, structural, ps))
-    | (Ty.Bot | Ty.Exists | Ty.Any | Ty.Top) as b ->
+    | (Ty.Bot | Ty.Exists | Ty.Any | Ty.AnyObj | Ty.Top) as b ->
       return b
     | Ty.Union (t0,t1,ts) ->
       class_t_aux t0 >>= fun t0 ->
@@ -1039,11 +1077,17 @@ end = struct
       class_t_aux t1 >>= fun t1 ->
       mapM class_t_aux ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
-    | Ty.Bound (Ty.Symbol (_, "this")) as t ->
-      return t
+    | Ty.Bound (Ty.Symbol (prov, sym_name)) ->
+      let pred Type.{ name; reason; _ } = (
+        name = sym_name &&
+        Reason.def_loc_of_reason reason = Ty.loc_of_provenance prov
+      ) in
+      begin match List.find_opt pred env.Env.tparams with
+      | Some Type.{ bound; _ } -> type__ ~env bound >>= class_t_aux
+      | _ -> terr ~kind:BadClassT ~msg:"bound" (Some t)
+      end
     | ty ->
-      let msg = spf "normalized class arg: %s" (Ty_debug.dump_t ty) in
-      terr ~kind:BadClassT ~msg (Some t)
+      terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t)
     in
     type__ ~env t >>= class_t_aux
 
@@ -1069,22 +1113,17 @@ end = struct
   (* Type Aliases *)
   and type_t =
     let open Type in
-    let mk_type_alias symbol ps = function
-    | Ty.TypeAlias _ -> terr ~kind:BadTypeAlias ~msg:"nested type alias" None
-    | Ty.Class _ as t -> return t
-    | t -> return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
-    in
     (* NOTE the use of the reason within `t` instead of the one passed with
        the constructor TypeT. The latter is an RType, which is somewhat more
        unwieldy as it is used more pervasively. *)
-    let local env t ps =
+    let local env t ta_tparams =
       let reason = TypeUtil.reason_of_t t in
       match desc_of_reason ~unwrap:false reason with
       | RTypeAlias (name, true, _) ->
         let env = Env.{ env with under_type_alias = Some name } in
-        type__ ~env t >>= fun body ->
+        type__ ~env t >>= fun ta_type ->
         let symbol = symbol_from_reason env reason name in
-        mk_type_alias symbol ps body
+        return (Ty.named_alias symbol ?ta_tparams ~ta_type)
       | _ -> terr ~kind:BadTypeAlias ~msg:"local" (Some t)
     in
     let import_symbol env r t =
@@ -1101,8 +1140,18 @@ end = struct
       import_symbol env r t >>= fun symbol ->
       let Ty.Symbol (_, name) = symbol in
       let env = Env.{ env with under_type_alias = Some name } in
-      type__ ~env t >>= fun body ->
-      mk_type_alias symbol ps body
+      type__ ~env t >>= function
+      | Ty.TypeAlias _ ->
+        terr ~kind:BadTypeAlias ~msg:"nested type alias" None
+      | Ty.Class _ as t ->
+        (* Normalize imports of the form "import typeof { C } from 'm';" (where C
+           is defined as a class in 'm') as a Ty.Class, instead of Ty.TypeAlias.
+           The provenance information on the class should point to the defining
+           location. This way we avoid the indirection of the import location on
+           the alias symbol. *)
+        return t
+      | t ->
+        return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
     in
     let import_typeof env r t ps = import env r t ps in
     let import_fun env r t ps = import env r t ps in
@@ -1367,41 +1416,94 @@ end = struct
     | T.Negative -> Ty.Negative
     | T.Neutral -> Ty.Neutral
 
-  and eval_t =
-    let from_name env name t =
-      type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t name [ty]
-    in
-    fun ~env t id d ->
-    match d with
-    | T.DestructuringT (r, s) ->
-      get_cx >>= fun cx ->
-      begin try
-        (* `eval_selector` may throw for `BoundT`. Catching here. *)
-        return (Flow_js.eval_selector cx r t s id)
-      with exn ->
-        let msg = spf "Exception:%s" (Printexc.to_string exn) in
-        terr ~kind:BadEvalT ~msg (Some t)
-      end
-      >>= type__ ~env
+  (************)
+  (* EvalT    *)
+  (************)
 
-    | T.TypeDestructorT (_, _, d) ->
-      begin match d with
-      | T.NonMaybeType -> from_name env "NonMaybeType" t
-      | T.ReactElementPropsType -> from_name env "React$ElementProps" t
-      | T.ReactElementConfigType -> from_name env "React$ElementConfig" t
-      | T.ReactElementRefType -> from_name env "React$ElementRef" t
-      | _ ->
-        get_cx >>= fun cx ->
-        let evaluated = Context.evaluated cx in
-        begin match IMap.get id evaluated with
-        | Some cached_t -> type__ ~env cached_t
-          (* this happens when, for example, the RHS of a destructuring is
-             unconstrained, so we never evaluate the destructuring. so, make the
-             destructured value also unconstrained... *)
-        | _ -> return Ty.Bot
-        end
-      end
+  and destructuring_t ~env t id r s =
+    get_cx >>= fun cx ->
+    let result = try
+      (* eval_selector may throw for BoundT. Catching here. *)
+      Ok (Flow_js.eval_selector cx r t s id)
+    with
+      exn -> Error (spf "Exception:%s" (Printexc.to_string exn))
+    in
+    match result with
+    | Ok tout -> type__ ~env tout
+    | Error msg -> terr ~kind:BadEvalT ~msg (Some t)
+
+  and named_type_destructor_t ~env t d =
+    let open Type in
+    let from_name n ts =
+      mapM (type__ ~env) ts >>| fun tys ->
+      Ty.generic_builtin_t n tys
+    in
+    match d with
+    | NonMaybeType -> from_name "$NonMaybeType" [t]
+    | ReadOnlyType -> from_name "$ReadOnlyType" [t]
+    | ValuesType -> from_name "$Values" [t]
+    | ElementType t' -> from_name "$ElementType" [t; t']
+    | CallType ts -> from_name "$Call" (t::ts)
+    | ReactElementPropsType -> from_name "React$ElementProps" [t]
+    | ReactElementConfigType -> from_name "React$ElementConfig" [t]
+    | ReactElementRefType -> from_name "React$ElementRef" [t]
+    | PropertyType k ->
+      let r = mk_reason (RStringLit k) Loc.none in
+      from_name "$PropertyType" [t; DefT (r, SingletonStrT k)]
+    | TypeMap (ObjectMap t') -> from_name "$ObjMap" [t; t']
+    | TypeMap (ObjectMapi t') -> from_name "$ObjMapi" [t; t']
+    | TypeMap (TupleMap t') -> from_name "$TupleMap" [t; t']
+    | RestType (Object.Rest.Sound, t') -> from_name "$Rest" [t; t']
+    | RestType (Object.Rest.IgnoreExactAndOwn, t') -> from_name "$Diff" [t; t']
+    | RestType (Object.Rest.ReactConfigMerge, _) | Bind _ | SpreadType _ ->
+      terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
+
+  and resolve_type_destructor_t ~env t id use_op reason d =
+    get_cx >>= fun cx ->
+    let trace = Trace.dummy_trace in
+    let result =
+      try
+        Ok (snd (Flow_js.mk_type_destructor cx ~trace use_op reason t d id))
+      with
+        (* Allow bounds *)
+        | Flow_js.Not_expect_bound s -> Error s
+        (* But re-raise any other exception *)
+        | exn -> raise exn
+    in
+    match result with
+    | Ok t -> type__ ~env t
+    | Error _s -> named_type_destructor_t ~env t d
+
+  and evaluate_type_destructor ~env t id use_op reason d =
+    get_cx >>= fun cx ->
+    let evaluated = Context.evaluated cx in
+    match IMap.get id evaluated with
+    | Some cached_t -> type__ ~env cached_t
+    | None -> resolve_type_destructor_t ~env t id use_op reason d
+
+  and type_destructor_t ~env t id use_op reason d =
+    find_eval_t id >>= function
+    | Some (Ok t) -> return t
+    | Some (Error e) -> error e
+    | None ->
+      get >>= fun in_st ->
+      (* To store the complete result (including error case) we need to run
+         evaluation outside the monad and then update the state of the main monad.
+      *)
+      let result, out_st = run in_st (
+        evaluate_type_destructor ~env t id use_op reason d
+      ) in
+      put out_st >>= fun _ ->
+      update_eval_t_cache id result >>= fun _ ->
+      begin match result with
+      | Ok ty -> return ty
+      | Error e -> error e end
+
+  and eval_t ~env t id = function
+    | Type.DestructuringT (r, s) ->
+      destructuring_t ~env t id r s
+    | Type.TypeDestructorT (use_op, reason, d) ->
+      type_destructor_t ~env t id use_op reason d
 
   and module_t env reason t =
     match desc_of_reason reason with

@@ -22,3 +22,9 @@ module Any: S with type t = bool = struct
   let empty = false
   let append = (||)
 end
+
+module Counter: S with type t = int = struct
+  type t = int
+  let empty = 0
+  let append = (+)
+end

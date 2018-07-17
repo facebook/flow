@@ -6,6 +6,9 @@
  *)
 
 module Request = struct
+  type refactor_variant =
+    | RENAME of string (* new name *)
+
   type command =
   | AUTOCOMPLETE of File_input.t
   | CHECK_FILE of
@@ -28,10 +31,14 @@ module Request = struct
       Verbose.t option *
       bool (* expand type aliases *)
   | PORT of string list
+  | REFACTOR of File_input.t * int * int * refactor_variant (* filename, line, char, refactor variant *)
   | STATUS of Path.t * bool (* include_warnings *)
   | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
   | SUGGEST of File_input.t
   | SAVE_STATE of Path.t
+
+  let string_of_refactor_variant = function
+    | RENAME new_name -> Printf.sprintf "rename(%s)" new_name
 
   let to_string = function
   | AUTOCOMPLETE fn ->
@@ -64,6 +71,12 @@ module Request = struct
         (File_input.filename_of_file_input fn) line char
   | PORT (files) ->
       Printf.sprintf "port %s" (String.concat " " files)
+  | REFACTOR (fn, line, char, kind) ->
+      Printf.sprintf "refactor %s:%d:%d:%s"
+        (File_input.filename_of_file_input fn)
+        line
+        char
+        (string_of_refactor_variant kind)
   | STATUS (_, _) ->
       "status"
   | SUGGEST (_) ->
@@ -122,6 +135,13 @@ module Response = struct
     Loc.t * Ty.t option,
     string
   ) result
+
+  type textedit = Loc.t * string
+  type refactor_ok = {
+    refactor_edits: textedit list;
+  }
+
+  type refactor_response = (refactor_ok option, string) result
 
   type suggest_result =
   | Suggest_Ok of {
@@ -185,6 +205,7 @@ module Response = struct
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
   | PORT of port_response
+  | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
   | FORCE_RECHECK of Profiling_js.finished option
   | SUGGEST of suggest_response
@@ -203,6 +224,7 @@ module Response = struct
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
   | PORT _ -> "port response"
+  | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"
   | FORCE_RECHECK _ -> "force_recheck response"
   | SUGGEST _ -> "suggest response"

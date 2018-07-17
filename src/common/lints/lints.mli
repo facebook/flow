@@ -6,13 +6,17 @@
  *)
 
 type sketchy_null_kind =
- | SketchyBool
- | SketchyString
- | SketchyNumber
- | SketchyMixed
+ | SketchyNullBool
+ | SketchyNullString
+ | SketchyNullNumber
+ | SketchyNullMixed
+
+type sketchy_number_kind =
+  | SketchyNumberAnd
 
 type lint_kind =
  | SketchyNull of sketchy_null_kind
+ | SketchyNumber of sketchy_number_kind
  | UntypedTypeImport
  | UntypedImport
  | NonstrictImport
@@ -21,6 +25,7 @@ type lint_kind =
  | UnsafeGettersSetters
  | InexactSpread
  | UnnecessaryOptionalChain
+ | UnnecessaryInvariant
  | DeprecatedCallSyntax
 
 val string_of_kind: lint_kind -> string

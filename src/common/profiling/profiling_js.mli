@@ -9,6 +9,7 @@ type running
 type finished
 
 val with_profiling_lwt: should_print_summary:bool -> (running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
+val get_profiling_duration: finished -> float
 
 val with_timer_prefix_lwt: prefix:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 

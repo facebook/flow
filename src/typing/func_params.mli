@@ -14,14 +14,12 @@ type binding = string * Loc.t * Type.t * default option
 val empty: t
 
 val add_simple: Context.t ->
-  tparams_map: Type.t SMap.t ->
   optional: bool ->
   ?default: Loc.t Ast.Expression.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->
   t -> t
 
 val add_complex: Context.t ->
-  tparams_map: Type.t SMap.t ->
   expr: (Context.t -> Loc.t Ast.Expression.t -> Type.t * Typed_ast.annot Ast.Expression.t') ->
   ?default: Loc.t Ast.Expression.t ->
   Loc.t Ast.Pattern.t -> Type.t ->
@@ -29,7 +27,6 @@ val add_complex: Context.t ->
   t * Typed_ast.annot Ast.Pattern.t'
 
 val add_rest: Context.t ->
-  tparams_map: Type.t SMap.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->
   t -> t
 

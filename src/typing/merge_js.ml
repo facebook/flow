@@ -153,13 +153,13 @@ let detect_sketchy_null_checks cx =
       | Some null_loc ->
         let add_error = add_error ~loc ~null_loc in
         if (Option.is_none exists_excuse.bool_loc) then
-          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyBool);
+          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyNullBool);
         if (Option.is_none exists_excuse.number_loc) then
-          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNumber);
+          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNullNumber);
         if (Option.is_none exists_excuse.string_loc) then
-          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyString);
+          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
         if (Option.is_none exists_excuse.mixed_loc) then
-          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyMixed);
+          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
         ()
     end
   in
@@ -176,6 +176,11 @@ let detect_unnecessary_optional_chains cx =
   List.iter (fun (loc, lhs_reason) ->
     Flow_js.add_output cx (Flow_error.EUnnecessaryOptionalChain (loc, lhs_reason))
   ) (Context.unnecessary_optional_chains cx)
+
+let detect_unnecessary_invariants cx =
+  List.iter (fun (loc, reason) ->
+    Flow_js.add_output cx (Flow_error.EUnnecessaryInvariant (loc, reason))
+  ) (Context.unnecessary_invariants cx)
 
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
@@ -349,6 +354,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_sketchy_null_checks cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
+  detect_unnecessary_invariants cx;
 
   cx, other_cxs
 

@@ -421,6 +421,18 @@ let handle_ephemeral_unsafe
           ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
           |> respond;
           Lwt.return None
+      | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
+          let open ServerProt.Response in
+          let%lwt result =
+            Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+          in
+          let result =
+            result
+            |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
+          in
+          REFACTOR (result)
+          |> respond;
+          Lwt.return None
       | ServerProt.Request.STATUS (client_root, include_warnings) ->
           let genv = {genv with
             options = let open Options in {genv.options with
@@ -452,7 +464,10 @@ let handle_ephemeral_unsafe
           Lwt.return None
     end
   in
-  MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+  let event = ServerStatus.(Finishing_up {
+    duration = Profiling_js.get_profiling_duration profiling;
+    info = CommandSummary (ServerProt.Request.to_string command)}) in
+  MonitorRPC.status_update ~event;
   Lwt.return (!env, profiling, json_data)
 
 let handle_ephemeral genv env (request_id, command) =
@@ -481,11 +496,10 @@ let handle_ephemeral genv env (request_id, command) =
     Lwt.return env
 
 
-let did_open genv env client (files: (string*string) Nel.t)
-  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string * Utils.callstack) result) Lwt.t =
+let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   begin match Persistent_connection.client_did_open env.connections client ~files with
-  | None -> Lwt.return (Ok (env, None)) (* No new files were opened, so do nothing *)
+  | None -> Lwt.return env (* No new files were opened, so do nothing *)
   | Some (connections, client) ->
     let env = {env with connections} in
 
@@ -507,123 +521,159 @@ let did_open genv env client (files: (string*string) Nel.t)
         let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
         Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
       end;
-      Lwt.return (Ok (env, None))
+      Lwt.return env
     | Some Options.LAZY_MODE_FILESYSTEM
     | None ->
       (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
        * a new file is opened is to send the errors to the client *)
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
       Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-      Lwt.return (Ok (env, None))
+      Lwt.return env
     end
 
-let did_close _genv env client (filenames: string Nel.t)
-  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string * Utils.callstack) result) Lwt.t
-  =
+let did_close _genv env client (filenames: string Nel.t) : ServerEnv.env Lwt.t =
   begin match Persistent_connection.client_did_close env.connections client ~filenames with
-    | None -> Lwt.return (Ok (env, None)) (* No new files were closed, so do nothing *)
+    | None -> Lwt.return env (* No new files were closed, so do nothing *)
     | Some (connections, client) ->
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
       Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-      Lwt.return (Ok ({env with connections}, None))
+      Lwt.return {env with connections}
   end
 
+
+let with_error
+    ?(stack: Utils.callstack option)
+    ~(reason: string)
+    (metadata: Persistent_connection_prot.metadata)
+  : Persistent_connection_prot.metadata =
+  let open Persistent_connection_prot in
+  let local_stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+  let stack = Option.value stack ~default:(Utils.Callstack local_stack) in
+  let error_info = Some (ExpectedError, reason, stack) in
+  { metadata with error_info }
+
+let keyvals_of_json (json: Hh_json.json option) : (string * Hh_json.json) list =
+  match json with
+  | None -> []
+  | Some (Hh_json.JSON_Object keyvals) -> keyvals
+  | Some json -> ["json_data", json]
+
+let with_data
+    ~(extra_data: Hh_json.json option)
+    (metadata: Persistent_connection_prot.metadata)
+  : Persistent_connection_prot.metadata =
+  let open Persistent_connection_prot in
+  let extra_data = metadata.extra_data @ (keyvals_of_json extra_data)
+  in
+  { metadata with extra_data }
+
+type persistent_handling_result =
+  (** IdeResponse means that handle_persistent_unsafe is responsible for sending
+     the message to the client, and handle_persistent is responsible for logging. *)
+  | IdeResponse of (
+      ServerEnv.env * Hh_json.json option,
+      ServerEnv.env * Persistent_connection_prot.error_info
+    ) result
+  (** LspResponse means that handle_persistent is responsible for sending the
+     message (if needed) to the client, and lspCommand is responsible for logging. *)
+  | LspResponse of (
+      ServerEnv.env * Lsp.lsp_message option * Persistent_connection_prot.metadata,
+      ServerEnv.env * Persistent_connection_prot.metadata
+    ) result
 
 
 (** handle_persistent_unsafe:
    either this method returns Ok (and optionally returns some logging data),
    or it returns Error for some well-understood reason string,
    or it might raise/Lwt.fail, indicating a misunderstood coding bug. *)
-let handle_persistent_unsafe genv env client profiling msg
-  : ((ServerEnv.env * Hh_json.json option, ServerEnv.env * string * Utils.callstack) result) Lwt.t
-  =
+let handle_persistent_unsafe genv env client profiling msg : persistent_handling_result Lwt.t =
+  let open Persistent_connection_prot in
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
-  let lsp_writer: (lsp_message -> unit) = fun payload ->
-    Persistent_connection.send_message (Persistent_connection_prot.LspFromServer payload) client
-  in
 
   match msg with
-  | Persistent_connection_prot.Subscribe ->
+  | Subscribe ->
       let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
       let new_connections = Persistent_connection.subscribe_client
         ~clients:env.connections ~client ~current_errors ~current_warnings
       in
-      Lwt.return (Ok ({ env with connections = new_connections }, None))
+      Lwt.return (IdeResponse (Ok ({ env with connections = new_connections }, None)))
 
-  | Persistent_connection_prot.Autocomplete (file_input, id) ->
+  | Autocomplete (file_input, id) ->
       let env = ref env in
       let%lwt results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
-      let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
+      let wrapped = AutocompleteResult (results, id) in
       Persistent_connection.send_message wrapped client;
-      Lwt.return (Ok (!env, json_data))
+      Lwt.return (IdeResponse (Ok (!env, json_data)))
 
-  | Persistent_connection_prot.DidOpen filenames ->
+  | DidOpen filenames ->
     Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
     let files = Nel.map (fun fn -> (fn, "%%Legacy IDE has no content")) filenames in
-    did_open genv env client files
+    let%lwt env = did_open genv env client files in
+    Lwt.return (IdeResponse (Ok (env, None)))
 
-  | Persistent_connection_prot.LspToServer (NotificationMessage (DidOpenNotification params)) ->
+  | LspToServer (NotificationMessage (DidOpenNotification params), metadata) ->
     let open Lsp.DidOpen in
     let open TextDocumentItem in
     let content = params.textDocument.text in
     let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-    did_open genv env client (Nel.one (fn, content))
+    let%lwt env = did_open genv env client (Nel.one (fn, content)) in
+    Lwt.return (LspResponse (Ok (env, None, metadata)))
 
-  | Persistent_connection_prot.LspToServer (NotificationMessage (DidChangeNotification params)) ->
-    begin
-      let open Lsp.DidChange in
-      let open VersionedTextDocumentIdentifier in
-      let open Persistent_connection in
-      let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-      match client_did_change env.connections client fn params.contentChanges with
+  | LspToServer (NotificationMessage (DidChangeNotification params), metadata) ->
+    let open Lsp.DidChange in
+    let open VersionedTextDocumentIdentifier in
+    let open Persistent_connection in
+    let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
+    begin match client_did_change env.connections client fn params.contentChanges with
       | Ok (connections, _client) ->
-        (* TODO(ljw): report syntax errors for the change immediately *)
-        let env = { env with connections; } in
-        Lwt.return (Ok (env, None))
+        Lwt.return (LspResponse (Ok ({ env with connections; }, None, metadata)))
       | Error (reason, stack) ->
-        Lwt.return (Error (env, reason, stack))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason ~stack)))
     end
 
-  | Persistent_connection_prot.LspToServer (NotificationMessage (DidSaveNotification _params)) ->
-    Lwt.return (Ok (env, None))
+  | LspToServer (NotificationMessage (DidSaveNotification _params), metadata) ->
+    Lwt.return (LspResponse (Ok (env, None, metadata)))
 
   | Persistent_connection_prot.DidClose filenames ->
     Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-    did_close genv env client filenames
+    let%lwt env = did_close genv env client filenames in
+    Lwt.return (IdeResponse (Ok (env, None)))
 
-  | Persistent_connection_prot.LspToServer (NotificationMessage (DidCloseNotification params)) ->
+  | LspToServer (NotificationMessage (DidCloseNotification params), metadata) ->
     let open Lsp.DidClose in
     let open TextDocumentIdentifier in
     let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-    did_close genv env client (Nel.one fn)
+    let%lwt env = did_close genv env client (Nel.one fn) in
+    Lwt.return (LspResponse (Ok (env, None, metadata)))
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, DefinitionRequest params)) ->
+  | LspToServer (RequestMessage (id, DefinitionRequest params), metadata) ->
     let env = ref env in
     let open TextDocumentPositionParams in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
-    let%lwt (result, json_data) =
+    let%lwt (result, extra_data) =
       get_def ~options ~workers ~env ~profiling (file, line, char) in
+    let metadata = with_data ~extra_data metadata in
     begin match result with
       | Ok loc ->
         let default_uri = params.textDocument.TextDocumentIdentifier.uri in
         let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
-        let definition_location = Lsp.DefinitionLocation.{ location; title = None } in
-        lsp_writer (ResponseMessage (id, DefinitionResult [definition_location]));
-        Lwt.return (Ok (!env, json_data))
+        let definition_location = { Lsp.DefinitionLocation.location; title = None } in
+        let response = ResponseMessage (id, DefinitionResult [definition_location]) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Error reason ->
-        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
     end
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, HoverRequest params)) ->
+  | LspToServer (RequestMessage (id, HoverRequest params), metadata) ->
     let open TextDocumentPositionParams in
     let env = ref env in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let verbose = None in (* if Some, would write to server logs *)
-    let%lwt result, json_data =
+    let%lwt result, extra_data =
       infer_type ~options ~workers ~env ~profiling (file, line, char, verbose, false)
     in
+    let metadata = with_data ~extra_data metadata in
     begin match result with
       | Ok (loc, content) ->
         (* loc may be the 'none' location; content may be None. *)
@@ -637,14 +687,13 @@ let handle_persistent_unsafe genv env client profiling msg
         let r = match range, content with
           | None, None -> None
           | _, _ -> Some {Lsp.Hover.contents; range;} in
-        lsp_writer (ResponseMessage (id, HoverResult r));
-        Lwt.return (Ok (!env, json_data))
+        let response = ResponseMessage (id, HoverResult r) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Error reason ->
-        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
     end
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, CompletionRequest params)) ->
+  | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
     let env = ref env in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let fn_content = match file with
@@ -658,33 +707,34 @@ let handle_persistent_unsafe genv env client profiling msg
           Error (Printexc.to_string e, Utils.Callstack stack)
     in
     begin match fn_content with
-      | Error (reason, Utils.Callstack stack) ->
-        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+      | Error (reason, stack) ->
+        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason ~stack)))
       | Ok (fn, content) ->
         let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
         let file_with_token = File_input.FileContent (fn, content_with_token) in
-        let%lwt result, json_data =
+        let%lwt result, extra_data =
           autocomplete ~options ~workers ~env ~profiling file_with_token
         in
+        let metadata = with_data ~extra_data metadata in
         begin match result with
           | Ok items ->
             let items = List.map Flow_lsp_conversions.flow_completion_to_lsp items in
             let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
-            lsp_writer (ResponseMessage (id, r));
-            Lwt.return (Ok (!env, json_data))
+            let response = ResponseMessage (id, r) in
+            Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
           | Error reason ->
-            let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-            Lwt.return (Error (!env, reason, Utils.Callstack stack))
+            Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
         end
     end
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
+  | LspToServer (RequestMessage (id, DocumentHighlightRequest params), metadata) ->
     let env = ref env in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let global, multi_hop = false, false in (* multi_hop implies global *)
-    let%lwt result, json_data =
+    let%lwt result, extra_data =
       find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in
+    let metadata = with_data ~extra_data metadata in
     begin match result with
       | Ok (Some (_name, locs)) ->
         (* All the locs are implicitly in the same file, because global=false. *)
@@ -693,19 +743,18 @@ let handle_persistent_unsafe genv env client profiling msg
           kind = Some DocumentHighlight.Text;
         } in
         let r = DocumentHighlightResult (List.map loc_to_highlight locs) in
-        lsp_writer (ResponseMessage (id, r));
-        Lwt.return (Ok (!env, json_data))
+        let response = ResponseMessage (id, r) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Ok (None) ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         let r = DocumentHighlightResult [] in
-        lsp_writer (ResponseMessage (id, r));
-        Lwt.return (Ok (!env, json_data))
+        let response = ResponseMessage (id, r) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Error reason ->
-        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
     end
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
+  | LspToServer (RequestMessage (id, TypeCoverageRequest params), metadata) ->
     let env = ref env in
     let textDocument = params.TypeCoverage.textDocument in
     let file = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow ~client textDocument in
@@ -731,8 +780,8 @@ let handle_persistent_unsafe genv env client profiling msg
           uncoveredRanges = [{TypeCoverage.range; message=None;}];
           defaultMessage = "Use @flow to get type coverage for this file";
         } in
-        lsp_writer (ResponseMessage (id, r));
-        Lwt.return (Ok (!env, None))
+        let response = ResponseMessage (id, r) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | true, Ok (all_locs) ->
         (* Figure out the percentages *)
         let accum_coverage (covered, total) (_loc, is_covered) =
@@ -767,23 +816,23 @@ let handle_persistent_unsafe genv env client profiling msg
           uncoveredRanges;
           defaultMessage = "Un-type checked code. Consider adding type annotations.";
         } in
-        lsp_writer (ResponseMessage (id, r));
-        Lwt.return (Ok (!env, None))
+        let response = ResponseMessage (id, r) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | true, Error reason ->
-        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
     end
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
+  | LspToServer (RequestMessage (id, FindReferencesRequest params), metadata) ->
+    let open FindReferences in
     let env = ref env in
-    let loc = FindReferences.(params.loc) in
-    let _includeDeclaration = FindReferences.(params.context.includeDeclaration) in
+    let { loc; context = { includeDeclaration=_; includeIndirectReferences=multi_hop } } = params in
     (* TODO: respect includeDeclaration *)
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
-    let global, multi_hop = true, false in
-    let%lwt result, json_data =
+    let global = true in
+    let%lwt result, extra_data =
       find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in
+    let metadata = with_data ~extra_data metadata in
     begin match result with
       | Ok (Some (_name, locs)) ->
         let lsp_locs = Core_list.fold locs ~init:(Ok []) ~f:(fun acc loc ->
@@ -791,23 +840,69 @@ let handle_persistent_unsafe genv env client profiling msg
           Core_result.combine location acc ~ok:List.cons ~err:(fun e _ -> e)) in
         begin match lsp_locs with
         | Ok lsp_locs ->
-          lsp_writer (ResponseMessage (id, FindReferencesResult lsp_locs));
-          Lwt.return (Ok (!env, json_data))
-        | Error e ->
-          let stack = Printexc.get_backtrace () in
-          Lwt.return (Error (!env, e, Utils.Callstack stack))
+          let response = ResponseMessage (id, FindReferencesResult lsp_locs) in
+          Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        | Error reason ->
+          Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
         end
       | Ok (None) ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         let r = FindReferencesResult [] in
-        lsp_writer (ResponseMessage (id, r));
-        Lwt.return (Ok (!env, json_data))
+        let response = ResponseMessage (id, r) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Error reason ->
-        let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-        Lwt.return (Error (!env, reason, Utils.Callstack stack))
+        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
     end
 
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, RageRequest)) ->
+  | LspToServer (RequestMessage (id, RenameRequest params), metadata) ->
+    let env = ref env in
+    let { Rename.textDocument; position; newName } = params in
+    let file_input = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client in
+    let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
+    let refactor_variant = ServerProt.Request.RENAME newName in
+    let%lwt result =
+      Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+    in
+    let edits_to_response (edits: (Loc.t * string) list) =
+      (* Extract the path from each edit and convert into a map from file to edits for that file *)
+      let file_to_edits: ((Loc.t * string) list SMap.t, string) result =
+        List.fold_left begin fun map edit ->
+          map >>= begin fun map ->
+            let (loc, _) = edit in
+            let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
+            uri >>| begin fun uri ->
+              let lst = Option.value ~default:[] (SMap.get uri map) in
+              (* This reverses the list *)
+              SMap.add uri (edit::lst) map
+            end
+          end
+        end (Ok SMap.empty) edits
+        (* Reverse the lists to restore the original order *)
+        >>| SMap.map (List.rev)
+      in
+      (* Convert all of the edits to LSP edits *)
+      let file_to_textedits: (TextEdit.t list SMap.t, string) result =
+        file_to_edits >>| SMap.map (List.map Flow_lsp_conversions.flow_edit_to_textedit)
+      in
+      let workspace_edit: (WorkspaceEdit.t, string) result =
+        file_to_textedits >>| fun file_to_textedits ->
+        { WorkspaceEdit.changes = file_to_textedits }
+      in
+      match workspace_edit with
+        | Ok x ->
+          let response = ResponseMessage (id, RenameResult x) in
+          LspResponse (Ok (!env, Some response, metadata))
+        | Error reason ->
+          LspResponse (Error (!env, with_error metadata ~reason))
+    in
+    Lwt.return begin match result with
+      | Ok (Some edits) -> edits_to_response edits
+      | Ok None -> edits_to_response []
+      | Error reason ->
+        LspResponse (Error (!env, with_error metadata ~reason))
+    end
+
+  | LspToServer (RequestMessage (id, RageRequest), metadata) ->
     let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
     let items = [] in
     (* genv: lazy-mode options *)
@@ -841,79 +936,101 @@ let handle_persistent_unsafe genv env client profiling msg
     let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
     let items = { Lsp.Rage.title = Some (root ^ ":env.errors"); data; } :: items in
     (* done! *)
-    let r = RageResult items in
-    lsp_writer (ResponseMessage (id, r));
-    Lwt.return (Ok (env, None))
+    let response = ResponseMessage (id, RageResult items) in
+    Lwt.return (LspResponse (Ok (env, Some response, metadata)))
 
-  | Persistent_connection_prot.LspToServer unhandled ->
-    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-    let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_to_string unhandled) in
-    Lwt.return (Error (env, reason, Utils.Callstack stack))
-
-
-let report_lsp_error_if_necessary
-    (client: Persistent_connection.single_client)
-    (msg: Persistent_connection_prot.request)
-    (e: exn)
-    (stack: string)
-  : unit =
-  let lsp_writer: (lsp_message -> unit) = fun payload ->
-    Persistent_connection.send_message (Persistent_connection_prot.LspFromServer payload) client
-  in
-  match msg with
-  | Persistent_connection_prot.LspToServer (RequestMessage (id, _)) ->
-    let response = ResponseMessage (id, ErrorResult (e,stack)) in
-    lsp_writer response
-  | Persistent_connection_prot.LspToServer _ ->
-    let open LogMessage in
-    let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
-    let message = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
-    let notification = NotificationMessage
-      (TelemetryNotification {type_=MessageType.ErrorMessage; message;}) in
-    lsp_writer notification
-  | _ ->
-    ()
+  | LspToServer (unhandled, metadata) ->
+    let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
+    Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
 
 
 let handle_persistent
     (genv: ServerEnv.genv)
     (env: ServerEnv.env)
     (client_id: Persistent_connection.Prot.client_id)
-    (msg: Persistent_connection_prot.request)
+    (request: Persistent_connection_prot.request)
   : ServerEnv.env Lwt.t =
-  Hh_logger.debug "Persistent request: %s" (Persistent_connection_prot.string_of_request msg);
+  let open Persistent_connection_prot in
+  Hh_logger.debug "Persistent request: %s" (string_of_request request);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
   let client = Persistent_connection.get_client env.connections client_id in
   let client_context = Persistent_connection.get_logging_context client in
   let should_print_summary = Options.should_profile genv.options in
-  let request = Persistent_connection_prot.denorm_string_of_request msg in
-  try
+  let wall_start = Unix.gettimeofday () in
 
-    let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
-      (fun profiling -> handle_persistent_unsafe genv env client profiling msg) in
+  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
+    (fun profiling ->
+      try%lwt
+        handle_persistent_unsafe genv env client profiling request
+      with e ->
+        let stack = Utils.Callstack (Printexc.get_backtrace ()) in
+        let reason = Printexc.to_string e in
+        let error_info = (UnexpectedError, reason, stack) in
+        begin match request with
+          | LspToServer (_, metadata) ->
+            Lwt.return (LspResponse (Error (env, {metadata with error_info=Some error_info})))
+          | _ ->
+            Lwt.return (IdeResponse (Error (env, error_info)))
+        end)
+  in
 
-    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
-    match result with
-    | Ok (env, json_data) ->
-      FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
-      Lwt.return env
-    | Error (env, reason, Utils.Callstack stack) ->
-      let json_data = Some (Hh_json.JSON_Object [ "Error", Hh_json.JSON_String reason ]) in
-      FlowEventLogger.persistent_command_success ?json_data ~request ~client_context ~profiling;
-      (* note that persistent_command_success is used even for Errors; *)
-      (* we only use persistent_command_failure for exceptions, i.e. coding bugs *)
-      report_lsp_error_if_necessary client msg (Failure reason) stack;
-      Lwt.return env
-  with exn ->
-    let backtrace = String.trim (Printexc.get_backtrace ()) in
-    let exn_str = Printf.sprintf "%s%s%s"
-      (Printexc.to_string exn)
-      (if backtrace = "" then "" else "\n")
-      backtrace in
-    Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request exn_str;
-    let json_data = Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ] in
-    FlowEventLogger.persistent_command_failure ~request ~client_context ~json_data;
-    report_lsp_error_if_necessary client msg exn backtrace;
-    MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
+  (* we'll send this "Finishing_up" event only after sending the LSP response *)
+  let event = ServerStatus.(Finishing_up {
+    duration = Profiling_js.get_profiling_duration profiling;
+    info = CommandSummary (string_of_request request)}) in
+
+  let server_profiling = Some profiling in
+
+  match result with
+  | LspResponse (Ok (env, lsp_response, metadata)) ->
+    let metadata = {metadata with server_profiling} in
+    let response = LspFromServer (lsp_response, metadata) in
+    Persistent_connection.send_message response client;
+    MonitorRPC.status_update ~event;
+    Lwt.return env
+
+  | LspResponse (Error (env, metadata)) ->
+    let metadata = {metadata with server_profiling} in
+    let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
+    let e = Failure reason in
+    let lsp_response = match request with
+      | LspToServer (RequestMessage (id, _), _) ->
+        Some (ResponseMessage (id, ErrorResult (e, stack)))
+      | LspToServer _ ->
+        let open LogMessage in
+        let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
+        let text = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
+        Some (NotificationMessage (TelemetryNotification
+          {type_=MessageType.ErrorMessage; message=text;}))
+      | _ -> None in
+    let response = LspFromServer (lsp_response, metadata) in
+    Persistent_connection.send_message response client;
+    MonitorRPC.status_update ~event;
+    Lwt.return env
+
+  | IdeResponse (Ok (env, extra_data)) ->
+    let request = json_of_request request |> Hh_json.json_to_string in
+    let extra_data = keyvals_of_json extra_data in
+    FlowEventLogger.persistent_command_success ~extra_data
+      ~persistent_context:None ~persistent_delay:None ~request ~client_context
+      ~server_profiling ~client_duration:None ~wall_start ~error:None;
+    MonitorRPC.status_update ~event;
+    Lwt.return env
+
+  | IdeResponse (Error (env, (ExpectedError, reason, stack))) ->
+    let request = json_of_request request |> Hh_json.json_to_string in
+    FlowEventLogger.persistent_command_success ~extra_data:[]
+      ~persistent_context:None ~persistent_delay:None ~request ~client_context
+      ~server_profiling ~client_duration:None ~wall_start ~error:(Some (reason, stack));
+    MonitorRPC.status_update ~event;
+    Lwt.return env
+
+  | IdeResponse (Error (env, (UnexpectedError, reason, stack))) ->
+    let request = json_of_request request |> Hh_json.json_to_string in
+    FlowEventLogger.persistent_command_failure ~extra_data:[]
+      ~persistent_context:None ~persistent_delay:None ~request ~client_context
+      ~server_profiling ~client_duration:None ~wall_start ~error:(reason, stack);
+    Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request reason;
+    MonitorRPC.status_update ~event;
     Lwt.return env

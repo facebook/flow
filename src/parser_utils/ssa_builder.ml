@@ -305,7 +305,6 @@ class ssa_builder = object(this)
   method run_to_completion f =
     try f (); None with
       | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
-      | e -> raise e (* unexpected shit *)
   method from_completion = function
     | None -> ()
     | Some abrupt_completion -> raise (AbruptCompletion.Exn abrupt_completion)

@@ -43,6 +43,9 @@ type results = {
 
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+
+  (* set of unchanged files *)
+  parse_unchanged: FilenameSet.t;
 }
 
 val docblock_max_tokens: int
@@ -60,8 +63,8 @@ val parse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
-  lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
+  parse_unchanged: bool ->
   MultiWorkerLwt.worker list option ->       (* Some=parallel, None=serial *)
   File_key.t list Bucket.next ->  (* delivers buckets of filenames *)
   results Lwt.t                       (* job results, not asts *)
@@ -82,8 +85,8 @@ val reparse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
-  lazy_mode: bool ->
   noflow: (File_key.t -> bool) ->
+  parse_unchanged: bool ->
   ?with_progress: bool ->
   MultiWorkerLwt.worker list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
@@ -118,6 +121,12 @@ val parse_docblock:
   string ->
   docblock_error list * Docblock.t
 
+val parse_json_file :
+  fail:bool ->
+  string ->
+  File_key.t ->
+  Loc.t * (Loc.t * Loc.t Ast.Statement.t') list * Loc.t Ast.Comment.t list
+
 (* parse contents of a file *)
 val do_parse:
   ?fail:bool ->
@@ -134,6 +143,8 @@ val next_of_filename_set:
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
   File_key.t list Bucket.next
+
+val does_content_match_file_hash: File_key.t -> string -> bool
 
 (* APIs for loading saved state *)
 val add_file_sig_from_saved_state: File_key.t -> File_sig.t -> unit

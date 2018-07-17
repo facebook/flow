@@ -71,8 +71,8 @@ let send_errors_if_subscribed ~client ~errors ~warnings =
 let send_single_exit code client =
   send_message (Prot.ServerExit code) client
 
-let send_single_lsp message client =
-  send_message (Prot.LspFromServer message) client
+let send_single_lsp (message, metadata) client =
+  send_message (Prot.LspFromServer (message, metadata)) client
 
 let send_single_start_recheck client =
   send_message (Prot.StartRecheck) client

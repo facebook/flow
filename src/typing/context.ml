@@ -101,6 +101,8 @@ type sig_t = {
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
 
   mutable optional_chains_useful: (Reason.t * bool) LocMap.t;
+
+  mutable invariants_useful: (Reason.t * bool) LocMap.t;
 }
 
 type t = {
@@ -184,6 +186,7 @@ let make_sig () = {
   exists_excuses = LocMap.empty;
   test_prop_hits_and_misses = IMap.empty;
   optional_chains_useful = LocMap.empty;
+  invariants_useful = LocMap.empty;
 }
 
 (* create a new context structure.
@@ -390,6 +393,7 @@ let clear_intermediates cx =
   cx.sig_cx.exists_excuses <- LocMap.empty;
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
   cx.sig_cx.optional_chains_useful <- LocMap.empty;
+  cx.sig_cx.invariants_useful <- LocMap.empty;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -433,6 +437,16 @@ let unnecessary_optional_chains cx =
   LocMap.fold (fun loc (r, useful) acc ->
     if useful then acc else (loc, r) :: acc
   ) cx.sig_cx.optional_chains_useful []
+
+let mark_invariant cx loc reason ~useful =
+  cx.sig_cx.invariants_useful <- LocMap.add loc (reason, useful) ~combine:(
+    fun (r, u) (_, u') -> (r, u || u')
+  ) cx.sig_cx.invariants_useful
+
+let unnecessary_invariants cx =
+  LocMap.fold (fun loc (r, useful) acc ->
+    if useful then acc else (loc, r) :: acc
+  ) cx.sig_cx.invariants_useful []
 
 (* utils *)
 let iter_props cx id f =

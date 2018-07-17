@@ -137,26 +137,37 @@ let set_module_kind cx loc new_exports_kind = Context.(
  * Given an exported default declaration, identify nameless declarations and
  * name them with a special internal name that can be used to reference them
  * when assigning the export value.
+ *
+ * Paired with function which undoes this, for typed AST construction
  *)
 let nameify_default_export_decl decl = Ast.Statement.(
+  let identity x = x in
   match decl with
   | loc, FunctionDeclaration func_decl -> Ast.Function.(
-    if func_decl.id <> None then decl else
-      loc, FunctionDeclaration {
+    if func_decl.id <> None then decl, identity else
+      (loc, FunctionDeclaration {
         func_decl with
           id = Some (loc, internal_name "*default*");
-      }
+      }), (function
+        | x, FunctionDeclaration func_decl ->
+          x, FunctionDeclaration { func_decl with id = None }
+        | _ -> failwith "expected FunctionDeclaration"
+      )
     )
 
   | loc, ClassDeclaration class_decl -> Ast.Class.(
-    if class_decl.id <> None then decl else
-      loc, ClassDeclaration {
+    if class_decl.id <> None then decl, identity else
+      (loc, ClassDeclaration {
         class_decl with
           id = Some (loc, internal_name "*default*");
-      }
+      }), (function
+        | x, ClassDeclaration class_decl ->
+          x, ClassDeclaration { class_decl with id = None }
+        | _ -> failwith "expected ClassDeclaration"
+      )
     )
 
-  | _ -> decl
+  | _ -> decl, identity
 )
 
 let warn_or_ignore_export_star_as cx name =

@@ -160,10 +160,12 @@ type error_message =
       null_loc: Loc.t;
       falsy_loc: Loc.t;
     }
+  | ESketchyNumberLint of Lints.sketchy_number_kind * reason
   | EInvalidPrototype of reason
   | EExperimentalOptionalChaining of Loc.t
   | EOptionalChainingMethods of Loc.t
   | EUnnecessaryOptionalChain of Loc.t * reason
+  | EUnnecessaryInvariant of Loc.t * reason
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
 
@@ -382,10 +384,12 @@ let util_use_op_of_msg nope util = function
 | EUnusedSuppression (_)
 | ELintSetting (_)
 | ESketchyNullLint {kind=_; loc=_; null_loc=_; falsy_loc=_}
+| ESketchyNumberLint _
 | EInvalidPrototype (_)
 | EExperimentalOptionalChaining _
 | EOptionalChainingMethods _
 | EUnnecessaryOptionalChain _
+| EUnnecessaryInvariant _
 | EInexactSpread _
 | EDeprecatedCallSyntax _
   -> nope
@@ -1985,15 +1989,22 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   | ESketchyNullLint { kind; loc; falsy_loc; null_loc } ->
     let type_str, value_str = match kind with
-    | Lints.SketchyBool -> "boolean", "false"
-    | Lints.SketchyNumber -> "number", "0"
-    | Lints.SketchyString -> "string", "an empty string"
-    | Lints.SketchyMixed -> "mixed", "false"
+    | Lints.SketchyNullBool -> "boolean", "false"
+    | Lints.SketchyNullNumber -> "number", "0"
+    | Lints.SketchyNullString -> "string", "an empty string"
+    | Lints.SketchyNullMixed -> "mixed", "false"
     in
     mk_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) loc [
       text "Sketchy null check on "; ref (mk_reason (RCustom type_str) falsy_loc); text " ";
       text "which is potentially "; text value_str; text ". Perhaps you meant to ";
       text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
+    ]
+
+  | ESketchyNumberLint (Lints.SketchyNumberAnd, reason) ->
+    mk_error ~trace_infos ~kind:Lints.(LintError (SketchyNumber SketchyNumberAnd)) (loc_of_reason reason) [
+      text "Avoid using "; code "&&"; text " to check the value of "; ref reason; text ". ";
+      text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
+      text "explicit default instead.";
     ]
 
   | EInvalidPrototype reason ->
@@ -2021,6 +2032,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
       text " will short-circuit the nullish case.";
     ]
 
+  | EUnnecessaryInvariant (loc, reason) ->
+    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryInvariant) loc [
+      text "This use of `invariant` is unnecessary because "; ref reason;
+      text " is always truthy."
+    ]
+
   | EInexactSpread (reason, reason_op) ->
     mk_error ~kind:(LintError Lints.InexactSpread) (loc_of_reason reason) [
       text "Cannot determine the type of "; ref reason_op; text " because ";
@@ -2038,7 +2055,9 @@ let is_lint_error = function
   | EDeprecatedType _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
+  | ESketchyNumberLint _
   | EInexactSpread _
-  | EUnnecessaryOptionalChain _ ->
-    true
+  | EUnnecessaryOptionalChain _
+  | EUnnecessaryInvariant _
+      -> true
   | _ -> false

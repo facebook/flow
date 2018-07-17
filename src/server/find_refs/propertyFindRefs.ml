@@ -657,7 +657,12 @@ let find_related_defs
    *   - Iterate until we reach a fixed point
    *)
   let {options; workers} = genv in
-  let related_defs = UnionFind.of_list (Nel.to_list def_info) in
+  let related_defs =
+    let uf = UnionFind.of_list (Nel.to_list def_info) in
+    let hd, tl = def_info in
+    List.iter (UnionFind.union uf hd) tl;
+    uf
+  in
   let process_files file_set =
     let node_modules_containers = !Files.node_modules_containers in
     let%lwt (result: ((single_def_info * single_def_info) list, string) result list) =

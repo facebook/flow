@@ -1,3 +1,23 @@
+### 0.76.0
+
+Likely to cause new Flow errors:
+* Flow now only allows subtyping polymorphic types with the same number of type parameters. This added strictness lets Flow avoid some slow typing code and shouldn't cause too many problems.
+
+New Features:
+* New `[declarations]` section in the `.flowconfig` which can suppress all errors in 1 or more files. Thanks [@LegNeato](https://github.com/LegNeato)! ([#4916](https://github.com/facebook/flow/pull/4916))
+* Added `flow server --file-watcher watchman` flag which uses [Watchman](https://facebook.github.io/watchman/) for file watching instead of the builtin file-watcher, dfind
+* Added a `--expand-type-aliases` flag to `type-at-pos`. It replaces type aliases with their bodies in the returned type.
+* Added `flow save-state` command to generate a saved state file (experimental & loading a saved state isn't ready yet)
+
+Notable bug fixes:
+* Fixed `type-at-pos` for `B` in `import type { A as B } from 'M';`
+* Fixed `find-refs`, `autocomplete`, `get-def`, etc for `$Facebookism$Idx`
+
+Misc:
+* Bunch of improvements to the libdefs. Thanks everyone for the PRs!
+* Handful of improvements to the type normalizer, which improves the `type-at-pos` output
+* Tweaked error messages for `+` operator to match other binary operators
+
 ### 0.75.0
 
 Likely to cause new Flow errors:

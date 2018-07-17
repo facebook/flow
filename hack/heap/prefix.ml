@@ -9,9 +9,11 @@
 
 
 (*****************************************************************************)
-(* The prefix is used to guarantee that we are not mixing different kind of 
+(* The prefix is used to guarantee that we are not mixing different kind of
  * keys in the heap.
  * It just creates a new prefix every time its called.
+ * The $ at the end of the prefix ensures that we don't have ambiguities if a key
+ * happens to start with a digit.
 *)
 (*****************************************************************************)
 
@@ -21,10 +23,10 @@ let make =
   let prefix_count = ref 0 in
   fun () ->
     incr prefix_count;
-    string_of_int !prefix_count
+    string_of_int !prefix_count ^ "$"
 
 let make_key prefix k =
-  prefix^k
+  prefix ^ k
 
 let remove prefix k =
   let prefix_size = String.length prefix in
