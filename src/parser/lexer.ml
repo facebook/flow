@@ -283,18 +283,17 @@ end = struct
       with No_good -> raise e
 end
 
-let save_comment
+let mk_comment
   (env: Lex_env.t)
   (start: Loc.position) (_end: Loc.position)
   (buf: Buffer.t)
   (multiline: bool)
-: Lex_env.t =
+: Loc.t Ast.Comment.t =
   let open Ast.Comment in
   let loc = { Loc.source = Lex_env.source env; start; _end } in
   let s = Buffer.contents buf in
   let c = if multiline then Block s else Line s in
-  let lex_comments_acc = (loc, c) :: env.lex_state.lex_comments_acc in
-  { env with lex_state = { env.lex_state with lex_comments_acc; } }
+  (loc, c)
 
 let mk_num_singleton number_type raw =
   let neg, num = if raw.[0] = '-'
@@ -382,6 +381,7 @@ type jsx_text_mode =
 
 type result =
   | Token of Lex_env.t * Token.t
+  | Comment of Lex_env.t * Loc.t Ast.Comment.t
   | Continue of Lex_env.t
 
 let rec comment env buf lexbuf =
@@ -633,8 +633,7 @@ let token (env: Lex_env.t) lexbuf : result =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf true in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf true)
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
     let pattern = lexeme lexbuf in
@@ -643,8 +642,7 @@ let token (env: Lex_env.t) lexbuf : result =
       let buf = Buffer.create 127 in
       Buffer.add_string buf (String.sub pattern 2 (String.length pattern - 2));
       let env, end_pos = comment env buf lexbuf in
-      let env = save_comment env start_pos end_pos buf true in
-      Continue env
+      Comment (env, mk_comment env start_pos end_pos buf true)
     else
       let env =
         if is_in_comment_syntax env then
@@ -675,8 +673,7 @@ let token (env: Lex_env.t) lexbuf : result =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf false in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf false)
 
   (* Support for the shebang at the beginning of a file. It is treated like a
    * comment at the beginning or an error elsewhere *)
@@ -1020,15 +1017,13 @@ let regexp env lexbuf =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf false in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf false)
 
   | "/*" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf true in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf true)
 
   | '/' ->
     let start = start_pos_of_lexbuf env lexbuf in
@@ -1382,15 +1377,13 @@ let jsx_tag env lexbuf =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf false in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf false)
 
   | "/*" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf true in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf true)
 
   | '<' -> Token (env, T_LESS_THAN)
   | '/' -> Token (env, T_DIV)
@@ -1470,15 +1463,13 @@ let template_tail env lexbuf =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf false in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf false)
 
   | "/*" ->
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf true in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf true)
 
   | '}' ->
     let start = start_pos_of_lexbuf env lexbuf in
@@ -1523,8 +1514,7 @@ let type_token env lexbuf =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf true in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf true)
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
     let pattern = lexeme lexbuf in
@@ -1533,8 +1523,7 @@ let type_token env lexbuf =
       let buf = Buffer.create 127 in
       Buffer.add_string buf pattern;
       let env, end_pos = comment env buf lexbuf in
-      let env = save_comment env start_pos end_pos buf true in
-      Continue env
+      Comment (env, mk_comment env start_pos end_pos buf true)
     else
       let env =
         if is_in_comment_syntax env then
@@ -1565,8 +1554,7 @@ let type_token env lexbuf =
     let start_pos = start_pos_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let env, end_pos = line_comment env buf lexbuf in
-    let env = save_comment env start_pos end_pos buf false in
-    Continue env
+    Comment (env, mk_comment env start_pos end_pos buf false)
 
   | "'" | '"' ->
     let quote = lexeme lexbuf in
@@ -1753,10 +1741,19 @@ let type_token env lexbuf =
 
   | _ -> failwith "unreachable"
 
+
+let save_comment
+  (env: Lex_env.t)
+  (comment: Loc.t Ast.Comment.t)
+: Lex_env.t =
+  let lex_comments_acc = comment :: env.lex_state.lex_comments_acc in
+  { env with lex_state = { env.lex_state with lex_comments_acc; } }
+
 let regexp =
   let rec helper env =
     match regexp env env.lex_lb with
     | Token (env, t) -> env, t
+    | Comment (env, comment) -> helper (save_comment env comment)
     | Continue env -> helper env
   in
   fun env -> get_result_and_clear_state (helper env)
@@ -1775,6 +1772,7 @@ let jsx_tag =
   let rec helper env =
     match jsx_tag env env.lex_lb with
     | Token (env, t) -> env, t
+    | Comment (env, comment) -> helper (save_comment env comment)
     | Continue env -> helper env
   in
   fun env -> get_result_and_clear_state (helper env)
@@ -1783,6 +1781,7 @@ let template_tail =
   let rec helper env =
     match template_tail env env.lex_lb with
     | Token (env, t) -> env, t
+    | Comment (env, comment) -> helper (save_comment env comment)
     | Continue env -> helper env
   in
   fun env -> get_result_and_clear_state (helper env)
@@ -1791,6 +1790,7 @@ let type_token =
   let rec helper env =
     match type_token env env.lex_lb with
     | Token (env, t) -> env, t
+    | Comment (env, comment) -> helper (save_comment env comment)
     | Continue env -> helper env
   in
   fun env -> get_result_and_clear_state (helper env)
@@ -1799,6 +1799,7 @@ let token =
   let rec helper env =
     match token env env.lex_lb with
     | Token (env, t) -> env, t
+    | Comment (env, comment) -> helper (save_comment env comment)
     | Continue env -> helper env
   in
   fun env -> get_result_and_clear_state (helper env)
