@@ -26,9 +26,9 @@ class MyComponent extends React.Component<{}, { count: number }> {
     // To access your button instance use `event.currentTarget`.
     (event.currentTarget: HTMLButtonElement);
 
-    this.setState(prevState => ({
+    this.setState(prevState => {
       count: prevState.count + 1,
-    }));
+    });
   };
 
   render() {
