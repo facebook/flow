@@ -84,14 +84,14 @@ module CheckCommand = struct
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
-    if Options.should_profile options
+    if Options.should_profile options && not Sys.win32
     then begin
       Flow_server_profile.init ();
       let rec sample_processor_info () =
         Flow_server_profile.processor_sample ();
         Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
       in
-      sample_processor_info ()
+      sample_processor_info ();
     end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
