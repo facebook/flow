@@ -31,7 +31,7 @@ let list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) 
     | [], [] -> Some []
     | hd1::tl1, hd2::tl2 ->
       let rest = helper (i + 1) tl1 tl2 in
-      if hd1 <> hd2 then
+      if hd1 != hd2 then
         Option.map rest ~f:(List.cons (i, Replace (hd1, hd2)))
       else
         rest
@@ -134,9 +134,9 @@ and function_ (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Function.t)
     expression = expression2; predicate = predicate2; return = return2; tparams = tparams2;
   } = func2 in
 
-  if id1 <> id2 || params1 <> params2 || (* body handled below *) async1 <> async2
-      || generator1 <> generator2 || expression1 <> expression2 || predicate1 <> predicate2
-      || return1 <> return2 || tparams1 <> tparams2
+  if id1 != id2 || params1 != params2 || (* body handled below *) async1 != async2
+      || generator1 != generator2 || expression1 != expression2 || predicate1 != predicate2
+      || return1 != return2 || tparams1 != tparams2
   then
     None
   else
@@ -158,9 +158,9 @@ and class_ (class1: Loc.t Ast.Class.t) (class2: Loc.t Ast.Class.t) =
     id=id2; body=body2; tparams=tparams2; super=super2; super_targs=super_targs2;
     implements=implements2; classDecorators=classDecorators2;
   } = class2 in
-  if id1 <> id2 || (* body handled below *) tparams1 <> tparams2 || super1 <> super2 ||
-      super_targs1 <> super_targs2 || implements1 <> implements2 ||
-      classDecorators1 <> classDecorators2
+  if id1 != id2 || (* body handled below *) tparams1 != tparams2 || super1 != super2 ||
+      super_targs1 != super_targs2 || implements1 != implements2 ||
+      classDecorators1 != classDecorators2
   then
     None
   else
@@ -193,8 +193,8 @@ and class_method
   let { kind = kind2; key = key2; value = (_loc, value2); static = static2; decorators = decorators2 } =
     m2
   in
-  if kind1 <> kind2 || key1 <> key2 || (* value handled below *) static1 <> static2 ||
-      decorators1 <> decorators2
+  if kind1 != kind2 || key1 != key2 || (* value handled below *) static1 != static2 ||
+      decorators1 != decorators2
   then
     None
   else
@@ -214,7 +214,7 @@ and expression_statement
   let open Ast.Statement.Expression in
   let { expression = expr1; directive = dir1 } = stmt1 in
   let { expression = expr2; directive = dir2 } = stmt2 in
-  if dir1 <> dir2 then
+  if dir1 != dir2 then
     None
   else
     Some (expression expr1 expr2)
@@ -240,7 +240,7 @@ and binary (b1: Loc.t Ast.Expression.Binary.t) (b2: Loc.t Ast.Expression.Binary.
   let open Ast.Expression.Binary in
   let { operator = op1; left = left1; right = right1 } = b1 in
   let { operator = op2; left = left2; right = right2 } = b2 in
-  if op1 <> op2 then
+  if op1 != op2 then
     None
   else
     Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
