@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This file defines a set of rules that can be used to
@@ -19,7 +16,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -84,7 +80,7 @@ class ruleset_base = object(self)
 
   (* We have a small chance to bypass this assertion *)
   method weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((Random.int 5) > 0) then raise Engine.Backtrack
 
   (* check t1 <: t2 *)
   method is_subtype (t1 : Loc.t T.t') (t2 : Loc.t T.t') : bool =
@@ -104,8 +100,8 @@ class ruleset_base = object(self)
       let open T.Function.Param in
       let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
-        (fun param -> (snd param).typeAnnotation |> snd)
-        params @ [f.returnType |> snd] in
+        (fun param -> (snd param).annot |> snd)
+        params @ [f.return |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -136,6 +132,7 @@ class ruleset_base = object(self)
                                    value = Init (_, t);
                                    optional = o;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) ->
             if o then Hashtbl.add opt_tbl name t
@@ -209,6 +206,7 @@ class ruleset_base = object(self)
                                      value = Init (_, t);
                                      optional = o;
                                      static = _;
+                                     proto = _;
                                      _method = _;
                                      variance = _;}) ->
               if take_opt || (not o) then
@@ -229,6 +227,7 @@ class ruleset_base = object(self)
                                      value = Init (_, t);
                                      optional = true;
                                      static = _;
+                                     proto = _;
                                      _method = _;
                                      variance = _;}) ->
                 Expr (E.Identifier (Loc.none, name), t) :: acc
@@ -286,6 +285,7 @@ class ruleset_base = object(self)
                                           value = Init (Loc.none, e);
                                           optional = if index >= prop_num then true else false;
                                           static = false;
+                                          proto = false;
                                           _method = false;
                                           variance = None})) props in
       let open T.Object in
@@ -322,6 +322,7 @@ class ruleset_base = object(self)
                                           value = Init (Loc.none, t);
                                           optional = if index >= prop_num then true else false;
                                           static = false;
+                                          proto = false;
                                           _method = false;
                                           variance = None})) props in
       let open T.Object in
@@ -403,6 +404,7 @@ class ruleset_base = object(self)
            value = Init (Loc.none, T.Number);
            optional = false;
            static = false;
+           proto = false;
            _method = false;
            variance = None} in
         let open T.Object in
@@ -516,13 +518,13 @@ class ruleset_base = object(self)
     let mk_func_type (ptype : Loc.t T.t') (rtype : Loc.t T.t') : Loc.t T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
+                                      annot = (Loc.none, ptype);
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
       T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
-                              returnType = ret_type;
-                              typeParameters = None}) in
+                              return = ret_type;
+                              tparams = None}) in
 
     (* parameter type *)
     let param_type =
@@ -577,13 +579,13 @@ class ruleset_base = object(self)
     let mk_func_type (ptype : Loc.t T.t') (rtype : Loc.t T.t') : Loc.t T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
+                                      annot = (Loc.none, ptype);
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
       T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
-                              returnType = ret_type;
-                              typeParameters = None}) in
+                              return = ret_type;
+                              tparams = None}) in
 
     (* parameter type *)
     let param_type =
@@ -657,9 +659,9 @@ class ruleset_base = object(self)
       let open T.Function in
       match func_type with
       | T.Function {params = (_, { Params.params = plist; rest = _ });
-                    returnType = _;
-                    typeParameters = _} ->
-        T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
+                    return = _;
+                    tparams = _} ->
+        T.Function.Param.((plist |> List.hd |> snd).annot)
       | _ -> failwith "This has to a function type" in
 
     (* parameter *)
@@ -673,8 +675,8 @@ class ruleset_base = object(self)
 
     let ret_type = T.Function.(match func_type with
         | T.Function {params = _;
-                      returnType = (_, rt);
-                      typeParameters =_} -> rt
+                      return = (_, rt);
+                      tparams =_} -> rt
         | _ -> failwith "This has to be a function type") in
     let new_env =
       self#add_binding
@@ -733,15 +735,15 @@ class ruleset_base = object(self)
 
     let ret_type =
       let param = T.Function.Param.({name = None;
-                                     typeAnnotation = (Loc.none, param_type);
+                                     annot = (Loc.none, param_type);
                                      optional = false}) in
       T.Function.(T.Function {
         params = (Loc.none, { Params.
           params = [(Loc.none, param)];
           rest = None;
         });
-        returnType = (Loc.none, func_ret_type);
-        typeParameters = None;
+        return = (Loc.none, func_ret_type);
+        tparams = None;
       }) in
     let new_env =
       self#add_binding env (Type ret_type) in
@@ -880,5 +882,5 @@ end;;
 class ruleset_random_base = object
   inherit ruleset_base
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((Random.int 5) > 0) then raise Engine.Backtrack
 end

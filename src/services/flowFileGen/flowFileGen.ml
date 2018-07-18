@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
@@ -47,27 +44,17 @@ let gen_imports env =
     let open Ast in
     let open Statement in
     let open ImportDeclaration in
-    let {importKind; source; specifiers;} = stmt in
-    let (named, default, ns) =
-      List.fold_left (fun (named, default, ns) spec ->
-        match spec with
-        | ImportNamedSpecifier s ->
-          (s::named, default, ns)
-        | ImportDefaultSpecifier (_, name) ->
-          (named, Some name, ns)
-        | ImportNamespaceSpecifier (_, (_, name)) ->
-          (named, default, Some name)
-      ) ([], None, None) specifiers
+    let {importKind; source; specifiers; default;} = stmt in
+    let default = Option.map ~f:(fun (_, name) -> name) default in
+    let named, ns = match specifiers with
+      | Some (ImportNamespaceSpecifier (_, (_, name))) ->
+        ([], Some name)
+      | Some (ImportNamedSpecifiers xs) ->
+        (xs, None)
+      | None ->
+        ([], None)
     in
-    let named = List.rev named in
-    let source =
-      match source with
-      | (_, {Literal.value = Literal.String s; _;}) -> s
-      | _ -> failwith (
-        "Internal error: Parsed a non-string for the `from` clause of an " ^
-        "import!"
-      )
-    in
+    let _, { Ast.StringLiteral.value = source; _ } = source in
 
     let env = Codegen.add_str "import " env in
     let env =
@@ -132,7 +119,7 @@ let gen_class_body =
      *)
     let is_static_name_field = static && field_name = "name" && (
       match p with
-      | Field (t, _) ->
+      | Field (_, t, _) ->
         (match resolve_type t env with
         | DefT (_, StrT AnyLiteral) -> true
         | _ -> false)
@@ -141,10 +128,10 @@ let gen_class_body =
 
     let is_empty_constructor = not static && field_name = "constructor" && (
       match p with
-      | Method t ->
+      | Method (_, t) ->
         (match resolve_type t env with
-        | DefT (_, FunT (_, _, { params_tlist; return_t; _ })) ->
-          List.length params_tlist = 0 && (
+        | DefT (_, FunT (_, _, { params; return_t; _ })) ->
+          (params = []) && (
             match resolve_type return_t env with
             | DefT (_, VoidT) -> true
             | _ -> false
@@ -196,11 +183,11 @@ let gen_class_body =
 class unexported_class_visitor = object(self)
   inherit [Codegen.codegen_env * Type.TypeSet.t * ISet.t] Type_visitor.t as super
 
-  method! tvar cx (env, seen, imported_classids) r id =
+  method! tvar cx pole (env, seen, imported_classids) r id =
     let t = Codegen.resolve_type (Type.OpenT (r, id)) env in
-    self#type_ cx (env, seen, imported_classids) t
+    self#type_ cx pole (env, seen, imported_classids) t
 
-  method! type_ cx (env, seen, imported_classids) t = Codegen.(Type.(
+  method! type_ cx pole (env, seen, imported_classids) t = Codegen.(Type.(
     if TypeSet.mem t seen then (env, seen, imported_classids) else (
       let seen = TypeSet.add t seen in
       match t with
@@ -211,8 +198,8 @@ class unexported_class_visitor = object(self)
 
       | DefT (r, InstanceT (static, extends, implements, {
           class_id;
-          fields_tmap;
-          methods_tmap;
+          own_props;
+          proto_props;
           structural;
           _
         })) when not (has_class_name class_id env || Reason.is_lib_reason r) ->
@@ -223,7 +210,7 @@ class unexported_class_visitor = object(self)
          * on recursive references to this class from within itself.
          *)
         let env = set_class_name class_id class_name env in
-        let (env, seen, imported_classids) = super#type_ cx (env, seen, imported_classids) t in
+        let (env, seen, imported_classids) = super#type_ cx pole (env, seen, imported_classids) t in
 
         let env = env
           |> add_str "declare "
@@ -255,12 +242,12 @@ class unexported_class_visitor = object(self)
           |> gen_separated_list ts ", " gen_type
         in
 
-        let fields = find_props fields_tmap env in
-        let methods = find_props methods_tmap env in
+        let fields = find_props own_props env in
+        let methods = find_props proto_props env in
         let env = gen_class_body static fields methods env |> add_str "\n" in
         (env, seen, imported_classids)
 
-      | t -> super#type_ cx (env, seen, imported_classids) t
+      | t -> super#type_ cx pole (env, seen, imported_classids) t
     )
   ))
 end
@@ -271,6 +258,7 @@ let gen_local_classes =
     let (env, _, _) =
       visitor#type_
         env.Codegen.flow_cx
+        Type.Neutral
         (env, Type.TypeSet.empty, imported_classids)
         t
     in
@@ -309,8 +297,7 @@ let gen_named_exports =
     let env = (
       match resolve_type t env with
       | DefT (_, FunT (_static, _prototype, {
-          params_tlist;
-          params_names;
+          params;
           rest_param;
           return_t;
           _;
@@ -322,7 +309,7 @@ let gen_named_exports =
         in
         gen_tparams_list env
           |> add_str "("
-          |> gen_func_params params_names params_tlist rest_param
+          |> gen_func_params params rest_param
           |> add_str "): "
           |> gen_type return_t
           |> add_str ";"
@@ -331,19 +318,14 @@ let gen_named_exports =
         add_tparams tparams env |> fold_named_export name t
 
       | ThisClassT (_, DefT (_, InstanceT (static, super, implements, {
-          fields_tmap;
-          methods_tmap;
-          (* TODO: The only way to express `mixins` right now is with a
-           *       `declare` statement. This is possible in implementation
-           *       files, but it is extremely rare -- so punting on this for
-           *       now.
-           *)
-          mixins = _;
+          own_props;
+          proto_props;
+          has_unknown_react_mixins = _;
           structural;
           _;
         }))) ->
-        let fields = Codegen.find_props fields_tmap env in
-        let methods = Codegen.find_props methods_tmap env in
+        let fields = Codegen.find_props own_props env in
+        let methods = Codegen.find_props proto_props env in
         let env = add_str "declare export " env in
         let env = add_str (
           if structural then "interface"
@@ -367,7 +349,7 @@ let gen_named_exports =
         in
         gen_class_body static fields methods env
 
-      | DefT (_, TypeT t) ->
+      | DefT (_, TypeT (_, t)) ->
         add_str "export type " env
           |> add_str name
           |> gen_tparams_list
@@ -405,6 +387,8 @@ let gen_exports named_exports cjs_export env =
 let flow_file cx =
   let module_ref = Context.module_ref cx in
   let (named_exports, cjs_export) = exports_map cx module_ref in
+  (* Drop the loc *)
+  let named_exports = SMap.map snd named_exports in
 
   Codegen.mk_env cx
     |> Codegen.add_str "// @flow\n\n"

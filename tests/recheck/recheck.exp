@@ -1,146 +1,215 @@
 
 Test a:
-Error: a1.js:3
-  3: function foo(x: number): string { return 5; }
-                                              ^ number. This type is incompatible with the expected return type of
-  3: function foo(x: number): string { return 5; }
-                              ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------- a1.js:3:42
 
-Error: a2.js:5
-  5: module.exports = foo("");
-                          ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): string { return 5; }
-                     ^^^^^^ number. See: a1.js:3
+Cannot return `5` because number [1] is incompatible with string [2].
+
+   a1.js:3:42
+   3| function foo(x: number): string { return 5; }
+                                               ^ [1]
+
+References:
+   a1.js:3:26
+   3| function foo(x: number): string { return 5; }
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
+
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   a2.js:5:22
+   5| module.exports = foo("");
+                           ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): string { return 5; }
+                      ^^^^^^ [2]
+
 
 
 Found 2 errors
-Error: a2.js:5
-  5: module.exports = foo("");
-                          ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): number { return 5; }
-                     ^^^^^^ number. See: a1.js:3
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
 
-Error: a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ number. This type is incompatible with
-  5: (five + five: string);
-                   ^^^^^^ string
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   a2.js:5:22
+   5| module.exports = foo("");
+                           ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): number { return 5; }
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a3.js:5:2
+
+Cannot cast `five + five` to string because number [1] is incompatible with string [2].
+
+   a3.js:5:2
+   5| (five + five: string);
+       ^^^^^^^^^^^ [1]
+
+References:
+   a3.js:5:15
+   5| (five + five: string);
+                    ^^^^^^ [2]
+
 
 
 Found 2 errors
-Error: a1.js:5
-  5: foo("");
-         ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): number { return 5; }
-                     ^^^^^^ number
+Error -------------------------------------------------------------------------------------------------------- a1.js:5:5
 
-Error: a2.js:5
-  5: module.exports = foo("");
-                          ^^ string. This type is incompatible with the expected param type of
-  3: function foo(x: number): number { return 5; }
-                     ^^^^^^ number. See: a1.js:3
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
 
-Error: a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ number. This type is incompatible with
-  5: (five + five: string);
-                   ^^^^^^ string
+   a1.js:5:5
+   5| foo("");
+          ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): number { return 5; }
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
+
+Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   a2.js:5:22
+   5| module.exports = foo("");
+                           ^^ [1]
+
+References:
+   a1.js:3:17
+   3| function foo(x: number): number { return 5; }
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a3.js:5:2
+
+Cannot cast `five + five` to string because number [1] is incompatible with string [2].
+
+   a3.js:5:2
+   5| (five + five: string);
+       ^^^^^^^^^^^ [1]
+
+References:
+   a3.js:5:15
+   5| (five + five: string);
+                    ^^^^^^ [2]
+
 
 
 Found 3 errors
 
 Test b:
-Error: b3.js:5
-  5: (new D: C);
-      ^^^^^ D. This type is incompatible with
-  5: (new D: C);
-             ^ C
+Error -------------------------------------------------------------------------------------------------------- b3.js:5:2
+
+Cannot cast `new D()` to `C` because `D` [1] is incompatible with `C` [2].
+
+   b3.js:5:2
+   5| (new D: C);
+       ^^^^^ [1]
+
+References:
+   b3.js:5:9
+   5| (new D: C);
+              ^ [2]
+
 
 
 Found 1 error
 No errors!
 
 Test c:
-Error: c2.js:6
-  6:   foo({ y: 0 });
-           ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  3: export function foo(props: { x: number }) { }
-                                ^^^^^^^^^^^^^ object type. See: c1.js:3
-  Property `x` is incompatible:
-      3: export function foo(props: { x: number }) { }
-                                    ^^^^^^^^^^^^^ property `x`. Property not found in. See: c1.js:3
-      6:   foo({ y: 0 });
-               ^^^^^^^^ object literal
+Error -------------------------------------------------------------------------------------------------------- c2.js:6:7
 
-Error: c3.js:5
-  5: bar({ x: 0 });
-         ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  5: export function bar(props: { y: number }) {
-                                ^^^^^^^^^^^^^ object type. See: c2.js:5
-  Property `y` is incompatible:
-      5: export function bar(props: { y: number }) {
-                                    ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
-      5: bar({ x: 0 });
-             ^^^^^^^^ object literal
+Cannot call `foo` with object literal bound to `props` because property `x` is missing in object literal [1] but exists
+in object type [2].
+
+   c2.js:6:7
+   6|   foo({ y: 0 });
+            ^^^^^^^^ [1]
+
+References:
+   c1.js:3:28
+   3| export function foo(props: { x: number }) { }
+                                 ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
+
+Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
+in object type [2].
+
+   c3.js:5:5
+   5| bar({ x: 0 });
+          ^^^^^^^^ [1]
+
+References:
+   c2.js:5:28
+   5| export function bar(props: { y: number }) {
+                                 ^^^^^^^^^^^^^ [2]
+
 
 
 Found 2 errors
-Error: c3.js:5
-  5: bar({ x: 0 });
-         ^^^^^^^^ object literal. This type is incompatible with the expected param type of
-  5: export function bar(props: { y: number }) {
-                                ^^^^^^^^^^^^^ object type. See: c2.js:5
-  Property `y` is incompatible:
-      5: export function bar(props: { y: number }) {
-                                    ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
-      5: bar({ x: 0 });
-             ^^^^^^^^ object literal
+Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
+
+Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
+in object type [2].
+
+   c3.js:5:5
+   5| bar({ x: 0 });
+          ^^^^^^^^ [1]
+
+References:
+   c2.js:5:28
+   5| export function bar(props: { y: number }) {
+                                 ^^^^^^^^^^^^^ [2]
+
 
 
 Found 1 error
 
 Test d:
-Error: d2.js:4
-  4: export var y: A = x;
-                       ^ B. This type is incompatible with
-  4: export var y: A = x;
-                   ^ A
+Error ------------------------------------------------------------------------------------------------------- d2.js:4:19
+
+Cannot assign `x` to `y` because `B` [1] is incompatible with `A` [2].
+
+   d2.js:4:19
+   4| export var y: A = x;
+                        ^
+
+References:
+   d1.js:5:16
+   5| export var x = new B;
+                     ^^^^^ [1]
+   d2.js:4:15
+   4| export var y: A = x;
+                    ^ [2]
+
 
 
 Found 1 error
 
 Test e:
-Error: e2.js:6
-  6:   return { type: 'QUX' };
-              ^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
-  5: const f = (): Action => {
-                   ^^^^^^ union: object type(s)
-  Member 1:
-    4:   | { type: 'FOO' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:4
-  Error:
-    6:   return { type: 'QUX' };
-                ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    4:   | { type: 'FOO' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:4
-    Property `type` is incompatible:
-        6:   return { type: 'QUX' };
-                            ^^^^^ string. Expected string literal `FOO`, got `QUX` instead
-        4:   | { type: 'FOO' }
-                       ^^^^^ string literal `FOO`. See: e1.js:4
-  Member 2:
-    5:   | { type: 'BAR' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:5
-  Error:
-    6:   return { type: 'QUX' };
-                ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    5:   | { type: 'BAR' }
-           ^^^^^^^^^^^^^^^ object type. See: e1.js:5
-    Property `type` is incompatible:
-        6:   return { type: 'QUX' };
-                            ^^^^^ string. Expected string literal `BAR`, got `QUX` instead
-        5:   | { type: 'BAR' }
-                       ^^^^^ string literal `BAR`. See: e1.js:5
+Error ------------------------------------------------------------------------------------------------------- e2.js:6:10
+
+Cannot return object literal because object literal [1] is incompatible with `Action` [2].
+
+   e2.js:6:10
+   6|   return { type: 'QUX' };
+               ^^^^^^^^^^^^^^^ [1]
+
+References:
+   e2.js:5:15
+   5| const f = (): Action => {
+                    ^^^^^^ [2]
+
 
 
 Found 1 error
@@ -148,84 +217,82 @@ No errors!
 No errors!
 
 Test f:
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ object type. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: type S = { x: string };
-                       ^^^^^^ string. This type is incompatible with. See: f1.js:4
-      4: (c: { x: number });
-                  ^^^^^^ number
+Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ object type. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: (c: { x: number });
-                  ^^^^^^ number. This type is incompatible with
-      4: type S = { x: string };
-                       ^^^^^^ string. See: f1.js:4
+Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`.
+
+   f2.js:4:2
+   4| (c: { x: number });
+       ^
+
+References:
+   f1.js:4:15
+   4| type S = { x: string };
+                    ^^^^^^ [1]
+   f2.js:4:10
+   4| (c: { x: number });
+               ^^^^^^ [2]
 
 
-Found 2 errors
+
+Found 1 error
 No errors!
 No errors!
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ object type. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: type S = { x: string };
-                       ^^^^^^ string. This type is incompatible with. See: f1.js:4
-      4: (c: { x: number });
-                  ^^^^^^ number
+Error -------------------------------------------------------------------------------------------------------- f2.js:4:2
 
-Error: f2.js:4
-  4: (c: { x: number });
-      ^ object type. This type is incompatible with
-  4: (c: { x: number });
-         ^^^^^^^^^^^^^ object type
-  Property `x` is incompatible:
-      4: (c: { x: number });
-                  ^^^^^^ number. This type is incompatible with
-      4: type S = { x: string };
-                       ^^^^^^ string. See: f1.js:4
+Cannot cast `c` to object type because string [1] is incompatible with number [2] in property `x`.
+
+   f2.js:4:2
+   4| (c: { x: number });
+       ^
+
+References:
+   f1.js:4:15
+   4| type S = { x: string };
+                    ^^^^^^ [1]
+   f2.js:4:10
+   4| (c: { x: number });
+               ^^^^^^ [2]
 
 
-Found 2 errors
+
+Found 1 error
 
 Test g:
 No errors!
 
 Test h:
-Error: h2.js:3
-  3: import type { Foo } from './h1';
-                   ^^^ Named import from module `./h1`. This module has no named export called `Foo`.
+Error ------------------------------------------------------------------------------------------------------- h2.js:3:15
+
+Cannot import `Foo` because there is no `Foo` export in `./h1`.
+
+   3| import type { Foo } from './h1';
+                    ^^^
+
 
 
 Found 1 error
 
 Test i:
-Error: i2.js:5
-  5: foo.p = 0;
-     ^^^ object type. Covariant property `p` incompatible with contravariant use in
-  5: foo.p = 0;
-     ^^^^^ assignment of property `p`
+Error -------------------------------------------------------------------------------------------------------- i2.js:5:1
+
+Cannot assign `0` to `foo.p` because property `p` is not writable.
+
+   5| foo.p = 0;
+      ^^^^^
+
 
 
 Found 1 error
 
 Test j:
-Error: j2.js:5
-  5: foo.p = 0;
-     ^^^ object type. Covariant property `p` incompatible with contravariant use in
-  5: foo.p = 0;
-     ^^^^^ assignment of property `p`
+Error -------------------------------------------------------------------------------------------------------- j2.js:5:1
+
+Cannot assign `0` to `foo.p` because property `p` is not writable.
+
+   5| foo.p = 0;
+      ^^^^^
+
 
 
 Found 1 error
@@ -234,46 +301,60 @@ Test l:
 No errors!
 
 Test m:
-Error: m3.js:6
-  6: (x: T<number>);
-      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
-  6: (x: T<number>);
-         ^^^^^^^^^ type application of type `T`
-  Type argument `X` is incompatible:
-      5: export var x: T<string> = null;
-                         ^^^^^^ string. This type is incompatible with. See: m1.js:5
-      6: (x: T<number>);
-               ^^^^^^ number
+Error -------------------------------------------------------------------------------------------------------- m3.js:6:2
 
-Error: m3.js:6
-  6: (x: T<number>);
-      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
-  6: (x: T<number>);
-         ^^^^^^^^^ type application of type `T`
-  Type argument `X` is incompatible:
-      6: (x: T<number>);
-               ^^^^^^ number. This type is incompatible with
-      5: export var x: T<string> = null;
-                         ^^^^^^ string. See: m1.js:5
+Cannot cast `x` to `T` because string [1] is incompatible with number [2] in type argument `X` [3].
+
+   m3.js:6:2
+   6| (x: T<number>);
+       ^
+
+References:
+   m1.js:5:17
+   5| export var x: T<string> = null;
+                      ^^^^^^ [1]
+   m3.js:6:7
+   6| (x: T<number>);
+            ^^^^^^ [2]
+   m1.js:3:15
+   3| export type T<X> = any;
+                    ^ [3]
 
 
-Found 2 errors
+
+Found 1 error
 
 Test k:
-Error: k.js:4
-  4: (x.p: string);
-        ^ property `p`. Property not found in
-  4: (x.p: string);
-      ^ object type
+Error --------------------------------------------------------------------------------------------------------- k.js:4:2
+
+Cannot get `x.p` because property `p` is missing in `LibK` [1].
+
+   k.js:4:2
+   4| (x.p: string);
+       ^^^
+
+References:
+   k.js:3:16
+   3| declare var x: LibK;
+                     ^^^^ [1]
+
 
 
 Found 1 error
 No errors!
-Error: k.js:4
-  4: (x.p: string);
-        ^ property `p`. Property not found in
-  4: (x.p: string);
-      ^ object type
+Error --------------------------------------------------------------------------------------------------------- k.js:4:2
+
+Cannot get `x.p` because property `p` is missing in `LibK` [1].
+
+   k.js:4:2
+   4| (x.p: string);
+       ^^^
+
+References:
+   k.js:3:16
+   3| declare var x: LibK;
+                     ^^^^ [1]
+
 
 
 Found 1 error

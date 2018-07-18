@@ -6,7 +6,11 @@
 const chalk = require('chalk');
 
 exports.divider = function divider(): string {
-  return chalk.grey(Array(80).fill('=').join(''));
+  return chalk.grey(
+    Array(80)
+      .fill('=')
+      .join(''),
+  );
 };
 
 exports.sectionHeader = function sectionHeader(header: string): string {

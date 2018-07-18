@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -13,32 +10,48 @@ open Utils_js
 (****************** shared context heap *********************)
 
 module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
-  type t = Context.cacheable_t
+  type t = Context.sig_t
   let prefix = Prefix.make()
   let description = "SigContext"
+  let use_sqlite_fallback () = false
 end)
 
-let add_sig_context = Expensive.wrap (fun file cx -> SigContextHeap.add file (Context.to_cache cx))
+let master_sig: Context.sig_t option option ref = ref None
+
+let add_sig_context = Expensive.wrap SigContextHeap.add
 
 let add_sig ~audit cx =
   let cx_file = Context.file cx in
-  add_sig_context ~audit cx_file cx
+  if cx_file = File_key.Builtins then master_sig := None;
+  add_sig_context ~audit cx_file (Context.sig_cx cx)
 
-let find_sig ~options file =
-  match SigContextHeap.get file with
-  | Some cx -> Context.from_cache ~options cx
+let find_sig file =
+  let cx_opt =
+    if file = File_key.Builtins then
+      match !master_sig with
+      | Some cx_opt -> cx_opt
+      | None ->
+        let cx_opt = SigContextHeap.get file in
+        master_sig := Some cx_opt;
+        cx_opt
+    else SigContextHeap.get file
+  in
+  match cx_opt with
+  | Some cx -> cx
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
-module SigHashHeap = SharedMem_js.WithCache (File_key) (struct
-  type t = SigHash.t
+module SigHashHeap = SharedMem_js.NoCache (File_key) (struct
+  type t = Xx.hash
   let prefix = Prefix.make()
   let description = "SigHash"
+  let use_sqlite_fallback () = false
 end)
 
 module LeaderHeap = SharedMem_js.WithCache (File_key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Leader"
+  let use_sqlite_fallback () = false
 end)
 
 let find_leader file =
@@ -51,27 +64,63 @@ let find_leader file =
 
 (* Add a sig only if it has not changed meaningfully, and return the result of
    that check. *)
-let add_merge_on_diff ~audit leader_cx component_files md5 =
+let add_merge_on_diff ~audit leader_cx component_files xx =
   let leader_f = Context.file leader_cx in
   let diff = match SigHashHeap.get_old leader_f with
-    | Some md5_old -> File_key.check_suffix leader_f Files.flow_ext || md5 <> md5_old
-    | None -> true in
-  if diff then begin
-    List.iter (fun f -> LeaderHeap.add f leader_f) component_files;
-    add_sig_context ~audit leader_f leader_cx;
-    SigHashHeap.add leader_f md5;
-  end;
-  diff
+  | None -> true
+  | Some xx_old ->
+    File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
+  in
+  if diff then (
+    Nel.iter (fun f -> LeaderHeap.add f leader_f) component_files;
+    add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
+    SigHashHeap.add leader_f xx;
+  )
+
+let add_merge_on_exn ~audit ~options component =
+  let leader_f = Nel.hd component in
+  let sig_cx = Context.make_sig () in
+  let cx =
+    let metadata = Context.metadata_of_options options in
+    let module_ref = Files.module_ref leader_f in
+    Context.make sig_cx metadata leader_f module_ref
+  in
+  let module_refs = List.map (fun f ->
+    let module_ref = Files.module_ref f in
+    let module_t = Type.Locationless.AnyT.t in
+    Context.add_module cx module_ref module_t;
+    LeaderHeap.add f leader_f;
+    module_ref
+  ) (Nel.to_list component) in
+  let xx = Merge_js.ContextOptimizer.sig_context cx module_refs in
+  add_sig_context ~audit leader_f sig_cx;
+  SigHashHeap.add leader_f xx
+
+let sig_hash_changed f =
+  match SigHashHeap.get f with
+  | None -> false
+  | Some xx ->
+    match SigHashHeap.get_old f with
+    | None -> true
+    | Some xx_old ->
+      File_key.check_suffix f Files.flow_ext || xx <> xx_old
 
 let oldify_merge_batch files =
   LeaderHeap.oldify_batch files;
   SigContextHeap.oldify_batch files;
   SigHashHeap.oldify_batch files
 
+let remove_merge_batch files =
+  LeaderHeap.remove_batch files;
+  SigContextHeap.remove_batch files;
+  SigHashHeap.remove_batch files;
+  SharedMem_js.collect `gentle
+
 let remove_old_merge_batch files =
   LeaderHeap.remove_old_batch files;
   SigContextHeap.remove_old_batch files;
-  SigHashHeap.remove_old_batch files
+  SigHashHeap.remove_old_batch files;
+  SharedMem_js.collect `gentle
 
 let revive_merge_batch files =
   LeaderHeap.revive_batch files;

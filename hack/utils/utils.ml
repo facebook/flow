@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
 let () = Random.self_init ()
 let debug = ref false
@@ -212,3 +211,11 @@ let infimum (arr : 'a array)
     end
   end in
   binary_search 0 ((Array.length arr) - 1)
+
+(** Callstack is simply a typed way to indicate that a string is a callstack *)
+type callstack = Callstack of string
+
+let unwrap_snd (a, b_opt) =
+  match b_opt with
+  | None -> None
+  | Some b -> Some (a, b)

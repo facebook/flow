@@ -1,38 +1,103 @@
-Error: Sigma.js:13
- 13:     x.c(); // error
-           ^ property `c`. Property not found in
- 13:     x.c(); // error
-         ^ B
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:13:5
 
-Error: Sigma.js:15
- 15:     x++; // TODO no error? since unreachable (x: B implies x: A)
-         ^^^ number. This type is incompatible with
- 10: function bar(x:B) {
-                    ^ B
+Cannot call `x.c` because property `c` is missing in `B` [1].
 
-Error: Sigma.js:24
- 24:     x.d(); // error
-           ^ property `d`. Property not found in
- 24:     x.d(); // error
-         ^ C
+   Sigma.js:13:5
+   13|     x.c(); // error
+           ^^^^^
 
-Error: Sigma.js:27
- 27:     x.c(); // error
-           ^ property `c`. Property not found in
- 27:     x.c(); // error
-         ^ A
-
-Error: Sigma.js:35
- 35:   if (x instanceof A) {
-                        ^ A. This type is incompatible with
- 34: function baz(x:D) {
-                    ^ D
-
-Error: test.js:11
- 11:     return obj.childProp_TYPO; // error (obj: ChildClass)
-                    ^^^^^^^^^^^^^^ property `childProp_TYPO`. Property not found in
- 11:     return obj.childProp_TYPO; // error (obj: ChildClass)
-                ^^^ ChildClass
+References:
+   Sigma.js:10:16
+   10| function bar(x:B) {
+                      ^ [1]
 
 
-Found 6 errors
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:15:5
+
+Cannot assign number to `x` because number [1] is incompatible with `B` [2].
+
+   Sigma.js:15:5
+   15|     x++; // TODO no error? since unreachable (x: B implies x: A)
+           ^^^ [1]
+
+References:
+   Sigma.js:10:16
+   10| function bar(x:B) {
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:15:5
+
+number [1] is incompatible with `B` [2].
+
+   Sigma.js:15:5
+   15|     x++; // TODO no error? since unreachable (x: B implies x: A)
+           ^^^ [1]
+
+References:
+   Sigma.js:10:16
+   10| function bar(x:B) {
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:24:5
+
+Cannot call `x.d` because property `d` is missing in `C` [1].
+
+   Sigma.js:24:5
+   24|     x.d(); // error
+           ^^^^^
+
+References:
+   Sigma.js:8:7
+    8| class C extends B { c() {} }
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:27:5
+
+Cannot call `x.c` because property `c` is missing in `A` [1].
+
+   Sigma.js:27:5
+   27|     x.c(); // error
+           ^^^^^
+
+References:
+   Sigma.js:19:16
+   19| function foo(x:A) {
+                      ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- Sigma.js:35:20
+
+`A` [1] is incompatible with `D` [2].
+
+   Sigma.js:35:20
+   35|   if (x instanceof A) {
+                          ^
+
+References:
+   Sigma.js:4:7
+    4| class A { a() {} }
+             ^ [1]
+   Sigma.js:34:16
+   34| function baz(x:D) {
+                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:12
+
+Cannot get `obj.childProp_TYPO` because property `childProp_TYPO` is missing in `ChildClass` [1].
+
+   test.js:11:12
+   11|     return obj.childProp_TYPO; // error (obj: ChildClass)
+                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:5:7
+    5| class ChildClass extends BaseClass {
+             ^^^^^^^^^^ [1]
+
+
+
+Found 7 errors

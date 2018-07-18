@@ -1,10 +1,16 @@
-Error: test.js:10
- 10:     return new this.constructor(this.n); // Error A ~> number
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 10:     return new this.constructor(this.n); // Error A ~> number
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
-  9:   badClone(): number {
-                   ^^^^^^ number
+Error ---------------------------------------------------------------------------------------------------- test.js:10:12
+
+Cannot return `new this.constructor(...)` because `A` [1] is incompatible with number [2].
+
+   test.js:10:12
+   10|     return new this.constructor(this.n); // Error A ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:9:15
+    9|   badClone(): number {
+                     ^^^^^^ [2]
+
 
 
 Found 1 error

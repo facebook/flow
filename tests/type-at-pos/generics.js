@@ -24,3 +24,7 @@ on;
 type Mono = C<void>;
 var mn: Mono<number> = new C; // error: application of non-poly type
 mn;
+
+/* $FlowFixMe */
+type Empty = empty;
+declare var a: Empty.T<number>;

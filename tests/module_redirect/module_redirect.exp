@@ -1,20 +1,62 @@
-Error: D.js:6
-  6: var bar1: string = require('A');
-                        ^^^^^^^^^^^^ module `A`. This type is incompatible with
-  6: var bar1: string = require('A');
-               ^^^^^^ string
+Error -------------------------------------------------------------------------------------------------------- D.js:6:20
 
-Error: D.js:7
-  7: var bar2: string = require('B');
-                        ^^^^^^^^^^^^ module `A`. This type is incompatible with
-  7: var bar2: string = require('B');
-               ^^^^^^ string
+Cannot assign `require(...)` to `bar1` because module `A` [1] is incompatible with string [2].
 
-Error: D.js:8
-  8: var bar3: string = require('C');
-                        ^^^^^^^^^^^^ module `A`. This type is incompatible with
-  8: var bar3: string = require('C');
-               ^^^^^^ string
+   D.js:6:20
+   6| var bar1: string = require('A');
+                         ^^^^^^^^^^^^
+
+References:
+   A.js:1:1
+      v-----------------
+   1| declare module A {
+   2|   declare function foo(): string;
+   3| }
+      ^ [1]
+   D.js:6:11
+   6| var bar1: string = require('A');
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- D.js:7:20
+
+Cannot assign `require(...)` to `bar2` because module `A` [1] is incompatible with string [2].
+
+   D.js:7:20
+   7| var bar2: string = require('B');
+                         ^^^^^^^^^^^^
+
+References:
+   A.js:1:1
+      v-----------------
+   1| declare module A {
+   2|   declare function foo(): string;
+   3| }
+      ^ [1]
+   D.js:7:11
+   7| var bar2: string = require('B');
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- D.js:8:20
+
+Cannot assign `require(...)` to `bar3` because module `A` [1] is incompatible with string [2].
+
+   D.js:8:20
+   8| var bar3: string = require('C');
+                         ^^^^^^^^^^^^
+
+References:
+   A.js:1:1
+      v-----------------
+   1| declare module A {
+   2|   declare function foo(): string;
+   3| }
+      ^ [1]
+   D.js:8:11
+   8| var bar3: string = require('C');
+                ^^^^^^ [2]
+
 
 
 Found 3 errors

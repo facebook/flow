@@ -1,429 +1,352 @@
-Error: identity.js:19
-      v
- 19: ({
- 20:   a: 'asd', // Error: string ~> number
- 21:   b: 'asd', // Error: string ~> number
- 22: }: Foo);
-     ^ object literal. This type is incompatible with
- 22: }: Foo);
-        ^^^ object type
-  Property `a` is incompatible:
-     20:   a: 'asd', // Error: string ~> number
-              ^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
+Error ------------------------------------------------------------------------------------------------- identity.js:19:2
 
-Error: identity.js:19
-      v
- 19: ({
- 20:   a: 'asd', // Error: string ~> number
- 21:   b: 'asd', // Error: string ~> number
- 22: }: Foo);
-     ^ object literal. This type is incompatible with
- 22: }: Foo);
-        ^^^ object type
-  Property `b` is incompatible:
-     21:   b: 'asd', // Error: string ~> number
-              ^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
+Cannot cast object literal to `Foo` because:
+ - string [1] is incompatible with number [2] in property `a`.
+ - string [3] is incompatible with number [4] in property `b`.
 
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `a` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     25:   a: string, // Error: string ~> number
-              ^^^^^^ string
-
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `a` is incompatible:
-     25:   a: string, // Error: string ~> number
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
-
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `b` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     26:   b: string, // Error: string ~> number
-              ^^^^^^ string
-
-Error: identity.js:24
-            v
- 24: ((any: {
- 25:   a: string, // Error: string ~> number
- 26:   b: string, // Error: string ~> number
- 27: }): Foo);
-     ^ object type. This type is incompatible with
- 27: }): Foo);
-         ^^^ object type
-  Property `b` is incompatible:
-     26:   b: string, // Error: string ~> number
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
-
-Error: identity.js:29
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ object literal. This type is incompatible with
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^^ object type
-  Property `a` is incompatible:
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-              ^^^ property `a`. Property not found in
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^ object literal
-
-Error: identity.js:29
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ object literal. This type is incompatible with
- 29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^^ object type
-  Property `b` is incompatible:
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-              ^^^ property `b`. Property not found in
-     29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^ object literal
-
-Error: identity.js:31
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ object type. This type is incompatible with
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                 ^^^ object type
-  Property `a` is incompatible:
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                     ^^^ property `a`. Property not found in
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                ^^ object type
-
-Error: identity.js:31
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ object type. This type is incompatible with
- 31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                 ^^^ object type
-  Property `b` is incompatible:
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                     ^^^ property `b`. Property not found in
-     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                ^^ object type
-
-Error: identity.js:38
- 38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `a` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     39:   a: string, // Error: number ~> string
-              ^^^^^^ string
-
-Error: identity.js:38
- 38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `a` is incompatible:
-     39:   a: string, // Error: number ~> string
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
-
-Error: identity.js:38
- 38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `b` is incompatible:
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number. This type is incompatible with
-     40:   b: string, // Error: number ~> string
-              ^^^^^^ string
-
-Error: identity.js:38
- 38: (foo: {
-      ^^^ object type. This type is incompatible with
-           v
- 38: (foo: {
- 39:   a: string, // Error: number ~> string
- 40:   b: string, // Error: number ~> string
- 41: });
-     ^ object type
-  Property `b` is incompatible:
-     40:   b: string, // Error: number ~> string
-              ^^^^^^ string. This type is incompatible with
-                    v-------
-      5: type Foo = $ObjMap<
-      6:   {
-      7:     a: number,
-    ...:
-     11: >;
-         ^ number
-
-Error: identity.js:43
- 43: (foo.a: empty); // Error: number ~> empty
-      ^^^^^ number. This type is incompatible with
- 43: (foo.a: empty); // Error: number ~> empty
-             ^^^^^ empty
-
-Error: identity.js:61
-      v
- 61: ({
- 62:   foo: true, // Error: boolean ~> number | string
- 63: }: $ObjMap<
-     ^ object literal. This type is incompatible with
-        v-------
- 63: }: $ObjMap<
- 64:   {
- 65:     foo: number | string,
-...:
- 68: >);
-     ^ object type
-  Property `foo` is incompatible:
-     62:   foo: true, // Error: boolean ~> number | string
-                ^^^^ boolean. This type is incompatible with
-            v-------
-     63: }: $ObjMap<
-     64:   {
-     65:     foo: number | string,
-    ...:
-     68: >);
-         ^ union: number | string
-      Member 1:
-              v-------
-       63: }: $ObjMap<
-       64:   {
-       65:     foo: number | string,
-      ...:
-       68: >);
-           ^ number
-      Error:
-       62:   foo: true, // Error: boolean ~> number | string
-                  ^^^^ boolean. This type is incompatible with
-              v-------
-       63: }: $ObjMap<
-       64:   {
-       65:     foo: number | string,
-      ...:
-       68: >);
-           ^ number
-      Member 2:
-              v-------
-       63: }: $ObjMap<
-       64:   {
-       65:     foo: number | string,
-      ...:
-       68: >);
-           ^ string
-      Error:
-       62:   foo: true, // Error: boolean ~> number | string
-                  ^^^^ boolean. This type is incompatible with
-              v-------
-       63: }: $ObjMap<
-       64:   {
-       65:     foo: number | string,
-      ...:
-       68: >);
-           ^ string
-
-Error: identity.js:70
-      v
- 70: ({
- 71:   foo: true, // Error: boolean ~> number | string
- 72: }: $ObjMap<
-     ^ object literal. This type is incompatible with
-        v-------
- 72: }: $ObjMap<
- 73:   ({ foo: number } | { foo: string }),
- 74:   <T>(T) => T,
- 75: >);
-     ^ union: object map(s)
-  Member 1:
-          v-------
-   72: }: $ObjMap<
-   73:   ({ foo: number } | { foo: string }),
-   74:   <T>(T) => T,
-   75: >);
-       ^ object map
-  Error:
+   identity.js:19:2
         v
-   70: ({
-   71:   foo: true, // Error: boolean ~> number | string
-   72: }: $ObjMap<
-       ^ object literal. This type is incompatible with
-          v-------
-   72: }: $ObjMap<
-   73:   ({ foo: number } | { foo: string }),
-   74:   <T>(T) => T,
-   75: >);
-       ^ object type
-    Property `foo` is incompatible:
-       71:   foo: true, // Error: boolean ~> number | string
-                  ^^^^ boolean. This type is incompatible with
-              v-------
-       72: }: $ObjMap<
-       73:   ({ foo: number } | { foo: string }),
-       74:   <T>(T) => T,
-       75: >);
-           ^ number
-  Member 2:
-          v-------
-   72: }: $ObjMap<
-   73:   ({ foo: number } | { foo: string }),
-   74:   <T>(T) => T,
-   75: >);
-       ^ object map
-  Error:
+   19| ({
+   20|   a: 'asd', // Error: string ~> number
+   21|   b: 'asd', // Error: string ~> number
+   22| }: Foo);
+       ^
+
+References:
+   identity.js:20:6
+   20|   a: 'asd', // Error: string ~> number
+            ^^^^^ [1]
+   identity.js:7:8
+    7|     a: number,
+              ^^^^^^ [2]
+   identity.js:21:6
+   21|   b: 'asd', // Error: string ~> number
+            ^^^^^ [3]
+   identity.js:8:8
+    8|     b: number,
+              ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:24:3
+
+Cannot cast `any` to `Foo` because:
+ - string [1] is incompatible with number [2] in property `a`.
+ - string [3] is incompatible with number [4] in property `b`.
+
+   identity.js:24:3
+         v-----
+   24| ((any: {
+   25|   a: string, // Error: string ~> number
+   26|   b: string, // Error: string ~> number
+   27| }): Foo);
+       ^
+
+References:
+   identity.js:25:6
+   25|   a: string, // Error: string ~> number
+            ^^^^^^ [1]
+   identity.js:7:8
+    7|     a: number,
+              ^^^^^^ [2]
+   identity.js:26:6
+   26|   b: string, // Error: string ~> number
+            ^^^^^^ [3]
+   identity.js:8:8
+    8|     b: number,
+              ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:29:2
+
+Cannot cast object literal to `Foo` because:
+ - property `a` is missing in object literal [1] but exists in object type [2].
+ - property `b` is missing in object literal [1] but exists in object type [2].
+
+   identity.js:29:2
+   29| ({}: Foo); // Error: `a` and `b` are not defined.
+        ^^ [1]
+
+References:
+   identity.js:29:6
+   29| ({}: Foo); // Error: `a` and `b` are not defined.
+            ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:31:3
+
+Cannot cast `any` to `Foo` because:
+ - property `a` is missing in object type [1] but exists in object type [2].
+ - property `b` is missing in object type [1] but exists in object type [2].
+
+   identity.js:31:3
+   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+         ^^^^^^^
+
+References:
+   identity.js:31:8
+   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]
+   identity.js:31:13
+   31| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                   ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:38:2
+
+Cannot cast `foo` to object type because:
+ - number [1] is incompatible with string [2] in property `a`.
+ - number [3] is incompatible with string [4] in property `b`.
+
+   identity.js:38:2
+   38| (foo: {
+        ^^^
+
+References:
+   identity.js:7:8
+    7|     a: number,
+              ^^^^^^ [1]
+   identity.js:39:6
+   39|   a: string, // Error: number ~> string
+            ^^^^^^ [2]
+   identity.js:8:8
+    8|     b: number,
+              ^^^^^^ [3]
+   identity.js:40:6
+   40|   b: string, // Error: number ~> string
+            ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:43:2
+
+Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2].
+
+   identity.js:43:2
+   43| (foo.a: empty); // Error: number ~> empty
+        ^^^^^
+
+References:
+   identity.js:7:8
+    7|     a: number,
+              ^^^^^^ [1]
+   identity.js:43:9
+   43| (foo.a: empty); // Error: number ~> empty
+               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- identity.js:61:2
+
+Cannot cast object literal to `$ObjMap` because in property `foo`:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   identity.js:61:2
         v
-   70: ({
-   71:   foo: true, // Error: boolean ~> number | string
-   72: }: $ObjMap<
-       ^ object literal. This type is incompatible with
-          v-------
-   72: }: $ObjMap<
-   73:   ({ foo: number } | { foo: string }),
-   74:   <T>(T) => T,
-   75: >);
-       ^ object type
-    Property `foo` is incompatible:
-       71:   foo: true, // Error: boolean ~> number | string
-                  ^^^^ boolean. This type is incompatible with
-              v-------
-       72: }: $ObjMap<
-       73:   ({ foo: number } | { foo: string }),
-       74:   <T>(T) => T,
-       75: >);
-           ^ string
+   61| ({
+   62|   foo: true, // Error: boolean ~> number | string
+   63| }: $ObjMap<
+       ^
 
-Error: issue-2674.js:7
-  7: (a.FOO: 'BAR'); // error
-      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
-  7: (a.FOO: 'BAR'); // error
-             ^^^^^ string literal `BAR`
-
-Error: issue-2674.js:8
-  8: a.FOO = 'BAR'; // error
-             ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
-  8: a.FOO = 'BAR'; // error
-     ^^^^^ string literal `FOO`
-
-Error: issue-2674.js:14
- 14: (b.FOO : 'BAR'); // error
-      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
- 14: (b.FOO : 'BAR'); // error
-              ^^^^^ string literal `BAR`
-
-Error: issue-2674.js:15
- 15: b.FOO = 'BAR'; // error
-             ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
- 15: b.FOO = 'BAR'; // error
-     ^^^^^ string literal `FOO`
-
-Error: issue-2674.js:17
- 17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
- 21: (c[0]: 'BAR'); // error
-            ^^^^^ string literal `BAR`
-
-Error: issue-2674.js:22
- 22: c[0] = 'BAR'; // error
-            ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
- 17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `FOO`
-
-Error: objmap.js:10
- 10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
- 10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-              ^^^^^ string literal `BAR`
-
-Error: objmap.js:16
- 16:   (o.foo: string); // error, number ~> string
-        ^^^^^ number. This type is incompatible with
- 16:   (o.foo: string); // error, number ~> string
-               ^^^^^^ string
+References:
+   identity.js:62:8
+   62|   foo: true, // Error: boolean ~> number | string
+              ^^^^ [1]
+   identity.js:65:10
+   65|     foo: number | string,
+                ^^^^^^ [2]
+   identity.js:65:19
+   65|     foo: number | string,
+                         ^^^^^^ [3]
 
 
-Found 25 errors
+Error ------------------------------------------------------------------------------------------------- identity.js:70:2
+
+Cannot cast object literal to `$ObjMap` because:
+ - Either boolean [1] is incompatible with number [2] in property `foo`.
+ - Or boolean [1] is incompatible with string [3] in property `foo`.
+
+   identity.js:70:2
+        v
+   70| ({
+   71|   foo: true, // Error: boolean ~> number | string
+   72| }: $ObjMap<
+       ^
+
+References:
+   identity.js:71:8
+   71|   foo: true, // Error: boolean ~> number | string
+              ^^^^ [1]
+   identity.js:73:11
+   73|   ({ foo: number } | { foo: string }),
+                 ^^^^^^ [2]
+   identity.js:73:29
+   73|   ({ foo: number } | { foo: string }),
+                                   ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ issue-2674.js:7:2
+
+Cannot cast `a.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2].
+
+   issue-2674.js:7:2
+   7| (a.FOO: 'BAR'); // error
+       ^^^^^
+
+References:
+   issue-2674.js:3:10
+   3| type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   issue-2674.js:7:9
+   7| (a.FOO: 'BAR'); // error
+              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ issue-2674.js:8:9
+
+Cannot assign `'BAR'` to `a.FOO` because string [1] is incompatible with string literal `FOO` [2].
+
+   issue-2674.js:8:9
+   8| a.FOO = 'BAR'; // error
+              ^^^^^ [1]
+
+References:
+   issue-2674.js:3:10
+   3| type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-2674.js:14:2
+
+Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2].
+
+   issue-2674.js:14:2
+   14| (b.FOO : 'BAR'); // error
+        ^^^^^
+
+References:
+   issue-2674.js:10:46
+   10| type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
+                                                    ^^^^^ [1]
+   issue-2674.js:14:10
+   14| (b.FOO : 'BAR'); // error
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-2674.js:15:9
+
+Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2].
+
+   issue-2674.js:15:9
+   15| b.FOO = 'BAR'; // error
+               ^^^^^ [1]
+
+References:
+   issue-2674.js:10:46
+   10| type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
+                                                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-2674.js:21:2
+
+Cannot cast `c[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2].
+
+   issue-2674.js:21:2
+   21| (c[0]: 'BAR'); // error
+        ^^^^
+
+References:
+   issue-2674.js:17:49
+   17| type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
+                                                       ^^^^^ [1]
+   issue-2674.js:21:8
+   21| (c[0]: 'BAR'); // error
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-2674.js:22:8
+
+Cannot assign `'BAR'` to `c[0]` because string [1] is incompatible with string literal `FOO` [2].
+
+   issue-2674.js:22:8
+   22| c[0] = 'BAR'; // error
+              ^^^^^ [1]
+
+References:
+   issue-2674.js:17:49
+   17| type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;
+                                                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- objmap.js:10:2
+
+Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2].
+
+   objmap.js:10:2
+   10| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+        ^^^^^
+
+References:
+   objmap.js:2:38
+    2| declare function keyMirror<O>(o: O): $ObjMapi<O, <K>(k:K) => K>;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   objmap.js:10:10
+   10| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- objmap.js:16:4
+
+Cannot cast `o.foo` to string because number [1] is incompatible with string [2].
+
+   objmap.js:16:4
+   16|   (o.foo: string); // error, number ~> string
+          ^^^^^
+
+References:
+   objmap.js:13:24
+   13|   foo: Promise.resolve(0),
+                              ^ [1]
+   objmap.js:16:11
+   16|   (o.foo: string); // error, number ~> string
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:13:2
+
+Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2].
+
+   optional.js:13:2
+   13| (o3.b: Array<number | void>); // Error: void ~> array
+        ^^^^
+
+References:
+   optional.js:5:17
+    5| declare var o3: $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:13:8
+   13| (o3.b: Array<number | void>); // Error: void ~> array
+              ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- optional.js:17:2
+
+Cannot cast `o6.b` to array type because undefined [1] is incompatible with array type [2].
+
+   optional.js:17:2
+   17| (o6.b: Array<number | void>); // Error: void ~> array
+        ^^^^
+
+References:
+   optional.js:9:17
+    9| declare var o6: $ObjMapi<{a: number, b?: number}, <T>(any, T) => Array<T>>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:17:8
+   17| (o6.b: Array<number | void>); // Error: void ~> array
+              ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 23 errors

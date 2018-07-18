@@ -1,13 +1,12 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 module Utils = Flowtestgen_utils;;
+module Logging = Flowtestgen_logging;;
+module Config = Flowtestgen_config;;
 
 (* A virtual class that defines the framework for ocaml-stype rules.
 
@@ -87,7 +86,7 @@ module Utils = Flowtestgen_utils;;
    the style of the traditional type rule where preconditions are
    written separately. With the power of backtracking, users could
    write rules with simple require and assert functions and we
-   recommend users writting rules this way. *)
+   recommend users writing rules this way. *)
 
 (* An exception indicating we want to backtrack *)
 exception Backtrack
@@ -153,7 +152,6 @@ class virtual ['a, 'b, 'c] engine = object(self)
   method virtual print_env : 'b -> unit
   method virtual print_syntax : 'c -> unit
   method virtual combine_syntax : 'c list -> string
-
   (* A mehod for getting the name of an engine *)
   method virtual get_name : unit -> string
 
@@ -285,12 +283,12 @@ class virtual ['a, 'b, 'c] engine = object(self)
           (* type check the program *)
           let prog = self#combine_syntax slist in
           let type_check_result =
-            if Utils.is_typecheck (self#get_name ()) then
+            if Utils.is_typecheck (self#get_name ()) || Config.(config.random) then
               Utils.type_check prog
             else
               None in
           match type_check_result with
-          | Some _ -> Printf.printf "Failed to type check: \n%s\n%!" prog
+          | Some msg -> Logging.log_early_type_error prog msg
           | None ->
             let result = self#run_exhaustive rule env in
             if result = [] then

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module S = Ast.Statement;;
@@ -13,7 +10,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -25,7 +21,7 @@ class ruleset_rtest = object(self)
   method! get_name () : string = "rtest"
 
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 3) > 0) then raise Engine.Backtrack
+    if (not b) && ((Random.int 3) > 0) then raise Engine.Backtrack
 
   (* Rule for declaring a variable with init and type annotation *)
   method! rule_vardecl_with_type (env : env_t) : (Syntax.t * env_t) =

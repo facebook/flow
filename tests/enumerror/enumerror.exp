@@ -1,23 +1,69 @@
-Error: enumerror.js:10
- 10: isActive({state: 'PAUSE'});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 10: isActive({state: 'PAUSE'});
-                      ^^^^^^^ property `PAUSE`. Property not found in
-                                   v------
-  3: function isActive(ad: {state: $Keys<{
-  4:     PAUSED: string;
-  5:     ACTIVE: string;
-  6:     DELETED: string;
-  7: }>}): boolean {
-     -^ object type
+Error ----------------------------------------------------------------------------------------------- enum-crash.js:7:25
 
-Error: enumerror.js:20
- 20: isActive2({state: 'PAUSE'});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 20: isActive2({state: 'PAUSE'});
-                       ^^^^^^^ property `PAUSE`. Property not found in
- 17: function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {
-                                    ^^^^^^^^^^^^^^^^^^^^^^ object literal
+Cannot resolve module `somewhere`.
+
+   7| import type {Enum} from 'somewhere';
+                              ^^^^^^^^^^^
 
 
-Found 2 errors
+Error ----------------------------------------------------------------------------------------------- enum-crash.js:13:5
+
+Cannot refine `Enum` as a value. 
+
+           v-------------
+   13|     case Enum.FOO:
+   14|       return 0;
+             --------^
+
+
+Error ---------------------------------------------------------------------------------------------- enum-crash.js:13:10
+
+Cannot reference type `Enum` [1] from a value position.
+
+   enum-crash.js:13:10
+   13|     case Enum.FOO:
+                ^^^^
+
+References:
+   enum-crash.js:7:14
+    7| import type {Enum} from 'somewhere';
+                    ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- enumerror.js:10:10
+
+Cannot call `isActive` with object literal bound to `ad` because property `PAUSE` is missing in object type [1] in
+property `state`.
+
+   enumerror.js:10:10
+   10| isActive({state: 'PAUSE'});
+                ^^^^^^^^^^^^^^^^
+
+References:
+   enumerror.js:3:37
+                                           v
+    3| function isActive(ad: {state: $Keys<{
+    4|     PAUSED: string;
+    5|     ACTIVE: string;
+    6|     DELETED: string;
+    7| }>}): boolean {
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- enumerror.js:20:11
+
+Cannot call `isActive2` with object literal bound to `ad` because property `PAUSE` is missing in `typeof MyStates` [1]
+in property `state`.
+
+   enumerror.js:20:11
+   20| isActive2({state: 'PAUSE'});
+                 ^^^^^^^^^^^^^^^^
+
+References:
+   enumerror.js:17:38
+   17| function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {
+                                            ^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 5 errors

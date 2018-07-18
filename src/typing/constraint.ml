@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Type
@@ -76,23 +73,16 @@ and constraints =
     upper bounds, respectively. See the __flow function for how these structures
     are populated and operated on.  Here the map keys are tvar ids, with trace
     info as values.
+
+    The use_op in the lower TypeMap represents the use_op when a lower bound
+    was added.
 **)
 and bounds = {
-  mutable lower: Trace.t TypeMap.t;
+  mutable lower: (Trace.t * Type.use_op) TypeMap.t;
   mutable upper: Trace.t UseTypeMap.t;
   mutable lowertvars: Trace.t IMap.t;
   mutable uppertvars: Trace.t IMap.t;
 }
-
-(* Extract bounds from a node. *)
-(** WARNING: This function is unsafe, since not all nodes are roots, and not all
-    roots are unresolved. Use this function only when you are absolutely sure
-    that a node is an unresolved root: this is guaranteed to be the case when
-    the type variable it denotes is never involved in unification. **)
-let bounds_of_unresolved_root node =
-  match node with
-  | Root { constraints = Unresolved bounds; _ } -> bounds
-  | _ -> failwith "expected unresolved root"
 
 let new_bounds () = {
   lower = TypeMap.empty;

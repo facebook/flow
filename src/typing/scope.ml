@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -58,11 +55,12 @@ module Entry = struct
 
   and let_binding_kind =
     | LetVarBinding
-    | LetConstlikeVarBinding
+    | ConstlikeLetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
+    | ConstlikeParamBinding
 
   and var_binding_kind =
     | VarBinding
@@ -73,11 +71,12 @@ module Entry = struct
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
   | Let LetVarBinding -> "let"
-  | Let LetConstlikeVarBinding -> "let"
+  | Let ConstlikeLetVarBinding -> "let"
   | Let ClassNameBinding -> "class"
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
   | Let ParamBinding -> "param"
+  | Let ConstlikeParamBinding -> "param"
   | Var VarBinding -> "var"
   | Var ConstlikeVarBinding -> "var"
 
@@ -200,7 +199,9 @@ module Entry = struct
       entry
     | Value { kind = Var ConstlikeVarBinding; _ } ->
       entry
-    | Value { kind = Let LetConstlikeVarBinding; _ } ->
+    | Value { kind = Let ConstlikeLetVarBinding; _ } ->
+      entry
+    | Value { kind = Let ConstlikeParamBinding; _ } ->
       entry
     | Value v ->
       if Reason.is_internal_name name
@@ -236,6 +237,7 @@ type var_scope_kind =
   | Module          (* module scope *)
   | Global          (* global scope *)
   | Predicate       (* predicate function *)
+  | Ctor            (* constructor *)
 
 let string_of_var_scope_kind = function
 | Ordinary -> "Ordinary"
@@ -245,6 +247,7 @@ let string_of_var_scope_kind = function
 | Module -> "Module"
 | Global -> "Global"
 | Predicate -> "Predicate"
+| Ctor -> "Constructor"
 
 (* var and lexical scopes differ in hoisting behavior
    and auxiliary properties *)

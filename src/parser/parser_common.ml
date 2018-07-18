@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Parser_env
@@ -24,7 +21,7 @@ type pattern_cover =
 module type PARSER = sig
   val program : env -> Loc.t program
   val statement : env -> Loc.t Statement.t
-  val statement_list_item : ?decorators:Loc.t Expression.t list -> env -> Loc.t Statement.t
+  val statement_list_item : ?decorators:Loc.t Class.Decorator.t list -> env -> Loc.t Statement.t
   val statement_list : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list
   val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list * bool
   val module_body : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list
@@ -40,11 +37,12 @@ module type PARSER = sig
     ?restricted_error:Error.t -> env -> Loc.t * string -> unit
   val block_body : env -> Loc.t * Loc.t Statement.Block.t
   val function_block_body : env -> Loc.t * Loc.t Statement.Block.t * bool
-  val jsx_element : env -> Loc.t * Loc.t JSX.element
+  val jsx_element_or_fragment :
+    env -> Loc.t * [`Element of Loc.t JSX.element | `Fragment of Loc.t JSX.fragment]
   val pattern : env -> Error.t -> Loc.t Pattern.t
   val pattern_from_expr : env -> Loc.t Expression.t -> Loc.t Pattern.t
   val object_key : ?class_body: bool -> env -> Loc.t * Loc.t Expression.Object.Property.key
-  val class_declaration : env -> Loc.t Expression.t list -> Loc.t Statement.t
+  val class_declaration : env -> Loc.t Class.Decorator.t list -> Loc.t Statement.t
   val class_expression : env -> Loc.t Expression.t
   val is_assignable_lhs : Loc.t Expression.t -> bool
 end
@@ -141,8 +139,11 @@ let rec is_labelled_function = function
   | _ ->
     false
 
-let with_loc fn env =
-  let start_loc = Peek.loc env in
+let with_loc ?start_loc fn env =
+  let start_loc = match start_loc with
+  | Some x -> x
+  | None -> Peek.loc env
+  in
   let result = fn env in
   let loc = match last_loc env with
   | Some end_loc -> Loc.btwn start_loc end_loc

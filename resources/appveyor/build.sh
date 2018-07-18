@@ -18,7 +18,5 @@ cd "${APPVEYOR_BUILD_FOLDER}"
 opam pin add flowtype-ci . -n
 opam depext -u flowtype-ci
 opam install flowtype-ci --deps-only
-opam install camlp4
-opam install ocp-build # opam build uses ocamlbuild, so install manually
-make all-ocp
-make build-parser-test-with-ocp
+make all
+make -C src/parser/ ../../_build/src/parser/test/run_tests.native

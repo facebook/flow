@@ -1,10 +1,10 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 /* This test suite documents a bunch of places where using spread arguments
  * doesn't work, either intentionally or due to us being lazy */
@@ -16,7 +16,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8: idx(...arr, obj => obj.foo)
-                      ^^^ A spread argument is unsupported here
+                      ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('idx({}, ...arr)')
@@ -24,7 +24,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:10
            10: idx({}, ...arr)
-                          ^^^ A spread argument is unsupported here
+                          ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('idx(...arr, ...arr)')
@@ -32,11 +32,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: idx(...arr, ...arr)
-                      ^^^ A spread argument is unsupported here
+                      ^^^ A spread argument is unsupported here.
 
           test.js:12
            12: idx(...arr, ...arr)
-                              ^^^ A spread argument is unsupported here
+                              ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -48,15 +48,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot spread properties from
-            3: const arr = [1,2,3];
-                              ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
+            References:
+              3: const arr = [1,2,3];
+                              ^ [1]
 
           test.js:7
             7: React.createElement(...arr, {})
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
-            3: const arr = [1,2,3];
-                            ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
+            References:
+              3: const arr = [1,2,3];
+                                ^ [1]
         `,
       ),
     addCode('React.createElement(({}: any), ...arr)')
@@ -64,9 +66,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: React.createElement(({}: any), ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot spread properties from
-            3: const arr = [1,2,3];
-                            ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
+            References:
+              3: const arr = [1,2,3];
+                              ^ [1]
         `,
       ),
     addCode('React.createElement(...arr, ...arr)')
@@ -74,15 +77,17 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. Cannot spread properties from
-            3: const arr = [1,2,3];
-                              ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not a React component.
+            References:
+              3: const arr = [1,2,3];
+                              ^ [1]
 
           test.js:11
            11: React.createElement(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
-            3: const arr = [1,2,3];
-                            ^ number
+                     ^^^^^^^^^^^^^ Cannot call \`React.createElement\` because number [1] is not an object.
+            References:
+              3: const arr = [1,2,3];
+                                ^ [1]
         `,
       ),
   ]),
@@ -93,7 +98,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function (...args) { return this.bar; }).call(...arr);
-                                                                 ^^^ A spread argument is unsupported here
+                                                                 ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -104,7 +109,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function () { return this.bar; }).apply(...arr);
-                                                           ^^^ A spread argument is unsupported here
+                                                           ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('(function () { return this.bar; }).apply(({}: any), ...arr);')
@@ -112,7 +117,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: (function () { return this.bar; }).apply(({}: any), ...arr);
-                                                                      ^^^ A spread argument is unsupported here
+                                                                      ^^^ A spread argument is unsupported here.
         `,
       ),
     addCode('(function () { return this.bar; }).apply(...arr, ...arr);')
@@ -120,11 +125,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                           ^^^ A spread argument is unsupported here
+                                                           ^^^ A spread argument is unsupported here.
 
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                                   ^^^ A spread argument is unsupported here
+                                                                   ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -134,7 +139,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: Object.getPrototypeOf(...arr)
-                                        ^^^ A spread argument is unsupported here
+                                        ^^^ A spread argument is unsupported here.
         `,
       ),
   ]),
@@ -148,7 +153,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       const o1 = Object.assign(...objArr);
-                                                 ^^^^^^ A spread argument is unsupported here
+                                                 ^^^^^^ A spread argument is unsupported here.
         `,
       ),
     addCode(`
@@ -162,23 +167,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:17
            17: Object.assign({}, ...[1])
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`assign\`. Expected object instead of
-           17: Object.assign({}, ...[1])
-                                     ^ number
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ number [1] is not an object.
+            References:
+             17: Object.assign({}, ...[1])
+                                       ^ [1]
         `,
       )
       .because('But this is an error since the array contains non-objects'),
-  ]),
-  test('mergeInto', [
-    addCode('declare var mergeInto: $Facebookism$MergeInto'),
-    addCode('mergeInto(...arr, ...arr)')
-      .newErrors(
-        `
-          test.js:7
-            7: mergeInto(...arr, ...arr)
-                            ^^^ A spread argument is unsupported here
-        `,
-      )
-      .because('First arg cant be a spread, second can'),
   ]),
 ]).beforeEach((({addCode}) => [ addCode('const arr = [1,2,3];') ]));

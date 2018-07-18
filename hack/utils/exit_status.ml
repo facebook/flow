@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -50,7 +49,6 @@ type t =
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
-  | Server_name_not_found
   | IDE_malformed_request
   | IDE_no_server
   | IDE_out_of_retries
@@ -72,6 +70,7 @@ type t =
   | Sql_corrupt
   | Sql_misuse
   | Uncaught_exception
+  | Decl_not_found
 
 exception Exit_with of t
 
@@ -112,7 +111,6 @@ let exit_code = function
   | CantRunAI ->                    102
   | Watchman_failed ->              103
   | Hhconfig_deleted ->             104
-  | Server_name_not_found ->        105
   | EventLogger_broken_pipe ->      106
   | Redecl_heap_overflow ->         107
   | EventLogger_restart_out_of_retries -> 108
@@ -134,7 +132,7 @@ let exit_code = function
   | Sql_cantopen ->                 214
   | Sql_corrupt ->                  215
   | Sql_misuse ->                   216
-
+  | Decl_not_found ->               217
 
 let exit t =
   let ec = exit_code t in
@@ -176,7 +174,6 @@ let to_string = function
   | Watchman_invalid_result -> "Watchman_invalid_result"
   | Hhconfig_deleted -> "Hhconfig_deleted"
   | Hhconfig_changed -> "Hhconfig_changed"
-  | Server_name_not_found -> "Server_name_not_found"
   | IDE_malformed_request -> "IDE_malformed_request"
   | IDE_no_server -> "IDE_no_server"
   | IDE_out_of_retries -> "IDE_out_of_retries"
@@ -199,9 +196,17 @@ let to_string = function
   | Sql_corrupt -> "Sql_corrupt"
   | Sql_misuse -> "Sql_misuse"
   | Uncaught_exception -> "Uncaught_exception"
+  | Decl_not_found -> "Decl_not_found"
 
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n
-  | Unix.WSIGNALED n -> "signaled", n
+  | Unix.WSIGNALED n ->
+    (**
+     * Ocaml signal numbers are mapped from System signal numbers.
+     * They are negative.
+     * See caml_convert_signal_number byterun/signals.c in Ocaml system source code
+     * to convert from Ocaml number to System number
+     *)
+    "signaled", n
   | Unix.WSTOPPED n -> "stopped", n

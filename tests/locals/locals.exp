@@ -1,130 +1,234 @@
-Error: lex.js:11
- 11:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 11:   (b : string); // error: number ~> string
-            ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ lex.js:11:4
 
-Error: lex.js:26
- 26:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 26:   (b : string); // error: number ~> string
-            ^^^^^^ string
+Cannot cast `b` to string because number [1] is incompatible with string [2].
 
-Error: lex.js:37
- 37:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 37:   (b : string); // error: number ~> string
-            ^^^^^^ string
+   lex.js:11:4
+   11|   (b : string); // error: number ~> string
+          ^
 
-Error: lex.js:48
- 48:   (b : number); // error: string ~> number
-        ^ string. This type is incompatible with
- 48:   (b : number); // error: string ~> number
-            ^^^^^^ number
-
-Error: lex.js:59
- 59:   (b : string); // error: number ~> string
-        ^ number. This type is incompatible with
- 59:   (b : string); // error: number ~> string
-            ^^^^^^ string
-
-Error: locals.js:1
-  1: var x:string = 0;
-           ^^^^^^ string. This type is incompatible with
-  2: var x:number = 1;
-           ^^^^^^ number
-
-Error: locals.js:1
-  1: var x:string = 0;
-                    ^ number. This type is incompatible with
-  1: var x:string = 0;
-           ^^^^^^ string
-
-Error: locals.js:2
-  2: var x:number = 1;
-           ^^^^^^ number. This type is incompatible with
-  1: var x:string = 0;
-           ^^^^^^ string
-
-Error: locals.js:2
-  2: var x:number = 1;
-                    ^ number. This type is incompatible with
-  1: var x:string = 0;
-           ^^^^^^ string
-
-Error: locals.js:10
- 10:         var x: number | string = 1337;
-                    ^^^^^^ number. This type is incompatible with
- 12:         var x: bool = true;
-                    ^^^^ boolean
-
-Error: locals.js:10
- 10:         var x: number | string = 1337;
-                             ^^^^^^ string. This type is incompatible with
- 12:         var x: bool = true;
-                    ^^^^ boolean
-
-Error: locals.js:12
- 12:         var x: bool = true;
-                    ^^^^ boolean. This type is incompatible with
- 10:         var x: number | string = 1337;
-                    ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Error:
-   12:         var x: bool = true;
-                      ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Member 2:
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-  Error:
-   12:         var x: bool = true;
-                      ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-
-Error: locals.js:12
- 12:         var x: bool = true;
-                           ^^^^ boolean. This type is incompatible with
- 10:         var x: number | string = 1337;
-                    ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Error:
-   12:         var x: bool = true;
-                             ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                      ^^^^^^ number
-  Member 2:
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-  Error:
-   12:         var x: bool = true;
-                             ^^^^ boolean. This type is incompatible with
-   10:         var x: number | string = 1337;
-                               ^^^^^^ string
-
-Error: locals.js:14
- 14:     foo(x);
-             ^ number. This type is incompatible with the expected param type of
-  6: function foo(p: bool) {}
-                     ^^^^ boolean
-
-Error: locals.js:14
- 14:     foo(x);
-             ^ string. This type is incompatible with the expected param type of
-  6: function foo(p: bool) {}
-                     ^^^^ boolean
-
-Error: locals.js:22
- 22:   return x;
-              ^ string. This type is incompatible with the expected return type of
- 17: function foo0(b: bool): number {
-                             ^^^^^^ number
+References:
+   lex.js:8:11
+    8|       b = 0;
+                 ^ [1]
+   lex.js:11:8
+   11|   (b : string); // error: number ~> string
+              ^^^^^^ [2]
 
 
-Found 16 errors
+Error ------------------------------------------------------------------------------------------------------ lex.js:26:4
+
+Cannot cast `b` to string because number [1] is incompatible with string [2].
+
+   lex.js:26:4
+   26|   (b : string); // error: number ~> string
+          ^
+
+References:
+   lex.js:23:9
+   23|     b = 0;
+               ^ [1]
+   lex.js:26:8
+   26|   (b : string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lex.js:37:4
+
+Cannot cast `b` to string because number [1] is incompatible with string [2].
+
+   lex.js:37:4
+   37|   (b : string); // error: number ~> string
+          ^
+
+References:
+   lex.js:34:9
+   34|     b = 0;
+               ^ [1]
+   lex.js:37:8
+   37|   (b : string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lex.js:48:4
+
+Cannot cast `b` to number because string [1] is incompatible with number [2].
+
+   lex.js:48:4
+   48|   (b : number); // error: string ~> number
+          ^
+
+References:
+   lex.js:45:9
+   45|     b = "";
+               ^^ [1]
+   lex.js:48:8
+   48|   (b : number); // error: string ~> number
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lex.js:59:4
+
+Cannot cast `b` to string because number [1] is incompatible with string [2].
+
+   lex.js:59:4
+   59|   (b : string); // error: number ~> string
+          ^
+
+References:
+   lex.js:56:9
+   56|     b = 0;
+               ^ [1]
+   lex.js:59:8
+   59|   (b : string); // error: number ~> string
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- locals.js:1:16
+
+Cannot assign `0` to `x` because number [1] is incompatible with string [2].
+
+   locals.js:1:16
+   1| var x:string = 0;
+                     ^ [1]
+
+References:
+   locals.js:1:7
+   1| var x:string = 0;
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- locals.js:2:7
+
+number [1] is incompatible with string [2].
+
+   locals.js:2:7
+   2| var x:number = 1;
+            ^^^^^^ [1]
+
+References:
+   locals.js:1:7
+   1| var x:string = 0;
+            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- locals.js:2:16
+
+Cannot assign `1` to `x` because number [1] is incompatible with string [2].
+
+   locals.js:2:16
+   2| var x:number = 1;
+                     ^ [1]
+
+References:
+   locals.js:1:7
+   1| var x:string = 0;
+            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- locals.js:10:16
+
+boolean [1] is incompatible with number [2].
+
+   locals.js:10:16
+   10|         var x: bool = true;
+                      ^^^^ [1]
+
+References:
+   locals.js:8:16
+    8|         var x: number | string = 1337;
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- locals.js:10:16
+
+boolean [1] is incompatible with string [2].
+
+   locals.js:10:16
+   10|         var x: bool = true;
+                      ^^^^ [1]
+
+References:
+   locals.js:8:25
+    8|         var x: number | string = 1337;
+                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- locals.js:10:16
+
+All branches are incompatible:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   locals.js:10:16
+   10|         var x: bool = true;
+                      ^^^^ [1]
+
+References:
+   locals.js:8:16
+    8|         var x: number | string = 1337;
+                      ^^^^^^ [2]
+   locals.js:8:25
+    8|         var x: number | string = 1337;
+                               ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- locals.js:10:23
+
+Cannot assign `true` to `x` because:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   locals.js:10:23
+   10|         var x: bool = true;
+                             ^^^^ [1]
+
+References:
+   locals.js:8:16
+    8|         var x: number | string = 1337;
+                      ^^^^^^ [2]
+   locals.js:8:25
+    8|         var x: number | string = 1337;
+                               ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- locals.js:12:9
+
+Cannot call `foo` with `x` bound to `p` because:
+ - number [1] is incompatible with boolean [2].
+ - string [3] is incompatible with boolean [2].
+
+   locals.js:12:9
+   12|     foo(x);
+               ^
+
+References:
+   locals.js:8:16
+    8|         var x: number | string = 1337;
+                      ^^^^^^ [1]
+   locals.js:4:17
+    4| function foo(p: bool) {}
+                       ^^^^ [2]
+   locals.js:8:25
+    8|         var x: number | string = 1337;
+                               ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- locals.js:20:10
+
+Cannot return `x` because string [1] is incompatible with number [2].
+
+   locals.js:20:10
+   20|   return x;
+                ^
+
+References:
+   locals.js:18:13
+   18|     var x = ""; // error: string ~> number
+                   ^^ [1]
+   locals.js:15:25
+   15| function foo0(b: bool): number {
+                               ^^^^^^ [2]
+
+
+
+Found 15 errors

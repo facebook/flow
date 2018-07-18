@@ -1,24 +1,21 @@
-Error: two.js:4
-  4: const x: Two = false;
-                    ^^^^^ boolean. This type is incompatible with
-  4: const x: Two = false;
-              ^^^ union: string | One
-  Member 1:
-    3: export type Two = string | One;
-                         ^^^^^^ string
-  Error:
-    4: const x: Two = false;
-                      ^^^^^ boolean. This type is incompatible with
-    3: export type Two = string | One;
-                         ^^^^^^ string
-  Member 2:
-    3: export type Two = string | One;
-                                  ^^^ One
-  Error:
-    4: const x: Two = false;
-                      ^^^^^ boolean. This type is incompatible with
-    3: export type Two = string | One;
-                                  ^^^ number
+Error ------------------------------------------------------------------------------------------------------ two.js:4:16
+
+Cannot assign `false` to `x` because:
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   two.js:4:16
+   4| const x: Two = false;
+                     ^^^^^ [1]
+
+References:
+   two.js:3:19
+   3| export type Two = string | One;
+                        ^^^^^^ [2]
+   two.js:3:28
+   3| export type Two = string | One;
+                                 ^^^ [3]
+
 
 
 Found 1 error

@@ -1,6 +1,10 @@
-Error: test.js:3
-  3: (01: number);
-      ^^ Octal literals are not allowed in strict mode.
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
+
+Octal literals are not allowed in strict mode.
+
+   3| (01: number);
+       ^^
+
 
 
 Found 1 error

@@ -1,190 +1,429 @@
-Error: all.js:13
- 13:   (a: number);  // Error: string ~> number
-        ^ string. This type is incompatible with
- 13:   (a: number);  // Error: string ~> number
-           ^^^^^^ number
+Error ------------------------------------------------------------------------------------------------------ all.js:13:4
 
-Error: all.js:14
- 14:   (b: boolean); // Error: number ~> boolean
-        ^ number. This type is incompatible with
- 14:   (b: boolean); // Error: number ~> boolean
-           ^^^^^^^ boolean
+Cannot cast `a` to number because string [1] is incompatible with number [2].
 
-Error: all.js:15
- 15:   (c: string);  // Error: boolean ~> string
-        ^ boolean. This type is incompatible with
- 15:   (c: string);  // Error: boolean ~> string
-           ^^^^^^ string
+   all.js:13:4
+   13|   (a: number);  // Error: string ~> number
+          ^
 
-Error: all.js:19
- 19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-          ^ boolean. This type is incompatible with
- 19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-             ^^^^ undefined
+References:
+   all.js:3:27
+    3| declare var pstr: Promise<string>;
+                                 ^^^^^^ [1]
+   all.js:13:7
+   13|   (a: number);  // Error: string ~> number
+             ^^^^^^ [2]
 
-Error: all.js:19
- 19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-          ^ number. This type is incompatible with
- 19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-             ^^^^ undefined
 
-Error: all.js:19
- 19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-          ^ string. This type is incompatible with
- 19:     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-             ^^^^ undefined
+Error ------------------------------------------------------------------------------------------------------ all.js:14:4
 
-Error: all.js:24
- 24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-     ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-611:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:611
-  Property `@@iterator` is incompatible:
-    611:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                                ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:611
-     24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-         ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
+Cannot cast `b` to boolean because number [1] is incompatible with boolean [2].
 
-Error: all.js:27
- 27: Promise.all(0); // Error: expected array instead of number
-                 ^ number. This type is incompatible with
-611:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:611
-  Property `@@iterator` is incompatible:
-    611:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                                ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:611
-     27: Promise.all(0); // Error: expected array instead of number
-                     ^ number
+   all.js:14:4
+   14|   (b: boolean); // Error: number ~> boolean
+          ^
 
-Error: promise.js:16
- 16:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
- 16:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+References:
+   all.js:4:27
+    4| declare var pnum: Promise<number>;
+                                 ^^^^^^ [1]
+   all.js:14:7
+   14|   (b: boolean); // Error: number ~> boolean
+             ^^^^^^^ [2]
 
-Error: promise.js:25
- 25:     var b: string = num; // Error: number ~> string
-                         ^^^ number. This type is incompatible with
- 25:     var b: string = num; // Error: number ~> string
-                ^^^^^^ string
 
-Error: promise.js:35
- 35:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
- 35:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ all.js:15:4
 
-Error: promise.js:47
- 47:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
- 47:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+Cannot cast `c` to string because boolean [1] is incompatible with string [2].
 
-Error: promise.js:63
- 63:   var c: string = numOrStr; // Error: number|string -> string
-                       ^^^^^^^^ number. This type is incompatible with
- 63:   var c: string = numOrStr; // Error: number|string -> string
-              ^^^^^^ string
+   all.js:15:4
+   15|   (c: string);  // Error: boolean ~> string
+          ^
 
-Error: promise.js:117
-117:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
-117:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+References:
+   all.js:9:3
+    9|   true, // non-Promise values passed through
+         ^^^^ [1]
+   all.js:15:7
+   15|   (c: string);  // Error: boolean ~> string
+             ^^^^^^ [2]
 
-Error: promise.js:123
-123:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
-123:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
 
-Error: promise.js:129
-129:   var b: string = num; // Error: number ~> string
-                       ^^^ number. This type is incompatible with
-129:   var b: string = num; // Error: number ~> string
-              ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ all.js:19:6
 
-Error: promise.js:161
-161:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-161:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+Cannot cast `x` to undefined because:
+ - string [1] is incompatible with undefined [2].
+ - number [3] is incompatible with undefined [2].
+ - boolean [4] is incompatible with undefined [2].
 
-Error: promise.js:169
-169:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-169:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+   all.js:19:6
+   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+            ^
 
-Error: promise.js:177
-177:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-177:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+References:
+   all.js:3:27
+    3| declare var pstr: Promise<string>;
+                                 ^^^^^^ [1]
+   all.js:19:9
+   19|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+               ^^^^ [2]
+   all.js:4:27
+    4| declare var pnum: Promise<number>;
+                                 ^^^^^^ [3]
+   all.js:9:3
+    9|   true, // non-Promise values passed through
+         ^^^^ [4]
 
-Error: promise.js:201
-201:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-201:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
 
-Error: promise.js:209
-209:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-209:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+Error ------------------------------------------------------------------------------------------------------ all.js:24:1
 
-Error: promise.js:217
-217:     var b: number = str; // Error: string ~> number
-                         ^^^ string. This type is incompatible with
-217:     var b: number = str; // Error: string ~> number
-                ^^^^^^ number
+Cannot call `Promise.all` because property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
 
-Error: promise.js:225
-225:     var b: string = num; // Error: string ~> number
-                         ^^^ number. This type is incompatible with
-225:     var b: string = num; // Error: string ~> number
-                ^^^^^^ string
+   all.js:24:1
+    24| Promise.all(); // Error: expected array instead of undefined (too few arguments)
+        ^^^^^^^^^^^^^ [1]
 
-Error: promise.js:225
-225:     var b: string = num; // Error: string ~> number
-                         ^^^ undefined. This type is incompatible with
-225:     var b: string = num; // Error: string ~> number
-                ^^^^^^ string
+References:
+   <BUILTINS>/core.js:608:19
+   608|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                          ^^^^^^^^^^^^^^^ [2]
 
-Error: resolve_global.js:35
- 35:   return Promise.resolve(0);
-                      ^^^^^^^ property `resolve`. Property not found in
- 35:   return Promise.resolve(0);
-              ^^^^^^^ statics of Promise
 
-Error: resolve_global.js:40
- 40:   return 0;
-       ^^^^^^^^^ type application of async return. Expected polymorphic type instead of
- 39: async function baz(): Promise<number> {
-                           ^^^^^^^^^^^^^^^ class type: Promise
+Error ----------------------------------------------------------------------------------------------------- all.js:27:13
 
-Error: resolve_void.js:3
-  3: (Promise.resolve(): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^ type application of class `Promise`. Has some incompatible type argument with
-  3: (Promise.resolve(): Promise<number>); // error
-                         ^^^^^^^^^^^^^^^ type application of identifier `Promise`
-  Type argument `R` is incompatible:
-      3: (Promise.resolve(): Promise<number>); // error
-          ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-      3: (Promise.resolve(): Promise<number>); // error
-                                     ^^^^^^ number
+Cannot call `Promise.all` with `0` bound to `promises` because property `@@iterator` is missing in number [1] but exists
+in `$Iterable` [2].
 
-Error: resolve_void.js:5
-  5: (Promise.resolve(undefined): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of class `Promise`. Has some incompatible type argument with
-  5: (Promise.resolve(undefined): Promise<number>); // error
-                                  ^^^^^^^^^^^^^^^ type application of identifier `Promise`
-  Type argument `R` is incompatible:
-      5: (Promise.resolve(undefined): Promise<number>); // error
-                          ^^^^^^^^^ undefined. This type is incompatible with
-      5: (Promise.resolve(undefined): Promise<number>); // error
-                                              ^^^^^^ number
+   all.js:27:13
+    27| Promise.all(0); // Error: expected array instead of number
+                    ^ [1]
+
+References:
+   <BUILTINS>/core.js:608:19
+   608|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                          ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- promise.js:16:19
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:16:19
+   16|   var b: string = num; // Error: number ~> string
+                         ^^^
+
+References:
+   promise.js:11:11
+   11|   resolve(0);
+                 ^ [1]
+   promise.js:16:10
+   16|   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- promise.js:25:21
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:25:21
+   25|     var b: string = num; // Error: number ~> string
+                           ^^^
+
+References:
+   promise.js:20:42
+   20| new Promise((resolve, reject) => resolve(0))
+                                                ^ [1]
+   promise.js:25:12
+   25|     var b: string = num; // Error: number ~> string
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- promise.js:35:19
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:35:19
+   35|   var b: string = num; // Error: number ~> string
+                         ^^^
+
+References:
+   promise.js:31:13
+   31|     resolve(0);
+                   ^ [1]
+   promise.js:35:10
+   35|   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- promise.js:47:19
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:47:19
+   47|   var b: string = num; // Error: number ~> string
+                         ^^^
+
+References:
+   promise.js:42:15
+   42|       resolve(0);
+                     ^ [1]
+   promise.js:47:10
+   47|   var b: string = num; // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- promise.js:63:19
+
+Cannot assign `numOrStr` to `c` because number [1] is incompatible with string [2].
+
+   promise.js:63:19
+   63|   var c: string = numOrStr; // Error: number|string -> string
+                         ^^^^^^^^
+
+References:
+   promise.js:53:13
+   53|     resolve(42);
+                   ^^ [1]
+   promise.js:63:10
+   63|   var c: string = numOrStr; // Error: number|string -> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:117:19
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:117:19
+   117|   var b: string = num; // Error: number ~> string
+                          ^^^
+
+References:
+   promise.js:115:17
+   115| Promise.resolve(0).then(function(num) {
+                        ^ [1]
+   promise.js:117:10
+   117|   var b: string = num; // Error: number ~> string
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:123:19
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:123:19
+   123|   var b: string = num; // Error: number ~> string
+                          ^^^
+
+References:
+   promise.js:121:33
+   121| Promise.resolve(Promise.resolve(0)).then(function(num) {
+                                        ^ [1]
+   promise.js:123:10
+   123|   var b: string = num; // Error: number ~> string
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:129:19
+
+Cannot assign `num` to `b` because number [1] is incompatible with string [2].
+
+   promise.js:129:19
+   129|   var b: string = num; // Error: number ~> string
+                          ^^^
+
+References:
+   promise.js:127:49
+   127| Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
+                                                        ^ [1]
+   promise.js:129:10
+   129|   var b: string = num; // Error: number ~> string
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:161:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+
+   promise.js:161:21
+   161|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:158:32
+   158|   .then(function(num) { return 'asdf'; })
+                                       ^^^^^^ [1]
+   promise.js:161:12
+   161|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:169:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+
+   promise.js:169:21
+   169|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:166:48
+   166|   .then(function(num) { return Promise.resolve('asdf'); })
+                                                       ^^^^^^ [1]
+   promise.js:169:12
+   169|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:177:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+
+   promise.js:177:21
+   177|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:174:64
+   174|   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
+                                                                       ^^^^^^ [1]
+   promise.js:177:12
+   177|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:201:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+
+   promise.js:201:21
+   201|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:198:33
+   198|   .catch(function(num) { return 'asdf'; })
+                                        ^^^^^^ [1]
+   promise.js:201:12
+   201|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:209:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+
+   promise.js:209:21
+   209|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:206:49
+   206|   .catch(function(num) { return Promise.resolve('asdf'); })
+                                                        ^^^^^^ [1]
+   promise.js:209:12
+   209|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:217:21
+
+Cannot assign `str` to `b` because string [1] is incompatible with number [2].
+
+   promise.js:217:21
+   217|     var b: number = str; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:214:65
+   214|   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
+                                                                        ^^^^^^ [1]
+   promise.js:217:12
+   217|     var b: number = str; // Error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ promise.js:225:21
+
+Cannot assign `num` to `b` because:
+ - number [1] is incompatible with string [2].
+ - undefined [3] is incompatible with string [2].
+
+   promise.js:225:21
+   225|     var b: string = num; // Error: string ~> number
+                            ^^^
+
+References:
+   promise.js:221:17
+   221| Promise.resolve(0)
+                        ^ [1]
+   promise.js:225:12
+   225|     var b: string = num; // Error: string ~> number
+                   ^^^^^^ [2]
+   promise.js:222:23
+   222|   .catch(function(err) {})
+                              ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ resolve_global.js:35:10
+
+Cannot call `Promise.resolve` because property `resolve` is missing in statics of `Promise` [1].
+
+   resolve_global.js:35:10
+   35|   return Promise.resolve(0);
+                ^^^^^^^^^^^^^^^^^^
+
+References:
+   resolve_global.js:9:7
+    9| class Promise {}
+             ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ resolve_global.js:39:23
+
+Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
+
+   39| async function baz(): Promise<number> {
+                             ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- resolve_void.js:3:2
+
+Cannot cast `Promise.resolve()` to `Promise` because undefined [1] is incompatible with number [2] in type argument
+`R` [3].
+
+   resolve_void.js:3:2
+     3| (Promise.resolve(): Promise<number>); // error
+         ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   resolve_void.js:3:29
+     3| (Promise.resolve(): Promise<number>); // error
+                                    ^^^^^^ [2]
+   <BUILTINS>/core.js:583:24
+   583| declare class Promise<+R> {
+                               ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- resolve_void.js:5:2
+
+Cannot cast `Promise.resolve(...)` to `Promise` because undefined [1] is incompatible with number [2] in type argument
+`R` [3].
+
+   resolve_void.js:5:2
+     5| (Promise.resolve(undefined): Promise<number>); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   resolve_void.js:5:18
+     5| (Promise.resolve(undefined): Promise<number>); // error
+                         ^^^^^^^^^ [1]
+   resolve_void.js:5:38
+     5| (Promise.resolve(undefined): Promise<number>); // error
+                                             ^^^^^^ [2]
+   <BUILTINS>/core.js:583:24
+   583| declare class Promise<+R> {
+                               ^ [3]
+
 
 
 Found 28 errors

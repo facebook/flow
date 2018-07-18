@@ -1,16 +1,14 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module LocMap = Utils_js.LocMap
 
 exception Props_not_found of Type.Properties.id
+exception Call_not_found of int
 exception Exports_not_found of Type.Exports.id
 exception Require_not_found of string
 exception Module_not_found of string
@@ -18,23 +16,26 @@ exception Tvar_not_found of Constraint.ident
 
 type env = Scope.t list
 
-type local_metadata = {
+type metadata = {
+  (* local *)
   checked: bool;
   munge_underscores: bool;
   verbose: Verbose.t option;
   weak: bool;
-  jsx: Options.jsx_mode option;
-}
+  jsx: Options.jsx_mode;
+  strict: bool;
+  strict_local: bool;
 
-type global_metadata = {
+  (* global *)
+  max_literal_length: int;
   enable_const_params: bool;
-  enable_unsafe_getters_and_setters: bool;
-  enforce_strict_type_args: bool;
   enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
+  esproposal_optional_chaining: Options.esproposal_feature_mode;
+  esproposal_nullish_coalescing: Options.esproposal_feature_mode;
   facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
@@ -45,62 +46,23 @@ type global_metadata = {
   max_workers: int;
 }
 
-type metadata = {
-  local_metadata: local_metadata;
-  global_metadata: global_metadata;
-}
-
 type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
-module Global = struct
-  type t = {
-    metadata: global_metadata;
-  }
+type test_prop_hit_or_miss =
+  | Hit
+  | Miss of string option * (Reason.t * Reason.t) * Type.use_op
 
-  let enable_const_params t = t.metadata.enable_const_params
-  let enable_unsafe_getters_and_setters t = t.metadata.enable_unsafe_getters_and_setters
-  let enforce_strict_type_args t = t.metadata.enforce_strict_type_args
-  let enforce_strict_call_arity t = t.metadata.enforce_strict_call_arity
-  let esproposal_class_static_fields t = t.metadata.esproposal_class_static_fields
-  let esproposal_class_instance_fields t = t.metadata.esproposal_class_instance_fields
-  let esproposal_decorators t = t.metadata.esproposal_decorators
-  let esproposal_export_star_as t = t.metadata.esproposal_export_star_as
-  let max_trace_depth t = t.metadata.max_trace_depth
-  let root t = t.metadata.root
-  let facebook_fbt t = t.metadata.facebook_fbt
-  let should_ignore_non_literal_requires t = t.metadata.ignore_non_literal_requires
-  let should_strip_root t = t.metadata.strip_root
-  let suppress_comments t = t.metadata.suppress_comments
-  let suppress_types t = t.metadata.suppress_types
-  let max_workers t = t.metadata.max_workers
-end
-
-type local_t = {
-  file: File_key.t;
-  module_ref: string;
-  metadata: local_metadata;
-
-  mutable module_kind: module_kind;
-
-  mutable import_stmts: Loc.t Ast.Statement.ImportDeclaration.t list;
-  mutable imported_ts: Type.t SMap.t;
-
+type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
 
-  (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)
-  (** Nominal ids are used to identify classes and to check nominal subtyping
-      between classes. They are different from other "structural" ids, used to
-      identify type variables and property maps, where subtyping cares about the
-      underlying types rather than the ids themselves. We track nominal ids in
-      the context to help decide when the types exported by a module have
-      meaningfully changed: see Merge_js.ContextOptimizer. **)
-  mutable nominal_ids: ISet.t;
-
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.Properties.map;
+
+  (* indirection to support context opt *)
+  mutable call_props: Type.t IMap.t;
 
   (* modules point to mutable export maps *)
   mutable export_maps: Type.Exports.map;
@@ -117,22 +79,13 @@ type local_t = {
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
 
-  mutable require_map: Type.t SMap.t;
-
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
 
   mutable errors: Errors.ErrorSet.t;
-  mutable globals: SSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover;
-
-  type_table: Type_table.t;
-  annot_table: (Loc.t, Type.t) Hashtbl.t;
-  refs_table: (Loc.t, Loc.t) Hashtbl.t;
-
-  mutable declare_module_t: Type.t option;
 
   (* map from exists proposition locations to the types of values running through them *)
   mutable exists_checks: ExistsCheck.t LocMap.t;
@@ -145,27 +98,65 @@ type local_t = {
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t LocMap.t;
 
-  mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
-  mutable use_def_map : Loc.t LocMap.t;
+  mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
+
+  mutable optional_chains_useful: (Reason.t * bool) LocMap.t;
+
+  mutable invariants_useful: (Reason.t * bool) LocMap.t;
 }
 
-type cacheable_t = local_t
-
-(* TODO this has a bunch of stuff in it that should be localized *)
 type t = {
-  global: Global.t;
-  local: local_t;
+  sig_cx: sig_t;
+
+  file: File_key.t;
+  module_ref: string;
+  metadata: metadata;
+
+  mutable module_kind: module_kind;
+
+  mutable import_stmts: Loc.t Ast.Statement.ImportDeclaration.t list;
+  mutable imported_ts: Type.t SMap.t;
+
+  (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)
+  (** Nominal ids are used to identify classes and to check nominal subtyping
+      between classes. They are different from other "structural" ids, used to
+      identify type variables and property maps, where subtyping cares about the
+      underlying types rather than the ids themselves. We track nominal ids in
+      the context to help decide when the types exported by a module have
+      meaningfully changed: see Merge_js.ContextOptimizer. **)
+  mutable nominal_ids: ISet.t;
+
+  mutable require_map: Type.t LocMap.t;
+
+  type_table: Type_table.t;
+  annot_table: (Loc.t, Type.t) Hashtbl.t;
+  refs_table: (Loc.t, Loc.t) Hashtbl.t;
+
+  mutable declare_module_ref: string option;
+
+  mutable use_def : Scope_api.info * Ssa_api.values;
 }
 
-let global_metadata_of_options options = {
+let metadata_of_options options = {
+  (* local *)
+  checked = Options.all options;
+  munge_underscores = Options.should_munge_underscores options;
+  verbose = Options.verbose options;
+  weak = Options.weak_by_default options;
+  jsx = Options.Jsx_react;
+  strict = false;
+  strict_local = false;
+
+  (* global *)
+  max_literal_length = Options.max_literal_length options;
   enable_const_params = Options.enable_const_params options;
-  enable_unsafe_getters_and_setters = Options.enable_unsafe_getters_and_setters options;
   enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-  enforce_strict_type_args = Options.enforce_strict_type_args options;
   esproposal_class_instance_fields = Options.esproposal_class_instance_fields options;
   esproposal_class_static_fields = Options.esproposal_class_static_fields options;
   esproposal_decorators = Options.esproposal_decorators options;
   esproposal_export_star_as = Options.esproposal_export_star_as options;
+  esproposal_optional_chaining = Options.esproposal_optional_chaining options;
+  esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
   facebook_fbt = Options.facebook_fbt options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
@@ -176,229 +167,286 @@ let global_metadata_of_options options = {
   suppress_types = Options.suppress_types options;
 }
 
-let metadata_of_options options =
-  let global_metadata = global_metadata_of_options options in
-  let local_metadata = {
-    checked = Options.all options;
-    munge_underscores = Options.should_munge_underscores options;
-    verbose = Options.verbose options;
-    weak = Options.weak_by_default options;
-    jsx = None;
-  } in
-  { global_metadata; local_metadata; }
+let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, LocMap.empty
+
+let make_sig () = {
+  graph = IMap.empty;
+  property_maps = Type.Properties.Map.empty;
+  call_props = IMap.empty;
+  export_maps = Type.Exports.Map.empty;
+  evaluated = IMap.empty;
+  type_graph = Graph_explorer.new_graph ISet.empty;
+  all_unresolved = IMap.empty;
+  envs = IMap.empty;
+  module_map = SMap.empty;
+  errors = Errors.ErrorSet.empty;
+  error_suppressions = Error_suppressions.empty;
+  severity_cover = ExactCover.empty;
+  exists_checks = LocMap.empty;
+  exists_excuses = LocMap.empty;
+  test_prop_hits_and_misses = IMap.empty;
+  optional_chains_useful = LocMap.empty;
+  invariants_useful = LocMap.empty;
+}
 
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make metadata file module_ref = {
-  global = {
-    Global.metadata = metadata.global_metadata;
-  };
-  local = {
-    file;
-    module_ref;
-    metadata = metadata.local_metadata;
+let make sig_cx metadata file module_ref = {
+  sig_cx;
 
-    module_kind = CommonJSModule(None);
+  file;
+  module_ref;
+  metadata;
 
-    import_stmts = [];
-    imported_ts = SMap.empty;
+  module_kind = CommonJSModule(None);
 
-    graph = IMap.empty;
-    nominal_ids = ISet.empty;
-    envs = IMap.empty;
-    property_maps = Type.Properties.Map.empty;
-    export_maps = Type.Exports.Map.empty;
-    evaluated = IMap.empty;
-    type_graph = Graph_explorer.new_graph ISet.empty;
-    all_unresolved = IMap.empty;
-    require_map = SMap.empty;
-    module_map = SMap.empty;
+  import_stmts = [];
+  imported_ts = SMap.empty;
 
-    errors = Errors.ErrorSet.empty;
-    globals = SSet.empty;
+  nominal_ids = ISet.empty;
 
-    error_suppressions = Error_suppressions.empty;
-    severity_cover = ExactCover.empty;
+  require_map = LocMap.empty;
 
-    type_table = Type_table.create ();
-    annot_table = Hashtbl.create 0;
-    refs_table = Hashtbl.create 0;
+  type_table = Type_table.create ();
+  annot_table = Hashtbl.create 0;
+  refs_table = Hashtbl.create 0;
 
-    declare_module_t = None;
+  declare_module_ref = None;
 
-    exists_checks = LocMap.empty;
-    exists_excuses = LocMap.empty;
-
-    dep_map = Dep_mapper.DepMap.empty;
-    use_def_map = LocMap.empty;
-  }
+  use_def = empty_use_def;
 }
 
-(* accessors *)
-let all_unresolved cx = cx.local.all_unresolved
-let annot_table cx = cx.local.annot_table
-let declare_module_t cx = cx.local.declare_module_t
-let envs cx = cx.local.envs
-let enable_const_params cx = Global.enable_const_params cx.global
-let enable_unsafe_getters_and_setters cx = Global.enable_unsafe_getters_and_setters cx.global
-let enforce_strict_type_args cx = Global.enforce_strict_type_args cx.global
-let enforce_strict_call_arity cx = Global.enforce_strict_call_arity cx.global
-let errors cx = cx.local.errors
-let error_suppressions cx = cx.local.error_suppressions
-let esproposal_class_static_fields cx = Global.esproposal_class_static_fields cx.global
-let esproposal_class_instance_fields cx = Global.esproposal_class_instance_fields cx.global
-let esproposal_decorators cx = Global.esproposal_decorators cx.global
-let esproposal_export_star_as cx = Global.esproposal_export_star_as cx.global
-let evaluated cx = cx.local.evaluated
-let file cx = cx.local.file
-let find_props cx id =
-  try Type.Properties.Map.find_unsafe id cx.local.property_maps
-  with Not_found -> raise (Props_not_found id)
-let find_exports cx id =
-  try Type.Exports.Map.find_unsafe id cx.local.export_maps
-  with Not_found -> raise (Exports_not_found id)
-let find_require cx r =
-  try SMap.find_unsafe r cx.local.require_map
-  with Not_found -> raise (Require_not_found r)
-let find_module cx m =
-  try SMap.find_unsafe m cx.local.module_map
+let sig_cx cx = cx.sig_cx
+let graph_sig sig_cx = sig_cx.graph
+let find_module_sig sig_cx m =
+  try SMap.find_unsafe m sig_cx.module_map
   with Not_found -> raise (Module_not_found m)
+
+let push_declare_module cx module_ref =
+  match cx.declare_module_ref with
+  | Some _ -> failwith "declare module must be one level deep"
+  | None -> cx.declare_module_ref <- Some module_ref
+
+let pop_declare_module cx =
+  match cx.declare_module_ref with
+  | None -> failwith "pop empty declare module"
+  | Some _ -> cx.declare_module_ref <- None
+
+(* accessors *)
+let all_unresolved cx = cx.sig_cx.all_unresolved
+let annot_table cx = cx.annot_table
+let envs cx = cx.sig_cx.envs
+let max_literal_length cx = cx.metadata.max_literal_length
+let enable_const_params cx =
+  cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
+let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
+let errors cx = cx.sig_cx.errors
+let error_suppressions cx = cx.sig_cx.error_suppressions
+let esproposal_class_static_fields cx = cx.metadata.esproposal_class_static_fields
+let esproposal_class_instance_fields cx = cx.metadata.esproposal_class_instance_fields
+let esproposal_decorators cx = cx.metadata.esproposal_decorators
+let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
+let esproposal_optional_chaining cx = cx.metadata.esproposal_optional_chaining
+let esproposal_nullish_coalescing cx = cx.metadata.esproposal_nullish_coalescing
+let evaluated cx = cx.sig_cx.evaluated
+let file cx = cx.file
+let find_props cx id =
+  try Type.Properties.Map.find_unsafe id cx.sig_cx.property_maps
+  with Not_found -> raise (Props_not_found id)
+let find_call cx id =
+  try IMap.find_unsafe id cx.sig_cx.call_props
+  with Not_found -> raise (Call_not_found id)
+let find_exports cx id =
+  try Type.Exports.Map.find_unsafe id cx.sig_cx.export_maps
+  with Not_found -> raise (Exports_not_found id)
+let find_require cx loc =
+  try LocMap.find_unsafe loc cx.require_map
+  with Not_found -> raise (Require_not_found (Loc.to_string ~include_source:true loc))
+let find_module cx m = find_module_sig (sig_cx cx) m
 let find_tvar cx id =
-  try IMap.find_unsafe id cx.local.graph
+  try IMap.find_unsafe id cx.sig_cx.graph
   with Not_found -> raise (Tvar_not_found id)
-let mem_nominal_id cx id = ISet.mem id cx.local.nominal_ids
-let globals cx = cx.local.globals
-let graph cx = cx.local.graph
-let import_stmts cx = cx.local.import_stmts
-let imported_ts cx = cx.local.imported_ts
-let is_checked cx = cx.local.metadata.checked
-let is_verbose cx = cx.local.metadata.verbose <> None
-let is_weak cx = cx.local.metadata.weak
-let severity_cover cx = cx.local.severity_cover
-let max_trace_depth cx = Global.max_trace_depth cx.global
-let module_kind cx = cx.local.module_kind
-let module_map cx = cx.local.module_map
-let module_ref cx = cx.local.module_ref
-let property_maps cx = cx.local.property_maps
-let refs_table cx = cx.local.refs_table
-let export_maps cx = cx.local.export_maps
-let root cx = Global.root cx.global
-let facebook_fbt cx = Global.facebook_fbt cx.global
-let should_ignore_non_literal_requires cx = Global.should_ignore_non_literal_requires cx.global
-let should_munge_underscores cx  = cx.local.metadata.munge_underscores
-let should_strip_root cx = Global.should_strip_root cx.global
-let suppress_comments cx = Global.suppress_comments cx.global
-let suppress_types cx = Global.suppress_types cx.global
-let type_graph cx = cx.local.type_graph
-let type_table cx = cx.local.type_table
-let verbose cx = cx.local.metadata.verbose
-let max_workers cx = Global.max_workers cx.global
-let jsx cx = cx.local.metadata.jsx
-let exists_checks cx = cx.local.exists_checks
-let exists_excuses cx = cx.local.exists_excuses
-let dep_map cx = cx.local.dep_map
-let use_def_map cx = cx.local.use_def_map
+let mem_nominal_id cx id = ISet.mem id cx.nominal_ids
+let graph cx = graph_sig cx.sig_cx
+let import_stmts cx = cx.import_stmts
+let imported_ts cx = cx.imported_ts
+let is_checked cx = cx.metadata.checked
+let is_verbose cx = cx.metadata.verbose <> None
+let is_weak cx = cx.metadata.weak
+let is_strict cx = (Option.is_some cx.declare_module_ref) || cx.metadata.strict
+let is_strict_local cx = cx.metadata.strict_local
+let severity_cover cx = cx.sig_cx.severity_cover
+let max_trace_depth cx = cx.metadata.max_trace_depth
+let module_kind cx = cx.module_kind
+let require_map cx = cx.require_map
+let module_map cx = cx.sig_cx.module_map
+let module_ref cx =
+  match cx.declare_module_ref with
+  | Some module_ref -> module_ref
+  | None -> cx.module_ref
+let property_maps cx = cx.sig_cx.property_maps
+let call_props cx = cx.sig_cx.call_props
+let refs_table cx = cx.refs_table
+let export_maps cx = cx.sig_cx.export_maps
+let root cx = cx.metadata.root
+let facebook_fbt cx = cx.metadata.facebook_fbt
+let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requires
+let should_munge_underscores cx  = cx.metadata.munge_underscores
+let should_strip_root cx = cx.metadata.strip_root
+let suppress_comments cx = cx.metadata.suppress_comments
+let suppress_types cx = cx.metadata.suppress_types
+let type_graph cx = cx.sig_cx.type_graph
+let type_table cx = cx.type_table
+let verbose cx = cx.metadata.verbose
+let max_workers cx = cx.metadata.max_workers
+let jsx cx = cx.metadata.jsx
+let exists_checks cx = cx.sig_cx.exists_checks
+let exists_excuses cx = cx.sig_cx.exists_excuses
+let use_def cx = cx.use_def
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
   then Printf.sprintf "[%d] " (Unix.getpid ())
   else ""
 
-let copy_of_context (cx: t) =
-  let local = { cx.local with
-    graph = IMap.map Constraint.copy_node cx.local.graph;
-    property_maps = cx.local.property_maps;
-    type_table = Type_table.copy cx.local.type_table;
-  } in
-  { cx with local }
+let copy_of_context cx = {
+  cx with
+  sig_cx = {
+    cx.sig_cx with
+    graph = IMap.map Constraint.copy_node cx.sig_cx.graph;
+    property_maps = cx.sig_cx.property_maps;
+    call_props = cx.sig_cx.call_props;
+  };
+  type_table = Type_table.copy cx.type_table;
+}
 
 (* mutators *)
 let add_env cx frame env =
-  cx.local.envs <- IMap.add frame env cx.local.envs
+  cx.sig_cx.envs <- IMap.add frame env cx.sig_cx.envs
 let add_error cx error =
-  cx.local.errors <- Errors.ErrorSet.add error cx.local.errors
+  cx.sig_cx.errors <- Errors.ErrorSet.add error cx.sig_cx.errors
 let add_error_suppression cx loc =
-  cx.local.error_suppressions <-
-    Error_suppressions.add loc cx.local.error_suppressions
-let add_global cx name =
-  cx.local.globals <- SSet.add name cx.local.globals
+  cx.sig_cx.error_suppressions <-
+    Error_suppressions.add loc cx.sig_cx.error_suppressions
+let add_severity_cover cx severity_cover =
+  cx.sig_cx.severity_cover <- ExactCover.union severity_cover cx.sig_cx.severity_cover
+let add_unused_lint_suppressions cx suppressions = cx.sig_cx.error_suppressions <-
+  Error_suppressions.add_unused_lint_suppressions suppressions cx.sig_cx.error_suppressions
 let add_import_stmt cx stmt =
-  cx.local.import_stmts <- stmt::cx.local.import_stmts
+  cx.import_stmts <- stmt::cx.import_stmts
 let add_imported_t cx name t =
-  cx.local.imported_ts <- SMap.add name t cx.local.imported_ts
-let add_require cx name tvar =
-  cx.local.require_map <- SMap.add name tvar cx.local.require_map
+  cx.imported_ts <- SMap.add name t cx.imported_ts
+let add_require cx loc tvar =
+  cx.require_map <- LocMap.add loc tvar cx.require_map
 let add_module cx name tvar =
-  cx.local.module_map <- SMap.add name tvar cx.local.module_map
+  cx.sig_cx.module_map <- SMap.add name tvar cx.sig_cx.module_map
 let add_property_map cx id pmap =
-  cx.local.property_maps <- Type.Properties.Map.add id pmap cx.local.property_maps
+  cx.sig_cx.property_maps <- Type.Properties.Map.add id pmap cx.sig_cx.property_maps
+let add_call_prop cx id t =
+  cx.sig_cx.call_props <- IMap.add id t cx.sig_cx.call_props
 let add_export_map cx id tmap =
-  cx.local.export_maps <- Type.Exports.Map.add id tmap cx.local.export_maps
+  cx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.sig_cx.export_maps
 let add_tvar cx id bounds =
-  cx.local.graph <- IMap.add id bounds cx.local.graph
+  cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.graph
 let add_nominal_id cx id =
-  cx.local.nominal_ids <- ISet.add id cx.local.nominal_ids
+  cx.nominal_ids <- ISet.add id cx.nominal_ids
 let remove_all_errors cx =
-  cx.local.errors <- Errors.ErrorSet.empty
+  cx.sig_cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
-  cx.local.error_suppressions <- Error_suppressions.empty
+  cx.sig_cx.error_suppressions <- Error_suppressions.empty
 let remove_all_lint_severities cx =
-  cx.local.severity_cover <- ExactCover.empty
+  cx.sig_cx.severity_cover <- ExactCover.empty
 let remove_tvar cx id =
-  cx.local.graph <- IMap.remove id cx.local.graph
+  cx.sig_cx.graph <- IMap.remove id cx.sig_cx.graph
 let set_all_unresolved cx all_unresolved =
-  cx.local.all_unresolved <- all_unresolved
-let set_declare_module_t cx t =
-  cx.local.declare_module_t <- t
+  cx.sig_cx.all_unresolved <- all_unresolved
 let set_envs cx envs =
-  cx.local.envs <- envs
+  cx.sig_cx.envs <- envs
 let set_evaluated cx evaluated =
-  cx.local.evaluated <- evaluated
-let set_globals cx globals =
-  cx.local.globals <- globals
+  cx.sig_cx.evaluated <- evaluated
 let set_graph cx graph =
-  cx.local.graph <- graph
-let set_errors cx errors =
-  cx.local.errors <- errors
-let set_error_suppressions cx suppressions =
-  cx.local.error_suppressions <- suppressions
-let set_severity_cover cx severity_cover =
-  cx.local.severity_cover <- severity_cover
+  cx.sig_cx.graph <- graph
 let set_module_kind cx module_kind =
-  cx.local.module_kind <- module_kind
+  cx.module_kind <- module_kind
 let set_property_maps cx property_maps =
-  cx.local.property_maps <- property_maps
+  cx.sig_cx.property_maps <- property_maps
+let set_call_props cx call_props =
+  cx.sig_cx.call_props <- call_props
 let set_export_maps cx export_maps =
-  cx.local.export_maps <- export_maps
+  cx.sig_cx.export_maps <- export_maps
 let set_type_graph cx type_graph =
-  cx.local.type_graph <- type_graph
-let set_tvar cx id node =
-  cx.local.graph <- IMap.add id node cx.local.graph
-let set_unused_lint_suppressions cx suppressions = cx.local.error_suppressions <-
-  Error_suppressions.set_unused_lint_suppressions suppressions cx.local.error_suppressions
+  cx.sig_cx.type_graph <- type_graph
 let set_exists_checks cx exists_checks =
-  cx.local.exists_checks <- exists_checks
+  cx.sig_cx.exists_checks <- exists_checks
 let set_exists_excuses cx exists_excuses =
-  cx.local.exists_excuses <- exists_excuses
-let set_dep_map cx dep_map =
-  cx.local.dep_map <- dep_map
-let set_use_def_map cx use_def_map =
-  cx.local.use_def_map <- use_def_map
+  cx.sig_cx.exists_excuses <- exists_excuses
+let set_use_def cx use_def =
+  cx.use_def <- use_def
 let set_module_map cx module_map =
-  cx.local.module_map <- module_map
+  cx.sig_cx.module_map <- module_map
 
 let clear_intermediates cx =
-  (* call reset instead of clear to also shrink the bucket tables *)
-  Type_table.reset cx.local.type_table;
-  Hashtbl.reset cx.local.annot_table;
-  cx.local.all_unresolved <- IMap.empty;
-  cx.local.exists_checks <- LocMap.empty;
-  cx.local.exists_excuses <- LocMap.empty;
-  cx.local.dep_map <- Dep_mapper.DepMap.empty;
-  cx.local.use_def_map <- LocMap.empty;
-  cx.local.require_map <- SMap.empty
+  cx.sig_cx.envs <- IMap.empty;
+  cx.sig_cx.all_unresolved <- IMap.empty;
+  cx.sig_cx.exists_checks <- LocMap.empty;
+  cx.sig_cx.exists_excuses <- LocMap.empty;
+  cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
+  cx.sig_cx.optional_chains_useful <- LocMap.empty;
+  cx.sig_cx.invariants_useful <- LocMap.empty;
+  ()
 
+(* Given a sig context, it makes sense to clear the parts that are shared with
+   the master sig context. Why? The master sig context, which contains global
+   declarations, is an implicit dependency for every file, and so will be
+   "merged in" anyway, thus making those shared parts redundant to carry around
+   in other sig contexts. This saves a lot of shared memory as well as
+   deserialization time. *)
+let clear_master_shared cx master_cx =
+  set_graph cx (graph cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id master_cx.graph)));
+  set_property_maps cx (property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
+    (Type.Properties.Map.mem id master_cx.property_maps)));
+  set_call_props cx (call_props cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id master_cx.call_props)));
+  set_evaluated cx (evaluated cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id master_cx.evaluated)))
+
+let test_prop_hit cx id =
+  cx.sig_cx.test_prop_hits_and_misses <-
+    IMap.add id Hit cx.sig_cx.test_prop_hits_and_misses
+
+let test_prop_miss cx id name reasons use =
+  if not (IMap.mem id cx.sig_cx.test_prop_hits_and_misses) then
+  cx.sig_cx.test_prop_hits_and_misses <-
+    IMap.add id (Miss (name, reasons, use)) cx.sig_cx.test_prop_hits_and_misses
+
+let test_prop_get_never_hit cx =
+  List.fold_left (fun acc (_, hit_or_miss) ->
+    match hit_or_miss with
+    | Hit -> acc
+    | Miss (name, reasons, use_op) -> (name, reasons, use_op)::acc
+  ) [] (IMap.bindings cx.sig_cx.test_prop_hits_and_misses)
+
+let mark_optional_chain cx loc lhs_reason ~useful =
+  cx.sig_cx.optional_chains_useful <- LocMap.add loc (lhs_reason, useful) ~combine:(
+    fun (r, u) (_, u') -> (r, u || u')
+  ) cx.sig_cx.optional_chains_useful
+
+let unnecessary_optional_chains cx =
+  LocMap.fold (fun loc (r, useful) acc ->
+    if useful then acc else (loc, r) :: acc
+  ) cx.sig_cx.optional_chains_useful []
+
+let mark_invariant cx loc reason ~useful =
+  cx.sig_cx.invariants_useful <- LocMap.add loc (reason, useful) ~combine:(
+    fun (r, u) (_, u') -> (r, u || u')
+  ) cx.sig_cx.invariants_useful
+
+let unnecessary_invariants cx =
+  LocMap.fold (fun loc (r, useful) acc ->
+    if useful then acc else (loc, r) :: acc
+  ) cx.sig_cx.invariants_useful []
 
 (* utils *)
 let iter_props cx id f =
@@ -432,33 +480,83 @@ let make_property_map cx pmap =
   add_property_map cx id pmap;
   id
 
+let make_call_prop cx t =
+  let id = Reason.mk_id () in
+  add_call_prop cx id t;
+  id
+
 let make_export_map cx tmap =
   let id = Type.Exports.mk_id () in
   add_export_map cx id tmap;
   id
 
+let make_nominal cx =
+  let nominal = Reason.mk_id () in
+  add_nominal_id cx nominal;
+  nominal
+
 (* Copy context from cx_other to cx *)
 let merge_into cx cx_other =
-  set_envs cx (IMap.union (envs cx_other) (envs cx));
-  set_property_maps cx (
-    Type.Properties.Map.union (property_maps cx_other) (property_maps cx));
-  set_export_maps cx (
-    Type.Exports.Map.union (export_maps cx_other) (export_maps cx));
-  set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
-  set_type_graph cx (Graph_explorer.union (type_graph cx_other) (type_graph cx));
-  set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
-  set_globals cx (SSet.union (globals cx_other) (globals cx));
-  set_graph cx (IMap.union (graph cx_other) (graph cx));
-  set_errors cx (Errors.ErrorSet.union (errors cx_other) (errors cx));
-  set_error_suppressions cx (Error_suppressions.union (error_suppressions cx_other) (error_suppressions cx));
-  set_severity_cover cx (ExactCover.union (severity_cover cx_other) (severity_cover cx));
-  set_exists_checks cx (LocMap.union (exists_checks cx_other) (exists_checks cx));
-  set_exists_excuses cx (LocMap.union (exists_excuses cx_other) (exists_excuses cx))
-  (* TODO: merge use_def_map and dep_map as well. *)
+  cx.property_maps <- Type.Properties.Map.union cx_other.property_maps cx.property_maps;
+  cx.call_props <- IMap.union cx_other.call_props cx.call_props;
+  cx.export_maps <- Type.Exports.Map.union cx_other.export_maps cx.export_maps;
+  cx.evaluated <- IMap.union cx_other.evaluated cx.evaluated;
+  cx.type_graph <- Graph_explorer.union cx_other.type_graph cx.type_graph;
+  cx.graph <- IMap.union cx_other.graph cx.graph;
 
-let to_cache cx = cx.local
-let from_cache ~options local =
-  {
-    global = { Global.metadata = global_metadata_of_options options };
-    local;
-  }
+  (* These entries are intermediates, and will be cleared from dep_cxs before
+     merge. However, initializing builtins is a bit different, and actually copy
+     these things from the lib cxs into the master cx before we clear the
+     indeterminates and calculate the sig cx. *)
+  cx.envs <- IMap.union cx_other.envs cx.envs;
+  cx.errors <- Errors.ErrorSet.union cx_other.errors cx.errors;
+  cx.error_suppressions <- Error_suppressions.union cx_other.error_suppressions cx.error_suppressions;
+  cx.severity_cover <- ExactCover.union cx_other.severity_cover cx.severity_cover;
+  cx.exists_checks <- LocMap.union cx_other.exists_checks cx.exists_checks;
+  cx.exists_excuses <- LocMap.union cx_other.exists_excuses cx.exists_excuses;
+  cx.all_unresolved <- IMap.union cx_other.all_unresolved cx.all_unresolved;
+  ()
+
+(* Find the constraints of a type variable in the graph.
+
+   Recall that type variables are either roots or goto nodes. (See
+   Constraint for details.) If the type variable is a root, the
+   constraints are stored with the type variable. Otherwise, the type variable
+   is a goto node, and it points to another type variable: a linked list of such
+   type variables must be traversed until a root is reached. *)
+let rec find_graph cx id =
+  let _, constraints = find_constraints cx id in
+  constraints
+
+and find_constraints cx id =
+  let root_id, root = find_root cx id in
+  root_id, root.Constraint.constraints
+
+(* Find the root of a type variable, potentially traversing a chain of type
+   variables, while short-circuiting all the type variables in the chain to the
+   root during traversal to speed up future traversals. *)
+and find_root cx id =
+  let open Constraint in
+  match IMap.get id (graph cx) with
+  | Some (Goto next_id) ->
+      let root_id, root = find_root cx next_id in
+      if root_id != next_id then add_tvar cx id (Goto root_id) else ();
+      root_id, root
+
+  | Some (Root root) ->
+      id, root
+
+  | None ->
+      let msg = Utils_js.spf "find_root: tvar %d not found in file %s" id
+        (File_key.to_string @@ file cx)
+      in
+      Utils_js.assert_false msg
+
+let rec find_resolved cx = function
+  | Type.OpenT (_, id) ->
+    begin match find_graph cx id with
+      | Constraint.Resolved t -> Some t
+      | Constraint.Unresolved _ -> None
+    end
+  | Type.AnnotT (t, _) -> find_resolved cx t
+  | t -> Some t

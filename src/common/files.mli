@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* utilities for supported filenames *)
@@ -13,6 +10,8 @@
 type options = {
   default_lib_dir: Path.t option;
   ignores: (string * Str.regexp) list;
+  untyped: (string * Str.regexp) list;
+  declarations: (string * Str.regexp) list;
   includes: Path_matcher.t;
   lib_paths: Path.t list;
   module_file_exts: SSet.t;
@@ -22,6 +21,8 @@ type options = {
 
 val default_lib_dir: options -> Path.t option
 val ignores: options -> (string * Str.regexp) list
+val untyped: options -> (string * Str.regexp) list
+val declarations: options -> (string * Str.regexp) list
 val includes: options -> Path_matcher.t
 val lib_paths: options -> Path.t list
 val module_file_exts: options -> SSet.t
@@ -41,12 +42,18 @@ val is_flow_file: options: options -> string -> bool
 
 (* true if a file path matches an [ignore] entry in config *)
 val is_ignored: options -> string -> bool
+(* true if a file path matches an [untyped] entry in config *)
+val is_untyped: options -> string -> bool
+(* true if a file path matches a [declarations] entry in config *)
+val is_declaration: options -> string -> bool
 (* true if a file path matches an [include] path in config *)
 val is_included: options -> string -> bool
 
 val is_valid_path: options: options -> string -> bool
 
-val init: options -> string list * SSet.t
+val get_all_watched_extensions: options -> SSet.t
+
+val init: ?flowlibs_only:bool -> options -> string list * SSet.t
 
 val module_ref: File_key.t -> string
 val lib_module_ref: string
@@ -55,11 +62,11 @@ val lib_module_ref: string
 val dir_sep: Str.regexp
 val current_dir_name: Str.regexp
 val parent_dir_name: Str.regexp
-val absolute_path: Str.regexp
+val absolute_path_regexp: Str.regexp
 
 val project_root_token: Str.regexp
 
-val watched_paths: root:Path.t -> options -> Path.t list
+val watched_paths: options -> Path.t list
 
 (* given a root, make a filter for file names *)
 val wanted:
@@ -85,6 +92,7 @@ val normalize_path: string -> string -> string
 val construct_path: string -> string list -> string
 
 val relative_path: string -> string -> string
+val absolute_path: string -> string -> string
 
 (* TODO: this doesn't match the signatures of the related functions above *)
 val make_path_absolute: Path.t -> string -> Path.t

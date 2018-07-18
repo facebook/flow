@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type t =
@@ -97,6 +94,8 @@ type t =
   | T_MINUS_ASSIGN
   | T_PLUS_ASSIGN
   | T_ASSIGN
+  | T_PLING_PERIOD
+  | T_PLING_PLING
   | T_PLING
   | T_COLON
   | T_OR
@@ -250,6 +249,8 @@ let token_to_string = function
   | T_MINUS_ASSIGN -> "T_MINUS_ASSIGN"
   | T_PLUS_ASSIGN -> "T_PLUS_ASSIGN"
   | T_ASSIGN -> "T_ASSIGN"
+  | T_PLING_PERIOD -> "T_PLING_PERIOD"
+  | T_PLING_PLING -> "T_PLING_PLING"
   | T_PLING -> "T_PLING"
   | T_COLON -> "T_COLON"
   | T_OR -> "T_OR"
@@ -379,6 +380,8 @@ let value_of_token = function
   | T_MINUS_ASSIGN -> "-="
   | T_PLUS_ASSIGN -> "+="
   | T_ASSIGN -> "="
+  | T_PLING_PERIOD -> "?."
+  | T_PLING_PLING -> "??"
   | T_PLING -> "?"
   | T_COLON -> ":"
   | T_OR -> "||"

@@ -1,66 +1,116 @@
-Error: maybe.js:9
-  9: ('foo': typeof x); // error: string ~> number
-      ^^^^^ string. This type is incompatible with
-  9: ('foo': typeof x); // error: string ~> number
-             ^^^^^^^^ number
+Error ----------------------------------------------------------------------------------------------------- maybe.js:9:2
 
-Error: optional.js:9
-  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
-      ^^^^ null. This type is incompatible with
-  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
-            ^^^^^^^^ number
+Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2].
 
-Error: typeof.js:43
- 43: var b: MyClass1 = MyClass1;
-                       ^^^^^^^^ class type: MyClass1. This type is incompatible with
- 43: var b: MyClass1 = MyClass1;
-            ^^^^^^^^ MyClass1
+   maybe.js:9:2
+   9| ('foo': typeof x); // error: string ~> number
+       ^^^^^ [1]
 
-Error: typeof.js:53
- 53: var c: typeof MyClass2 = new MyClass2();
-                              ^^^^^^^^^^^^^^ MyClass2. This type is incompatible with
- 53: var c: typeof MyClass2 = new MyClass2();
-            ^^^^^^^^^^^^^^^ class type: MyClass2
+References:
+   maybe.js:8:11
+   8| var x = f(42);
+                ^^ [2]
 
-Error: typeof.js:61
- 61: var e: typeof numValue = 'asdf'; // Error: string ~> number
-                              ^^^^^^ string. This type is incompatible with
- 61: var e: typeof numValue = 'asdf'; // Error: string ~> number
-            ^^^^^^^^^^^^^^^ number
 
-Error: typeof.js:73
- 73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
-                   ^^^^^^^^^^^ numberAlias. type referenced from value position
- 67: type numberAlias = number;
-          ^^^^^^^^^^^ type numberAlias
+Error -------------------------------------------------------------------------------------------------- optional.js:9:2
 
-Error: typeof.js:82
- 82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
-                      ^^^ object literal. Ineligible value used in/as type annotation (did you forget 'typeof'?)
- 82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
-                      ^^^ Map
+Cannot cast `null` to `typeof x` because null [1] is incompatible with number [2].
 
-Error: union.js:9
-  9: (null: typeof x); // error: null ~> number|string
-      ^^^^ null. This type is incompatible with
-  9: (null: typeof x); // error: null ~> number|string
-            ^^^^^^^^ union: type parameter `A` of function call | type parameter `B` of function call
-  Member 1:
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ type parameter `A` of function call
-  Error:
-    9: (null: typeof x); // error: null ~> number|string
-        ^^^^ null. This type is incompatible with
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ number
-  Member 2:
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ type parameter `B` of function call
-  Error:
-    9: (null: typeof x); // error: null ~> number|string
-        ^^^^ null. This type is incompatible with
-    9: (null: typeof x); // error: null ~> number|string
-              ^^^^^^^^ string
+   optional.js:9:2
+   9| (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
+       ^^^^ [1]
+
+References:
+   optional.js:8:11
+   8| var x = f(42).p;
+                ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:43:19
+
+Cannot assign `MyClass1` to `b` because statics of `MyClass1` [1] is incompatible with `MyClass1` [2].
+
+   typeof.js:43:19
+   43| var b: MyClass1 = MyClass1;
+                         ^^^^^^^^
+
+References:
+   typeof.js:11:7
+   11| class MyClass1 {
+             ^^^^^^^^ [1]
+   typeof.js:43:8
+   43| var b: MyClass1 = MyClass1;
+              ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:53:26
+
+Cannot assign `new MyClass2()` to `c` because `MyClass2` [1] is incompatible with `typeof MyClass2` [2].
+
+   typeof.js:53:26
+   53| var c: typeof MyClass2 = new MyClass2();
+                                ^^^^^^^^^^^^^^ [1]
+
+References:
+   typeof.js:53:8
+   53| var c: typeof MyClass2 = new MyClass2();
+              ^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:61:26
+
+Cannot assign `'asdf'` to `e` because string [1] is incompatible with number [2].
+
+   typeof.js:61:26
+   61| var e: typeof numValue = 'asdf'; // Error: string ~> number
+                                ^^^^^^ [1]
+
+References:
+   typeof.js:59:14
+   59| var numValue:number = 42;
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:73:15
+
+Cannot reference type `numberAlias` [1] from a value position.
+
+   typeof.js:73:15
+   73| var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
+                     ^^^^^^^^^^^
+
+References:
+   typeof.js:67:6
+   67| type numberAlias = number;
+            ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- typeof.js:82:18
+
+Cannot use object literal as a type because object literal is a value. To get the type of a value use `typeof`.
+
+   82|  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
+                        ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:9:2
+
+Cannot cast `null` to `typeof x` because:
+ - Either null [1] is incompatible with number [2].
+ - Or null [1] is incompatible with string [3].
+
+   union.js:9:2
+   9| (null: typeof x); // error: null ~> number|string
+       ^^^^ [1]
+
+References:
+   union.js:8:13
+   8| const x = f(42, 'foo');
+                  ^^ [2]
+   union.js:8:17
+   8| const x = f(42, 'foo');
+                      ^^^^^ [3]
+
 
 
 Found 8 errors

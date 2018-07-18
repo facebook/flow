@@ -5,6 +5,13 @@ import * as React from 'react';
 // Utility. We want a value for any.
 const any: any = null;
 
+// Utility. We want to be able to enhance some components.
+function hoc<Props, Component: React.ComponentType<Props>>(
+  WrappedComponent: Component,
+): React.ComponentType<React.ElementConfig<Component>> {
+  return props => <WrappedComponent {...props} />;
+}
+
 /* ========================================================================== *\
  * NoProps                                                                    *
 \* ========================================================================== */
@@ -46,6 +53,14 @@ const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
 const Member_NoProps = {prop: Class_NoProps};
 <Member_NoProps.prop />; // OK: There are no props.
 <Member_NoProps.prop foo={42} />; // OK: Extra props are fine.
+
+const EnhancedClass_NoProps = hoc(Class_NoProps);
+<EnhancedClass_NoProps />; // OK: There are no props.
+<EnhancedClass_NoProps foo={42} />; // OK: Extra props are fine.
+
+const EnhancedFunction_NoProps = hoc(Function_NoProps);
+<EnhancedFunction_NoProps />; // OK: There are no props.
+<EnhancedFunction_NoProps foo={42} />; // OK: Extra props are fine.
 
 /* ========================================================================== *\
  * ManyProps                                                                  *
@@ -217,14 +232,14 @@ class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
   boolean2={null}
   number={null}
 />;
-<ClassExact_ManyProps // OK: All props are defined. Error for exact types.
+<ClassExact_ManyProps // OK: All props are defined.
   string1="foo"
   string2={'bar'}
   boolean1
   boolean2={false}
   {...{number: 42}}
 />;
-<ClassExact_ManyProps // OK: All props are defined. Error for exact types.
+<ClassExact_ManyProps // OK: All props are defined.
   {...{string1: 'foo', string2: 'bar'}}
   {...{boolean1: true, boolean2: false}}
   {...{number: 42}}
@@ -233,20 +248,20 @@ class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
   {...{string1: 'foo', string2: 'bar'}}
   {...{boolean1: true, boolean2: false}}
 />;
-<ClassExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+<ClassExact_ManyProps // Error: Extra props are not allowed.
   string1="foo"
   string2={'bar'}
   boolean1
   boolean2={false}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
-<ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
+<ClassExact_ManyProps // Error (TODO), but OK: `number` is overwritten at the end of the element.
   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
   boolean1
   boolean2={false}
   number={42}
 />;
-<ClassExact_ManyProps // Error: `number` cannot be null. Error for exact types.
+<ClassExact_ManyProps // OK: `number` is not overwritten at the end of the element
   boolean1
   boolean2={false}
   number={42}
@@ -403,36 +418,36 @@ const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
   boolean2={null}
   number={null}
 />;
-<FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
+<FunctionExact_ManyProps // OK: All props are defined.
   string1="foo"
   string2={'bar'}
   boolean1
   boolean2={false}
   {...{number: 42}}
 />;
-<FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
+<FunctionExact_ManyProps // OK: All props are defined.
   {...{string1: 'foo', string2: 'bar'}}
   {...{boolean1: true, boolean2: false}}
   {...{number: 42}}
 />;
-<FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
+<FunctionExact_ManyProps // Error: Missing `number`.
   {...{string1: 'foo', string2: 'bar'}}
   {...{boolean1: true, boolean2: false}}
 />;
-<FunctionExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+<FunctionExact_ManyProps // Error: Extra props are not allowed.
   string1="foo"
   string2={'bar'}
   boolean1
   boolean2={false}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
-<FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+<FunctionExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
   boolean1
   boolean2={false}
   number={42}
 />;
-<FunctionExact_ManyProps // Error: `number` cannot be null. Error for exact types.
+<FunctionExact_ManyProps // OK: `number` is not overwritten at the end of the element
   boolean1
   boolean2={false}
   number={42}
@@ -528,14 +543,14 @@ const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
   boolean2={null}
   number={null}
 />;
-<AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
+<AbstractExact_ManyProps // OK: All props are defined.
   string1="foo"
   string2={'bar'}
   boolean1
   boolean2={false}
   {...{number: 42}}
 />;
-<AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
+<AbstractExact_ManyProps // OK: All props are defined.
   {...{string1: 'foo', string2: 'bar'}}
   {...{boolean1: true, boolean2: false}}
   {...{number: 42}}
@@ -544,20 +559,20 @@ const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
   {...{string1: 'foo', string2: 'bar'}}
   {...{boolean1: true, boolean2: false}}
 />;
-<AbstractExact_ManyProps // OK: Extra props are allowed. Error for exact types.
+<AbstractExact_ManyProps // Error: Extra props are not allowed.
   string1="foo"
   string2={'bar'}
   boolean1
   boolean2={false}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
-<AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
+<AbstractExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
   boolean1
   boolean2={false}
   number={42}
 />;
-<AbstractExact_ManyProps // Error: `number` cannot be null. Error for exact types.
+<AbstractExact_ManyProps // OK: `number` is not overwritten.
   boolean1
   boolean2={false}
   number={42}
@@ -620,6 +635,130 @@ const Member_ManyProps = {prop: Class_ManyProps};
   number={42}
 />;
 <Member_ManyProps.prop // Error: `number` cannot be null.
+  boolean1
+  boolean2={false}
+  number={42}
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+/>;
+
+const EnhancedClass_ManyProps = hoc(Class_ManyProps);
+<EnhancedClass_ManyProps />; // Error: There are no props.
+<EnhancedClass_ManyProps // OK: All props are defined.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<EnhancedClass_ManyProps // OK: Other props are allowed.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  number={42}
+  a={1}
+  b={2}
+  c={3}
+/>;
+<EnhancedClass_ManyProps // Error: All props have an incorrect type.
+  string1={null}
+  string2={null}
+  boolean1={null}
+  boolean2={null}
+  number={null}
+/>;
+<EnhancedClass_ManyProps // OK: All props are defined.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  {...{number: 42}}
+/>;
+<EnhancedClass_ManyProps // OK: All props are defined.
+  {...{string1: 'foo', string2: 'bar'}}
+  {...{boolean1: true, boolean2: false}}
+  {...{number: 42}}
+/>;
+<EnhancedClass_ManyProps // Error: Missing `number`.
+  {...{string1: 'foo', string2: 'bar'}}
+  {...{boolean1: true, boolean2: false}}
+/>;
+<EnhancedClass_ManyProps // OK: Extra props are allowed. Error for exact types.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  {...{number: 42, a: 1, b: 2, c: 3}}
+/>;
+<EnhancedClass_ManyProps // OK: `number` is overwritten at the end of the element.
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<EnhancedClass_ManyProps // Error: `number` cannot be null.
+  boolean1
+  boolean2={false}
+  number={42}
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+/>;
+
+const EnhancedFunction_ManyProps = hoc(Function_ManyProps);
+<EnhancedFunction_ManyProps />; // Error: There are no props.
+<EnhancedFunction_ManyProps // OK: All props are defined.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<EnhancedFunction_ManyProps // OK: Other props are allowed.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  number={42}
+  a={1}
+  b={2}
+  c={3}
+/>;
+<EnhancedFunction_ManyProps // Error: All props have an incorrect type.
+  string1={null}
+  string2={null}
+  boolean1={null}
+  boolean2={null}
+  number={null}
+/>;
+<EnhancedFunction_ManyProps // OK: All props are defined.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  {...{number: 42}}
+/>;
+<EnhancedFunction_ManyProps // OK: All props are defined.
+  {...{string1: 'foo', string2: 'bar'}}
+  {...{boolean1: true, boolean2: false}}
+  {...{number: 42}}
+/>;
+<EnhancedFunction_ManyProps // Error: Missing `number`.
+  {...{string1: 'foo', string2: 'bar'}}
+  {...{boolean1: true, boolean2: false}}
+/>;
+<EnhancedFunction_ManyProps // OK: Extra props are allowed. Error for exact types.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  {...{number: 42, a: 1, b: 2, c: 3}}
+/>;
+<EnhancedFunction_ManyProps // OK: `number` is overwritten at the end of the element.
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<EnhancedFunction_ManyProps // Error: `number` cannot be null.
   boolean1
   boolean2={false}
   number={42}
@@ -793,6 +932,40 @@ const Member_OptionalProps = {prop: Class_OptionalProps};
   bar="nope"
 />;
 
+const EnhancedClass_OptionalProps = hoc(Class_OptionalProps);
+<EnhancedClass_OptionalProps />; // Error: `foo` is required.
+<EnhancedClass_OptionalProps foo={42} />; // OK: `foo` is defined.
+<EnhancedClass_OptionalProps foo={undefined} />; // OK: `foo` is defined as undefined.
+<EnhancedClass_OptionalProps // OK: Both props are defined with a correct type.
+  foo={4}
+  bar={2}
+/>;
+<EnhancedClass_OptionalProps // Error: `foo` has a bad type.
+  foo="nope"
+  bar={2}
+/>;
+<EnhancedClass_OptionalProps // Error: `bar` has a bad type.
+  foo={4}
+  bar="nope"
+/>;
+
+const EnhancedFunction_OptionalProps = hoc(Function_OptionalProps);
+<EnhancedFunction_OptionalProps />; // Error: `foo` is required.
+<EnhancedFunction_OptionalProps foo={42} />; // OK: `foo` is defined.
+<EnhancedFunction_OptionalProps foo={undefined} />; // OK: `foo` is defined as undefined.
+<EnhancedFunction_OptionalProps // OK: Both props are defined with a correct type.
+  foo={4}
+  bar={2}
+/>;
+<EnhancedFunction_OptionalProps // Error: `foo` has a bad type.
+  foo="nope"
+  bar={2}
+/>;
+<EnhancedFunction_OptionalProps // Error: `bar` has a bad type.
+  foo={4}
+  bar="nope"
+/>;
+
 /* ========================================================================== *\
  * DefaultProps                                                               *
 \* ========================================================================== */
@@ -914,5 +1087,29 @@ const Member_DefaultProps = {prop: Class_DefaultProps};
   bar={2}
 />;
 <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
+  foo={1}
+/>;
+
+const EnhancedClass_DefaultProps = hoc(Class_DefaultProps);
+<EnhancedClass_DefaultProps // OK: It has all the props.
+  foo={1}
+  bar={2}
+/>;
+<EnhancedClass_DefaultProps // OK: It is missing a default prop.
+  bar={2}
+/>;
+<EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.
+  foo={1}
+/>;
+
+const EnhancedFunction_DefaultProps = hoc(Function_DefaultProps);
+<EnhancedFunction_DefaultProps // OK: It has all the props.
+  foo={1}
+  bar={2}
+/>;
+<EnhancedFunction_DefaultProps // OK: It is missing a default prop.
+  bar={2}
+/>;
+<EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
   foo={1}
 />;

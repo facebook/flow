@@ -24,9 +24,30 @@ let rec mkdir_p = function
   | "" -> failwith "Unexpected empty directory, should never happen"
   | d when not (Sys.file_exists d) ->
     mkdir_p (Filename.dirname d);
-    Unix.mkdir d 0o770;
+    Unix.mkdir d 0o777;
   | d when Sys.is_directory d -> ()
   | d -> raise (NotADirectory d)
+
+let rec rm_dir_tree path =
+  try begin
+    let stats = Unix.lstat path in
+    match stats.Unix.st_kind with
+    | Unix.S_DIR ->
+      let contents = Sys.readdir path in
+      List.iter (fun name ->
+          let name = Filename.concat path name in
+          rm_dir_tree name)
+        (Array.to_list contents) ;
+      Unix.rmdir path
+    | Unix.S_LNK | Unix.S_REG | Unix.S_CHR | Unix.S_BLK | Unix.S_FIFO
+    | Unix.S_SOCK ->
+      Unix.unlink path
+  end with
+  (** Path has been deleted out from under us - can ignore it. *)
+  | Sys_error(s) when s = Printf.sprintf "%s: No such file or directory" path ->
+    ()
+  | Unix.Unix_error(Unix.ENOENT, _, _) ->
+    ()
 
 let is_directory x =
   try Sys.is_directory x with
@@ -37,6 +58,7 @@ let file_exists = Sys.file_exists
 let getcwd = Sys.getcwd
 let chdir = Sys.chdir
 let mkdir = Unix.mkdir
+let readdir = Sys.readdir
 let rename old target =
   if not (file_exists old) then
     raise (No_such_file_or_directory old)

@@ -1,0 +1,82 @@
+Reading JS from stdin:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":0}},
+  "range":[0,0],
+  "body":[],
+  "comments":[]
+}
+
+Reading JSON from stdin:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"ObjectExpression",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":2}},
+  "range":[0,2],
+  "properties":[]
+}
+
+Reading JS from a file:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"Program",
+  "loc":{"source":"foo.js","start":{"line":1,"column":0},"end":{"line":1,"column":0}},
+  "range":[0,0],
+  "body":[],
+  "comments":[]
+}
+
+Reading JSON from a file:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"ObjectExpression",
+  "loc":{"source":"bar.json","start":{"line":1,"column":0},"end":{"line":1,"column":2}},
+  "range":[0,2],
+  "properties":[]
+}
+
+Using absolute --path with stdin:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"Program",
+  "loc":{
+    "source":"/some/path.js",
+    "start":{"line":1,"column":0},
+    "end":{"line":1,"column":0}
+  },
+  "range":[0,0],
+  "body":[],
+  "comments":[]
+}
+
+Using relative --path with stdin:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"Program",
+  "loc":{
+    "source":"my/relative/path.js",
+    "start":{"line":1,"column":0},
+    "end":{"line":1,"column":0}
+  },
+  "range":[0,0],
+  "body":[],
+  "comments":[]
+}
+
+Using --path is ignore without stdin:
+{
+  "errors":[],
+  "tokens":[],
+  "type":"Program",
+  "loc":{"source":"foo.js","start":{"line":1,"column":0},"end":{"line":1,"column":0}},
+  "range":[0,0],
+  "body":[],
+  "comments":[]
+}

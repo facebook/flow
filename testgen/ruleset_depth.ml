@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module S = Ast.Statement;;
@@ -13,7 +10,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -35,6 +31,7 @@ class ruleset_depth = object(self)
                                    value = Init (_, t);
                                    optional = _;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) -> Hashtbl.add tbl name t
           | _ -> ()) T.Object.(o.properties);
@@ -57,10 +54,11 @@ class ruleset_depth = object(self)
     let obj_expr =
       let prop =
         let open E.Object.Property in
-        E.Object.Property (Loc.none, {key = Identifier (Loc.none, pname);
-                    value = Init (Loc.none, expr);
-                    _method = false;
-                    shorthand = false}) in
+        E.Object.Property (Loc.none, Init {
+          key = Identifier (Loc.none, pname);
+          value = Loc.none, expr;
+          shorthand = false
+        }) in
       let properties = [prop] in
       E.Object.(E.Object {properties}) in
     let obj_type =
@@ -70,6 +68,7 @@ class ruleset_depth = object(self)
                                       value = Init (Loc.none, etype);
                                       optional = false;
                                       static = false;
+                                      proto = false;
                                       _method = false;
                                       variance = None;}) in
       T.Object.(T.Object {exact = false; properties = [prop_type]}) in
@@ -185,5 +184,5 @@ end
 class ruleset_random_depth = object
   inherit ruleset_depth
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((Random.int 3) > 0) then raise Engine.Backtrack
 end

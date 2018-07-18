@@ -22,7 +22,7 @@ If you then put all your source files in a `src` directory you can compile them
 to another directory by running:
 
 ```sh
-{{include.run_command}}babel -- src/ -d lib/
+{{include.run_command}}
 ```
 
 You can add this to your `package.json` scripts easily.

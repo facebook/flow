@@ -1,15 +1,14 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Lints
 open Severity
+
+let (>>=) = Core_result.bind
 
 type 'a t = {
   (* The default value associated with a lint if the lint kind isn't found in the map *)
@@ -60,9 +59,9 @@ let map f settings =
 
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
-let default_severities = {
+let empty_severities = {
   default_value = Off;
-  explicit_values = LintMap.empty
+  explicit_values = LintMap.empty;
 }
 
 let is_enabled lint_kind settings =
@@ -98,15 +97,15 @@ let of_lines base_settings =
     | [left; right] ->
       let left = left |> String.trim in
       let right = right |> String.trim in
-      Result.bind (parse_value label right) (fun value ->
-        match left with
+      parse_value label right >>= fun value ->
+        begin match left with
         | "all" -> Ok (AllSetting (of_default value))
         | _ ->
           begin match kinds_of_string left with
             | Some kinds -> Ok (EntryList (kinds, (value, Some loc)))
             | None -> Error (label, (Printf.sprintf "Invalid lint rule \"%s\" encountered." left))
           end
-      )
+        end
     | _ -> Error (label,
       "Malformed lint rule. Properly formed rules contain a single '=' character.")
   in
@@ -126,19 +125,18 @@ let of_lines base_settings =
   let rec loop acc = function
     | [] -> Ok acc
     | line::lines ->
-      Result.bind (parse_line line)
-        (fun result ->
-          match result with
-            | EntryList (keys, value) ->
-              begin match add_value keys value acc with
-                | Ok settings -> loop settings lines
-                | Error msg -> Error (line |> snd |> fst, msg)
-              end
-            | AllSetting value ->
-              if acc == base_settings then loop value lines
-              else Error (line |> snd |> fst,
-                "\"all\" is only allowed as the first setting. Settings are order-sensitive.")
-        )
+      parse_line line >>= fun result ->
+        begin match result with
+        | EntryList (keys, value) ->
+          begin match add_value keys value acc with
+            | Ok settings -> loop settings lines
+            | Error msg -> Error (line |> snd |> fst, msg)
+          end
+        | AllSetting value ->
+          if acc == base_settings then loop value lines
+          else Error (line |> snd |> fst,
+            "\"all\" is only allowed as the first setting. Settings are order-sensitive.")
+        end
   in
 
   let loc_of_line line =
@@ -160,18 +158,18 @@ let of_lines base_settings =
     let located_lines = List.map locate_fun lint_lines in
     let settings = loop base_settings located_lines in
 
-    Result.bind settings (fun settings ->
+    settings >>= (fun settings ->
         let used_locs = fold
           (fun _kind (_enabled, loc) acc ->
-            Option.value_map loc ~f:(fun loc -> Loc.LocSet.add loc acc) ~default:acc)
-          settings Loc.LocSet.empty
+            Option.value_map loc ~f:(fun loc -> Utils_js.LocSet.add loc acc) ~default:acc)
+          settings Utils_js.LocSet.empty
         in
         let first_unused = List.fold_left
           (fun acc (art_loc, (label, line)) ->
             match acc with
               | Some _ -> acc
               | None ->
-                if Loc.LocSet.mem art_loc used_locs
+                if Utils_js.LocSet.mem art_loc used_locs
                   || Str.string_match all_regex (String.trim line) 0
                 then None else Some label
           ) None located_lines

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* See exactCover.mli for a high-level explanation. *)
@@ -184,7 +181,7 @@ let union_all cover_set =
 
 type lint_severity_cover = Severity.severity LintSettings.t t
 
-let default_file_cover source = file_cover source LintSettings.default_severities
+let default_file_cover source = file_cover source LintSettings.empty_severities
 
 let get_severity lint_kind loc severity_cover =
 find loc severity_cover |> LintSettings.get_value lint_kind

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 class ['a] t :
   object
@@ -97,6 +94,9 @@ class ['a] t :
     method resolve_spread :
       Context.t ->
       'a -> Type.resolve_spread_type -> Type.resolve_spread_type
+    method resolved_prop :
+      Context.t ->
+      'a -> Type.Object.prop -> Type.Object.prop
     method resolved :
       Context.t ->
       'a -> Type.Object.resolved -> Type.Object.resolved
@@ -145,3 +145,5 @@ class ['a] t :
     method use_type :
       Context.t -> 'a -> Type.UseTypeMap.key -> Type.UseTypeMap.key
 end
+
+val union_flatten: Context.t -> Type.t list -> Type.t list

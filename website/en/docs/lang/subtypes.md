@@ -38,7 +38,7 @@ each have some unique items.
 
 ```js
 type TypeA = 1 | 2 | 3;
-type TypeB =         3 | 4 | 5;
+type TypeB = 3 | 4 | 5;
 ```
 
 ## When are subtypes used? <a class="toc" id="toc-when-are-subtypes-used" href="#toc-when-are-subtypes-used"></a>

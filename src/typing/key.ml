@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -40,3 +37,13 @@ and proj_uses_propname ~private_ propname = function
 let compare = Pervasives.compare
 
 let is_simple (_, ps) = List.length ps = 0
+
+let reason_desc = Reason.(function
+| name, [] when not (is_internal_name name) -> RIdentifier name
+| name, [] -> RCustom name
+| _, projs ->
+  (match List.hd (List.rev projs) with
+  | Prop x -> RProperty (Some x)
+  | PrivateField x -> RPrivateProperty x
+  | Elem _ -> RProperty None)
+)

@@ -51,6 +51,6 @@ let tests = [
   },
 
   function(o: null|{}) {
-    if (o.p) {} // error: property `p` not found on null
+    if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
   },
 ]

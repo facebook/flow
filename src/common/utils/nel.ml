@@ -1,12 +1,29 @@
+(**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
+
 (* Non-empty list *)
 
 type 'a t = 'a * 'a list
 
 let to_list (x, xs) = x::xs
 
+let of_list = function
+  | x::xs -> Some (x, xs)
+  | [] -> None
+
 let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1::xs)
+
+let mem y (x1, xs) =
+  x1 = y || List.mem y xs
+
+let exists f (x1, xs) =
+  f x1 || List.exists f xs
 
 let iter f (x, xs) =
   f x;
@@ -53,3 +70,25 @@ let length (_, xs) = 1 + List.length xs
 let fold_left f acc (x, xs) = List.fold_left f acc (x::xs)
 
 let hd (x, _) = x
+
+let nth nel n = List.nth (to_list nel) n
+
+let result_all = function
+  | Ok x, rest ->
+    begin match Core_result.all rest with
+    | Ok rest -> Ok (x, rest)
+    | Error _ as err -> err
+    end
+  | Error _ as err, _ -> err
+
+let cat_maybes nel =
+  let rev_result =
+    fold_left begin fun acc elt -> match acc, elt with
+    | _, None -> acc
+    | None, Some x -> Some (one x)
+    | Some lst, Some x -> Some (cons x lst)
+    end None nel
+  in
+  match rev_result with
+  | None -> None
+  | Some lst -> Some (rev lst)

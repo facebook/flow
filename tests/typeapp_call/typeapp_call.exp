@@ -1,0 +1,357 @@
+Error ---------------------------------------------------------------------------------------------------- array.js:2:10
+
+Cannot assign `0` to `arr[0]` because number [1] is incompatible with string [2].
+
+   array.js:2:10
+   2| arr[0] = 0; // error: number ~> string
+               ^ [1]
+
+References:
+   array.js:1:21
+   1| var arr = new Array<string>(10); // TODO: also support empty args
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:12:2
+
+Cannot cast `cond(...)` to undefined because:
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
+
+   call.js:12:2
+   12| (cond(test, 0, ""): void); // errors: number|string ~> void
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   call.js:12:13
+   12| (cond(test, 0, ""): void); // errors: number|string ~> void
+                   ^ [1]
+   call.js:12:21
+   12| (cond(test, 0, ""): void); // errors: number|string ~> void
+                           ^^^^ [2]
+   call.js:12:16
+   12| (cond(test, 0, ""): void); // errors: number|string ~> void
+                      ^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:15:2
+
+Cannot cast `cond<...>(...)` to undefined because number [1] is incompatible with undefined [2].
+
+   call.js:15:2
+   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   call.js:15:7
+   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+             ^^^^^^ [1]
+   call.js:15:29
+   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+                                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:15:24
+
+Cannot call `cond` with empty string bound to `b` because string [1] is incompatible with number [2].
+
+   call.js:15:24
+   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+                              ^^ [1]
+
+References:
+   call.js:15:7
+   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:19:1
+
+Cannot call non-polymorphic function [1] with type arguments.
+
+   call.js:19:1
+   19| f<number>(); // error: expected polymorphic type
+       ^^^^^^^^^^^
+
+References:
+   call.js:18:1
+   18| function f() {}
+       ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:23:2
+
+Cannot cast `o1.m<...>(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   call.js:23:2
+   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
+        ^^^^^^^^^^^^^^^
+
+References:
+   call.js:23:7
+   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
+             ^^^^^^ [1]
+   call.js:23:19
+   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
+                         ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:23:15
+
+Cannot call `o1.m` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   call.js:23:15
+   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
+                     ^ [1]
+
+References:
+   call.js:23:7
+   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:27:2
+
+Cannot cast `o2.m<...>(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   call.js:27:2
+   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
+        ^^^^^^^^^^^^^^^
+
+References:
+   call.js:27:7
+   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
+             ^^^^^^ [1]
+   call.js:27:19
+   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
+                         ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:27:15
+
+Cannot call `o2.m` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   call.js:27:15
+   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
+                     ^ [1]
+
+References:
+   call.js:27:7
+   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- call.js:32:2
+
+Cannot cast `o3.m<...>(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   call.js:32:2
+   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
+        ^^^^^^^^^^^^^^^
+
+References:
+   call.js:32:7
+   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
+             ^^^^^^ [1]
+   call.js:32:19
+   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
+                         ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:32:15
+
+Cannot call `o3.m` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   call.js:32:15
+   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
+                     ^ [1]
+
+References:
+   call.js:32:7
+   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:45:12
+
+Cannot return `super.m<...>(...)` because string [1] is incompatible with undefined [2].
+
+   call.js:45:12
+   45|     return super.m<string>(x); // error: number ~> string, string ~> void
+                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   call.js:45:20
+   45|     return super.m<string>(x); // error: number ~> string, string ~> void
+                          ^^^^^^ [1]
+   call.js:44:19
+   44|   foo(x: number): void {
+                         ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:45:28
+
+Cannot call `super.m` with `x` bound to `x` because number [1] is incompatible with string [2].
+
+   call.js:45:28
+   45|     return super.m<string>(x); // error: number ~> string, string ~> void
+                                  ^
+
+References:
+   call.js:44:10
+   44|   foo(x: number): void {
+                ^^^^^^ [1]
+   call.js:45:20
+   45|     return super.m<string>(x); // error: number ~> string, string ~> void
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:51:18
+
+Cannot call `pred` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   call.js:51:18
+   51| if (pred<string>(0)) {} // number ~> string
+                        ^ [1]
+
+References:
+   call.js:51:10
+   51| if (pred<string>(0)) {} // number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- idx.js:2:1
+
+Cannot call non-polymorphic function type [1] with type arguments.
+
+   idx.js:2:1
+   2| idx<string>();
+      ^^^^^^^^^^^^^
+
+References:
+   idx.js:1:18
+   1| declare var idx: $Facebookism$Idx;
+                       ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:10:2
+
+Cannot cast `c1.x` to undefined because:
+ - number [1] is incompatible with undefined [2].
+ - string [3] is incompatible with undefined [2].
+
+   new.js:10:2
+   10| (c1.x: void); // error: number|string ~> void
+        ^^^^
+
+References:
+   new.js:8:7
+    8| c1.m1(0);
+             ^ [1]
+   new.js:10:8
+   10| (c1.x: void); // error: number|string ~> void
+              ^^^^ [2]
+   new.js:9:7
+    9| c1.m2("");
+             ^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:13:7
+
+Cannot call `c2.m1` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   new.js:13:7
+   13| c2.m1(0); // error: number ~> string
+             ^ [1]
+
+References:
+   new.js:12:16
+   12| var c2 = new C<string>;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:15:2
+
+Cannot cast `c2.x` to undefined because string [1] is incompatible with undefined [2].
+
+   new.js:15:2
+   15| (c2.x: void); // error: string ~> void
+        ^^^^
+
+References:
+   new.js:12:16
+   12| var c2 = new C<string>;
+                      ^^^^^^ [1]
+   new.js:15:8
+   15| (c2.x: void); // error: string ~> void
+              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:18:1
+
+Cannot construct non-polymorphic `NonPoly` [1] with type arguments.
+
+   new.js:18:1
+   18| new NonPoly<string>; // error: expected polymorphic type
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   new.js:17:7
+   17| class NonPoly {}
+             ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- new.js:22:22
+
+Cannot call `F` with `0` bound to `y` because number [1] is incompatible with string [2].
+
+   new.js:22:22
+   22| new F<string>("foo", 0); // error, number ~> string
+                            ^ [1]
+
+References:
+   new.js:22:7
+   22| new F<string>("foo", 0); // error, number ~> string
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ new.js:25:1
+
+Cannot construct non-polymorphic function [1] with type arguments.
+
+   new.js:25:1
+   25| new NonPolyF<string>; // error: expected polymorphic type
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   new.js:24:1
+   24| function NonPolyF() {}
+       ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- require.js:1:1
+
+Cannot call non-polymorphic function with type arguments.
+
+   1| require<string>("foo");
+      ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- require.js:1:17
+
+Cannot resolve module `foo`.
+
+   1| require<string>("foo");
+                      ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- require.js:2:1
+
+Cannot call non-polymorphic function with type arguments.
+
+   2| requireLazy<string>("foo");
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 26 errors

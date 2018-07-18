@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Ast
@@ -49,10 +46,23 @@ let bindings_of_variable_declarations =
       bindings_of_pattern acc pattern
   ) []
 
-let bindings_of_export_specifiers =
-  let open Ast.Statement.ExportNamedDeclaration in
-  List.fold_left ExportSpecifier.(fun acc -> function
-    | loc, { local = id; exported = None }
-    | loc, { exported = Some id; _ } ->
-      (loc, snd id)::acc
-  ) []
+let partition_directives statements =
+  let open Ast.Statement in
+  let rec helper directives = function
+    | ((_, Expression { Expression.directive = Some _; _ }) as directive)::rest ->
+      helper (directive::directives) rest
+    | rest -> List.rev directives, rest
+  in
+  helper [] statements
+
+let negate_number_literal (value, raw) =
+  let raw_len = String.length raw in
+  let raw = if raw_len > 0 && raw.[0] = '-'
+    then String.sub raw 1 (raw_len - 1)
+    else "-" ^ raw
+  in
+  ~-. value, raw
+
+let loc_of_statement = fst
+
+let loc_of_expression = fst

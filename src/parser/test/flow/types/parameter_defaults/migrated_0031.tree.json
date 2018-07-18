@@ -81,16 +81,21 @@
                 ]
               }
             },
+            "method":true,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"init"
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       },
-      "extends":[]
+      "extends":[],
+      "implements":[],
+      "mixins":[]
     }
   ],
   "comments":[]

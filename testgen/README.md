@@ -11,7 +11,7 @@ To build the executable, run `make`.
 `ruleset_base.ml` contains a lot of rules used to generate
 programs. However, to accomplish a certain task, one might not want to
 use all those rules. Instead, a recommended way to do that is to
-inherite the `ruleset_base` class, pick the necessary rules and
+inherit the `ruleset_base` class, pick the necessary rules and
 possibly overwrite those methods. 
 
 Here are the steps to extend the 
@@ -26,7 +26,7 @@ examples for this extension:
    `ruleset_depth.ml` to `ruleset_exact.ml`. Make classname
    adjustments in there appropriately.
 2. Modify the build file
-3. Then, in codegen.ml, add `ruleset_exact` as one of the engines
+3. Then, in `codegen.ml`, add `ruleset_exact` as one of the engines
 4. Compile the program and run
  
 ## Running Testgen

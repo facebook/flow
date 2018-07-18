@@ -152,6 +152,24 @@ let mkdir path _perm =
 
 let mkdir_p path = ignore (mkdir_p path root)
 
+let rm_dir_tree path =
+  if path = "/" then
+    Hashtbl.clear root
+  else try
+    let dir = get_dir (Filename.dirname path) root in
+    Hashtbl.remove dir (Filename.basename path)
+  with
+  | No_such_file_or_directory _ ->
+    (** File already doesn't exist; ignore. *)
+    ()
+
+let readdir x = match get_file x root with
+  | Actual_file_with_contents _ ->
+    raise (NotADirectory x)
+  | Directory directory ->
+    let names = Hashtbl.fold (fun k _v acc -> k :: acc) directory [] in
+    Array.of_list names
+
 let rename old target =
   if not (file_exists old) then
     raise (No_such_file_or_directory old)

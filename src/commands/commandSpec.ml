@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 exception Show_help
@@ -34,7 +31,7 @@ module ArgSpec = struct
   type ('a, 'b) t = {
     f : (values_t * 'a) -> (values_t * 'b);
     flags : flag_metadata SMap.t;
-    anons : (string * string * flag_arg_count) list;
+    anons : (string * flag_arg_count) list;
   }
 
   (* Partially applies [fn] with the values from [values]. Uses [spec] to
@@ -82,12 +79,14 @@ module ArgSpec = struct
   let enum values = {
     parse = (fun ~name -> function
     | Some [x] ->
-        if List.mem x values
-        then Some x
-        else raise (Failed_to_parse (name, Utils_js.spf
-          "expected one of: %s"
-          (String.concat ", " values)
-        ))
+        begin match List.find_opt (fun (s, _) -> s = x) values with
+        | Some (_, v) -> Some v
+        | None ->
+          raise (Failed_to_parse (name, Utils_js.spf
+            "expected one of: %s"
+            (String.concat ", " (List.map fst values))
+          ))
+        end
     | _ -> None
     );
     arg = Arg;
@@ -205,16 +204,16 @@ module ArgSpec = struct
     anons = prev.anons;
   }
 
-  let anon name arg_type ~doc prev = {
+  let anon name arg_type prev = {
     f = apply_arg name arg_type prev.f;
     flags = prev.flags;
-    anons = List.append prev.anons [(name, doc, arg_type.arg)];
+    anons = List.append prev.anons [(name, arg_type.arg)];
   }
 
-  let rest ~doc prev = {
+  let rest prev = {
     f = apply_arg "--" (optional (list_of string)) prev.f;
     flags = prev.flags;
-    anons = List.append prev.anons [("--", doc, Arg_Rest)];
+    anons = List.append prev.anons [("--", Arg_Rest)];
   }
 
   let dummy value prev = {
@@ -309,17 +308,17 @@ and parse_flag values spec arg args =
 and parse_anon values spec arg args =
   let (anon, spec) = ArgSpec.pop_anon spec in
   match anon with
-  | Some (name, _, ArgSpec.Arg) ->
+  | Some (name, ArgSpec.Arg) ->
     let values = SMap.add name [arg] values in
     parse values spec args
-  | Some (name, _, ArgSpec.Arg_List) ->
+  | Some (name, ArgSpec.Arg_List) ->
     let (value_list, args) = consume_args (arg::args) in
     let values = SMap.add name value_list values in
     parse values spec args
-  | Some (name, _, ArgSpec.Arg_Rest) ->
+  | Some (name, ArgSpec.Arg_Rest) ->
     let values = SMap.add name args values in
     parse values spec []
-  | Some (_, _, ArgSpec.No_Arg) ->
+  | Some (_, ArgSpec.No_Arg) ->
     assert false
   | None ->
     raise (Failed_to_parse ("anon", Utils_js.spf

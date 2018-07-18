@@ -1,39 +1,32 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Reason
 open Type
 open React
 
-let run cx trace reason_op l u
+let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
-  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t)
+  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> ?annot_loc:Loc.t -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
+  ~(get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
-  ~(mk_methodcalltype: Type.t -> Type.call_arg list -> ?frame:int -> ?call_strict_arity:bool -> Type.t -> Type.funcalltype)
   ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
-  ~(mk_object: Context.t -> reason -> Type.t)
-  ~(mk_object_with_map_proto: Context.t -> reason -> ?sealed:bool -> ?exact:bool -> ?frozen:bool -> ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t)
   ~(string_key: string -> reason -> Type.t)
-  ~(mk_tvar: Context.t -> reason -> Type.t)
-  ~(mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t)
-  ~(eval_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> Type.t)
+  ~(mk_type_destructor: Context.t -> trace:Trace.t -> use_op -> reason -> t -> Type.destructor -> int -> bool * Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)
   ~(union_of_ts: reason -> Type.t list -> Type.t)
   ~(filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t)
   =
   let err_incompatible reason =
     add_output cx ~trace (Flow_error.EReactKit
-      ((reason_op, reason), u))
+      ((reason_op, reason), u, use_op))
   in
 
   (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
@@ -112,14 +105,14 @@ let run cx trace reason_op l u
    * because there seems to be a bug where reasons get mixed up when this
    * function is called multiple times *)
   let component_function ?(with_return_t=true) props =
+    let reason = replace_reason_const RReactSFC reason_op in
     let any = DefT (reason_op, AnyT) in
-    DefT (reason_op, FunT (
+    DefT (reason, FunT (
       any,
       any,
       {
         this_t = any;
-        params_tlist = [props];
-        params_names = None;
+        params = [(None, props)];
         rest_param = Some (None, loc_of_reason reason_op, any);
         return_t = if with_return_t
           then get_builtin_type cx reason_op "React$Node"
@@ -132,35 +125,50 @@ let run cx trace reason_op l u
     ))
   in
 
-  let get_intrinsic_props t =
-    let component = l in
-    let reason_c = reason_of_t component in
-    let reason_jsx = locationless_reason (RCustom "JSX intrinsics") in
-    (* Get the internal `$JSXIntrinsics` map. *)
-    let intrinsics = get_builtin_type cx ~trace reason_jsx "$JSXIntrinsics" in
-    (* Check that the intrinsic component is a valid key in $JSXIntrinsics. *)
-    rec_flow_t cx trace (component, KeysT (reason_jsx, intrinsics));
+  let get_intrinsic artifact literal prop =
+    let reason = reason_of_t l in
+    (* Get the internal $JSXIntrinsics map. *)
+    let intrinsics =
+      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l) in
+      get_builtin_type cx ~trace reason "$JSXIntrinsics"
+    in
+    (* Create a use_op for the upcoming operations. *)
+    let use_op = Op (ReactGetIntrinsic {
+      literal = (match literal with
+        | Literal (_, name) -> replace_reason_const (RIdentifier name) reason
+        | _ -> reason);
+    }) in
+    (* GetPropT with a non-literal when there is not a dictionary will propagate
+     * any. Run the HasOwnPropT check to give the user an error if they use a
+     * non-literal without a dictionary. *)
+    (match literal with
+      | Literal _ -> ()
+      | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, literal)));
     (* Create a type variable which will represent the specific intrinsic we
      * find in the intrinsics map. *)
-    let reason_i = locationless_reason (RCustom "JSX intrinsic") in
-    let intrinsic = mk_tvar cx reason_i in
+    let intrinsic = Tvar.mk cx reason in
     (* Get the intrinsic from the map. *)
-    rec_flow cx trace (intrinsics, GetPropT (reason_c, (match component with
-      | DefT (_, StrT (Literal (_, name)))
-        -> Named (reason_c, name)
-      | _ -> Computed component
+    rec_flow cx trace (intrinsics, GetPropT (use_op, reason, (match literal with
+      | Literal (_, name) ->
+        Named (replace_reason_const (RReactElement (Some name)) reason, name)
+      | _ -> Computed l
     ), intrinsic));
-    (* Flow the intrinsic's props as an upper bound to our output
-     * type variable. *)
+    (* Get the artifact from the intrinsic. *)
+    let propref =
+      let name = match artifact with
+      | `Props -> "props"
+      | `Instance -> "instance"
+      in
+      Named (replace_reason_const (RCustom name) reason_op, name)
+    in
     (* TODO: if intrinsic is null, we will treat it like prototype termination,
-     * but we should error like a GetPropT would instead. Can this use GetPropT
-     * instead? *)
+     * but we should error like a GetPropT would instead. *)
     rec_flow cx trace (intrinsic, LookupT (
-      reason_i,
-      Strict reason_i,
+      reason_op,
+      Strict reason_op,
       [],
-      Named (replace_reason_const (RStringLit "props") reason_op, "props"),
-      LookupProp (UnknownUse, Field (t, Neutral))
+      propref,
+      LookupProp (unknown_use, prop)
     ))
   in
 
@@ -175,9 +183,11 @@ let run cx trace reason_op l u
     match component with
     (* Class components or legacy components. *)
     | DefT (_, ClassT _) ->
-      (* This direction works since tin is unified given the variance of
-       * React$Component. *)
-      rec_flow_t cx trace (component, component_class tin)
+      (* The Props type parameter is invariant, but we only want to create a
+       * constraint tin <: props. *)
+      let props = Tvar.mk cx reason_op in
+      rec_flow_t cx trace (tin, props);
+      rec_flow_t cx trace (component, component_class props)
 
     (* Stateless functional components. *)
     | DefT (_, FunT _) ->
@@ -186,15 +196,13 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (component, component_function tin)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (_, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
+    | DefT (_, ObjT { call_t = Some _; _ }) ->
       (* This direction works because function arguments are flowed in the
        * opposite direction. *)
       rec_flow_t cx trace (component, component_function tin)
 
     (* Intrinsic components. *)
-    | DefT (_, StrT _) ->
-      (* This is ok since lookup will resolve tin. *)
-      get_intrinsic_props tin
+    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -209,7 +217,9 @@ let run cx trace reason_op l u
     match component with
     (* Class components or legacy components. *)
     | DefT (_, ClassT _) ->
-      rec_flow_t cx trace (component, component_class tout)
+      let props = Tvar.mk cx reason_op in
+      rec_flow_t cx trace (props, tout);
+      rec_flow_t cx trace (component, component_class props)
 
     (* Stateless functional components. *)
     | DefT (_, FunT _) ->
@@ -218,13 +228,13 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (_, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
+    | DefT (_, ObjT { call_t = Some _; _ }) ->
       (* This direction works because function arguments are flowed in the
        * opposite direction. *)
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Special case for intrinsic components. *)
-    | DefT (_, StrT _) -> get_intrinsic_props tout
+    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tout, Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -232,6 +242,40 @@ let run cx trace reason_op l u
 
     (* ...otherwise, error. *)
     | _ -> err_incompatible (reason_of_t component)
+  in
+
+  (* Get a type for the default props of a component. If a component has no
+   * default props then either the type will be Some void or we will
+   * return None. *)
+  let get_defaults () =
+    let component = l in
+    match component with
+    | DefT (_, ClassT _)
+    | DefT (_, FunT _) ->
+      Some (Tvar.mk_where cx reason_op (fun tvar ->
+        let name = "defaultProps" in
+        let reason_missing =
+          replace_reason_const (RMissingProperty (Some name)) reason_op in
+        let reason_prop =
+          replace_reason_const (RProperty (Some name)) reason_op in
+        (* NOTE: This is intentionally unsound. Function statics are modeled
+         * as an unsealed object and so a `GetPropT` would perform a shadow
+         * lookup since a write to an unsealed property may happen at any
+         * time. If we were to perform a shadow lookup for `defaultProps` and
+         * `defaultProps` was never written then our lookup would stall and
+         * therefore so would our props analysis. So instead we make the
+         * stateful assumption that `defaultProps` was already written to
+         * the component statics which may not always be true. *)
+        let strict = NonstrictReturning (Some
+          (DefT (reason_missing, VoidT), tvar), None) in
+        let propref = Named (reason_prop, name) in
+        let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
+        (* Lookup the `defaultProps` property. *)
+        rec_flow cx trace (component,
+          LookupT (reason_op, strict, [], propref, action))
+      ))
+    (* Everything else will not have default props we should diff out. *)
+    | _ -> None
   in
 
   let coerce_children_args (children, children_spread) =
@@ -248,7 +292,10 @@ let run cx trace reason_op l u
     | t::ts, None ->
       (* Create a reason where the location is between our first and last known
        * argument. *)
-      let r = replace_reason_const RReactChildren reason_op in
+      let r = mk_reason RReactChildren (match use_op with
+      | Op (ReactCreateElementCall {children; _}) -> children
+      | _ -> loc_of_reason reason_op)
+      in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
     (* If we only have a spread of unknown length then React may not pass in
      * children, React may pass in a single child, or React may pass in an array
@@ -269,9 +316,11 @@ let run cx trace reason_op l u
      * element type is the union of the known argument and the spread type. *)
     | t::[], Some spread ->
       (* Create a reason between our known argument and the spread argument. *)
-      let r = replace_reason_const
+      let r = mk_reason
         (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
-        reason_op
+        (match use_op with
+        | Op (ReactCreateElementCall {children; _}) -> children
+        | _ -> loc_of_reason reason_op)
       in
       Some (union_of_ts r [
         t;
@@ -282,182 +331,150 @@ let run cx trace reason_op l u
      * of all argument types and the spread argument type. *)
     | t::ts, Some spread ->
       (* Create a reason between our known argument and the spread argument. *)
-      let r = replace_reason_const RReactChildren reason_op in
+      let r = mk_reason RReactChildren (match use_op with
+      | Op (ReactCreateElementCall {children; _}) -> children
+      | _ -> loc_of_reason reason_op)
+      in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in
 
-  let create_element shape config_input children_args tout =
-    let component = l in
-    (* If our config input is void or null then we want to replace it with an
+  let create_element clone component config children_args tout =
+    (* If our config is void or null then we want to replace it with an
      * empty object. *)
-    let config_input =
-      let reason = reason_of_t config_input in
-      let empty_object = mk_object_with_map_proto
+    let config =
+      let reason = reason_of_t config in
+      let empty_object = Obj_type.mk_with_proto
         cx reason
         ~sealed:true ~exact:true ~frozen:true
-        SMap.empty (ObjProtoT reason)
+        (ObjProtoT reason)
       in
-      mk_tvar_where cx reason (fun tout ->
-        rec_flow cx trace (filter_maybe cx ~trace reason config_input,
+      Tvar.mk_where cx reason (fun tout ->
+        rec_flow cx trace (filter_maybe cx ~trace reason config,
           CondT (reason, empty_object, tout))
       )
     in
     (* Create the optional children input type from the children arguments. *)
-    let children_input = coerce_children_args children_args in
-    (* Create a type variable for our config. *)
-    let config = mk_tvar_where cx reason_op tin_to_props in
-    (* If we only want to check the shape of the config then wrap our final
-     * config type in a ShapeT. *)
-    let config = if shape
-      then ShapeT config
-      else config
-    in
-    (* For class components and function components we want to lookup the
-     * static default props property so that we may diff it against the props
-     * value for our component.
-     *
-     * Note that we use the shape variable. We will not be using defaultProps if
-     * shape is true because no props are required. *)
-    let config =
-      let defaults = match component with
-        | DefT (_, ClassT _)
-        | DefT (_, FunT _) ->
-          Some (mk_tvar_where cx reason_op (fun tvar ->
-            let name = "defaultProps" in
-            let reason_missing =
-              replace_reason_const (RMissingProperty (Some name)) reason_op in
-            let reason_prop =
-              replace_reason_const (RProperty (Some name)) reason_op in
-            (* NOTE: This is intentionally unsound. Function statics are modeled
-             * as an unsealed object and so a `GetPropT` would perform a shadow
-             * lookup since a write to an unsealed property may happen at any
-             * time. If we were to perform a shadow lookup for `defaultProps` and
-             * `defaultProps` was never written then our lookup would stall and
-             * therefore so would our props analysis. So instead we make the
-             * stateful assumption that `defaultProps` was already written to
-             * the component statics which may not always be true. *)
-            let strict = NonstrictReturning (Some
-              (DefT (reason_missing, VoidT), tvar)) in
-            let propref = Named (reason_prop, name) in
-            let action = LookupProp (UnknownUse, Field (tvar, Positive)) in
-            (* Lookup the `defaultProps` property. *)
-            rec_flow cx trace (component,
-              LookupT (reason_op, strict, [], propref, action))
-          ))
-        (* Everything else will not have default props we should diff out. *)
-        | _ -> None
-      in
-      (* Use the optional defaults type we created to diff against our
-       * config. *)
-      match defaults with
-      | Some defaults -> DiffT (config, defaults)
-      | None -> config
+    let children = coerce_children_args children_args in
+    (* Create a type variable for our props. *)
+    (* If we are cloning an existing element, the config does not need to
+     * provide the entire props type. *)
+    let props = if clone
+      then ShapeT (Tvar.mk_where cx reason_op props_to_tout)
+      else Tvar.mk_where cx reason_op tin_to_props
     in
     (* Check the type of React keys in the config input.
      *
-     * NOTE: We are intentionally being unsound here. If config_input is inexact
-     * and we can't find a key prop in config_input then the sound thing to do
+     * NOTE: We are intentionally being unsound here. If config is inexact
+     * and we can't find a key prop in config then the sound thing to do
      * would be to assume that the type of key is mixed. Instead we are unsound
      * and don't check a type for key. Otherwise we would cause a lot of issues
      * in existing React code. *)
     let () =
       let reason_key =
-        (replace_reason_const (RCustom "React key") (reason_of_t config_input)) in
+        (replace_reason_const (RCustom "React key") (reason_of_t config)) in
       (* Create the key type. *)
       let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
       (* Flow the config input key type to the key type. *)
-      let kind = NonstrictReturning None in
+      let kind = NonstrictReturning (None, None) in
       let propref = Named (reason_key, "key") in
-      let action = LookupProp (UnknownUse, Field (key_t, Positive)) in
-      (* TODO: if config_input is null, we will treat it like prototype termination,
-       * but we should be treating a null config like an empty config. *)
-      rec_flow cx trace (config_input,
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some "key";
+        lower = reason_of_t config;
+        upper = reason_key;
+        is_sentinel = false;
+      }, use_op) in
+      let action = LookupProp (use_op, Field (None, key_t, Positive)) in
+      rec_flow cx trace (config,
         LookupT (reason_key, kind, [], propref, action))
     in
     (* Check the type of React refs in the config input.
      *
-     * NOTE: We are intentionally being unsound here. If config_input is inexact
-     * and we can't find a ref prop in config_input then the sound thing to do
+     * NOTE: We are intentionally being unsound here. If config is inexact
+     * and we can't find a ref prop in config then the sound thing to do
      * would be to assume that the type of ref is mixed. Instead we are unsound
      * and don't check a type for key. Otherwise we would cause a lot of issues
      * in existing React code. *)
     let () =
       let reason_ref =
-        (replace_reason_const (RCustom "React ref") (reason_of_t config_input)) in
+        (replace_reason_const (RCustom "React ref") (reason_of_t config)) in
       (* Create the ref type. *)
       let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
       (* Flow the config input ref type to the ref type. *)
-      let kind = NonstrictReturning None in
+      let kind = NonstrictReturning (None, None) in
       let propref = Named (reason_ref, "ref") in
-      let action = LookupProp (UnknownUse, Field (ref_t, Positive)) in
-      (* TODO: if config_input is null, we will treat it like prototype termination,
-       * but we should be treating a null config like an empty config. *)
-      rec_flow cx trace (config_input,
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some "ref";
+        lower = reason_of_t config;
+        upper = reason_ref;
+        is_sentinel = false;
+      }, use_op) in
+      let action = LookupProp (use_op, Field (None, ref_t, Positive)) in
+      rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in
-    (* If we have a type for children then we want to create an exact object
-     * type where the only property is children and the type is the children
-     * input. We will merge this type with our config_input type. The
-     * resulting object will only be exact if config_input is exact given the
-     * behavior of our merge mode.
-     *
-     * If we don't have a type for children then we want to create an empty
-     * exact object type since we still want to use object spread to remove the
-     * key and ref props from our config_input. *)
-    let children_input_mixin =
-      mk_object_with_map_proto cx reason_op
-        ~sealed:true ~exact:true
-        (match children_input with
-          | None -> SMap.empty
-          | Some children_input ->
-              SMap.singleton "children" (Field (children_input, Neutral)))
-        (ObjProtoT reason_op)
-    in
-    (* Use object spread to add children to config_input (if we have children)
+    (* For class components and function components we want to lookup the
+     * static default props property so that we may add it to our config input. *)
+    let defaults = get_defaults () in
+    (* Use object spread to add children to config (if we have children)
      * and remove key and ref since we already checked key and ref. Finally in
      * this block we will flow the final config to our props type. *)
     let () =
       let open Object in
-      let open Object.Spread in
+      let open Object.ReactConfig in
       (* We need to treat config input as a literal here so we ensure it has the
-       * RReactElement or RReactElementProps reason. *)
-      let reason_el = replace_reason (fun desc ->
-        (* Get the element name from the current reason. *)
-        let name = match desc with
-        | RReactElement x -> x
-        | RReactElementProps x -> x
-        | _ -> None in
-        (* If we have no children then we are just looking at the props. *)
-        if Option.is_none children_input
-          then RReactElementProps name
-          else RReactElement name
-      ) (if Option.is_none children_input
-        then reason_of_t config_input
-        else reason_op)
-      in
-      (* Configure our object spread appropriately. *)
-      let options = {
-        (* We just want to merge the objects together. In this case we do not
-         * care about sound object spread rules. *)
-        merge_mode = Sound Value;
-        (* Exclude key and ref from our final object type since we already
-         * checked key and ref. We do not want key and ref to exist on our
-         * final config_input type in case config is exact. *)
-        exclude_props = ["ref"; "key"];
-      } in
-      let tool = Resolve Next in
-      let state = { todo_rev = [children_input_mixin]; acc = [] } in
-      (* Flow the spread of config_input and config_input_mixin to config which
-       * will perform the final config to props check. *)
-      rec_flow cx trace (config_input,
-        ObjKitT (reason_el, tool, Spread (options, state), config))
+       * RReactProps reason description. *)
+      let reason = replace_reason_const RReactProps (reason_of_t config) in
+      (* Create the final config object using the ReactConfig object kit tool
+       * and flow it to our type for props.
+       *
+       * We wrap our use_op in a ReactConfigCheck frame to increment the
+       * speculation error message score. Usually we will already have a
+       * ReactCreateElementCall use_op, but we want errors after this point to
+       * win when picking the best errors speculation discovered. *)
+      let use_op = Frame (ReactConfigCheck, use_op) in
+      rec_flow cx trace (config,
+        ObjKitT (use_op, reason, Resolve Next,
+          ReactConfig (Config { defaults; children }), props))
     in
     (* Set the return type as a React element. *)
-    let elem_reason = replace_reason_const (RReactElement None) reason_op in
+    let elem_reason = annot_reason (replace_reason_const (RType "React$Element") reason_op) in
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
       tout
     )
+  in
+
+  (* Creates the type that we expect for a React config by diffing out default
+   * props with ObjKitT(Rest). The config does not include types for `key`
+   * or `ref`.
+   *
+   * There is some duplication between the logic used here to get a config type
+   * and ObjKitT(ReactConfig). In create_element, we want to produce a props
+   * object from the config object and the defaultProps object. This way we can
+   * add a lower bound to components who have a type variable for props. e.g.
+   *
+   *     const MyComponent = props => null;
+   *     <MyComponent foo={42} />;
+   *
+   * Here, MyComponent has no annotation for props so Flow must infer a type.
+   * However, get_config must produce a valid type from only the component type.
+   *
+   * This approach may stall if props never gets a lower bound. Using the result
+   * of get_config as an upper bound won't give props a lower bound. However,
+   * the places in which this approach stalls are the same places as other type
+   * destructor annotations. Like object spread, $Diff, and $Rest. *)
+  let get_config tout =
+    let props = Tvar.mk_where cx reason_op props_to_tout in
+    let defaults = get_defaults () in
+    match defaults with
+    | None -> rec_flow cx trace (props, UseT (use_op, tout))
+    | Some defaults ->
+      let open Object in
+      let open Object.Rest in
+      let tool = Resolve Next in
+      let state = One defaults in
+      rec_flow cx trace (props,
+        ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge, state), tout))
   in
 
   let get_instance tout =
@@ -467,35 +484,15 @@ let run cx trace reason_op l u
     | DefT (_, ClassT component) -> rec_flow_t cx trace (component, tout)
 
     (* Stateless functional components. *)
-    | DefT (r, FunT _) -> rec_flow_t cx trace (VoidT.make r, tout)
+    | DefT (r, FunT _) ->
+      rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (r, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
-      rec_flow_t cx trace (VoidT.make r, tout)
+    | DefT (r, ObjT { call_t = Some _; _ }) ->
+      rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Intrinsic components. *)
-    | DefT (reason, (StrT _ | SingletonStrT _)) ->
-      (* Get the internal `$JSXIntrinsics` map. *)
-      let intrinsics =
-        get_builtin_type cx ~trace
-          (locationless_reason (RCustom "JSX intrinsics")) "$JSXIntrinsics" in
-      (* Create a type variable which will represent the specific intrinsic we
-       * find in the intrinsics map. *)
-      let reason_i = locationless_reason (RCustom "JSX intrinsic") in
-      let intrinsic = mk_tvar cx reason_i in
-      (* Get the intrinsic from the map. *)
-      rec_flow cx trace (intrinsics, GetPropT (reason, begin match component with
-        | DefT (_, (StrT (Literal (_, name)) | SingletonStrT name))
-          -> Named (reason, name)
-        | _ -> Computed component
-      end, intrinsic));
-      (* Get the instance from our intrinsic. *)
-      rec_flow cx trace (intrinsic,
-        GetPropT (
-          reason,
-          Named (replace_reason_const (RStringLit "instance") reason, "instance"),
-          tout
-        ));
+    | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -537,7 +534,7 @@ let run cx trace reason_op l u
       resolve t
 
     | InstanceOf ->
-      let t = mk_instance cx reason_op l in
+      let t = mk_instance cx (annot_reason reason_op) l in
       resolve t
 
     | ObjectOf ->
@@ -555,7 +552,7 @@ let run cx trace reason_op l u
       } in
       let proto = ObjProtoT (locationless_reason RObjectClassName) in
       let reason = replace_reason_const RObjectType reason_op in
-      let t = mk_object_with_map_proto cx reason props proto
+      let t = Obj_type.mk_with_proto cx reason ~props proto
         ~dict ~sealed:true ~exact:false in
       resolve t
 
@@ -565,7 +562,7 @@ let run cx trace reason_op l u
           let t = mk_union reason_op (List.rev done_rev) in
           resolve t
         | t::todo ->
-          rec_flow cx trace (t, ReactKitT (reason_op,
+          rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
             SimplifyPropType (OneOf
               (ResolveElem (todo, done_rev)), tout)))
       in
@@ -586,7 +583,7 @@ let run cx trace reason_op l u
           let t = mk_union reason_op (List.rev done_rev) in
           resolve t
         | t::todo ->
-          rec_flow cx trace (t, ReactKitT (reason_op,
+          rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
             SimplifyPropType (OneOfType
               (ResolveElem (todo, done_rev)), tout)))
       in
@@ -606,7 +603,7 @@ let run cx trace reason_op l u
          for reasons descriptions/locations, recursive ReactKit constraints, and
          `resolve` behavior. *)
       let add_prop k t (reason, props, dict, flags) =
-        let props = SMap.add k (Field (t, Neutral)) props in
+        let props = SMap.add k (Field (None, t, Neutral)) props in
         reason, props, dict, flags
       in
       let add_dict dict (reason, props, _, flags) =
@@ -618,7 +615,7 @@ let run cx trace reason_op l u
           let reason = replace_reason_const RObjectType reason_op in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
           let _, props, dict, _ = shape in
-          let t = mk_object_with_map_proto cx reason props proto
+          let t = Obj_type.mk_with_proto cx reason ~props proto
             ?dict ~sealed:true ~exact:false
           in
           resolve t
@@ -627,7 +624,7 @@ let run cx trace reason_op l u
           match Property.read_t p with
           | None -> next todo shape
           | Some t ->
-            rec_flow cx trace (t, ReactKitT (reason_op,
+            rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
               SimplifyPropType (Shape
                 (ResolveProp (k, todo, shape)), tout)))
       in
@@ -644,7 +641,7 @@ let run cx trace reason_op l u
           (match dict with
           | None -> next todo shape
           | Some dicttype ->
-            rec_flow cx trace (dicttype.value, ReactKitT (reason_op,
+            rec_flow cx trace (dicttype.value, ReactKitT (unknown_use, reason_op,
               SimplifyPropType (Shape
                 (ResolveDict (dicttype, todo, shape)), tout))))
         | Error _ -> resolve (DefT (reason_op, AnyT)))
@@ -681,7 +678,7 @@ let run cx trace reason_op l u
       | None ->
         Option.map dict (fun { key; value; dict_polarity; _ } ->
           rec_flow_t cx trace (string_key x reason_op, key);
-          Field (value, dict_polarity))
+          Field (None, value, dict_polarity))
     in
 
     let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
@@ -692,20 +689,20 @@ let run cx trace reason_op l u
 
     (* This tool recursively resolves types until the spec is resolved enough to
      * compute the instance type. `resolve` and `resolve_call` actually emit the
-     * recursive constaints. The latter is for `getInitialState` and
+     * recursive constraints. The latter is for `getInitialState` and
      * `getDefaultProps`, where the type we want to resolve is the return type
      * of the bound function call *)
 
     let resolve tool t =
-      rec_flow cx trace (t, ReactKitT (reason_op,
+      rec_flow cx trace (t, ReactKitT (unknown_use, reason_op,
         CreateClass (tool, knot, tout)))
     in
 
     let resolve_call this tool t =
       let reason = reason_of_t t in
-      let return_t = mk_tvar cx reason in
-      let funcall = mk_methodcalltype this [] return_t in
-      rec_flow cx trace (t, CallT (reason, funcall));
+      let return_t = Tvar.mk cx reason in
+      let funcall = mk_methodcalltype this None [] return_t in
+      rec_flow cx trace (t, CallT (unknown_use, reason, funcall));
       resolve tool return_t
     in
 
@@ -787,10 +784,10 @@ let run cx trace reason_op l u
         let t = match acc with
         | None ->
           let reason = replace_reason_const RReactDefaultProps reason_op in
-          mk_object cx reason
+          Obj_type.mk cx reason
         | Some (Unknown reason) -> DefT (reason, AnyObjT)
         | Some (Known (reason, props, dict, _)) ->
-          mk_object_with_map_proto cx reason props (ObjProtoT reason)
+          Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
         in
         rec_flow_t cx trace (t, knot.default_t)
@@ -803,12 +800,12 @@ let run cx trace reason_op l u
         let t = match acc with
         | None ->
           let reason = replace_reason_const RReactState reason_op in
-          mk_object cx reason
+          Obj_type.mk cx reason
         | Some (Unknown reason) -> DefT (reason, AnyObjT)
         | Some (Known (Null reason)) -> DefT (reason, NullT)
         | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
           let sealed = not (exact && sealed_in_op reason_op sealed) in
-          mk_object_with_map_proto cx reason props (ObjProtoT reason)
+          Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed ~exact
         in
         rec_flow_t cx trace (t, knot.state_t)
@@ -854,11 +851,17 @@ let run cx trace reason_op l u
       | None -> DefT (reason_op, AnyObjT)
       | Some (Unknown reason) -> DefT (reason, AnyObjT)
       | Some (Known (reason, props, dict, _)) ->
-        mk_object_with_map_proto cx reason props (ObjProtoT reason)
+        Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false
       in
       let props_t =
         mod_reason_of_t (replace_reason_const RReactPropTypes) props_t
+      in
+
+      let props =
+        SMap.empty
+        |> SMap.add "props" (Field (None, props_t, Neutral))
+        |> SMap.add "state" (Field (None, knot.state_t, Neutral))
       in
 
       (* Some spec fields are used to create the instance type, but are not
@@ -892,41 +895,43 @@ let run cx trace reason_op l u
         | "componentDidUpdate"
         | "componentWillUnmount"
         | "updateComponent" ->
+          let loc = Property.read_loc v in
           let v = match Property.read_t v with
           | None -> v
           | Some t ->
             (* Tie the `this` knot with BindT *)
             let dummy_return = DefT (reason_op, AnyT) in
-            let calltype = mk_methodcalltype knot.this [] dummy_return in
-            rec_flow cx trace (t, BindT (reason_op, calltype, true));
+            let calltype = mk_methodcalltype knot.this None [] dummy_return in
+            rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
             (* Because we are creating an instance type, which can be used as an
                upper bound (e.g., as a super class), it's more flexible to
                create covariant methods. Otherwise, a subclass could not
                override the `render` method, say. *)
-            Method t
+            Method (loc, t)
           in
           SMap.add k v props, static_props
 
         | _ ->
           let bound_v = Property.map_t (fun t ->
+            let use_op = unknown_use in
             let destructor = Bind knot.this in
             let id = mk_id () in
-            ignore (eval_destructor cx ~trace reason_op t destructor id);
-            EvalT (t, TypeDestructorT (reason_op, destructor), id)
+            ignore (mk_type_destructor cx ~trace use_op reason_op t destructor id);
+            EvalT (t, TypeDestructorT (use_op, reason_op, destructor), id)
           ) v in
           SMap.add k bound_v props, static_props
-      ) spec_props (SMap.empty, SMap.empty) in
+      ) spec_props (props, SMap.empty) in
 
       let static_props = static_props
-        |> SMap.add "defaultProps" (Field (knot.default_t, Neutral))
+        |> SMap.add "defaultProps" (Field (None, knot.default_t, Neutral))
       in
 
       let reason_component = replace_reason_const RReactComponent reason_op in
 
       let super =
         let reason = replace_reason (fun x -> RSuperOf x) reason_component in
-        get_builtin_typeapp cx reason
-          "LegacyReactComponent" [props_t; knot.state_t]
+        let c = get_builtin cx "LegacyReactComponent" reason in
+        this_typeapp c knot.this (Some [props_t; knot.state_t])
       in
 
       let static =
@@ -947,7 +952,7 @@ let run cx trace reason_op l u
           reason, static_props, dict, exact, sealed
         in
         let reason = replace_reason_const RReactStatics reason in
-        mk_object_with_map_proto cx reason props (class_type super)
+        Obj_type.mk_with_proto cx reason ~props (class_type super)
           ?dict ~exact ~sealed
       in
 
@@ -955,13 +960,24 @@ let run cx trace reason_op l u
         class_id = 0;
         type_args = SMap.empty;
         arg_polarities = SMap.empty;
-        fields_tmap = Context.make_property_map cx props;
-        initialized_field_names = SSet.empty;
-        methods_tmap = Context.make_property_map cx SMap.empty;
-        mixins = spec.unknown_mixins <> [];
+        (* TODO: props are actually installed on the prototype *)
+        own_props = Context.make_property_map cx props;
+        proto_props = Context.make_property_map cx SMap.empty;
+        initialized_fields = SSet.empty;
+        initialized_static_fields = SSet.empty;
+        inst_call_t = None;
+        has_unknown_react_mixins = spec.unknown_mixins <> [];
         structural = false;
       } in
-      rec_flow cx trace (super, SuperT (reason_op, DerivedInstance insttype));
+      rec_flow cx trace (super, SuperT (use_op, reason_op, Derived {
+        instance = insttype;
+        statics = (
+          (* TODO: check static signature against base class *)
+          let props = Context.make_property_map cx SMap.empty in
+          let proto = NullProtoT reason_op in
+          mk_objecttype ~dict:None ~call:None props proto
+        )
+      }));
 
       let instance = DefT (reason_component, InstanceT (static, super, [], insttype)) in
       rec_flow_t cx trace (instance, knot.this);
@@ -1034,7 +1050,7 @@ let run cx trace reason_op l u
 
     | PropTypes (stack, tool) ->
       let add_prop k t (reason, props, dict, flags) =
-        let props = SMap.add k (Field (t, Neutral)) props in
+        let props = SMap.add k (Field (None, t, Neutral)) props in
         reason, props, dict, flags
       in
       let add_dict dict (reason, props, _, flags) =
@@ -1110,9 +1126,11 @@ let run cx trace reason_op l u
   in
 
   match u with
-  | CreateElement (shape, config, children, tout) ->
-    create_element shape config children tout
+  | CreateElement0 _ -> failwith "handled elsewhere"
+  | CreateElement (clone, component, config, children, tout) ->
+    create_element clone component config children tout
   | GetProps tout -> props_to_tout tout
+  | GetConfig tout -> get_config tout
   | GetRef tout -> get_instance tout
   | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
   | CreateClass (tool, knot, tout) -> create_class knot tout tool

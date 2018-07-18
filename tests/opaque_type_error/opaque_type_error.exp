@@ -1,38 +1,98 @@
-Error: importtest.js:7
-  7: (3 : ID); // Error: number ~> ID
-      ^ number. This type is incompatible with
-  7: (3 : ID); // Error: number ~> ID
-          ^^ ID
+Error ------------------------------------------------------------------------------------------------ importtest.js:7:2
 
-Error: importtest.js:10
- 10:     return x;
-                ^ number. This type is incompatible with the expected return type of
-  9: function bad1(x: number) : ID { // Error: number ~> ID
-                                ^^ ID
+Cannot cast `3` to `ID` because number [1] is incompatible with `ID` [2].
 
-Error: importtest.js:14
- 14:     return Test.hide(x); // Error: ID ~> number
-                          ^ ID. This type is incompatible with the expected param type of
- 12: export function hide(x: number) : ID {
-                             ^^^^^^ number. See: test.js:12
+   importtest.js:7:2
+   7| (3 : ID); // Error: number ~> ID
+       ^ [1]
 
-Error: importtest.js:18
- 18:     return x; // Error: ID ~> ID2
-                ^ ID. This type is incompatible with the expected return type of
- 17: function bad3(x: ID) : ID2 {
-                            ^^^ number
+References:
+   importtest.js:7:6
+   7| (3 : ID); // Error: number ~> ID
+           ^^ [2]
 
-Error: importtest.js:22
- 22:     return x;
-                ^ number. This type is incompatible with the expected return type of
- 21: function bad4(x: ID2) : ID { // Error: ID2 ~> ID
-                             ^^ ID
 
-Error: test.js:17
- 17: ("hello": MyNum) // Error: string ~> number
-      ^^^^^^^ string. This type is incompatible with
- 17: ("hello": MyNum) // Error: string ~> number
-               ^^^^^ number
+Error ---------------------------------------------------------------------------------------------- importtest.js:10:12
+
+Cannot return `x` because number [1] is incompatible with `ID` [2].
+
+   importtest.js:10:12
+   10|     return x;
+                  ^
+
+References:
+   importtest.js:9:18
+    9| function bad1(x: number) : ID { // Error: number ~> ID
+                        ^^^^^^ [1]
+   importtest.js:9:28
+    9| function bad1(x: number) : ID { // Error: number ~> ID
+                                  ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:14:22
+
+Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2].
+
+   importtest.js:14:22
+   14|     return Test.hide(x); // Error: ID ~> number
+                            ^
+
+References:
+   importtest.js:13:18
+   13| function bad2(x: ID) : ID {
+                        ^^ [1]
+   test.js:12:25
+   12| export function hide(x: number) : ID {
+                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:18:12
+
+Cannot return `x` because `ID` [1] is incompatible with number [2].
+
+   importtest.js:18:12
+   18|     return x; // Error: ID ~> ID2
+                  ^
+
+References:
+   importtest.js:17:18
+   17| function bad3(x: ID) : ID2 {
+                        ^^ [1]
+   importtest.js:17:24
+   17| function bad3(x: ID) : ID2 {
+                              ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- importtest.js:22:12
+
+Cannot return `x` because number [1] is incompatible with `ID` [2].
+
+   importtest.js:22:12
+   22|     return x;
+                  ^
+
+References:
+   importtest.js:21:18
+   21| function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+                        ^^^ [1]
+   importtest.js:21:25
+   21| function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+                               ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:2
+
+Cannot cast `"hello"` to `MyNum` because string [1] is incompatible with number [2].
+
+   test.js:17:2
+   17| ("hello": MyNum) // Error: string ~> number
+        ^^^^^^^ [1]
+
+References:
+   test.js:17:11
+   17| ("hello": MyNum) // Error: string ~> number
+                 ^^^^^ [2]
+
 
 
 Found 6 errors

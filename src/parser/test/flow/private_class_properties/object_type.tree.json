@@ -45,14 +45,17 @@
               "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":12}},
               "range":[17,23]
             },
+            "method":false,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"init"
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],

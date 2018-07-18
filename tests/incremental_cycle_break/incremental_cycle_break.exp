@@ -3,9 +3,13 @@ Initial status:
 No errors!
 
 Clear A.js:
-Error: B.js:5
-  5: require('A');
-             ^^^ A. Required module not found
+Error --------------------------------------------------------------------------------------------------------- B.js:5:9
+
+Cannot resolve module `A`.
+
+   5| require('A');
+              ^^^
+
 
 
 Found 1 error

@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -79,7 +78,7 @@
  * sent across pipes.
  *)
 
-module List = Core.List
+module List = Hh_core.List
 module FloatMap = MyMap.Make(struct type t = float let compare = compare end)
 
 type distribution = {
@@ -102,7 +101,7 @@ type record = record_data ref
 let create () = ref SMap.empty
 
 let global: (record list) ref = ref [create ()]
-let push_global record =
+let push_global () =
   global := (create ()) :: (!global)
 let pop_global () =
   match !global with
@@ -218,7 +217,7 @@ let merge_entries name from into = match (from, into) with
           "Merging buckets for %s failed: bucket sizes %f, %f"
           name from into
       | Some { bucket_size; buckets = from; }, Some { buckets = into; _; } ->
-          let buckets = FloatMap.merge (fun bucket from_count into_count ->
+          let buckets = FloatMap.merge (fun _bucket from_count into_count ->
             match (from_count, into_count) with
             | None, into -> into
             | from, None -> from
@@ -277,7 +276,7 @@ let print_entry_stats ?record ?print_raw name =
   match SMap.get name (!record) with
   | None
   | Some { count = 0.0; _; } -> Printf.ksprintf print_raw "%s NO DATA" prefix
-  | Some { count; mean; variance_sum; max; min; distribution=_; } ->
+  | Some { count; mean; variance_sum; max; min; distribution = _; } ->
       let total = count *. mean in
       let std_dev = sqrt (variance_sum /. count) in
       Printf.ksprintf print_raw

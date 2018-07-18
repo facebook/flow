@@ -44,8 +44,10 @@
                       "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":22}},
                       "range":[16,22]
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
+                    "proto":false,
                     "variance":null,
                     "kind":"init"
                   },
@@ -66,14 +68,17 @@
                       "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":38}},
                       "range":[32,38]
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
+                    "proto":false,
                     "variance":null,
                     "kind":"init"
                   }
                 ],
                 "indexers":[],
-                "callProperties":[]
+                "callProperties":[],
+                "internalSlots":[]
               }
             },
             "optional":false

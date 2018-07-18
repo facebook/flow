@@ -1,45 +1,81 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type sketchy_null_kind =
-  | SketchyBool
-  | SketchyString
-  | SketchyNumber
-  | SketchyMixed
+  | SketchyNullBool
+  | SketchyNullString
+  | SketchyNullNumber
+  | SketchyNullMixed
+
+type sketchy_number_kind =
+  | SketchyNumberAnd
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
+  | SketchyNumber of sketchy_number_kind
   | UntypedTypeImport
+  | UntypedImport
+  | NonstrictImport
+  | UnclearType
+  | DeprecatedType
+  | UnsafeGettersSetters
+  | InexactSpread
+  | UnnecessaryOptionalChain
+  | UnnecessaryInvariant
+  | DeprecatedCallSyntax
 
 let string_of_sketchy_null_kind = function
-  | SketchyBool -> "sketchy-null-bool"
-  | SketchyString -> "sketchy-null-string"
-  | SketchyNumber -> "sketchy-null-number"
-  | SketchyMixed -> "sketchy-null-mixed"
+  | SketchyNullBool -> "sketchy-null-bool"
+  | SketchyNullString -> "sketchy-null-string"
+  | SketchyNullNumber -> "sketchy-null-number"
+  | SketchyNullMixed -> "sketchy-null-mixed"
+
+let string_of_sketchy_number_kind = function
+  | SketchyNumberAnd -> "sketchy-number-and"
 
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
+  | SketchyNumber kind -> string_of_sketchy_number_kind kind
   | UntypedTypeImport -> "untyped-type-import"
+  | UntypedImport -> "untyped-import"
+  | NonstrictImport -> "nonstrict-import"
+  | UnclearType -> "unclear-type"
+  | DeprecatedType -> "deprecated-type"
+  | UnsafeGettersSetters -> "unsafe-getters-setters"
+  | InexactSpread -> "inexact-spread"
+  | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
+  | UnnecessaryInvariant -> "unnecessary-invariant"
+  | DeprecatedCallSyntax -> "deprecated-call-syntax"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
-      SketchyNull SketchyBool;
-      SketchyNull SketchyString;
-      SketchyNull SketchyNumber;
-      SketchyNull SketchyMixed;
+      SketchyNull SketchyNullBool;
+      SketchyNull SketchyNullString;
+      SketchyNull SketchyNullNumber;
+      SketchyNull SketchyNullMixed;
     ]
-  | "sketchy-null-bool" -> Some [SketchyNull SketchyBool]
-  | "sketchy-null-string" -> Some [SketchyNull SketchyString]
-  | "sketchy-null-number" -> Some [SketchyNull SketchyNumber]
-  | "sketchy-null-mixed" -> Some [SketchyNull SketchyMixed]
+  | "sketchy-null-bool" -> Some [SketchyNull SketchyNullBool]
+  | "sketchy-null-string" -> Some [SketchyNull SketchyNullString]
+  | "sketchy-null-number" -> Some [SketchyNull SketchyNullNumber]
+  | "sketchy-null-mixed" -> Some [SketchyNull SketchyNullMixed]
+  | "sketchy-number" -> Some [
+      SketchyNumber SketchyNumberAnd;
+    ]
+  | "sketchy-number-and" -> Some [SketchyNumber SketchyNumberAnd]
   | "untyped-type-import" -> Some [UntypedTypeImport]
+  | "nonstrict-import" -> Some [NonstrictImport]
+  | "untyped-import" -> Some [UntypedImport]
+  | "unclear-type" -> Some [UnclearType]
+  | "deprecated-type" -> Some [DeprecatedType]
+  | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
+  | "inexact-spread" -> Some [InexactSpread]
+  | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
+  | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
+  | "deprecated-call-syntax" -> Some [DeprecatedCallSyntax]
   | _ -> None
 
 module LintKind = struct
@@ -48,3 +84,4 @@ module LintKind = struct
 end
 
 module LintMap = MyMap.Make(LintKind)
+module LintSet = Set.Make(LintKind)

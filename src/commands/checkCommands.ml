@@ -1,20 +1,15 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandUtils
 open Utils_js
 
-module Main = ServerFunctors.ServerMain (Server.FlowProgram)
-
 type printer =
-  | Json of { pretty: bool }
+  | Json of { pretty: bool; version: Errors.Json_output.json_version option }
   | Cli of Errors.Cli_output.error_flags
 
 (* helper - print errors. used in check-and-die runs *)
@@ -26,7 +21,7 @@ let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warning
   in
 
   match printer with
-  | Json { pretty } ->
+  | Json { pretty; version } ->
     let profiling =
       if options.Options.opt_profile
       then Some profiling
@@ -36,6 +31,7 @@ let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warning
       ~strip_root
       ~profiling
       ~pretty
+      ?version
       ~suppressed_errors
       ~errors
       ~warnings
@@ -52,6 +48,7 @@ let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warning
       ~strip_root
       ~errors
       ~warnings
+      ~lazy_msg:None
       ()
 
 module CheckCommand = struct
@@ -64,10 +61,11 @@ module CheckCommand = struct
         |> flag "--include-suppressed" no_arg
           ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
         |> options_and_json_flags
+        |> json_version_flag
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
-        |> anon "root" (optional string) ~doc:"Root directory"
+        |> anon "root" (optional string)
       );
     usage = Printf.sprintf
       "Usage: %s check [OPTION]... [ROOT]\n\n\
@@ -78,7 +76,7 @@ module CheckCommand = struct
   }
 
   let main
-      error_flags include_suppressed options_flags json pretty
+      error_flags include_suppressed options_flags json pretty json_version
       shm_flags ignore_version from path_opt
       () =
 
@@ -105,17 +103,18 @@ module CheckCommand = struct
 
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-    let profiling, errors, warnings, suppressed_errors = Main.check_once
+    let profiling, errors, warnings, suppressed_errors = Server.check_once
       ~shared_mem_config ~client_include_warnings options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
     let printer =
-      if json || pretty then Json { pretty } else Cli error_flags in
+      if json || Option.is_some json_version || pretty then
+        Json { pretty; version = json_version }
+      else
+        Cli error_flags in
     print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
     Flow_server_profile.print_url ();
-    if Errors.ErrorSet.is_empty errors
-      then FlowExitStatus.(exit No_error)
-      else FlowExitStatus.(exit Type_error)
+    FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
   let command = CommandSpec.command spec main
 end
@@ -132,14 +131,13 @@ module FocusCheckCommand = struct
         |> flag "--include-suppressed" no_arg
           ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
         |> options_and_json_flags
+        |> json_version_flag
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
         |> root_flag
-        |> flag "--input-file" string
-          ~doc:("File containing list of files to check, one per line. If -, list of files is "^
-            "read from the standard input.")
-        |> anon "root" (list_of string) ~doc:"Root directory"
+        |> input_file_flag "check"
+        |> anon "root" (list_of string)
       );
     usage = Printf.sprintf
       "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\n\
@@ -153,7 +151,7 @@ module FocusCheckCommand = struct
   }
 
   let main
-      error_flags include_suppressed options_flags json pretty
+      error_flags include_suppressed options_flags json pretty json_version
       shm_flags ignore_version from root input_file filenames
       () =
 
@@ -187,16 +185,17 @@ module FocusCheckCommand = struct
       filenames
       FilenameSet.empty in
 
-    let profiling, errors, warnings, suppressed_errors = Main.check_once
+    let profiling, errors, warnings, suppressed_errors = Server.check_once
       ~shared_mem_config ~client_include_warnings ~focus_targets options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
     let printer =
-      if json || pretty then Json { pretty } else Cli error_flags in
+      if json || Option.is_some json_version || pretty then
+        Json { pretty; version = json_version }
+      else
+        Cli error_flags
+    in
     print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
-    if Errors.ErrorSet.is_empty errors
-      then FlowExitStatus.(exit No_error)
-      else FlowExitStatus.(exit Type_error)
-
+    FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
   let command = CommandSpec.command spec main
 end

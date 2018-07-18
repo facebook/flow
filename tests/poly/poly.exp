@@ -1,114 +1,266 @@
-Error: annot.js:3
-  3: class B extends A { } // OK, same as above
-                     ^ polymorphic type: class type: A. Too few type arguments. Expected at least 1
-  1: class A<X> { }
-             ^ See type parameters of definition here
+Error ---------------------------------------------------------------------------------------------------- annot.js:3:17
 
-Error: annot.js:10
- 10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                        ^^^^^^^^^^^^^^ type application of class `A`. This type is incompatible with the expected return type of
-  9: function bar(): A<*> { // error, * can't be {} and {x: string} at the same time
-                     ^^^^ type application of polymorphic type: class type: A
-  Type argument `X` is incompatible:
-     10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                              ^^^^^^^^^^^ property `x`. Property not found in
-     10:   return (new A: A<{}>) || (new A: A<{x: string}>);
-                            ^^ object type
+Cannot use `A` [1] with less than 1 type argument.
 
-Error: implicit_bounded_instantiation.js:19
- 19: a.meth(42); // Error: number ~> Middle
-            ^^ number. This type is incompatible with
-  7: class C<T: Middle> {
-                ^^^^^^ Middle
+   annot.js:3:17
+   3| class B extends A { } // OK, same as above
+                      ^
 
-Error: implicit_bounded_instantiation.js:20
- 20: a.meth(new Base()); // Error: Base ~> Middle
-            ^^^^^^^^^^ Base. This type is incompatible with
-  7: class C<T: Middle> {
-                ^^^^^^ Middle
-
-Error: phantom.js:7
-  7: (a: B); // Error
-      ^ type application of type `T`. Has some incompatible type argument with
-  7: (a: B); // Error
-         ^ type application of type `T`
-  Type argument `Phantom` is incompatible:
-      3: type A = T<number>;
-                    ^^^^^^ number. This type is incompatible with
-      4: type B = T<string>;
-                    ^^^^^^ string
-
-Error: phantom.js:7
-  7: (a: B); // Error
-      ^ type application of type `T`. Has some incompatible type argument with
-  7: (a: B); // Error
-         ^ type application of type `T`
-  Type argument `Phantom` is incompatible:
-      4: type B = T<string>;
-                    ^^^^^^ string. This type is incompatible with
-      3: type A = T<number>;
-                    ^^^^^^ number
-
-Error: phantom.js:15
- 15: (c: D); // Error
-      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
- 15: (c: D); // Error
-         ^ type application of polymorphic type: type `T`
-  Type argument `Phantom` is incompatible:
-     11: type C = T<number>;
-                    ^^^^^^ number. This type is incompatible with
-     12: type D = T<string>;
-                    ^^^^^^ string
-
-Error: phantom.js:15
- 15: (c: D); // Error
-      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
- 15: (c: D); // Error
-         ^ type application of polymorphic type: type `T`
-  Type argument `Phantom` is incompatible:
-     12: type D = T<string>;
-                    ^^^^^^ string. This type is incompatible with
-     11: type C = T<number>;
-                    ^^^^^^ number
-
-Error: poly.js:17
- 17: var x:string = foo.x;
-                    ^^^^^ number. This type is incompatible with
- 17: var x:string = foo.x;
-           ^^^^^^ string
-
-Error: poly.js:18
- 18: var z:Foo<number> = Q.bar(foo,"");
-                         ^^^^^^^^^^^^^ type application of class `Foo`. Has some incompatible type argument with
- 18: var z:Foo<number> = Q.bar(foo,"");
-           ^^^^^^^^^^^ type application of polymorphic type: class type: Foo
-  Type argument `T` is incompatible:
-     18: var z:Foo<number> = Q.bar(foo,"");
-                                       ^^ string. This type is incompatible with
-     18: var z:Foo<number> = Q.bar(foo,"");
-                   ^^^^^^ number
-
-Error: test.js:8
-  8:   foo(x: number): number { return x; } // error (specialization, see below)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  2:   foo<X>(x: X): X { return x; }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
-  This parameter is incompatible:
-      2:   foo<X>(x: X): X { return x; }
-               ^ X. This type is incompatible with
-      8:   foo(x: number): number { return x; } // error (specialization, see below)
-                  ^^^^^^ number
-
-Error: test.js:8
-  8:   foo(x: number): number { return x; } // error (specialization, see below)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  2:   foo<X>(x: X): X { return x; }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
-  This parameter is incompatible:
-      8:   foo(x: number): number { return x; } // error (specialization, see below)
-                           ^^^^^^ number. This type is incompatible with
-      8:   foo(x: number): number { return x; } // error (specialization, see below)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
+References:
+   annot.js:1:9
+   1| class A<X> { }
+              ^ [1]
 
 
-Found 12 errors
+Error --------------------------------------------------------------------------------------------------- annot.js:10:10
+
+Cannot return `new A() || new A()` because property `x` is missing in object type [1] but exists in object type [2] in
+type argument `X` [3].
+
+   annot.js:10:10
+   10|   return (new A: A<{}>) || (new A: A<{x: string}>);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   annot.js:10:20
+   10|   return (new A: A<{}>) || (new A: A<{x: string}>);
+                          ^^ [1]
+   annot.js:10:38
+   10|   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                            ^^^^^^^^^^^ [2]
+   annot.js:1:9
+    1| class A<X> { }
+               ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- error.js:8:8
+
+Cannot call `newFn1` with `'string'` bound to the first parameter because string [1] is incompatible with number [2].
+
+   error.js:8:8
+   8| newFn1('string'); // The error should point here.
+             ^^^^^^^^ [1]
+
+References:
+   error.js:7:24
+   7| const newFn1 = fn1((x: number) => {});
+                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- error.js:12:8
+
+Cannot call `newFn2` with function bound to the first parameter because string [1] is incompatible with number [2] in
+the first argument.
+
+   error.js:12:8
+   12| newFn2((x: string) => {}); // The error should point here.
+              ^^^^^^^^^^^^^^^^^
+
+References:
+   error.js:12:12
+   12| newFn2((x: string) => {}); // The error should point here.
+                  ^^^^^^ [1]
+   error.js:11:20
+   11| const newFn2 = fn2(42);
+                          ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- error.js:15:5
+
+Cannot call `fn3` with `42` bound to `x` because number [1] is incompatible with string [2].
+
+   error.js:15:5
+   15| fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+           ^^ [1]
+
+References:
+   error.js:15:13
+   15| fn3(42, (x: string) => {}); // The error should point to 42 and not string.
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- error.js:20:2
+
+Cannot cast `newVal4` to string because number [1] is incompatible with string [2].
+
+   error.js:20:2
+   20| (newVal4: string); // The error should point here.
+        ^^^^^^^
+
+References:
+   error.js:19:8
+   19| newFn4(42);
+              ^^ [1]
+   error.js:20:11
+   20| (newVal4: string); // The error should point here.
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
+
+Cannot instantiate `C` because:
+ - number [1] is incompatible with `Middle` [2] in type argument `T`.
+ - `Base` [3] is incompatible with `Middle` [2] in type argument `T`.
+
+   implicit_bounded_instantiation.js:15:8
+   15| var a: C<*> = new C();
+              ^^^^
+
+References:
+   implicit_bounded_instantiation.js:19:8
+   19| a.meth(42); // Error: number ~> Middle
+              ^^ [1]
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [2]
+   implicit_bounded_instantiation.js:20:8
+   20| a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:19:8
+
+Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible with `Middle` [2].
+
+   implicit_bounded_instantiation.js:19:8
+   19| a.meth(42); // Error: number ~> Middle
+              ^^ [1]
+
+References:
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:20:8
+
+Cannot call `a.meth` with `new Base()` bound to `a` because `Base` [1] is incompatible with `Middle` [2].
+
+   implicit_bounded_instantiation.js:20:8
+   20| a.meth(new Base()); // Error: Base ~> Middle
+              ^^^^^^^^^^ [1]
+
+References:
+   implicit_bounded_instantiation.js:7:12
+    7| class C<T: Middle> {
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- phantom.js:7:2
+
+Cannot cast `a` to `B` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
+
+   phantom.js:7:2
+   7| (a: B); // Error
+       ^
+
+References:
+   phantom.js:3:12
+   3| type A = T<number>;
+                 ^^^^^^ [1]
+   phantom.js:4:12
+   4| type B = T<string>;
+                 ^^^^^^ [2]
+   phantom.js:9:8
+   9| type T<Phantom> = any;
+             ^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- phantom.js:15:2
+
+Cannot cast `c` to `D` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
+
+   phantom.js:15:2
+   15| (c: D); // Error
+        ^
+
+References:
+   phantom.js:11:12
+   11| type C = T<number>;
+                  ^^^^^^ [1]
+   phantom.js:12:12
+   12| type D = T<string>;
+                  ^^^^^^ [2]
+   phantom.js:9:8
+    9| type T<Phantom> = any;
+              ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
+
+Cannot assign `foo.x` to `x` because:
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
+
+   poly.js:17:16
+   17| var x:string = foo.x;
+                      ^^^^^
+
+References:
+   poly.js:16:19
+   16| var foo = new Foo(0);
+                         ^ [1]
+   poly.js:17:7
+   17| var x:string = foo.x;
+             ^^^^^^ [2]
+   poly.js:18:11
+   18| var z:Foo<number> = Q.bar(foo,"");
+                 ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:18:21
+
+Cannot assign `Q.bar(...)` to `z` because string [1] is incompatible with number [2] in type argument `T` [3].
+
+   poly.js:18:21
+   18| var z:Foo<number> = Q.bar(foo,"");
+                           ^^^^^^^^^^^^^
+
+References:
+   poly.js:18:31
+   18| var z:Foo<number> = Q.bar(foo,"");
+                                     ^^ [1]
+   poly.js:18:11
+   18| var z:Foo<number> = Q.bar(foo,"");
+                 ^^^^^^ [2]
+   poly.js:1:11
+    1| class Foo<T> {
+                 ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+
+Cannot extend `C` [1] with `D` because:
+ - number [2] is incompatible with `X` [3] in the first argument of property `foo`.
+ - number [4] is incompatible with `X` [5] in the return value of property `foo`.
+
+   test.js:7:1
+       v------------------
+    7| class D extends C {
+    8|   foo(x: number): number { return x; } // error (specialization, see below)
+    9|   foo_(x: number): number { return x; } // OK, but only because the overridden foo accepts no more than number and returns exactly number
+   10|   bar<X>(x: X): X { return x; } // OK
+   11|   qux<X>(x: X): X { return x; } // OK (generalization)
+   12| }
+       ^
+
+References:
+   test.js:7:17
+    7| class D extends C {
+                       ^ [1]
+   test.js:8:10
+    8|   foo(x: number): number { return x; } // error (specialization, see below)
+                ^^^^^^ [2]
+   test.js:2:13
+    2|   foo<X>(x: X): X { return x; }
+                   ^ [3]
+   test.js:8:19
+    8|   foo(x: number): number { return x; } // error (specialization, see below)
+                         ^^^^^^ [4]
+   test.js:2:17
+    2|   foo<X>(x: X): X { return x; }
+                       ^ [5]
+
+
+
+Found 17 errors

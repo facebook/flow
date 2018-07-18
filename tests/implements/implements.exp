@@ -1,94 +1,114 @@
-Error: test.js:5
-  5: class C1 implements IFoo {} // error: property `foo` not found
-           ^^ C1. This type is incompatible with
-  5: class C1 implements IFoo {} // error: property `foo` not found
-                         ^^^^ IFoo
-  Property `foo` is incompatible:
-      5: class C1 implements IFoo {} // error: property `foo` not found
-                             ^^^^ property `foo` of IFoo. Property not found in
-      5: class C1 implements IFoo {} // error: property `foo` not found
-               ^^ C1
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Error: test.js:6
-  6: class C2 implements IFoo { foo: number } // error: number <~> string
-           ^^ C2. This type is incompatible with
-  6: class C2 implements IFoo { foo: number } // error: number <~> string
-                         ^^^^ IFoo
-  Property `foo` is incompatible:
-      3: interface IFoo { foo: string }
-                               ^^^^^^ string. This type is incompatible with
-      6: class C2 implements IFoo { foo: number } // error: number <~> string
-                                         ^^^^^^ number
+Cannot implement `IFoo` [1] with `C1` because property `foo` is missing in `C1` [2] but exists in `IFoo` [1].
 
-Error: test.js:6
-  6: class C2 implements IFoo { foo: number } // error: number <~> string
-           ^^ C2. This type is incompatible with
-  6: class C2 implements IFoo { foo: number } // error: number <~> string
-                         ^^^^ IFoo
-  Property `foo` is incompatible:
-      6: class C2 implements IFoo { foo: number } // error: number <~> string
-                                         ^^^^^^ number. This type is incompatible with
-      3: interface IFoo { foo: string }
-                               ^^^^^^ string
+   test.js:5:1
+   5| class C1 implements IFoo {} // error: property `foo` not found
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Error: test.js:13
- 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-           ^^ C4. This type is incompatible with
- 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                         ^^^^ IFoo
-  Property `foo` is incompatible:
-     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                             ^^^^ property `foo` of IFoo. Property not found in
-     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-               ^^ C4
-
-Error: test.js:13
- 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-           ^^ C4. This type is incompatible with
- 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                               ^^^^ IBar
-  Property `bar` is incompatible:
-     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                                   ^^^^ property `bar` of IBar. Property not found in
-     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-               ^^ C4
-
-Error: test.js:18
- 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-           ^^ C5. This type is incompatible with
- 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                         ^^^^^^^ IFoo
-  Property `foo` is incompatible:
-     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                             ^^^^^^^ property `foo` of IFoo. Property not found in
-     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-               ^^ C5
-
-Error: test.js:18
- 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-           ^^ C5. This type is incompatible with
- 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                         ^^^^^^^ IFooBar
-  Property `bar` is incompatible:
-     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                             ^^^^^^^ property `bar` of IFooBar. Property not found in
-     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-               ^^ C5
-
-Error: test.js:21
- 21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
-      ^^^^^^ C5. This type is incompatible with
- 21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
-              ^^^^ IBar
-  Property `bar` is incompatible:
-     21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
-                  ^^^^ property `bar` of IBar. Property not found in
-     21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
-          ^^^^^^ C5
-
-Error: test.js:26
- 26: class C7 implements C1 {} // error: C1 is a class, expected an interface
-                         ^^ C1. Argument to implements clause must be an interface
+References:
+   test.js:5:21
+   5| class C1 implements IFoo {} // error: property `foo` not found
+                          ^^^^ [1]
+   test.js:5:7
+   5| class C1 implements IFoo {} // error: property `foo` not found
+            ^^ [2]
 
 
-Found 9 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
+
+Cannot implement `IFoo` [1] with `C2` because number [2] is incompatible with string [3] in property `foo`.
+
+   test.js:6:1
+   6| class C2 implements IFoo { foo: number } // error: number <~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:6:21
+   6| class C2 implements IFoo { foo: number } // error: number <~> string
+                          ^^^^ [1]
+   test.js:6:33
+   6| class C2 implements IFoo { foo: number } // error: number <~> string
+                                      ^^^^^^ [2]
+   test.js:3:23
+   3| interface IFoo { foo: string }
+                            ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Cannot implement `IFoo` [1] with `C4` because property `foo` is missing in `C4` [2] but exists in `IFoo` [1].
+
+   test.js:13:1
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:13:21
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                           ^^^^ [1]
+   test.js:13:7
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+             ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Cannot implement `IBar` [1] with `C4` because property `bar` is missing in `C4` [2] but exists in `IBar` [1].
+
+   test.js:13:1
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:13:27
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                                 ^^^^ [1]
+   test.js:13:7
+   13| class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+             ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+Cannot implement `IFooBar` [1] with `C5` because:
+ - property `bar` is missing in `C5` [2] but exists in `IFooBar` [1].
+ - property `foo` is missing in `C5` [2] but exists in `IFoo` [1].
+
+   test.js:18:1
+   18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:18:21
+   18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+                           ^^^^^^^ [1]
+   test.js:18:7
+   18| class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+             ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:2
+
+Cannot cast `new C5()` to `IBar` because property `bar` is missing in `C5` [1] but exists in `IBar` [2].
+
+   test.js:21:2
+   21| (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
+        ^^^^^^ [1]
+
+References:
+   test.js:21:10
+   21| (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
+                ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:21
+
+Cannot implement `C1` because it is not an interface.
+
+   26| class C7 implements C1 {} // error: C1 is a class, expected an interface
+                           ^^
+
+
+
+Found 8 errors

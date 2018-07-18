@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
@@ -29,6 +26,37 @@ let mk_write pos1 pos2 =
   Ssa_api.Write (mk_loc pos1 pos2)
 
 let tests = "ssa_builder" >::: [
+  "var" >:: mk_ssa_builder_test
+    "function foo(x) {
+       var y;
+       if (x) y = 123;
+       return y;
+     }"
+    LocMap.(
+      empty |>
+      add (mk_loc (3, 11) (3, 12)) [ (* x *)
+        mk_write (1, 13) (1, 14);
+      ] |>
+      add (mk_loc (4, 14) (4, 15)) [ (* y *)
+        Ssa_api.uninitialized;
+        mk_write (3, 14) (3, 15);
+      ]
+    );
+  "var_hoist" >:: mk_ssa_builder_test
+    "function foo(x) {
+       y = x;
+       var y;
+       return y;
+     }"
+    LocMap.(
+      empty |>
+      add (mk_loc (2, 11) (2, 12)) [ (* x *)
+        mk_write (1, 13) (1, 14);
+      ] |>
+      add (mk_loc (4, 14) (4, 15)) [ (* y *)
+        mk_write (2, 7) (2, 8);
+      ]
+    );
   "let" >:: mk_ssa_builder_test
     "function foo() { \
        let x = 0; \
@@ -702,6 +730,20 @@ let tests = "ssa_builder" >::: [
         mk_write (1, 18) (1, 19);
         mk_write (1, 37) (1, 38);
         mk_write (1, 90) (1, 91);
+      ]
+    );
+  "JSX" >:: mk_ssa_builder_test
+    "class Foo {}; <Foo></Foo>; <Foo/>"
+    LocMap.(
+      empty |>
+      add (mk_loc (1, 15) (1, 18)) [
+        mk_write (1, 6) (1, 9);
+      ] |>
+      add (mk_loc (1, 21) (1, 24)) [
+        mk_write (1, 6) (1, 9);
+      ] |>
+      add (mk_loc (1, 28) (1, 31)) [
+        mk_write (1, 6) (1, 9);
       ]
     );
 ]

@@ -1,6 +1,6 @@
 {
   "name": "flow-upgrade",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "A utility for upgrading your codebase to the latest version of Flow.",
   "engines": {
     "node": ">=6"
@@ -15,6 +15,14 @@
     "prepublish": "npm run build",
     "postpublish": "node ./scripts/postpublish.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/flow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/flow/issues"
+  },
+  "homepage": "https://github.com/facebook/flow/tree/master/packages/flow-upgrade#readme",
   "jest": {
     "rootDir": "src",
     "testMatch": [
@@ -24,7 +32,7 @@
   "dependencies": {
     "chalk": "^2.0.1",
     "graceful-fs": "^4.1.11",
-    "jscodeshift": "calebmer/jscodeshift#patch-1",
+    "jscodeshift": "^0.4.0",
     "ora": "^1.3.0",
     "prompt-confirm": "^1.2.0",
     "semver": "^5.3.0",
@@ -34,7 +42,7 @@
     "babel-cli": "^6.24.1",
     "babel-preset-env": "^1.6.0",
     "babel-preset-flow": "^6.23.0",
-    "flow-bin": "0.50.0",
+    "flow-bin": "0.74.0",
     "jest": "^20.0.4"
   }
 }

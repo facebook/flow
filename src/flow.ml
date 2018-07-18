@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -23,8 +20,8 @@ end = struct
     CheckCommands.CheckCommand.command;
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
-    ConfigCommands.Init.command;
     CoverageCommand.command;
+    CycleCommand.command;
     DumpTypesCommand.command;
     FindModuleCommand.command;
     FindRefsCommand.command;
@@ -33,8 +30,12 @@ end = struct
     GetDefCommand.command;
     GetImportsCommand.command;
     IdeCommand.command;
+    InitCommand.command;
+    LspCommand.command;
     LsCommand.command;
     PortCommand.command;
+    RefactorCommand.command;
+    SaveStateCommand.command;
     ServerCommand.command;
     StartCommand.command;
     StopCommand.command;
@@ -60,6 +61,7 @@ end = struct
   let commands = ShellCommand.command :: commands
 
   let main () =
+
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
     let (command, argv) = match argv with
@@ -115,12 +117,18 @@ let _ =
      exit via FlowExitStatus.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
 
+  let () = Printexc.record_backtrace true in
+
+  let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then EventLogger.disable_logging () in
+
   try
     Daemon.check_entry_point (); (* this call might not return *)
     FlowShell.main ()
   with
   | SharedMem_js.Out_of_shared_memory ->
-      FlowExitStatus.(exit Out_of_shared_memory)
+      let bt = Printexc.get_backtrace () in
+      let msg = Utils.spf "Out of shared memory%s" (if bt = "" then bt else ":\n"^bt) in
+      FlowExitStatus.(exit ~msg Out_of_shared_memory)
   | e ->
       let bt = Printexc.get_backtrace () in
       let msg = Utils.spf "Unhandled exception: %s%s"

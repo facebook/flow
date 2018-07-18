@@ -1,110 +1,67 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-open Result
+open Core_result
+let (>|=) = Lwt.(>|=)
 
-let mk_loc file line col =
-  {
-    Loc.
-    source = Some file;
-    start = { Loc.line; column = col; offset = 0; };
-    _end = { Loc.line; column = col + 1; offset = 0; };
-  }
+let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content line col =
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
+  function
+  | Error str -> Error (str, None)
+  | Ok (cx, _info) ->
+    let loc = Loc.make file line col in
+    let json_data, loc, ty =
+      let mk_data result_str loc ty_json = Hh_json.JSON_Object [
+        "result", Hh_json.JSON_String result_str;
+        "loc", Reason.json_of_loc loc;
+        "type", ty_json;
+      ] in
+      Query_types.(match query_type ~expand_aliases cx loc with
+        | FailureNoMatch ->
+          Hh_json.JSON_Object [
+            "result", Hh_json.JSON_String "FAILURE_NO_MATCH"
+          ], Loc.none, None
+        | FailureUnparseable (loc, gt, _) ->
+          let json = Hh_json.JSON_String (Type.string_of_ctor gt) in
+          mk_data "FAILURE_UNPARSEABLE" loc json, loc, None
+        | Success (loc, ty) ->
+          (* TODO use Ty_debug.json_of_t after making it faster using
+             count_calls *)
+          let json = Hh_json.JSON_String (Ty_printer.string_of_t ty) in
+          mk_data "SUCCESS" loc json, loc, Some ty
+      ) in
 
-let type_at_pos ~options ~workers ~env ~client_context ~include_raw file content line col =
-  Types_js.basic_check_contents ~options ~workers ~env content file >>| fun (profiling, cx, _info) ->
-  let loc = mk_loc file line col in
-  let result_str, data, loc, ground_t, possible_ts =
-    let mk_data loc ty = [
-      "loc", Reason.json_of_loc loc;
-      "type", Debug_js.json_of_t ~depth:3 cx ty
-    ] in
-    Query_types.(match query_type cx loc with
-      | FailureNoMatch ->
-        "FAILURE_NO_MATCH", [],
-        Loc.none, None, []
-      | FailureUnparseable (loc, gt, possible_ts) ->
-        "FAILURE_UNPARSEABLE", mk_data loc gt,
-        loc, None, possible_ts
-      | Success (loc, gt, possible_ts) ->
-        "SUCCESS", mk_data loc gt,
-        loc, Some gt, possible_ts
-    ) in
-  FlowEventLogger.type_at_pos_result
-    ~client_context
-    ~result_str
-    ~json_data:(Hh_json.JSON_Object data)
-    ~profiling;
+    Ok ((loc, ty), Some json_data)
 
-  let ty, raw_type = match ground_t with
-    | None -> None, None
-    | Some t ->
-      let ty = Some (Type_printer.string_of_t cx t) in
-      let raw_type =
-        if include_raw then
-          Some (Debug_js.jstr_of_t ~size:50 ~depth:10 cx t)
-        else
-          None
-      in
-      ty, raw_type
-  in
-  let reasons = List.map Type.reason_of_t possible_ts in
-  loc, ty, raw_type, reasons
-
-let dump_types ~options ~workers ~env ~include_raw ~strip_root file content =
+let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)
-  let printer = Type_printer.string_of_t in
+  let printer = Ty_printer.string_of_t in
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
+  map ~f:(fun (cx, _info) -> Query_types.dump_types ~printer cx)
 
-  (* Print raw representation of types as json; as it turns out, the
-     json gets cut off at a specified depth, so pass the maximum
-     possible depth to avoid that. *)
-  let raw_printer c t =
-    if include_raw
-      then Some (Debug_js.jstr_of_t ~depth:max_int ~strip_root c t)
-      else None
-    in
 
-  Types_js.basic_check_contents ~options ~workers ~env content file >>| fun (_profiling, cx, _info) ->
-  Query_types.dump_types printer raw_printer cx
-
-let coverage ~options ~workers ~env ~force file content =
+let coverage ~options ~workers ~env ~profiling ~force file content =
   let should_check =
-    if force then
-      true
-    else
+    if force then true else
       let (_, docblock) =
-        Parsing_service_js.(get_docblock docblock_max_tokens file content) in
+        Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
-  Types_js.basic_check_contents ~options ~workers ~env content file >>| fun (_profiling, cx, _info) ->
-  let types = Query_types.covered_types cx in
-  if should_check then
-    types
-  else
-    types |> List.map (fun (loc, _) -> (loc, false))
+  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
+  map ~f:(fun (cx, _) -> Query_types.covered_types cx ~should_check)
 
-
-let suggest ~options ~workers ~env file region content =
-  Types_js.basic_check_contents ~options ~workers ~env content file >>| fun (_profiling, cx, _info) ->
-  Query_types.fill_types cx
-  |> List.sort Pervasives.compare
-  |> match region with
-    | [] -> fun insertions -> insertions
-    | [l1;c1;l2;c2] ->
-        let l1,c1,l2,c2 =
-          int_of_string l1,
-          int_of_string c1,
-          int_of_string l2,
-          int_of_string c2
-        in
-        List.filter (fun (l,c,_) ->
-          (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
-        )
-    | _ -> assert false
+let suggest ~options ~workers ~env ~profiling file content =
+  Types_js.typecheck_contents ~options ~workers ~env ~profiling content file >|=
+  function
+  | (Some (cx, ast), tc_errors, tc_warnings) ->
+    let cxs = Query_types.suggest_types cx in
+    let visitor = new Suggest.visitor ~cxs in
+    let typed_ast = visitor#program ast in
+    let suggest_warnings = visitor#warnings () in
+    Ok (tc_errors, tc_warnings, suggest_warnings, typed_ast)
+  | (None, errors, _) ->
+    Error errors

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type t =
@@ -16,10 +13,15 @@ type t =
      these, just check that they exist *)
   | ResourceFile of string
   | Builtins
+  [@@deriving show]
 
 let to_string = function
   | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
   | Builtins -> "(global)"
+
+let to_path = function
+  | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> Ok x
+  | Builtins -> Error "File key refers to a builtin"
 
 let compare =
   (* builtins, then libs, then source and json files at the same priority since

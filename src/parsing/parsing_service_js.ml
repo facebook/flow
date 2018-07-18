@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -16,7 +13,7 @@ exception Docblock_not_found of string
 exception Requires_not_found of string
 
 type result =
-  | Parse_ok of Loc.t Ast.program
+  | Parse_ok of Loc.t Ast.program * File_sig.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -27,6 +24,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
+  | File_sig_error of File_sig.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -38,19 +36,23 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: FilenameSet.t;
+  parse_ok: (File_sig.tolerable_error list) FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
 
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+
+  (* set of unchanged files *)
+  parse_unchanged: FilenameSet.t;
 }
 
 let empty_result = {
-  parse_ok = FilenameSet.empty;
+  parse_ok = FilenameMap.empty;
   parse_skips = [];
   parse_fails = [];
+  parse_unchanged = FilenameSet.empty;
 }
 
 (**************************** internal *********************************)
@@ -60,19 +62,49 @@ module ASTHeap = SharedMem_js.WithCache (File_key) (struct
     type t = Loc.t Ast.program
     let prefix = Prefix.make()
     let description = "AST"
+    let use_sqlite_fallback () = false
 end)
 
 module DocblockHeap = SharedMem_js.WithCache (File_key) (struct
     type t = Docblock.t
     let prefix = Prefix.make()
     let description = "Docblock"
+    let use_sqlite_fallback () = false
 end)
 
 module FileSigHeap = SharedMem_js.WithCache (File_key) (struct
     type t = File_sig.t
     let prefix = Prefix.make()
     let description = "Requires"
+    let use_sqlite_fallback () = false
 end)
+
+(* Contains the hash for every file we even consider parsing *)
+module FileHashHeap = SharedMem_js.WithCache (File_key) (struct
+    (* In the future I imagine a system like this:
+     *
+     * type t = {
+     *   since_version: Recheck.version;
+     *   hash: Sha1.hash;
+     * }
+     *
+     * Every time we notice files changing (via file_watcher or some other way) we bump the version
+     * so a recheck is known to be from version N to version N+1. If the recheck gets cancelled
+     * due to a file watcher event, then we're checking from version N to version N+2 (etc etc).
+     *
+     * Ideally we'd be able to ignore file watcher events that are either old & outdated or where
+     * hash hasn't changed (watchman can provide the sha1).
+     *
+     * And ideally a cancelled recheck leading to a recheck from version N to N+2 will still
+     * merge file foo.js, even if we parsed it at version N+1 & it's unchanged since version N+1.
+     *)
+    type t = Xx.hash
+    let prefix = Prefix.make()
+    let description = "FileHash"
+    let use_sqlite_fallback () = false
+end)
+
+let add_file_sig_from_saved_state = FileSigHeap.add
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
@@ -84,22 +116,28 @@ module ParsingHeaps = struct
   let oldify_batch files =
     ASTHeap.oldify_batch files;
     DocblockHeap.oldify_batch files;
-    FileSigHeap.oldify_batch files
+    FileSigHeap.oldify_batch files;
+    FileHashHeap.oldify_batch files
 
   let remove_batch files =
     ASTHeap.remove_batch files;
     DocblockHeap.remove_batch files;
-    FileSigHeap.remove_batch files
+    FileSigHeap.remove_batch files;
+    FileHashHeap.remove_batch files;
+    SharedMem_js.collect `gentle
 
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
-    FileSigHeap.remove_old_batch files
+    FileSigHeap.remove_old_batch files;
+    FileHashHeap.remove_old_batch files;
+    SharedMem_js.collect `gentle
 
   let revive_batch files =
     ASTHeap.revive_batch files;
     DocblockHeap.revive_batch files;
-    FileSigHeap.revive_batch files
+    FileSigHeap.revive_batch files;
+    FileHashHeap.revive_batch files
 end
 
 (* TODO: add TypesForbidden (disables types even on files with @flow) and
@@ -120,6 +158,8 @@ let parse_source_file ~fail ~types ~use_strict content file =
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
     esproposal_export_star_as = true;
+    esproposal_optional_chaining = true;
+    esproposal_nullish_coalescing = true;
     types = types;
     use_strict;
   }) in
@@ -134,6 +174,8 @@ let parse_json_file ~fail content file =
     esproposal_class_static_fields = false;
     esproposal_decorators = false;
     esproposal_export_star_as = false;
+    esproposal_optional_chaining = false;
+    esproposal_nullish_coalescing = false;
     types = true;
     use_strict = false;
   }) in
@@ -174,6 +216,16 @@ let extract_docblock =
      if @flow or @providesModule is found more than once, the first one is used
      and an error is returned. *)
   let rec parse_attributes (errors, info) = function
+    | (loc, "@flow") :: (_, "strict") :: xs ->
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInStrict } in
+        parse_attributes acc xs
+    | (loc, "@flow") :: (_, "strict-local") :: xs ->
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInStrictLocal } in
+        parse_attributes acc xs
     | (loc, "@flow") :: (_, "weak") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
@@ -206,7 +258,7 @@ let extract_docblock =
           if info.jsx <> None then
             (csx_loc, MultipleJSXAttributes)::errors, info
           else
-            errors, { info with jsx = Some Options.CSX }
+            errors, { info with jsx = Some Csx_pragma }
         in
         parse_attributes acc xs
     | [jsx_loc, "@jsx"] -> (jsx_loc, InvalidJSXAttribute None)::errors, info
@@ -223,8 +275,7 @@ let extract_docblock =
               let (jsx_expr, _) = Parser_flow.jsx_pragma_expression
                 (padding ^ expr)
                 expr_loc.Loc.source in
-              let jsx_pragma = Options.JSXPragma (expr, jsx_expr) in
-              errors, { info with jsx = Some jsx_pragma }
+              errors, { info with jsx = Some (Jsx_pragma (expr, jsx_expr)) }
             with
             | Parse_error.Error [] ->
                 (expr_loc, InvalidJSXAttribute None)::errors, info
@@ -246,7 +297,7 @@ let extract_docblock =
     |> List.fold_left Loc.(fun _end elem ->
       match elem with
       | Str.Delim delim ->
-          let line_incr = if "delim" = "\r" then 0 else 1 in
+          let line_incr = if delim = "\r" then 0 else 1 in
           let column = 0 in
           let line = _end.line + line_incr in
           let offset = _end.offset + (String.length delim) in
@@ -336,7 +387,7 @@ let extract_docblock =
         ) ([], info) comments
     | None -> [], info
 
-let get_docblock
+let parse_docblock
   ~max_tokens file content
 : docblock_error list * Docblock.t =
   match file with
@@ -355,27 +406,36 @@ let types_checked types_mode info =
     | None
     | Some Docblock.OptOut -> false
     | Some Docblock.OptIn
+    | Some Docblock.OptInStrict
+    | Some Docblock.OptInStrictLocal
     | Some Docblock.OptInWeak -> true
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
     | File_key.JsonFile _ ->
-      Parse_ok (parse_json_file ~fail content file)
+      let ast = parse_json_file ~fail content file in
+      Parse_ok (ast, File_sig.empty_file_sig)
     | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
-      let types =
-        (* either all=true or @flow pragma exists *)
-        types_checked types_mode info ||
-        (* always parse types for .flow files -- NB: will _not_ be inferred *)
-        Docblock.isDeclarationFile info
-      in
-      (* don't bother to parse if types are disabled *)
-      if types
-      then Parse_ok (parse_source_file ~fail ~types ~use_strict content file)
-      else Parse_skip Skip_non_flow_file
-  )
+      (* either all=true or @flow pragma exists *)
+      let types_checked = types_checked types_mode info in
+      (* always parse types for .flow files -- NB: will _not_ be inferred *)
+      let types = types_checked || Docblock.isDeclarationFile info in
+      if not types
+      then Parse_skip Skip_non_flow_file
+      else
+        let ast = parse_source_file ~fail ~types ~use_strict content file in
+        (* Only calculate file sigs for files which will actually be inferred.
+         * The only files which are parsed but not inferred are .flow files with
+         * no @flow pragma. *)
+        if types_checked then
+          match File_sig.program ~ast with
+          | Ok file_sig -> Parse_ok (ast, file_sig)
+          | Error e -> Parse_fail (File_sig_error e)
+        else
+          Parse_ok (ast, File_sig.empty_file_sig))
   with
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
@@ -385,13 +445,21 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_file_sig ~ast =
-  File_sig.program ~ast
+let hash_content content =
+  let state = Xx.init () in
+  Xx.update state content;
+  Xx.digest state
+
+let does_content_match_file_hash file content =
+  let content_hash = hash_content content in
+  match FileHashHeap.get file with
+  | None -> false
+  | Some hash -> hash = content_hash
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens ~lazy_mode
+  ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
   parse_results
   file
 : results =
@@ -411,39 +479,40 @@ let reducer
       None in
   match content with
   | Some content ->
-      begin match get_docblock ~max_tokens:max_header_tokens file content with
+      let new_hash = hash_content content in
+      let unchanged =
+        match FileHashHeap.get_old file with
+        | Some old_hash when old_hash = new_hash ->
+          (* If this optimization is turned off then still parse the file, even though it's
+           * unchanged *)
+          not parse_unchanged &&
+            (* Let's disable this optimization for .flow files. Sometimes we still want to recheck
+             * foo.js.flow file because foo.js changed *)
+            not (File_key.check_suffix file Files.flow_ext) &&
+            (* File hasn't changed. But do we have an AST available? *)
+            ASTHeap.mem_old file
+        | _ ->
+          (* The file has changed. Let's record the new hash *)
+          FileHashHeap.add file new_hash;
+          false
+      in
+      if unchanged
+      then
+        let parse_unchanged = FilenameSet.add file parse_results.parse_unchanged in
+        { parse_results with parse_unchanged; }
+      else begin match parse_docblock ~max_tokens:max_header_tokens file content with
       | [], info ->
+        let info =
+          if noflow file then { info with Docblock.flow = Some Docblock.OptOut }
+          else info
+        in
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
-        | Parse_ok ast ->
-            (* Consider the file unchanged if its reparsing info is the same as
-             * its old parsing info. A complication is that we don't want to
-             * drop a .flow file, even if it is unchanged, since it might have
-             * been added to the modified set simply because a corresponding
-             * implementation file was also added. *)
-            if not (File_key.check_suffix file Files.flow_ext)
-              (* In --lazy mode, a file is parsed initially but not
-                 checked, and reparsing it later triggers a check even if the
-                 file hasn't changed.
-
-                 TODO: this optimization is never hit in this mode, but we can
-                 use it if `file` is in the current set of checked files. *)
-              && not lazy_mode
-              && (ASTHeap.get_old file = Some ast)
-            then parse_results
-            else begin
-              (* Only calculate file sigs for files which will actually be
-                 inferred. The only files which are parsed (thus, Parse_ok) but
-                 not inferred are .flow files with no @flow pragma and .json
-                 files. *)
-              let file_sig =
-                if types_checked types_mode info
-                then calc_file_sig ~ast
-                else File_sig.empty_file_sig
-              in
-              ParsingHeaps.add file ast info file_sig;
-              let parse_ok = FilenameSet.add file parse_results.parse_ok in
-              { parse_results with parse_ok; }
-            end
+        | Parse_ok (ast, file_sig) ->
+            ParsingHeaps.add file ast info file_sig;
+            let parse_ok =
+              FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
+            in
+            { parse_results with parse_ok; }
         | Parse_fail converted ->
             let fail = (file, info, converted) in
             let parse_fails = fail :: parse_results.parse_fails in
@@ -466,9 +535,10 @@ let reducer
 (* merge is just memberwise union/concat of results *)
 let merge r1 r2 =
   {
-    parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
+    parse_ok = FilenameMap.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
+    parse_unchanged = FilenameSet.union r1.parse_unchanged r2.parse_unchanged;
   }
 
 let opt_or_alternate opt alternate =
@@ -491,46 +561,58 @@ let get_defaults ~types_mode ~use_strict options =
   in
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
-  let lazy_mode = Options.is_lazy_mode options in
-  types_mode, use_strict, profile, max_header_tokens, lazy_mode
+  let noflow fn =
+    Files.is_untyped (Options.file_options options) (File_key.to_string fn)
+  in
+  types_mode, use_strict, profile, max_header_tokens, noflow
 
 (***************************** public ********************************)
 
-let next_of_filename_set workers filenames =
-  MultiWorker.next workers (FilenameSet.elements filenames)
+let progress_fn ~total ~start ~length:_ =
+  let finished = start in
+  MonitorRPC.status_update
+    ServerStatus.(Parsing_progress { total = Some total; finished })
 
-let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
+let next_of_filename_set ?(with_progress=false) workers filenames =
+  if with_progress
+  then MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements filenames)
+  else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
+
+let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
   workers next
-: results =
+: results Lwt.t =
   let t = Unix.gettimeofday () in
-  let results = MultiWorker.call
+  let reducer = reducer ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged in
+  let%lwt results = MultiWorkerLwt.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode))
+    ~job: (List.fold_left reducer)
     ~neutral: empty_result
-    ~merge: merge
-    ~next: next in
-
+    ~merge
+    ~next
+  in
   if profile then
     let t2 = Unix.gettimeofday () in
-    let ok_count = FilenameSet.cardinal results.parse_ok in
+    let ok_count = FilenameMap.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
     let fail_count = List.length results.parse_fails in
-    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed) in %f"
+    let unchanged_count = FilenameSet.cardinal results.parse_unchanged in
+    Hh_logger.info "parsed %d files (%d ok, %d skipped, %d failed, %d unchanged) in %f"
       (ok_count + skip_count + fail_count)
-      ok_count skip_count fail_count
+      ok_count skip_count fail_count unchanged_count
       (t2 -. t)
   else ();
+  Lwt.return results
 
-  results
-
-let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
-    ~options workers files =
+let reparse
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+  ?with_progress workers files =
   (* save old parsing info for files *)
   ParsingHeaps.oldify_batch files;
-  let next = next_of_filename_set workers files in
-  let results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next in
-  let modified = results.parse_ok in
+  let next = next_of_filename_set ?with_progress workers files in
+  let%lwt results =
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+  in
+  let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
   ) modified results.parse_fails in
@@ -539,27 +621,35 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   ) modified results.parse_skips in
   (* discard old parsing info for modified files *)
   ParsingHeaps.remove_old_batch modified;
+  SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParsingHeaps.revive_batch unchanged;
-  SharedMem_js.collect options `gentle;
-  modified, results
+  Lwt.return (modified, results)
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
-  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
+  let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next
+  let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
+  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
 
-let reparse_with_defaults ?types_mode ?use_strict options workers files =
-  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
+let reparse_with_defaults ?types_mode ?use_strict ?with_progress options workers files =
+  let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~options workers files
+  let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
+  reparse
+    ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged ?with_progress
+    workers files
 
 let has_ast = ASTHeap.mem
 
 let get_ast = ASTHeap.get
+
+let get_docblock = DocblockHeap.get
+
+let get_file_sig = FileSigHeap.get
 
 let get_ast_unsafe file =
   try ASTHeap.find_unsafe file
@@ -574,4 +664,5 @@ let get_file_sig_unsafe file =
   with Not_found -> raise (Requires_not_found (File_key.to_string file))
 
 let remove_batch files =
-  ParsingHeaps.remove_batch files
+  ParsingHeaps.remove_batch files;
+  SharedMem_js.collect `gentle

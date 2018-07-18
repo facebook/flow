@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This file contains util functions*)
@@ -13,77 +10,14 @@ module S = Ast.Statement;;
 module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
+module F = Ast.Function;;
 
 module StrSet = Set.Make(struct
     type t = string
     let compare = Pervasives.compare
   end)
 
-(* This is a special "random" number generator used for code
-   generation. It is special in a way that it ensures that it doesn't
-   generate the same random number given the same history.
-
-   For example, if it gives 0,0,0,0 during the first program
-   generation, it will give 1,0,0,0 for the second program
-   generation.
-
-   The algorithm simply keeps track of histories when generating
-   numbers. When we want to generate a number and the generator has
-   already generated 0,1,0, the generator will return 0 for the first
-   time because it is the first time it generates a number under the
-   history 0,1,0. If later on it is asked to generate another number
-   under the history 0,1,0, it will generate (0 + 1) % max.
-
-   Essentially this random number generator turns a random walk
-   algorithm into a combinatorial search algorithm without
-   stopping. The reason why we need this is that we don't want to
-   generate repetative programs.
-*)
-module FRandom = struct
-  (* A hash table storing history counts *)
-  let hist_tbl = Hashtbl.create 10000
-
-  (* The current history for a codegen session *)
-  let history = ref ""
-
-  (* init functions *)
-  let init_hist () = history := ""
-  let init_all_hist ()  = Hashtbl.clear hist_tbl
-
-  (* The most important function in this module *)
-  let int (limit : int) : int =
-    (* insert a new history if necessary *)
-    if not (Hashtbl.mem hist_tbl !history) then
-      Hashtbl.add hist_tbl !history 0;
-
-    (* get the count of seeing this history *)
-    let count = Hashtbl.find hist_tbl !history in
-
-    (* increment the history count *)
-    Hashtbl.replace hist_tbl !history (count + 1);
-
-    (* return a number and update the current history *)
-    let result = if limit = 0 then 0 else count mod limit in
-    history := !history ^ (string_of_int result) ^ ",";
-    result
-
-  (* The rest are based on int function *)
-  let bool () : bool = int 2 = 0
-  let choice (arr : 'a array) : 'a =
-    let index = int (Array.length arr) in
-    Array.get arr index
-
-  (* Real randomness here *)
-  let rint (limit : int) : int =
-    if limit = 0
-    then 0
-    else Random.int limit
-  let rbool () : bool = Random.bool ()
-  let rchoice (arr : 'a array) : 'a =
-    let index = rint (Array.length arr) in
-    Array.get arr index
-end;;
-
+let random_choice (arr : 'a array) : 'a = arr.(Random.int (Array.length arr))
 
 (* Generate a sequence of numbers *)
 let sequence i j =
@@ -135,7 +69,7 @@ let rec string_of_pattern (pattern : Loc.t P.t') =
     let open P.Identifier in
     (snd id.name) ^
     (if id.optional then "?" else "") ^ " " ^
-    (match id.typeAnnotation with
+    (match id.annot with
      | Some (_, (_, t)) -> " : " ^ (string_of_type t)
      | None -> "")
   | P.Expression (_, e) -> string_of_expr e
@@ -149,10 +83,10 @@ let rec string_of_pattern (pattern : Loc.t P.t') =
 and string_of_expr (expr : Loc.t E.t') =
   let string_of_proplist plist =
     let helper prop = match prop with
-      | E.Object.Property (_, p) ->
+      | E.Object.Property (_, E.Object.Property.Init p) ->
         let open E.Object.Property in
         (match p.key, p.value with
-         | Identifier (_, name), Init (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | Identifier (_, name), (_, e) -> name ^ " : " ^ (string_of_expr e)
          | _ -> failwith "Unsupported expression")
       | _ -> failwith "Unsupported property" in
     String.concat ", " (List.map helper plist) in
@@ -202,7 +136,7 @@ and string_of_expr (expr : Loc.t E.t') =
     let open E.TypeCast in
     (string_of_expr (snd cast.expression)) ^
     " : " ^
-    (string_of_type (snd (snd cast.typeAnnotation)))
+    (string_of_type (snd (snd cast.annot)))
   | E.Array array ->
     let open E.Array in
     "[" ^
@@ -236,7 +170,7 @@ and string_of_stmt (stmt : Loc.t S.t') =
     let body_str = match func.body with
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
       | BodyExpression (_, e) -> string_of_expr e in
-    let ret_type_str = match func.returnType with
+    let ret_type_str = match func.return with
       | Some (_, (_, t)) -> ": " ^ string_of_type t
       | None -> "" in
     "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
@@ -305,8 +239,8 @@ and string_of_type (t : Loc.t T.t') =
       [(string_of_type t1); (string_of_type t2)]
       @ (trest |> (List.map snd) |> (List.map string_of_type)) in
     String.concat " | " t_strlist
-  | T.StringLiteral st -> T.StringLiteral.(st.raw)
-  | T.NumberLiteral nt -> T.NumberLiteral.(nt.raw)
+  | T.StringLiteral st -> Ast.StringLiteral.(st.raw)
+  | T.NumberLiteral nt -> Ast.NumberLiteral.(nt.raw)
   | T.BooleanLiteral bt -> if bt then "true" else "false"
   | T.Function func ->
     let open T.Function in
@@ -316,14 +250,14 @@ and string_of_type (t : Loc.t T.t') =
       let name_str = match param.name with
         | Some (_, id) -> id ^ opt_str ^ " : "
         | None -> "" in
-      name_str ^ (string_of_type (snd param.typeAnnotation)) in
+      name_str ^ (string_of_type (snd param.annot)) in
     let params_str =
       let (_, { T.Function.Params.params; rest = _ }) = func.params in
       params
       |> List.map snd
       |> List.map string_of_param
       |> String.concat ", " in
-    let ret_type_str = (string_of_type (snd func.returnType)) in
+    let ret_type_str = (string_of_type (snd func.return)) in
     "(" ^ params_str ^ ") => " ^ ret_type_str
   | _ -> failwith "[string_of_type] unsupported type"
 
@@ -472,8 +406,7 @@ module Config = struct
 
     (* get all the properties *)
     let prop_list = (List.map (fun p -> match p with
-        | Property (_, prop) ->
-          let k = E.Object.Property.(prop.key) in
+        | Property (_, E.Object.Property.Init { key = k; value = (_, e); _ }) ->
           let k = (match k with
               | E.Object.Property.Literal (_, id) -> Ast.Literal.(match id.value with
                   | String s ->
@@ -484,12 +417,15 @@ module Config = struct
                     s
                   | _ -> failwith "Config key can only be a string")
               | _ -> failwith "Config key can only be a string literal.") in
-          let v = E.Object.Property.(prop.value) in
-          let v = (match v with
-              | E.Object.Property.Init (_, e) -> get_value e
-              | _ -> failwith "Config values can only be expressions.") in
+          let v = get_value e in
           (k, v)
-        | _ -> failwith "Spread properties are not allowed") ast.properties) in
+        | Property (_, E.Object.Property.Get _) ->
+          failwith "Getter properties are not allowed"
+        | Property (_, E.Object.Property.Set _) ->
+          failwith "Setter properties are not allowed"
+        | _ ->
+          failwith "Spread properties are not allowed"
+    ) ast.properties) in
     prop_list
 
   (* Convert a config into an expression ast. Mainly used for printing *)
@@ -508,10 +444,9 @@ module Config = struct
       let open E.Object.Property in
       List.map (fun (k, v) ->
           let key = Identifier (Loc.none, "\"" ^ k ^ "\"") in
-          let value = Init (Loc.none, expr_of_value v) in
-          Property (Loc.none, {key;
+          let value = Loc.none, expr_of_value v in
+          Property (Loc.none, Init {key;
                                value;
-                               _method = false;
                                shorthand = false})) c in
     {properties = prop_list};;
 
@@ -579,6 +514,159 @@ module Config = struct
     load_json_config_string ~filename content;;
 end
 
+(* Metadata for involing flow type checking *)
+let stub_metadata ~root ~checked = { Context.
+  (* local *)
+  checked;
+  munge_underscores = false;
+  (*
+  verbose = Some { Verbose.depth = 2; indent = 2 };
+     *)
+  verbose = None;
+  weak = false;
+  jsx = Options.Jsx_react;
+  strict = true;
+  strict_local = false;
+  (* global *)
+  max_literal_length = 100;
+  enable_const_params = false;
+  enforce_strict_call_arity = true;
+  esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+  esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+  esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
+  esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  facebook_fbt = None;
+  ignore_non_literal_requires = false;
+  max_trace_depth = 0;
+  max_workers = 0;
+  root;
+  strip_root = true;
+  suppress_comments = [];
+  suppress_types = SSet.empty;
+}
+
+(* Invoke flow for type checking *)
+let flow_check (code : string) : string option =
+  if code = "" then
+    None
+  else
+    try
+      let root = Path.dummy_path in
+      let master_sig_cx = Context.make_sig () in
+      let master_cx = Context.make master_sig_cx
+        (stub_metadata ~root ~checked:false)
+        File_key.Builtins
+        Files.lib_module_ref in
+
+      (* Merge builtins *)
+      let builtin_metadata = stub_metadata ~root ~checked:true in
+      let lint_severities = LintSettings.empty_severities in
+      let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
+      let builtins_file_sig = match File_sig.program ~ast:builtins_ast with
+      | Ok file_sig -> file_sig
+      | Error _ -> failwith "error calculating builtins file sig"
+      in
+      let builtins_sig_cx = Context.make_sig () in
+      let builtins_cx = Context.make builtins_sig_cx builtin_metadata
+        File_key.Builtins Files.lib_module_ref in
+      let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
+        ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:builtins_file_sig in
+      let () =
+        let from_t = Context.find_module master_cx Files.lib_module_ref in
+        let to_t = Context.find_module builtins_cx Files.lib_module_ref in
+        Context.merge_into master_sig_cx builtins_sig_cx;
+        Flow_js.flow_t master_cx (from_t, to_t)
+      in
+      let reason = Reason.builtin_reason (Reason.RCustom "module") in
+      let builtin_module = Obj_type.mk master_cx reason in
+      Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
+      Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref] |> ignore;
+
+      (* Merge the input program into the context *)
+      let strict_mode = StrictModeSettings.empty in
+      let stub_docblock = { Docblock.
+                            flow = Docblock.(Some OptIn);
+                            preventMunge = None;
+                            providesModule = None;
+                            isDeclarationFile = false;
+                            jsx = None;
+                          } in
+      let input_ast, _ = Parser_flow.program code in
+      let filename = File_key.SourceFile "/tmp/foo.js" in
+      let file_sig = match File_sig.program ~ast:input_ast with
+      | Ok file_sig -> file_sig
+      | Error _ -> failwith "error calculating implementation file sig"
+      in
+      let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+      let reqs = Merge_js.Reqs.empty in
+      (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
+      let final_cx, _other_cxs = Merge_js.merge_component_strict
+          ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
+          ~get_ast_unsafe:(fun _ -> input_ast)
+          ~get_docblock_unsafe:(fun _ -> stub_docblock)
+          (Nel.one filename) reqs [] master_sig_cx in
+      let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
+          Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
+      in
+      let error_num = Errors.ErrorSet.cardinal errors in
+      if error_num = 0 then
+        None
+      else begin
+
+        (* This is used for pringing errors *)
+        let string_of_errors (json : Hh_json.json) : string =
+          let open Hh_json in
+          let string_of_error (error_json : json) : string =
+            let error = get_object_exn error_json in
+            let msg_helper (msg_json : json) : string =
+              let msg = get_object_exn msg_json in
+              let desc = get_string_exn (List.assoc "descr" msg) in
+              let loc = get_object_exn (List.assoc "loc" msg) in
+              let start =
+                let start_json = get_object_exn (List.assoc "start" loc) in
+                (Printf.sprintf
+                   "line %d\tcolumn %d\toffset %d"
+                   (int_of_string (get_number_exn (List.assoc "line" start_json)))
+                   (int_of_string (get_number_exn (List.assoc "column" start_json)))
+                   (int_of_string (get_number_exn (List.assoc "offset" start_json)))) in
+              let eend =
+                let end_json = get_object_exn (List.assoc "end" loc) in
+                (Printf.sprintf
+                   "line %d\tcolumn %d\toffset %d"
+                   (int_of_string (get_number_exn (List.assoc "line" end_json)))
+                   (int_of_string (get_number_exn (List.assoc "column" end_json)))
+                   (int_of_string (get_number_exn (List.assoc "offset" end_json)))) in
+              Printf.sprintf "Error: %sStart: %s\nEnd: %s\n" desc start eend
+            in
+            String.concat "" (List.map msg_helper (get_array_exn (List.assoc "message" error)))
+          in
+          (List.assoc "errors" (get_object_exn json))
+          |> get_array_exn
+          |> List.map string_of_error
+          |> String.concat "\n"
+        in
+
+        (* Return error message *)
+        let error_msg =
+          let stdin_file = None in
+          let strip_root = None in
+          let profiling = None in
+          let suppressed_errors = [] in
+          let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~profiling ~stdin_file
+              ~suppressed_errors ~errors ~warnings () in
+        (*
+        Printf.printf "%s\n" (Hh_json.json_to_string ~pretty:false res);
+           *)
+          string_of_errors res in
+    (*
+      Printf.printf "'%s'\n" error_msg;
+  Errors.Cli_output.print_errors stdout Errors.Cli_output.default_error_flags None errors warnings ();
+       *)
+        Some error_msg
+      end
+    with _ -> Some "Failed to type check."
 
 let assert_func = "
 // from http://tinyurl.com/y93dykzv
@@ -635,7 +723,6 @@ function assert_type(actual: any, expected: any) {
         }
     }
 }
-
 function check_opt_prop(obj_list : any, actual : any, expected : any) {
     var len = obj_list.length;
     for(var i = 0; i < len; ++i) {
@@ -651,62 +738,48 @@ function check_opt_prop(obj_list : any, actual : any, expected : any) {
 \n\n
 ";;
 
-(* Run a system command with a given code as input *)
-let run_cmd
-    (code : string)
-    (cmd : string)
-    (exit_code_handler : (int -> string -> string option)) : string option =
-  let content = code in
+(* type check a piece of code.
+ * Return true if this code doesn't have type error.
+ *)
+let type_check (code : string) : string option =
+  (Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ code))
+  |> flow_check
+
+let is_typecheck engine_name = engine_name = "union"
+
+(* Run Javascript programs in batch mode *)
+let batch_run (code_list : string list) : (string option) list =
+  (* Wrap the input program into a stand alont scope with try-catch block *)
+  let to_stmt (code : string) : string =
+    Printf.sprintf
+"(function () {
+    try {
+      %s
+      console.log('Done');
+    } catch (_err_) {
+      console.log(_err_.message);
+    }
+})();\n" code in
+
+  (* Split the batch run output into a list of single-program outputs *)
+  let to_msg_list (output : string) : (string option) list =
+    let msg_list = Str.split (Str.regexp "====\n") output in
+    List.map (fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
+
+  (* Convert all programs into a string for batch run *)
+  let progs = List.map to_stmt code_list in
+  let progs_string = String.concat "console.log('====');\n" progs in
+
+  (* run all the programs *)
+  let cmd = "./node_modules/.bin/flow-remove-types" ^ " -a -p | node" in
+  let content = progs_string in
   let ic, oc = Unix.open_process cmd in
   let out_str = Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ content) in
   Printf.fprintf oc "%s" out_str;
   close_out oc;
   let lines = read_all ic in
   close_in ic;
-  let exit_code = match (Unix.close_process (ic, oc)) with
+  let _  = match (Unix.close_process (ic, oc)) with
     | Unix.WEXITED code -> code
     | _ -> failwith "Command exited abnormally." in
-  exit_code_handler exit_code (String.concat "\n" lines);;
-
-(* Exit code handler for flow type checking *)
-let type_check_exit_handler
-    (exit_code : int)
-    (output : string) : string option =
-  if exit_code = 0 then None
-  else
-    let error_type =
-      exit_code
-      |> FlowExitStatus.error_type
-      |> FlowExitStatus.to_string in
-    let msg = error_type ^ ":\n" ^ output ^ "\n" in
-    Some msg;;
-
-(* type check a piece of code.
- * Return true if this code doesn't have type error.
- *
- * We decided to run Flow using shell command, because it is much
- * easier than using the APIs. If the performance starts to hurt,
- * we will change it to using the APIs.
- *)
-let type_check (code : string) : string option =
-  (* Check if we have .flowconfig file *)
-  let cmd = "flow check-contents" in
-  run_cmd code cmd type_check_exit_handler;;
-
-
-(* Exit handler for running the program *)
-let run_exit_handler
-    (exit_code : int)
-    (output : string) : string option =
-  if exit_code = 0 then None
-  else
-    let msg = "Failed to run program:\n" ^ output ^ "\n" in
-    Some msg;;
-
-(* Run the code and see if it has runtime error *)
-let test_code (code : string) : string option =
-  (* Check if we have flow-remove-types *)
-  let exe = "./node_modules/.bin/babel" in
-  run_cmd code (exe ^ " --presets flow | node") run_exit_handler;;
-
-let is_typecheck engine_name = engine_name = "union"
+  String.concat "\n" lines |> to_msg_list

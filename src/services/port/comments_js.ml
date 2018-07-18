@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -134,7 +131,7 @@ and parse_dynamic_type s =
   assert (i = String.length s);
   match ts with
   | [t] -> t
-  | _ -> spf "$Either<%s>" (ts |> List.rev |> String.concat ", ")
+  | _ -> ts |> List.rev |> String.concat " | "
 
 (* if there is a comment whose scope spans the given location,
    return the map with that comment removed, and parsed type annos
@@ -171,16 +168,8 @@ let skip loc = Loc.(
   loc.start.line, loc.start.column, string_of_int n
 )
 
-(* concat_map with an accumulator *)
-let concat_fold f acc items =
-  let acc, lists = List.fold_left (fun (acc, lists) item ->
-    let acc, list = f acc item in
-    acc, list :: lists
-  ) (acc, []) items in
-  acc, List.concat lists
-
 let meta_params params map cmap =
-  concat_fold Ast.Pattern.(fun cmap -> function
+  ListUtils.concat_fold Ast.Pattern.(fun cmap -> function
     | nloc, Identifier { Ast.Pattern.Identifier.name = (_, name); _ } -> (
         match SMap.get name map with
           | Some t -> cmap, [insert_after nloc t]
@@ -228,7 +217,7 @@ and meta_expression_or_spread cmap = Ast.Expression.(function
 
 and meta_fbody cmap loc params body =
   let cmap, tmap = meta_fun cmap loc in
-  concat_fold (fun cmap f -> f cmap) cmap [
+  ListUtils.concat_fold (fun cmap f -> f cmap) cmap [
     meta_params params tmap;
     meta_return body tmap;
     meta_body body
@@ -236,9 +225,9 @@ and meta_fbody cmap loc params body =
 
 and meta_expression cmap = Ast.Expression.(function
   | _, Object { Object.properties } ->
-      concat_fold (fun cmap -> function
-        | Object.Property (loc, {
-            Object.Property.value = Object.Property.Init (_, Function {
+      ListUtils.concat_fold (fun cmap -> function
+        | Object.Property (loc, Object.Property.Init {
+            value = (_, Function {
               Ast.Function.params = (_, { Ast.Function.Params.params; _ }); body; _
             });
             key = Ast.Expression.Object.Property.Identifier _;
@@ -246,20 +235,17 @@ and meta_expression cmap = Ast.Expression.(function
           }) ->
             meta_fbody cmap loc params body
 
-        | Object.Property (_, { Object.Property.
-            value = Object.Property.Init v;
-            _
-          }) ->
-            meta_expression cmap v
+        | Object.Property (_, Object.Property.Init { value; _ }) ->
+            meta_expression cmap value
 
         | _ -> cmap, [] (* TODO? *)
       ) cmap properties
 
   | _, Array { Array.elements } ->
-      concat_fold meta_array_element cmap elements
+      ListUtils.concat_fold meta_array_element cmap elements
 
   | _, Call { Call.arguments; _ } ->
-      concat_fold meta_expression_or_spread cmap arguments
+      ListUtils.concat_fold meta_expression_or_spread cmap arguments
 
   | _, Assignment { Assignment.right; _ } ->
       meta_expression cmap right
@@ -286,14 +272,14 @@ and meta_variable cmap (_, vdecl) = Ast.Statement.VariableDeclaration.(
 
 and meta_statement cmap = Ast.Statement.(function
   | _, VariableDeclaration { VariableDeclaration.declarations; _ } ->
-      concat_fold meta_variable cmap declarations
+      ListUtils.concat_fold meta_variable cmap declarations
 
   | _, Expression { Expression.expression = e; _ } ->
       meta_expression cmap e
 
   | _, ClassDeclaration { Ast.Class.body; _ } ->
       let _, { Ast.Class.Body.body = elements; _ } = body in
-      concat_fold Ast.Class.(fun cmap -> function
+      ListUtils.concat_fold Ast.Class.(fun cmap -> function
         | Body.Method (loc, {
             Method.key = Ast.Expression.Object.Property.Identifier _;
             value = _, { Ast.Function.
@@ -325,7 +311,7 @@ and meta_body body cmap = Ast.Statement.(
         meta_expression cmap expr
 )
 
-and meta_statements cmap = concat_fold meta_statement cmap
+and meta_statements cmap = ListUtils.concat_fold meta_statement cmap
 
 let meta_program (loc, statements, comments) =
   let cmap = make_comment_map loc comments in

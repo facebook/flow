@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -12,7 +11,7 @@
 (*****************************************************************************)
 (* Adds a new file or directory to the environment *)
 (*****************************************************************************)
-open Core
+open Hh_core
 open DfindEnv
 open DfindMaybe
 
@@ -103,7 +102,7 @@ let rec add_file links env path =
 and add_watch links env path =
   call (add_fsnotify_watch env) path >>= function
   | None -> return ()
-  | Some watch -> add_file links env path
+  | Some _watch -> add_file links env path
 
 and add_fsnotify_watch env path =
   return (Fsnotify.add_watch env.fsnotify path)

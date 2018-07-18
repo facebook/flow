@@ -1,11 +1,8 @@
-(*
+(**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Ast
@@ -59,14 +56,7 @@ end = struct
   }
 
   let create lex_env mode =
-    let lexbuf = Lex_env.lexbuf lex_env in
-    (* copy all the mutable things so that we have a distinct lexing environment
-     * that does not interfere with ordinary lexer operations *)
-    (* lex_buffer has type bytes, which is itself mutable, but the lexer
-     * promises not to change it so a shallow copy should be fine *)
-    (* I don't know how to do a copy without an update *)
-    let lexbuf = lexbuf |> Obj.repr |> Obj.dup |> Obj.obj in
-    let lex_env = Lex_env.with_lexbuf ~lexbuf lex_env in
+    let lex_env = Lex_env.clone lex_env in
     {
       la_results = [||];
       la_num_lexed = 0;
@@ -107,15 +97,7 @@ end = struct
       | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
       | Lex_mode.REGEXP -> Lexer.regexp lex_env
     in
-    let cloned_env =
-      let lexbuf =
-        Lex_env.lexbuf lex_env
-        |> Obj.repr
-        |> Obj.dup
-        |> Obj.obj
-      in
-      Lex_env.with_lexbuf ~lexbuf lex_env
-    in
+    let cloned_env = Lex_env.clone lex_env in
     t.la_lex_env <- lex_env;
     t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
     t.la_num_lexed <- t.la_num_lexed + 1
@@ -160,6 +142,8 @@ type parse_options = {
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
+  esproposal_optional_chaining: bool;
+  esproposal_nullish_coalescing: bool;
   types: bool;
   use_strict: bool;
 }
@@ -168,6 +152,8 @@ let default_parse_options = {
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
   esproposal_export_star_as = false;
+  esproposal_optional_chaining = false;
+  esproposal_nullish_coalescing = false;
   types = true;
   use_strict = false;
 }
@@ -290,8 +276,6 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-let comment_list env =
-  List.iter (fun c -> env.comments := c :: !(env.comments))
 let record_export env (loc, export_name) =
   if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
@@ -340,7 +324,7 @@ let add_used_private env name loc =
   | (declared, used)::xs -> env.privates := ((declared, (name, loc) :: used) :: xs)
 
 (* lookahead: *)
-let lookahead ?(i=0) env =
+let lookahead ~i env =
   assert (i < maximum_lookahead);
   Lookahead.peek !(env.lookahead) i
 
@@ -455,8 +439,9 @@ let is_reserved str_val =
 
 let is_reserved_type str_val =
   match str_val with
-  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null"
-  | "number" | "static" | "string" | "true" | "typeof" | "void" -> true
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
+  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends"
+    -> true
   | _ -> false
 
 (* Answer questions about what comes next *)
@@ -464,11 +449,17 @@ module Peek = struct
   open Loc
   open Token
 
-  let token ?(i=0) env = Lex_result.token (lookahead ~i env)
-  let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
-  let errors ?(i=0) env = Lex_result.errors (lookahead ~i env)
-  let comments ?(i=0) env = Lex_result.comments (lookahead ~i env)
-  let lex_env ?(i=0) env = Lookahead.lex_env !(env.lookahead) i
+  let ith_token ~i env = Lex_result.token (lookahead ~i env)
+  let ith_loc ~i env = Lex_result.loc (lookahead ~i env)
+  let ith_errors ~i env = Lex_result.errors (lookahead ~i env)
+  let ith_comments ~i env = Lex_result.comments (lookahead ~i env)
+  let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
+
+  let token env = ith_token ~i:0 env
+  let loc env = ith_loc ~i:0 env
+  let errors env = ith_errors ~i:0 env
+  let comments env = ith_comments ~i:0 env
+  let lex_env env = ith_lex_env ~i:0 env
 
   (* True if there is a line terminator before the next token *)
   let is_line_terminator env =
@@ -483,10 +474,8 @@ module Peek = struct
     | T_SEMICOLON -> false
     | _ -> is_line_terminator env
 
-  (* This returns true if the next token is identifier-ish (even if it is an
-   * error) *)
-  let is_identifier ?(i=0) env =
-    match token ~i env with
+  let ith_is_identifier ~i env =
+    match ith_token ~i env with
     | t when token_is_strict_reserved t -> true
     | t when token_is_future_reserved t -> true
     | t when token_is_restricted t -> true
@@ -501,18 +490,185 @@ module Peek = struct
     | T_IDENTIFIER _ -> true
     | _ -> false
 
-  let is_literal_property_name ?(i=0) env =
-    is_identifier ~i env || match token ~i env with
-    | T_STRING _
-    | T_NUMBER _ -> true
-    | _ -> false
+  let ith_is_type_identifier ~i env =
+    match lex_mode env with
+    | Lex_mode.TYPE ->
+      begin match ith_token ~i env with
+      | T_IDENTIFIER _ -> true
+      | _ -> false
+      end
+    | Lex_mode.NORMAL ->
+      (* Sometimes we peek at type identifiers while in normal lex mode. For
+         example, when deciding whether a `type` token is an identifier or the
+         start of a type declaration, based on whether the following token
+         `is_type_identifier`. *)
+      begin match ith_token ~i env with
+      | T_IDENTIFIER { raw; _ } when is_reserved_type raw -> false
 
-  let is_function ?(i=0) env =
-    token ~i env = T_FUNCTION ||
-    (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
+      (* reserved type identifiers, but these don't appear in NORMAL mode *)
+      | T_ANY_TYPE
+      | T_MIXED_TYPE
+      | T_EMPTY_TYPE
+      | T_NUMBER_TYPE
+      | T_STRING_TYPE
+      | T_VOID_TYPE
+      | T_BOOLEAN_TYPE _
+      | T_NUMBER_SINGLETON_TYPE _
 
-  let is_class ?(i=0) env =
-    match token ~i env with
+      (* identifier-ish *)
+      | T_ASYNC
+      | T_AWAIT
+      | T_BREAK
+      | T_CASE
+      | T_CATCH
+      | T_CLASS
+      | T_CONST
+      | T_CONTINUE
+      | T_DEBUGGER
+      | T_DECLARE
+      | T_DEFAULT
+      | T_DELETE
+      | T_DO
+      | T_ELSE
+      | T_ENUM
+      | T_EXPORT
+      | T_EXTENDS
+      | T_FALSE
+      | T_FINALLY
+      | T_FOR
+      | T_FUNCTION
+      | T_IDENTIFIER _
+      | T_IF
+      | T_IMPLEMENTS
+      | T_IMPORT
+      | T_IN
+      | T_INSTANCEOF
+      | T_INTERFACE
+      | T_LET
+      | T_NEW
+      | T_NULL
+      | T_OF
+      | T_OPAQUE
+      | T_PACKAGE
+      | T_PRIVATE
+      | T_PROTECTED
+      | T_PUBLIC
+      | T_RETURN
+      | T_SUPER
+      | T_SWITCH
+      | T_THIS
+      | T_THROW
+      | T_TRUE
+      | T_TRY
+      | T_TYPE
+      | T_VAR
+      | T_WHILE
+      | T_WITH
+      | T_YIELD -> true
+
+      (* identifier-ish, but not valid types *)
+      | T_STATIC
+      | T_TYPEOF
+      | T_VOID
+        -> false
+
+      (* syntax *)
+      | T_LCURLY
+      | T_RCURLY
+      | T_LCURLYBAR
+      | T_RCURLYBAR
+      | T_LPAREN
+      | T_RPAREN
+      | T_LBRACKET
+      | T_RBRACKET
+      | T_SEMICOLON
+      | T_COMMA
+      | T_PERIOD
+      | T_ARROW
+      | T_ELLIPSIS
+      | T_AT
+      | T_POUND
+      | T_CHECKS
+      | T_RSHIFT3_ASSIGN
+      | T_RSHIFT_ASSIGN
+      | T_LSHIFT_ASSIGN
+      | T_BIT_XOR_ASSIGN
+      | T_BIT_OR_ASSIGN
+      | T_BIT_AND_ASSIGN
+      | T_MOD_ASSIGN
+      | T_DIV_ASSIGN
+      | T_MULT_ASSIGN
+      | T_EXP_ASSIGN
+      | T_MINUS_ASSIGN
+      | T_PLUS_ASSIGN
+      | T_ASSIGN
+      | T_PLING_PERIOD
+      | T_PLING_PLING
+      | T_PLING
+      | T_COLON
+      | T_OR
+      | T_AND
+      | T_BIT_OR
+      | T_BIT_XOR
+      | T_BIT_AND
+      | T_EQUAL
+      | T_NOT_EQUAL
+      | T_STRICT_EQUAL
+      | T_STRICT_NOT_EQUAL
+      | T_LESS_THAN_EQUAL
+      | T_GREATER_THAN_EQUAL
+      | T_LESS_THAN
+      | T_GREATER_THAN
+      | T_LSHIFT
+      | T_RSHIFT
+      | T_RSHIFT3
+      | T_PLUS
+      | T_MINUS
+      | T_DIV
+      | T_MULT
+      | T_EXP
+      | T_MOD
+      | T_NOT
+      | T_BIT_NOT
+      | T_INCR
+      | T_DECR
+      | T_EOF
+        -> false
+
+      (* literals *)
+      | T_NUMBER _
+      | T_STRING _
+      | T_TEMPLATE_PART _
+      | T_REGEXP _
+
+      (* misc that shouldn't appear in NORMAL mode *)
+      | T_JSX_IDENTIFIER _
+      | T_JSX_TEXT _
+      | T_ERROR _
+        -> false
+      end
+    | Lex_mode.JSX_TAG
+    | Lex_mode.JSX_CHILD
+    | Lex_mode.TEMPLATE
+    | Lex_mode.REGEXP -> false
+
+  let ith_is_identifier_name ~i env =
+    ith_is_identifier ~i env || ith_is_type_identifier ~i env
+
+  (* This returns true if the next token is identifier-ish (even if it is an
+     error) *)
+  let is_identifier env = ith_is_identifier ~i:0 env
+
+  let is_identifier_name env = ith_is_identifier_name ~i:0 env
+
+  let is_type_identifier env = ith_is_type_identifier ~i:0 env
+
+  let is_function env =
+    token env = T_FUNCTION ||
+    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION)
+
+  let is_class env =
+    match token env with
     | T_CLASS
     | T_AT -> true
     | _ -> false
@@ -589,8 +745,8 @@ module Eat = struct
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
-    comment_list env (Peek.comments env);
-    env.last_lex_result := Some (lookahead env);
+    env.comments := List.rev_append (Peek.comments env) !(env.comments);
+    env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
 
@@ -710,4 +866,9 @@ module Try = struct
     let saved_state = save_state env in
     try success env saved_state (parse env)
     with Rollback -> rollback_state env saved_state
+
+  let or_else env ~fallback parse =
+    match to_parse env parse with
+    | ParsedSuccessfully result -> result
+    | FailedToParse -> fallback
 end

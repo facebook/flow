@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
-ruby '2.3.4'
+ruby '~> 2.3.0'
 
-gem 'jekyll'
+gem 'jekyll', '~>3.2.1'
 gem 'jekyll-redirect-from'
 gem 'jekyll-paginate'
 gem 'crowdin-cli'
@@ -10,5 +10,5 @@ gem 'rouge', '<2' # rouge2 will require changes in _plugins/jekyll_ext.rb
 gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 gem 'jekyll-assets', '~>2.2'
 gem 'sprockets-es6'
-gem 's3_website'
+gem 's3_website', '~>3.4.0'
 gem 'octokit'
