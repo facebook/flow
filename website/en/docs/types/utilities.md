@@ -18,6 +18,7 @@ Table of contents:
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F>`](#toc-call)
 - [`Class<T>`](#toc-class)
+- [`$Shape<T>`](#toc-shape)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -561,6 +562,38 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 }
 (makeParamStore(ParamStore, 1): ParamStore<number>);
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
+```
+
+## `$Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+Objects of type `$Shape<T>` may not contain required properties of `T` and cannot contain properties not described in `T`. For example:
+
+```js
+/* @flow */
+
+type Person = {
+  name: string,
+  age: number,
+  parent: Person
+};
+
+({}: $Shape<Person>);
+
+({
+  name: 'Alex',
+  age: 20,
+}: $Shape<Person>);
+
+({
+  name: 'Alex',
+  surname: 'Black' // Error: surename is not described in Person
+}: $Shape<Person>);
+
+({
+  name: 'Alex',
+  age: '20', // Error: `20` is not a number
+}: $Shape<Person>);
+
 ```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
