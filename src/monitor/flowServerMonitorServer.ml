@@ -344,8 +344,11 @@ end = struct
     | FileWatcherStatus.Watchman ->
       new FileWatcher.watchman monitor_options
     in
+    Logger.debug "Initializing file watcher (%s)" watcher#name;
+    watcher#start_init;
+    let file_watcher_pid = watcher#getpid in
     let handle = Server.daemonize
-      ~log_file ~shared_mem_config ~argv server_options in
+      ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =
       ic
@@ -406,8 +409,7 @@ end = struct
 
     (* This may block for quite awhile. No messages will be sent to the server process until the
      * file watcher is up and running *)
-    Logger.debug "Initializing file watcher (%s)" watcher#name;
-    let%lwt () = watcher#init in
+    let%lwt () = watcher#wait_for_init in
     Logger.debug "File watcher (%s) ready!" watcher#name;
     let file_watcher_exit_thread =
       let%lwt status = watcher#waitpid in handle_file_watcher_exit watcher status

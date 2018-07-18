@@ -20,5 +20,6 @@ val daemonize :
   shared_mem_config:SharedMem_js.config ->
   argv: string array ->
   options:Options.t ->
+  file_watcher_pid: int option ->
   entry_point ->
   (MonitorProt.server_to_monitor_message, MonitorProt.monitor_to_server_message) Daemon.handle
