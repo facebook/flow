@@ -854,6 +854,54 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
     end
 
+  | LspToServer (RequestMessage (id, RenameRequest params), metadata) ->
+    let env = ref env in
+    let { Rename.textDocument; position; newName } = params in
+    let file_input = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client in
+    let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
+    let refactor_variant = ServerProt.Request.RENAME newName in
+    let%lwt result =
+      Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+    in
+    let edits_to_response (edits: (Loc.t * string) list) =
+      (* Extract the path from each edit and convert into a map from file to edits for that file *)
+      let file_to_edits: ((Loc.t * string) list SMap.t, string) result =
+        List.fold_left begin fun map edit ->
+          map >>= begin fun map ->
+            let (loc, _) = edit in
+            let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
+            uri >>| begin fun uri ->
+              let lst = Option.value ~default:[] (SMap.get uri map) in
+              (* This reverses the list *)
+              SMap.add uri (edit::lst) map
+            end
+          end
+        end (Ok SMap.empty) edits
+        (* Reverse the lists to restore the original order *)
+        >>| SMap.map (List.rev)
+      in
+      (* Convert all of the edits to LSP edits *)
+      let file_to_textedits: (TextEdit.t list SMap.t, string) result =
+        file_to_edits >>| SMap.map (List.map Flow_lsp_conversions.flow_edit_to_textedit)
+      in
+      let workspace_edit: (WorkspaceEdit.t, string) result =
+        file_to_textedits >>| fun file_to_textedits ->
+        { WorkspaceEdit.changes = file_to_textedits }
+      in
+      match workspace_edit with
+        | Ok x ->
+          let response = ResponseMessage (id, RenameResult x) in
+          LspResponse (Ok (!env, Some response, metadata))
+        | Error reason ->
+          LspResponse (Error (!env, with_error metadata ~reason))
+    in
+    Lwt.return begin match result with
+      | Ok (Some edits) -> edits_to_response edits
+      | Ok None -> edits_to_response []
+      | Error reason ->
+        LspResponse (Error (!env, with_error metadata ~reason))
+    end
+
   | LspToServer (RequestMessage (id, RageRequest), metadata) ->
     let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
     let items = [] in
