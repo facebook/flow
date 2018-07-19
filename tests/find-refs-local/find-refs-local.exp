@@ -1509,3 +1509,100 @@ Idx:
     }
   ]
 }
+Unions:
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":31},
+      "end":{"line":4,"column":5,"offset":34}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":3,"offset":84},
+      "end":{"line":7,"column":5,"offset":87}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":9,"offset":277},
+      "end":{"line":17,"column":11,"offset":280}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":16,"offset":307},
+      "end":{"line":21,"column":18,"offset":310}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":29,"offset":128},
+      "end":{"line":10,"column":31,"offset":131}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":9,"offset":277},
+      "end":{"line":17,"column":11,"offset":280}
+    }
+  ]
+}
+{
+  "kind":"symbol-found",
+  "name":"bar",
+  "locs":[
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":4,"column":3,"offset":31},
+      "end":{"line":4,"column":5,"offset":34}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":3,"offset":84},
+      "end":{"line":7,"column":5,"offset":87}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":13,"offset":112},
+      "end":{"line":10,"column":15,"offset":115}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":10,"column":29,"offset":128},
+      "end":{"line":10,"column":31,"offset":131}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":14,"column":19,"offset":211},
+      "end":{"line":14,"column":21,"offset":214}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":17,"column":9,"offset":277},
+      "end":{"line":17,"column":11,"offset":280}
+    },
+    {
+      "source":"unions.js",
+      "type":"SourceFile",
+      "start":{"line":21,"column":16,"offset":307},
+      "end":{"line":21,"column":18,"offset":310}
+    }
+  ]
+}

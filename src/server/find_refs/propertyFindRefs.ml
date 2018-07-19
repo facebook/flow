@@ -255,6 +255,7 @@ type def_loc =
   | FoundClass of Loc.t Nel.t
   (* We found an object property. *)
   | FoundObject of Loc.t
+  | FoundUnion of def_loc Nel.t
   (* This means we resolved the receiver type but did not find the definition. If this happens
    * there must be a type error (which may be suppresssed) *)
   | NoDefFound
@@ -285,9 +286,12 @@ let debug_string_of_def_info = function
   | CJSExport loc ->
     spf "CJSExport (%s)" (Loc.to_string loc)
 
-let debug_string_of_def_loc = function
+let rec debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
   | FoundObject loc -> spf "FoundObject (%s)" (Loc.to_string loc)
+  | FoundUnion def_locs ->
+    Nel.to_list def_locs |> List.map debug_string_of_def_loc |> String.concat ", "
+    |> spf "FoundUnion (%s)"
   | NoDefFound -> "NoDefFound"
   | UnsupportedType -> "UnsupportedType"
   | AnyType -> "AnyType"
@@ -343,6 +347,7 @@ and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, stri
             in
             Ok (FoundClass lst)
         | FoundObject _ -> Error "A superclass should be a class, not an object"
+        | FoundUnion _ -> Error "A superclass should be a class, not a union"
         (* If the superclass does not have a definition for this method, or it is for some reason
          * not a class type, or we don't know its type, just return the location we already know
          * about. *)
@@ -362,6 +367,20 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
           | None -> NoDefFound
           | Some loc -> FoundObject loc
         end
+    | Success (DefT (_, UnionT rep)) ->
+        let union_members =
+          UnionRep.members rep
+          |> List.map (fun member -> extract_def_loc cx member name)
+          |> Result.all
+        in
+        union_members
+        >>= begin fun members ->
+          Nel.of_list members
+          |> Result.of_option ~error:"Union should have at least one member"
+        end
+        >>| begin fun members_nel ->
+          FoundUnion members_nel
+        end
     | Success _
     | FailureNullishType
     | FailureUnhandledType _ ->
@@ -371,24 +390,30 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
 
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
 let type_matches_locs cx ty prop_def_info name =
-  extract_def_loc cx ty name >>| function
-    | FoundClass ty_def_locs ->
-      prop_def_info |> Nel.exists begin function
-        | Object _ -> false
-        | Class loc ->
-          (* Only take the first extracted def loc -- that is, the one for the actual definition
-           * and not overridden implementations, and compare it to the list of def locs we are
-           * interested in *)
-          loc = Nel.hd ty_def_locs
-      end
-    | FoundObject loc ->
-      prop_def_info |> Nel.exists begin function
-      | Class _ -> false
-      | Object def_loc -> loc = def_loc
-      end
-    (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
-     * are references or not. For now we'll leave them out. *)
-    | NoDefFound | UnsupportedType | AnyType -> false
+  let rec def_loc_matches_locs = function
+  | FoundClass ty_def_locs ->
+    prop_def_info |> Nel.exists begin function
+      | Object _ -> false
+      | Class loc ->
+        (* Only take the first extracted def loc -- that is, the one for the actual definition
+         * and not overridden implementations, and compare it to the list of def locs we are
+         * interested in *)
+        loc = Nel.hd ty_def_locs
+    end
+  | FoundObject loc ->
+    prop_def_info |> Nel.exists begin function
+    | Class _ -> false
+    | Object def_loc -> loc = def_loc
+    end
+  | FoundUnion def_locs ->
+    def_locs
+    |> Nel.map def_loc_matches_locs
+    |> Nel.fold_left ( || ) false
+  (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
+   * are references or not. For now we'll leave them out. *)
+  | NoDefFound | UnsupportedType | AnyType -> false
+  in
+  extract_def_loc cx ty name >>| def_loc_matches_locs
 
 (* Takes the file key where the module reference appeared, as well as the module reference, and
  * returns the file name for the module that the module reference refers to. *)
@@ -612,6 +637,7 @@ let find_related_defs_in_file options name file =
       |> Nel.to_list
       |> List.map (fun class_loc -> (Class class_loc, Object obj_loc))
     | _ -> []
+    (* TODO union types *)
     end
   in
   let related_types: (Type.t * Type.t) list ref = ref [] in
@@ -723,12 +749,19 @@ let def_info_of_typecheck_results cx props_access_info =
     Nel.map (fun loc -> Class loc) locs
   in
   let def_info_of_type name ty =
-    extract_def_loc cx ty name >>| function
-      | FoundClass locs -> Some (def_info_of_class_member_locs locs)
-      | FoundObject loc -> Some (Nel.one (Object loc))
-      | NoDefFound
-      | UnsupportedType
-      | AnyType -> None
+    let rec def_info_of_def_loc = function
+    | FoundClass locs -> Some (def_info_of_class_member_locs locs)
+    | FoundObject loc -> Some (Nel.one (Object loc))
+    | FoundUnion def_locs ->
+      def_locs
+      |> Nel.map def_info_of_def_loc
+      |> Nel.cat_maybes
+      |> Option.map ~f:Nel.concat
+    | NoDefFound
+    | UnsupportedType
+    | AnyType -> None
+    in
+    extract_def_loc cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
     | None -> Ok None
@@ -746,6 +779,7 @@ let def_info_of_typecheck_results cx props_access_info =
           extract_instancet cx ty >>= fun ty ->
           begin extract_def_loc_resolved cx ty name >>= function
             | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
+            | FoundUnion _
             | FoundObject _ -> Error "Expected to extract class def info from a class"
             | _ -> Error "Unexpectedly failed to extract definition from known type"
           end
