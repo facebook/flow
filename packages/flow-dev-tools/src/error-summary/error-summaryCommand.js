@@ -12,6 +12,8 @@ export type Args = {
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
+  messageFilter: string,
+  codeFilter: string,
 };
 
 export default class ErrorSummaryCommand extends Base<Args> {
@@ -23,6 +25,8 @@ export default class ErrorSummaryCommand extends Base<Args> {
       bin: findFlowBin(argv.bin),
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
+      messageFilter: argv.messageFilter,
+      codeFilter: argv.codeFilter,
     };
   }
 
@@ -42,6 +46,22 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
   }
 
   static getFlags() {
-    return [commonFlags.bin, commonFlags.errorCheckCommand];
+    return [
+      commonFlags.bin,
+      commonFlags.errorCheckCommand,
+      {
+        type: 'string',
+        name: 'messageFilter',
+        argName: '<regex>',
+        description: 'Regex used to filter the error messages into the summary',
+      },
+      {
+        type: 'string',
+        name: 'codeFilter',
+        argName: '<regex>',
+        description:
+          'Regex used to filter the error blame code into the summary',
+      },
+    ];
   }
 }

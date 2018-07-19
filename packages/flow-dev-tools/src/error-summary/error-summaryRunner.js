@@ -12,13 +12,21 @@ export default (async function(args: Args): Promise<void> {
     args.root,
   );
 
+  var message_filter = new RegExp(args.messageFilter);
+  var code_filter = new RegExp(args.codeFilter);
   var error_summary = {};
   flow_result.errors.forEach(error =>
     error.message.forEach(err => {
-      if (err.descr in error_summary) {
-        error_summary[err.descr] = error_summary[err.descr] + 1;
-      } else {
-        error_summary[err.descr] = 1;
+      if (
+        (args.messageFilter === undefined || message_filter.test(err.descr)) &&
+        (args.codeFilter === undefined ||
+          (err.context != null && code_filter.test(err.context)))
+      ) {
+        if (err.descr in error_summary) {
+          error_summary[err.descr] = error_summary[err.descr] + 1;
+        } else {
+          error_summary[err.descr] = 1;
+        }
       }
     }),
   );
