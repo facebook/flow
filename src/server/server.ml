@@ -22,7 +22,7 @@ let sample_init_memory profiling =
     "hash_table.slots", hash_stats.slots;
   ] in
   List.iter (fun (metric, value) ->
-    Profiling_js.sample_memory
+    Profiling_js.legacy_sample_memory
       ~metric:("init_done." ^ metric)
       ~value:(float_of_int value)
        profiling

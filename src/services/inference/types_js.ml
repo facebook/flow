@@ -1121,7 +1121,9 @@ let recheck ~options ~workers ~updates env ~force_focus =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders)) =
     Profiling_js.with_profiling_lwt ~should_print_summary (fun profiling ->
-      recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focus
+      SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
+        recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focus
+      )
     )
   in
   (** TODO: update log to reflect current terminology **)
