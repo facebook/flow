@@ -85,12 +85,21 @@ let check_locs locs lint_kind suppressions severity_cover unused =
 
 let check err suppressions severity_cover unused =
   let locs = Errors.locs_of_error err in
-  let lint_kind =
-    let open Errors in
-    match kind_of_error err with
-      | LintError lint_kind -> Some lint_kind
-      | _ -> None
+  (* Ignore lint errors which were never enabled in the first place. *)
+  let lint_kind, ignore =
+    match Errors.kind_of_error err with
+      | Errors.LintError kind ->
+        let severity, is_explicit = List.fold_left (fun (s, e) loc ->
+          let lint_settings = ExactCover.find loc severity_cover in
+          let s' = LintSettings.get_value kind lint_settings in
+          let e' = LintSettings.is_explicit kind lint_settings in
+          (severity_min s s', e || e')
+        ) (Err, false) locs in
+        let ignore = severity = Off && not is_explicit in
+        Some kind, ignore
+      | _ -> None, false
   in
+  if ignore then None else
   let result, used, unused =
     check_locs locs lint_kind suppressions severity_cover unused
   in
@@ -101,11 +110,13 @@ let check err suppressions severity_cover unused =
       String_utils.is_substring "/node_modules/" (File_key.to_string filename))
   in
   let result = match Errors.kind_of_error err with
-    | Errors.RecursionLimitError -> Err
+    | Errors.RecursionLimitError ->
+      (* TODO: any related suppressions should not be considered used *)
+      Err
     | _ -> if (is_in_dependency && (Option.is_some lint_kind))
-      then Off
+      then Off (* TODO: this should not show up with --include-suppressed *)
       else result
-  in (result, used, unused)
+  in Some (result, used, unused)
 
 (* Gets the locations of the suppression comments that are yet unused *)
 let unused { suppressions; lint_suppressions } =
@@ -124,29 +135,14 @@ let union_suppressions suppressions =
     suppressions
     empty
 
-let filter_suppressed_errors =
-  let is_explicit error severity_cover =
-    match Errors.kind_of_error error with
-      | Errors.LintError kind ->
-        let locs = Errors.locs_of_error error in
-        List.fold_left
-          (fun acc loc -> acc || ExactCover.is_explicit kind loc severity_cover)
-          false locs
-      | _ -> true
-  in
-
-  fun suppressions severity_cover errors ~unused ->
-    (* Filter out suppressed errors. also track which suppressions are used. *)
-    Errors.ErrorSet.fold (fun error (errors, warnings, suppressed, unused) ->
-      let severity, used, unused = check error suppressions severity_cover unused in
-      let errors, warnings, suppressed = match severity with
-        | Off ->
-          (* Don't treat a flow lint as suppressed if it was never enabled in the first place. *)
-          if is_explicit error severity_cover
-          then errors, warnings, (error, used)::suppressed
-          else errors, warnings, suppressed
-        | Warn -> errors, Errors.ErrorSet.add error warnings, suppressed
-        | Err -> Errors.ErrorSet.add error errors, warnings, suppressed
-      in
-      errors, warnings, suppressed, unused
-    ) errors (Errors.ErrorSet.empty, Errors.ErrorSet.empty, [], unused)
+let filter_suppressed_errors suppressions severity_cover errors ~unused =
+  (* Filter out suppressed errors. also track which suppressions are used. *)
+  Errors.ErrorSet.fold (fun error ((errors, warnings, suppressed, unused) as acc) ->
+    match check error suppressions severity_cover unused with
+    | None -> acc
+    | Some (severity, used, unused) ->
+      match severity with
+      | Off -> errors, warnings, (error, used)::suppressed, unused
+      | Warn -> errors, Errors.ErrorSet.add error warnings, suppressed, unused
+      | Err -> Errors.ErrorSet.add error errors, warnings, suppressed, unused
+  ) errors (Errors.ErrorSet.empty, Errors.ErrorSet.empty, [], unused)
