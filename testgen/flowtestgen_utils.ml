@@ -607,8 +607,10 @@ let flow_check (code : string) : string option =
           ~get_ast_unsafe:(fun _ -> input_ast)
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
+      let suppressions = Error_suppressions.empty in
       let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-          Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
+          suppressions (ExactCover.default_file_cover filename) (Context.errors final_cx)
+          ~unused:suppressions
       in
       let error_num = Errors.ErrorSet.cardinal errors in
       if error_num = 0 then

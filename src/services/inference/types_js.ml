@@ -347,7 +347,9 @@ let typecheck
             let supps_acc = Error_suppressions.union supps_acc supps in
             let lints_acc = ExactCover.union lints_acc lints in
             (* Filter errors and warnings based on suppressions we've seen so far. *)
-            let errs, warns, _, _ = filter supps_acc lints_acc errs_and_warns in
+            let errs, warns, _, _ = filter supps_acc lints_acc errs_and_warns
+              ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
+            in
             (* Only add errors we haven't seen before. *)
             let errs_acc = ErrorSet.fold (fun err acc ->
               if ErrorSet.mem err !curr_errors
@@ -575,7 +577,9 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
 
       (* Filter out suppressed errors *)
       let errors, warnings, _, _ =
-        Error_suppressions.filter_suppressed_errors suppressions severity_cover errors in
+        Error_suppressions.filter_suppressed_errors suppressions severity_cover errors
+          ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
+      in
 
       let warnings = if Options.should_include_warnings options
         then warnings

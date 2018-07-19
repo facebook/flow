@@ -331,8 +331,8 @@ let add_error_suppression cx loc =
     Error_suppressions.add loc cx.sig_cx.error_suppressions
 let add_severity_cover cx severity_cover =
   cx.sig_cx.severity_cover <- ExactCover.union severity_cover cx.sig_cx.severity_cover
-let add_unused_lint_suppressions cx suppressions = cx.sig_cx.error_suppressions <-
-  Error_suppressions.add_unused_lint_suppressions suppressions cx.sig_cx.error_suppressions
+let add_lint_suppressions cx suppressions = cx.sig_cx.error_suppressions <-
+  Error_suppressions.add_lint_suppressions suppressions cx.sig_cx.error_suppressions
 let add_import_stmt cx stmt =
   cx.import_stmts <- stmt::cx.import_stmts
 let add_imported_t cx name t =

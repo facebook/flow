@@ -129,7 +129,7 @@ val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_severity_cover: t -> ExactCover.lint_severity_cover -> unit
-val add_unused_lint_suppressions: t -> LocSet.t -> unit
+val add_lint_suppressions: t -> LocSet.t -> unit
 val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_require: t -> Loc.t -> Type.t -> unit
