@@ -76,4 +76,9 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
   end;
+  "new" >:: begin fun ctxt ->
+    let source = "new rename()" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
+  end;
 ]

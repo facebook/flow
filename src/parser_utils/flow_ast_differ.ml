@@ -230,6 +230,8 @@ and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
       binary b1 b2
     | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
       Some (identifier id1 id2)
+    | (_, New new1), (_, New new2) ->
+      new_ new1 new2
     | _, _ ->
       None
   in
@@ -248,3 +250,13 @@ and binary (b1: Loc.t Ast.Expression.Binary.t) (b2: Loc.t Ast.Expression.Binary.
 and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
   let (old_loc, _) = id1 in
   [(old_loc, Replace (Identifier id1, Identifier id2))]
+
+and new_ (new1: Loc.t Ast.Expression.New.t) (new2: Loc.t Ast.Expression.New.t): node change list option =
+  let open Ast.Expression.New in
+  let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
+  let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
+  if targs1 != targs2 || arguments1 != arguments2 then
+    (* TODO(nmote) recurse into targs and arguments *)
+    None
+  else
+    Some (diff_if_changed expression callee1 callee2)
