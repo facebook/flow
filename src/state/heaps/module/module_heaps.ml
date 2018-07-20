@@ -22,6 +22,45 @@ let get_file_unsafe ~audit m =
   | None -> failwith
       (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
 
+(* Subset of a file's context, with the important distinction that module
+   references in the file have been resolved to module names. *)
+(** TODO [perf] Make resolved_requires tighter. For info:
+    (1) checked? We know that requires and phantom dependents for unchecked
+    files are empty.
+
+    (2) parsed? We only care about the module provided by an unparsed file, but
+    that's probably guessable.
+**)
+type resolved_requires = {
+  resolved_modules: Modulename.t SMap.t; (* map from module references in file
+                                            to module names they resolve to *)
+  phantom_dependents: SSet.t; (* set of paths that were looked up but not found
+                                 when resolving module references in the file:
+                                 when the paths come into existence, the module
+                                 references need to be re-resolved. *)
+}
+
+
+(****************** shared dependency map *********************)
+
+(* map from filename to resolved requires *)
+module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
+  type t = resolved_requires
+  let prefix = Prefix.make()
+  let description = "ResolvedRequires"
+  let use_sqlite_fallback () = false
+end)
+
+let add_resolved_requires = Expensive.wrap ResolvedRequiresHeap.add
+let remove_batch_resolved_requires = ResolvedRequiresHeap.remove_batch
+
+let get_resolved_requires_unsafe = Expensive.wrap (fun f ->
+  match ResolvedRequiresHeap.get f with
+  | Some resolved_requires -> resolved_requires
+  | None -> failwith
+      (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
+)
+
 module Commit_modules_mutator: sig
   type t
   val create: Transaction.t -> is_init:bool -> t
@@ -85,4 +124,8 @@ end = struct
       ~neutral: ()
       ~merge: (fun () () -> ())
       ~next: (MultiWorkerLwt.next workers to_replace)
+end
+
+module FromSavedState = struct
+  let add_resolved_requires = ResolvedRequiresHeap.add
 end

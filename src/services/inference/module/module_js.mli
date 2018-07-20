@@ -7,10 +7,6 @@
 
 open Utils_js
 
-type resolved_requires = {
-  resolved_modules: Modulename.t SMap.t;
-  phantom_dependents: SSet.t;
-}
 
 type info = {
   module_name: Modulename.t;
@@ -48,9 +44,6 @@ val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t
 
 val is_tracked_file: File_key.t -> bool
-
-(* given a filename, returns resolved requires. unsafe *)
-val get_resolved_requires_unsafe: (File_key.t -> resolved_requires) Expensive.t
 
 (* given a filename, returns module info *)
 val get_info_unsafe: (File_key.t -> info) Expensive.t
@@ -111,7 +104,6 @@ val clear_filename_cache: unit -> unit
 (* APIs mainly intended for saving and loading saved state *)
 val get_package_json_for_saved_state_unsafe: string -> Package_json.t
 val add_package_from_saved_state: string -> Package_json.t -> unit
-val add_resolved_requires_from_saved_state: (File_key.t -> resolved_requires -> unit) Expensive.t
 val introduce_files_from_saved_state:
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->

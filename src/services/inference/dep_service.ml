@@ -83,8 +83,10 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
   ) root_fileset SSet.empty in
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun utils f ->
-    let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
-    let required = Modulename.Set.of_list (SMap.values resolved_requires.resolved_modules) in
+    let resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok f in
+    let required = Modulename.Set.of_list
+      (SMap.values resolved_requires.Module_heaps.resolved_modules)
+    in
     let info = get_info_unsafe ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
        in calc_all_dependents.
@@ -110,7 +112,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
     (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_dependents downstream). *)
-      resolved_requires.phantom_dependents |> SSet.exists (fun f ->
+      resolved_requires.Module_heaps.phantom_dependents |> SSet.exists (fun f ->
         SSet.mem f root_fileset
       )
 
@@ -219,17 +221,18 @@ let implementation_file ~audit r =
   then Some (Module_heaps.get_file_unsafe ~audit r)
   else None
 
-let file_dependencies ~audit file = Module_js.(
+let file_dependencies ~audit file =
   let file_sig = Parsing_heaps.get_file_sig_unsafe file in
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
-  let { resolved_modules; _ } = get_resolved_requires_unsafe ~audit file in
+  let { Module_heaps.resolved_modules; _ } =
+    Module_heaps.get_resolved_requires_unsafe ~audit file
+  in
   SMap.fold (fun mref _ files ->
     let m = SMap.find_unsafe mref resolved_modules in
     match implementation_file m ~audit:Expensive.ok with
     | Some f -> FilenameSet.add f files
     | None -> files
   ) require_loc FilenameSet.empty
-)
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)

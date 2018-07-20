@@ -16,24 +16,6 @@
 open Hh_json
 open Utils_js
 
-(* Subset of a file's context, with the important distinction that module
-   references in the file have been resolved to module names. *)
-(** TODO [perf] Make resolved_requires tighter. For info:
-    (1) checked? We know that requires and phantom dependents for unchecked
-    files are empty.
-
-    (2) parsed? We only care about the module provided by an unparsed file, but
-    that's probably guessable.
-**)
-type resolved_requires = {
-  resolved_modules: Modulename.t SMap.t; (* map from module references in file
-                                            to module names they resolve to *)
-  phantom_dependents: SSet.t; (* set of paths that were looked up but not found
-                                 when resolving module references in the file:
-                                 when the paths come into existence, the module
-                                 references need to be re-resolved. *)
-}
-
 type info = {
   module_name: Modulename.t;
   checked: bool; (* in flow? *)
@@ -117,21 +99,6 @@ let module_name_candidates ~options name =
     mapped_names
   )
 
-(****************** shared dependency map *********************)
-
-
-(* map from filename to resolved requires *)
-module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
-  type t = resolved_requires
-  let prefix = Prefix.make()
-  let description = "ResolvedRequires"
-  let use_sqlite_fallback () = false
-end)
-
-let get_resolved_requires = Expensive.wrap ResolvedRequiresHeap.get
-let add_resolved_requires = Expensive.wrap ResolvedRequiresHeap.add
-
-let add_resolved_requires_from_saved_state = add_resolved_requires
 
 (* map from filename to module name *)
 (* note: currently we may have many files for one module name.
@@ -747,15 +714,12 @@ let choose_provider ~options m files errmap =
 
 let is_tracked_file = InfoHeap.mem
 
-let get_resolved_requires_unsafe ~audit f =
-  match get_resolved_requires ~audit f with
-  | Some resolved_requires -> resolved_requires
-  | None -> failwith
-      (spf "resolved requires not found for file %s" (File_key.to_string f))
 
 (* Look up cached resolved module. *)
 let find_resolved_module ~audit file r =
-  let { resolved_modules; _ } = get_resolved_requires_unsafe ~audit file in
+  let { Module_heaps.resolved_modules; _ } =
+    Module_heaps.get_resolved_requires_unsafe ~audit file
+  in
   SMap.find_unsafe r resolved_modules
 
 let get_info_unsafe ~audit f =
@@ -774,7 +738,7 @@ let checked_file ~audit f =
 let resolved_requires_of ~options node_modules_containers f require_loc =
   let resolved_modules, { paths; errors } =
     imported_modules ~options node_modules_containers f require_loc in
-  errors, {
+  errors, { Module_heaps.
     resolved_modules;
     phantom_dependents = paths;
   }
@@ -784,7 +748,7 @@ let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
-  add_resolved_requires ~audit file resolved_requires;
+  Module_heaps.add_resolved_requires ~audit file resolved_requires;
   List.fold_left (fun acc msg ->
     Errors.ErrorSet.add (Flow_error.error_of_msg
       ~trace_reasons:[] ~source_file:file msg) acc) Errors.ErrorSet.empty errors
@@ -967,7 +931,7 @@ let commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_
   Lwt.return (providers, changed_modules, errmap)
 
 let remove_batch_resolved_requires files =
-  ResolvedRequiresHeap.remove_batch files;
+  Module_heaps.remove_batch_resolved_requires files;
   SharedMem_js.collect `gentle
 
 let get_files ~audit filename module_name =
@@ -1042,7 +1006,7 @@ let clear_files workers ~options new_or_changed_or_deleted =
   in
   (* clear files *)
   InfoHeap.remove_batch new_or_changed_or_deleted;
-  ResolvedRequiresHeap.remove_batch new_or_changed_or_deleted;
+  Module_heaps.remove_batch_resolved_requires new_or_changed_or_deleted;
   SharedMem_js.collect `gentle;
 
   Lwt.return (calc_old_modules ~options old_file_module_assoc)
