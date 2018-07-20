@@ -90,6 +90,7 @@ module Monitor : sig
   val get_next_workload: unit -> workload option
   val update_env: env -> env
   val get_updates_for_recheck: genv -> env -> Utils_js.FilenameSet.t
+  val wait_for_updates_for_recheck: genv -> env -> unit Lwt.t
 end = struct
   type workload = env -> env Lwt.t
 
@@ -189,13 +190,29 @@ end = struct
     Lwt.return_unit
 end
 
-let rec recheck_and_update_env_loop genv env =
+let rec recheck_and_update_env_loop ?(canceled_updates=Utils_js.FilenameSet.empty) genv env =
   let env = Monitor.update_env env in
-  let updates = Monitor.get_updates_for_recheck genv env in
+  let new_updates = Monitor.get_updates_for_recheck genv env in
+  let updates = Utils_js.FilenameSet.union canceled_updates new_updates in
   if Utils_js.FilenameSet.is_empty updates
   then Lwt.return env
   else begin
-    let%lwt _summary, env = Rechecker.recheck genv env updates in
+    let%lwt env =
+      let recheck_thread = Rechecker.recheck genv env updates in
+      let cancel_thread =
+        let%lwt () = Monitor.wait_for_updates_for_recheck genv env in
+        Hh_logger.info "canceling recheck";
+        Lwt.cancel recheck_thread;
+        Lwt.return_unit
+      in
+      try%lwt
+        let%lwt _summary, env = recheck_thread in
+        Lwt.cancel cancel_thread;
+        Lwt.return env
+      with Lwt.Canceled as exn ->
+        Hh_logger.info ~exn "Recheck successfully canceled";
+        recheck_and_update_env_loop ~canceled_updates:updates genv env
+    in
     recheck_and_update_env_loop genv env
   end
 
