@@ -111,6 +111,7 @@ MODULES=\
   src/state/heaps/context\
   src/state/heaps/module\
   src/state/heaps/parsing\
+  src/state/locals/module\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\

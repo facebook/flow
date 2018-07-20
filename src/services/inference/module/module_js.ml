@@ -69,11 +69,9 @@ let choose_provider_and_warn_about_duplicates =
  * regexp string. For the node module system, we go a step further and only
  * choose candidates that match the string *and* are a valid, resolvable path.
  *)
-let module_name_candidates_cache = Hashtbl.create 50
 let module_name_candidates ~options name =
-  if Hashtbl.mem module_name_candidates_cache name then (
-    Hashtbl.find module_name_candidates_cache name
-  ) else (
+  try Hashtbl.find Module_hashtables.module_name_candidates_cache name
+  with Not_found -> (
     let mappers = Options.module_name_mappers options in
     let root = Options.root options
       |> Path.to_string
@@ -90,7 +88,7 @@ let module_name_candidates ~options name =
       if new_name = name then mapped_names else new_name::mapped_names
     in
     let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in
-    Hashtbl.add module_name_candidates_cache name mapped_names;
+    Hashtbl.add Module_hashtables.module_name_candidates_cache name mapped_names;
     mapped_names
   )
 
@@ -714,25 +712,22 @@ let add_parsed_resolved_requires ~mutator ~options ~node_modules_containers file
    config file under /foo, and other files may still be able to import it by
    that name when the /foo directory is moved to, say, /qux/foo. *)
 
-(* hash table from module names to all known provider files.
-   maintained and used by commit_modules and remove_files *)
-(** TODO [perf]: investigate whether this takes too much memory **)
-let all_providers = Hashtbl.create 0
+
 
 let add_provider f m =
-  let provs = try FilenameSet.add f (Hashtbl.find all_providers m)
+  let provs = try FilenameSet.add f (Hashtbl.find Module_hashtables.all_providers m)
     with Not_found -> FilenameSet.singleton f in
-  Hashtbl.replace all_providers m provs
+  Hashtbl.replace Module_hashtables.all_providers m provs
 
 let remove_provider f m =
-  let provs = try FilenameSet.remove f (Hashtbl.find all_providers m)
+  let provs = try FilenameSet.remove f (Hashtbl.find Module_hashtables.all_providers m)
     with Not_found -> failwith (spf
       "can't remove provider %s of %S, not found in all_providers"
       (File_key.to_string f) (Modulename.to_string m))
   in
-  Hashtbl.replace all_providers m provs
+  Hashtbl.replace Module_hashtables.all_providers m provs
 
-let get_providers = Hashtbl.find all_providers
+let get_providers = Hashtbl.find Module_hashtables.all_providers
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.
