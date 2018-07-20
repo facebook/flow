@@ -959,7 +959,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
   ) in
 
   (* remove sig context, leader heap, and sig hash entries for deleted files *)
-  Context_cache.remove_merge_batch deleted;
+  Context_heaps.remove_merge_batch deleted;
 
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
@@ -1111,7 +1111,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
       (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
-      Context_cache.oldify_merge_batch (CheckedSet.all to_merge);
+      Context_heaps.oldify_merge_batch (CheckedSet.all to_merge);
 
       ()
     ))

@@ -108,6 +108,7 @@ MODULES=\
   src/services/port\
   src/services/saved_state\
   src/services/type_info\
+  src/state/heaps/context\
   src/state/heaps/module\
   src/state/heaps/parsing\
   src/third-party/lz4\

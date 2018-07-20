@@ -63,8 +63,8 @@ let reqs_of_component component required =
             dep_cxs, Reqs.add_impl m file locs reqs
           else
             (* look up impl sig_context *)
-            let leader = Context_cache.find_leader dep in
-            let dep_cx = Context_cache.find_sig leader in
+            let leader = Context_heaps.find_leader dep in
+            let dep_cx = Context_heaps.find_sig leader in
             dep_cx::dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs
         else
           (* unchecked implementation exists *)
@@ -76,7 +76,7 @@ let reqs_of_component component required =
     ) ([], Reqs.empty) required
   in
 
-  let master_cx = Context_cache.find_sig File_key.Builtins in
+  let master_cx = Context_heaps.find_sig File_key.Builtins in
 
   master_cx, dep_cxs, reqs
 
@@ -205,7 +205,7 @@ let merge_strict_component ~options merged_acc component =
 
     Context.clear_intermediates cx;
 
-    Context_cache.add_merge_on_diff ~audit:Expensive.ok cx component md5;
+    Context_heaps.add_merge_on_diff ~audit:Expensive.ok cx component md5;
 
     (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
   )
@@ -286,7 +286,7 @@ let merge_strict_job ~job ~options merged elements =
       (* A catch all suppression is probably a bad idea... *)
       | exc ->
         (* Ensure heaps are in a good state before continuing. *)
-        Context_cache.add_merge_on_exn ~audit:Expensive.ok ~options component;
+        Context_heaps.add_merge_on_exn ~audit:Expensive.ok ~options component;
         (* In dev mode, fail hard, but log and continue in prod. *)
         if Build_mode.dev then raise exc else
           prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"

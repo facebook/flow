@@ -182,6 +182,6 @@ let init ~options lib_files =
   Context.clear_intermediates master_cx;
 
   (* store master signature context to heap *)
-  Context_cache.add_sig ~audit:Expensive.ok master_cx;
+  Context_heaps.add_sig ~audit:Expensive.ok master_cx;
 
   Lwt.return result

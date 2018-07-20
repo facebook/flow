@@ -196,7 +196,7 @@ let make
     fun merged merged_acc ->
       let () = intermediate_result_callback (lazy merged) in
       let skipped = List.fold_left (fun skipped (leader_f, _) ->
-        let diff = Context_cache.sig_hash_changed leader_f in
+        let diff = Context_heaps.sig_hash_changed leader_f in
         let () =
           let fs =
             FilenameMap.find_unsafe leader_f !components
@@ -204,8 +204,8 @@ let make
             |> FilenameSet.of_list
           in
           if diff
-          then Context_cache.remove_old_merge_batch fs
-          else Context_cache.revive_merge_batch fs
+          then Context_heaps.remove_old_merge_batch fs
+          else Context_heaps.revive_merge_batch fs
         in
         push skipped leader_f diff
       ) [] merged in
@@ -215,7 +215,7 @@ let make
           |> Nel.to_list
           |> FilenameSet.of_list
         in
-        Context_cache.revive_merge_batch fs;
+        Context_heaps.revive_merge_batch fs;
         FilenameSet.cardinal fs + acc
       ) 0 skipped in
       if skipped_length > 0 then begin
