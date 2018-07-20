@@ -371,7 +371,7 @@ let does_content_match_file_hash file content =
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
+  ~worker_mutator ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
   parse_results
   file
 : results =
@@ -405,7 +405,7 @@ let reducer
             Parsing_heaps.has_old_ast file
         | _ ->
           (* The file has changed. Let's record the new hash *)
-          Parsing_heaps.add_hash file new_hash;
+          worker_mutator.Parsing_heaps.add_hash file new_hash;
           false
       in
       if unchanged
@@ -420,7 +420,7 @@ let reducer
         in
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok (ast, file_sig) ->
-            Parsing_heaps.ParsingHeaps.add file ast info file_sig;
+            worker_mutator.Parsing_heaps.add_file file ast info file_sig;
             let parse_ok =
               FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
             in
@@ -490,11 +490,13 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   then MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements filenames)
   else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
-let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
-  workers next
+let parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
+  ~parse_unchanged workers next
 : results Lwt.t =
   let t = Unix.gettimeofday () in
-  let reducer = reducer ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged in
+  let reducer =
+    reducer ~worker_mutator ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
+  in
   let%lwt results = MultiWorkerLwt.call
     workers
     ~job: (List.fold_left reducer)
@@ -516,14 +518,15 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unc
   Lwt.return results
 
 let reparse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+  ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
   ~with_progress ~workers ~modified:files ~deleted =
-  Parsing_heaps.ParsingHeaps.remove_batch deleted;
   (* save old parsing info for files *)
-  Parsing_heaps.ParsingHeaps.oldify_batch files;
+  let all_files = FilenameSet.union files deleted in
+  let master_mutator, worker_mutator = Parsing_heaps.Reparse_mutator.create transaction all_files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+    parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens
+      ~noflow ~parse_unchanged workers next
   in
   let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
@@ -532,12 +535,10 @@ let reparse
   let modified = List.fold_left (fun acc (skip, _) ->
     FilenameSet.add skip acc
   ) modified results.parse_skips in
-  (* discard old parsing info for modified files *)
-  Parsing_heaps.ParsingHeaps.remove_old_batch modified;
   SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
-  Parsing_heaps.ParsingHeaps.revive_batch unchanged;
+  Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
   Lwt.return (modified, results)
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
@@ -545,14 +546,17 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
     get_defaults ~types_mode ~use_strict options
   in
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+  let worker_mutator = Parsing_heaps.Parse_mutator.create () in
+  parse
+    ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+    workers next
 
 let reparse_with_defaults
-  ?types_mode ?use_strict ?with_progress ~workers ~modified ~deleted options =
+  ~transaction ?types_mode ?use_strict ?with_progress ~workers ~modified ~deleted options =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   reparse
-    ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+    ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
     ~with_progress ~workers ~modified ~deleted

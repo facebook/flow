@@ -61,6 +61,7 @@ val parse_with_defaults:
   results Lwt.t
 
 val reparse_with_defaults:
+  transaction: Transaction.t ->
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   ?with_progress: bool ->

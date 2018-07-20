@@ -121,11 +121,11 @@ let parse ~options ~profiling ~workers parse_next =
     Lwt.return (collate_parse_results ~options results)
   )
 
-let reparse ~options ~profiling ~workers ~modified ~deleted =
+let reparse ~options ~profiling ~transaction ~workers ~modified ~deleted =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
     let%lwt new_or_changed, results =
       Parsing_service_js.reparse_with_defaults
-        ~with_progress:true ~workers ~modified ~deleted options
+        ~transaction ~with_progress:true ~workers ~modified ~deleted options
     in
     let parse_ok, unparsed, unchanged, local_errors = collate_parse_results ~options results in
     Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors)
@@ -713,7 +713,7 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focus =
+let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates env ~force_focus =
   let errors = env.ServerEnv.errors in
 
   (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
@@ -760,7 +760,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
   (* reparse modified files, updating modified to new_or_changed to reflect
      removal of unchanged files *)
   let%lwt new_or_changed, freshparsed, unparsed, unchanged_parse, new_local_errors =
-     reparse ~options ~profiling ~workers ~modified ~deleted in
+     reparse ~options ~profiling ~transaction ~workers ~modified ~deleted in
 
   let new_or_changed, freshparsed =
     if force_focus then begin
@@ -1127,7 +1127,9 @@ let recheck ~options ~workers ~updates env ~force_focus =
   let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders)) =
     Profiling_js.with_profiling_lwt ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
-        recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focus
+        Transaction.with_transaction (fun transaction ->
+          recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates env ~force_focus
+        )
       )
     )
   in

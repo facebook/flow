@@ -5,6 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* For use by a worker process *)
+type worker_mutator = {
+  add_file: File_key.t -> Loc.t Ast.program -> Docblock.t -> File_sig.t -> unit;
+  add_hash: File_key.t -> Xx.hash -> unit
+}
+
+module Parse_mutator: sig
+  val create: unit -> worker_mutator
+end
+
+module Reparse_mutator: sig
+  type master_mutator (* Used by the master process *)
+  val create: Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
+  val revive_files: master_mutator -> Utils_js.FilenameSet.t -> unit
+end
+
+
 val has_ast: File_key.t -> bool
 val has_old_ast: File_key.t -> bool
 
@@ -19,13 +36,3 @@ val get_ast_unsafe: File_key.t -> Loc.t Ast.program
 val get_docblock_unsafe: File_key.t -> Docblock.t
 val get_file_sig_unsafe: File_key.t -> File_sig.t
 val get_file_hash_unsafe: File_key.t -> Xx.hash
-
-(********* I plan to hide these almost immediately ************)
-val add_hash: File_key.t -> Xx.hash -> unit
-module ParsingHeaps: sig
-  val add: File_key.t -> Loc.t Ast.program -> Docblock.t -> File_sig.t -> unit
-  val oldify_batch: Utils_js.FilenameSet.t -> unit
-  val remove_batch: Utils_js.FilenameSet.t -> unit
-  val remove_old_batch: Utils_js.FilenameSet.t -> unit
-  val revive_batch: Utils_js.FilenameSet.t -> unit
-end
