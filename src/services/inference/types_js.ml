@@ -183,13 +183,14 @@ let commit_modules ~transaction ~options ~is_init profiling ~workers
       )
     )
 
-let resolve_requires ~options profiling ~workers parsed =
+let resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
+  let mutator = Module_heaps.Resolved_requires_mutator.create transaction parsed_set in
   with_timer_lwt ~options "ResolveRequires" profiling (fun () ->
     MultiWorkerLwt.call workers
       ~job: (List.fold_left (fun errors_acc filename ->
         let errors = Module_js.add_parsed_resolved_requires filename
-          ~options ~node_modules_containers ~audit:Expensive.ok in
+          ~mutator ~options ~node_modules_containers in
         if Errors.ErrorSet.is_empty errors
         then errors_acc
         else FilenameMap.add filename errors errors_acc
@@ -206,7 +207,7 @@ let commit_modules_and_resolve_requires
   ~profiling
   ~workers
   ~old_modules
-  ~parsed
+  ~parsed_set
   ~unparsed
   ~new_or_changed
   ~errors
@@ -216,11 +217,15 @@ let commit_modules_and_resolve_requires
 
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
+  let parsed = FilenameSet.elements parsed_set in
+
   let%lwt changed_modules, local_errors = commit_modules
     ~transaction ~options ~is_init profiling ~workers parsed unparsed
     ~old_modules local_errors new_or_changed in
 
-  let%lwt resolve_errors = resolve_requires ~options profiling ~workers parsed in
+  let%lwt resolve_errors =
+    resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set
+  in
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
   Lwt.return (
@@ -950,7 +955,6 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
   (* remove sig context, leader heap, and sig hash entries for deleted files *)
   Context_cache.remove_merge_batch deleted;
 
-  let freshparsed_list = FilenameSet.elements freshparsed in
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
     commit_modules_and_resolve_requires
@@ -959,7 +963,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
       ~profiling
       ~workers
       ~old_modules
-      ~parsed:freshparsed_list
+      ~parsed_set:freshparsed
       ~unparsed
       ~new_or_changed
       ~errors
@@ -981,17 +985,16 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
     ) in
 
   Hh_logger.info "Re-resolving directly dependent files";
-  (** TODO [perf] Consider oldifying **)
-  Module_js.remove_batch_resolved_requires direct_dependent_files;
 
   let node_modules_containers = !Files.node_modules_containers in
   (* requires in direct_dependent_files must be re-resolved before merging. *)
+  let mutator = Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files in
   let%lwt () = with_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
     MultiWorkerLwt.call workers
       ~job: (fun () files ->
         List.iter (fun filename ->
           let errors = Module_js.add_parsed_resolved_requires filename
-            ~options ~node_modules_containers ~audit:Expensive.ok in
+            ~mutator ~options ~node_modules_containers in
           ignore errors (* TODO: why, FFS, why? *)
         ) files
       )
@@ -1214,10 +1217,9 @@ let init ~profiling ~workers options =
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
 
-  let parsed_list = FilenameSet.elements parsed in
   let all_files, unparsed_set = List.fold_left (fun (all_files, unparsed_set) (filename, _) ->
     FilenameSet.add filename all_files, (FilenameSet.add filename unparsed_set)
-  ) (FilenameSet.of_list parsed_list, FilenameSet.empty) unparsed in
+  ) (parsed, FilenameSet.empty) unparsed in
 
   let%lwt _, errors =
     let errors = { ServerEnv.
@@ -1232,7 +1234,7 @@ let init ~profiling ~workers options =
       ~profiling
       ~workers
       ~old_modules:[]
-      ~parsed:parsed_list
+      ~parsed_set:parsed
       ~unparsed
       ~new_or_changed:all_files
       ~errors

@@ -14,11 +14,6 @@ type resolved_requires = {
   phantom_dependents: SSet.t;
 }
 
-(*** WILL DELETE SOON ***)
-val add_resolved_requires: (File_key.t -> resolved_requires -> unit) Expensive.t
-val remove_batch_resolved_requires: Utils_js.FilenameSet.t -> unit
-(************************)
-
 val get_resolved_requires_unsafe: (File_key.t -> resolved_requires) Expensive.t
 
 module Commit_modules_mutator : sig
@@ -30,6 +25,12 @@ module Commit_modules_mutator : sig
     to_remove:Modulename.Set.t ->
     to_replace:(Modulename.t *  File_key.t) list ->
     unit Lwt.t
+end
+
+module Resolved_requires_mutator : sig
+  type t
+  val create: Transaction.t -> Utils_js.FilenameSet.t -> t
+  val add_resolved_requires: t -> File_key.t -> resolved_requires -> unit
 end
 
 module FromSavedState : sig

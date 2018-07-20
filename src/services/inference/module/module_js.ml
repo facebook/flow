@@ -743,12 +743,12 @@ let resolved_requires_of ~options node_modules_containers f require_loc =
     phantom_dependents = paths;
   }
 
-let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
+let add_parsed_resolved_requires ~mutator ~options ~node_modules_containers file =
   let file_sig = Parsing_heaps.get_file_sig_unsafe file in
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
-  Module_heaps.add_resolved_requires ~audit file resolved_requires;
+  Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires;
   List.fold_left (fun acc msg ->
     Errors.ErrorSet.add (Flow_error.error_of_msg
       ~trace_reasons:[] ~source_file:file msg) acc) Errors.ErrorSet.empty errors
@@ -930,10 +930,6 @@ let commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (providers, changed_modules, errmap)
 
-let remove_batch_resolved_requires files =
-  Module_heaps.remove_batch_resolved_requires files;
-  SharedMem_js.collect `gentle
-
 let get_files ~audit filename module_name =
   (module_name, Module_heaps.get_file ~audit module_name)::
     let f_module = eponymous_module filename in
@@ -1006,7 +1002,6 @@ let clear_files workers ~options new_or_changed_or_deleted =
   in
   (* clear files *)
   InfoHeap.remove_batch new_or_changed_or_deleted;
-  Module_heaps.remove_batch_resolved_requires new_or_changed_or_deleted;
   SharedMem_js.collect `gentle;
 
   Lwt.return (calc_old_modules ~options old_file_module_assoc)

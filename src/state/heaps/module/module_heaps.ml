@@ -51,9 +51,6 @@ module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
   let use_sqlite_fallback () = false
 end)
 
-let add_resolved_requires = Expensive.wrap ResolvedRequiresHeap.add
-let remove_batch_resolved_requires = ResolvedRequiresHeap.remove_batch
-
 let get_resolved_requires_unsafe = Expensive.wrap (fun f ->
   match ResolvedRequiresHeap.get f with
   | Some resolved_requires -> resolved_requires
@@ -124,6 +121,35 @@ end = struct
       ~neutral: ()
       ~merge: (fun () () -> ())
       ~next: (MultiWorkerLwt.next workers to_replace)
+end
+
+module Resolved_requires_mutator: sig
+  type t
+  val create: Transaction.t -> Utils_js.FilenameSet.t -> t
+  val add_resolved_requires: t -> File_key.t -> resolved_requires -> unit
+end = struct
+  type t = unit
+
+  let commit files =
+    Hh_logger.debug "Committing ResolvedRequiresHeap";
+    ResolvedRequiresHeap.remove_old_batch files
+
+  let rollback files =
+    Hh_logger.debug "Rolling back ResolvedRequiresHeap";
+    ResolvedRequiresHeap.revive_batch files
+
+  let create transaction oldified_files =
+    ResolvedRequiresHeap.oldify_batch oldified_files;
+    Transaction.add
+      ~commit:(fun () -> Lwt.return (commit oldified_files))
+      ~rollback:(fun () -> Lwt.return (rollback oldified_files))
+      transaction
+
+  (* This function runs on a worker process. Ideally, we'd assert that file is a member of
+   * oldified_files, but for init and large rechecks this would involve sending a very large
+   * set to the workers, which is really slow. *)
+  let add_resolved_requires () file resolved_requires =
+    ResolvedRequiresHeap.add file resolved_requires
 end
 
 module FromSavedState = struct

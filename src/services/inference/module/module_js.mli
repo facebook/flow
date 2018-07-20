@@ -83,15 +83,12 @@ val commit_modules:
     error list FilenameMap.t) Lwt.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires: (
+val add_parsed_resolved_requires:
+  mutator:Module_heaps.Resolved_requires_mutator.t ->
   options:Options.t ->
   node_modules_containers: SSet.t ->
   File_key.t ->
   Errors.ErrorSet.t
-) Expensive.t
-
-(* remove resolved requires from store *)
-val remove_batch_resolved_requires: FilenameSet.t -> unit
 
 val add_package: string -> Loc.t Ast.program -> unit
 
