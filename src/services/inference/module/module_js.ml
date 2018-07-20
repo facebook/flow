@@ -16,11 +16,6 @@
 open Hh_json
 open Utils_js
 
-type info = {
-  module_name: Modulename.t;
-  checked: bool; (* in flow? *)
-  parsed: bool; (* if false, it's a tracking record only *)
-}
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
@@ -99,19 +94,6 @@ let module_name_candidates ~options name =
     mapped_names
   )
 
-
-(* map from filename to module name *)
-(* note: currently we may have many files for one module name.
-   this is an issue. *)
-module InfoHeap = SharedMem_js.WithCache (File_key) (struct
-  type t = info
-  let prefix = Prefix.make()
-  let description = "Info"
-  let use_sqlite_fallback () = false
-end)
-
-let get_info = Expensive.wrap InfoHeap.get
-let add_info = Expensive.wrap InfoHeap.add
 
 (** module systems **)
 
@@ -712,9 +694,6 @@ let choose_provider ~options m files errmap =
 (***** public *****)
 (******************)
 
-let is_tracked_file = InfoHeap.mem
-
-
 (* Look up cached resolved module. *)
 let find_resolved_module ~audit file r =
   let { Module_heaps.resolved_modules; _ } =
@@ -722,15 +701,9 @@ let find_resolved_module ~audit file r =
   in
   SMap.find_unsafe r resolved_modules
 
-let get_info_unsafe ~audit f =
-  match get_info ~audit f with
-  | Some info -> info
-  | None -> failwith
-      (spf "module info not found for file %s" (File_key.to_string f))
-
 let checked_file ~audit f =
-  let info = f |> get_info_unsafe ~audit in
-  info.checked
+  let info = f |> Module_heaps.get_info_unsafe ~audit in
+  info.Module_heaps.checked
 
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
@@ -989,9 +962,9 @@ let calc_old_modules ~options old_file_module_assoc =
 let clear_files workers ~options new_or_changed_or_deleted =
   let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun acc file ->
-      match get_info ~audit:Expensive.ok file with
+      match Module_heaps.get_info ~audit:Expensive.ok file with
       | Some info ->
-        let { module_name; _ } = info in
+        let { Module_heaps.module_name; _ } = info in
         (file,
          get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
       | None -> acc
@@ -1001,7 +974,7 @@ let clear_files workers ~options new_or_changed_or_deleted =
     ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
   in
   (* clear files *)
-  InfoHeap.remove_batch new_or_changed_or_deleted;
+  Module_heaps.info_heap_clear_batch new_or_changed_or_deleted;
   SharedMem_js.collect `gentle;
 
   Lwt.return (calc_old_modules ~options old_file_module_assoc)
@@ -1018,8 +991,8 @@ module IntroduceFiles : sig
   val introduce_files_from_saved_state:
     workers:MultiWorkerLwt.worker list option ->
     options: Options.t ->
-    parsed:(File_key.t * info) list ->
-    unparsed:(File_key.t * info) list ->
+    parsed:(File_key.t * Module_heaps.info) list ->
+    unparsed:(File_key.t * Module_heaps.info) list ->
       (Modulename.t * File_key.t option) list Lwt.t
 end = struct
   (* Before and after inference, we add per-file module info to the shared heap
@@ -1033,12 +1006,12 @@ end = struct
       force_check ||
       Docblock.is_flow docblock
     in
-    let info = {
+    let info = { Module_heaps.
       module_name;
       checked;
       parsed = true;
     } in
-    add_info ~audit file info;
+    Module_heaps.add_info ~audit file info;
     file, module_name
 
   (* We need to track files that have failed to parse. This begins with
@@ -1057,12 +1030,12 @@ end = struct
       Docblock.is_flow docblock ||
       Docblock.isDeclarationFile docblock
     in
-    let info = {
+    let info = { Module_heaps.
       module_name;
       checked;
       parsed = false;
     } in
-    add_info ~audit file info;
+    Module_heaps.add_info ~audit file info;
     file, module_name
 
   let calc_new_modules ~options file_module_assoc =
@@ -1115,8 +1088,8 @@ end = struct
 
   let introduce_files_from_saved_state =
     let add_info_from_saved_state ~audit ~options:_ (filename, info) =
-      add_info ~audit filename info;
-      filename, info.module_name
+      Module_heaps.add_info ~audit filename info;
+      filename, info.Module_heaps.module_name
     in
     introduce_files_generic
       ~add_parsed_info:add_info_from_saved_state ~add_unparsed_info:add_info_from_saved_state

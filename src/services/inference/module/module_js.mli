@@ -8,11 +8,6 @@
 open Utils_js
 
 
-type info = {
-  module_name: Modulename.t;
-  checked: bool;            (* in flow? *)
-  parsed: bool;             (* if false, it's a tracking record only *)
-}
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
@@ -42,12 +37,6 @@ val imported_module:
 
 val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t
-
-val is_tracked_file: File_key.t -> bool
-
-(* given a filename, returns module info *)
-val get_info_unsafe: (File_key.t -> info) Expensive.t
-val get_info: (File_key.t -> info option) Expensive.t
 
 val checked_file: (File_key.t -> bool) Expensive.t
 
@@ -104,6 +93,6 @@ val add_package_from_saved_state: string -> Package_json.t -> unit
 val introduce_files_from_saved_state:
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
-  parsed:(File_key.t * info) list ->
-  unparsed:(File_key.t * info) list ->
+  parsed:(File_key.t * Module_heaps.info) list ->
+  unparsed:(File_key.t * Module_heaps.info) list ->
     (Modulename.t * File_key.t option) list Lwt.t

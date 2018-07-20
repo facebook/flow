@@ -216,7 +216,7 @@ let gen_flow_files ~options env files =
           | File_input.FileName fn ->
             let file = File_key.SourceFile fn in
             let checked =
-              let open Module_js in
+              let open Module_heaps in
               match get_info file ~audit:Expensive.warn with
               | Some info -> info.checked
               | None -> false
@@ -297,8 +297,8 @@ let get_imports ~options module_names =
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      let { Module_js.checked; _ } =
-        Module_js.get_info_unsafe ~audit:Expensive.warn file in
+      let { Module_heaps.checked; _ } =
+        Module_heaps.get_info_unsafe ~audit:Expensive.warn file in
       if checked then
         let { Module_heaps.resolved_modules; _ } =
           Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.warn file in

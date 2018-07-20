@@ -16,6 +16,21 @@ type resolved_requires = {
 
 val get_resolved_requires_unsafe: (File_key.t -> resolved_requires) Expensive.t
 
+type info = {
+  module_name: Modulename.t;
+  checked: bool;            (* in flow? *)
+  parsed: bool;             (* if false, it's a tracking record only *)
+}
+
+(* given a filename, returns module info *)
+val get_info_unsafe: (File_key.t -> info) Expensive.t
+val get_info: (File_key.t -> info option) Expensive.t
+val is_tracked_file: File_key.t -> bool
+
+(* WILL DELETE SOON *)
+val add_info: (File_key.t -> info -> unit) Expensive.t
+val info_heap_clear_batch: Utils_js.FilenameSet.t -> unit
+
 module Commit_modules_mutator : sig
   type t
   val create: Transaction.t -> is_init:bool -> t

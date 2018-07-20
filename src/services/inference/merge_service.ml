@@ -50,7 +50,7 @@ let reqs_of_component component required =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, locs, resolved_r, file = req in
       let locs = locs |> Nel.to_list |> LocSet.of_list in
-      Module_js.(match Module_heaps.get_file Expensive.ok resolved_r with
+      Module_heaps.(match get_file Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
         dep_cxs, Reqs.add_res f file locs reqs
       | Some dep ->
@@ -186,8 +186,8 @@ let merge_strict_component ~options merged_acc component =
 
      It also follows when file is checked, other_files must be checked too!
   *)
-  let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
-  if info.Module_js.checked then (
+  let info = Module_heaps.get_info_unsafe ~audit:Expensive.ok file in
+  if info.Module_heaps.checked then (
     let { cx; other_cxs = _; master_cx } = merge_strict_context ~options component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in

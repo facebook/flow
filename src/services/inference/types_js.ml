@@ -680,7 +680,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
  **)
 let focused_files_to_infer ~focused ~dependency_graph =
   let focused = focused |> FilenameSet.filter (fun f ->
-    Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
+    Module_heaps.is_tracked_file f (* otherwise, f is probably a directory *)
     && Module_js.checked_file ~audit:Expensive.warn f)
   in
 

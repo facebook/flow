@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* map from module name to filename *)
+(********************************** Name Heap *********************************)
+(* Maps module names to the filenames which provide those modules             *)
+
 module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
@@ -21,6 +23,9 @@ let get_file_unsafe ~audit m =
   | Some file -> file
   | None -> failwith
       (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+
+(*************************** Resolved Requires Heap ***************************)
+(* Maps filenames to which other modules they require                         *)
 
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
@@ -40,10 +45,6 @@ type resolved_requires = {
                                  references need to be re-resolved. *)
 }
 
-
-(****************** shared dependency map *********************)
-
-(* map from filename to resolved requires *)
 module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
   type t = resolved_requires
   let prefix = Prefix.make()
@@ -57,6 +58,36 @@ let get_resolved_requires_unsafe = Expensive.wrap (fun f ->
   | None -> failwith
       (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
 )
+
+(********************************** Info Heap *********************************)
+(* Maps filenames to info about a module, including the module's name.        *)
+(* note: currently we may have many files for one module name.                *)
+(* this is an issue.                                                          *)
+
+
+type info = {
+  module_name: Modulename.t;
+  checked: bool; (* in flow? *)
+  parsed: bool; (* if false, it's a tracking record only *)
+}
+
+module InfoHeap = SharedMem_js.WithCache (File_key) (struct
+  type t = info
+  let prefix = Prefix.make()
+  let description = "Info"
+  let use_sqlite_fallback () = false
+end)
+
+let get_info = Expensive.wrap InfoHeap.get
+
+let get_info_unsafe ~audit f =
+  match get_info ~audit f with
+  | Some info -> info
+  | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
+
+let add_info = Expensive.wrap InfoHeap.add
+let is_tracked_file = InfoHeap.mem
+let info_heap_clear_batch = InfoHeap.remove_batch
 
 module Commit_modules_mutator: sig
   type t
@@ -122,6 +153,7 @@ end = struct
       ~merge: (fun () () -> ())
       ~next: (MultiWorkerLwt.next workers to_replace)
 end
+
 
 module Resolved_requires_mutator: sig
   type t

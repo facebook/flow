@@ -72,7 +72,7 @@ open Utils_js
        the value is the subset of files which require that module directly
    (3) a subset of those files that phantom depend on root_fileset
  *)
-let dependent_calc_utils workers fileset root_fileset = Module_js.(
+let dependent_calc_utils workers fileset root_fileset = Module_heaps.(
   let root_fileset = FilenameSet.fold (fun f root_fileset ->
     match f with
       | File_key.SourceFile s
@@ -83,9 +83,9 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
   ) root_fileset SSet.empty in
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun utils f ->
-    let resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok f in
+    let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
     let required = Modulename.Set.of_list
-      (SMap.values resolved_requires.Module_heaps.resolved_modules)
+      (SMap.values resolved_requires.resolved_modules)
     in
     let info = get_info_unsafe ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
@@ -112,7 +112,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
     (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_dependents downstream). *)
-      resolved_requires.Module_heaps.phantom_dependents |> SSet.exists (fun f ->
+      resolved_requires.phantom_dependents |> SSet.exists (fun f ->
         SSet.mem f root_fileset
       )
 

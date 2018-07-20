@@ -12,14 +12,14 @@ open Utils_js
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
-  info: Module_js.info;
+  info: Module_heaps.info;
   file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
 }
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_info: Module_js.info;
+  unparsed_info: Module_heaps.info;
 }
 
 (* This is the complete saved state data representation *)
@@ -113,9 +113,9 @@ end = struct
 
   let normalize_info ~root info =
     let module_name =
-      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_js.module_name
+      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_heaps.module_name
     in
-    { info with Module_js.module_name }
+    { info with Module_heaps.module_name }
 
   let normalize_parsed_data ~root parsed_file_data =
     (* info *)
@@ -146,7 +146,7 @@ end = struct
 
     let file_data = {
       package;
-      info = Module_js.get_info_unsafe ~audit:Expensive.ok fn;
+      info = Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
       file_sig = Parsing_heaps.get_file_sig_unsafe fn;
       resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
     } in
@@ -160,7 +160,7 @@ end = struct
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~root unparsed_heaps fn  =
     let relative_file_data = {
-      unparsed_info = normalize_info ~root @@ Module_js.get_info_unsafe ~audit:Expensive.ok fn;
+      unparsed_info = normalize_info ~root @@ Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -319,9 +319,9 @@ end = struct
 
   let denormalize_info ~root info =
     let module_name =
-      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_js.module_name
+      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_heaps.module_name
     in
-    { info with Module_js.module_name }
+    { info with Module_heaps.module_name }
 
   (* Turns all the relative paths in a file's data back into absolute paths.
    *
