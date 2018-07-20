@@ -75,7 +75,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         (* Worker is handling a job but we're cancelling *)
         Hh_logger.info ~exn "Stopping running worker #%d" (worker_id w);
         (* Each worker might call this but that's ok *)
-        SharedMem.stop_workers ();
+        WorkerCancel.stop_workers ();
         (* Wait for the worker to finish cancelling *)
         let%lwt () = Lwt_unix.wait_read infd_lwt in
         (* Read the junk from the pipe *)

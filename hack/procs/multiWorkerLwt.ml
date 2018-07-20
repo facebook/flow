@@ -72,7 +72,7 @@ include MultiWorker.CallFunctor (struct
         (* For most exceptions, we want to propagate the exception as soon as one worker throws.
          * However, for Canceled we want to wait for all the workers to process the Canceled.
          * Lwt.join will wait for every thread to finish or fail *)
-        (Lwt.join worker_threads) [%lwt.finally SharedMem.resume_workers (); Lwt.return_unit]
+        (Lwt.join worker_threads) [%lwt.finally WorkerCancel.resume_workers (); Lwt.return_unit]
     in
 
     Lwt.return (!acc)
