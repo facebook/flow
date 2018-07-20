@@ -1571,7 +1571,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
     | DefT (_, NumT (Literal (_, (n, _)))), DebugSleepT _ ->
-      Unix.sleepf n
+      let n = ref n in
+      while !n > 0.0 do
+        WorkerCancel.check_should_exit ();
+        Unix.sleepf (min (!n) 1.0);
+        n := !n -. 1.
+      done
 
     (*************************)
     (* repositioning, part 1 *)
