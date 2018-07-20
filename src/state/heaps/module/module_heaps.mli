@@ -27,7 +27,6 @@ val get_info_unsafe: (File_key.t -> info) Expensive.t
 val get_info: (File_key.t -> info option) Expensive.t
 val is_tracked_file: File_key.t -> bool
 
-val add_package_json: string -> Package_json.t -> unit
 val get_package: string -> Package_json.t option
 val get_package_directory: string -> string option
 
@@ -52,6 +51,10 @@ module Introduce_files_mutator : sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
   val add_info: t -> File_key.t -> info -> unit
+end
+
+module Package_heap_mutator : sig
+  val add_package_json: string -> Package_json.t -> unit
 end
 
 module FromSavedState : sig

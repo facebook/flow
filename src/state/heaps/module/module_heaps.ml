@@ -109,14 +109,6 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     let use_sqlite_fallback () = false
   end)
 
-let add_package_json filename package_json =
-  PackageHeap.add filename package_json;
-  begin match Package_json.name package_json with
-  | Some name ->
-    ReversePackageHeap.add name (Filename.dirname filename)
-  | None -> ()
-  end
-
 let get_package = PackageHeap.get
 let get_package_directory = ReversePackageHeap.get
 
@@ -244,6 +236,21 @@ end = struct
    * to the worker process which calls add_info is kind of expensive *)
   let add_info () file info =
     InfoHeap.add file info
+end
+
+
+(* Flow doesn't support incrementally changing the package heaps, so we don't need to add this to
+ * a transaction *)
+module Package_heap_mutator: sig
+ val add_package_json: string -> Package_json.t -> unit
+end = struct
+  let add_package_json filename package_json =
+    PackageHeap.add filename package_json;
+    begin match Package_json.name package_json with
+    | Some name ->
+      ReversePackageHeap.add name (Filename.dirname filename)
+    | None -> ()
+    end
 end
 
 (******************** APIs for saving/loading saved state *********************)

@@ -97,7 +97,7 @@ let module_name_candidates ~options name =
 let add_package filename ast =
   match Package_json.parse ast with
   | Ok package ->
-    Module_heaps.add_package_json filename package
+    Module_heaps.Package_heap_mutator.add_package_json filename package
   | Error parse_err ->
     assert_false (spf "%s: %s" filename parse_err)
 
