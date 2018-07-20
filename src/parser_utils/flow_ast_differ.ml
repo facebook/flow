@@ -112,8 +112,12 @@ and statement (stmt1: Loc.t Ast.Statement.t) (stmt2: Loc.t Ast.Statement.t)
     function_declaration func1 func2
   | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
     class_ class1 class2
+  | (_, Ast.Statement.If if1), (_, Ast.Statement.If if2) ->
+    if_statement if1 if2
   | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
     expression_statement expr1 expr2
+  | (_, Ast.Statement.Block block1), (_, Ast.Statement.Block block2) ->
+    block block1 block2
   | _, _ ->
     None
   in
@@ -147,6 +151,31 @@ and function_ (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Function.t)
       None
     | BodyBlock (_, block1), BodyBlock (_, block2) ->
       block block1 block2
+
+and if_statement (if1: Loc.t Ast.Statement.If.t) (if2: Loc.t Ast.Statement.If.t)
+    : node change list option =
+  let open Ast.Statement.If in
+  let {
+    test = test1;
+    consequent = consequent1;
+    alternate = alternate1
+  } = if1 in
+  let {
+    test = test2;
+    consequent = consequent2;
+    alternate = alternate2
+  } = if2 in
+
+  let expr_diff = Some (diff_if_changed expression test1 test2) in
+  let cons_diff = Some (diff_if_changed statement consequent1 consequent2) in
+  let alt_diff = match alternate1, alternate2 with
+    | None, None -> Some ([])
+    | Some _, None
+    | None, Some _ -> None
+    | Some a1, Some a2 -> Some (diff_if_changed statement a1 a2) in
+  let result_list = [expr_diff; cons_diff; alt_diff] in
+
+  Option.all result_list |> Option.map ~f:List.concat
 
 and class_ (class1: Loc.t Ast.Class.t) (class2: Loc.t Ast.Class.t) =
   let open Ast.Class in
