@@ -76,6 +76,7 @@ MODULES=\
   src/common/profiling\
   src/common/span\
   src/common/tarjan\
+  src/common/transaction\
   src/common/ty\
   src/common/utils\
   src/common/xx\
