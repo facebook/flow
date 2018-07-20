@@ -891,10 +891,12 @@ let get_providers = Hashtbl.find all_providers
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let commit_modules workers ~options new_or_changed dirty_modules =
+let commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
+
+  let mutator = Module_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
-  let remove, providers, replace, errmap, changed_modules = List.fold_left
+  let to_remove, providers, to_replace, errmap, changed_modules = List.fold_left
     (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
     match get_providers m with
     | ps when FilenameSet.is_empty ps ->
@@ -942,7 +944,6 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             (Modulename.to_string m)
             (File_key.to_string p)
             (File_key.to_string f);
-          let rem = Modulename.Set.add m rem in
           let diff = Modulename.Set.add m diff in
           rem, p::prov, (m, p)::rep, errmap, diff
         end
@@ -958,23 +959,10 @@ let commit_modules workers ~options new_or_changed dirty_modules =
           rem, p::prov, (m,p)::rep, errmap, diff
   ) (Modulename.Set.empty, [], [], FilenameMap.empty, Modulename.Set.empty) dirty_modules in
 
-  (* update NameHeap *)
-  if not (Modulename.Set.is_empty remove) then begin
-    Module_heaps.remove_file_batch remove;
-    SharedMem_js.collect `gentle;
-  end;
-
-  let%lwt () = MultiWorkerLwt.call
-    workers
-    ~job: (fun () replace ->
-      List.iter (fun (m, f) ->
-        Module_heaps.add_file Expensive.ok m f
-      ) replace;
-    )
-    ~neutral: ()
-    ~merge: (fun () () -> ())
-    ~next: (MultiWorkerLwt.next workers replace)
+  let%lwt () = Module_heaps.Commit_modules_mutator.remove_and_replace
+    mutator ~workers ~to_remove ~to_replace
   in
+
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (providers, changed_modules, errmap)
 

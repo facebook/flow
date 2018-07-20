@@ -79,8 +79,10 @@ val clear_files:
 
 (* repick providers for old and new modules *)
 val commit_modules:
-  MultiWorkerLwt.worker list option ->
+  transaction: Transaction.t ->
+  workers: MultiWorkerLwt.worker list option ->
   options: Options.t ->
+  is_init: bool ->
   FilenameSet.t ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)
     (File_key.t list *                   (* providers *)

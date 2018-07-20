@@ -149,7 +149,7 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
   )
 
 (* commit providers for old and new modules, collect errors. *)
-let commit_modules ~options profiling ~workers
+let commit_modules ~transaction ~options ~is_init profiling ~workers
     parsed unparsed ~old_modules local_errors new_or_changed =
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
@@ -157,7 +157,9 @@ let commit_modules ~options profiling ~workers
       let%lwt new_modules = Module_js.introduce_files ~workers ~options ~parsed ~unparsed in
       let dirty_modules = List.rev_append old_modules new_modules in
       let%lwt providers, changed_modules, errmap =
-        Module_js.commit_modules workers ~options new_or_changed dirty_modules in
+        Module_js.commit_modules
+          ~transaction ~workers ~options ~is_init new_or_changed dirty_modules
+      in
   (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -199,6 +201,7 @@ let resolve_requires ~options profiling ~workers parsed =
   )
 
 let commit_modules_and_resolve_requires
+  ~transaction
   ~options
   ~profiling
   ~workers
@@ -206,14 +209,16 @@ let commit_modules_and_resolve_requires
   ~parsed
   ~unparsed
   ~new_or_changed
-  ~errors =
+  ~errors
+  ~is_init =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
 
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
   let%lwt changed_modules, local_errors = commit_modules
-    ~options profiling ~workers parsed unparsed ~old_modules local_errors new_or_changed in
+    ~transaction ~options ~is_init profiling ~workers parsed unparsed
+    ~old_modules local_errors new_or_changed in
 
   let%lwt resolve_errors = resolve_requires ~options profiling ~workers parsed in
   let local_errors = FilenameMap.union resolve_errors local_errors in
@@ -949,6 +954,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
     commit_modules_and_resolve_requires
+      ~transaction
       ~options
       ~profiling
       ~workers
@@ -956,7 +962,9 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
       ~parsed:freshparsed_list
       ~unparsed
       ~new_or_changed
-      ~errors in
+      ~errors
+      ~is_init:false
+  in
 
   let parsed = FilenameSet.union freshparsed unchanged in
 
@@ -1171,6 +1179,8 @@ let make_next_files ~libs ~file_options root =
 
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
+
+  Transaction.with_transaction @@ fun transaction ->
   (* TODO - explicitly order the libs.
    *
    * Should we let the filesystem dictate the order that we merge libs? Are we sheep? No! We are
@@ -1217,6 +1227,7 @@ let init ~profiling ~workers options =
       severity_cover_set;
     } in
     commit_modules_and_resolve_requires
+      ~transaction
       ~options
       ~profiling
       ~workers
@@ -1225,6 +1236,7 @@ let init ~profiling ~workers options =
       ~unparsed
       ~new_or_changed:all_files
       ~errors
+      ~is_init:true
   in
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
     Dep_service.calc_dependency_graph workers ~parsed
