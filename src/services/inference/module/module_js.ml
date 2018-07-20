@@ -69,9 +69,8 @@ let choose_provider_and_warn_about_duplicates =
  * regexp string. For the node module system, we go a step further and only
  * choose candidates that match the string *and* are a valid, resolvable path.
  *)
-let module_name_candidates ~options name =
-  try Hashtbl.find Module_hashtables.module_name_candidates_cache name
-  with Not_found -> (
+let module_name_candidates ~options =
+  Module_hashtables.memoize_with_module_name_candidates_cache ~f:(fun name ->
     let mappers = Options.module_name_mappers options in
     let root = Options.root options
       |> Path.to_string
@@ -87,9 +86,7 @@ let module_name_candidates ~options name =
         |> String.concat root in
       if new_name = name then mapped_names else new_name::mapped_names
     in
-    let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in
-    Hashtbl.add Module_hashtables.module_name_candidates_cache name mapped_names;
-    mapped_names
+    List.rev (name::(List.fold_left map_name [] mappers))
   )
 
 let add_package filename ast =
@@ -689,46 +686,6 @@ let add_parsed_resolved_requires ~mutator ~options ~node_modules_containers file
     Errors.ErrorSet.add (Flow_error.error_of_msg
       ~trace_reasons:[] ~source_file:file msg) acc) Errors.ErrorSet.empty errors
 
-(* Note that the module provided by a file is always accessible via its full
-   path, so that it may be imported by specifying (a part of) that path in any
-   module system. So, e.g., a file whose full path is /foo/bar.js is considered
-   to export a module by that name, so that it is always possible to import it
-   from any other file in the file system by using a relative path or some other
-   file system navigation convention. The Node module system relies on this
-   basic setup.
-
-   In addition, a file may or may not export its module by another name: this
-   name is typically shorter, but can be used unambiguously throughout the file
-   system to import the module, and this access mechanism is somewhat robust to
-   moving files around in the file system. Thus, /foo/bar.js may also export its
-   module by the name Bar, using a custom module system like Haste, either
-   explicitly (by mentioning Bar in the file) or implicitly (following some
-   convention), so that it can be imported from any other file in the file
-   system by the name Bar. Other combinations are possible: e.g., all files in a
-   directory may export their modules via paths relative to a package name, and
-   files elsewhere in the file system can import those modules by providing
-   paths relative to that package name. So, e.g., /foo/bar.js may export its
-   module via the name Foo/bar.js, with the name Foo may be specified in a
-   config file under /foo, and other files may still be able to import it by
-   that name when the /foo directory is moved to, say, /qux/foo. *)
-
-
-
-let add_provider f m =
-  let provs = try FilenameSet.add f (Hashtbl.find Module_hashtables.all_providers m)
-    with Not_found -> FilenameSet.singleton f in
-  Hashtbl.replace Module_hashtables.all_providers m provs
-
-let remove_provider f m =
-  let provs = try FilenameSet.remove f (Hashtbl.find Module_hashtables.all_providers m)
-    with Not_found -> failwith (spf
-      "can't remove provider %s of %S, not found in all_providers"
-      (File_key.to_string f) (Modulename.to_string m))
-  in
-  Hashtbl.replace Module_hashtables.all_providers m provs
-
-let get_providers = Hashtbl.find Module_hashtables.all_providers
-
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.
 
@@ -795,7 +752,7 @@ let commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_
   (* prep for registering new mappings in NameHeap *)
   let to_remove, providers, to_replace, errmap, changed_modules = List.fold_left
     (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
-    match get_providers m with
+    match Module_hashtables.find_in_all_providers_unsafe m with
     | ps when FilenameSet.is_empty ps ->
         if debug then prerr_endlinef
           "no remaining providers: %S"
@@ -892,12 +849,13 @@ let get_files_unsafe ~audit filename module_name =
    the eponymous module of the file it shadows?
 *)
 let calc_old_modules =
-  let calc_from_module_assocs ~options old_file_module_assoc =
+  let calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc =
     (* files may or may not be registered as module providers.
        when they are, we need to clear their registrations *)
     let old_modules = List.fold_left (fun old_modules (file, module_provider_assoc) ->
       List.fold_left (fun old_modules (module_name, provider) ->
-        remove_provider file module_name;
+        Module_hashtables.All_providers_mutator.remove_provider
+          all_providers_mutator file module_name;
         if provider = file
         then (module_name, Some provider)::old_modules
         else old_modules
@@ -913,7 +871,7 @@ let calc_old_modules =
     old_modules
   in
 
-  fun workers ~options new_or_changed_or_deleted ->
+  fun workers ~all_providers_mutator ~options new_or_changed_or_deleted ->
     let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
       ~job: (List.fold_left (fun acc file ->
         match Module_heaps.get_info ~audit:Expensive.ok file with
@@ -928,12 +886,13 @@ let calc_old_modules =
       ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
     in
 
-    Lwt.return (calc_from_module_assocs ~options old_file_module_assoc)
+    Lwt.return (calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc)
 
 
 module IntroduceFiles : sig
   val introduce_files:
     mutator:Module_heaps.Introduce_files_mutator.t ->
+    all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
     workers:MultiWorkerLwt.worker list option ->
     options: Options.t ->
     parsed:File_key.t list ->
@@ -942,6 +901,7 @@ module IntroduceFiles : sig
 
   val introduce_files_from_saved_state:
     mutator:Module_heaps.Introduce_files_mutator.t ->
+    all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
     workers:MultiWorkerLwt.worker list option ->
     options: Options.t ->
     parsed:(File_key.t * Module_heaps.info) list ->
@@ -991,11 +951,11 @@ end = struct
     Module_heaps.Introduce_files_mutator.add_info mutator file info;
     file, module_name
 
-  let calc_new_modules ~options file_module_assoc =
+  let calc_new_modules ~all_providers_mutator ~options file_module_assoc =
     (* all modules provided by newly parsed / unparsed files must be repicked *)
     let new_modules = List.fold_left (fun new_modules (file, module_opt_provider_assoc) ->
       List.fold_left (fun new_modules (module_, opt_provider) ->
-        add_provider file module_;
+        Module_hashtables.All_providers_mutator.add_provider all_providers_mutator file module_;
         (module_, opt_provider)::new_modules
       ) new_modules module_opt_provider_assoc
     ) [] file_module_assoc in
@@ -1008,7 +968,8 @@ end = struct
     new_modules
 
   let introduce_files_generic
-      ~add_parsed_info ~add_unparsed_info ~workers ~options ~parsed ~unparsed =
+      ~add_parsed_info ~add_unparsed_info
+      ~all_providers_mutator ~workers ~options ~parsed ~unparsed =
 
     (* add tracking modules for unparsed files *)
     let%lwt unparsed_file_module_assoc = MultiWorkerLwt.call workers
@@ -1035,7 +996,7 @@ end = struct
     let new_file_module_assoc =
       List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
 
-    Lwt.return (calc_new_modules ~options new_file_module_assoc)
+    Lwt.return (calc_new_modules ~all_providers_mutator ~options new_file_module_assoc)
 
   let introduce_files ~mutator =
     let add_parsed_info = add_parsed_info ~mutator in

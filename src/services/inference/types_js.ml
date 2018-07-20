@@ -149,7 +149,7 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
   )
 
 (* commit providers for old and new modules, collect errors. *)
-let commit_modules ~transaction ~options ~is_init profiling ~workers
+let commit_modules ~transaction ~all_providers_mutator ~options ~is_init profiling ~workers
     ~parsed ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted local_errors new_or_changed =
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
@@ -157,7 +157,8 @@ let commit_modules ~transaction ~options ~is_init profiling ~workers
       let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
       let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
       let%lwt new_modules =
-        Module_js.introduce_files ~mutator ~workers ~options ~parsed ~unparsed
+        Module_js.introduce_files
+          ~mutator ~all_providers_mutator ~workers ~options ~parsed ~unparsed
       in
       let dirty_modules = List.rev_append old_modules new_modules in
       let%lwt providers, changed_modules, errmap =
@@ -207,6 +208,7 @@ let resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_s
 
 let commit_modules_and_resolve_requires
   ~transaction
+  ~all_providers_mutator
   ~options
   ~profiling
   ~workers
@@ -226,8 +228,9 @@ let commit_modules_and_resolve_requires
   let parsed = FilenameSet.elements parsed_set in
 
   let%lwt changed_modules, local_errors = commit_modules
-    ~transaction ~options ~is_init profiling ~workers ~parsed ~parsed_set ~unparsed ~unparsed_set
-    ~old_modules ~deleted local_errors new_or_changed in
+    ~transaction ~all_providers_mutator ~options ~is_init profiling ~workers ~parsed ~parsed_set
+    ~unparsed ~unparsed_set ~old_modules ~deleted local_errors new_or_changed
+  in
 
   let%lwt resolve_errors =
     resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set
@@ -968,15 +971,18 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
   (* remember old modules *)
   let unchanged_checked = CheckedSet.remove new_or_changed_or_deleted env.ServerEnv.checked_files in
 
+  let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
+
   (* clear out records of files, and names of modules provided by those files *)
   let%lwt old_modules = with_timer_lwt ~options "ModuleClearFiles" profiling (fun () ->
-    Module_js.calc_old_modules workers ~options new_or_changed_or_deleted
+    Module_js.calc_old_modules workers ~all_providers_mutator ~options new_or_changed_or_deleted
   ) in
 
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
     commit_modules_and_resolve_requires
       ~transaction
+      ~all_providers_mutator
       ~options
       ~profiling
       ~workers
@@ -1241,6 +1247,8 @@ let init ~profiling ~workers options =
     FilenameSet.add filename all_files, (FilenameSet.add filename unparsed_set)
   ) (parsed, FilenameSet.empty) unparsed in
 
+  let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
+
   let%lwt _, errors =
     let errors = { ServerEnv.
       local_errors;
@@ -1250,6 +1258,7 @@ let init ~profiling ~workers options =
     } in
     commit_modules_and_resolve_requires
       ~transaction
+      ~all_providers_mutator
       ~options
       ~profiling
       ~workers

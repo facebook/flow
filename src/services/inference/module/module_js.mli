@@ -45,6 +45,7 @@ val checked_file: (File_key.t -> bool) Expensive.t
 *)
 val introduce_files:
   mutator:Module_heaps.Introduce_files_mutator.t ->
+  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
   parsed:File_key.t list ->
@@ -56,6 +57,7 @@ val introduce_files:
 *)
 val calc_old_modules:
   MultiWorkerLwt.worker list option ->
+  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   options:Options.t ->
   FilenameSet.t ->
     (Modulename.t * File_key.t option) list Lwt.t
@@ -91,6 +93,7 @@ val clear_filename_cache: unit -> unit
 (* APIs mainly intended for saving and loading saved state *)
 val introduce_files_from_saved_state:
   mutator:Module_heaps.Introduce_files_mutator.t ->
+  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
   parsed:(File_key.t * Module_heaps.info) list ->
