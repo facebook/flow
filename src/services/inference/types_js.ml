@@ -255,6 +255,8 @@ let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
   )
 
 let merge
+    ~master_mutator
+    ~worker_mutator
     ~intermediate_result_callback
     ~options
     ~profiling
@@ -266,7 +268,8 @@ let merge
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
     let%lwt merged = Merge_service.merge_strict
-      ~intermediate_result_callback ~options ~workers dependency_graph component_map recheck_map
+      ~master_mutator ~worker_mutator ~intermediate_result_callback ~options ~workers
+      dependency_graph component_map recheck_map
     in
     Lwt.return @@ List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
@@ -291,6 +294,7 @@ let merge
 
 (* helper *)
 let typecheck
+  ~transaction
   ~options
   ~profiling
   ~workers
@@ -300,6 +304,7 @@ let typecheck
   ~dependency_graph
   ~all_dependent_files
   ~direct_dependent_files
+  ~deleted
   ~persistent_connections
   ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
@@ -428,8 +433,9 @@ let typecheck
   Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
+  let files_to_merge = CheckedSet.all to_merge in
   let%lwt dependency_graph, component_map =
-    calc_deps ~options ~profiling ~dependency_graph ~components (CheckedSet.all to_merge) in
+    calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
   let%lwt merge_errors, suppressions, severity_cover_set = try%lwt
@@ -452,8 +458,15 @@ let typecheck
       send_errors_over_connection errors
     in
 
+    let master_mutator, worker_mutator =
+      Context_heaps.Merge_context_mutator.create
+        transaction (FilenameSet.union files_to_merge deleted)
+    in
+
     let%lwt merge_errors, suppressions, severity_cover_set =
       merge
+        ~master_mutator
+        ~worker_mutator
         ~intermediate_result_callback
         ~options
         ~profiling
@@ -523,13 +536,15 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requi
     let direct_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let dependency_graph = !env.ServerEnv.dependency_graph in
-    let%lwt checked, _cycle_leaders, errors = typecheck
-      ~options ~profiling ~workers ~errors
-      ~unchanged_checked ~infer_input
-      ~dependency_graph ~all_dependent_files ~direct_dependent_files
-      ~persistent_connections
-      ~prep_merge:None
-    in
+    let deleted = FilenameSet.empty in
+    let%lwt checked, _cycle_leaders, errors = Transaction.with_transaction (fun transaction ->
+      typecheck
+        ~transaction ~options ~profiling ~workers ~errors
+        ~unchanged_checked ~infer_input
+        ~dependency_graph ~all_dependent_files ~direct_dependent_files ~deleted
+        ~persistent_connections
+        ~prep_merge:None
+    ) in
 
     (* During a normal initialization or recheck, we update the env with the errors and
      * calculate the collated errors. However, this code is for when the server is in lazy mode,
@@ -958,9 +973,6 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
     Module_js.calc_old_modules workers ~options new_or_changed_or_deleted
   ) in
 
-  (* remove sig context, leader heap, and sig hash entries for deleted files *)
-  Context_heaps.remove_merge_batch deleted;
-
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
     commit_modules_and_resolve_requires
@@ -1080,7 +1092,9 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
     CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
 
   (* recheck *)
+
   let%lwt checked, cycle_leaders, errors = typecheck
+    ~transaction
     ~options
     ~profiling
     ~workers
@@ -1090,8 +1104,9 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
     ~dependency_graph
     ~all_dependent_files
     ~direct_dependent_files
+    ~deleted
     ~persistent_connections:(Some env.ServerEnv.connections)
-    ~prep_merge:(Some (fun to_merge ->
+    ~prep_merge:(Some (fun _to_merge ->
       (* need to merge the closure of inferred files and their deps *)
 
       let n = FilenameSet.cardinal all_dependent_files in
@@ -1111,8 +1126,6 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
       (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
-      Context_heaps.oldify_merge_batch (CheckedSet.all to_merge);
-
       ()
     ))
   in
@@ -1257,17 +1270,20 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
   let%lwt infer_input = files_to_infer
     ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
-  let%lwt (checked, _, errors) = typecheck
-    ~options
-    ~profiling
-    ~workers
-    ~errors
-    ~unchanged_checked:CheckedSet.empty
-    ~infer_input
-    ~dependency_graph
-    ~all_dependent_files:FilenameSet.empty
-    ~direct_dependent_files:FilenameSet.empty
-    ~persistent_connections:None
-    ~prep_merge:None
-  in
+  let%lwt (checked, _, errors) = Transaction.with_transaction (fun transaction ->
+    typecheck
+      ~transaction
+      ~options
+      ~profiling
+      ~workers
+      ~errors
+      ~unchanged_checked:CheckedSet.empty
+      ~infer_input
+      ~dependency_graph
+      ~all_dependent_files:FilenameSet.empty
+      ~direct_dependent_files:FilenameSet.empty
+      ~deleted:FilenameSet.empty
+      ~persistent_connections:None
+      ~prep_merge:None
+  ) in
   Lwt.return (checked, errors)

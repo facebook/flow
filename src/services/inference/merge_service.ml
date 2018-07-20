@@ -10,6 +10,7 @@ module Reqs = Merge_js.Reqs
 
 type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
+  worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   'a merge_results ->
   File_key.t Nel.t ->
@@ -171,7 +172,7 @@ let merge_contents_context options file ast info file_sig ~ensure_checked_depend
   merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options merged_acc component =
+let merge_strict_component ~worker_mutator ~options merged_acc component =
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -205,7 +206,8 @@ let merge_strict_component ~options merged_acc component =
 
     Context.clear_intermediates cx;
 
-    Context_heaps.add_merge_on_diff ~audit:Expensive.ok cx component md5;
+    Context_heaps.Merge_context_mutator.add_merge_on_diff
+      ~audit:Expensive.ok worker_mutator cx component md5;
 
     (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
   )
@@ -242,7 +244,7 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_strict_job ~job ~options merged elements =
+let merge_strict_job ~worker_mutator ~job ~options merged elements =
   List.fold_left (fun merged -> function
     | Merge_stream.Component component ->
       (* A component may have several files: there's always at least one, and
@@ -267,7 +269,7 @@ let merge_strict_job ~job ~options merged elements =
         ~f:(fun () ->
           let start_time = Unix.gettimeofday () in
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-          let ret = job ~options merged component in
+          let ret = job ~worker_mutator ~options merged component in
           let merge_time = Unix.gettimeofday () -. start_time in
           if Options.should_profile options then begin
             let length = Nel.length component in
@@ -286,7 +288,8 @@ let merge_strict_job ~job ~options merged elements =
       (* A catch all suppression is probably a bad idea... *)
       | exc ->
         (* Ensure heaps are in a good state before continuing. *)
-        Context_heaps.add_merge_on_exn ~audit:Expensive.ok ~options component;
+        Context_heaps.Merge_context_mutator.add_merge_on_exn
+          ~audit:Expensive.ok worker_mutator ~options component;
         (* In dev mode, fail hard, but log and continue in prod. *)
         if Build_mode.dev then raise exc else
           prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
@@ -306,7 +309,8 @@ let merge_strict_job ~job ~options merged elements =
   ) merged elements
 
 (* make a map from component leaders to components *)
-let merge_runner ~job ~intermediate_result_callback ~options ~workers
+let merge_runner
+    ~job ~master_mutator ~worker_mutator ~intermediate_result_callback ~options ~workers
     dependency_graph component_map recheck_map =
   (* make a map from files to their component leaders *)
   let leader_map =
@@ -328,9 +332,9 @@ let merge_runner ~job ~intermediate_result_callback ~options ~workers
   (* returns parallel lists of filenames, error sets, and suppression sets *)
   let%lwt ret = MultiWorkerLwt.call
     workers
-    ~job: (merge_strict_job ~options ~job)
+    ~job: (merge_strict_job ~worker_mutator ~options ~job)
     ~neutral: []
-    ~merge
+    ~merge:(merge ~master_mutator)
     ~next
   in
   let elapsed = Unix.gettimeofday () -. start_time in

@@ -14,6 +14,7 @@ type 'a merge_result = (File_key.t * 'a) list
 type 'a merge_stream = {
   next: unit -> element list Bucket.bucket;
   merge:
+    master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
     (* merged *)
     'a merge_result ->
     (* accumulator *)

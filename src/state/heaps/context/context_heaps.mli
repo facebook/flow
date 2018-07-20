@@ -5,15 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val add_sig: (Context.t -> unit) Expensive.t
 val find_sig: File_key.t -> Context.sig_t
 
 val find_leader: File_key.t -> File_key.t
 
-val add_merge_on_diff: (Context.t -> File_key.t Nel.t -> Xx.hash -> unit) Expensive.t
-val add_merge_on_exn: (options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
 val sig_hash_changed: File_key.t -> bool
-val oldify_merge_batch: Utils_js.FilenameSet.t -> unit
-val revive_merge_batch: Utils_js.FilenameSet.t -> unit
-val remove_merge_batch: Utils_js.FilenameSet.t -> unit
-val remove_old_merge_batch: Utils_js.FilenameSet.t -> unit
+
+module Init_master_context_mutator: sig
+  val add_master_sig: (Context.t -> unit) Expensive.t
+end
+
+module Merge_context_mutator: sig
+  type master_mutator
+  type worker_mutator
+  val create: Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
+  val add_merge_on_diff:
+    (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> unit) Expensive.t
+  val add_merge_on_exn:
+    (worker_mutator -> options:Options.t -> File_key.t Nel.t -> unit) Expensive.t
+  val revive_files: master_mutator -> Utils_js.FilenameSet.t -> unit
+end
