@@ -27,10 +27,6 @@ val get_info_unsafe: (File_key.t -> info) Expensive.t
 val get_info: (File_key.t -> info option) Expensive.t
 val is_tracked_file: File_key.t -> bool
 
-(* WILL DELETE SOON *)
-val add_info: (File_key.t -> info -> unit) Expensive.t
-val info_heap_clear_batch: Utils_js.FilenameSet.t -> unit
-
 module Commit_modules_mutator : sig
   type t
   val create: Transaction.t -> is_init:bool -> t
@@ -46,6 +42,12 @@ module Resolved_requires_mutator : sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
   val add_resolved_requires: t -> File_key.t -> resolved_requires -> unit
+end
+
+module Introduce_files_mutator : sig
+  type t
+  val create: Transaction.t -> Utils_js.FilenameSet.t -> t
+  val add_info: t -> File_key.t -> info -> unit
 end
 
 module FromSavedState : sig

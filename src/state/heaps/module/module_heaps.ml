@@ -85,9 +85,7 @@ let get_info_unsafe ~audit f =
   | Some info -> info
   | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
 
-let add_info = Expensive.wrap InfoHeap.add
 let is_tracked_file = InfoHeap.mem
-let info_heap_clear_batch = InfoHeap.remove_batch
 
 module Commit_modules_mutator: sig
   type t
@@ -182,6 +180,35 @@ end = struct
    * set to the workers, which is really slow. *)
   let add_resolved_requires () file resolved_requires =
     ResolvedRequiresHeap.add file resolved_requires
+end
+
+module Introduce_files_mutator : sig
+  type t
+  val create: Transaction.t -> Utils_js.FilenameSet.t -> t
+  val add_info: t -> File_key.t -> info -> unit
+end = struct
+  type t = unit
+
+  let commit oldified_files =
+    Hh_logger.debug "Committing InfoHeap";
+    InfoHeap.remove_old_batch oldified_files;
+    Lwt.return_unit
+
+  let rollback oldified_files =
+    Hh_logger.debug "Rolling back InfoHeap";
+    InfoHeap.revive_batch oldified_files;
+    Lwt.return_unit
+
+  let create transaction oldified_files =
+    InfoHeap.oldify_batch oldified_files;
+    let commit () = commit oldified_files in
+    let rollback () = rollback oldified_files in
+    Transaction.add ~commit ~rollback transaction
+
+  (* Ideally we'd assert that file is in oldified_files, but passing through the oldified_files set
+   * to the worker process which calls add_info is kind of expensive *)
+  let add_info () file info =
+    InfoHeap.add file info
 end
 
 module FromSavedState = struct

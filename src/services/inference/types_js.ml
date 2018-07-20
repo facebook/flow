@@ -150,11 +150,15 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
 
 (* commit providers for old and new modules, collect errors. *)
 let commit_modules ~transaction ~options ~is_init profiling ~workers
-    parsed unparsed ~old_modules local_errors new_or_changed =
+    ~parsed ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted local_errors new_or_changed =
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
     with_timer_lwt ~options "CommitModules" profiling (fun () ->
-      let%lwt new_modules = Module_js.introduce_files ~workers ~options ~parsed ~unparsed in
+      let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
+      let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
+      let%lwt new_modules =
+        Module_js.introduce_files ~mutator ~workers ~options ~parsed ~unparsed
+      in
       let dirty_modules = List.rev_append old_modules new_modules in
       let%lwt providers, changed_modules, errmap =
         Module_js.commit_modules
@@ -209,7 +213,9 @@ let commit_modules_and_resolve_requires
   ~old_modules
   ~parsed_set
   ~unparsed
+  ~unparsed_set
   ~new_or_changed
+  ~deleted
   ~errors
   ~is_init =
   (* TODO remove after lookup overhaul *)
@@ -220,8 +226,8 @@ let commit_modules_and_resolve_requires
   let parsed = FilenameSet.elements parsed_set in
 
   let%lwt changed_modules, local_errors = commit_modules
-    ~transaction ~options ~is_init profiling ~workers parsed unparsed
-    ~old_modules local_errors new_or_changed in
+    ~transaction ~options ~is_init profiling ~workers ~parsed ~parsed_set ~unparsed ~unparsed_set
+    ~old_modules ~deleted local_errors new_or_changed in
 
   let%lwt resolve_errors =
     resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set
@@ -949,7 +955,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
 
   (* clear out records of files, and names of modules provided by those files *)
   let%lwt old_modules = with_timer_lwt ~options "ModuleClearFiles" profiling (fun () ->
-    Module_js.clear_files workers ~options new_or_changed_or_deleted
+    Module_js.calc_old_modules workers ~options new_or_changed_or_deleted
   ) in
 
   (* remove sig context, leader heap, and sig hash entries for deleted files *)
@@ -965,10 +971,11 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
       ~old_modules
       ~parsed_set:freshparsed
       ~unparsed
+      ~unparsed_set
       ~new_or_changed
+      ~deleted
       ~errors
-      ~is_init:false
-  in
+      ~is_init:false in
 
   let parsed = FilenameSet.union freshparsed unchanged in
 
@@ -1236,7 +1243,9 @@ let init ~profiling ~workers options =
       ~old_modules:[]
       ~parsed_set:parsed
       ~unparsed
+      ~unparsed_set
       ~new_or_changed:all_files
+      ~deleted:FilenameSet.empty
       ~errors
       ~is_init:true
   in

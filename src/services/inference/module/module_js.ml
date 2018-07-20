@@ -915,15 +915,7 @@ let get_files_unsafe ~audit filename module_name =
     if f_module = module_name then []
     else [f_module, Module_heaps.get_file_unsafe ~audit f_module]
 
-(* Clear module mappings for given files, if they exist.
-
-   This has no effect on new files. The set of modules returned are those whose
-   current providers are changed or deleted files.
-
-   As a side effect, we delete entries for the given files from InfoHeap and
-   NameHeap, and moreover, clear the returned modules from NameHeap. Entries
-   corresponding new and changed files are (re)populated in InfoHeap and
-   NameHeap later.
+(* Calculate the set of modules whose current providers are changed or deleted files.
 
    Possibilities:
    1. file is current registered module provider for a given module name
@@ -939,49 +931,49 @@ let get_files_unsafe ~audit filename module_name =
    TODO: Does a .flow file also provide its eponymous module? Or does it provide
    the eponymous module of the file it shadows?
 *)
-let calc_old_modules ~options old_file_module_assoc =
-  (* files may or may not be registered as module providers.
-     when they are, we need to clear their registrations *)
-  let old_modules = List.fold_left (fun old_modules (file, module_provider_assoc) ->
-    List.fold_left (fun old_modules (module_name, provider) ->
-      remove_provider file module_name;
-      if provider = file
-      then (module_name, Some provider)::old_modules
-      else old_modules
-    ) old_modules module_provider_assoc
-  ) [] old_file_module_assoc in
+let calc_old_modules =
+  let calc_from_module_assocs ~options old_file_module_assoc =
+    (* files may or may not be registered as module providers.
+       when they are, we need to clear their registrations *)
+    let old_modules = List.fold_left (fun old_modules (file, module_provider_assoc) ->
+      List.fold_left (fun old_modules (module_name, provider) ->
+        remove_provider file module_name;
+        if provider = file
+        then (module_name, Some provider)::old_modules
+        else old_modules
+      ) old_modules module_provider_assoc
+    ) [] old_file_module_assoc in
 
-  let debug = Options.is_debug_mode options in
-  if debug then prerr_endlinef
-    "*** old modules (changed and deleted files) %d ***"
-    (List.length old_modules);
+    let debug = Options.is_debug_mode options in
+    if debug then prerr_endlinef
+      "*** old modules (changed and deleted files) %d ***"
+      (List.length old_modules);
 
-  (* return *)
-  old_modules
-
-let clear_files workers ~options new_or_changed_or_deleted =
-  let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
-    ~job: (List.fold_left (fun acc file ->
-      match Module_heaps.get_info ~audit:Expensive.ok file with
-      | Some info ->
-        let { Module_heaps.module_name; _ } = info in
-        (file,
-         get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
-      | None -> acc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
+    (* return *)
+    old_modules
   in
-  (* clear files *)
-  Module_heaps.info_heap_clear_batch new_or_changed_or_deleted;
-  SharedMem_js.collect `gentle;
 
-  Lwt.return (calc_old_modules ~options old_file_module_assoc)
+  fun workers ~options new_or_changed_or_deleted ->
+    let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
+      ~job: (List.fold_left (fun acc file ->
+        match Module_heaps.get_info ~audit:Expensive.ok file with
+        | Some info ->
+          let { Module_heaps.module_name; _ } = info in
+          (file,
+           get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
+        | None -> acc
+      ))
+      ~neutral: []
+      ~merge: List.rev_append
+      ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
+    in
+
+    Lwt.return (calc_from_module_assocs ~options old_file_module_assoc)
 
 
 module IntroduceFiles : sig
   val introduce_files:
+    mutator:Module_heaps.Introduce_files_mutator.t ->
     workers:MultiWorkerLwt.worker list option ->
     options: Options.t ->
     parsed:File_key.t list ->
@@ -989,6 +981,7 @@ module IntroduceFiles : sig
       (Modulename.t * File_key.t option) list Lwt.t
 
   val introduce_files_from_saved_state:
+    mutator:Module_heaps.Introduce_files_mutator.t ->
     workers:MultiWorkerLwt.worker list option ->
     options: Options.t ->
     parsed:(File_key.t * Module_heaps.info) list ->
@@ -998,7 +991,7 @@ end = struct
   (* Before and after inference, we add per-file module info to the shared heap
      from worker processes. Note that we wait to choose providers until inference
      is complete. *)
-  let add_parsed_info ~audit ~options file =
+  let add_parsed_info ~mutator ~options file =
     let force_check = Options.all options in
     let docblock = Parsing_heaps.get_docblock_unsafe file in
     let module_name = exported_module ~options file docblock in
@@ -1011,7 +1004,7 @@ end = struct
       checked;
       parsed = true;
     } in
-    Module_heaps.add_info ~audit file info;
+    Module_heaps.Introduce_files_mutator.add_info mutator file info;
     file, module_name
 
   (* We need to track files that have failed to parse. This begins with
@@ -1021,7 +1014,7 @@ end = struct
      the module names of unparsed files, we're able to tell whether an
      unparsed file has been required/imported.
    *)
-  let add_unparsed_info ~audit ~options (file, docblock) =
+  let add_unparsed_info ~mutator ~options (file, docblock) =
     let force_check = Options.all options in
     let module_name = exported_module ~options file docblock in
     let checked =
@@ -1035,7 +1028,7 @@ end = struct
       checked;
       parsed = false;
     } in
-    Module_heaps.add_info ~audit file info;
+    Module_heaps.Introduce_files_mutator.add_info mutator file info;
     file, module_name
 
   let calc_new_modules ~options file_module_assoc =
@@ -1060,7 +1053,7 @@ end = struct
     (* add tracking modules for unparsed files *)
     let%lwt unparsed_file_module_assoc = MultiWorkerLwt.call workers
       ~job: (List.fold_left (fun file_module_assoc unparsed_file ->
-        let filename, m = add_unparsed_info ~audit:Expensive.ok ~options unparsed_file in
+        let filename, m = add_unparsed_info ~options unparsed_file in
         (filename,
          get_files ~audit:Expensive.ok filename m) :: file_module_assoc
       ))
@@ -1071,7 +1064,7 @@ end = struct
     (* create info for parsed files *)
     let%lwt parsed_file_module_assoc = MultiWorkerLwt.call workers
       ~job: (List.fold_left (fun file_module_assoc parsed_file ->
-        let filename, m = add_parsed_info ~audit:Expensive.ok ~options parsed_file in
+        let filename, m = add_parsed_info ~options parsed_file in
         (filename,
          get_files ~audit:Expensive.ok filename m) :: file_module_assoc
       ))
@@ -1084,11 +1077,14 @@ end = struct
 
     Lwt.return (calc_new_modules ~options new_file_module_assoc)
 
-  let introduce_files = introduce_files_generic ~add_parsed_info ~add_unparsed_info
+  let introduce_files ~mutator =
+    let add_parsed_info = add_parsed_info ~mutator in
+    let add_unparsed_info = add_unparsed_info ~mutator in
+    introduce_files_generic ~add_parsed_info ~add_unparsed_info
 
-  let introduce_files_from_saved_state =
-    let add_info_from_saved_state ~audit ~options:_ (filename, info) =
-      Module_heaps.add_info ~audit filename info;
+  let introduce_files_from_saved_state ~mutator =
+    let add_info_from_saved_state ~options:_ (filename, info) =
+      Module_heaps.Introduce_files_mutator.add_info mutator filename info;
       filename, info.Module_heaps.module_name
     in
     introduce_files_generic

@@ -44,6 +44,7 @@ val checked_file: (File_key.t -> bool) Expensive.t
    returns the set of modules added
 *)
 val introduce_files:
+  mutator:Module_heaps.Introduce_files_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
   parsed:File_key.t list ->
@@ -53,7 +54,7 @@ val introduce_files:
 (* remove module records being tracked for given files;
    returns the set of modules removed
 *)
-val clear_files:
+val calc_old_modules:
   MultiWorkerLwt.worker list option ->
   options:Options.t ->
   FilenameSet.t ->
@@ -91,6 +92,7 @@ val clear_filename_cache: unit -> unit
 val get_package_json_for_saved_state_unsafe: string -> Package_json.t
 val add_package_from_saved_state: string -> Package_json.t -> unit
 val introduce_files_from_saved_state:
+  mutator:Module_heaps.Introduce_files_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
   parsed:(File_key.t * Module_heaps.info) list ->
