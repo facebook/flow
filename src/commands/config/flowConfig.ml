@@ -35,6 +35,7 @@ module Opts = struct
   type t = {
     emoji: bool;
     max_literal_length: int;
+    enable_cancelable_rechecks: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool;
@@ -144,6 +145,7 @@ module Opts = struct
   let default_options = {
     emoji = false;
     max_literal_length = 100;
+    enable_cancelable_rechecks = false;
     enable_const_params = false;
     enforce_strict_call_arity = true;
     enforce_well_formed_exports = false;
@@ -892,6 +894,16 @@ let parse_options config lines =
       );
     }
 
+
+    |> define_opt "experimental.cancelable_rechecks" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        Ok {opts with enable_cancelable_rechecks = v;}
+      );
+    }
+
     |> define_opt "experimental.const_params" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -1073,6 +1085,7 @@ let libs config = config.libs
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji
 let max_literal_length c = c.options.Opts.max_literal_length
+let enable_cancelable_rechecks c = c.options.Opts.enable_cancelable_rechecks
 let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports

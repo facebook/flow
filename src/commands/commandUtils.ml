@@ -856,6 +856,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
+    opt_enable_cancelable_rechecks = FlowConfig.enable_cancelable_rechecks flowconfig;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;

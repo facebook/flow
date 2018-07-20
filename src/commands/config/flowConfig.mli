@@ -39,6 +39,7 @@ val libs: config -> string list
 val all: config -> bool
 val emoji: config -> bool
 val max_literal_length: config -> int
+val enable_cancelable_rechecks: config -> bool
 val enable_const_params: config -> bool
 val enforce_strict_call_arity: config -> bool
 val enforce_well_formed_exports: config -> bool

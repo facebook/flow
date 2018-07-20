@@ -174,10 +174,14 @@ let rec recheck_single
   end else
     let recheck_thread = recheck genv env ~files_to_focus all_files in
     let cancel_thread =
-      let%lwt () = wait_for_updates_for_recheck ~process_updates in
-      Hh_logger.info "Canceling recheck due to new file changes";
-      Lwt.cancel recheck_thread;
-      Lwt.return_unit
+      if Options.enable_cancelable_rechecks genv.ServerEnv.options
+      then begin
+        let%lwt () = wait_for_updates_for_recheck ~process_updates in
+        Hh_logger.info "Canceling recheck due to new file changes";
+        Lwt.cancel recheck_thread;
+        Lwt.return_unit
+      end else
+        Lwt.return_unit
     in
     try%lwt
       let%lwt (profiling, env) = recheck_thread in
