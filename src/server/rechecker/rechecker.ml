@@ -129,27 +129,69 @@ let process_updates genv env updates =
 
 (* on notification, execute client commands or recheck files *)
 let recheck genv env ?(files_to_focus=FilenameSet.empty) updates =
-  if FilenameSet.is_empty updates
-  then Lwt.return (None, env)
-  else begin
-    MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
-    Persistent_connection.send_start_recheck env.connections;
-    let options = genv.ServerEnv.options in
-    let workers = genv.ServerEnv.workers in
+  (* Caller should have already checked this *)
+  assert (not (FilenameSet.is_empty updates));
 
-    let%lwt profiling, summary, env =
-      Types_js.recheck ~options ~workers ~updates env ~files_to_focus in
+  MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
+  Persistent_connection.send_start_recheck env.connections;
+  let options = genv.ServerEnv.options in
+  let workers = genv.ServerEnv.workers in
 
-    let lazy_stats = get_lazy_stats genv env in
-    Persistent_connection.send_end_recheck ~lazy_stats env.connections;
-    (* We must send "end_recheck" prior to sending errors+warnings so the client *)
-    (* knows that this set of errors+warnings are final ones, not incremental.   *)
-    let calc_errors_and_warnings () =
-      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-      errors, warnings
+  let%lwt profiling, summary, env =
+    Types_js.recheck ~options ~workers ~updates env ~files_to_focus in
+
+  let lazy_stats = get_lazy_stats genv env in
+  Persistent_connection.send_end_recheck ~lazy_stats env.connections;
+  (* We must send "end_recheck" prior to sending errors+warnings so the client *)
+  (* knows that this set of errors+warnings are final ones, not incremental.   *)
+  let calc_errors_and_warnings () =
+    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+    errors, warnings
+  in
+  Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;
+
+  MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
+  Lwt.return (profiling, env)
+
+(* Perform a single recheck. This will incorporate any pending changes from the file watcher.
+ * If any file watcher notifications come in during the recheck, it will be canceled and restarted
+ * to include the new changes *)
+let rec recheck_single
+    ?(files_to_recheck=Utils_js.FilenameSet.empty)
+    ?(files_to_focus=Utils_js.FilenameSet.empty)
+    genv env =
+  let env = ServerMonitorListenerState.update_env env in
+  let process_updates = process_updates genv env in
+  let new_updates = ServerMonitorListenerState.get_and_clear_updates_for_recheck ~process_updates in
+  let updates = Utils_js.FilenameSet.union files_to_recheck new_updates
+    |> Utils_js.FilenameSet.union files_to_focus in
+  if Utils_js.FilenameSet.is_empty updates
+  then Lwt.return (Error env) (* Nothing to do *)
+  else
+    let recheck_thread = recheck genv env ~files_to_focus updates in
+    let cancel_thread =
+      let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
+      Hh_logger.info "Canceling recheck due to new file changes";
+      Lwt.cancel recheck_thread;
+      Lwt.return_unit
     in
-    Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;
+    try%lwt
+      let%lwt ret = recheck_thread in
+      Lwt.cancel cancel_thread;
+      Lwt.return (Ok ret)
+    with Lwt.Canceled as exn ->
+      Hh_logger.info ~exn
+        "Recheck successfully canceled. Restarting the recheck to include new file changes";
+      recheck_single ~files_to_recheck:updates ~files_to_focus genv env
 
-    MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
-    Lwt.return (Some profiling, env)
-  end
+let rec recheck_loop
+    ?(files_to_recheck=Utils_js.FilenameSet.empty)
+    ?(files_to_focus=Utils_js.FilenameSet.empty)
+    genv env =
+  match%lwt recheck_single ~files_to_recheck ~files_to_focus genv env with
+  | Error env ->
+    (* No more work to do for now *)
+    Lwt.return env
+  | Ok (_profiling, env) ->
+    (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
+    recheck_loop genv env

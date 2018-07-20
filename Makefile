@@ -91,10 +91,12 @@ MODULES=\
   src/parser_utils/output/printers\
   src/parsing\
   src/server\
+  src/server/command_handler\
   src/server/env\
   src/server/error_collator\
   src/server/find_refs\
   src/server/lazy_mode_utils\
+  src/server/monitor_listener\
   src/server/persistent_connection\
   src/server/protocol\
   src/server/rechecker\

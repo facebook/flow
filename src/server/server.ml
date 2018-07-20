@@ -81,32 +81,6 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event;
   Lwt.return (profiling, env)
 
-let rec recheck_and_update_env_loop ?(canceled_updates=Utils_js.FilenameSet.empty) genv env =
-  let env = ServerMonitorListener.update_env env in
-  let new_updates = ServerMonitorListener.get_updates_for_recheck genv env in
-  let updates = Utils_js.FilenameSet.union canceled_updates new_updates in
-  if Utils_js.FilenameSet.is_empty updates
-  then Lwt.return env
-  else begin
-    let%lwt env =
-      let recheck_thread = Rechecker.recheck genv env updates in
-      let cancel_thread =
-        let%lwt () = ServerMonitorListener.wait_for_updates_for_recheck genv env in
-        Hh_logger.info "canceling recheck";
-        Lwt.cancel recheck_thread;
-        Lwt.return_unit
-      in
-      try%lwt
-        let%lwt _summary, env = recheck_thread in
-        Lwt.cancel cancel_thread;
-        Lwt.return env
-      with Lwt.Canceled as exn ->
-        Hh_logger.info ~exn "Recheck successfully canceled";
-        recheck_and_update_env_loop ~canceled_updates:updates genv env
-    in
-    recheck_and_update_env_loop genv env
-  end
-
 let rec serve ~genv ~env =
   Hh_logger.debug "Starting aggressive shared mem GC";
   SharedMem_js.collect `aggressive;
@@ -115,13 +89,15 @@ let rec serve ~genv ~env =
   MonitorRPC.status_update ~event:ServerStatus.Ready;
 
   (* Ok, server is settled. Let's go to sleep until we get a message from the monitor *)
-  let%lwt () = ServerMonitorListener.wait_for_anything genv env in
+  let%lwt () = ServerMonitorListenerState.wait_for_anything
+    ~process_updates:(Rechecker.process_updates genv env)
+  in
 
   (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
-  let%lwt env = recheck_and_update_env_loop genv env in
+  let%lwt env = Rechecker.recheck_loop genv env in
 
   (* Run a workload (if there is one) *)
-  let%lwt env = Option.value_map (ServerMonitorListener.get_next_workload ())
+  let%lwt env = Option.value_map (ServerMonitorListenerState.pop_next_workload ())
     ~default:(Lwt.return env)
     ~f:(fun workload -> workload env) in
 
