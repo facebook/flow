@@ -35,7 +35,7 @@ val recheck:
   workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
   ServerEnv.env ->
-  force_focus:bool ->
+  files_to_focus:FilenameSet.t ->
   (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)

@@ -128,7 +128,7 @@ let process_updates genv env updates =
   ) updates FilenameSet.empty
 
 (* on notification, execute client commands or recheck files *)
-let recheck genv env ?(force_focus=false) updates =
+let recheck genv env ?(files_to_focus=FilenameSet.empty) updates =
   if FilenameSet.is_empty updates
   then Lwt.return (None, env)
   else begin
@@ -138,7 +138,7 @@ let recheck genv env ?(force_focus=false) updates =
     let workers = genv.ServerEnv.workers in
 
     let%lwt profiling, summary, env =
-      Types_js.recheck ~options ~workers ~updates env ~force_focus in
+      Types_js.recheck ~options ~workers ~updates env ~files_to_focus in
 
     let lazy_stats = get_lazy_stats genv env in
     Persistent_connection.send_end_recheck ~lazy_stats env.connections;

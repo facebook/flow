@@ -747,7 +747,8 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates env ~force_focus =
+let recheck_with_profiling
+    ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus =
   let errors = env.ServerEnv.errors in
 
   (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
@@ -797,7 +798,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
      reparse ~options ~profiling ~transaction ~workers ~modified ~deleted in
 
   let new_or_changed, freshparsed =
-    if force_focus then begin
+    if not (FilenameSet.is_empty files_to_focus) then begin
       (* Normally we can ignore files which are unmodified. However, if someone passed force_focus,
        * then we may need to ressurect some unmodified files into the new_or_changed and freshparsed
        * sets. For example, if someone ran `flow force-recheck --focus a.js` and a.js is not
@@ -805,10 +806,13 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
        *
        * We avoid rechecking already-focused unmodified files since they're already focused and
        * haven't changed :P *)
-      let files_to_focus =
-        FilenameSet.diff unchanged_parse (CheckedSet.focused env.ServerEnv.checked_files)
+      let unchanged_files_to_focus =
+        FilenameSet.diff
+          (FilenameSet.inter files_to_focus unchanged_parse) (* unchanged files to focus... *)
+          (CheckedSet.focused env.ServerEnv.checked_files)   (* ...which aren't already focused *)
       in
-      FilenameSet.union new_or_changed files_to_focus, FilenameSet.union freshparsed files_to_focus
+      FilenameSet.union new_or_changed unchanged_files_to_focus,
+        FilenameSet.union freshparsed unchanged_files_to_focus
     end else new_or_changed, freshparsed
   in
 
@@ -1066,9 +1070,10 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
          * it.
          **)
         let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
-        let forced_focus = if force_focus
-          then filter_out_node_modules ~options freshparsed
-          else FilenameSet.empty in
+        let new_focused =
+          filter_out_node_modules ~options (FilenameSet.inter files_to_focus freshparsed)
+        in
+
         let open_in_ide =
           let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
           FilenameSet.filter (function
@@ -1081,7 +1086,7 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
         in
         let focused = old_focused
           |> FilenameSet.union open_in_ide
-          |> FilenameSet.union forced_focus in
+          |> FilenameSet.union new_focused in
         let%lwt updated_checked_files = focused_files_to_infer ~focused ~dependency_graph in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
@@ -1098,7 +1103,6 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
     CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
 
   (* recheck *)
-
   let%lwt checked, cycle_leaders, errors = typecheck
     ~transaction
     ~options
@@ -1159,13 +1163,14 @@ let recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates en
     (new_or_changed, deleted, all_dependent_files, cycle_leaders))
   )
 
-let recheck ~options ~workers ~updates env ~force_focus =
+let recheck ~options ~workers ~updates env ~files_to_focus =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders)) =
     Profiling_js.with_profiling_lwt ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         Transaction.with_transaction (fun transaction ->
-          recheck_with_profiling ~profiling ~transaction ~options ~workers ~updates env ~force_focus
+          recheck_with_profiling
+            ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus
         )
       )
     )

@@ -387,7 +387,8 @@ let handle_ephemeral_unsafe
           (* If we're not profiling the recheck, then respond immediately *)
           if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
           let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
-          let%lwt profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
+          let files_to_focus = if focus then updates else FilenameSet.empty in
+          let%lwt profiling, new_env = Rechecker.recheck genv !env ~files_to_focus updates in
           env := new_env;
           if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
           Lwt.return None

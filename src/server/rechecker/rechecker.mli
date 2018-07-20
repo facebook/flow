@@ -15,7 +15,7 @@ val process_updates :
 val recheck:
   ServerEnv.genv ->
   ServerEnv.env ->
-  ?force_focus:bool ->
+  ?files_to_focus:Utils_js.FilenameSet.t ->
   Utils_js.FilenameSet.t ->
   (Profiling_js.finished option * ServerEnv.env) Lwt.t
 

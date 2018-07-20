@@ -19,7 +19,9 @@ let focus_and_check genv env filenames =
   if not (FilenameSet.is_empty new_focused_files)
   then
     (* Rechecking will send errors to the clients *)
-    let%lwt _summary, env = Rechecker.recheck genv env ~force_focus:true new_focused_files in
+    let%lwt _summary, env =
+      Rechecker.recheck genv env ~files_to_focus:new_focused_files new_focused_files
+    in
     Lwt.return (env, true)
   else
     Lwt.return (env, false)
