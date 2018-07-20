@@ -34,6 +34,12 @@ let init ~focus_targets genv =
   let workers = genv.ServerEnv.workers in
   let options = genv.ServerEnv.options in
 
+  MultiWorkerLwt.set_report_canceled_callback (fun ~total ~finished ->
+    Hh_logger.info "Canceling progress %d/%d" finished total;
+    MonitorRPC.status_update
+      ~event:ServerStatus.(Canceling_progress { total = Some total; finished; });
+  );
+
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
   let should_print_summary = Options.should_profile options in
