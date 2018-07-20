@@ -89,8 +89,6 @@ val package_incompatible: string -> Loc.t Ast.program -> bool
 val clear_filename_cache: unit -> unit
 
 (* APIs mainly intended for saving and loading saved state *)
-val get_package_json_for_saved_state_unsafe: string -> Package_json.t
-val add_package_from_saved_state: string -> Package_json.t -> unit
 val introduce_files_from_saved_state:
   mutator:Module_heaps.Introduce_files_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->

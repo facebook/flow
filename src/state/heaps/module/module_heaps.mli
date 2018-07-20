@@ -27,6 +27,10 @@ val get_info_unsafe: (File_key.t -> info) Expensive.t
 val get_info: (File_key.t -> info option) Expensive.t
 val is_tracked_file: File_key.t -> bool
 
+val add_package_json: string -> Package_json.t -> unit
+val get_package: string -> Package_json.t option
+val get_package_directory: string -> string option
+
 module Commit_modules_mutator : sig
   type t
   val create: Transaction.t -> is_init:bool -> t
@@ -52,4 +56,8 @@ end
 
 module FromSavedState : sig
   val add_resolved_requires: File_key.t -> resolved_requires -> unit
+end
+
+module ForSavedState : sig
+  val get_package_json_unsafe: string -> Package_json.t
 end

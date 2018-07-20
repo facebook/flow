@@ -94,52 +94,17 @@ let module_name_candidates ~options name =
     mapped_names
   )
 
-
-(** module systems **)
-
-(* shared heap for package.json tokens by filename *)
-module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
-    type t = Package_json.t
-    let prefix = Prefix.make()
-    let description = "Package"
-    let use_sqlite_fallback () = false
-  end)
-
-(* shared heap for package.json directories by package name *)
-module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
-    type t = string
-    let prefix = Prefix.make()
-    let description = "ReversePackage"
-    let use_sqlite_fallback () = false
-  end)
-
-exception Package_not_found of string
-
-let get_package_json_for_saved_state_unsafe file =
-  try PackageHeap.find_unsafe file
-  with Not_found -> raise (Package_not_found file)
-
-let add_package_json filename package_json =
-  PackageHeap.add filename package_json;
-  begin match Package_json.name package_json with
-  | Some name ->
-    ReversePackageHeap.add name (Filename.dirname filename)
-  | None -> ()
-  end
-
 let add_package filename ast =
   match Package_json.parse ast with
   | Ok package ->
-    add_package_json filename package
+    Module_heaps.add_package_json filename package
   | Error parse_err ->
     assert_false (spf "%s: %s" filename parse_err)
-
-let add_package_from_saved_state = add_package_json
 
 let package_incompatible filename ast =
   match Package_json.parse ast with
   | Ok new_package ->
-    begin match PackageHeap.get filename with
+    begin match Module_heaps.get_package filename with
     | None -> true
     | Some old_package -> old_package <> new_package
     end
@@ -383,7 +348,7 @@ module Node = struct
     if not (file_exists package_filename) || (Files.is_ignored file_options package_filename)
     then None
     else
-      let package = match PackageHeap.get package_filename with
+      let package = match Module_heaps.get_package package_filename with
       | Some package -> package
       | None ->
         let msg =
@@ -588,7 +553,7 @@ module Haste: MODULE_SYSTEM = struct
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name::rest ->
-        ReversePackageHeap.get package_name |> Option.map ~f:(fun package ->
+        Module_heaps.get_package_directory package_name |> Option.map ~f:(fun package ->
           Files.construct_path package rest
         )
 

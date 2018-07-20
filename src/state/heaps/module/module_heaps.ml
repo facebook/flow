@@ -87,6 +87,41 @@ let get_info_unsafe ~audit f =
 
 let is_tracked_file = InfoHeap.mem
 
+(******************************** Package Heaps *******************************)
+(* Maps filenames to info about a module, including the module's name.        *)
+(* note: currently we may have many files for one module name.                *)
+(* this is an issue.                                                          *)
+
+
+(* shared heap for package.json tokens by filename *)
+module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
+    type t = Package_json.t
+    let prefix = Prefix.make()
+    let description = "Package"
+    let use_sqlite_fallback () = false
+  end)
+
+(* shared heap for package.json directories by package name *)
+module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
+    type t = string
+    let prefix = Prefix.make()
+    let description = "ReversePackage"
+    let use_sqlite_fallback () = false
+  end)
+
+let add_package_json filename package_json =
+  PackageHeap.add filename package_json;
+  begin match Package_json.name package_json with
+  | Some name ->
+    ReversePackageHeap.add name (Filename.dirname filename)
+  | None -> ()
+  end
+
+let get_package = PackageHeap.get
+let get_package_directory = ReversePackageHeap.get
+
+(*********************************** Mutators *********************************)
+
 module Commit_modules_mutator: sig
   type t
   val create: Transaction.t -> is_init:bool -> t
@@ -211,6 +246,15 @@ end = struct
     InfoHeap.add file info
 end
 
+(******************** APIs for saving/loading saved state *********************)
+
 module FromSavedState = struct
   let add_resolved_requires = ResolvedRequiresHeap.add
+end
+
+module ForSavedState = struct
+  exception Package_not_found of string
+  let get_package_json_unsafe file =
+    try PackageHeap.find_unsafe file
+    with Not_found -> raise (Package_not_found file)
 end
