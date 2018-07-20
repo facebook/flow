@@ -121,10 +121,12 @@ let parse ~options ~profiling ~workers parse_next =
     Lwt.return (collate_parse_results ~options results)
   )
 
-let reparse ~options ~profiling ~workers modified =
+let reparse ~options ~profiling ~workers ~modified ~deleted =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
     let%lwt new_or_changed, results =
-      Parsing_service_js.reparse_with_defaults ~with_progress:true options workers modified in
+      Parsing_service_js.reparse_with_defaults
+        ~with_progress:true ~workers ~modified ~deleted options
+    in
     let parse_ok, unparsed, unchanged, local_errors = collate_parse_results ~options results in
     Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors)
   )
@@ -635,7 +637,7 @@ let init_package_heap ~options ~profiling parsed =
     FilenameSet.iter (fun filename ->
       match filename with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-        let ast = Parsing_service_js.get_ast_unsafe filename in
+        let ast = Parsing_heaps.get_ast_unsafe filename in
         Module_js.add_package str ast
       | _ -> ()
     ) parsed;
@@ -719,7 +721,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
    * provides based on the existence of foo.js *)
   let updates = FilenameSet.fold (fun file updates ->
     if not (File_key.check_suffix file Files.flow_ext) &&
-      Parsing_service_js.has_ast (File_key.with_suffix file Files.flow_ext)
+      Parsing_heaps.has_ast (File_key.with_suffix file Files.flow_ext)
     then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
     else updates
   ) updates updates in
@@ -751,15 +753,14 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~force_focu
     if deleted_count > 0 then log_files deleted "deleted" deleted_count
   );
 
-  (* clear errors, asts for deleted files *)
-  Parsing_service_js.remove_batch deleted;
-  SharedMem_js.collect `gentle;
+  (* We don't need to delete things from the parsing heaps - they will be automatically oldified.
+   * Oldifying something removes it from the heap (but keeps it around in case we need it back) *)
 
   Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
      removal of unchanged files *)
   let%lwt new_or_changed, freshparsed, unparsed, unchanged_parse, new_local_errors =
-     reparse ~options ~profiling ~workers modified in
+     reparse ~options ~profiling ~workers ~modified ~deleted in
 
   let new_or_changed, freshparsed =
     if force_focus then begin

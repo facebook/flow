@@ -636,9 +636,9 @@ module Haste: MODULE_SYSTEM = struct
   and exported_non_haste_module options file =
     match Files.chop_flow_ext file with
     | Some file_without_flow_ext ->
-      if Parsing_service_js.has_ast file_without_flow_ext
+      if Parsing_heaps.has_ast file_without_flow_ext
       then
-        let info = Parsing_service_js.get_docblock_unsafe file_without_flow_ext in
+        let info = Parsing_heaps.get_docblock_unsafe file_without_flow_ext in
         exported_module options file_without_flow_ext info
       else
         Modulename.Filename (file_without_flow_ext)
@@ -797,7 +797,7 @@ let resolved_requires_of ~options node_modules_containers f require_loc =
   }
 
 let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file =
-  let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+  let file_sig = Parsing_heaps.get_file_sig_unsafe file in
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
@@ -1097,7 +1097,7 @@ end = struct
      is complete. *)
   let add_parsed_info ~audit ~options file =
     let force_check = Options.all options in
-    let docblock = Parsing_service_js.get_docblock_unsafe file in
+    let docblock = Parsing_heaps.get_docblock_unsafe file in
     let module_name = exported_module ~options file docblock in
     let checked =
       force_check ||

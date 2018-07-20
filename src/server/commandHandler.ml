@@ -302,7 +302,7 @@ let get_imports ~options module_names =
       if checked then
         let { Module_js.resolved_modules; _ } =
           Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
-        let fsig = Parsing_service_js.get_file_sig_unsafe file in
+        let fsig = Parsing_heaps.get_file_sig_unsafe file in
         let requires = File_sig.(require_loc_map fsig.module_sig) in
         let mlocs = SMap.fold (fun mref locs acc ->
           let m = SMap.find_unsafe mref resolved_modules in

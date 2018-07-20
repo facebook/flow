@@ -38,8 +38,8 @@ let parse_lib_file options file =
     in
     Lwt.return (
       if not (FilenameMap.is_empty results.Parsing.parse_ok) then
-        let ast = Parsing.get_ast_unsafe lib_file in
-        let file_sig = Parsing.get_file_sig_unsafe lib_file in
+        let ast = Parsing_heaps.get_ast_unsafe lib_file in
+        let file_sig = Parsing_heaps.get_file_sig_unsafe lib_file in
         Parsing.Parse_ok (ast, file_sig)
       else if List.length results.Parsing.parse_fails > 0 then
         let _, _, parse_fails = List.hd results.Parsing.parse_fails in

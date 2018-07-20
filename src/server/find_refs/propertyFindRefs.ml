@@ -851,7 +851,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
         | Ok None ->
           let external_file_sig =
             let filename = file_key_of_module_ref file_key module_ref in
-            Option.bind filename Parsing_service_js.get_file_sig
+            Option.bind filename Parsing_heaps.get_file_sig
           in
           Result.return @@ Option.bind external_file_sig begin fun external_file_sig ->
             match external_file_sig.module_sig.module_kind with

@@ -83,7 +83,7 @@ let reqs_of_component component required =
 let merge_strict_context ~options component =
   let required, file_sigs =
     Nel.fold_left (fun (required, file_sigs) file ->
-      let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+      let file_sig = Parsing_heaps.get_file_sig_unsafe file in
       let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r locs acc ->
         let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
@@ -103,8 +103,8 @@ let merge_strict_context ~options component =
   let strict_mode = Options.strict_mode options in
   let cx, other_cxs = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-    ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
-    ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
+    ~get_ast_unsafe:Parsing_heaps.get_ast_unsafe
+    ~get_docblock_unsafe:Parsing_heaps.get_docblock_unsafe
     ~do_gc:(Options.is_debug_mode options)
     component file_reqs dep_cxs master_cx
   in

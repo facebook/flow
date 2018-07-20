@@ -145,7 +145,7 @@ end = struct
     let file_data = {
       package;
       info = Module_js.get_info_unsafe ~audit:Expensive.ok fn;
-      file_sig = Parsing_service_js.get_file_sig_unsafe fn;
+      file_sig = Parsing_heaps.get_file_sig_unsafe fn;
       resolved_requires = Module_js.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
     } in
 
