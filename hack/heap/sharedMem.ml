@@ -152,6 +152,7 @@ let init config =
 
 external stop_workers : unit -> unit = "hh_stop_workers"
 external resume_workers : unit -> unit = "hh_resume_workers"
+external check_should_exit : unit -> unit = "hh_check_should_exit"
 external set_can_worker_stop : bool -> unit = "hh_set_can_worker_stop"
 
 let on_worker_cancelled = ref (fun () -> ())
@@ -170,6 +171,9 @@ let with_worker_exit f =
   | Worker_should_exit ->
     !on_worker_cancelled ();
     exit 0
+
+(* Check if the workers are stopped and exit if they are *)
+let check_should_exit () = with_worker_exit check_should_exit
 
 external allow_removes : bool -> unit = "hh_allow_removes"
 
