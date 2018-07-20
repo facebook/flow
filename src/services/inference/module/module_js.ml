@@ -119,16 +119,6 @@ let module_name_candidates ~options name =
 
 (****************** shared dependency map *********************)
 
-(* map from module name to filename *)
-module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
-  type t = File_key.t
-  let prefix = Prefix.make()
-  let description = "Name"
-  let use_sqlite_fallback () = false
-end)
-
-let get_file = Expensive.wrap NameHeap.get
-let add_file = Expensive.wrap NameHeap.add
 
 (* map from filename to resolved requires *)
 module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
@@ -756,13 +746,6 @@ let choose_provider ~options m files errmap =
 (******************)
 
 let is_tracked_file = InfoHeap.mem
-let module_exists = NameHeap.mem
-
-let get_file_unsafe ~audit m =
-  match get_file ~audit m with
-  | Some file -> file
-  | None -> failwith
-      (spf "file name not found for module %s" (Modulename.to_string m))
 
 let get_resolved_requires_unsafe ~audit f =
   match get_resolved_requires ~audit f with
@@ -977,7 +960,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
 
   (* update NameHeap *)
   if not (Modulename.Set.is_empty remove) then begin
-    NameHeap.remove_batch remove;
+    Module_heaps.remove_file_batch remove;
     SharedMem_js.collect `gentle;
   end;
 
@@ -985,7 +968,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
     workers
     ~job: (fun () replace ->
       List.iter (fun (m, f) ->
-        add_file Expensive.ok m f
+        Module_heaps.add_file Expensive.ok m f
       ) replace;
     )
     ~neutral: ()
@@ -1000,16 +983,16 @@ let remove_batch_resolved_requires files =
   SharedMem_js.collect `gentle
 
 let get_files ~audit filename module_name =
-  (module_name, get_file ~audit module_name)::
+  (module_name, Module_heaps.get_file ~audit module_name)::
     let f_module = eponymous_module filename in
     if f_module = module_name then []
-    else [f_module, get_file ~audit f_module]
+    else [f_module, Module_heaps.get_file ~audit f_module]
 
 let get_files_unsafe ~audit filename module_name =
-  (module_name, get_file_unsafe ~audit module_name)::
+  (module_name, Module_heaps.get_file_unsafe ~audit module_name)::
     let f_module = eponymous_module filename in
     if f_module = module_name then []
-    else [f_module, get_file_unsafe ~audit f_module]
+    else [f_module, Module_heaps.get_file_unsafe ~audit f_module]
 
 (* Clear module mappings for given files, if they exist.
 

@@ -50,7 +50,7 @@ let reqs_of_component component required =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, locs, resolved_r, file = req in
       let locs = locs |> Nel.to_list |> LocSet.of_list in
-      Module_js.(match get_file Expensive.ok resolved_r with
+      Module_js.(match Module_heaps.get_file Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
         dep_cxs, Reqs.add_res f file locs reqs
       | Some dep ->

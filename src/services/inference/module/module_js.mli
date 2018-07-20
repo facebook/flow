@@ -47,13 +47,6 @@ val imported_module:
 val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t
 
-val module_exists: Modulename.t -> bool
-
-val get_file_unsafe: (Modulename.t -> File_key.t) Expensive.t
-
-(* given a module name, returns either (Some filename) or None *)
-val get_file: (Modulename.t -> File_key.t option) Expensive.t
-
 val is_tracked_file: File_key.t -> bool
 
 (* given a filename, returns resolved requires. unsafe *)

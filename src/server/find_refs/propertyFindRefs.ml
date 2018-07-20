@@ -423,7 +423,7 @@ let file_key_of_module_ref file_key module_ref =
     file_key
     module_ref
   in
-  Module_js.get_file ~audit:Expensive.warn resolved
+  Module_heaps.get_file ~audit:Expensive.warn resolved
 
 let process_prop_refs cx potential_refs file_key prop_def_info name =
   potential_refs |>

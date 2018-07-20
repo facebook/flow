@@ -487,7 +487,7 @@ let typecheck
    StartRecheck and EndRecheck messages. *)
 let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requires =
   let infer_input = Modulename.Set.fold (fun m acc ->
-    match Module_js.get_file m ~audit:Expensive.warn with
+    match Module_heaps.get_file m ~audit:Expensive.warn with
     | Some f ->
       if FilenameSet.mem f !env.ServerEnv.files && Module_js.checked_file f ~audit:Expensive.warn
       then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc

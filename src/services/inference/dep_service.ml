@@ -207,19 +207,17 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
    savings in init and recheck times). *)
 
 
-let checked_module ~audit m = Module_js.(
-  m |> get_file_unsafe ~audit |> checked_file ~audit
-)
+let checked_module ~audit m =
+  m |> Module_heaps.get_file_unsafe ~audit |> Module_js.checked_file ~audit
 
 (* A file is considered to implement a required module r only if the file is
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~audit r = Module_js.(
-  if module_exists r && checked_module ~audit r
-  then Some (get_file_unsafe ~audit r)
+let implementation_file ~audit r =
+  if Module_heaps.module_exists r && checked_module ~audit r
+  then Some (Module_heaps.get_file_unsafe ~audit r)
   else None
-)
 
 let file_dependencies ~audit file = Module_js.(
   let file_sig = Parsing_heaps.get_file_sig_unsafe file in

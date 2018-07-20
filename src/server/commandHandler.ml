@@ -193,7 +193,7 @@ let find_module ~options (moduleref, filename) =
   let module_name = Module_js.imported_module
     ~options ~node_modules_containers:!Files.node_modules_containers
     file (Nel.one loc) moduleref in
-  Module_js.get_file ~audit:Expensive.warn module_name
+  Module_heaps.get_file ~audit:Expensive.warn module_name
 
 let gen_flow_files ~options env files =
   let errors, warnings, _ = ErrorCollator.get env in
@@ -290,7 +290,7 @@ let module_name_of_string ~options module_name_str =
 let get_imports ~options module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Module_js.get_file ~audit:Expensive.warn module_name with
+    match Module_heaps.get_file ~audit:Expensive.warn module_name with
     | Some file ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
