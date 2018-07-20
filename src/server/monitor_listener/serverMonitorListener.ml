@@ -14,21 +14,24 @@ module ListenLoop = LwtLoop.Make (struct
 
   let handle_message genv = function
   | MonitorProt.Request (request_id, command) ->
-    ServerMonitorListenerState.push_new_workload
-      (fun env -> CommandHandler.handle_ephemeral genv env (request_id, command))
+    CommandHandler.handle_ephemeral genv (request_id, command)
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
     ServerMonitorListenerState.push_new_workload
-      (fun env -> CommandHandler.handle_persistent genv env client_id request)
+      (fun env -> CommandHandler.handle_persistent genv env client_id request);
+    Lwt.return_unit
   | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
     ServerMonitorListenerState.push_new_env_update (fun env -> { env with
       connections = Persistent_connection.add_client env.connections client_id logging_context lsp
-    })
+    });
+    Lwt.return_unit
   | MonitorProt.DeadPersistentConnection client_id ->
     ServerMonitorListenerState.push_new_env_update (fun env -> { env with
       connections = Persistent_connection.remove_client env.connections client_id
-    })
+    });
+    Lwt.return_unit
   | MonitorProt.FileWatcherNotification changed_files ->
-    ServerMonitorListenerState.push_files_to_recheck changed_files
+    ServerMonitorListenerState.push_files_to_recheck changed_files;
+    Lwt.return_unit
   | MonitorProt.PleaseDie please_die_reason ->
     (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the
      * middle of a job this will lead to some log spew. We probably should send SIGTERM to each
@@ -47,7 +50,7 @@ module ListenLoop = LwtLoop.Make (struct
 
   let main genv =
     let%lwt message = MonitorRPC.read () in
-    handle_message genv message;
+    let%lwt () = handle_message genv message in
     Lwt.return genv
 
   external reraise : exn -> 'a = "%reraise"

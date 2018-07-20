@@ -11,8 +11,8 @@ open Utils_js
 let get_lazy_stats genv env =
   { ServerProt.Response.
     lazy_mode = Options.lazy_mode genv.options;
-    checked_files = CheckedSet.all env.checked_files |> Utils_js.FilenameSet.cardinal;
-    total_files = Utils_js.FilenameSet.cardinal env.files;
+    checked_files = CheckedSet.all env.checked_files |> FilenameSet.cardinal;
+    total_files = FilenameSet.cardinal env.files;
   }
 
 (* filter a set of updates coming from dfind and return
@@ -157,36 +157,41 @@ let recheck genv env ?(files_to_focus=FilenameSet.empty) updates =
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes *)
 let rec recheck_single
-    ?(files_to_recheck=Utils_js.FilenameSet.empty)
-    ?(files_to_focus=Utils_js.FilenameSet.empty)
+    ?(files_to_recheck=FilenameSet.empty)
+    ?(files_to_focus=FilenameSet.empty)
     genv env =
-  let env = ServerMonitorListenerState.update_env env in
+  let open ServerMonitorListenerState in
+  let env = update_env env in
   let process_updates = process_updates genv env in
-  let new_updates = ServerMonitorListenerState.get_and_clear_updates_for_recheck ~process_updates in
-  let updates = Utils_js.FilenameSet.union files_to_recheck new_updates
-    |> Utils_js.FilenameSet.union files_to_focus in
-  if Utils_js.FilenameSet.is_empty updates
-  then Lwt.return (Error env) (* Nothing to do *)
-  else
-    let recheck_thread = recheck genv env ~files_to_focus updates in
+  let workload = get_and_clear_recheck_workload ~process_updates in
+  let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
+  let files_to_focus = FilenameSet.union files_to_focus workload.files_to_focus in
+  let all_files = FilenameSet.union files_to_recheck files_to_focus in
+  if FilenameSet.is_empty all_files
+  then begin
+    List.iter (fun callback -> callback None) workload.profiling_callbacks;
+    Lwt.return (Error env) (* Nothing to do *)
+  end else
+    let recheck_thread = recheck genv env ~files_to_focus all_files in
     let cancel_thread =
-      let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
+      let%lwt () = wait_for_updates_for_recheck ~process_updates in
       Hh_logger.info "Canceling recheck due to new file changes";
       Lwt.cancel recheck_thread;
       Lwt.return_unit
     in
     try%lwt
-      let%lwt ret = recheck_thread in
+      let%lwt (profiling, env) = recheck_thread in
       Lwt.cancel cancel_thread;
-      Lwt.return (Ok ret)
+      List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
+      Lwt.return (Ok (profiling, env))
     with Lwt.Canceled as exn ->
       Hh_logger.info ~exn
         "Recheck successfully canceled. Restarting the recheck to include new file changes";
-      recheck_single ~files_to_recheck:updates ~files_to_focus genv env
+      recheck_single ~files_to_recheck:all_files ~files_to_focus genv env
 
 let rec recheck_loop
-    ?(files_to_recheck=Utils_js.FilenameSet.empty)
-    ?(files_to_focus=Utils_js.FilenameSet.empty)
+    ?(files_to_recheck=FilenameSet.empty)
+    ?(files_to_focus=FilenameSet.empty)
     genv env =
   match%lwt recheck_single ~files_to_recheck ~files_to_focus genv env with
   | Error env ->
