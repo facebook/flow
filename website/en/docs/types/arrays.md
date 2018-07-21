@@ -116,3 +116,27 @@ if (value !== undefined) {
 
 As Flow is made to be smarter it may be possible in the future to fix this
 problem, but for now you should be aware of it.
+
+## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
+
+Similar to `$ReadOnly<T>`, it is the supertype of all arrays and all tuples and
+represents an immutable array. It does not contain any methods that will allow an
+object of this type to be mutated (no `push()`, `pop()`, etc.)
+
+```js
+// @flow
+const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
+
+const first = readonlyArray[0] // Ok to read
+readonlyArray[1] = 20          // Error
+readonlyArray.push(4)          // Error
+```
+
+Note that an array of type `$ReadOnlyArray<T>` can still have mutable _elements_:
+
+```js
+// @flow
+const readonlyArray: $ReadOnlyArray<{x: number}> = [{x: 1}];
+readonlyArray[0] = {x: 42}; // error
+readonlyArray[0].x = 42; // ok
+```

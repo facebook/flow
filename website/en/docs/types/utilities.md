@@ -9,12 +9,11 @@ Table of contents:
 - [`$Keys<T>`](#toc-keys)
 - [`$Values<T>`](#toc-values)
 - [`$ReadOnly<T>`](#toc-readonly)
-- [`$ReadOnlyArray<T>`](#toc-readonlyarray)
 - [`$Exact<T>`](#toc-exact)
 - [`$Diff<A, B>`](#toc-diff)
 - [`$Rest<A, B>`](#toc-rest)
-- [`$PropertyType<T>`](#toc-propertytype)
-- [`$ElementType<T>`](#toc-elementtype)
+- [`$PropertyType<T, k>`](#toc-propertytype)
+- [`$ElementType<T, K>`](#toc-elementtype)
 - [`$ObjMap<T, F>`](#toc-objmap)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F>`](#toc-call)
@@ -144,19 +143,6 @@ type Obj = {
 };
 
 type MappedObj = $ReadOnly<$ObjMap<Obj, TypeFn>> // Still read-only
-```
-
-## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
-
-Similar to `$ReadOnly<T>`, it is the supertype of all arrays and all tuples and represents an immutable array. It does not contain any methods that will allow an object of this type to be mutated (no `push()`, `pop()`, etc.)
-
-```js
-// @flow
-const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
-
-const first = readonlyArray[0] // Ok to read
-readonlyArray[1] = 20          // Error
-readonlyArray.push(4)          // Error
 ```
 
 ## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
@@ -321,7 +307,7 @@ type Tuple = [boolean, string];
 ('bar': $ElementType<Tuple, 2>); // Nope, can't access position 2
 ```
 
-In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
+In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T, k>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
 
 ```js
 // @flow
@@ -351,7 +337,7 @@ type NumberObj = {
 (42: $ElementType<$ElementType<NumberObj, 'nums'>, number>);
 ```
 
-Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T>`](#toc-propertytype) is that you can use it with generics. For example:
+Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T, k>`](#toc-propertytype) is that you can use it with generics. For example:
 
 ```js
 // @flow
@@ -362,6 +348,21 @@ function getProp<O: {+[string]: mixed}, P: $Keys<O>>(o: O, p: P): $ElementType<O
 (getProp({a: 42}, 'a'): number); // OK
 (getProp({a: 42}, 'a'): string); // Error: number is not a string
 getProp({a: 42}, 'b'); // Error: `b` does not exist
+```
+
+## `$NonMaybeType<T>` <a class="toc" id="toc-nonmaybe" href="#toc-nonmaybe"></a>
+
+`$NonMaybeType<T>` converts a type `T` to a non-maybe type. In other words, the values of `$NonMaybeType<T>` are the values of `T` except for `null` and `undefined`.
+
+```js
+// @flow
+type MaybeName = ?string;
+type Name = $NonMaybeType<MaybeName>;
+
+('Gabriel': MaybeName); // Ok
+(null: MaybeName); // Ok
+('Gabriel': Name); // Ok
+(null: Name); // Error! null can't be annotated as Name because Name is not a maybe type
 ```
 
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
