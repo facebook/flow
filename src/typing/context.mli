@@ -129,7 +129,7 @@ val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_severity_cover: t -> ExactCover.lint_severity_cover -> unit
-val add_unused_lint_suppressions: t -> LocSet.t -> unit
+val add_lint_suppressions: t -> LocSet.t -> unit
 val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_require: t -> Loc.t -> Type.t -> unit
@@ -178,6 +178,8 @@ val test_prop_get_never_hit: t -> (string option * (Reason.t * Reason.t) * Type.
 
 val mark_optional_chain: t -> Loc.t -> Reason.t -> useful:bool -> unit
 val unnecessary_optional_chains: t -> (Loc.t * Reason.t) list
+val mark_invariant: t -> Loc.t -> Reason.t -> useful:bool -> unit
+val unnecessary_invariants: t -> (Loc.t * Reason.t) list
 
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit

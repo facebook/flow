@@ -7,9 +7,8 @@
 
 val handle_ephemeral:
   ServerEnv.genv ->
-  ServerEnv.env ->
   MonitorProt.request_id * ServerProt.Request.command_with_context ->
-  ServerEnv.env Lwt.t
+  unit Lwt.t
 
 val handle_persistent:
   ServerEnv.genv ->

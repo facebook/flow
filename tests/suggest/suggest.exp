@@ -17,7 +17,7 @@ const b = (
     z.f,
   )
 );
-b((k: string, l: number): string => l + k, "a", {f: 2});
+b((k: string, l: number): string => l + k, "a", { f: 2 });
 
 class-0.js
 // @flow
@@ -147,7 +147,7 @@ foo(
 poly-0.js
 // @flow
 function foo<T>(x: T): {|f: T|} {
-  return {f: x};
+  return { f: x };
 }
 
 react-0.js

@@ -19,7 +19,7 @@ Rename of an object property:
         "start":{"line":7,"column":3,"offset":90},
         "end":{"line":7,"column":15,"offset":103}
       },
-      "newText":"return {newName: bar};"
+      "newText":"return { newName: bar };"
     },
     {
       "oldRange":{
@@ -53,7 +53,7 @@ Rename of a local variable used in object shorthand:
         "start":{"line":7,"column":3,"offset":90},
         "end":{"line":7,"column":15,"offset":103}
       },
-      "newText":"return {bar: newName};"
+      "newText":"return { bar: newName };"
     }
   ]
 }

@@ -128,16 +128,16 @@ end = struct
     let preamble_core = get_preamble_core size in
     let preamble = Bytes.create (preamble_core_size + 1) in
     Bytes.set preamble 0 preamble_start_sentinel;
-    String.blit preamble_core 0 preamble 1 4;
+    Bytes.blit preamble_core 0 preamble 1 4;
     preamble
 
   let parse_preamble preamble =
-    if (String.length preamble) <> expected_preamble_size
-      || (String.get preamble 0) <> preamble_start_sentinel then
+    if (Bytes.length preamble) <> expected_preamble_size
+      || (Bytes.get preamble 0) <> preamble_start_sentinel then
       raise Malformed_Preamble_Exception;
     let rec loop i acc =
       if i >= 5 then acc
-      else loop (i + 1) ((acc * 256) + (int_of_char (String.get preamble i))) in
+      else loop (i + 1) ((acc * 256) + (int_of_char (Bytes.get preamble i))) in
     loop 1 0
 
   let rec write_payload ?timeout fd buffer offset to_write =
@@ -152,8 +152,8 @@ end = struct
 
   (* Returns the size of the marshaled payload *)
   let to_fd_with_preamble ?timeout ?(flags=[]) fd obj =
-    let payload = Marshal.to_string obj flags in
-    let size = String.length payload in
+    let payload = Marshal.to_bytes obj flags in
+    let size = Bytes.length payload in
     let preamble = make_preamble size in
     write_payload ?timeout fd preamble 0 expected_preamble_size
     >>= (fun preamble_bytes_written ->
@@ -198,7 +198,7 @@ end = struct
       >>= (fun payload_size_read ->
         if (payload_size_read <> payload_size)
         then WriterReader.fail Reading_Payload_Exception
-        else WriterReader.return (Marshal.from_string payload 0)
+        else WriterReader.return (Marshal.from_bytes payload 0)
       )
     )
 end

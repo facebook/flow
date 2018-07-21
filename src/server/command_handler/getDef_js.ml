@@ -134,7 +134,7 @@ let getdef_get_result_from_hooks ~options cx state =
       let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
-        let filename = Module_js.get_file Expensive.warn (
+        let filename = Module_heaps.get_file Expensive.warn (
           Module_js.imported_module ~options
             ~node_modules_containers:!Files.node_modules_containers
             (Context.file cx) (Nel.one require_loc) name

@@ -18,6 +18,7 @@ val stop_timer: timer:string -> running -> unit
 val with_timer_lwt: timer:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 val get_finished_timer: timer:string -> running -> (float * float * float * float) option
 
+val legacy_sample_memory: metric:string -> value:float -> running -> unit
 val sample_memory: metric:string -> value:float -> running -> unit
 
 val get_timing_json_string: finished -> string

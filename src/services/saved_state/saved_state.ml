@@ -12,14 +12,14 @@ open Utils_js
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
-  info: Module_js.info;
+  info: Module_heaps.info;
   file_sig: File_sig.t;
-  resolved_requires: Module_js.resolved_requires;
+  resolved_requires: Module_heaps.resolved_requires;
 }
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_info: Module_js.info;
+  unparsed_info: Module_heaps.info;
 }
 
 (* This is the complete saved state data representation *)
@@ -113,9 +113,9 @@ end = struct
 
   let normalize_info ~root info =
     let module_name =
-      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_js.module_name
+      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_heaps.module_name
     in
-    { info with Module_js.module_name }
+    { info with Module_heaps.module_name }
 
   let normalize_parsed_data ~root parsed_file_data =
     (* info *)
@@ -125,11 +125,13 @@ end = struct
     let file_sig = (new file_sig_normalizer root)#file_sig parsed_file_data.file_sig in
 
     (* resolved_requires *)
-    let { Module_js.resolved_modules; phantom_dependents } = parsed_file_data.resolved_requires in
+    let { Module_heaps.resolved_modules; phantom_dependents } =
+      parsed_file_data.resolved_requires
+    in
     let phantom_dependents = SSet.map (Files.relative_path root) phantom_dependents in
     let resolved_modules = SMap.map
       (modulename_map_fn ~f:(normalize_file_key ~root)) resolved_modules in
-    let resolved_requires = { Module_js.resolved_modules; phantom_dependents } in
+    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
     { package = parsed_file_data.package; info; file_sig; resolved_requires }
 
@@ -138,15 +140,15 @@ end = struct
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-          Some (Module_js.get_package_json_for_saved_state_unsafe str)
+          Some (Module_heaps.ForSavedState.get_package_json_unsafe str)
       | _ -> None
     in
 
     let file_data = {
       package;
-      info = Module_js.get_info_unsafe ~audit:Expensive.ok fn;
-      file_sig = Parsing_service_js.get_file_sig_unsafe fn;
-      resolved_requires = Module_js.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
+      info = Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
+      file_sig = Parsing_heaps.get_file_sig_unsafe fn;
+      resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -158,7 +160,7 @@ end = struct
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~root unparsed_heaps fn  =
     let relative_file_data = {
-      unparsed_info = normalize_info ~root @@ Module_js.get_info_unsafe ~audit:Expensive.ok fn;
+      unparsed_info = normalize_info ~root @@ Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -317,9 +319,9 @@ end = struct
 
   let denormalize_info ~root info =
     let module_name =
-      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_js.module_name
+      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_heaps.module_name
     in
-    { info with Module_js.module_name }
+    { info with Module_heaps.module_name }
 
   (* Turns all the relative paths in a file's data back into absolute paths.
    *
@@ -332,11 +334,11 @@ end = struct
     let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
 
     (* resolved_requires *)
-    let { Module_js.resolved_modules; phantom_dependents } = file_data.resolved_requires in
+    let { Module_heaps.resolved_modules; phantom_dependents } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules = SMap.map
       (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules in
-    let resolved_requires = { Module_js.resolved_modules; phantom_dependents } in
+    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
     { package = file_data.package; info; file_sig; resolved_requires }
 

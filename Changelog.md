@@ -1,3 +1,27 @@
+### 0.77.0
+
+New Features:
+
+* New lint to disallow `a && b` when `a` is a `number`. See https://flow.org/en/docs/linting/rule-reference/#toc-sketchy-number
+* Support multi-hop/indirect find-refs in LSP
+* Expose renaming through the Flow LSP
+
+Notable bug fixes:
+
+* Fix server crash on persistent-command unhandled exception
+
+Misc:
+
+* Library type definition changes: created explicit type for `Context`, added `readAsBinaryString` to `FileReader`
+* AST differ utility to power rename
+* More uniform bucketing of jobs to be run in parallel leads to higher CPU utilization
+* Improvements to type printing
+* Treat getters and setters as proto fields
+
+Parser:
+
+* Optimization when saving comments
+
 ### 0.76.0
 
 Likely to cause new Flow errors:

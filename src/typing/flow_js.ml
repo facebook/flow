@@ -1571,7 +1571,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
     | DefT (_, NumT (Literal (_, (n, _)))), DebugSleepT _ ->
-      Unix.sleepf n
+      let n = ref n in
+      while !n > 0.0 do
+        WorkerCancel.check_should_exit ();
+        Unix.sleepf (min (!n) 1.0);
+        n := !n -. 1.
+      done
 
     (*************************)
     (* repositioning, part 1 *)
@@ -2423,6 +2428,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | InternalT (OptionalChainVoidT r), u ->
       rec_flow cx trace (DefT (r, VoidT), u);
+
+    (*************)
+    (* invariant *)
+    (*************)
+
+    | _, InvariantT r' -> Context.mark_invariant cx (loc_of_reason r') (reason_of_t l) ~useful:(
+        match Type_filter.not_exists l with
+        | DefT (_, EmptyT) -> false
+        | _ -> true
+      )
 
     (***************)
     (* maybe types *)
@@ -8663,27 +8678,22 @@ and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t =
         in
         rec_flow cx trace (o.proto_t, LookupT (reason_op, strict, [], propref,
             RWProp (use_op, l, tin, Write (Normal, prop_t))))
-    | Computed elem_t -> begin
-      let rec handle_elem_t elem_t =
-        match elem_t with
-        | OpenT _ ->
-          let loc = loc_of_t elem_t in
-          add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedOpen))
-        | DefT (_, StrT Literal _) ->
-          let loc = loc_of_t elem_t in
-          add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedLiteral))
-        | DefT (_, AnyT) | DefT (_, StrT _) | DefT (_, NumT _) ->
-          (* any, string, and number keys are allowed, but there's nothing else to
-             flow without knowing their literal values. *)
-          rec_flow_t cx trace (tin, AnyT.why reason_op)
-        | OpaqueT (_, {super_t = Some t; _}) ->
-            handle_elem_t t
-        | _ ->
-          let reason_prop = reason_of_t elem_t in
-          add_output cx ~trace (FlowError.EObjectComputedPropertyAssign
-            (reason_op, reason_prop)) in
-      handle_elem_t elem_t
-    end
+    | Computed elem_t ->
+      match elem_t with
+      | OpenT _ ->
+        let loc = loc_of_t elem_t in
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedOpen))
+      | DefT (_, StrT Literal _) ->
+        let loc = loc_of_t elem_t in
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+      | DefT (_, AnyT) | DefT (_, StrT _) | DefT (_, NumT _) ->
+        (* any, string, and number keys are allowed, but there's nothing else to
+           flow without knowing their literal values. *)
+        rec_flow_t cx trace (tin, AnyT.why reason_op)
+      | _ ->
+        let reason_prop = reason_of_t elem_t in
+        add_output cx ~trace (FlowError.EObjectComputedPropertyAssign
+          (reason_op, reason_prop));
 
 and find_or_intro_shadow_prop cx trace reason_op x prop_loc =
   let intro_shadow_prop id =

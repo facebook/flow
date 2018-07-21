@@ -30,6 +30,7 @@ type event =
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
+| Canceling_progress of progress
 | Finishing_up of summary
 | Recheck_start
 | Handling_request_start

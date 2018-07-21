@@ -8,10 +8,6 @@
 open Utils_js
 open Sys_utils
 
-exception Ast_not_found of string
-exception Docblock_not_found of string
-exception Requires_not_found of string
-
 type result =
   | Parse_ok of Loc.t Ast.program * File_sig.t
   | Parse_fail of parse_failure
@@ -56,90 +52,6 @@ let empty_result = {
 }
 
 (**************************** internal *********************************)
-
-(* shared heap for parsed ASTs by filename *)
-module ASTHeap = SharedMem_js.WithCache (File_key) (struct
-    type t = Loc.t Ast.program
-    let prefix = Prefix.make()
-    let description = "AST"
-    let use_sqlite_fallback () = false
-end)
-
-module DocblockHeap = SharedMem_js.WithCache (File_key) (struct
-    type t = Docblock.t
-    let prefix = Prefix.make()
-    let description = "Docblock"
-    let use_sqlite_fallback () = false
-end)
-
-module FileSigHeap = SharedMem_js.WithCache (File_key) (struct
-    type t = File_sig.t
-    let prefix = Prefix.make()
-    let description = "Requires"
-    let use_sqlite_fallback () = false
-end)
-
-(* Contains the hash for every file we even consider parsing *)
-module FileHashHeap = SharedMem_js.WithCache (File_key) (struct
-    (* In the future I imagine a system like this:
-     *
-     * type t = {
-     *   since_version: Recheck.version;
-     *   hash: Sha1.hash;
-     * }
-     *
-     * Every time we notice files changing (via file_watcher or some other way) we bump the version
-     * so a recheck is known to be from version N to version N+1. If the recheck gets cancelled
-     * due to a file watcher event, then we're checking from version N to version N+2 (etc etc).
-     *
-     * Ideally we'd be able to ignore file watcher events that are either old & outdated or where
-     * hash hasn't changed (watchman can provide the sha1).
-     *
-     * And ideally a cancelled recheck leading to a recheck from version N to N+2 will still
-     * merge file foo.js, even if we parsed it at version N+1 & it's unchanged since version N+1.
-     *)
-    type t = Xx.hash
-    let prefix = Prefix.make()
-    let description = "FileHash"
-    let use_sqlite_fallback () = false
-end)
-
-let add_file_sig_from_saved_state = FileSigHeap.add
-
-(* Groups operations on the multiple heaps that need to stay in sync *)
-module ParsingHeaps = struct
-  let add file ast info file_sig =
-    ASTHeap.add file ast;
-    DocblockHeap.add file info;
-    FileSigHeap.add file file_sig
-
-  let oldify_batch files =
-    ASTHeap.oldify_batch files;
-    DocblockHeap.oldify_batch files;
-    FileSigHeap.oldify_batch files;
-    FileHashHeap.oldify_batch files
-
-  let remove_batch files =
-    ASTHeap.remove_batch files;
-    DocblockHeap.remove_batch files;
-    FileSigHeap.remove_batch files;
-    FileHashHeap.remove_batch files;
-    SharedMem_js.collect `gentle
-
-  let remove_old_batch files =
-    ASTHeap.remove_old_batch files;
-    DocblockHeap.remove_old_batch files;
-    FileSigHeap.remove_old_batch files;
-    FileHashHeap.remove_old_batch files;
-    SharedMem_js.collect `gentle
-
-  let revive_batch files =
-    ASTHeap.revive_batch files;
-    DocblockHeap.revive_batch files;
-    FileSigHeap.revive_batch files;
-    FileHashHeap.revive_batch files
-end
-
 (* TODO: add TypesForbidden (disables types even on files with @flow) and
    TypesAllowedByDefault (enables types even on files without @flow, but allows
    something like @noflow to disable them) *)
@@ -452,14 +364,14 @@ let hash_content content =
 
 let does_content_match_file_hash file content =
   let content_hash = hash_content content in
-  match FileHashHeap.get file with
+  match Parsing_heaps.get_file_hash file with
   | None -> false
   | Some hash -> hash = content_hash
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
+  ~worker_mutator ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
   parse_results
   file
 : results =
@@ -481,7 +393,7 @@ let reducer
   | Some content ->
       let new_hash = hash_content content in
       let unchanged =
-        match FileHashHeap.get_old file with
+        match Parsing_heaps.get_old_file_hash file with
         | Some old_hash when old_hash = new_hash ->
           (* If this optimization is turned off then still parse the file, even though it's
            * unchanged *)
@@ -490,10 +402,10 @@ let reducer
              * foo.js.flow file because foo.js changed *)
             not (File_key.check_suffix file Files.flow_ext) &&
             (* File hasn't changed. But do we have an AST available? *)
-            ASTHeap.mem_old file
+            Parsing_heaps.has_old_ast file
         | _ ->
           (* The file has changed. Let's record the new hash *)
-          FileHashHeap.add file new_hash;
+          worker_mutator.Parsing_heaps.add_hash file new_hash;
           false
       in
       if unchanged
@@ -508,7 +420,7 @@ let reducer
         in
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok (ast, file_sig) ->
-            ParsingHeaps.add file ast info file_sig;
+            worker_mutator.Parsing_heaps.add_file file ast info file_sig;
             let parse_ok =
               FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
             in
@@ -578,11 +490,13 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   then MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements filenames)
   else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
-let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
-  workers next
+let parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
+  ~parse_unchanged workers next
 : results Lwt.t =
   let t = Unix.gettimeofday () in
-  let reducer = reducer ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged in
+  let reducer =
+    reducer ~worker_mutator ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
+  in
   let%lwt results = MultiWorkerLwt.call
     workers
     ~job: (List.fold_left reducer)
@@ -604,13 +518,15 @@ let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unc
   Lwt.return results
 
 let reparse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
-  ?with_progress workers files =
+  ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+  ~with_progress ~workers ~modified:files ~deleted =
   (* save old parsing info for files *)
-  ParsingHeaps.oldify_batch files;
+  let all_files = FilenameSet.union files deleted in
+  let master_mutator, worker_mutator = Parsing_heaps.Reparse_mutator.create transaction all_files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+    parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens
+      ~noflow ~parse_unchanged workers next
   in
   let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
@@ -619,12 +535,10 @@ let reparse
   let modified = List.fold_left (fun acc (skip, _) ->
     FilenameSet.add skip acc
   ) modified results.parse_skips in
-  (* discard old parsing info for modified files *)
-  ParsingHeaps.remove_old_batch modified;
   SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
-  ParsingHeaps.revive_batch unchanged;
+  Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
   Lwt.return (modified, results)
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
@@ -632,37 +546,17 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
     get_defaults ~types_mode ~use_strict options
   in
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged workers next
+  let worker_mutator = Parsing_heaps.Parse_mutator.create () in
+  parse
+    ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+    workers next
 
-let reparse_with_defaults ?types_mode ?use_strict ?with_progress options workers files =
+let reparse_with_defaults
+  ~transaction ?types_mode ?use_strict ?with_progress ~workers ~modified ~deleted options =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   reparse
-    ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged ?with_progress
-    workers files
-
-let has_ast = ASTHeap.mem
-
-let get_ast = ASTHeap.get
-
-let get_docblock = DocblockHeap.get
-
-let get_file_sig = FileSigHeap.get
-
-let get_ast_unsafe file =
-  try ASTHeap.find_unsafe file
-  with Not_found -> raise (Ast_not_found (File_key.to_string file))
-
-let get_docblock_unsafe file =
-  try DocblockHeap.find_unsafe file
-  with Not_found -> raise (Docblock_not_found (File_key.to_string file))
-
-let get_file_sig_unsafe file =
-  try FileSigHeap.find_unsafe file
-  with Not_found -> raise (Requires_not_found (File_key.to_string file))
-
-let remove_batch files =
-  ParsingHeaps.remove_batch files;
-  SharedMem_js.collect `gentle
+    ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+    ~with_progress ~workers ~modified ~deleted

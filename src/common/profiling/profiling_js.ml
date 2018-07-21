@@ -28,6 +28,13 @@ type result = {
   flow_cpu_usage: float;
 }
 
+type memory_result = {
+  start: float;
+  delta: float;
+  high_water_mark_delta: float;
+  is_legacy: bool;
+}
+
 module Timing : sig
   type t
   val empty: t
@@ -247,22 +254,59 @@ end
 module Memory: sig
   type t
   val empty: t
+  val legacy_sample_memory: metric:string -> value:float -> t -> t
   val sample_memory: metric:string -> value:float -> t -> t
   val to_json: t -> Hh_json.json
+  val get_results: t -> memory_result SMap.t
 end = struct
-  type t = float SMap.t
+  type t = memory_result SMap.t
 
   let empty = SMap.empty
 
+  let legacy_sample_memory ~metric ~value memory =
+    let legacy_metric = {
+      start = 0.0;
+      delta = value;
+      high_water_mark_delta = value;
+      is_legacy = true;
+    } in
+    SMap.add metric legacy_metric memory
+
+  let start_sampling ~metric ~value memory =
+    let new_metric = {
+      start = value;
+      delta = 0.0;
+      high_water_mark_delta = 0.0;
+      is_legacy = false;
+    } in
+    SMap.add metric new_metric memory
+
   let sample_memory ~metric ~value memory =
-    SMap.add metric value memory
+    match SMap.get metric memory with
+    | None -> start_sampling ~metric ~value memory
+    | Some old_metric ->
+      let new_metric = { old_metric with
+        delta = value -. old_metric.start;
+        high_water_mark_delta = max (value -. old_metric.start) old_metric.high_water_mark_delta;
+      } in
+      SMap.add metric new_metric memory
+
+  let get_results memory = memory
 
   let to_json results =
     let open Hh_json in
-    let results = results
-    |> SMap.map (fun v -> JSON_Number (Dtoa.ecma_string_of_float v))
+    let object_props = results
+    |> SMap.map (fun v ->
+      if v.is_legacy
+      then JSON_Number (Dtoa.ecma_string_of_float v.delta)
+      else JSON_Object [
+        ("start", JSON_Number (Dtoa.ecma_string_of_float v.start));
+        ("delta", JSON_Number (Dtoa.ecma_string_of_float v.delta));
+        ("hwm_delta", JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta));
+      ]
+    )
     |> SMap.elements in
-    JSON_Object results
+    JSON_Object object_props
 end
 
 type finished = {
@@ -319,7 +363,7 @@ let reserved_timer_names = SSet.of_list [ profiling_timer_name ]
  * The <Unknown> sections appear when some unprofiled code takes up more than 1% of wall time. The
  * <Unknown total> is the sum of all unprofiled time.
  *)
-let print_summary =
+let print_summary_time_table =
   (* Total cpu duration *)
   let sum_cpu result =
     result.user.duration +.
@@ -361,8 +405,8 @@ let print_summary =
       print_summary_single_raw "<Unknown>" (unknown_wall, unknown_cpu) total
   in
 
-  fun profile ->
-    let results = Timing.get_results profile.timing in
+  fun timing ->
+    let results = Timing.get_results timing in
     let total, parts = SMap.fold (fun key result (total, parts) ->
       if key = profiling_timer_name
       then (Some result), parts
@@ -409,6 +453,51 @@ let print_summary =
     (* Print the unknown totals *)
     print_summary_single_raw "<Unknown total>" remaining total
 
+let print_summary_memory_table =
+  let pretty_num f =
+    let abs_f = abs_float f in
+    if abs_f > 1000000000.0
+    then Printf.sprintf "%+7.2fG" (f /. 1000000000.0)
+    else if abs_f > 1000000.0
+    then Printf.sprintf "%+7.2fM" (f /. 1000000.0)
+    else if abs_f > 1000.0
+    then Printf.sprintf "%+7.2fK" (f /. 1000.0)
+    else Printf.sprintf "%+7.2f " f
+  in
+
+  let pretty_pct num denom =
+    if denom = 0.0 then "(--N/A--)" else Printf.sprintf "(%+5.1f%%)" (100.0 *. num /. denom)
+  in
+
+  (* Prints a single row of the table. All but the last column have a fixed width. *)
+  let print_summary_single key result =
+    Printf.eprintf "%s\t\t%s %s\t%s %s\t%s\n%!"
+      (pretty_num result.start)
+      (pretty_num result.delta)
+      (pretty_pct result.delta result.start)
+      (pretty_num result.high_water_mark_delta)
+      (pretty_pct result.high_water_mark_delta result.start)
+      key
+  in
+
+  fun memory ->
+    let results = Memory.get_results memory in
+    if SMap.cardinal results > 0
+    then begin
+      (* Print the header *)
+      Printf.eprintf "  START\t\t\t       DELTA \t\t     HWM DELTA  \tSECTION\n%!";
+      Printf.eprintf "--------------------------------------------------------\n%!";
+
+      SMap.iter print_summary_single results
+    end
+
+let print_summary profile =
+  Printf.eprintf "\n%!";
+  print_summary_time_table profile.timing;
+  Printf.eprintf "\n%!";
+  print_summary_memory_table profile.memory;
+  Printf.eprintf "\n%!"
+
 let with_profiling_lwt ~should_print_summary f =
   let profiling = ref empty in
   start_timer ~timer:profiling_timer_name profiling;
@@ -446,6 +535,8 @@ let get_finished_timer ~timer profile =
   | Some r ->
     Some (r.wall.start_age, r.wall.duration, r.processor_totals.cpu_usage, r.flow_cpu_usage)
 
+let legacy_sample_memory ~metric ~value profile =
+  profile := {!profile with memory = Memory.legacy_sample_memory ~metric ~value !profile.memory }
 let sample_memory ~metric ~value profile =
   profile := {!profile with memory = Memory.sample_memory ~metric ~value !profile.memory }
 

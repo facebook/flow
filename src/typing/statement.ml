@@ -3695,7 +3695,7 @@ and subscript =
         arguments;
       } ->
         (* TODO: require *)
-        let _, callee = expression cx callee in
+        let callee_t, callee = expression cx callee in
         let targs = Option.map targs (fun (_, args) ->
           (),
           List.map (fun arg ->
@@ -3748,8 +3748,10 @@ and subscript =
               Abnormal.Throw
           | None, (Expression cond)::arguments ->
             let arguments = List.map (Fn.compose snd (expression_or_spread cx)) arguments in
-            let (_, cond), preds, _, xtypes = predicates_of_condition cx cond in
+            let (cond_t, cond), preds, _, xtypes = predicates_of_condition cx cond in
             let _ = Env.refine_with_preds cx loc preds xtypes in
+            let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
+            Flow.flow cx (cond_t, InvariantT reason);
             Expression ((), cond) :: arguments
           | _, (Spread _)::_ ->
             ignore (List.map (expression_or_spread cx) arguments);

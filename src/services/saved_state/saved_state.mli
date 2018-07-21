@@ -9,13 +9,13 @@
 
 type parsed_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
-  info: Module_js.info;
+  info: Module_heaps.info;
   file_sig: File_sig.t;
-  resolved_requires: Module_js.resolved_requires;
+  resolved_requires: Module_heaps.resolved_requires;
 }
 
 type unparsed_file_data = {
-  unparsed_info: Module_js.info;
+  unparsed_info: Module_heaps.info;
 }
 
 type saved_state_data = {

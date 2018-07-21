@@ -8,7 +8,7 @@
 let port_file (file: string) : (string, exn) result =
   try
     let file = Path.to_string (Path.make file) in
-    let ast = Parsing_service_js.get_ast_unsafe (File_key.SourceFile file) in
+    let ast = Parsing_heaps.get_ast_unsafe (File_key.SourceFile file) in
     let content = Sys_utils.cat file in
     let lines = Str.split_delim (Str.regexp "\n") content in
     let insertions = Comments_js.meta_program ast in

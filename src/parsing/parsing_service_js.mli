@@ -50,25 +50,6 @@ type results = {
 
 val docblock_max_tokens: int
 
-val extract_docblock:
-  max_tokens: int ->
-  File_key.t ->
-  string ->
-  docblock_error list * Docblock.t
-
-(* initial parsing pass: success/failure info is returned,
- * asts are made available via get_ast_unsafe. *)
-val parse:
-  types_mode: types_mode ->
-  use_strict: bool ->
-  profile: bool ->
-  max_header_tokens: int ->
-  noflow: (File_key.t -> bool) ->
-  parse_unchanged: bool ->
-  MultiWorkerLwt.worker list option ->       (* Some=parallel, None=serial *)
-  File_key.t list Bucket.next ->  (* delivers buckets of filenames *)
-  results Lwt.t                       (* job results, not asts *)
-
 (* Use default values for the various settings that parse takes. Each one can be overridden
 individually *)
 val parse_with_defaults:
@@ -79,41 +60,16 @@ val parse_with_defaults:
   File_key.t list Bucket.next ->
   results Lwt.t
 
-(* for non-initial passes: updates asts for passed file set. *)
-val reparse:
-  types_mode: types_mode ->
-  use_strict: bool ->
-  profile: bool ->
-  max_header_tokens: int ->
-  noflow: (File_key.t -> bool) ->
-  parse_unchanged: bool ->
-  ?with_progress: bool ->
-  MultiWorkerLwt.worker list option ->   (* Some=parallel, None=serial *)
-  FilenameSet.t ->          (* filenames to reparse *)
-  (FilenameSet.t * results) Lwt.t   (* modified files and job results *)
-
 val reparse_with_defaults:
+  transaction: Transaction.t ->
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   ?with_progress: bool ->
+  workers: MultiWorkerLwt.worker list option ->
+  modified: FilenameSet.t ->
+  deleted: FilenameSet.t ->
   Options.t ->
-  MultiWorkerLwt.worker list option ->
-  FilenameSet.t ->
   (FilenameSet.t * results) Lwt.t
-
-val has_ast: File_key.t -> bool
-
-val get_ast: File_key.t -> Loc.t Ast.program option
-val get_docblock: File_key.t -> Docblock.t option
-val get_file_sig: File_key.t -> File_sig.t option
-
-(* after parsing, retrieves ast and docblock by filename (unsafe) *)
-val get_ast_unsafe: File_key.t -> Loc.t Ast.program
-val get_docblock_unsafe: File_key.t -> Docblock.t
-val get_file_sig_unsafe: File_key.t -> File_sig.t
-
-(* remove asts and docblocks for given file set. *)
-val remove_batch: FilenameSet.t -> unit
 
 val parse_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
@@ -145,6 +101,3 @@ val next_of_filename_set:
   File_key.t list Bucket.next
 
 val does_content_match_file_hash: File_key.t -> string -> bool
-
-(* APIs for loading saved state *)
-val add_file_sig_from_saved_state: File_key.t -> File_sig.t -> unit

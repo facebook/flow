@@ -9,6 +9,7 @@ open Utils_js
 
 type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
+  worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   'a merge_results ->
   File_key.t Nel.t ->
@@ -44,6 +45,8 @@ val merge_contents_context_without_ensure_checked_dependencies:
 
 val merge_runner:
   job: 'a merge_job ->
+  master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
+  worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   intermediate_result_callback: ('a merge_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: MultiWorkerLwt.worker list option ->
@@ -53,6 +56,8 @@ val merge_runner:
   'a merge_results Lwt.t
 
 val merge_strict:
+  master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
+  worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   intermediate_result_callback:
     ((Errors.ErrorSet.t *
       Error_suppressions.t *

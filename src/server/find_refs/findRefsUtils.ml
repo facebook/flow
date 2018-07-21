@@ -34,7 +34,7 @@ let compute_ast_result file content =
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
 
 let get_ast_result file : (Loc.t Ast.program * File_sig.t * Docblock.t, string) result =
-  let open Parsing_service_js in
+  let open Parsing_heaps in
   let get_result f kind =
     let error =
       Printf.sprintf "Expected %s to be available for %s"

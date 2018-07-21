@@ -544,13 +544,23 @@ class mapper = object(this)
     if argument' == argument then opt
     else loc, { argument = argument'; }
 
+  method object_indexer_property_type (opt: Loc.t Ast.Type.Object.Indexer.t) =
+    let open Ast.Type.Object.Indexer in
+    let loc, { id; key; value; static; variance; } = opt in
+    let key' = this#type_ key in
+    let value' = this#type_ value in
+    if key' == key && value' == value then opt
+    else loc, { id; key = key'; value = value'; static; variance; }
+
   method object_type (ot: Loc.t Ast.Type.Object.t) =
     let open Ast.Type.Object in
     let { properties ; exact; } = ot in
     let properties' = ListUtils.ident_map (fun p -> match p with
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
       | SpreadProperty p' -> id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
-      | _ -> p (* TODO *)
+      | Indexer p' -> id this#object_indexer_property_type p' p (fun p' -> Indexer p')
+      | CallProperty _
+      | InternalSlot _ -> p (* TODO *)
     ) properties in
     if properties' == properties then ot
     else { properties = properties'; exact }

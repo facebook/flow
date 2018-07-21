@@ -33,3 +33,5 @@ val make:
   gc_control  : Gc.control ->
   heap_handle : SharedMem.handle ->
     worker list
+
+val set_report_canceled_callback: (total:int -> finished:int -> unit) -> unit

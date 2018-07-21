@@ -177,6 +177,11 @@ let detect_unnecessary_optional_chains cx =
     Flow_js.add_output cx (Flow_error.EUnnecessaryOptionalChain (loc, lhs_reason))
   ) (Context.unnecessary_optional_chains cx)
 
+let detect_unnecessary_invariants cx =
+  List.iter (fun (loc, reason) ->
+    Flow_js.add_output cx (Flow_error.EUnnecessaryInvariant (loc, reason))
+  ) (Context.unnecessary_invariants cx)
+
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
@@ -349,6 +354,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_sketchy_null_checks cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
+  detect_unnecessary_invariants cx;
 
   cx, other_cxs
 

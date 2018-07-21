@@ -193,7 +193,7 @@ let find_module ~options (moduleref, filename) =
   let module_name = Module_js.imported_module
     ~options ~node_modules_containers:!Files.node_modules_containers
     file (Nel.one loc) moduleref in
-  Module_js.get_file ~audit:Expensive.warn module_name
+  Module_heaps.get_file ~audit:Expensive.warn module_name
 
 let gen_flow_files ~options env files =
   let errors, warnings, _ = ErrorCollator.get env in
@@ -216,7 +216,7 @@ let gen_flow_files ~options env files =
           | File_input.FileName fn ->
             let file = File_key.SourceFile fn in
             let checked =
-              let open Module_js in
+              let open Module_heaps in
               match get_info file ~audit:Expensive.warn with
               | Some info -> info.checked
               | None -> false
@@ -290,19 +290,19 @@ let module_name_of_string ~options module_name_str =
 let get_imports ~options module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Module_js.get_file ~audit:Expensive.warn module_name with
+    match Module_heaps.get_file ~audit:Expensive.warn module_name with
     | Some file ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      let { Module_js.checked; _ } =
-        Module_js.get_info_unsafe ~audit:Expensive.warn file in
+      let { Module_heaps.checked; _ } =
+        Module_heaps.get_info_unsafe ~audit:Expensive.warn file in
       if checked then
-        let { Module_js.resolved_modules; _ } =
-          Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
-        let fsig = Parsing_service_js.get_file_sig_unsafe file in
+        let { Module_heaps.resolved_modules; _ } =
+          Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.warn file in
+        let fsig = Parsing_heaps.get_file_sig_unsafe file in
         let requires = File_sig.(require_loc_map fsig.module_sig) in
         let mlocs = SMap.fold (fun mref locs acc ->
           let m = SMap.find_unsafe mref resolved_modules in
@@ -327,7 +327,7 @@ let save_state ~saved_state_filename ~genv ~env =
     Lwt.return (Ok ())
   )
 
-let handle_ephemeral_unsafe
+let handle_ephemeral_deferred_unsafe
   genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
   let env = ref env in
   let respond msg =
@@ -383,14 +383,8 @@ let handle_ephemeral_unsafe
             find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
           ServerProt.Response.FIND_REFS result |> respond;
           Lwt.return json_data
-      | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
-          (* If we're not profiling the recheck, then respond immediately *)
-          if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
-          let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
-          let%lwt profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
-          env := new_env;
-          if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
-          Lwt.return None
+      | ServerProt.Request.FORCE_RECHECK _ ->
+          failwith "force-recheck cannot be deferred"
       | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
           let options = { options with Options.
             opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
@@ -470,14 +464,14 @@ let handle_ephemeral_unsafe
   MonitorRPC.status_update ~event;
   Lwt.return (!env, profiling, json_data)
 
-let handle_ephemeral genv env (request_id, command) =
+let wrap_ephemeral_handler handler genv arg (request_id, command) =
   try%lwt
-    let%lwt env, profiling, json_data = handle_ephemeral_unsafe genv env (request_id, command) in
+    let%lwt ret, profiling, json_data = handler genv arg (request_id, command) in
     FlowEventLogger.ephemeral_command_success
       ?json_data
       ~client_context:command.ServerProt.Request.client_logging_context
       ~profiling;
-    Lwt.return env
+    Lwt.return ret
   with exn ->
     let backtrace = String.trim (Printexc.get_backtrace ()) in
     let exn_str = Printf.sprintf
@@ -493,9 +487,101 @@ let handle_ephemeral genv env (request_id, command) =
       ~client_context:command.ServerProt.Request.client_logging_context
       ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
     MonitorRPC.request_failed ~request_id ~exn_str;
-    Lwt.return env
+    Lwt.return arg
+let handle_ephemeral_deferred = wrap_ephemeral_handler handle_ephemeral_deferred_unsafe
 
+let should_handle_immediately { ServerProt.Request.client_logging_context=_; command; } =
+  match command with
+    | ServerProt.Request.FORCE_RECHECK _ ->
+      true
 
+    | ServerProt.Request.AUTOCOMPLETE _
+    | ServerProt.Request.CHECK_FILE _
+    | ServerProt.Request.COVERAGE _
+    | ServerProt.Request.CYCLE _
+    | ServerProt.Request.DUMP_TYPES _
+    | ServerProt.Request.FIND_MODULE _
+    | ServerProt.Request.FIND_REFS _
+    | ServerProt.Request.GEN_FLOW_FILES _
+    | ServerProt.Request.GET_DEF _
+    | ServerProt.Request.GET_IMPORTS _
+    | ServerProt.Request.INFER_TYPE _
+    | ServerProt.Request.PORT _
+    | ServerProt.Request.REFACTOR _
+    | ServerProt.Request.STATUS _
+    | ServerProt.Request.SUGGEST _
+    | ServerProt.Request.SAVE_STATE _ ->
+      false
+
+(* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
+ * `env` is NOT available, since we don't have the server's full attention *)
+let handle_ephemeral_immediately_unsafe
+    genv () (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
+  let respond msg =
+    MonitorRPC.respond_to_request ~request_id ~response:msg
+
+  in
+  Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
+  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+  let should_print_summary = Options.should_profile genv.options in
+  let%lwt profiling, json_data =
+    Profiling_js.with_profiling_lwt ~should_print_summary begin fun _profiling ->
+      match command with
+      | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
+          let callback =
+            if profile
+            then
+              (* When the recheck finishes, respond to this request *)
+              Some (fun profiling -> respond (ServerProt.Response.FORCE_RECHECK profiling))
+            else begin
+              (* If we're not profiling the recheck, then respond immediately *)
+              respond (ServerProt.Response.FORCE_RECHECK None);
+              None
+            end
+          in
+
+          let fileset = SSet.of_list files in
+
+          if focus
+          then ServerMonitorListenerState.push_files_to_focus ?callback fileset
+          else ServerMonitorListenerState.push_files_to_recheck ?callback fileset;
+
+          Lwt.return None
+      | ServerProt.Request.AUTOCOMPLETE _
+      | ServerProt.Request.CHECK_FILE _
+      | ServerProt.Request.COVERAGE _
+      | ServerProt.Request.CYCLE _
+      | ServerProt.Request.DUMP_TYPES _
+      | ServerProt.Request.FIND_MODULE _
+      | ServerProt.Request.FIND_REFS _
+      | ServerProt.Request.GEN_FLOW_FILES _
+      | ServerProt.Request.GET_DEF _
+      | ServerProt.Request.GET_IMPORTS _
+      | ServerProt.Request.INFER_TYPE _
+      | ServerProt.Request.PORT _
+      | ServerProt.Request.REFACTOR _
+      | ServerProt.Request.STATUS _
+      | ServerProt.Request.SUGGEST _
+      | ServerProt.Request.SAVE_STATE _ ->
+          failwith (spf "Command %s must be deferred" (ServerProt.Request.to_string command))
+    end
+  in
+  let event = ServerStatus.(Finishing_up {
+    duration = Profiling_js.get_profiling_duration profiling;
+    info = CommandSummary (ServerProt.Request.to_string command)}) in
+  MonitorRPC.status_update ~event;
+  Lwt.return ((), profiling, json_data)
+
+let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
+
+let handle_ephemeral genv (request_id, command) =
+  if should_handle_immediately command
+  then handle_ephemeral_immediately genv () (request_id, command)
+  else begin
+    ServerMonitorListenerState.push_new_workload
+      (fun env -> handle_ephemeral_deferred genv env (request_id, command));
+    Lwt.return_unit
+  end
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   begin match Persistent_connection.client_did_open env.connections client ~files with
@@ -852,6 +938,54 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Error reason ->
         Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+    end
+
+  | LspToServer (RequestMessage (id, RenameRequest params), metadata) ->
+    let env = ref env in
+    let { Rename.textDocument; position; newName } = params in
+    let file_input = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client in
+    let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
+    let refactor_variant = ServerProt.Request.RENAME newName in
+    let%lwt result =
+      Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+    in
+    let edits_to_response (edits: (Loc.t * string) list) =
+      (* Extract the path from each edit and convert into a map from file to edits for that file *)
+      let file_to_edits: ((Loc.t * string) list SMap.t, string) result =
+        List.fold_left begin fun map edit ->
+          map >>= begin fun map ->
+            let (loc, _) = edit in
+            let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
+            uri >>| begin fun uri ->
+              let lst = Option.value ~default:[] (SMap.get uri map) in
+              (* This reverses the list *)
+              SMap.add uri (edit::lst) map
+            end
+          end
+        end (Ok SMap.empty) edits
+        (* Reverse the lists to restore the original order *)
+        >>| SMap.map (List.rev)
+      in
+      (* Convert all of the edits to LSP edits *)
+      let file_to_textedits: (TextEdit.t list SMap.t, string) result =
+        file_to_edits >>| SMap.map (List.map Flow_lsp_conversions.flow_edit_to_textedit)
+      in
+      let workspace_edit: (WorkspaceEdit.t, string) result =
+        file_to_textedits >>| fun file_to_textedits ->
+        { WorkspaceEdit.changes = file_to_textedits }
+      in
+      match workspace_edit with
+        | Ok x ->
+          let response = ResponseMessage (id, RenameResult x) in
+          LspResponse (Ok (!env, Some response, metadata))
+        | Error reason ->
+          LspResponse (Error (!env, with_error metadata ~reason))
+    in
+    Lwt.return begin match result with
+      | Ok (Some edits) -> edits_to_response edits
+      | Ok None -> edits_to_response []
+      | Error reason ->
+        LspResponse (Error (!env, with_error metadata ~reason))
     end
 
   | LspToServer (RequestMessage (id, RageRequest), metadata) ->

@@ -850,6 +850,7 @@ class ['a] t = object(self)
         ) uses in
         if uses' == uses then t
         else OptionalChainT (r, lhs_r, uses')
+    | InvariantT _ -> t
     | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

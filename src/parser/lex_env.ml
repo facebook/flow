@@ -23,12 +23,10 @@ and bol = {
 
 and lex_state = {
   lex_errors_acc: (Loc.t * Parse_error.t) list;
-  lex_comments_acc: Loc.t Ast.Comment.t list;
 }
 
 let empty_lex_state = {
   lex_errors_acc = [];
-  lex_comments_acc = [];
 }
 
 let new_lex_env lex_source lex_lb ~enable_types_in_comments = {
@@ -80,11 +78,10 @@ let debug_string_of_lex_env (env: t) =
       lex_lb = %s\n  \
       lex_in_comment_syntax = %b\n  \
       lex_enable_comment_syntax = %b\n  \
-      lex_state = {errors = (count = %d); comments = (count = %d)}\n\
+      lex_state = {errors = (count = %d)}\n\
     }"
     source
     (debug_string_of_lexbuf env.lex_lb)
     (is_in_comment_syntax env)
     (is_comment_syntax_enabled env)
     (List.length (state env).lex_errors_acc)
-    (List.length (state env).lex_comments_acc)

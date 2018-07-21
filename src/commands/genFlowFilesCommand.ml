@@ -75,7 +75,7 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   print_string (spf "%s -> " printed_src_file_path);
   flush stdout;
   (try (
-    ignore (Unix.single_write fd content 0 (String.length content));
+    ignore (Unix.single_write_substring fd content 0 (String.length content));
     let printed_dest_file_path =
       if strip_root
       then Files.relative_path root_str dest_file_path

@@ -171,6 +171,7 @@ type hash =
   | CondH
   | ExtendsUseH
   | ToStringH
+  | InvariantH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -325,6 +326,7 @@ let hash_of_use_ctor = Type.(function
   | CondT _ -> CondH
   | ExtendsUseT _ -> ExtendsUseH
   | ToStringT _ -> ToStringH
+  | InvariantT _ -> InvariantH
 )
 
 let add = Xx.update

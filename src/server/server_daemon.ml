@@ -9,9 +9,18 @@ open Utils_js
 
 module Server_files = Server_files_js
 
+type args = {
+  shared_mem_config: SharedMem_js.config;
+  options: Options.t;
+  logging_context: FlowEventLogger.logging_context;
+  argv: string array;
+  parent_pid: int;
+  parent_logger_pid: int option;
+  file_watcher_pid: int option;
+}
+
 type entry_point = (
-  SharedMem_js.config * Options.t * FlowEventLogger.logging_context *
-    string array * int * int option,
+  args,
   MonitorProt.monitor_to_server_message,
   MonitorProt.server_to_monitor_message
 ) Daemon.entry
@@ -55,7 +64,15 @@ let register_entry_point
   Daemon.register_entry_point
     (new_entry_point ())
     (fun args monitor_channels ->
-      let shared_mem_config, options, logging_context, argv, parent_pid, parent_logger_pid = args in
+      let {
+        shared_mem_config;
+        options;
+        logging_context;
+        argv;
+        parent_pid;
+        parent_logger_pid;
+        file_watcher_pid;
+      } = args in
       LoggingUtils.set_hh_logger_min_level options;
       Hh_logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
 
@@ -74,12 +91,13 @@ let register_entry_point
       PidLog.init (Server_files_js.pids_file ~tmp_dir root);
       PidLog.log ~reason:"monitor" parent_pid;
       Option.iter parent_logger_pid ~f:(PidLog.log ~reason:"monitor_logger");
+      Option.iter file_watcher_pid ~f:(PidLog.log ~reason:"file_watcher");
       PidLog.log ~reason:"main" (Unix.getpid ());
       Option.iter (EventLogger.logger_pid ()) ~f:(PidLog.log ~reason:"main_logger");
 
       main ~monitor_channels ~shared_mem_config options)
 
-let daemonize ~log_file ~shared_mem_config ~argv ~options main_entry =
+let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -114,11 +132,12 @@ let daemonize ~log_file ~shared_mem_config ~argv ~options main_entry =
     set_close_on_exec stdout;
     set_close_on_exec stderr
   with Unix_error (EINVAL, _, _) -> ());
-  Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) (
-    shared_mem_config,
-    options,
-    FlowEventLogger.get_context (),
-    argv,
-    Unix.getpid (),
-    EventLogger.logger_pid ()
-  )
+  Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) {
+    shared_mem_config;
+    options;
+    logging_context = FlowEventLogger.get_context ();
+    argv;
+    parent_pid = Unix.getpid ();
+    parent_logger_pid = EventLogger.logger_pid ();
+    file_watcher_pid;
+  }

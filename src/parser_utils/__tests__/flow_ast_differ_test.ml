@@ -76,4 +76,34 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
   end;
+  "new" >:: begin fun ctxt ->
+    let source = "new rename()" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
+  end;
+  "block" >:: begin fun ctxt ->
+    let source = "{ 2; 4; 10; rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((5, 6), "(5)"); ((12, 18), "gotRenamed")] edits
+  end;
+  "if_nochange" >:: begin fun ctxt ->
+    let source = "if (true) { false; } else { true; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [] edits
+  end;
+  "if_noblock" >:: begin fun ctxt ->
+    let source = "if (4) rename;" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 5), "(5)"); ((7, 13), "gotRenamed");] edits
+  end;
+  "if_partial" >:: begin fun ctxt ->
+    let source = "if (4) { rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 5), "(5)"); ((9, 15), "gotRenamed");] edits
+  end;
+  "if_full" >:: begin fun ctxt ->
+    let source = "if (4) { 4; } else { rename }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")] edits
+  end;
 ]

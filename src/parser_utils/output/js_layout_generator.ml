@@ -681,7 +681,7 @@ and expression ?(ctxt=normal_context) (root_expr: Loc.t Ast.Expression.t) =
         )
     | E.Object { E.Object.properties } ->
       list
-        ~wrap:(Atom "{", Atom "}")
+        ~wrap:(Concat [Atom "{"; flat_pretty_space], Concat [flat_pretty_space; Atom "}"])
         ~sep:(Atom ",")
         (object_properties_with_newlines properties)
     | E.Sequence { E.Sequence.expressions } ->
