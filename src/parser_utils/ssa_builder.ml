@@ -995,18 +995,17 @@ class ssa_builder = object(this)
 
 end
 
-let program program =
-  let ssa_walk = new ssa_builder in
-  ignore @@ ssa_walk#program program;
-  ssa_walk#values
-
 let program_with_scope ?(ignore_toplevel=false) program =
   let ssa_walk = new ssa_builder in
-  if ignore_toplevel then begin
-    ignore @@ ssa_walk#program program;
-    ssa_walk#acc, ssa_walk#values
-  end else
-    let hoist = new hoister in
-    let bindings = hoist#eval hoist#program program in
-    ignore @@ ssa_walk#with_bindings bindings ssa_walk#program program;
-    ssa_walk#acc, ssa_walk#values
+  let bindings =
+    if ignore_toplevel then Bindings.empty
+    else
+      let hoist = new hoister in
+      hoist#eval hoist#program program
+  in
+  ignore @@ ssa_walk#with_bindings bindings ssa_walk#program program;
+  ssa_walk#acc, ssa_walk#values
+
+let program program =
+  let _, values = program_with_scope ~ignore_toplevel:true program in
+  values

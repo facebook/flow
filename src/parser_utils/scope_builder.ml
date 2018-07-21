@@ -300,8 +300,10 @@ end
 
 let program ?(ignore_toplevel=false) program =
   let walk = new scope_builder in
-  if ignore_toplevel then walk#eval walk#program program
-  else
-    let hoist = new hoister in
-    let bindings = hoist#eval hoist#program program in
-    walk#eval (walk#with_bindings bindings walk#program) program
+  let bindings =
+    if ignore_toplevel then Bindings.empty
+    else
+      let hoist = new hoister in
+      hoist#eval hoist#program program
+  in
+  walk#eval (walk#with_bindings bindings walk#program) program
