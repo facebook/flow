@@ -64,6 +64,15 @@ end)
 (* This is the common entry point for both daemonize and start. *)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _; } = monitor_options in
+
+  let () =
+    let file_watcher =
+      FileWatcherStatus.string_of_file_watcher monitor_options.FlowServerMonitorOptions.file_watcher
+    in
+    FlowEventLogger.set_monitor_options ~file_watcher;
+    LoggingUtils.set_server_options ~server_options
+  in
+
   let root = Options.root server_options in
   let tmp_dir = Options.temp_dir server_options in
 

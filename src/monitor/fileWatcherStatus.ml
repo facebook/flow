@@ -15,17 +15,17 @@ type status' =
 | Ready
 type status = file_watcher * status'
 
-let string_of_status =
-  let string_of_watcher = function
-  | NoFileWatcher -> "Dummy file watcher"
-  | DFind -> "Dfind file watcher"
-  | Watchman -> "Watchman file watcher"
-  in
+let string_of_file_watcher = function
+  | NoFileWatcher -> "Dummy"
+  | DFind -> "Dfind"
+  | Watchman -> "Watchman"
 
+let string_of_status =
   let string_of_status = function
   | Initializing -> "still initializing"
   | Ready -> "ready"
   in
 
   fun (watcher, status) ->
-    Printf.sprintf "%s is %s" (string_of_watcher watcher) (string_of_status status)
+    Printf.sprintf
+      "%s file watcher is %s" (string_of_file_watcher watcher) (string_of_status status)

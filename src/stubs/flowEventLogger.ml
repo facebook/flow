@@ -48,6 +48,8 @@ let restore_context _ = ()
 let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
+let set_monitor_options ~file_watcher:_  = ()
+let set_server_options ~lazy_mode:_ ~cancelable_rechecks:_ = ()
 
 let status_response ~num_errors:_ = ()
 let init_done ~profiling:_ = ()

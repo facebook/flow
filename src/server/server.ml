@@ -176,6 +176,8 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
   PidLog.disable ();
   MonitorRPC.disable ();
 
+  LoggingUtils.set_server_options ~server_options:options;
+
   let initial_lwt_thread () =
     let _, program_init =
       create_program_init ~shared_mem_config ~focus_targets options in
