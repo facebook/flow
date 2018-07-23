@@ -106,4 +106,9 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")] edits
   end;
+  "function_expression" >:: begin fun ctxt ->
+    let source = "(function() { 4; })" in
+    let edits = edits_of_source source in
+    assert_equal ~msg:(debug_string_of_edits edits) ~ctxt [((14, 15), "(5)")] edits
+  end;
 ]

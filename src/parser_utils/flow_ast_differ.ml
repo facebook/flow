@@ -261,6 +261,8 @@ and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
       Some (identifier id1 id2)
     | (_, New new1), (_, New new2) ->
       new_ new1 new2
+    | (_, Function f1), (_, Function f2) ->
+      function_ f1 f2
     | _, _ ->
       None
   in
