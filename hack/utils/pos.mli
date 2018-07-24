@@ -94,6 +94,8 @@ val first_char_of_line : t -> t
 
 val to_absolute : t -> absolute
 
+val to_relative: absolute -> t
+
 val to_relative_string : t -> string pos
 
 val get_text_from_pos: content:string -> 'a pos -> string
@@ -106,6 +108,8 @@ val destruct_range : 'a pos -> (int * int * int * int)
 val compare : 'a pos -> 'a pos -> int
 
 val set_file : 'a -> 'a pos -> 'a pos
+
+val end_line_beg_offset: 'a pos -> int * int * int
 
 val make_from_lnum_bol_cnum :
   pos_file:Relative_path.t ->
