@@ -109,8 +109,6 @@ val compare : 'a pos -> 'a pos -> int
 
 val set_file : 'a -> 'a pos -> 'a pos
 
-val end_line_beg_offset: 'a pos -> int * int * int
-
 val make_from_lnum_bol_cnum :
   pos_file:Relative_path.t ->
   pos_start:int*int*int ->
