@@ -312,9 +312,9 @@ module Expressions = struct
   let false_ () =
     literal (Literals.bool false)
 
-  let logical_and (l: Loc.t Ast.Expression.t) r = logical ~op:Logical.And l r
-  let logical_or (l: Loc.t Ast.Expression.t) r = logical ~op:Logical.Or l r
-  let unary_not (b: Loc.t Ast.Expression.t) = unary ~op:Unary.Not b
+  let logical_and (l: (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.And l r
+  let logical_or (l: (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
+  let unary_not (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
 end
 
 let mk_program stmts =

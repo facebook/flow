@@ -184,7 +184,7 @@ val json_of_loc_props: ?strip_root:Path.t option -> Loc.t -> (string * Hh_json.j
 
 val locationless_reason: reason_desc -> reason
 
-val func_reason: Loc.t Ast.Function.t -> Loc.t -> reason
+val func_reason: (Loc.t, Loc.t) Ast.Function.t -> Loc.t -> reason
 
 val is_internal_name: string -> bool
 val internal_name: string -> string
@@ -243,7 +243,7 @@ val do_patch: string list -> (int * int * string) list -> string
 
 module ReasonMap : MyMap.S with type key = reason
 
-val mk_expression_reason: Loc.t Ast.Expression.t -> reason
+val mk_expression_reason: (Loc.t, Loc.t) Ast.Expression.t -> reason
 
 val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc

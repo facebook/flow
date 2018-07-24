@@ -9,4 +9,4 @@ type t
 val empty: t
 val name: t -> string option
 val main: t -> string option
-val parse: Loc.t Ast.program -> (t, string) result
+val parse: (Loc.t, Loc.t) Ast.program -> (t, string) result

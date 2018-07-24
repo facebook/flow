@@ -23,10 +23,10 @@ class ruleset_func = object(self)
   method! weak_assert b = self#backtrack_on_false b
 
   method! is_subtype_func
-      (f1 : Loc.t T.Function.t)
-      (f2 : Loc.t T.Function.t) : bool =
+      (f1 : (Loc.t, Loc.t) T.Function.t)
+      (f2 : (Loc.t, Loc.t) T.Function.t) : bool =
     let open T.Function in
-    let get_type_list (f : Loc.t T.Function.t) : Loc.t T.t' list =
+    let get_type_list (f : (Loc.t, Loc.t) T.Function.t) : (Loc.t, Loc.t) T.t' list =
       let open T.Function.Param in
       let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
@@ -57,7 +57,7 @@ class ruleset_func = object(self)
 
   (* A rule for generating function definitions *)
   method! rule_funcdef (env : env_t) : (Syntax.t * env_t) =
-    let mk_func_type (ptype : Loc.t T.t') (rtype : Loc.t T.t') : Loc.t T.t' =
+    let mk_func_type (ptype : (Loc.t, Loc.t) T.t') (rtype : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
                                       annot = (Loc.none, ptype);

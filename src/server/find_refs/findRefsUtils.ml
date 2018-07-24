@@ -33,7 +33,7 @@ let compute_ast_result file content =
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
 
-let get_ast_result file : (Loc.t Ast.program * File_sig.t * Docblock.t, string) result =
+let get_ast_result file : ((Loc.t, Loc.t) Ast.program * File_sig.t * Docblock.t, string) result =
   let open Parsing_heaps in
   let get_result f kind =
     let error =

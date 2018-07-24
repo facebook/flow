@@ -23,7 +23,7 @@ class ruleset_union = object(self)
   method! weak_assert b = self#backtrack_on_false b
 
   (* check t1 <: t2 *)
-  method! is_subtype (t1 : Loc.t T.t') (t2 : Loc.t T.t') : bool =
+  method! is_subtype (t1 : (Loc.t, Loc.t) T.t') (t2 : (Loc.t, Loc.t) T.t') : bool =
     match t1, t2 with
     | (t, T.Union ((_, tu1), (_, tu2), tlist)) ->  (* t should be one of the branches of Union *)
       List.mem t (tu1 :: tu2 :: (List.map snd tlist))
@@ -37,8 +37,8 @@ class ruleset_union = object(self)
     In general this is unsound, and Flow allows this only in certain
     situations.
    *)
-  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
-    let get_prop_set (o : Loc.t T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
       let open T.Object.Property in
       List.iter (fun p -> match p with

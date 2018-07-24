@@ -9,7 +9,7 @@ open Utils_js
 open Sys_utils
 
 type result =
-  | Parse_ok of Loc.t Ast.program * File_sig.t
+  | Parse_ok of (Loc.t, Loc.t) Ast.program * File_sig.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 

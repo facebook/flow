@@ -7,7 +7,7 @@
 
 (* Main type for code *)
 type t = {
-  stmt : Loc.t Ast.Statement.t;
+  stmt : (Loc.t, Loc.t) Ast.Statement.t;
   stmt_deps : t list
 };;
 
@@ -16,6 +16,6 @@ type t = {
  * expressions.
 *)
 type t' = {
-  expr : Loc.t Ast.Expression.t';
+  expr : (Loc.t, Loc.t) Ast.Expression.t';
   expr_deps : t list
 };;

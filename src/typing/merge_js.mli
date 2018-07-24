@@ -21,7 +21,7 @@ val merge_component_strict:
   file_options: Files.options option ->
   strict_mode: StrictModeSettings.t ->
   file_sigs: File_sig.t Utils_js.FilenameMap.t ->
-  get_ast_unsafe: (File_key.t -> Loc.t Ast.program) ->
+  get_ast_unsafe: (File_key.t -> (Loc.t, Loc.t) Ast.program) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   ?do_gc: bool ->
   (* component *)

@@ -9,23 +9,23 @@ type binding = Loc.t * string
 
 val bindings_of_pattern:
   binding list ->
-  Loc.t Ast.Pattern.t' ->
+  (Loc.t, Loc.t) Ast.Pattern.t' ->
   binding list
 
 val bindings_of_variable_declarations:
-  Loc.t Ast.Statement.VariableDeclaration.Declarator.t list ->
+  (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t list ->
   binding list
 
 val partition_directives:
-  Loc.t Ast.Statement.t list ->
-  Loc.t Ast.Statement.t list * Loc.t Ast.Statement.t list
+  (Loc.t, Loc.t) Ast.Statement.t list ->
+  (Loc.t, Loc.t) Ast.Statement.t list * (Loc.t, Loc.t) Ast.Statement.t list
 
 val negate_number_literal:
   float * string ->
   float * string
 
 val loc_of_expression:
-  'a Ast.Expression.t -> 'a
+  ('a, 'a) Ast.Expression.t -> 'a
 
 val loc_of_statement:
-  'a Ast.Statement.t -> 'a
+  ('a, 'a) Ast.Statement.t -> 'a

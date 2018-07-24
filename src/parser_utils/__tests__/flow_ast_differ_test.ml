@@ -17,7 +17,7 @@ class useless_mapper = object
       {value=Number 5.0; raw="5"}
     | _ -> expr
 
-  method! binary (expr: Loc.t Ast.Expression.Binary.t) =
+  method! binary (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression.Binary in
     let expr = super#binary expr in
     let { operator; _ } = expr in

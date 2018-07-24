@@ -21,7 +21,7 @@ let add_ref_kind kind = List.map (fun loc -> (kind, loc))
 class ['acc] object_key_visitor ~init = object(this)
   inherit ['acc] Flow_ast_visitor.visitor ~init as super
 
-  method! expression (exp: Loc.t Ast.Expression.t) =
+  method! expression (exp: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     begin match exp with
     | loc, Object x ->
@@ -30,7 +30,7 @@ class ['acc] object_key_visitor ~init = object(this)
     end;
     super#expression exp
 
-  method private visit_object_literal (loc: Loc.t) (obj: Loc.t Ast.Expression.Object.t) =
+  method private visit_object_literal (loc: Loc.t) (obj: (Loc.t, Loc.t) Ast.Expression.Object.t) =
     let open Ast.Expression.Object in
     let get_prop_key =
       let open Property in
@@ -45,7 +45,7 @@ class ['acc] object_key_visitor ~init = object(this)
 
   method private visit_object_key
       (_literal_loc: Loc.t)
-      (_key: Loc.t Ast.Expression.Object.Property.key) =
+      (_key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
     ()
 end
 
@@ -55,13 +55,13 @@ module ObjectKeyAtLoc : sig
    * enclosing object literal. This is because later, we need to figure out which types are related
    * to this object literal which is easier to do when we have the location of the actual object
    * literal than if we only had the location of a single key. *)
-  val get: Loc.t Ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
+  val get: (Loc.t, Loc.t) Ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
 end = struct
   class object_key_finder target_loc = object(this)
     inherit [(Loc.t * Loc.t * string) option] object_key_visitor ~init:None
     method! private visit_object_key
         (literal_loc: Loc.t)
-        (key: Loc.t Ast.Expression.Object.Property.key) =
+        (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object in
       match key with
       | Property.Identifier (prop_loc, name) when Loc.contains prop_loc target_loc ->
@@ -77,13 +77,13 @@ end
 module LiteralToPropLoc : sig
   (* Returns a map from object_literal_loc to prop_loc, for all object literals which contain the
    * given property name. *)
-  val make: Loc.t Ast.program -> prop_name: string -> Loc.t LocMap.t
+  val make: (Loc.t, Loc.t) Ast.program -> prop_name: string -> Loc.t LocMap.t
 end = struct
   class locmap_builder prop_name = object(this)
     inherit [Loc.t LocMap.t] object_key_visitor ~init:LocMap.empty
     method! private visit_object_key
         (literal_loc: Loc.t)
-        (key: Loc.t Ast.Expression.Object.Property.key) =
+        (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object in
       match key with
       | Property.Identifier (prop_loc, name) when name = prop_name ->

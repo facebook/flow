@@ -45,8 +45,8 @@ let spec = {
 }
 
 type ast_result_type =
-  | Ast_json of Loc.t Ast.Expression.t
-  | Ast_js of Loc.t Ast.program
+  | Ast_json of (Loc.t, Loc.t) Ast.Expression.t
+  | Ast_js of (Loc.t, Loc.t) Ast.program
 
 let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
@@ -117,7 +117,7 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
             Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey
           in
           if debug then begin
-            Ast.pp_program Loc.pp Format.err_formatter ocaml_ast;
+            Ast.pp_program Loc.pp Loc.pp Format.err_formatter ocaml_ast;
             Printf.eprintf "\n%!"
           end;
           Ast_js ocaml_ast, errors
@@ -127,7 +127,7 @@ let main include_tokens pretty check debug file_type_opt use_strict from path fi
             Parser_flow.json_file ~fail:false ~parse_options ~token_sink content filekey
           in
           if debug then begin
-            Ast.Expression.pp Loc.pp Format.err_formatter ocaml_ast;
+            Ast.Expression.pp Loc.pp Loc.pp Format.err_formatter ocaml_ast;
             Printf.eprintf "\n%!"
           end;
           Ast_json ocaml_ast, errors

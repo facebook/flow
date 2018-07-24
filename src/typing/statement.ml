@@ -111,7 +111,7 @@ let rec variable_decl cx entry = Ast.Statement.(
         in
         Type_table.set (Context.type_table cx) loc t;
         bind cx name t loc
-      ) : Typed_ast.annot Ast.Pattern.t') |> ignore;
+      ) : (unit, unit) Ast.Pattern.t') |> ignore;
   ) in
 
   VariableDeclaration.(entry.declarations |> List.iter (function
@@ -683,7 +683,7 @@ and statement cx = Ast.Statement.(
         in
         let ast = (), Labeled { Labeled.label = (), name; body = body_ast } in
         ignore (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-          : Typed_ast.annot Ast.Statement.t);
+          : (unit, unit) Ast.Statement.t);
 
         let newset = Changeset.merge oldset in
 
@@ -708,7 +708,7 @@ and statement cx = Ast.Statement.(
         in
         let ast = (), Labeled { Labeled.label = (), name; body = body_ast } in
         ignore (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-          : Typed_ast.annot Ast.Statement.t);
+          : (unit, unit) Ast.Statement.t);
 
         let newset = Changeset.merge oldset in
         if Abnormal.swap_saved (Abnormal.Break label) save_break <> None
@@ -1264,7 +1264,7 @@ and statement cx = Ast.Statement.(
 
       (* if finally has abnormal control flow, we throw here *)
       ignore (Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
-        : Typed_ast.annot Ast.Statement.t);
+        : (unit, unit) Ast.Statement.t);
 
       (* other ways we throw due to try/catch abends *)
       begin match try_abnormal, catch_abnormal with
@@ -1778,7 +1778,7 @@ and statement cx = Ast.Statement.(
             | ES _ -> ES ());
     } in
     ignore (Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
-      : Typed_ast.annot Ast.Statement.t);
+      : (unit, unit) Ast.Statement.t);
 
     let reason = mk_reason (RModule name) loc in
     let module_t = match Context.module_kind cx with
@@ -2818,7 +2818,7 @@ and mixin_element_spread cx (loc, e) =
   )
 
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
-and expression ?(is_cond=false) cx (loc, e) : Type.t * unit Ast.Expression.t' =
+and expression ?(is_cond=false) cx (loc, e) : Type.t * (unit, unit) Ast.Expression.t' =
   let t, e' = expression_ ~is_cond cx loc e in
   Type_table.set (Context.type_table cx) loc t;
   t, e'
@@ -2832,7 +2832,7 @@ and this_ cx loc = Ast.Expression.(
 and super_ cx loc =
   Env.var_ref cx (internal_name "super") loc
 
-and expression_ ~is_cond cx loc e : Type.t * unit Ast.Expression.t' =
+and expression_ ~is_cond cx loc e : Type.t * (unit, unit) Ast.Expression.t' =
   let ex = (loc, e) in Ast.Expression.(match e with
 
   | Ast.Expression.Literal lit ->
@@ -5976,7 +5976,7 @@ and mk_class_sig =
       match init with
       | None -> Annot annot_t, Fn.const None
       | Some expr ->
-        let value_ref : Typed_ast.annot Ast.Expression.t option ref = ref None in
+        let value_ref : (unit, unit) Ast.Expression.t option ref = ref None in
         Infer (
           Func_sig.field_initializer tparams_map reason expr annot_t,
           (fun (_, value_opt) -> value_ref := Some (Option.value_exn value_opt))
@@ -6145,7 +6145,7 @@ and mk_class_sig =
           were arranged in the class is lost by the time this happens, so rather
           than attempting to return a list of method bodies from the Class_sig.toplevels
           function, we have it place the function bodies into a list via side effects. *)
-      let body_ref : Typed_ast.annot Ast.Function.body option ref = ref None in
+      let body_ref : (unit, unit) Ast.Function.body option ref = ref None in
       let set_asts (body_opt, _) = body_ref := Some (Option.value_exn body_opt) in
       let get_element () =
         let body = Option.value (!body_ref) ~default:Typed_ast.Function.body_error in

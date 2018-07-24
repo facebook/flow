@@ -14,7 +14,7 @@ module LocMap = Utils_js.LocMap
 class with_or_eval_visitor = object(this)
   inherit [bool] visitor ~init:false as super
 
-  method! expression (expr: Loc.t Ast.Expression.t) =
+  method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     if this#acc = true then expr else match expr with
     | (_, Call { Call.callee = (_, Identifier (_, "eval")); _}) ->
@@ -22,10 +22,10 @@ class with_or_eval_visitor = object(this)
       expr
     | _ -> super#expression expr
 
-  method! statement (stmt: Loc.t Ast.Statement.t) =
+  method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     if this#acc = true then stmt else super#statement stmt
 
-  method! with_ (stuff: Loc.t Ast.Statement.With.t) =
+  method! with_ (stuff: (Loc.t, Loc.t) Ast.Statement.With.t) =
     this#set_acc true;
     stuff
 end
@@ -154,21 +154,21 @@ class scope_builder = object(this)
   (* don't rename the `foo` in `{ foo: ... }` *)
   method! object_key_identifier (id: Loc.t Ast.Identifier.t) = id
 
-  method! block (stmt: Loc.t Ast.Statement.Block.t) =
+  method! block (stmt: (Loc.t, Loc.t) Ast.Statement.Block.t) =
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval lexical_hoist#block stmt in
     this#with_bindings ~lexical:true lexical_bindings super#block stmt
 
   (* like block *)
-  method! program (program: Loc.t Ast.program) =
+  method! program (program: (Loc.t, Loc.t) Ast.program) =
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
     this#with_bindings ~lexical:true lexical_bindings super#program program
 
-  method private scoped_for_in_statement (stmt: Loc.t Ast.Statement.ForIn.t) =
+  method private scoped_for_in_statement (stmt: (Loc.t, Loc.t) Ast.Statement.ForIn.t) =
     super#for_in_statement stmt
 
-  method! for_in_statement (stmt: Loc.t Ast.Statement.ForIn.t) =
+  method! for_in_statement (stmt: (Loc.t, Loc.t) Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
     let { left; right = _; body = _; each = _ } = stmt in
 
@@ -180,10 +180,10 @@ class scope_builder = object(this)
     in
     this#with_bindings ~lexical:true lexical_bindings this#scoped_for_in_statement stmt
 
-  method private scoped_for_of_statement (stmt: Loc.t Ast.Statement.ForOf.t) =
+  method private scoped_for_of_statement (stmt: (Loc.t, Loc.t) Ast.Statement.ForOf.t) =
     super#for_of_statement stmt
 
-  method! for_of_statement (stmt: Loc.t Ast.Statement.ForOf.t) =
+  method! for_of_statement (stmt: (Loc.t, Loc.t) Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
     let { left; right = _; body = _; async = _ } = stmt in
 
@@ -195,10 +195,10 @@ class scope_builder = object(this)
     in
     this#with_bindings ~lexical:true lexical_bindings this#scoped_for_of_statement stmt
 
-  method private scoped_for_statement (stmt: Loc.t Ast.Statement.For.t) =
+  method private scoped_for_statement (stmt: (Loc.t, Loc.t) Ast.Statement.For.t) =
     super#for_statement stmt
 
-  method! for_statement (stmt: Loc.t Ast.Statement.For.t) =
+  method! for_statement (stmt: (Loc.t, Loc.t) Ast.Statement.For.t) =
     let open Ast.Statement.For in
     let { init; test = _; update = _; body = _ } = stmt in
 
@@ -210,7 +210,7 @@ class scope_builder = object(this)
     in
     this#with_bindings ~lexical:true lexical_bindings this#scoped_for_statement stmt
 
-  method! catch_clause (clause: Loc.t Ast.Statement.Try.CatchClause.t') =
+  method! catch_clause (clause: (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
     let { param; body = _ } = clause in
 
@@ -251,7 +251,7 @@ class scope_builder = object(this)
       end;
     ) ()
 
-  method! function_declaration (expr: Loc.t Ast.Function.t) =
+  method! function_declaration (expr: (Loc.t, Loc.t) Ast.Function.t) =
     let contains_with_or_eval =
       let visit = new with_or_eval_visitor in
       visit#eval visit#function_declaration expr
@@ -273,7 +273,7 @@ class scope_builder = object(this)
 
   (* Almost the same as function_declaration, except that the name of the
      function expression is locally in scope. *)
-  method! function_ (expr: Loc.t Ast.Function.t) =
+  method! function_ (expr: (Loc.t, Loc.t) Ast.Function.t) =
     let contains_with_or_eval =
       let visit = new with_or_eval_visitor in
       visit#eval visit#function_ expr

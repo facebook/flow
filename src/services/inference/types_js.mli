@@ -67,7 +67,7 @@ val typecheck_contents:
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
   File_key.t ->                             (* fake file-/module name *)
-  ((Context.t * Loc.t Ast.program) option *
+  ((Context.t * (Loc.t, Loc.t) Ast.program) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 

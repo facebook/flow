@@ -96,7 +96,7 @@ type open_file_info = {
   (* o_open_doc is guaranteed to be up-to-date with respect to the editor *)
   o_open_doc: Lsp.TextDocumentItem.t;
   (* o_ast, if present, is guaranteed to be up-to-date. It gets computed lazily. *)
-  o_ast: Loc.t Ast.program option;
+  o_ast: (Loc.t, Loc.t) Ast.program option;
   (* o_live_diagnostics, if present, is guaranteed to be up-to-date, and to only contain
    * parse errors, and to be a better source of truth about the parse errors
    * in this file than what the flow server has told us. It also gets computed lazily. *)
@@ -848,7 +848,7 @@ let error_to_lsp
  * or it's an unopened file in which case we'll retrieve parse results but
  * won't store them. *)
 let parse_and_cache (state: state) (uri: string)
-  : state * Loc.t Ast.program * PublishDiagnostics.diagnostic list option =
+  : state * (Loc.t, Loc.t) Ast.program * PublishDiagnostics.diagnostic list option =
   (* part of parsing is producing parse errors, if so desired *)
   let liveSyntaxErrors = let open Initialize in match state with
     | Connected cenv -> cenv.c_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors

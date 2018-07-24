@@ -22,8 +22,8 @@ class ruleset_depth = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
-    let get_prop_set (o : Loc.t T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
       let open T.Object.Property in
       List.iter (fun p -> match p with
@@ -49,7 +49,7 @@ class ruleset_depth = object(self)
 
   (* A helper funtions for wrapping an expression and a type
      into an object for mutation and expose type errors. *)
-  method wrap_in_obj (expr : Loc.t E.t') (etype : Loc.t T.t') : (Loc.t E.t' * Loc.t T.t') =
+  method wrap_in_obj (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') : ((Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t') =
     let pname = "p_0" in
     let obj_expr =
       let prop =

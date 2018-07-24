@@ -16,8 +16,8 @@ val module_t_of_cx : Context.t -> Type.t
 val set_module_t : Context.t -> Reason.t -> (Type.t -> unit) -> unit
 val set_module_kind : Context.t -> Loc.t -> Context.module_kind -> unit
 val nameify_default_export_decl :
-  'M Ast.Statement.t ->
-  'M Ast.Statement.t * ('N Ast.Statement.t -> 'N Ast.Statement.t)
+  ('M, 'T) Ast.Statement.t ->
+  ('M, 'T) Ast.Statement.t * (('N, 'U) Ast.Statement.t -> ('N, 'U) Ast.Statement.t)
 val warn_or_ignore_export_star_as : Context.t -> (Loc.t * 'a) option -> unit
 val get_module_exports : Context.t -> Loc.t -> Type.t
 val set_module_exports : Context.t -> Loc.t -> Type.t -> unit

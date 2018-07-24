@@ -12,25 +12,25 @@ open Parser_common
 module Error = Parse_error
 
 module type TYPE = sig
-  val _type : env -> Loc.t Ast.Type.t
+  val _type : env -> (Loc.t, Loc.t) Ast.Type.t
   val type_identifier : env -> Loc.t * string
-  val type_parameter_declaration : env -> Loc.t Ast.Type.ParameterDeclaration.t option
-  val type_parameter_declaration_with_defaults : env -> Loc.t Ast.Type.ParameterDeclaration.t option
-  val type_parameter_instantiation : env -> Loc.t Ast.Type.ParameterInstantiation.t option
-  val generic : env -> Loc.t * Loc.t Ast.Type.Generic.t
-  val _object : allow_static:bool -> allow_proto:bool -> env -> Loc.t * Loc.t Type.Object.t
-  val interface_helper : env -> Loc.t Type.Interface.t
-  val function_param_list : env -> Loc.t Type.Function.Params.t
-  val annotation : env -> Loc.t Ast.Type.annotation
-  val annotation_opt : env -> Loc.t Ast.Type.annotation option
-  val predicate_opt : env -> Loc.t Ast.Type.Predicate.t option
-  val annotation_and_predicate_opt : env -> Loc.t Ast.Type.annotation option * Loc.t Ast.Type.Predicate.t option
+  val type_parameter_declaration : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
+  val type_parameter_declaration_with_defaults : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
+  val type_parameter_instantiation : env -> (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option
+  val generic : env -> Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
+  val _object : allow_static:bool -> allow_proto:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
+  val interface_helper : env -> (Loc.t, Loc.t) Type.Interface.t
+  val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
+  val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
+  val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation option
+  val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
+  val annotation_and_predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation option * (Loc.t, Loc.t) Ast.Type.Predicate.t option
 end
 
 module Type (Parse: Parser_common.PARSER) : TYPE = struct
   type param_list_or_type =
-    | ParamList of Loc.t Type.Function.Params.t'
-    | Type of Loc.t Type.t
+    | ParamList of (Loc.t, Loc.t) Type.Function.Params.t'
+    | Type of (Loc.t, Loc.t) Type.t
 
   let rec _type env = union env
 
@@ -371,7 +371,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     let params = function_param_list env in
     function_with_params env start_loc tparams params
 
-  and function_with_params env start_loc tparams (params: Loc.t Ast.Type.Function.Params.t) =
+  and function_with_params env start_loc tparams (params: (Loc.t, Loc.t) Ast.Type.Function.Params.t) =
     with_loc ~start_loc (fun env ->
       Expect.token env T_ARROW;
       let return = _type env in
