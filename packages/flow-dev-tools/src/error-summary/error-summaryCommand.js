@@ -12,8 +12,10 @@ export type Args = {
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
-  messageFilter: string,
-  codeFilter: string,
+  messageFilter: ?string,
+  codeFilter: ?string,
+  fileFilter: ?string,
+  showErrors: ?boolean,
 };
 
 export default class ErrorSummaryCommand extends Base<Args> {
@@ -27,6 +29,8 @@ export default class ErrorSummaryCommand extends Base<Args> {
       root: resolve(process.cwd(), argv._[0]),
       messageFilter: argv.messageFilter,
       codeFilter: argv.codeFilter,
+      fileFilter: argv.fileFilter,
+      showErrors: argv.showErrors,
     };
   }
 
@@ -53,14 +57,25 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
         type: 'string',
         name: 'messageFilter',
         argName: '<regex>',
-        description: 'Regex used to filter the error messages into the summary',
+        description: 'Regex used to filter by error messages into the summary',
       },
       {
         type: 'string',
         name: 'codeFilter',
         argName: '<regex>',
         description:
-          'Regex used to filter the error blame code into the summary',
+          'Regex used to filter by error blame code into the summary',
+      },
+      {
+        type: 'string',
+        name: 'fileFilter',
+        argName: '<regex>',
+        description: 'Regex used to filter by file name into the summary',
+      },
+      {
+        type: 'boolean',
+        name: 'showErrors',
+        description: 'If set to true, error messages will print',
       },
     ];
   }
