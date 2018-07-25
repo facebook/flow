@@ -14,6 +14,7 @@ export default (async function(args: Args): Promise<void> {
   );
 
   var error_summary = {};
+  var files = new Set();
   flow_result.errors.forEach(error =>
     error.message.forEach(err => {
       if (
@@ -30,6 +31,11 @@ export default (async function(args: Args): Promise<void> {
         if (args.showErrors) {
           console.log(prettyPrintError(error));
         }
+
+        if (args.showFiles && err.loc != null && err.loc.source != null) {
+          files.add(err.loc.source);
+        }
+
         if (err.descr in error_summary) {
           error_summary[err.descr] = error_summary[err.descr] + 1;
         } else {
@@ -46,6 +52,10 @@ export default (async function(args: Args): Promise<void> {
     };
   });
   result.sort((first, second) => second.freq - first.freq);
+
+  if (args.showFiles) {
+    files.forEach(file => console.log(file));
+  }
 
   result.forEach(error =>
     console.log('frequency: ' + error.freq + ' message: ' + error.message),

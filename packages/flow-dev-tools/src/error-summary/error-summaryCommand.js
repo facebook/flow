@@ -16,6 +16,7 @@ export type Args = {
   codeFilter: ?string,
   fileFilter: ?string,
   showErrors: ?boolean,
+  showFiles: ?boolean,
 };
 
 export default class ErrorSummaryCommand extends Base<Args> {
@@ -31,6 +32,7 @@ export default class ErrorSummaryCommand extends Base<Args> {
       codeFilter: argv.codeFilter,
       fileFilter: argv.fileFilter,
       showErrors: argv.showErrors,
+      showFiles: argv.showFiles,
     };
   }
 
@@ -76,6 +78,11 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
         type: 'boolean',
         name: 'showErrors',
         description: 'If set to true, error messages will print',
+      },
+      {
+        type: 'boolean',
+        name: 'showFiles',
+        description: 'If set to true, file names will print',
       },
     ];
   }
