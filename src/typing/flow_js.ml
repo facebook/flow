@@ -2539,10 +2539,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a falsy && b ~> a
          a truthy && b ~> b
          a && b ~> a falsy | b *)
-      let truthy_left = Type_filter.exists left in
-      (match truthy_left with
-      | DefT (_, EmptyT) ->
-        (* falsy *)
+      (match Type_filter.exists left with
+      | DefT (_, EmptyT) -> (* falsy *)
         rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
       | _ ->
         (match Type_filter.not_exists left with
@@ -2550,11 +2548,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (right, UseT (unknown_use, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u));
-          begin match truthy_left with
-          | DefT (_, EmptyT) -> ()
-          | _ ->
-            rec_flow cx trace (right, UseT (unknown_use, u))
-          end
+          rec_flow cx trace (right, UseT (unknown_use, u))
         )
       )
 
@@ -2562,10 +2556,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a truthy || b ~> a
          a falsy || b ~> b
          a || b ~> a truthy | b *)
-      let falsy_left = Type_filter.not_exists left in
-      (match falsy_left with
-      | DefT (_, EmptyT) ->
-        (* truthy *)
+      (match Type_filter.not_exists left with
+      | DefT (_, EmptyT) -> (* truthy *)
         rec_flow cx trace (left, PredicateT (ExistsP None, u))
       | _ ->
         (match Type_filter.exists left with
@@ -2573,11 +2565,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (right, UseT (unknown_use, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (ExistsP None, u));
-          begin match falsy_left with
-          | DefT (_, EmptyT) -> ()
-          | _ ->
-            rec_flow cx trace (right, UseT (unknown_use, u))
-          end
+          rec_flow cx trace (right, UseT (unknown_use, u))
         )
       )
 
