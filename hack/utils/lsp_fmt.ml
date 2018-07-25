@@ -605,8 +605,23 @@ let print_completionItem (item: Completion.completionItem) : json =
 (** textDocument/completion request                                    **)
 (************************************************************************)
 
-let parse_completion (params: json option) : Definition.params =
-  parse_textDocumentPositionParams params
+let parse_completion (params: json option) : Completion.params =
+  let open Lsp.Completion in
+  let context = Jget.obj_opt params "context" in
+  {
+    loc = parse_textDocumentPositionParams params;
+    context = match context with
+    | Some _ ->
+      Some {
+        triggerKind = (match Jget.int_exn context "triggerKind" with
+        | 1 -> Invoked
+        | 2 -> TriggerCharacter
+        | 3 -> TriggerForIncompleteCompletions
+        | x -> failwith ("Unsupported trigger kind: "^(string_of_int x))
+        );
+      }
+    | None -> None
+  }
 
 let print_completion (r: Completion.result) : json =
   let open Completion in

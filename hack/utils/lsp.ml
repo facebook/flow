@@ -505,7 +505,21 @@ end
 
 (* Completion request, method="textDocument/completion" *)
 module Completion = struct
-  type params = TextDocumentPositionParams.t
+  type params = completionParams
+
+  and completionParams = {
+    loc: TextDocumentPositionParams.t;
+    context: completionContext option;
+  }
+
+  and completionContext = {
+    triggerKind: completionTriggerKind;
+  }
+
+  and completionTriggerKind =
+    | Invoked (* 1 *)
+    | TriggerCharacter (* 2 *)
+    | TriggerForIncompleteCompletions (* 3 *)
 
   and result = completionList  (* wire: can also be 'completionItem list' *)
 
