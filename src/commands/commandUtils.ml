@@ -773,11 +773,11 @@ let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in
   prev
   |> flag "--file-watcher"
-    (required ~default:FileWatcherStatus.DFind (enum [
-      "none", FileWatcherStatus.NoFileWatcher;
-      "dfind", FileWatcherStatus.DFind;
-      "watchman", FileWatcherStatus.Watchman;
-    ]))
+    (enum [
+      "none", Options.NoFileWatcher;
+      "dfind", Options.DFind;
+      "watchman", Options.Watchman;
+    ])
     ~doc:("Which file watcher Flow should use (none, dfind, watchman). " ^
       "Flow will ignore file system events if this is set to none. (default: dfind)")
   |> flag "--file-watcher-debug" no_arg

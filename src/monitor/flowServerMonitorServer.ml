@@ -337,11 +337,11 @@ end = struct
     let%lwt () = StatusStream.reset file_watcher in
 
     let watcher = match file_watcher with
-    | FileWatcherStatus.NoFileWatcher ->
+    | Options.NoFileWatcher ->
       new FileWatcher.dummy
-    | FileWatcherStatus.DFind ->
+    | Options.DFind ->
       new FileWatcher.dfind monitor_options
-    | FileWatcherStatus.Watchman ->
+    | Options.Watchman ->
       new FileWatcher.watchman monitor_options
     in
     Logger.debug "Initializing file watcher (%s)" watcher#name;
@@ -418,7 +418,7 @@ end = struct
 
     let command_loop = CommandLoop.run ~cancel_condition:ExitSignal.signal (watcher, connection) in
     let file_watcher_loop =
-      if file_watcher = FileWatcherStatus.NoFileWatcher
+      if file_watcher = Options.NoFileWatcher
       then Lwt.return_unit (* Don't even bother *)
       else FileWatcherLoop.run ~cancel_condition:ExitSignal.signal watcher
     in

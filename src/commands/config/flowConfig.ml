@@ -46,6 +46,7 @@ module Opts = struct
     esproposal_optional_chaining: Options.esproposal_feature_mode;
     esproposal_nullish_coalescing: Options.esproposal_feature_mode;
     facebook_fbt: string option;
+    file_watcher: Options.file_watcher option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_blacklist: string list;
     haste_paths_whitelist: string list;
@@ -156,6 +157,7 @@ module Opts = struct
     esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
     esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
     facebook_fbt = None;
+    file_watcher = None;
     haste_name_reducers = [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
     haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
     haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
@@ -560,6 +562,19 @@ let parse_options config lines =
       optparser = optparse_string;
       setter = (fun opts v -> Ok {
         opts with facebook_fbt = Some v;
+      });
+    }
+
+    |> define_opt "file_watcher" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_enum [
+        "none", Options.NoFileWatcher;
+        "dfind", Options.DFind;
+        "watchman", Options.Watchman;
+      ];
+      setter = (fun opts v -> Ok {
+        opts with file_watcher = Some v;
       });
     }
 
@@ -1095,6 +1110,7 @@ let esproposal_decorators c = c.options.Opts.esproposal_decorators
 let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
 let esproposal_optional_chaining c = c.options.Opts.esproposal_optional_chaining
 let esproposal_nullish_coalescing c = c.options.Opts.esproposal_nullish_coalescing
+let file_watcher c = c.options.Opts.file_watcher
 let facebook_fbt c = c.options.Opts.facebook_fbt
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist

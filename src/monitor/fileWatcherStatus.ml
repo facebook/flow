@@ -5,20 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type file_watcher =
-| NoFileWatcher
-| DFind
-| Watchman
-
 type status' =
 | Initializing
 | Ready
-type status = file_watcher * status'
+type status = Options.file_watcher * status'
 
 let string_of_file_watcher = function
-  | NoFileWatcher -> "Dummy"
-  | DFind -> "Dfind"
-  | Watchman -> "Watchman"
+  | Options.NoFileWatcher -> "Dummy"
+  | Options.DFind -> "Dfind"
+  | Options.Watchman -> "Watchman"
 
 let string_of_status =
   let string_of_status = function

@@ -91,6 +91,9 @@ let main
   (* A quiet `flow start` doesn't imply a quiet `flow server` *)
   let server_options = { options with Options.opt_quiet = false } in
 
+  let file_watcher = Option.first_some file_watcher (FlowConfig.file_watcher flowconfig)
+  |> Option.value ~default:Options.DFind in
+
   let monitor_options = { FlowServerMonitorOptions.
     log_file = monitor_log_file;
     autostop;
