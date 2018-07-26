@@ -78,7 +78,8 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
 
   (* We need to grab the lock before initializing the pid files and before allocating the shared
    * heap. Luckily for us, the server will do both of these later *)
-  if not (Lock.grab (Server_files_js.lock_file ~tmp_dir root))
+  let flowconfig_name = Options.flowconfig_name server_options in
+  if not (Lock.grab (Server_files_js.lock_file ~flowconfig_name ~tmp_dir root))
   then begin
    let msg = "Error: another server is already running?\n" in
    FlowExitStatus.(exit ~msg Lock_stolen)
@@ -107,11 +108,11 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
    * socket, it will fail immediately. The blocking behavior is a little nicer
    *)
   let monitor_socket_fd =
-    Socket.init_unix_socket (Server_files_js.socket_file ~tmp_dir root) in
+    Socket.init_unix_socket (Server_files_js.socket_file ~flowconfig_name ~tmp_dir root) in
   let legacy2_socket_fd =
-    Socket.init_unix_socket (Server_files_js.legacy2_socket_file ~tmp_dir root) in
+    Socket.init_unix_socket (Server_files_js.legacy2_socket_file ~flowconfig_name ~tmp_dir root) in
   let legacy1_socket_fd =
-    Socket.init_unix_socket (Server_files_js.legacy1_socket_file ~tmp_dir root) in
+    Socket.init_unix_socket (Server_files_js.legacy1_socket_file ~flowconfig_name ~tmp_dir root) in
 
   (************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************)
 
@@ -179,7 +180,8 @@ let daemonize ~wait ~on_spawn monitor_options =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root server_options in
   let tmp_dir = Options.temp_dir server_options in
-  let lock = Server_files_js.lock_file ~tmp_dir root in
+  let flowconfig_name = Options.flowconfig_name server_options in
+  let lock = Server_files_js.lock_file ~flowconfig_name ~tmp_dir root in
   if not (Lock.check lock)
   then begin
     let msg = spf

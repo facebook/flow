@@ -51,6 +51,7 @@ type t = {
   opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
   opt_facebook_fbt: string option;
+  opt_flowconfig_name: string;
   opt_file_options: Files.options;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
@@ -101,6 +102,7 @@ let haste_name_reducers opts = opts.opt_haste_name_reducers
 let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
 let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
+let flowconfig_name opts = opts.opt_flowconfig_name
 let file_options opts = opts.opt_file_options
 let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy_mode <> None

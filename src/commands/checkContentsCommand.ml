@@ -26,6 +26,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_and_json_flags
     |> json_version_flag
     |> root_flag
@@ -39,12 +40,13 @@ let spec = {
   )
 }
 
-let main option_values json pretty json_version root error_flags strip_root verbose from
+let main base_flags option_values json pretty json_version root error_flags strip_root verbose from
   respect_pragma all file () =
   FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin file
     ~cmd:CommandSpec.(spec.name) None in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
@@ -69,7 +71,7 @@ let main option_values json pretty json_version root error_flags strip_root verb
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
   let request = ServerProt.Request.CHECK_FILE (file, verbose, all, include_warnings) in
-  let response = match connect_and_make_request option_values root request with
+  let response = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CHECK_FILE response -> response
   | response -> failwith_bad_response ~request ~response
   in

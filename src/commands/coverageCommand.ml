@@ -25,6 +25,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_and_json_flags
     |> root_flag
     |> from_flag
@@ -209,12 +210,13 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
       "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main
-    option_values json pretty root from color debug path respect_pragma
+    base_flags option_values json pretty root from color debug path respect_pragma
     all filename () =
   FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path filename in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
@@ -240,7 +242,7 @@ let main
 
   let request = ServerProt.Request.COVERAGE (file, all) in
 
-  match connect_and_make_request option_values root request with
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.COVERAGE (Error err) ->
     handle_error ~json ~pretty err
   | ServerProt.Response.COVERAGE (Ok resp) ->

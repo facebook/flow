@@ -16,6 +16,7 @@ let spec = { CommandSpec.
   doc = "Starts a Flow server";
   args = CommandSpec.ArgSpec.(
       empty
+      |> base_flags
       |> options_and_json_flags
       |> log_file_flags
       |> flag "--wait" no_arg
@@ -39,12 +40,13 @@ let spec = { CommandSpec.
 }
 
 let main
-    options_flags json pretty server_log_file monitor_log_file wait lazy_mode
+    base_flags options_flags json pretty server_log_file monitor_log_file wait lazy_mode
     autostop shm_flags ignore_version from no_restart file_watcher file_watcher_debug path_opt () =
 
-  let root = CommandUtils.guess_root path_opt in
-  let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let options = make_options ~flowconfig ~lazy_mode ~root options_flags in
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = CommandUtils.guess_root flowconfig_name path_opt in
+  let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+  let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
   LoggingUtils.init_loggers ~from ~options ();
@@ -56,14 +58,15 @@ let main
   let server_log_file = match server_log_file with
   | Some s -> s
   | None ->
-    CommandUtils.server_log_file ~tmp_dir:(Options.temp_dir options) root flowconfig
+    CommandUtils.server_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
+      flowconfig
     |> Path.to_string
   in
 
   let monitor_log_file = match monitor_log_file with
   | Some s -> s
   | None ->
-    CommandUtils.monitor_log_file ~tmp_dir:(Options.temp_dir options) root
+    CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
     |> Path.to_string
   in
 

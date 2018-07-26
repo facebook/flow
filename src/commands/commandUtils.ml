@@ -397,7 +397,8 @@ let list_of_string_arg = function
 | None -> []
 | Some arg_str -> Str.split (Str.regexp ",") arg_str
 
-let collect_flowconfig_flags main ignores_str untyped_str declarations_str includes_str lib_str lints_str =
+let collect_flowconfig_flags main ignores_str untyped_str declarations_str includes_str lib_str
+  lints_str =
   let ignores = list_of_string_arg ignores_str in
   let untyped = list_of_string_arg untyped_str in
   let declarations = list_of_string_arg declarations_str in
@@ -636,13 +637,13 @@ let connect_and_json_flags =
     |> connect_flags
     |> json_flags
 
-let server_log_file ~tmp_dir root flowconfig =
+let server_log_file ~flowconfig_name ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
-  | None -> Path.make (Server_files_js.file_of_root "log" ~tmp_dir root)
+  | None -> Path.make (Server_files_js.file_of_root ~flowconfig_name "log" ~tmp_dir root)
 
-let monitor_log_file ~tmp_dir root =
-  Path.make (Server_files_js.file_of_root "monitor_log" ~tmp_dir root)
+let monitor_log_file ~flowconfig_name ~tmp_dir root =
+  Path.make (Server_files_js.file_of_root ~flowconfig_name "monitor_log" ~tmp_dir root)
 
 module Options_flags = struct
   type t = {
@@ -664,6 +665,12 @@ module Options_flags = struct
     traces: int option;
     verbose: Verbose.t option;
     weak: bool;
+  }
+end
+
+module Base_flags = struct
+  type t = {
+    flowconfig_name: string;
   }
 end
 
@@ -748,6 +755,20 @@ let options_flags =
     |> flag "--no-saved-state" no_arg
       ~doc:"Do not load from a saved state even if one is available"
 
+let base_flags =
+  let collect_base_flags main flowconfig_name =
+    main { Base_flags.
+      flowconfig_name;
+    }
+  in
+  fun prev ->
+    let open CommandSpec.ArgSpec in
+    prev
+    |> collect collect_base_flags
+    |> flag "--flowconfig-name" (required ~default:Server_files_js.default_flowconfig_name string)
+    ~doc:(Printf.sprintf "Set the name of the flow configuration file. (default: %s)"
+      Server_files_js.default_flowconfig_name)
+
 let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in
   prev
@@ -785,7 +806,7 @@ let json_version_flag prev = CommandSpec.ArgSpec.(
        ~doc:"The version of the JSON format (defaults to 1)"
 )
 
-let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
+let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -803,7 +824,8 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
       untyped;
       declarations;
     } = options_flags.flowconfig_flags in
-    file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig
+    file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations
+      flowconfig
   in
   let lint_severities = parse_lints_flag
     (FlowConfig.lint_severities flowconfig) options_flags.flowconfig_flags.raw_lint_severities
@@ -832,6 +854,7 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
 
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
+    opt_flowconfig_name = flowconfig_name;
     opt_lazy_mode = lazy_mode;
     opt_root = root;
     opt_debug = options_flags.debug;
@@ -845,7 +868,8 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_profile = options_flags.profile;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;
-    opt_module_resolver = Option.value_map (FlowConfig.module_resolver flowconfig) ~default:None ~f:(fun module_resolver ->
+    opt_module_resolver = Option.value_map (FlowConfig.module_resolver flowconfig) ~default:None
+      ~f:(fun module_resolver ->
       Some (expand_project_root_token module_resolver root));
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
@@ -887,8 +911,8 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_no_saved_state = options_flags.no_saved_state;
   }
 
-let make_env connect_flags root =
-  let flowconfig_path = Server_files_js.config_file root in
+let make_env flowconfig_name connect_flags root =
+  let flowconfig_path = Server_files_js.config_file flowconfig_name root in
   let flowconfig = FlowConfig.get flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir = Option.value_map
@@ -899,7 +923,7 @@ let make_env connect_flags root =
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
     connect_flags.shm_flags.shm_dirs in
   let log_file =
-    Path.to_string (server_log_file ~tmp_dir root flowconfig) in
+    Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in
   let retries = connect_flags.retries in
   let expiry = match connect_flags.timeout with
   | None -> None
@@ -924,10 +948,10 @@ let make_env connect_flags root =
     quiet = connect_flags.quiet;
   }
 
-let connect ~client_handshake connect_flags root =
-  let env = make_env connect_flags root
+let connect ~flowconfig_name ~client_handshake connect_flags root =
+  let env = make_env flowconfig_name connect_flags root
   in
-  CommandConnect.connect ~client_handshake env
+  CommandConnect.connect ~flowconfig_name ~client_handshake env
 
 let rec search_for_root config start recursion_limit : Path.t option =
   if start = Path.parent start then None (* Reach fs root, nothing to do. *)
@@ -937,29 +961,29 @@ let rec search_for_root config start recursion_limit : Path.t option =
 
 (* Given a valid file or directory, find a valid Flow root directory *)
 (* NOTE: exits on invalid file or .flowconfig not found! *)
-let guess_root dir_or_file =
+let guess_root flowconfig_name dir_or_file =
   let dir_or_file = match dir_or_file with
   | Some dir_or_file -> dir_or_file
   | None -> "." in
   if not (Sys.file_exists dir_or_file) then (
     let msg = spf
       "Could not find file or directory %s; canceling \
-      search for .flowconfig.\nSee \"flow init --help\" for more info"
-      dir_or_file in
+      search for %s.\nSee \"flow init --help\" for more info"
+      dir_or_file flowconfig_name in
     FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   ) else (
     let dir = if Sys.is_directory dir_or_file
       then dir_or_file
       else Filename.dirname dir_or_file in
-    match search_for_root ".flowconfig" (Path.make dir) 50 with
+    match search_for_root flowconfig_name (Path.make dir) 50 with
     | Some root ->
         FlowEventLogger.set_root (Some (Path.to_string root));
         root
     | None ->
         let msg = spf
-          "Could not find a .flowconfig in %s or any \
+          "Could not find a %s in %s or any \
           of its parent directories.\nSee \"flow init --help\" for more info\n%!"
-          dir in
+          flowconfig_name dir in
         FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   )
 
@@ -1017,7 +1041,7 @@ let exe_name = Utils_js.exe_name
 (* What should we do when we connect to the flow server monitor, but it dies before responding to
  * us? Well, we should consume a retry and try to connect again, potentially even starting a new
  * server *)
-let rec connect_and_make_request =
+let rec connect_and_make_request flowconfig_name =
   (* Sends the command over the socket *)
   let send_command ?timeout (oc:out_channel) (cmd:ServerProt.Request.command): unit =
     let command = { ServerProt.Request.
@@ -1042,7 +1066,7 @@ let rec connect_and_make_request =
   (* Waits for a response over the socket. If the connection dies, this will throw an exception *)
   let rec wait_for_response ?timeout ~quiet ~root (ic: Timeout.in_channel) =
     let use_emoji = Tty.supports_emoji () &&
-      Server_files_js.config_file root
+      Server_files_js.config_file flowconfig_name root
       |> FlowConfig.get
       |> FlowConfig.emoji in
 
@@ -1102,7 +1126,7 @@ let rec connect_and_make_request =
       client_type = SocketHandshake.Ephemeral;
     }) in
     (* connect handles timeouts itself *)
-    let ic, oc = connect ~client_handshake connect_flags root in
+    let ic, oc = connect ~flowconfig_name ~client_handshake connect_flags root in
     send_command ?timeout oc request;
     try wait_for_response ?timeout ~quiet ~root ic
     with End_of_file ->
@@ -1113,18 +1137,20 @@ let rec connect_and_make_request =
           retries
           (if retries = 1 then "retry" else "retries")
       end;
-      connect_and_make_request ?timeout ~retries:(retries - 1) connect_flags root request
+      connect_and_make_request flowconfig_name ?timeout ~retries:(retries - 1) connect_flags root
+        request
 
 (* If --timeout is set, wrap connect_and_make_request in a timeout *)
-let connect_and_make_request ?retries connect_flags root request =
+let connect_and_make_request ?retries flowconfig_name connect_flags root request =
   match connect_flags.timeout with
   | None ->
-    connect_and_make_request ?retries connect_flags root request
+    connect_and_make_request ?retries flowconfig_name connect_flags root request
   | Some timeout ->
     Timeout.with_timeout
       ~timeout
       ~on_timeout:(fun () -> FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time))
-      ~do_:(fun timeout -> connect_and_make_request ~timeout ?retries connect_flags root request)
+      ~do_:(fun timeout ->
+        connect_and_make_request ~timeout ?retries flowconfig_name connect_flags root request)
 
 let failwith_bad_response ~request ~response =
   let msg = Printf.sprintf

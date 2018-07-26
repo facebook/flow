@@ -24,6 +24,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_flags
     |> root_flag
     |> from_flag
@@ -31,16 +32,17 @@ let spec = {
   )
 }
 
-let main option_values root from files () =
+let main base_flags option_values root from files () =
   FlowEventLogger.set_from from;
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> Some (List.hd files)
   ) in
   let files = List.map expand_path files in
   let request = ServerProt.Request.PORT files in
-  let patch_map = match connect_and_make_request option_values root request with
+  let patch_map = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.PORT patch_map -> patch_map
   | response -> failwith_bad_response ~request ~response
   in

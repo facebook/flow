@@ -22,6 +22,7 @@ let spec = {
         CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_and_json_flags
     |> root_flag
     |> strip_root_flag
@@ -91,10 +92,11 @@ let to_string result option_values ~strip_root =
   in
   String.concat "\n" @@ List.map string_of_edit edits
 
-let main option_values json pretty root strip_root from path rename args () =
+let main base_flags option_values json pretty root strip_root from path rename args () =
   FlowEventLogger.set_from from;
   let (file, line, column) = parse_args path args in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
@@ -108,7 +110,7 @@ let main option_values json pretty root strip_root from path rename args () =
 
   let request = ServerProt.Request.REFACTOR (file, line, column, refactor_variant) in
   (* command result will be a position structure with full file path *)
-  match connect_and_make_request option_values root request with
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.REFACTOR (Ok result) ->
     (* format output *)
     if json || pretty

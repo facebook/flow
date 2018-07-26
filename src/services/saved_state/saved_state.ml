@@ -210,7 +210,8 @@ end = struct
       SSet.map (Files.relative_path root) !Files.node_modules_containers
     in
     let flowconfig_hash =
-      FlowConfig.get_hash @@ Server_files_js.config_file @@ Options.root options
+      FlowConfig.get_hash @@ Server_files_js.config_file (Options.flowconfig_name options)
+      @@ Options.root options
     in
     Lwt.return {
       flowconfig_hash;
@@ -261,6 +262,7 @@ exception Invalid_saved_state
  *)
 module Load: sig
   val load:
+    flowconfig_name:string ->
     workers:MultiWorkerLwt.worker list option ->
     saved_state_filename:Path.t ->
     options:Options.t ->
@@ -382,7 +384,7 @@ end = struct
     Errors.ErrorSet.map denormalizer#error normalized_error_set
 
   (* Denormalize all the data *)
-  let denormalize_data ~workers ~options ~data =
+  let denormalize_data ~flowconfig_name~workers ~options ~data =
     let root = Options.root options |> Path.to_string in
 
     let {
@@ -395,7 +397,7 @@ end = struct
     } = data in
 
     let current_flowconfig_hash =
-      FlowConfig.get_hash @@ Server_files_js.config_file @@ Options.root options
+      FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
     in
 
     if flowconfig_hash <> current_flowconfig_hash
@@ -439,7 +441,7 @@ end = struct
       node_modules_containers;
     }
 
-  let load ~workers ~saved_state_filename ~options =
+  let load ~flowconfig_name ~workers ~saved_state_filename ~options =
     let filename = Path.to_string saved_state_filename in
 
     Hh_logger.info "Reading saved-state file at %S" filename;
@@ -466,7 +468,7 @@ end = struct
 
     Hh_logger.info "Denormalizing saved-state data";
 
-    let%lwt data = denormalize_data ~workers ~options ~data in
+    let%lwt data = denormalize_data ~flowconfig_name ~workers ~options ~data in
 
     Hh_logger.info "Finished loading saved-state";
 

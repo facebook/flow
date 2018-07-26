@@ -28,6 +28,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> temp_dir_flag
     |> shm_flags
     |> lazy_flags
@@ -182,8 +183,8 @@ let to_stdout (json: Hh_json.json) : unit =
   let s = (Hh_json.json_to_string json) ^ "\r\n\r\n" in
   Http_lite.write_message stdout s
 
-let get_current_version (root: Path.t) : string option =
-  Server_files_js.config_file root
+let get_current_version flowconfig_name (root: Path.t) : string option =
+  Server_files_js.config_file flowconfig_name root
     |> FlowConfig.get ~allow_cache:false
     |> FlowConfig.required_version
 
@@ -492,10 +493,10 @@ let show_disconnected
   }
 
 
-let try_connect (env: disconnected_env) : state =
+let try_connect flowconfig_name (env: disconnected_env) : state =
   (* If the version in .flowconfig has changed under our feet then we mustn't *)
   (* connect. We'll terminate and trust the editor to relaunch an ok version. *)
-  let current_version = get_current_version env.d_ienv.i_root in
+  let current_version = get_current_version flowconfig_name env.d_ienv.i_root in
   if env.d_ienv.i_version <> current_version then begin
     let prev_version_str = Option.value env.d_ienv.i_version ~default: "[None]" in
     let current_version_str = Option.value current_version ~default: "[None]" in
@@ -506,7 +507,8 @@ let try_connect (env: disconnected_env) : state =
     Lsp_helpers.telemetry_log to_stdout message;
     lsp_exit_bad ()
   end;
-  let start_env = CommandUtils.make_env env.d_ienv.i_connect_params env.d_ienv.i_root in
+  let start_env = CommandUtils.make_env flowconfig_name env.d_ienv.i_connect_params
+    env.d_ienv.i_root in
 
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
@@ -519,7 +521,8 @@ let try_connect (env: disconnected_env) : state =
     };
   }) in
   let conn = CommandConnectSimple.connect_once
-    ~client_handshake ~tmp_dir:start_env.CommandConnect.tmp_dir start_env.CommandConnect.root in
+    ~flowconfig_name ~client_handshake ~tmp_dir:start_env.CommandConnect.tmp_dir
+    start_env.CommandConnect.root in
 
   match conn with
   | Ok (ic, oc) ->
@@ -584,7 +587,7 @@ let try_connect (env: disconnected_env) : state =
     begin try
       let tmp_dir = start_env.CommandConnect.tmp_dir in
       let root = start_env.CommandConnect.root in
-      CommandMeanKill.mean_kill ~tmp_dir root;
+      CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
       show_connecting reason { env with d_server_status = None; }
     with CommandMeanKill.FailedToKill _ ->
       let msg = "An old version of the Flow server is running. Please stop it." in
@@ -847,7 +850,7 @@ let error_to_lsp
  * and store them in the state;
  * or it's an unopened file in which case we'll retrieve parse results but
  * won't store them. *)
-let parse_and_cache (state: state) (uri: string)
+let parse_and_cache flowconfig_name (state: state) (uri: string)
   : state * (Loc.t, Loc.t) Ast.program * PublishDiagnostics.diagnostic list option =
   (* part of parsing is producing parse errors, if so desired *)
   let liveSyntaxErrors = let open Initialize in match state with
@@ -871,7 +874,8 @@ let parse_and_cache (state: state) (uri: string)
   let get_parse_options () =
     let root = get_root state in
     let use_strict = Option.value_map root ~default:false ~f:(fun root ->
-      Server_files_js.config_file root |> FlowConfig.get |> FlowConfig.modules_are_use_strict) in
+      Server_files_js.config_file flowconfig_name root
+      |> FlowConfig.get |> FlowConfig.modules_are_use_strict) in
     Some Parser_env.({
       esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;
@@ -1007,9 +1011,9 @@ let do_replacement_diagnostics
   in
   state
 
-let do_live_diagnostics (state: state) (uri: string): state =
+let do_live_diagnostics flowconfig_name (state: state) (uri: string): state =
   (* reparse the file and write it into the state's editor_open_files as needed *)
-  let state, _, _ = parse_and_cache state uri in
+  let state, _, _ = parse_and_cache flowconfig_name state uri in
   (* republish the diagnostics for this file based on a mix of server-generated ones *)
   (* if present, and client-generated ones if the file is open *)
   let server_diagnostics = match state with
@@ -1042,9 +1046,10 @@ let show_recheck_progress (cenv: connected_env) : state =
     c_ienv = show_status~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv
   }
 
-let do_documentSymbol (state: state) (id: lsp_id) (params: DocumentSymbol.params) : state =
+let do_documentSymbol flowconfig_name (state: state) (id: lsp_id)
+  (params: DocumentSymbol.params): state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
-  let state, ast, _ = parse_and_cache state uri in
+  let state, ast, _ = parse_and_cache flowconfig_name state uri in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
   to_stdout json;
@@ -1168,7 +1173,7 @@ module RagePrint = struct
     Buffer.contents b
 end
 
-let do_rage (state: state) : Rage.result =
+let do_rage flowconfig_name (state: state) : Rage.result =
   let open Rage in
 
   (* Some helpers to add various types of data to the rage output... *)
@@ -1227,12 +1232,13 @@ let do_rage (state: state) : Rage.result =
   let items = match ienv with
     | None -> items
     | Some ienv ->
-      let start_env = CommandUtils.make_env ienv.i_connect_params ienv.i_root in
+      let start_env = CommandUtils.make_env flowconfig_name ienv.i_connect_params ienv.i_root in
       let tmp_dir = start_env.CommandConnect.tmp_dir in
       let server_log_file = Path.make start_env.CommandConnect.log_file in
       (* monitor log file isn't retained anywhere. But since flow lsp doesn't *)
       (* take a --monitor-log-file option, then we know where it must be.     *)
-      let monitor_log_file = CommandUtils.monitor_log_file tmp_dir start_env.CommandConnect.root in
+      let monitor_log_file =
+         CommandUtils.monitor_log_file flowconfig_name tmp_dir start_env.CommandConnect.root in
       let items = add_file items server_log_file in
       let items = add_file items monitor_log_file in
       (* Let's pick up the old files in case user reported bug after a crash *)
@@ -1240,7 +1246,8 @@ let do_rage (state: state) : Rage.result =
       let items = add_file items (Path.concat monitor_log_file ".old") in
       (* And the pids file *)
       let items = try
-        let pids = PidLog.get_pids (Server_files_js.pids_file ~tmp_dir ienv.i_root) in
+        let pids = PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir ienv.i_root)
+        in
         Core_list.fold pids ~init:items ~f:add_pid
       with e ->
         let message = Printexc.to_string e in
@@ -1285,6 +1292,7 @@ let with_timer (f: unit -> 'a) : (float * 'a) =
 type log_needed = LogNeeded of Persistent_connection_prot.metadata | LogDeferred | LogNotNeeded
 
 let rec main
+    base_flags
     (temp_dir: string option)
     (shm_flags: CommandUtils.shared_mem_params)
     (lazy_mode: Options.lazy_mode option)
@@ -1307,16 +1315,16 @@ let rec main
   } in
   let client = Jsonrpc.make_queue () in
   let state = (Pre_init connect_params) in
-  main_loop client state
+  main_loop base_flags.Base_flags.flowconfig_name client state
 
-and main_loop (client: Jsonrpc.queue) (state: state) : unit =
+and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit =
   let event = try Ok (get_next_event state client (parse_json state))
     with e -> Error (state, e, Utils.Callstack (Printexc.get_backtrace ())) in
   let result = match event with
     | Error (state, e, stack) -> Error (state, e, stack, None)
     | Ok event ->
       let (client_duration, result) = with_timer (fun () ->
-        try main_handle_unsafe state event
+        try main_handle_unsafe flowconfig_name state event
           with e -> Error (state, e, Utils.Callstack (Printexc.get_backtrace ()))) in
       match result with
       | Ok (state, logneeded) -> Ok (state, logneeded, client_duration)
@@ -1334,10 +1342,10 @@ and main_loop (client: Jsonrpc.queue) (state: state) : unit =
       state
     | Error (state, e, stack, event) -> main_handle_error e stack state event
   in
-  main_loop client state
+  main_loop flowconfig_name client state
 
 
-and main_handle_unsafe (state: state) (event: event)
+and main_handle_unsafe flowconfig_name (state: state) (event: event)
   : (state * log_needed, state * exn * Utils.callstack) result =
 begin
   match state, event with
@@ -1348,7 +1356,7 @@ begin
       i_initialize_params;
       i_connect_params;
       i_root;
-      i_version = get_current_version i_root;
+      i_version = get_current_version flowconfig_name i_root;
       i_can_autostart_after_version_mismatch = true;
       i_server_id = 0;
       i_outstanding_local_requests = IdMap.empty;
@@ -1363,7 +1371,7 @@ begin
     (* binary then it doesn't even make sense for us to start up. And future *)
     (* attempts by the client to launch us will fail as well. Clients which  *)
     (* receive the following response are expected to shut down their LSP.   *)
-    let required_version = get_current_version i_root in
+    let required_version = get_current_version flowconfig_name i_root in
     begin match CommandUtils.check_version required_version with
       | Ok () -> ()
       | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
@@ -1376,7 +1384,7 @@ begin
       d_autostart = true;
       d_server_status = None;
     } in
-    Ok (try_connect env, LogNeeded metadata)
+    Ok (try_connect flowconfig_name env, LogNeeded metadata)
 
   | _, Client_message (RequestMessage (id, ShutdownRequest), _metadata) ->
     begin match state with Connected env -> close_conn env | _ -> () end;
@@ -1432,7 +1440,7 @@ begin
     (* documentSymbols is handled in the client, not the server, since it's *)
     (* purely syntax-driven and we'd like it to work even if the server is  *)
     (* busy or disconnected *)
-    let state = do_documentSymbol state id params in
+    let state = do_documentSymbol flowconfig_name state id params in
     Ok (state, LogNeeded metadata)
 
   | Connected cenv, Client_message (c, metadata) ->
@@ -1440,7 +1448,8 @@ begin
     (* computation work, which we'll profile, and send it over in metadata. *)
     let client_duration, state = with_timer (fun () ->
       let state, {changed_live_uri} = track_to_server state c in
-      let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
+      let state = Option.value_map changed_live_uri ~default:state
+        ~f:(do_live_diagnostics flowconfig_name state) in
       state) in
     let metadata = { metadata with
       Persistent_connection_prot.client_duration=Some client_duration } in
@@ -1452,7 +1461,7 @@ begin
     (* above case will just have forwarded the message on to the server (and  *)
     (* we'll patch in our own extra information when the server replies). But *)
     (* if there's no server then we have to reply here and now.               *)
-    let result = do_rage state in
+    let result = do_rage flowconfig_name state in
     let response = ResponseMessage (id, RageResult result) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
@@ -1465,7 +1474,8 @@ begin
     (* these are editor events that happen while disconnected. *)
     let client_duration, state = with_timer (fun () ->
       let state, {changed_live_uri} = track_to_server state c in
-      let state = Option.value_map changed_live_uri ~default:state ~f:(do_live_diagnostics state) in
+      let state = Option.value_map changed_live_uri ~default:state
+        ~f:(do_live_diagnostics flowconfig_name state) in
       state) in
     let metadata = { metadata with
       Persistent_connection_prot.client_duration=Some client_duration } in
@@ -1499,7 +1509,7 @@ begin
             (* work we did before sending out the request. By zeroing it out now, it'll get *)
             (* filled out with the client-side work that gets done right here and now. *)
             let metadata = { metadata with Persistent_connection_prot.client_duration = None} in
-            ResponseMessage (id, RageResult (items @ (do_rage state))), metadata
+            ResponseMessage (id, RageResult (items @ (do_rage flowconfig_name state))), metadata
           | _ -> outgoing, metadata
         in
         to_stdout (Lsp_fmt.print_lsp outgoing);
@@ -1568,7 +1578,7 @@ begin
       (string_of_state state) (denorm_string_of_event event))
 
   | Disconnected env, Tick ->
-    let state = try_connect env in
+    let state = try_connect flowconfig_name env in
     Ok (state, LogNotNeeded)
 
   | _, Tick ->

@@ -347,8 +347,8 @@ end = struct
     Logger.debug "Initializing file watcher (%s)" watcher#name;
     watcher#start_init;
     let file_watcher_pid = watcher#getpid in
-    let handle = Server.daemonize
-      ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options in
+    let handle = Server.daemonize ~log_file ~shared_mem_config ~argv ~file_watcher_pid
+      server_options in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =
       ic

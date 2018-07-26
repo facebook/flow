@@ -49,6 +49,7 @@ let spec = {
   ;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_flags
     |> root_flag
     |> error_flags
@@ -85,11 +86,12 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   ) with exn -> print_endline "ERROR!"; Unix.close fd; raise exn);
   Unix.close fd
 
-let main option_values root error_flags strip_root ignore_flag
+let main base_flags option_values root error_flags strip_root ignore_flag
   include_flag untyped_flag declaration_flag from src out_dir () = (
   FlowEventLogger.set_from from;
   let src = expand_path src in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> Some src
@@ -112,7 +114,8 @@ let main option_values root error_flags strip_root ignore_flag
         FlowExitStatus.exit ~msg FlowExitStatus.Commandline_usage_error
       );
 
-      let options = LsCommand.make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag in
+      let options = LsCommand.make_options ~flowconfig_name ~root ~ignore_flag ~include_flag
+        ~untyped_flag ~declaration_flag in
       let _, libs = Files.init options in
       let next_files =
         LsCommand.get_ls_files ~root ~all:false ~options ~libs ~imaginary:false (Some src)
@@ -127,7 +130,7 @@ let main option_values root error_flags strip_root ignore_flag
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
   let request = ServerProt.Request.GEN_FLOW_FILES (filenames, include_warnings) in
   let open ServerProt.Response in
-  match connect_and_make_request option_values root request, out_dir with
+  match connect_and_make_request flowconfig_name option_values root request, out_dir with
   | GEN_FLOW_FILES (Error (GenFlowFiles_TypecheckError {errors; warnings})), _ ->
     let strip_root = if strip_root then Some root else None in
     Errors.Cli_output.print_errors

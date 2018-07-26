@@ -195,4 +195,5 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in
   fun ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
-    Server_daemon.daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid entry
+    Server_daemon.daemonize ~log_file ~shared_mem_config ~argv ~options
+      ~file_watcher_pid entry

@@ -23,8 +23,8 @@ type connect_exn =
   | Missing_socket
 exception ConnectError of connect_exn
 
-let server_exists ~tmp_dir root =
-  not (Lock.check (Server_files.lock_file ~tmp_dir root))
+let server_exists ~flowconfig_name ~tmp_dir root =
+  not (Lock.check (Server_files.lock_file ~flowconfig_name ~tmp_dir root))
 
 let wait_on_server_restart ic =
   try
@@ -78,8 +78,8 @@ let close_connection sockaddr =
       Timeout.shutdown_connection ic;
       Timeout.close_in_noerr ic
 
-let establish_connection ~timeout ~client_handshake ~tmp_dir root =
-  let sock_name = Socket.get_path (Server_files.socket_file ~tmp_dir root) in
+let establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root =
+  let sock_name = Socket.get_path (Server_files.socket_file ~flowconfig_name ~tmp_dir root) in
   let sockaddr =
     if Sys.win32 then
       let ic = open_in_bin sock_name in
@@ -156,14 +156,14 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
     failwith "Monitor sent incorrect handshake"
 
 (* Connects to the monitor via a socket. *)
-let connect_once ~client_handshake ~tmp_dir root =
+let connect_once ~flowconfig_name ~client_handshake ~tmp_dir root =
   let (>>=) = Core_result.(>>=) in
   try
     Timeout.with_timeout
       ~timeout:1
       ~on_timeout:(fun _ -> raise (ConnectError Timeout))
       ~do_:begin fun timeout ->
-        establish_connection ~timeout ~client_handshake ~tmp_dir root
+        establish_connection ~flowconfig_name ~timeout ~client_handshake ~tmp_dir root
           >>= fun (sockaddr, (ic, oc)) ->
         get_handshake ~timeout sockaddr ic oc
       end >>= fun (sockaddr, ic, oc, server_handshake) ->
@@ -171,12 +171,12 @@ let connect_once ~client_handshake ~tmp_dir root =
       Ok (ic, oc)
   with
   | ConnectError Missing_socket ->
-    if server_exists ~tmp_dir root
+    if server_exists ~flowconfig_name ~tmp_dir root
     then Error Server_socket_missing
     else Error Server_missing
   | ConnectError Timeout
   | _ ->
-    if server_exists ~tmp_dir root
+    if server_exists ~flowconfig_name ~tmp_dir root
     then Error (Server_busy Not_responding)
     else Error Server_missing
 

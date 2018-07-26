@@ -21,6 +21,7 @@ let spec = {
       Utils_js.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_flags
     |> root_flag
     |> strip_root_flag
@@ -28,9 +29,10 @@ let spec = {
   )
 }
 
-let main option_values root strip_root file () =
+let main base_flags option_values root strip_root file () =
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = expand_path file in
-  let root = guess_root root in
+  let root = guess_root flowconfig_name root in
   let strip_root f =
     if strip_root
     then Files.relative_path (Path.to_string root) f
@@ -38,7 +40,7 @@ let main option_values root strip_root file () =
   in
   (* connect to server *)
   let request = ServerProt.Request.CYCLE file in
-  match connect_and_make_request option_values root request with
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CYCLE (Error msg) ->
     prerr_endline msg
   | ServerProt.Response.CYCLE (Ok dep_graph) ->
