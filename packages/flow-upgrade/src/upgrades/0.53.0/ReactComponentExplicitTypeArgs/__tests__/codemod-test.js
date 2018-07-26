@@ -11,10 +11,6 @@ const jscodeshiftFlowParser = require('jscodeshift/parser/flow');
 const jscodeshift = require('jscodeshift').withParser(jscodeshiftFlowParser);
 const transform = require('../codemod');
 
-const JSCODESHIFT_BIN = path.resolve(
-  __dirname,
-  '../../node_modules/.bin/jscodeshift',
-);
 const FIXTURES_DIR = path.join(__dirname, './fixtures');
 
 fs.readdirSync(FIXTURES_DIR).forEach(fixture => {
