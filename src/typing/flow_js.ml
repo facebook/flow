@@ -12350,8 +12350,8 @@ class assert_ground_visitor skip = object (self)
       | _, [] -> seen
       | [], _ -> seen
       | tparam::tparams, targ::targs ->
-        let pole = Polarity.mult (pole, tparam.polarity) in
-        let seen = self#type_ cx pole seen targ in
+        let param_polarity = Polarity.mult (pole, tparam.polarity) in
+        let seen = self#type_ cx param_polarity seen targ in
         loop cx pole seen (tparams, targs)
     in
     fun targs cx pole seen -> function
