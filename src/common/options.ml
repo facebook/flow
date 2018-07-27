@@ -10,6 +10,11 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
+type file_watcher =
+| NoFileWatcher
+| DFind
+| Watchman
+
 type module_system =
   | Node
   | Haste
@@ -27,7 +32,7 @@ type jsx_mode =
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
-  | Jsx_pragma of (string * Loc.t Ast.Expression.t)
+  | Jsx_pragma of (string * (Loc.t, Loc.t) Ast.Expression.t)
 
   (**
    * Alternate mode for interpreting JSX syntax. The element name is treated
@@ -51,6 +56,7 @@ type t = {
   opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
   opt_facebook_fbt: string option;
+  opt_flowconfig_name: string;
   opt_file_options: Files.options;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
@@ -101,6 +107,7 @@ let haste_name_reducers opts = opts.opt_haste_name_reducers
 let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
 let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
+let flowconfig_name opts = opts.opt_flowconfig_name
 let file_options opts = opts.opt_file_options
 let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy_mode <> None

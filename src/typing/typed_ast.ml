@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type annot = unit
-
 (** Error AST nodes. These are used when, while generating the typed AST,
     errors prevent some part of the original AST from being translated.
     These are all chosen arbitrarily, and currently nothing relies on them

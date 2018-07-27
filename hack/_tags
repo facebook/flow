@@ -1,4 +1,4 @@
-true: package(unix),package(str),package(bigarray)
+true: package(unix),package(str),package(bigarray),package(ppx_deriving.std)
 <**/*.ml*>: ocaml, warn_A, warn(-3-4-6-29-35-44-48-50-52)
 <*.ml*>: warn(-27)
 <hhi/hhi.ml>: ppx(ppx/ppx_gen_hhi hhi)
@@ -15,4 +15,5 @@ true: package(unix),package(str),package(bigarray)
 <third-party/avl/*.ml*>: warn(-27)
 <third-party/core/*.ml*>: warn(-32-41)
 <utils/*.ml*>: warn(-27)
-not <{dfind,find,globals,heap,injection,procs,search,socket,third-party,utils,watchman,fsevents,fsnotify_darwin,fsnotify_linux,fsnotify_win,stubs}/**/*>: package(core_kernel), package(ppx_deriving.std), package(visitors.ppx), package(visitors.runtime)
+not <{dfind,find,globals,heap,injection,procs,search,socket,third-party,utils,watchman,fsevents,fsnotify_darwin,fsnotify_linux,fsnotify_win,stubs}/**/*>: package(core_kernel), package(visitors.ppx), package(visitors.runtime), package(pcre)
+

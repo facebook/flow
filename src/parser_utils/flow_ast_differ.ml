@@ -62,9 +62,9 @@ let diff_and_recurse
 (* We need a variant here for every node that we want to be able to store a diff for. The more we
  * have here, the more granularly we can diff. *)
 type node =
-  | Statement of Loc.t Ast.Statement.t
-  | Program of Loc.t Ast.program
-  | Expression of Loc.t Ast.Expression.t
+  | Statement of (Loc.t, Loc.t) Ast.Statement.t
+  | Program of (Loc.t, Loc.t) Ast.program
+  | Expression of (Loc.t, Loc.t) Ast.Expression.t
   | Identifier of Loc.t Ast.Identifier.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
@@ -94,17 +94,17 @@ let diff_if_changed f x1 x2 =
 *)
 
 (* Entry point *)
-let rec program (program1: Loc.t Ast.program) (program2: Loc.t Ast.program) : node change list =
+let rec program (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
   let (program_loc, statements1, _) = program1 in
   let (_, statements2, _) = program2 in
   statement_list statements1 statements2
   |> Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
 
-and statement_list (stmts1: Loc.t Ast.Statement.t list) (stmts2: Loc.t Ast.Statement.t list)
+and statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list) (stmts2: (Loc.t, Loc.t) Ast.Statement.t list)
     : node change list option =
   diff_and_recurse (fun x y -> Some (statement x y)) stmts1 stmts2
 
-and statement (stmt1: Loc.t Ast.Statement.t) (stmt2: Loc.t Ast.Statement.t)
+and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast.Statement.t)
     : node change list =
   let open Ast.Statement in
   let changes = match stmt1, stmt2 with
@@ -126,7 +126,7 @@ and statement (stmt1: Loc.t Ast.Statement.t) (stmt2: Loc.t Ast.Statement.t)
 
 and function_declaration func1 func2 = function_ func1 func2
 
-and function_ (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Function.t)
+and function_ (func1: (Loc.t, Loc.t) Ast.Function.t) (func2: (Loc.t, Loc.t) Ast.Function.t)
     : node change list option =
   let open Ast.Function in
   let {
@@ -152,7 +152,7 @@ and function_ (func1: Loc.t Ast.Function.t) (func2: Loc.t Ast.Function.t)
     | BodyBlock (_, block1), BodyBlock (_, block2) ->
       block block1 block2
 
-and if_statement (if1: Loc.t Ast.Statement.If.t) (if2: Loc.t Ast.Statement.If.t)
+and if_statement (if1: (Loc.t, Loc.t) Ast.Statement.If.t) (if2: (Loc.t, Loc.t) Ast.Statement.If.t)
     : node change list option =
   let open Ast.Statement.If in
   let {
@@ -177,7 +177,7 @@ and if_statement (if1: Loc.t Ast.Statement.If.t) (if2: Loc.t Ast.Statement.If.t)
 
   Option.all result_list |> Option.map ~f:List.concat
 
-and class_ (class1: Loc.t Ast.Class.t) (class2: Loc.t Ast.Class.t) =
+and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
   let open Ast.Class in
   let {
     id=id1; body=body1; tparams=tparams1; super=super1; super_targs=super_targs1;
@@ -196,14 +196,14 @@ and class_ (class1: Loc.t Ast.Class.t) (class2: Loc.t Ast.Class.t) =
     (* just body changed *)
     class_body body1 body2
 
-and class_body (class_body1: Loc.t Ast.Class.Body.t) (class_body2: Loc.t Ast.Class.Body.t)
+and class_body (class_body1: (Loc.t, Loc.t) Ast.Class.Body.t) (class_body2: (Loc.t, Loc.t) Ast.Class.Body.t)
     : node change list option =
   let open Ast.Class.Body in
   let _, { body=body1 } = class_body1 in
   let _, { body=body2 } = class_body2 in
   diff_and_recurse class_element body1 body2
 
-and class_element (elem1: Loc.t Ast.Class.Body.element) (elem2: Loc.t Ast.Class.Body.element)
+and class_element (elem1: (Loc.t, Loc.t) Ast.Class.Body.element) (elem2: (Loc.t, Loc.t) Ast.Class.Body.element)
     : node change list option =
   let open Ast.Class.Body in
   match elem1, elem2 with
@@ -212,8 +212,8 @@ and class_element (elem1: Loc.t Ast.Class.Body.element) (elem2: Loc.t Ast.Class.
   | _ -> None (* TODO *)
 
 and class_method
-    (m1: Loc.t Ast.Class.Method.t')
-    (m2: Loc.t Ast.Class.Method.t')
+    (m1: (Loc.t, Loc.t) Ast.Class.Method.t')
+    (m2: (Loc.t, Loc.t) Ast.Class.Method.t')
     : node change list option =
   let open Ast.Class.Method in
   let { kind = kind1; key = key1; value = (_loc, value1); static = static1; decorators = decorators1 } =
@@ -229,7 +229,7 @@ and class_method
   else
     function_ value1 value2
 
-and block (block1: Loc.t Ast.Statement.Block.t) (block2: Loc.t Ast.Statement.Block.t)
+and block (block1: (Loc.t, Loc.t) Ast.Statement.Block.t) (block2: (Loc.t, Loc.t) Ast.Statement.Block.t)
     : node change list option =
   let open Ast.Statement.Block in
   let { body = body1 } = block1 in
@@ -237,8 +237,8 @@ and block (block1: Loc.t Ast.Statement.Block.t) (block2: Loc.t Ast.Statement.Blo
   statement_list body1 body2
 
 and expression_statement
-    (stmt1: Loc.t Ast.Statement.Expression.t)
-    (stmt2: Loc.t Ast.Statement.Expression.t)
+    (stmt1: (Loc.t, Loc.t) Ast.Statement.Expression.t)
+    (stmt2: (Loc.t, Loc.t) Ast.Statement.Expression.t)
     : node change list option =
   let open Ast.Statement.Expression in
   let { expression = expr1; directive = dir1 } = stmt1 in
@@ -248,7 +248,7 @@ and expression_statement
   else
     Some (expression expr1 expr2)
 
-and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
+and expression (expr1: (Loc.t, Loc.t) Ast.Expression.t) (expr2: (Loc.t, Loc.t) Ast.Expression.t)
     : node change list =
   let changes =
     (* The open is here to avoid ambiguity with the use of the local `Expression` constructor
@@ -261,13 +261,15 @@ and expression (expr1: Loc.t Ast.Expression.t) (expr2: Loc.t Ast.Expression.t)
       Some (identifier id1 id2)
     | (_, New new1), (_, New new2) ->
       new_ new1 new2
+    | (_, Function f1), (_, Function f2) ->
+      function_ f1 f2
     | _, _ ->
       None
   in
   let old_loc = Ast_utils.loc_of_expression expr1 in
   Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
 
-and binary (b1: Loc.t Ast.Expression.Binary.t) (b2: Loc.t Ast.Expression.Binary.t): node change list option =
+and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
   let open Ast.Expression.Binary in
   let { operator = op1; left = left1; right = right1 } = b1 in
   let { operator = op2; left = left2; right = right2 } = b2 in
@@ -280,7 +282,7 @@ and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node
   let (old_loc, _) = id1 in
   [(old_loc, Replace (Identifier id1, Identifier id2))]
 
-and new_ (new1: Loc.t Ast.Expression.New.t) (new2: Loc.t Ast.Expression.New.t): node change list option =
+and new_ (new1: (Loc.t, Loc.t) Ast.Expression.New.t) (new2: (Loc.t, Loc.t) Ast.Expression.New.t): node change list option =
   let open Ast.Expression.New in
   let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
   let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in

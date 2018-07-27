@@ -25,7 +25,7 @@ type t = {
   (* The argv of the process which created the server monitor *)
   argv: string array;
   (* What to use for file watching *)
-  file_watcher: FileWatcherStatus.file_watcher;
+  file_watcher: Options.file_watcher;
   (* Turn on debugging messages for the file watcher *)
   file_watcher_debug: bool;
 }

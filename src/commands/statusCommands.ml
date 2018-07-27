@@ -37,6 +37,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           exe_name;
       args = CommandSpec.ArgSpec.(
         empty
+        |> base_flags
         |> connect_and_json_flags
         |> json_version_flag
         |> error_flags
@@ -78,6 +79,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
+        |> base_flags
         |> connect_and_json_flags
         |> json_version_flag
         |> error_flags
@@ -99,12 +101,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     strip_root: bool;
   }
 
-  let check_status (args:args) connect_flags =
+  let check_status flowconfig_name (args:args) connect_flags =
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
     let request = ServerProt.Request.STATUS (args.root, include_warnings) in
-    let response, lazy_stats = match connect_and_make_request connect_flags args.root request with
+    let response, lazy_stats = match connect_and_make_request flowconfig_name connect_flags
+      args.root request with
     | ServerProt.Response.STATUS {status_response; lazy_stats} -> status_response, lazy_stats
     | response -> failwith_bad_response ~request ~response
     in
@@ -163,7 +166,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  let main connect_flags json pretty json_version error_flags strip_root from version root () =
+  let main base_flags connect_flags json pretty json_version error_flags strip_root from version
+    root () =
     FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
@@ -172,7 +176,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.(exit No_error)
     );
 
-    let root = guess_root root in
+    let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+    let root = guess_root flowconfig_name root in
 
     let json = json || Option.is_some json_version || pretty in
 
@@ -185,7 +190,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       error_flags;
       strip_root;
     } in
-    check_status args connect_flags
+    check_status flowconfig_name args connect_flags
 end
 
 module Status(CommandList : COMMAND_LIST) = struct

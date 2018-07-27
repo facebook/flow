@@ -106,7 +106,7 @@ let lsp_DocumentPosition_to_flow
 
 
 module DocumentSymbols = struct
-  let name_of_key (key: Loc.t Ast.Expression.Object.Property.key) : string option =
+  let name_of_key (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) : string option =
     let open Ast.Expression.Object.Property in
     match key with
     | Literal (_, { Ast.Literal.raw; _ }) -> Some raw
@@ -139,7 +139,7 @@ module DocumentSymbols = struct
     Option.value_map name_opt ~default:acc
       ~f:(fun name -> ast_name ~uri ~containerName ~acc ~loc ~name ~kind)
 
-  let ast_key ~uri ~containerName ~acc ~loc ~(key:Loc.t Ast.Expression.Object.Property.key) ~kind =
+  let ast_key ~uri ~containerName ~acc ~loc ~(key:(Loc.t, Loc.t) Ast.Expression.Object.Property.key) ~kind =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_key key) ~kind
 
   let ast_id ~uri ~containerName ~acc ~loc ~(id: Loc.t Ast.Identifier.t) ~kind =
@@ -152,7 +152,7 @@ module DocumentSymbols = struct
       ~(uri: Lsp.documentUri)
       ~(containerName: string option)
       (acc: Lsp.SymbolInformation.t list)
-      (member: Loc.t Ast.Class.Body.element)
+      (member: (Loc.t, Loc.t) Ast.Class.Body.element)
     : Lsp.SymbolInformation.t list =
     let open Ast.Class in
     match member with
@@ -174,7 +174,7 @@ module DocumentSymbols = struct
       ~(containerName: string option)
       ~(acc: Lsp.SymbolInformation.t list)
       ~(loc: Loc.t)
-      ~(class_: Loc.t Ast.Class.t)
+      ~(class_: (Loc.t, Loc.t) Ast.Class.t)
     : Lsp.SymbolInformation.t list =
     let open Ast.Class in
     let acc = ast_id_opt ~uri ~containerName ~acc
@@ -187,7 +187,7 @@ module DocumentSymbols = struct
       ~(uri: Lsp.documentUri)
       ~(containerName: string option)
       (acc: Lsp.SymbolInformation.t list)
-      (property: Loc.t Ast.Type.Object.property)
+      (property: (Loc.t, Loc.t) Ast.Type.Object.property)
     : Lsp.SymbolInformation.t list =
     let open Ast.Type.Object in
     match property with
@@ -203,7 +203,7 @@ module DocumentSymbols = struct
      ~(uri: Lsp.documentUri)
      ~(containerName: string option)
      ~(acc: Lsp.SymbolInformation.t list)
-     ~(object_: Loc.t Ast.Type.Object.t)
+     ~(object_: (Loc.t, Loc.t) Ast.Type.Object.t)
     : Lsp.SymbolInformation.t list =
     let open Ast.Type.Object in
     Core_list.fold object_.properties ~init:acc ~f:(ast_type_object_property ~uri ~containerName)
@@ -212,7 +212,7 @@ module DocumentSymbols = struct
       ~(uri: Lsp.documentUri)
       ~(containerName: string option)
       ~(acc: Lsp.SymbolInformation.t list)
-      ~(type_: Loc.t Ast.Type.t')
+      ~(type_: (Loc.t, Loc.t) Ast.Type.t')
     : Lsp.SymbolInformation.t list =
     let open Ast.Type in
     match type_ with
@@ -226,7 +226,7 @@ module DocumentSymbols = struct
       ~(uri: Lsp.documentUri)
       ~(containerName: string option)
       ~(acc: Lsp.SymbolInformation.t list)
-      ~(declaration: Loc.t Ast.Statement.DeclareExportDeclaration.declaration)
+      ~(declaration: (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration)
     : Lsp.SymbolInformation.t list =
     let open Ast.Statement.DeclareExportDeclaration in
     let open Ast.Statement in
@@ -253,7 +253,7 @@ module DocumentSymbols = struct
       ~(uri: Lsp.documentUri)
       ~(containerName: string option)
       ~(acc: Lsp.SymbolInformation.t list)
-      ~(expression: Loc.t Ast.Expression.t)
+      ~(expression: (Loc.t, Loc.t) Ast.Expression.t)
     : Lsp.SymbolInformation.t list =
     let open Ast.Expression in
     match expression with
@@ -264,7 +264,7 @@ module DocumentSymbols = struct
       ~(uri: Lsp.documentUri)
       ~(containerName: string option)
       (acc: Lsp.SymbolInformation.t list)
-      (statement: Loc.t Ast.Statement.t)
+      (statement: (Loc.t, Loc.t) Ast.Statement.t)
     : Lsp.SymbolInformation.t list =
     let open Ast.Statement in
     match statement with
@@ -321,7 +321,7 @@ end
 
 let flow_ast_to_lsp_symbols
     ~(uri: Lsp.documentUri)
-    (program: Loc.t Ast.program)
+    (program: (Loc.t, Loc.t) Ast.program)
   : Lsp.SymbolInformation.t list =
   let (_loc, statements, _comments) = program in
   Core_list.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)

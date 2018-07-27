@@ -27,7 +27,7 @@ let process_updates genv env updates =
     SSet.union known_libs maybe_new_libs
   in
   let root = Options.root options in
-  let config_path = Server_files_js.config_file root in
+  let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
   let sroot = Path.to_string root in
   let want = Files.wanted ~options:file_options all_libs in
 

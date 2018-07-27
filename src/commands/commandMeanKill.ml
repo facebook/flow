@@ -7,9 +7,9 @@
 
 exception FailedToKill of string option
 
-let mean_kill ~tmp_dir root =
+let mean_kill ~flowconfig_name ~tmp_dir root =
   let pids =
-    try PidLog.get_pids (Server_files_js.pids_file ~tmp_dir root)
+    try PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir root)
     with PidLog.FailedToGetPids ->
       let msg = Printf.sprintf
         "Unable to figure out pids of running Flow server. \
@@ -29,6 +29,6 @@ let mean_kill ~tmp_dir root =
       ()
   ) pids;
   ignore(Unix.sleep 1);
-  if CommandConnectSimple.server_exists ~tmp_dir root
+  if CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root
   then raise (FailedToKill None);
   ()

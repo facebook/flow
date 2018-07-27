@@ -24,6 +24,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_and_json_flags
     |> root_flag
     |> strip_root_flag
@@ -33,15 +34,16 @@ let spec = {
   )
 }
 
-let main option_values json pretty root strip_root from moduleref filename () =
+let main base_flags option_values json pretty root strip_root from moduleref filename () =
   FlowEventLogger.set_from from;
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with Some root -> Some root | None -> Some filename
   ) in
 
   let request = ServerProt.Request.FIND_MODULE (moduleref, filename) in
 
-  let result = match connect_and_make_request option_values root request with
+  let result = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.FIND_MODULE (
       Some File_key.LibFile file
     | Some File_key.SourceFile file

@@ -35,7 +35,7 @@ type comment_attach =
     | Following
 
 type comment_map =
-  (comment_attach * Loc.t Ast.Statement.t * Loc.t Ast.Comment.t)
+  (comment_attach * (Loc.t, Loc.t) Ast.Statement.t * Loc.t Ast.Comment.t)
   list LocMap.t
 
 let normal_context = { left = Normal_left; group = Normal_group; }
@@ -249,7 +249,7 @@ let comments_before_loc loc comments =
   helper loc [] comments
 
 type statement_or_comment =
-| Statement of Loc.t Ast.Statement.t
+| Statement of (Loc.t, Loc.t) Ast.Statement.t
 | Comment of Loc.t Ast.Comment.t
 
 let better_quote =
@@ -417,7 +417,7 @@ and comment (loc, comment) =
     ]
   )
 
-and statement_list_with_locs ?allow_empty ?(pretty_semicolon=false) (stmts: Loc.t Ast.Statement.t list) =
+and statement_list_with_locs ?allow_empty ?(pretty_semicolon=false) (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
   let rec mapper acc = function
   | [] -> List.rev acc
   | ((loc, _) as stmt)::rest ->
@@ -427,7 +427,7 @@ and statement_list_with_locs ?allow_empty ?(pretty_semicolon=false) (stmts: Loc.
   in
   mapper [] stmts
 
-and statement_list ?allow_empty ?pretty_semicolon (stmts: Loc.t Ast.Statement.t list) =
+and statement_list ?allow_empty ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
   stmts
   |> statement_list_with_locs ?allow_empty ?pretty_semicolon
   |> List.map (fun (_loc, layout) -> layout)
@@ -439,7 +439,7 @@ and statement_list ?allow_empty ?pretty_semicolon (stmts: Loc.t Ast.Statement.t 
  * a semicolon is never required on the last statement of a statement list, so we can set
  * `~pretty_semicolon:true` to only print the unnecessary semicolon in pretty mode.
  *)
-and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: Loc.t Ast.Statement.t) =
+and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement.t) =
   let (loc, stmt) = root_stmt in
   let module E = Ast.Expression in
   let module S = Ast.Statement in
@@ -655,7 +655,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: Loc.t A
     | S.DeclareExportDeclaration export -> declare_export_declaration export
   )
 
-and expression ?(ctxt=normal_context) (root_expr: Loc.t Ast.Expression.t) =
+and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.t) =
   let (loc, expr) = root_expr in
   let module E = Ast.Expression in
   let precedence = precedence_of_expression (loc, expr) in
@@ -1065,7 +1065,7 @@ and pattern_object_property_key = Ast.Pattern.Object.(function
     ]
   )
 
-and pattern ?(ctxt=normal_context) ((loc, pat): Loc.t Ast.Pattern.t) =
+and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
   let module P = Ast.Pattern in
   source_location_with_comments (
     loc,
@@ -2195,7 +2195,7 @@ and type_with_parens t =
   | (_, T.Intersection _) -> wrap_in_parens (type_ t)
   | _ -> type_ t
 
-and type_ ((loc, t): Loc.t Ast.Type.t) =
+and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
   let module T = Ast.Type in
   source_location_with_comments (
     loc,

@@ -63,7 +63,7 @@ let string_of_type =
 (* A hacky version of string_of function for AST nodes.
    This will be replaced once we have a better solution.
 *)
-let rec string_of_pattern (pattern : Loc.t P.t') =
+let rec string_of_pattern (pattern : (Loc.t, Loc.t) P.t') =
   match pattern with
   | P.Identifier id ->
     let open P.Identifier in
@@ -80,7 +80,7 @@ let rec string_of_pattern (pattern : Loc.t P.t') =
     (string_of_expr (snd assign.right))
   | _ -> failwith "[string_of_pattern] unsupported pattern"
 
-and string_of_expr (expr : Loc.t E.t') =
+and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   let string_of_proplist plist =
     let helper prop = match prop with
       | E.Object.Property (_, E.Object.Property.Init p) ->
@@ -148,7 +148,7 @@ and string_of_expr (expr : Loc.t E.t') =
       "]"
   | _ -> failwith "unknown expr"
 
-and string_of_stmt (stmt : Loc.t S.t') =
+and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
   match stmt with
   | S.Block b ->
     S.Block.(b.body)
@@ -201,7 +201,7 @@ and string_of_stmt (stmt : Loc.t S.t') =
     (string_of_expr (snd e.expression)) ^ ";\n"
   | _ -> failwith "[string_of_stmt] Unspported stmt"
 
-and string_of_type (t : Loc.t T.t') =
+and string_of_type (t : (Loc.t, Loc.t) T.t') =
 
   match t with
   | T.Any -> "any"
@@ -281,7 +281,7 @@ let mk_obj_cons = mk_gen "Obj";;
 (* Convert a code and its dependencies into a list
    CAUTION: This function will lose some independencies between
    codes *)
-let list_of_code (code : Code.t) : Loc.t Ast.Statement.t list =
+let list_of_code (code : Code.t) : (Loc.t, Loc.t) Ast.Statement.t list =
   let open Code in
   let rec helper acc lst = match lst with
     | [] -> acc
@@ -293,7 +293,7 @@ let list_of_code (code : Code.t) : Loc.t Ast.Statement.t list =
 (* Convert a list of statements into a code object. Dependencies
    are based on the order of the statements. Thus, it will create
    unnecessary dependnecies. USE THIS WITH CAUTION. *)
-let code_of_stmt_list (slist : Loc.t Ast.Statement.t list) : Code.t option =
+let code_of_stmt_list (slist : (Loc.t, Loc.t) Ast.Statement.t list) : Code.t option =
   let open Code in
 
   let rec helper lst = match lst with
@@ -310,7 +310,7 @@ let code_of_stmt_list (slist : Loc.t Ast.Statement.t list) : Code.t option =
    assignments will appear after empty object init.
 *)
 let rm_prop_write
-    (prop : Loc.t E.Member.t)
+    (prop : (Loc.t, Loc.t) E.Member.t)
     (clist : Code.t list) : Code.t list =
   let open S.Expression in
   let open Code in
@@ -334,7 +334,7 @@ let rm_vardecl
   let open S.VariableDeclaration in
 
   (* Check whether this declaration defines the target variable *)
-  let is_target (decl : Loc.t S.VariableDeclaration.Declarator.t) =
+  let is_target (decl : (Loc.t, Loc.t) S.VariableDeclaration.Declarator.t) =
     let decl' = (snd decl) in
     match decl'.id with
     | (_, P.Identifier { P.Identifier.name = (_, name); _;})
@@ -389,10 +389,10 @@ module Config = struct
   and t = (string * value) list;;
 
   (* Convert a JSON ast into a config *)
-  let rec to_config (ast : Loc.t E.Object.t) : t =
+  let rec to_config (ast : (Loc.t, Loc.t) E.Object.t) : t =
 
     (* get config value from an expression *)
-    let get_value (expr : Loc.t E.t') : value = match expr with
+    let get_value (expr : (Loc.t, Loc.t) E.t') : value = match expr with
       | E.Object o -> Obj (to_config o)
       | E.Literal lit -> let open Ast.Literal in
         (match lit.value with
@@ -429,9 +429,9 @@ module Config = struct
     prop_list
 
   (* Convert a config into an expression ast. Mainly used for printing *)
-  let rec ast_of_config (c : t) : Loc.t E.Object.t =
+  let rec ast_of_config (c : t) : (Loc.t, Loc.t) E.Object.t =
 
-    let expr_of_value (v : value) : Loc.t E.t' = let open Ast.Literal in
+    let expr_of_value (v : value) : (Loc.t, Loc.t) E.t' = let open Ast.Literal in
       match v with
       | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i}
       | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""}

@@ -245,6 +245,8 @@ let set_file pos_file pos =
 let to_absolute p =
   set_file (Relative_path.to_absolute (filename p)) p
 
+let to_relative p =
+  set_file (Relative_path.create_detect_prefix (filename p)) p
 
 let btw x1 x2 =
   if filename x1 <> filename x2

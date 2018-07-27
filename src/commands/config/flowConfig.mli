@@ -50,6 +50,7 @@ val esproposal_export_star_as: config -> Options.esproposal_feature_mode
 val esproposal_optional_chaining: config -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: config -> Options.esproposal_feature_mode
 val facebook_fbt: config -> string option
+val file_watcher: config -> Options.file_watcher option
 val haste_name_reducers: config -> (Str.regexp * string) list
 val haste_paths_blacklist: config -> string list
 val haste_paths_whitelist: config -> string list

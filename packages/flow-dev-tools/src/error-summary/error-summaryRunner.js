@@ -3,6 +3,7 @@
  */
 
 import getFlowErrors from '../comment/getFlowErrors';
+import {prettyPrintError} from '../flowResult';
 import type {Args} from './error-summaryCommand';
 
 export default (async function(args: Args): Promise<void> {
@@ -12,16 +13,29 @@ export default (async function(args: Args): Promise<void> {
     args.root,
   );
 
-  var message_filter = new RegExp(args.messageFilter);
-  var code_filter = new RegExp(args.codeFilter);
   var error_summary = {};
+  var files = new Set();
   flow_result.errors.forEach(error =>
     error.message.forEach(err => {
       if (
-        (args.messageFilter === undefined || message_filter.test(err.descr)) &&
-        (args.codeFilter === undefined ||
-          (err.context != null && code_filter.test(err.context)))
+        (args.messageFilter == null ||
+          new RegExp(args.messageFilter).test(err.descr)) &&
+        (args.codeFilter == null ||
+          (err.context != null &&
+            new RegExp(args.codeFilter).test(err.context))) &&
+        (args.fileFilter == null ||
+          (err.loc != null &&
+            err.loc.source != null &&
+            new RegExp(args.fileFilter).test(err.loc.source)))
       ) {
+        if (args.showErrors) {
+          console.log(prettyPrintError(error));
+        }
+
+        if (args.showFiles && err.loc != null && err.loc.source != null) {
+          files.add(err.loc.source);
+        }
+
         if (err.descr in error_summary) {
           error_summary[err.descr] = error_summary[err.descr] + 1;
         } else {
@@ -38,6 +52,10 @@ export default (async function(args: Args): Promise<void> {
     };
   });
   result.sort((first, second) => second.freq - first.freq);
+
+  if (args.showFiles) {
+    files.forEach(file => console.log(file));
+  }
 
   result.forEach(error =>
     console.log('frequency: ' + error.freq + ' message: ' + error.message),

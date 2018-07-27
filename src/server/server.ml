@@ -176,6 +176,8 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
   PidLog.disable ();
   MonitorRPC.disable ();
 
+  LoggingUtils.set_server_options ~server_options:options;
+
   let initial_lwt_thread () =
     let _, program_init =
       create_program_init ~shared_mem_config ~focus_targets options in
@@ -193,4 +195,5 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in
   fun ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
-    Server_daemon.daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid entry
+    Server_daemon.daemonize ~log_file ~shared_mem_config ~argv ~options
+      ~file_watcher_pid entry

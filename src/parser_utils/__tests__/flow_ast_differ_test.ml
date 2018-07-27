@@ -17,7 +17,7 @@ class useless_mapper = object
       {value=Number 5.0; raw="5"}
     | _ -> expr
 
-  method! binary (expr: Loc.t Ast.Expression.Binary.t) =
+  method! binary (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression.Binary in
     let expr = super#binary expr in
     let { operator; _ } = expr in
@@ -105,5 +105,10 @@ let tests = "ast_differ" >::: [
     let source = "if (4) { 4; } else { rename }" in
     let edits = edits_of_source source in
     assert_equal ~ctxt [((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")] edits
+  end;
+  "function_expression" >:: begin fun ctxt ->
+    let source = "(function() { 4; })" in
+    let edits = edits_of_source source in
+    assert_equal ~msg:(debug_string_of_edits edits) ~ctxt [((14, 15), "(5)")] edits
   end;
 ]

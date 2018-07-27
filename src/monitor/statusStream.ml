@@ -94,7 +94,7 @@ let empty file_watcher =
   ret
 
 (* This is the status info for the current Flow server *)
-let current_status = ref (empty FileWatcherStatus.NoFileWatcher)
+let current_status = ref (empty Options.NoFileWatcher)
 
 (* Call f the next time the server is free. If the server is currently free, then call now *)
 let call_on_free ~f =

@@ -22,6 +22,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> strip_root_flag
     |> ignore_flag
     |> include_flag
@@ -69,7 +70,7 @@ let string_of_file_result_with_padding = function
 | ExplicitLib        -> "ExplicitLib       "
 | ConfigFile         -> "ConfigFile        "
 
-let explain ~root ~options ~libs raw_file =
+let explain ~flowconfig_name ~root ~options ~libs raw_file =
   let file = raw_file |> Path.make |> Path.to_string in
   let root_str = Path.to_string root in
   let result =
@@ -80,7 +81,7 @@ let explain ~root ~options ~libs raw_file =
       if String_utils.string_starts_with file (Path.to_string flowtyped_path)
       then ImplicitLib
       else ExplicitLib
-    end else if Server_files_js.config_file root = file
+    end else if Server_files_js.config_file flowconfig_name root = file
     then ConfigFile
     else if Files.is_ignored options file
     then ExplicitlyIgnored
@@ -107,8 +108,8 @@ let rec iter_get_next ~f get_next =
       List.iter f result;
       iter_get_next ~f get_next
 
-let make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
-  let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
+let make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
+  let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
   let temp_dir = FlowConfig.temp_dir flowconfig in
   let includes = CommandUtils.list_of_string_arg include_flag in
   let ignores = CommandUtils.list_of_string_arg ignore_flag in
@@ -176,13 +177,15 @@ let get_next_append_const get_next const =
       ret
 
 let main
-  strip_root ignore_flag include_flag untyped_flag declaration_flag root_flag json pretty from all imaginary reason
+  base_flags strip_root ignore_flag include_flag untyped_flag declaration_flag root_flag json pretty
+  from all imaginary reason
   input_file root_or_files () =
 
   let files_or_dirs = get_filenames_from_input ~allow_imaginary:true input_file root_or_files in
 
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   FlowEventLogger.set_from from;
-  let root = guess_root (
+  let root = guess_root flowconfig_name (
     match root_flag with
     | Some root -> Some root
     | None -> (match files_or_dirs with
@@ -196,7 +199,8 @@ let main
       | _ -> None)
   ) in
 
-  let options = make_options ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag in
+  let options = make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag
+    ~declaration_flag in
   (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
   let options = { options with Files.default_lib_dir = None; } in
   let _, libs = Files.init options in
@@ -211,7 +215,7 @@ let main
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-  let config_file_absolute = Server_files_js.config_file root in
+  let config_file_absolute = Server_files_js.config_file flowconfig_name root in
   let config_file_relative = Files.relative_path root_str config_file_absolute in
   let include_config_file = files_or_dirs = [] || List.exists (fun file_or_dir ->
       file_or_dir = config_file_relative || String_utils.string_starts_with root_str file_or_dir
@@ -232,7 +236,7 @@ let main
       if reason
       then
         files
-        |> List.map (explain ~root ~options ~libs)
+        |> List.map (explain ~flowconfig_name ~root ~options ~libs)
         |> List.map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
@@ -242,7 +246,7 @@ let main
   end) else begin
     let f = if reason
     then begin fun filename ->
-      let f, r = explain ~root ~options ~libs filename in
+      let f, r = explain ~flowconfig_name ~root ~options ~libs filename in
       Printf.printf
         "%s    %s\n%!"
         (string_of_file_result_with_padding r)

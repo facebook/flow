@@ -26,6 +26,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_flags
     |> root_flag
     |> error_flags
@@ -98,19 +99,20 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     with_errors_and_warnings true errors Errors.ErrorSet.empty None @@ fun () ->
     failwith "SuggestCommand: Parsing failed with no errors"
 
-let main option_values root error_flags strip_root from path
+let main base_flags option_values root error_flags strip_root from path
   fail_on_tc_errors fail_on_suggest_warnings filename () =
   FlowEventLogger.set_from from;
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path (Option.map ~f:expand_path filename) in
-  let root = guess_root (
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
   let request = ServerProt.Request.SUGGEST file in
-  match connect_and_make_request option_values root request with
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.SUGGEST (Ok result) ->
     handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings result;
     flush stdout

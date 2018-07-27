@@ -56,12 +56,12 @@ class comment_attacher ~comments = object(this)
         this#check_loc node_loc
       end
 
-  method! statement (stmt: Loc.t Ast.Statement.t) =
+  method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     let (loc, _) = stmt in
     this#check_loc loc;
     super#statement stmt
 
-  method! expression (expr: Loc.t Ast.Expression.t) =
+  method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let (loc, _) = expr in
     this#check_loc loc;
     super#expression expr
@@ -71,12 +71,12 @@ class comment_attacher ~comments = object(this)
     this#check_loc loc;
     super#identifier expr
 
-  method! object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
+  method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
     let (loc, _) = prop in
     this#check_loc loc;
     super#object_property prop
 
-  method! class_element (elem: Loc.t Ast.Class.Body.element) =
+  method! class_element (elem: (Loc.t, Loc.t) Ast.Class.Body.element) =
     let open Ast.Class.Body in
     begin match elem with
     | Method (loc, _)

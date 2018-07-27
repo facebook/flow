@@ -5,27 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type file_watcher =
-| NoFileWatcher
-| DFind
-| Watchman
-
 type status' =
 | Initializing
 | Ready
-type status = file_watcher * status'
+type status = Options.file_watcher * status'
+
+let string_of_file_watcher = function
+  | Options.NoFileWatcher -> "Dummy"
+  | Options.DFind -> "Dfind"
+  | Options.Watchman -> "Watchman"
 
 let string_of_status =
-  let string_of_watcher = function
-  | NoFileWatcher -> "Dummy file watcher"
-  | DFind -> "Dfind file watcher"
-  | Watchman -> "Watchman file watcher"
-  in
-
   let string_of_status = function
   | Initializing -> "still initializing"
   | Ready -> "ready"
   in
 
   fun (watcher, status) ->
-    Printf.sprintf "%s is %s" (string_of_watcher watcher) (string_of_status status)
+    Printf.sprintf
+      "%s file watcher is %s" (string_of_file_watcher watcher) (string_of_status status)

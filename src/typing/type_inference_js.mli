@@ -12,7 +12,7 @@ val infer_ast:
   file_sig: File_sig.t ->
   Context.t ->
   File_key.t ->
-  Loc.t Ast.program ->
+  (Loc.t, Loc.t) Ast.program ->
   unit
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
@@ -21,5 +21,5 @@ val infer_lib_file:
   file_options: Files.options option ->
   file_sig: File_sig.t ->
   Context.t ->
-  Loc.t Ast.program ->
+  (Loc.t, Loc.t) Ast.program ->
   string list

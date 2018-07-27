@@ -781,7 +781,8 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
 
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
     let env = ref env in
-    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
+    let open Completion in
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc ~client in
     let fn_content = match file with
       | File_input.FileContent (fn, content) ->
         Ok (fn, content)

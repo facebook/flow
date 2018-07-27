@@ -1,0 +1,18 @@
+Error ---------------------------------------------------------------------------------------------------- testA.js:8:16
+
+Missing type annotation for `A`.
+
+   8| export default f(0, 0); // should just be missing for A, not B
+                     ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- testB.js:8:16
+
+Missing type annotation for `B`.
+
+   8| export default f(0, 0); // should just be missing for B, not A
+                     ^^^^^^^
+
+
+
+Found 2 errors

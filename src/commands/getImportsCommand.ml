@@ -24,6 +24,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_and_json_flags
     |> root_flag
     |> strip_root_flag
@@ -32,12 +33,14 @@ let spec = {
   )
 }
 
-let main option_values json pretty root strip_root from modules () =
+let main base_flags option_values json pretty root strip_root from modules () =
   FlowEventLogger.set_from from;
-  let root = guess_root root in
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name root in
 
   let request = ServerProt.Request.GET_IMPORTS modules in
-  let (requirements_map, non_flow) = match connect_and_make_request option_values root request with
+  let (requirements_map, non_flow) = match connect_and_make_request flowconfig_name option_values
+    root request with
   | ServerProt.Response.GET_IMPORTS response -> response
   | response -> failwith_bad_response ~request ~response
   in

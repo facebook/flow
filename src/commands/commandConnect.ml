@@ -125,7 +125,8 @@ let consume_retry retries =
 (* A featureful wrapper around CommandConnectSimple.connect_once. This
  * function handles retries, timeouts, displaying messages during
  * initialization, etc *)
-let rec connect ~client_handshake env retries start_time =
+let rec connect ~flowconfig_name ~client_handshake env retries start_time =
+  let connect = connect ~flowconfig_name in
   if retries.retries_remaining < 0
   then
     FlowExitStatus.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries);
@@ -136,14 +137,14 @@ let rec connect ~client_handshake env retries start_time =
   if has_timed_out
   then FlowExitStatus.(exit ~msg:"\nTimeout exceeded, exiting" Out_of_time);
   let retries = { retries with last_connect_time = Unix.gettimeofday () } in
-  let conn = CCS.connect_once ~client_handshake ~tmp_dir:env.tmp_dir env.root in
+  let conn = CCS.connect_once ~flowconfig_name ~client_handshake ~tmp_dir:env.tmp_dir env.root in
 
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   let retries = reset_retries_if_necessary retries conn in
   match conn with
   | Ok (ic, oc) -> (ic, oc)
   | Error CCS.Server_missing ->
-      handle_missing_server ~client_handshake env retries start_time
+      handle_missing_server ~flowconfig_name ~client_handshake env retries start_time
   | Error CCS.Server_busy busy_reason ->
       let busy_reason = match busy_reason with
       | CCS.Too_many_clients -> "has too many clients and rejected our connection"
@@ -180,12 +181,12 @@ let rec connect ~client_handshake env retries start_time =
         if not env.quiet then Utils_js.prerr_endlinef
           "Attempting to kill server for `%s`"
           (Path.to_string env.root);
-        CommandMeanKill.mean_kill ~tmp_dir:env.tmp_dir env.root;
+        CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir:env.tmp_dir env.root;
         if not env.quiet then Utils_js.prerr_endlinef
           "Successfully killed server for `%s`"
           (Path.to_string env.root);
         let start_time = Unix.gettimeofday () in
-        handle_missing_server ~client_handshake env retries start_time
+        handle_missing_server ~flowconfig_name ~client_handshake env retries start_time
       with CommandMeanKill.FailedToKill err ->
         begin if not env.quiet then match err with
         | Some err -> prerr_endline err
@@ -195,7 +196,7 @@ let rec connect ~client_handshake env retries start_time =
         FlowExitStatus.(exit ~msg Kill_error)
       end
 
-and handle_missing_server ~client_handshake env retries start_time =
+and handle_missing_server ~flowconfig_name ~client_handshake env retries start_time =
   if env.autostart then begin
     let retries = match start_flow_server env with
       | Ok () ->
@@ -211,7 +212,7 @@ and handle_missing_server ~client_handshake env retries start_time =
       | Error (msg, code) ->
         FlowExitStatus.exit ~msg code
     in
-    connect ~client_handshake env retries start_time
+    connect ~flowconfig_name ~client_handshake env retries start_time
   end else begin
     let msg = Utils_js.spf
       "\nError: There is no Flow server running in '%s'."
@@ -219,7 +220,7 @@ and handle_missing_server ~client_handshake env retries start_time =
     FlowExitStatus.(exit ~msg No_server_running)
   end
 
-let connect ~client_handshake env =
+let connect ~flowconfig_name ~client_handshake env =
   let start_time = Unix.gettimeofday () in
   let retries = {
     retries_remaining = env.retries;
@@ -227,5 +228,5 @@ let connect ~client_handshake env =
     last_connect_time = Unix.gettimeofday ();
   } in
 
-  let res = connect ~client_handshake env retries start_time in
+  let res = connect ~flowconfig_name ~client_handshake env retries start_time in
   res

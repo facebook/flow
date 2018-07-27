@@ -176,7 +176,7 @@ val empty_module_sig: module_sig
 
 val require_loc_map: module_sig -> Loc.t Nel.t SMap.t
 
-val program: ast:Loc.t Ast.program -> (t, error) result
+val program: ast:(Loc.t, Loc.t) Ast.program -> (t, error) result
 
 (* Use for debugging; not for exposing info the the end user *)
 val to_string: t -> string

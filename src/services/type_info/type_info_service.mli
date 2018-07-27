@@ -46,6 +46,6 @@ val suggest :
   ((Errors.ErrorSet.t *   (* Typechecking errors *)
     Errors.ErrorSet.t *   (* Typechecking warnings *)
     Errors.ErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
-    Loc.t Ast.program),   (* Annotated program *)
+    (Loc.t, Loc.t) Ast.program),   (* Annotated program *)
     Errors.ErrorSet.t     (* Parsing errors *)
   ) Core_result.t Lwt.t
