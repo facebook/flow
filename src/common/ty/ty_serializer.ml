@@ -233,11 +233,11 @@ and type_param tp =
 and type_arguments ts =
   mapM type_ ts >>| fun ts -> (Loc.none, ts)
 
-and str_lit lit = {
-  Ast.StringLiteral.
-  value = lit;
-  raw = lit;
-}
+and str_lit lit =
+  let quote = Js_layout_generator.better_quote lit in
+  let raw_lit = Js_layout_generator.utf8_escape ~quote lit in
+  let raw = quote ^ raw_lit ^ quote in
+  { Ast.StringLiteral.value = lit; raw }
 
 and num_lit lit = {
   Ast.NumberLiteral.
