@@ -292,7 +292,7 @@ foo([]);
 
 Callable objects can be typed, for example:
 
-```
+```js
 type CallableObj = {
   (number, number): number,
   bar: string
