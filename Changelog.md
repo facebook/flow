@@ -1,3 +1,33 @@
+### 0.78.0
+
+New Features:
+* Added the [`unnecessary-invariant`](https://flow.org/en/docs/linting/rule-reference/#toc-unnecessary-invariant) lint, which will flag uses of `invariant` when Flow can determine that the predicate must be truthy.
+* `find-refs` now traverses union types.
+* The `--flowconfig-name` flag now allows you to specify the name of the flowconfig.
+* Added a `file_watcher` option for `.flowconfig`.
+* Rechecks will now stop and restart as soon as Flow notices other file changes. The previous behavior was to finish the recheck and then start a new recheck. The new behavior is currently off by default and can be enabled by setting `experimental.cancelable_rechecks=true` in `.flowconfig`.
+**Note**: This feature is experimental. When it stabilizes, the flag will be removed and this feature will be enabled by default.
+
+Notable bug fixes:
+* `flow-upgrade` should no longer trigger `ENOENT` on Windows.
+* Running Flow with `--profile` should no longer throw on Windows.
+* Suppression comments preceding lint errors for disabled lints should now be correctly considered unused and trigger unused suppression warnings.
+* `ArrayBuffer`'s static indexer property is now correctly marked covariant. This should prevent errors like [this one](https://flow.org/try/#0PTAEBUAsEsGdQMYEMCusCm8mgGYBsB7Ad1HQCcyCzRoA7UAF0nUSpf2NABN0c7oG0ArQBQ6AB4AHKg1wpaCQcNAAjJFwAUASlABvEaEOtasWUgpIAnqAC8oWuhIBVOgwAcAQQuWNAFgBMWgDcBkZk6AwoZPQACpQAtnDoAHThsAR4AG7oGuZkVskqKDg45MEiAL4iIkA).
+* Fixed a bug in which the polarity of a type parameter was propagated to all subsequent type parameters, causing errors when covariant type parameters followed contravariant or invariant ones.
+  This bug is demonstrated by the difference in behavior of the following examples:
+  - [Incorrect](https://flow.org/try/#0C4TwDgpgBAKgPAQQDQGoBCA+KBeKBvAQwC4pkoUAjEtAXwG4AoBgMwFcA7AY2AEsB7dlGaIkmABTFSSKFShoAlCXjJM+BlCgAnCMFabBhaRRoMTDCAA8wfTcCgATCMwKsANneZiADNK-y6UAD0gVAAzgAWfG72UABWrKF2FNAAtjyhoTzsAOZCNlJQ7Hx2aEA)
+  - [Correct](https://flow.org/try/#0C4TwDgpgBAKgPAagIIBoBCA+KBeKBvBAQwC4pUoAjUtAXwG4AoBgMwFcA7AY2AEsB7dlGZxUmABQkyKStQCUpeKKx4GUKACcIwVusF5C0ijQbGGEAB5g+64FAAmEZoVYAbW8zEAGaZ9l0oAPQBUADOABZ8rnZQAFasIbYU0AC2PCEhPOwA5kLWUGjS7Hy2SEA)
+
+Misc:
+* Flow now prints array types as `Array<T>` instead of `T[]` in JavaScript output.
+* Flow now prints `{foo:x}` as `{ foo: x }` in JavaScript output, as Prettier does.
+* Library definition changes:
+  - Added `destroyed` to `net$Socket`.
+  - Added `document.scrollingElement`.
+  - Added `dgram$Socket$rinfo` to the Node library definitions.
+  - Added WebAssembly library definitions.
+  - Added the `groups` property to `RegExp$matchResult`.
+
 ### 0.77.0
 
 New Features:
