@@ -16,6 +16,7 @@ open Hh_core
 let extensions = [
   ".php"  ; (* normal php file *)
   ".hh"   ; (* Hack extension some open source code is starting to use *)
+  ".hack" ; (* Hack extension some open source code is starting to use *)
   ".phpt" ; (* our php template files *)
   ".hhi"  ; (* interface files only visible to the type checker *)
   ".xhp"  ; (* XHP extensions *)
