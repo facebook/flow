@@ -288,7 +288,7 @@ end = struct
           subscription_prefix = "flow_watcher";
           roots = Files.watched_paths file_options;
           debug_logging = file_watcher_debug;
-        })
+        } ())
 
       method wait_for_init =
         let%lwt watchman = Option.value_exn init_thread in

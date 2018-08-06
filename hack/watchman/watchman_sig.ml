@@ -118,7 +118,7 @@ module type S = sig
   type 'a result
   type conn
 
-  val init: init_settings -> env option result
+  val init: ?since_clockspec:string -> init_settings -> unit -> env option result
 
   val get_all_files: env -> string list result
 
