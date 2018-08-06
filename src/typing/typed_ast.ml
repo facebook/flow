@@ -23,6 +23,23 @@ module Type = struct
       targs = None
     }
 
+  module Function = struct
+    open Function
+
+    module Params = struct
+      let error = { Params.
+        params = [];
+        rest = None;
+      }
+    end
+
+    let error = {
+      tparams = None;
+      params = (), Params.error;
+      return = (), error;
+    }
+  end
+
   module Object = struct
     open Object
 
@@ -131,7 +148,7 @@ module Statement = struct
     open DeclareFunction
     let error = {
       id = (), "Error";
-      annot = (), ((), Type.error);
+      annot = (), ((), Ast.Type.Function Type.Function.error);
       predicate = None;
     }
   end
