@@ -10,8 +10,8 @@ module Flow = Flow_js
 open Reason
 
 type set_asts =
-  (unit, Loc.t * Type.t) Ast.Function.body option *
-  (unit, Loc.t * Type.t) Ast.Expression.t option
+  (Loc.t, Loc.t * Type.t) Ast.Function.body option *
+  (Loc.t, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
 type field = Loc.t option * Type.polarity * field'

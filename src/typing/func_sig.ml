@@ -237,8 +237,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
   let statements, reconstruct_body = Ast.Statement.(
     match body with
     | None -> [], Fn.const None
-    | Some (Ast.Function.BodyBlock (_, { Block.body })) ->
-      body, (fun body -> Some (Ast.Function.BodyBlock ((), { Block.body })))
+    | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
+      body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body })))
     | Some (Ast.Function.BodyExpression expr) ->
       [fst expr, Return {Return.argument = Some expr}],
       (function
