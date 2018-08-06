@@ -2634,6 +2634,16 @@ module NullProtoT = Primitive (struct
   let make r = NullProtoT r
 end)
 
+module AnyObjT = Primitive (struct
+  let desc = RAnyObject
+  let make r = DefT (r, AnyObjT)
+end)
+
+module AnyFunT = Primitive (struct
+  let desc = RAnyFunction
+  let make r = DefT (r, AnyFunT)
+end)
+
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
    they will cause error printing to crash.
 

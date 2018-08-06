@@ -134,7 +134,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 name :: xs,
                 Property ((), { prop with Property.key; pattern; }) :: rev_props
             | { Property.key = Property.Computed key; pattern = p; _; } ->
-                let key_t, key_ast = expr cx key in
+                let (_, key_t), _ as key_ast = expr cx key in
                 let loc = fst key in
                 let reason = mk_reason (RProperty None) loc in
                 let init = Option.map init (fun init ->
@@ -156,7 +156,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 let default = Option.map default (Default.elem key_t reason) in
                 let pattern = (), recurse ~parent_pattern_t tvar init default p in
                 xs, Property ((), {
-                  prop with Property.key = Property.Computed ((), key_ast); pattern;
+                  prop with Property.key = Property.Computed key_ast; pattern;
                 }) :: rev_props
             | { Property.key = Property.Literal _; _ } ->
                 Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
@@ -219,12 +219,15 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in
       let left = (), recurse ?parent_pattern_t tvar init default left in
-      Assignment { Assignment.left; right = (), Typed_ast.Expression.unimplemented }
+      Assignment { Assignment.
+        left;
+        right = Typed_ast.error_annot, Typed_ast.Expression.unimplemented
+      }
 
   | loc, Expression _ ->
       Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
         (loc, DestructuringExpressionPattern));
-      Expression ((), Typed_ast.Expression.error)
+      Expression (Typed_ast.error_annot, Typed_ast.Expression.error)
 
   in fun t init default pattern -> recurse t init default pattern
 )

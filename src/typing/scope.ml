@@ -283,7 +283,7 @@ type t = {
   kind: kind;
   mutable entries: Entry.t SMap.t;
   mutable refis: refi_binding Key_map.t;
-  mutable declare_func_annots: (unit, unit) Ast.Type.t' SMap.t;
+  mutable declare_func_annots: (unit, Loc.t * Type.t) Ast.Type.t SMap.t;
 }
 
 (* ctor helper *)

@@ -15,6 +15,10 @@
     This module also contains "unimplemented" AST nodes; these will be deleted once
     we've finished implementing the typed AST translation
   *)
+module T = Type
+
+let error_annot = Loc.none, Type.Locationless.AnyT.t
+
 module Type = struct
   open Ast.Type
   let error =
@@ -36,7 +40,7 @@ module Type = struct
     let error = {
       tparams = None;
       params = (), Params.error;
-      return = (), error;
+      return = error_annot, error;
     }
   end
 
@@ -50,7 +54,7 @@ module Type = struct
           value = Ast.Literal.Null;
           raw = "Error";
         });
-        value = Init ((), error);
+        value = Init (error_annot, error);
         optional = false;
         static = false;
         proto = false;
@@ -63,8 +67,8 @@ module Type = struct
       open Indexer
       let error = {
         id = Some ((), "Error");
-        key = (), error;
-        value = (), error;
+        key = error_annot, error;
+        value = error_annot, error;
         static = false;
         variance = None;
       }
@@ -74,7 +78,7 @@ module Type = struct
       open InternalSlot
       let error = {
         id = (), "Error";
-        value = (), error;
+        value = error_annot, error;
         optional = false;
         static = false;
         _method = false;
@@ -84,7 +88,7 @@ module Type = struct
     module SpreadProperty = struct
       open SpreadProperty
       let error = {
-        argument = (), error
+        argument = error_annot, error
       }
     end
   end
@@ -93,10 +97,10 @@ end
 module Expression = struct
   open Ast.Expression
   let error = Identifier ((), "Error")
-  let expression_or_spread_list_error = [ Expression ((), error) ]
+  let expression_or_spread_list_error = [ Expression (error_annot, error) ]
   let unimplemented = Identifier ((), "Unimplemented")
   let targs_unimplemented = None
-  let expression_or_spread_list_unimplemented = [ Expression ((), unimplemented) ]
+  let expression_or_spread_list_unimplemented = [ Expression (error_annot, unimplemented) ]
 
   module Object = struct
     open Object
@@ -105,7 +109,7 @@ module Expression = struct
       let key_error = Property.Identifier ((), "Error")
       let error = Init {
         key = key_error;
-        value = (), error;
+        value = error_annot, error;
         shorthand = false;
       }
     end
@@ -116,8 +120,8 @@ end
 
 module Pattern = struct
   open Ast.Pattern
-  let error = Expression ((), Expression.error)
-  let unimplemented = Expression ((), Expression.unimplemented)
+  let error = Expression (error_annot, Expression.error)
+  let unimplemented = Expression (error_annot, Expression.unimplemented)
 end
 
 module Statement = struct
@@ -148,7 +152,7 @@ module Statement = struct
     open DeclareFunction
     let error = {
       id = (), "Error";
-      annot = (), ((), Ast.Type.Function Type.Function.error);
+      annot = (), (error_annot, Ast.Type.Function Type.Function.error);
       predicate = None;
     }
   end
@@ -156,8 +160,8 @@ end
 
 module Function = struct
   open Ast.Function
-  let body_error = BodyExpression ((), Expression.error)
-  let body_unimplemented = BodyExpression ((), Expression.unimplemented)
+  let body_error = BodyExpression (error_annot, Expression.error)
+  let body_unimplemented = BodyExpression (error_annot, Expression.unimplemented)
   let unimplemented = {
       id = Some ((), "Unimplemented");
       params = (), { Params.params = []; rest = None; };
@@ -188,7 +192,7 @@ module Function = struct
   let error = {
     id = Some ((), "Error");
     params = (), Params.error;
-    body = BodyExpression ((), Expression.error);
+    body = BodyExpression (error_annot, Expression.error);
     async = false;
     generator = false;
     predicate = None;

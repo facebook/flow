@@ -10,8 +10,8 @@
 type t
 
 type set_asts =
-  (unit, unit) Ast.Function.body option *
-  (unit, unit) Ast.Expression.t option
+  (unit, Loc.t * Type.t) Ast.Function.body option *
+  (unit, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
 type field = Loc.t option * Type.polarity * field'
@@ -158,9 +158,9 @@ val generate_tests: Context.t ->
 val toplevels: Context.t ->
   decls:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list -> unit) ->
   stmts:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list ->
-                      (unit, unit) Ast.Statement.t list) ->
+                      (unit, Loc.t * Type.t) Ast.Statement.t list) ->
   expr:(Context.t -> (Loc.t, Loc.t) Ast.Expression.t ->
-                      Type.t * (unit, unit) Ast.Expression.t') ->
+                      (unit, Loc.t * Type.t) Ast.Expression.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
