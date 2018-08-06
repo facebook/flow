@@ -578,6 +578,23 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
 
+## `Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+Copies the shape of the type supplied, but marks every field optional.
+
+```js
+type Person = {
+  age: number,
+  name: string,
+}
+type PersonDetails = $Shape<Person>;
+
+const person1: Person = {age: 28}; // Error due to incorrect type of Person.
+const person2: Person = {name: 'a'}; // Error due to incorrect type of Person.
+const person3: PersonDetails = {age: 28}; // Ok
+const person4: PersonDetails = {name: 'a'}; // Ok
+const person5: PersonDetails = {age: 28, name: 'a'}; // Ok
+
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
 Work in progress
