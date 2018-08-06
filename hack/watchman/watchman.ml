@@ -524,7 +524,6 @@ struct
       watch_root;
       watched_paths;
     } in
-
     (match subscribe_mode with
     | None -> Watchman_process.return ()
     | Some mode ->
@@ -532,7 +531,6 @@ struct
         Watchman_process.request ~debug_logging ~conn (subscribe ~mode ~watched_path env) >|= ignore
       )
     ) >|= fun () ->
-
     env
 
   let init ?since_clockspec settings () =
