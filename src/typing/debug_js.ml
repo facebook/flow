@@ -1518,7 +1518,7 @@ let json_of_scope = Scope.(
   let open Hh_json in
 
   let json_of_value_impl json_cx { Entry.
-    kind; value_state; value_declare_loc; value_assign_loc; specific; general
+    kind; value_state; value_declare_loc; value_assign_loc; specific; general;
   } =
     JSON_Object [
       "entry_type", JSON_String "Value";
@@ -2253,7 +2253,7 @@ let dump_tvar ?(depth=3) cx id =
 let string_of_scope_entry = Scope.(
 
   let string_of_value_binding cx { Entry.
-    kind; value_state; value_declare_loc; value_assign_loc; specific; general
+    kind; value_state; value_declare_loc; value_assign_loc; specific; general;
   } =
     spf "{ kind: %s; value_state: %s; value_declare_loc: %S; \
       value_assign_loc: %s; specific: %s; general: %s }"

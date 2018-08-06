@@ -155,6 +155,5 @@ let test_case file_name _ =
   file_name |> lib_before_and_after_stmts |> check_structural_equality
 
 let tests = "TypedAST" >::: [
-  (* This test case doesn't currently pass -- bug fix in upcoming diff
-  "lib_serviceworkers" >:: test_case "flow/lib/serviceworkers.js" *)
+  "lib_serviceworkers" >:: test_case "flow/lib/serviceworkers.js"
 ]

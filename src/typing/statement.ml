@@ -261,12 +261,15 @@ and statement_decl cx = Ast.Statement.(
       (match declare_function_to_function_declaration cx declare_function with
       | None ->
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
-          let t, _ =
+          let t, annot' =
             Anno.mk_type_annotation cx SMap.empty r (Some annot) in
           Type_table.set (Context.type_table cx) id_loc t;
           let id_info = name, t, Type_table.Other in
           Type_table.set_info id_loc id_info (Context.type_table cx);
-          Env.bind_declare_fun cx name t id_loc
+          Env.bind_declare_fun cx name t id_loc;
+          Option.iter
+            ~f:(fun annot' -> Scope.add_declare_func_annot name annot' (Env.peek_scope ()))
+            annot';
       | Some (func_decl, _) ->
           statement_decl cx (loc, func_decl)
       )
@@ -1696,8 +1699,17 @@ and statement cx = Ast.Statement.(
       (match declare_function_to_function_declaration cx declare_function with
       | Some (func_decl, reconstruct_ast) ->
           (), DeclareFunction (reconstruct_ast (statement cx (loc, func_decl)))
-      | _ ->
-          (), DeclareFunction Typed_ast.Statement.DeclareFunction.error
+      | None ->
+        let { DeclareFunction.id = _, name; _ } = declare_function in
+        let annot = Option.value
+          (Scope.get_declare_func_annot name (Env.peek_scope ()))
+          ~default:Typed_ast.Type.error
+        in
+          (), DeclareFunction { DeclareFunction.
+            id = (), name;
+            annot = (), ((), annot);
+            predicate = None;
+          }
       )
 
   | (_, VariableDeclaration decl) ->

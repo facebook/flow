@@ -97,6 +97,7 @@ type t = {
   kind : kind;
   mutable entries : Entry.t SMap.t;
   mutable refis : refi_binding Key_map.t;
+  mutable declare_func_annots: (unit, unit) Ast.Type.t' SMap.t;
 }
 val fresh_impl : kind -> t
 val fresh : ?var_scope_kind:var_scope_kind -> unit -> t
@@ -118,5 +119,7 @@ val havoc_refis : ?name:string -> private_:bool -> t -> unit
 val havoc_all_refis : ?name:string -> t -> unit
 val havoc : t -> unit
 val reset : Loc.t -> t -> unit
+val add_declare_func_annot : string -> (unit, unit) Ast.Type.t' -> t -> unit
+val get_declare_func_annot : string -> t -> (unit, unit) Ast.Type.t' option
 val is_lex : t -> bool
 val is_global : t -> bool
