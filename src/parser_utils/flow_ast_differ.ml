@@ -261,6 +261,8 @@ and expression (expr1: (Loc.t, Loc.t) Ast.Expression.t) (expr2: (Loc.t, Loc.t) A
       Some (identifier id1 id2)
     | (_, New new1), (_, New new2) ->
       new_ new1 new2
+    | (_, Call call1), (_, Call call2) ->
+      call_ call1 call2
     | (_, Function f1), (_, Function f2) ->
       function_ f1 f2
     | _, _ ->
@@ -286,6 +288,16 @@ and new_ (new1: (Loc.t, Loc.t) Ast.Expression.New.t) (new2: (Loc.t, Loc.t) Ast.E
   let open Ast.Expression.New in
   let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
   let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
+  if targs1 != targs2 || arguments1 != arguments2 then
+    (* TODO(nmote) recurse into targs and arguments *)
+    None
+  else
+    Some (diff_if_changed expression callee1 callee2)
+
+and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) Ast.Expression.Call.t): node change list option =
+  let open Ast.Expression.Call in
+  let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
+  let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
   if targs1 != targs2 || arguments1 != arguments2 then
     (* TODO(nmote) recurse into targs and arguments *)
     None
