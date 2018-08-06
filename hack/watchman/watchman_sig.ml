@@ -37,6 +37,9 @@ module Types = struct
     subscription_prefix: string;
   }
 
+  (** The message's clock. *)
+  type clock = string
+
   type pushed_changes =
     (**
      * State name and metadata.
@@ -55,7 +58,7 @@ module Types = struct
      *)
     | State_enter of string * Hh_json.json option
     | State_leave of string * Hh_json.json option
-    | Changed_merge_base of string * SSet.t
+    | Changed_merge_base of string * SSet.t * clock
     | Files_changed of SSet.t
 
   type changes =

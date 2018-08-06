@@ -680,7 +680,7 @@ struct
       get_string "mergebase" >>= fun (mergebase, keytrace) ->
     let files = set_of_list @@ extract_file_names ~watched_path env data in
     watched_path.clockspec <- clock;
-    let response = Changed_merge_base (mergebase, files) in
+    let response = Changed_merge_base (mergebase, files, clock) in
     Ok ((env, response), keytrace)
 
   let get_watched_path_for_response env data =

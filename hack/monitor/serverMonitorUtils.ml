@@ -19,14 +19,41 @@ type monitor_config =
     monitor_log_file: string;
   }
 
+(** In an Informant-directed restart, Watchman provided a new
+ * mergebase, a new clock, and a list of files changed w.r.t.
+ * that mergebase.
+ *
+ * A new server instance can "resume" from that new mergebase
+ * given that it handles the list of files changed w.r.t. that
+ * new mergebase, and just starts a watchman subscription
+ * beginning with that clock.
+ *)
+type watchman_mergebase = {
+  (** Watchman says current repo mergebase is this. *)
+  mergebase_svn_rev : int;
+  (** ... plus these files changed to represent its current state *)
+  files_changed : SSet.t;
+  (** ...as of this clock *)
+  watchman_clock : string;
+}
+
 (** Informant-induced restart may specify the mini saved state
  * we should load from. *)
 type target_mini_state = {
   (** True if this is a tiny saved state. *)
   is_tiny : bool;
   mini_state_everstore_handle : string;
+  (** The SVN revision to which the above handle corresponds to. *)
   target_svn_rev : int;
+  watchman_mergebase : watchman_mergebase option;
 }
+
+let watchman_mergebase_to_string { mergebase_svn_rev; files_changed; watchman_clock; } =
+  Printf.sprintf
+    "watchman_mergebase (mergebase_svn_rev: %d; files_changed count: %d; watchman_clock: %s)"
+    mergebase_svn_rev
+    (SSet.cardinal files_changed)
+    watchman_clock
 
 module type Server_config = sig
 
