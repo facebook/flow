@@ -1025,6 +1025,9 @@ module rec TypeTerm : sig
 
   (* Facebookisms *)
   | Idx
+  | TypeAssertIs
+  | TypeAssertThrows
+  | TypeAssertWraps
 
   (* Internal tools *)
   | DebugPrint

@@ -42,6 +42,9 @@ let convert_targs cx = function
   | Some (loc, args) ->
     let targs_ast = List.map (Anno.convert cx SMap.empty) args in
     let targts = List.map snd_fst targs_ast in
+    List.iter (fun t ->
+      Type_table.set_targ (Context.type_table cx) (TypeUtil.loc_of_t t) t
+    ) targts;
     Some targts, Some (loc, targs_ast)
 
 (************)

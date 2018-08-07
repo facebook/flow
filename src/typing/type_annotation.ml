@@ -647,6 +647,12 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   | "$Facebookism$Idx" ->
       mk_custom_fun cx loc targs ident Idx
+  | "$Facebookism$TypeAssertIs" ->
+      mk_custom_fun cx loc targs ident TypeAssertIs
+  | "$Facebookism$TypeAssertThrows" ->
+      mk_custom_fun cx loc targs ident TypeAssertThrows
+  | "$Facebookism$TypeAssertWraps" ->
+      mk_custom_fun cx loc targs ident TypeAssertWraps
 
   | "$Flow$DebugPrint" ->
       mk_custom_fun cx loc targs ident DebugPrint

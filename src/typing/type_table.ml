@@ -31,12 +31,16 @@ type t = {
   type_info: (Loc.t, scheme_entry) Hashtbl.t;
   (* Keep a stack of the type parameters in scope and use it to create type schemes. *)
   tparams: tparam_env ref;
+  (* This stores type information for explicit type arguments to polymorphic
+   * functions. TODO once typed AST is available, this won't be necessary anymore. *)
+  targs: (Loc.t, type_scheme) Hashtbl.t;
 }
 
 let create () = {
   coverage = Hashtbl.create 0;
   type_info = Hashtbl.create 0;
   tparams = ref [];
+  targs = Hashtbl.create 0;
 }
 
 let set {coverage; tparams; _} loc t =
@@ -54,6 +58,10 @@ let set_info ?extra_tparams loc (name, t, i) x =
   let tparams = extra_tparams @ !tparams in
   Hashtbl.replace type_info loc (name, Scheme (tparams, t), i)
 
+let set_targ {targs; tparams; _} loc t =
+  let scheme = Scheme (!tparams, t) in
+  Hashtbl.replace targs loc scheme
+
 let fold_coverage f t init = Hashtbl.fold f t.coverage init
 
 let find_unsafe_coverage t k = Hashtbl.find t.coverage k
@@ -62,15 +70,19 @@ let find_unsafe_coverage_type t k =
   let Scheme (_, t) = Hashtbl.find t.coverage k in
   t
 
-let reset {coverage; type_info; tparams} =
+let find_unsafe_targ t k = Hashtbl.find t.targs k
+
+let reset {coverage; type_info; tparams; targs} =
   Hashtbl.reset coverage;
   Hashtbl.reset type_info;
-  tparams := []
+  tparams := [];
+  Hashtbl.reset targs
 
-let copy {coverage; type_info; tparams} = {
+let copy {coverage; type_info; tparams; targs} = {
   coverage = Hashtbl.copy coverage;
   type_info = Hashtbl.copy type_info;
   tparams = ref !tparams;
+  targs = Hashtbl.copy targs;
 }
 
 let with_typeparams new_tparams x f =
@@ -91,6 +103,11 @@ let type_info_hashtbl t =
 let coverage_to_list t =
   let r = ref [] in
   Hashtbl.iter (fun l t -> r := (l, t) :: !r) t.coverage;
+  !r
+
+let targs_to_list t =
+  let r = ref [] in
+  Hashtbl.iter (fun l t -> r := (l, t) :: !r) t.targs;
   !r
 
 let coverage_hashtbl t =

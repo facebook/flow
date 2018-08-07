@@ -51,6 +51,8 @@ type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
+type type_assert_kind = Is | Throws | Wraps
+
 val make_sig: unit -> sig_t
 val make: sig_t -> metadata -> File_key.t -> string -> t
 val metadata_of_options: Options.t -> metadata
@@ -110,6 +112,7 @@ val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> Type_table.t
+val type_asserts: t -> (type_assert_kind * Loc.t) LocMap.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode
@@ -139,6 +142,7 @@ val add_call_prop: t -> int -> Type.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
+val add_type_assert: t -> Loc.t -> (type_assert_kind * Loc.t) -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_all_lint_severities: t -> unit

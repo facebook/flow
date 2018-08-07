@@ -2397,6 +2397,76 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EIdxUse2 reason)
 
     (*********************)
+    (* type assert calls *)
+    (*********************)
+
+    | CustomFunT (fun_reason, TypeAssertIs),
+      CallT (use_op, reason_op, call_type)
+    | CustomFunT (fun_reason, TypeAssertThrows),
+      CallT (use_op, reason_op, call_type)
+    | CustomFunT (fun_reason, TypeAssertWraps),
+      CallT (use_op, reason_op, call_type) ->
+
+      let call_loc = loc_of_reason reason_op in
+      let fun_loc = loc_of_reason fun_reason in
+      let fun_reason_new = mk_reason RFunctionType fun_loc in
+
+      (* Add Flow errors for calls that attempt to assert types that cannot be
+      checked at runtime. *)
+      let reason = mk_reason (RCustom "TypeAssert library function") call_loc in
+      let return_t = begin match call_type.call_targs with
+      | None ->
+        add_output cx ~trace (FlowError.ETooFewTypeArgs (reason, reason, 1));
+        AnyT.at fun_loc
+      | Some [t] ->
+        let kind, return_t = begin match l with
+        | CustomFunT (_, TypeAssertIs) -> Context.Is, BoolT.at fun_loc
+        | CustomFunT (_, TypeAssertThrows) -> Context.Throws, t
+        | CustomFunT (_, TypeAssertWraps) ->
+          (* For TypeAssertWraps, return type is Result<T> *)
+          let mk_bool b = DefT (mk_reason (RBooleanLit b) fun_loc, SingletonBoolT b) in
+          let pmap_fail =
+            Properties.add_field "error" Neutral None (StrT.at fun_loc)
+            (Properties.add_field "success" Neutral None (mk_bool false) SMap.empty) in
+          let pmap_succ =
+            Properties.add_field "value" Neutral None t
+            (Properties.add_field "success" Neutral None (mk_bool true) SMap.empty) in
+          let id_succ, id_fail =
+            Context.make_property_map cx pmap_fail,
+            Context.make_property_map cx pmap_succ in
+          let reason = mk_reason (RCustom "Result<T>") fun_loc in
+          let obj_fail, obj_succ =
+            mk_object_def_type ~reason ~dict:None ~call:None id_fail dummy_prototype,
+            mk_object_def_type ~reason ~dict:None ~call:None id_succ dummy_prototype in
+          Context.Wraps,
+          DefT (mk_reason RUnion fun_loc, UnionT (UnionRep.make obj_fail obj_succ []))
+        | _ -> failwith "cannot reach this case"
+        end in
+        Context.add_type_assert cx call_loc (kind, TypeUtil.loc_of_t t); return_t
+      | Some _ ->
+        add_output cx ~trace (FlowError.ETooManyTypeArgs (reason, reason, 1));
+        AnyT.at fun_loc
+      end in
+
+      let funtype = DefT (fun_reason_new, FunT (
+        dummy_static reason,
+        DefT (mk_reason RPrototype fun_loc, AnyT),
+        {
+          this_t = DefT (mk_reason RThis fun_loc, AnyT);
+          params = [(Some "value", MixedT.at fun_loc)];
+          rest_param = None;
+          return_t = return_t;
+          is_predicate = false;
+          closure_t = 0;
+          changeset = Changeset.empty;
+          def_reason = fun_reason_new;
+        }))
+      in
+      rec_flow cx trace (
+        funtype, CallT (use_op, reason_op, {call_type with call_targs = None})
+      )
+
+    (*********************)
     (* optional chaining *)
     (*********************)
 
@@ -11056,6 +11126,9 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
   | ReactPropType _
   | ReactCreateClass
   | Idx
+  | TypeAssertIs
+  | TypeAssertThrows
+  | TypeAssertWraps
   | DebugPrint
   | DebugThrow
   | DebugSleep

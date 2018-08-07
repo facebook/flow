@@ -215,6 +215,9 @@ let rec gen_type t env = Type.(
   | CustomFunT (_, ReactCloneElement) -> add_str "React$CloneElement" env
   | CustomFunT (_, ReactElementFactory _) -> add_str "React$ElementFactory" env
   | CustomFunT (_, Idx) -> add_str "$Facebookism$Idx" env
+  | CustomFunT (_, TypeAssertIs) -> add_str "$Facebookism$TypeAssertIs" env
+  | CustomFunT (_, TypeAssertThrows) -> add_str "$Facebookism$TypeAssertThrows" env
+  | CustomFunT (_, TypeAssertWraps) -> add_str "$Facebookism$TypeAssertWraps" env
   | CustomFunT (_, DebugPrint) -> add_str "$Flow$DebugPrint" env
   | CustomFunT (_, DebugThrow) -> add_str "$Flow$DebugThrow" env
   | CustomFunT (_, DebugSleep) -> add_str "$Flow$DebugSleep" env
