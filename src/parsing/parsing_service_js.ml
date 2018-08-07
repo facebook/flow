@@ -196,7 +196,8 @@ let extract_docblock =
                 (expr_loc, InvalidJSXAttribute first_error)::errors, info
           end in
         parse_attributes acc xs
-
+   | (_, "@typeAssert") :: xs ->
+      parse_attributes (errors, { info with typeAssert = true }) xs
     | _ :: xs ->
         parse_attributes (errors, info) xs
     | [] -> (errors, info)

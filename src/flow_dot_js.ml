@@ -116,6 +116,7 @@ let load_lib_files ~master_cx ~metadata files
 
 let stub_docblock = { Docblock.
   flow = None;
+  typeAssert = false;
   preventMunge = None;
   providesModule = None;
   isDeclarationFile = false;
