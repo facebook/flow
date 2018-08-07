@@ -594,6 +594,7 @@ const person2: Person = {name: 'a'}; // Error due to incorrect type of Person.
 const person3: PersonDetails = {age: 28}; // Ok
 const person4: PersonDetails = {name: 'a'}; // Ok
 const person5: PersonDetails = {age: 28, name: 'a'}; // Ok
+```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
