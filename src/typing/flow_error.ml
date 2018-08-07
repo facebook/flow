@@ -98,6 +98,7 @@ type error_message =
   | ETypeParamMinArity of Loc.t * int
   | ETooManyTypeArgs of reason * reason * int
   | ETooFewTypeArgs of reason * reason * int
+  | EInvalidTypeArgs of reason * reason
   | EPropertyTypeAnnot of Loc.t
   | EExportsAnnot of Loc.t
   | ECharSetAnnot of Loc.t
@@ -338,6 +339,7 @@ let util_use_op_of_msg nope util = function
 | ETypeParamMinArity (_, _)
 | ETooManyTypeArgs (_, _, _)
 | ETooFewTypeArgs (_, _, _)
+| EInvalidTypeArgs (_, _)
 | EPropertyTypeAnnot (_)
 | EExportsAnnot (_)
 | ECharSetAnnot (_)
@@ -1267,6 +1269,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error ~trace_infos (loc_of_reason reason_tapp) [
       text "Cannot use "; ref reason_arity; text " with less than ";
       text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"))
+    ]
+
+  | EInvalidTypeArgs (reason_main, reason_tapp) ->
+    mk_error ~trace_infos (loc_of_reason reason_tapp) [
+      text "Cannot use "; ref reason_main; text " with "; ref reason_tapp; text " argument";
     ]
 
   | ETypeParamArity (loc, n) ->

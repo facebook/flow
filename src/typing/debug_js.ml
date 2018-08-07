@@ -2622,6 +2622,10 @@ let dump_flow_error =
           (dump_reason cx reason_tapp)
           (dump_reason cx reason_arity)
           minimum_arity
+    | EInvalidTypeArgs (reason_tapp, reason_arity) ->
+        spf "EInvalidTypeArgs (%s, %s)"
+          (dump_reason cx reason_tapp)
+          (dump_reason cx reason_arity)
     | EPropertyTypeAnnot loc ->
         spf "EPropertyTypeAnnot (%s)" (string_of_loc loc)
     | EExportsAnnot loc ->
