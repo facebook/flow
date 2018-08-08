@@ -116,4 +116,14 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [((0, 6), "gotRenamed")] edits
   end;
+  "for" >:: begin fun ctxt ->
+    let source = "for(i = 7; i < rename; i++){}" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(15, 21) , "gotRenamed"] edits
+  end;
+  "for_body" >:: begin fun ctxt ->
+    let source = "for(i = 7; i < top; i++){ rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(26, 32) , "gotRenamed"] edits
+  end;
 ]

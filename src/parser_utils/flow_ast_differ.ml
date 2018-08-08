@@ -73,6 +73,15 @@ type node =
 let diff_if_changed f x1 x2 =
   if x1 == x2 then [] else f x1 x2
 
+let diff_if_changed_opt f opt1 opt2: node change list option =
+  match (opt1, opt2) with
+    | (Some x1, Some x2) ->
+      if x1 == x2 then Some [] else f x1 x2
+    | (None, None) ->
+      Some []
+    | _ ->
+      None
+
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
 * - Each function for an AST node represented in the `node` type above should return a list of
@@ -118,6 +127,8 @@ and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast
     expression_statement expr1 expr2
   | (_, Ast.Statement.Block block1), (_, Ast.Statement.Block block2) ->
     block block1 block2
+  | (_, Ast.Statement.For for1), (_, Ast.Statement.For for2) ->
+    for_statement for1 for2
   | _, _ ->
     None
   in
@@ -303,3 +314,30 @@ and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) A
     None
   else
     Some (diff_if_changed expression callee1 callee2)
+
+and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
+                  (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
+    : node change list option =
+  let open Ast.Statement.For in
+  let { init = init1; test = test1; update = update1; body = body1 } = stmt1 in
+  let { init = init2; test = test2; update = update2; body = body2 } = stmt2 in
+  let expression_option expr1 expr2 = Some (expression expr1 expr2) in
+  let init = diff_if_changed_opt for_statement_init init1 init2 in
+  let test = diff_if_changed_opt expression_option test1 test2 in
+  let update = diff_if_changed_opt expression_option update1 update2 in
+  let body = Some (diff_if_changed statement body1 body2) in
+  Option.all [init; test; update; body] |> Option.map ~f:List.concat
+
+and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
+                      (init2: (Loc.t, Loc.t) Ast.Statement.For.init)
+    : node change list option =
+  let open Ast.Statement.For in
+  match (init1, init2) with
+  | (InitDeclaration(_, _), InitDeclaration(_, _)) ->
+    (* TODO add support for InitDeclaration comparisons *)
+    None
+  | (InitExpression expr1, InitExpression expr2) ->
+    Some (diff_if_changed expression expr1 expr2)
+  | (InitDeclaration _, InitExpression _)
+  | (InitExpression _, InitDeclaration _) ->
+    None
