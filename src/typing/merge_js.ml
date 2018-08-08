@@ -232,22 +232,26 @@ let check_type_visitor wrap =
 
   end
 
-let detect_invalid_type_assert_calls cx =
-
-  let check_valid_call call_loc (_, targ_loc) =
-    let t = Type_table.find_unsafe_targ (Context.type_table cx) targ_loc in
-    let reason_main = Reason.mk_reason (
-      Reason.RCustom "TypeAssert library function"
-    ) call_loc in
-    let wrap reason = Flow_js.add_output cx ( Flow_error.EInvalidTypeArgs (
+let detect_invalid_type_assert_calls ~full_cx cxs =
+  let check_valid_call targs_map call_loc (_, targ_loc) =
+    Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
+      let desc = Reason.RCustom "TypeAssert library function" in
+      let reason_main = Reason.mk_reason desc call_loc in
+      let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
         reason_main, Reason.mk_reason reason call_loc
-    )) in
-    match TypeNormalizer.from_scheme ~cx t with
-    | Ok ty -> Pervasives.ignore ((check_type_visitor wrap)#type_ () ty)
-    | Error _ -> failwith "Could not resolve type in detect_invalid_type_assert_calls"
+      )) in
+      match TypeNormalizer.from_scheme ~cx:full_cx scheme with
+      | Ok ty ->
+        Pervasives.ignore ((check_type_visitor wrap)#type_ () ty)
+      | Error _ ->
+        let Type_table.Scheme (_, t) = scheme in
+        wrap (Type.desc_of_t t)
+    )
   in
-
-  Utils_js.LocMap.iter check_valid_call (Context.type_asserts cx)
+  List.iter (fun cx ->
+    let targs_map = Type_table.targs_hashtbl (Context.type_table cx) in
+    Utils_js.LocMap.iter (check_valid_call targs_map) (Context.type_asserts cx)
+  ) cxs
 
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
@@ -422,7 +426,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls cx;
+  detect_invalid_type_assert_calls ~full_cx:cx (cx::other_cxs);
 
   cx, other_cxs
 

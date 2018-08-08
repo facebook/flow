@@ -110,6 +110,9 @@ let targs_to_list t =
   Hashtbl.iter (fun l t -> r := (l, t) :: !r) t.targs;
   !r
 
+let targs_hashtbl t =
+  t.targs
+
 let coverage_hashtbl t =
   t.coverage
 
