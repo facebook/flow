@@ -14,10 +14,12 @@ Table of contents:
 - [`$Rest<A, B>`](#toc-rest)
 - [`$PropertyType<T, k>`](#toc-propertytype)
 - [`$ElementType<T, K>`](#toc-elementtype)
+- [`$NonMaybeType<T>`](#toc-nonmaybe)
 - [`$ObjMap<T, F>`](#toc-objmap)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F>`](#toc-call)
 - [`Class<T>`](#toc-class)
+- [`Shape<T>`](#toc-shape)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -594,6 +596,7 @@ const person2: Person = {name: 'a'}; // Error due to incorrect type of Person.
 const person3: PersonDetails = {age: 28}; // Ok
 const person4: PersonDetails = {name: 'a'}; // Ok
 const person5: PersonDetails = {age: 28, name: 'a'}; // Ok
+```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
