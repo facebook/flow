@@ -76,5 +76,6 @@ val ensure_checked_dependencies:
   profiling: Profiling_js.running ->
   workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
-  Modulename.Set.t ->
+  File_key.t ->
+  File_sig.t ->
   unit Lwt.t

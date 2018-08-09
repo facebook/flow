@@ -462,7 +462,7 @@ let property_find_refs_in_file options ast_info file_key def_info name =
     Ok local_defs
   else begin
     set_get_refs_hook potential_refs potential_matching_literals name;
-    let cx = Merge_service.merge_contents_context_without_ensure_checked_dependencies
+    let cx = Merge_service.merge_contents_context
       options file_key ast info file_sig
     in
     unset_hooks ();
@@ -648,7 +648,7 @@ let find_related_defs_in_file options name file =
   Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
     get_ast_result file >>| fun (ast, file_sig, docblock) ->
-    Merge_service.merge_contents_context_without_ensure_checked_dependencies
+    Merge_service.merge_contents_context
       options file ast docblock file_sig
   in
   unset_hooks ();
@@ -826,9 +826,11 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
   let%lwt cx =
     set_def_loc_hook props_access_info literal_key_info loc;
     let%lwt cx = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
-      let ensure_checked =
-        Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
-      Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+      let%lwt () =
+        Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env file_key file_sig
+      in
+      Lwt.return @@
+        Merge_service.merge_contents_context options file_key ast info file_sig
     ) in
     Lwt.return cx
   in

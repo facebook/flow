@@ -495,7 +495,18 @@ let typecheck
    should be able to emit errors, even places like propertyFindRefs.get_def_info
    that invoke this function. But it looks like this codepath fails to emit
    StartRecheck and EndRecheck messages. *)
-let ensure_checked_dependencies ~options ~profiling ~workers ~env resolved_requires =
+let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig =
+  let resolved_requires =
+    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+    SMap.fold (fun r locs resolved_rs ->
+      let resolved_r = Module_js.imported_module
+        ~options
+        ~node_modules_containers:!Files.node_modules_containers
+        file locs r in
+      Modulename.Set.add resolved_r resolved_rs
+    ) require_loc_map Modulename.Set.empty
+  in
+
   let infer_input = Modulename.Set.fold (fun m acc ->
     match Module_heaps.get_file m ~audit:Expensive.warn with
     | Some f ->
@@ -553,11 +564,10 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
 
       (* merge *)
       let%lwt cx = with_timer_lwt ~options "MergeContents" profiling (fun () ->
-        let ensure_checked_dependencies =
-          ensure_checked_dependencies ~options ~profiling ~workers ~env
+        let%lwt () =
+          ensure_checked_dependencies ~options ~profiling ~workers ~env filename file_sig
         in
-        Merge_service.merge_contents_context
-          options filename ast info file_sig ~ensure_checked_dependencies
+        Lwt.return @@ Merge_service.merge_contents_context options filename ast info file_sig
       ) in
 
       let errors = Context.errors cx in

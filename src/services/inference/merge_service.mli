@@ -32,15 +32,6 @@ val merge_contents_context:
   (Loc.t, Loc.t) Ast.program ->
   Docblock.t ->
   File_sig.t ->
-  ensure_checked_dependencies: (Modulename.Set.t -> unit Lwt.t) ->
-  Context.t Lwt.t
-
-val merge_contents_context_without_ensure_checked_dependencies:
-  Options.t ->
-  File_key.t ->
-  (Loc.t, Loc.t) Ast.program ->
-  Docblock.t ->
-  File_sig.t ->
   Context.t
 
 val merge_runner:
