@@ -240,6 +240,7 @@ let new_metadata (state: state) (message: Jsonrpc.message) : Persistent_connecti
     server_profiling = None;
     client_duration = None;
     extra_data = [];
+    server_logging_context = None;
   }
 
 
@@ -560,6 +561,7 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
       server_profiling = None;
       client_duration = None;
       extra_data = [];
+      server_logging_context = None;
     } in
     List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
     (* close the old UI and bring up the new *)
@@ -1606,6 +1608,7 @@ and main_log_command
     start_watcher_status = Option.map metadata.start_watcher_status
       ~f:(FileWatcherStatus.string_of_status);
   } in
+  let server_logging_context = metadata.server_logging_context in
   (* gather any recent typechecks that finished after the request had arrived *)
   let delays = match state with
     | Connected cenv -> Core_list.filter_map cenv.c_recent_summaries ~f:(fun (t,s) ->
@@ -1617,15 +1620,15 @@ and main_log_command
 
   match metadata.error_info with
   | None -> FlowEventLogger.persistent_command_success
-      ~request ~extra_data
+      ~server_logging_context ~request ~extra_data
       ~client_context ~persistent_context ~persistent_delay
       ~server_profiling ~client_duration ~wall_start ~error:None
   | Some (ExpectedError, msg, stack) -> FlowEventLogger.persistent_command_success
-      ~request ~extra_data
+      ~server_logging_context ~request ~extra_data
       ~client_context ~persistent_context ~persistent_delay
       ~server_profiling ~client_duration ~wall_start ~error:(Some (msg, stack))
   | Some (UnexpectedError, msg, stack) -> FlowEventLogger.persistent_command_failure
-      ~request ~extra_data
+      ~server_logging_context ~request ~extra_data
       ~client_context ~persistent_context ~persistent_delay
       ~server_profiling ~client_duration ~wall_start ~error:(msg, stack)
 
