@@ -235,7 +235,65 @@ let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
     Lwt.return (dependency_graph, component_map)
   )
 
-let merge
+(* The infer_input passed in basically tells us what the caller wants to typecheck.
+ * However, due to laziness, it's possible that certain dependents or dependencies have not been
+ * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
+ * and add them to infer_input, unless they're already checked and in unchanged_checked
+ *
+ * Note that we do not want to add all_dependent_files to infer_input directly! We only want to
+ * pass the dependencies, and later add dependent files as needed. This is important for recheck
+ * optimizations. We create the recheck map which indicates whether a given file needs to be
+ * rechecked. Dependent files only need to be rechecked if their dependencies change.
+ *)
+let include_dependencies_and_dependents
+    ~options
+    ~profiling
+    ~unchanged_checked
+    ~infer_input
+    ~dependency_graph
+    ~all_dependent_files
+    ~direct_dependent_files =
+  let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
+    (* Don't just look up the dependencies of the focused or dependent modules. Also look up
+     * the dependencies of dependencies, since we need to check transitive dependencies *)
+    let preliminary_to_merge = CheckedSet.all
+      (CheckedSet.add ~dependents:all_dependent_files infer_input) in
+    (* So we want to prune our dependencies to only the dependencies which changed. However,
+     * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
+     * check both of them. So we need to calculate components before we can prune *)
+    (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
+     * cycles *)
+    let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
+    let dependencies = List.fold_left (fun dependencies component ->
+      if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
+      (* If at least one member of the component is not unchanged, then keep the component *)
+      then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
+      (* If every element is unchanged, drop the component *)
+      else dependencies
+    ) FilenameSet.empty components in
+    Lwt.return (CheckedSet.add ~dependencies infer_input, components)
+  ) in
+
+  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with infer_input +
+     all_dependent_files (which is = to_merge later) on dependency_graph, we would get exactly the
+     same components. Later, we will filter dependency_graph to just to_merge, and correspondingly
+     filter components as well. This will work out because every component is either entirely inside
+     to_merge or entirely outside. *)
+
+  let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
+
+  let recheck_map =
+    let roots = CheckedSet.add ~dependents:direct_dependent_files infer_input in
+    (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
+       files in to_merge may or may not be rechecked. *)
+    CheckedSet.fold (fun recheck_map file ->
+      FilenameMap.add file (CheckedSet.mem file roots) recheck_map
+    ) FilenameMap.empty to_merge
+  in
+
+  Lwt.return (to_merge, components, recheck_map)
+
+let run_merge_service
     ~master_mutator
     ~worker_mutator
     ~intermediate_result_callback
@@ -273,58 +331,25 @@ let merge
     ) acc merged
   )
 
-(* helper *)
-let typecheck
+(* This function does some last minute preparation and then calls into the merge service, which
+ * typechecks the code. By the time this function is called, we know exactly what we want to merge
+ * (though we may later decline to typecheck some files due to recheck optimizations) *)
+let merge
   ~transaction
   ~options
   ~profiling
   ~workers
   ~errors
   ~unchanged_checked
-  ~infer_input
+  ~to_merge
+  ~components
+  ~recheck_map
   ~dependency_graph
-  ~all_dependent_files
-  ~direct_dependent_files
   ~deleted
   ~persistent_connections
   ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
-  (* The infer_input passed into typecheck basically tells us what the caller wants to typecheck.
-   * However, due to laziness, it's possible that certain dependents or dependencies have not been
-   * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
-   * and add them to infer_input, unless they're already checked and in unchanged_checked
-   *
-   * Note that we do not want to add all_dependent_files to infer_input directly! We only want to
-   * pass the dependencies, and later add dependent files as needed. This is important for recheck
-   * optimizations. We create the recheck map which indicates whether a given file needs to be
-   * rechecked. Dependent files only need to be rechecked if their dependencies change.
-   *)
-  let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
-    (* Don't just look up the dependencies of the focused or dependent modules. Also look up
-     * the dependencies of dependencies, since we need to check transitive dependencies *)
-    let preliminary_to_merge = CheckedSet.all
-      (CheckedSet.add ~dependents:all_dependent_files infer_input) in
-    (* So we want to prune our dependencies to only the dependencies which changed. However,
-     * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
-     * check both of them. So we need to calculate components before we can prune *)
-    (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
-     * cycles *)
-    let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
-    let dependencies = List.fold_left (fun dependencies component ->
-      if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
-      (* If at least one member of the component is not unchanged, then keep the component *)
-      then Nel.fold_left (fun acc fn -> FilenameSet.add fn acc) dependencies component
-      (* If every element is unchanged, drop the component *)
-      else dependencies
-    ) FilenameSet.empty components in
-    Lwt.return (CheckedSet.add ~dependencies infer_input, components)
-  ) in
-  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with infer_input +
-     all_dependent_files (which is = to_merge later) on dependency_graph, we would get exactly the
-     same components. Later, we will filter dependency_graph to just to_merge, and correspondingly
-     filter components as well. This will work out because every component is either entirely inside
-     to_merge or entirely outside. *)
 
   let%lwt send_errors_over_connection =
     match persistent_connections with
@@ -386,15 +411,6 @@ let typecheck
           ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
       ))
   in
-  let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
-  let roots = CheckedSet.add ~dependents:direct_dependent_files infer_input in
-  let recheck_map =
-    (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
-       files in to_merge may or may not be rechecked. *)
-    CheckedSet.fold (fun recheck_map file ->
-      FilenameMap.add file (CheckedSet.mem file roots) recheck_map
-    ) FilenameMap.empty to_merge
-  in
 
   let%lwt () = match prep_merge with
     | None -> Lwt.return_unit
@@ -445,7 +461,7 @@ let typecheck
     in
 
     let%lwt merge_errors, suppressions, severity_cover_set =
-      merge
+      run_merge_service
         ~master_mutator
         ~worker_mutator
         ~intermediate_result_callback
@@ -529,11 +545,17 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig 
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let dependency_graph = !env.ServerEnv.dependency_graph in
     let deleted = FilenameSet.empty in
+
+    let%lwt to_merge, components, recheck_map =
+      include_dependencies_and_dependents
+        ~options ~profiling ~unchanged_checked ~infer_input ~dependency_graph ~all_dependent_files
+        ~direct_dependent_files
+    in
     let%lwt checked, _cycle_leaders, errors = Transaction.with_transaction (fun transaction ->
-      typecheck
+      merge
         ~transaction ~options ~profiling ~workers ~errors
-        ~unchanged_checked ~infer_input
-        ~dependency_graph ~all_dependent_files ~direct_dependent_files ~deleted
+        ~unchanged_checked ~to_merge ~components ~recheck_map
+        ~dependency_graph ~deleted
         ~persistent_connections
         ~prep_merge:None
     ) in
@@ -1090,18 +1112,24 @@ let recheck_with_profiling
   let infer_input =
     CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
 
+  let%lwt to_merge, components, recheck_map =
+    include_dependencies_and_dependents
+      ~options ~profiling ~unchanged_checked ~infer_input ~dependency_graph ~all_dependent_files
+      ~direct_dependent_files
+  in
+
   (* recheck *)
-  let%lwt checked, cycle_leaders, errors = typecheck
+  let%lwt checked, cycle_leaders, errors = merge
     ~transaction
     ~options
     ~profiling
     ~workers
     ~errors
     ~unchanged_checked
-    ~infer_input
+    ~to_merge
+    ~components
+    ~recheck_map
     ~dependency_graph
-    ~all_dependent_files
-    ~direct_dependent_files
     ~deleted
     ~persistent_connections:(Some env.ServerEnv.connections)
     ~prep_merge:(Some (fun _to_merge ->
@@ -1270,20 +1298,32 @@ let init ~profiling ~workers options =
   Lwt.return (parsed, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
 
 let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
-  let%lwt infer_input = files_to_infer
-    ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
   let%lwt (checked, _, errors) = Transaction.with_transaction (fun transaction ->
-    typecheck
+    let%lwt infer_input = files_to_infer
+      ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
+
+    let unchanged_checked = CheckedSet.empty in
+    let%lwt to_merge, components, recheck_map =
+      include_dependencies_and_dependents
+        ~options ~profiling
+        ~unchanged_checked
+        ~infer_input
+        ~dependency_graph
+        ~all_dependent_files:FilenameSet.empty
+        ~direct_dependent_files:FilenameSet.empty
+    in
+
+    merge
       ~transaction
       ~options
       ~profiling
       ~workers
       ~errors
-      ~unchanged_checked:CheckedSet.empty
-      ~infer_input
+      ~unchanged_checked
+      ~to_merge
+      ~components
+      ~recheck_map
       ~dependency_graph
-      ~all_dependent_files:FilenameSet.empty
-      ~direct_dependent_files:FilenameSet.empty
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
       ~prep_merge:None
