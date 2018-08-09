@@ -407,6 +407,12 @@ runtest() {
             then
                 return $RUNTEST_SKIP
             fi
+
+            if [[ "$saved_state" -eq 0 ]] && \
+              [ "$(awk '$1=="saved_state_only:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
