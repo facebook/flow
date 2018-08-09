@@ -89,7 +89,7 @@ while getopts "b:d:f:lqrst:vh?" opt; do
     list_tests=1
     ;;
   t)
-    filter="^$OPTARG$"
+    specific_test="$OPTARG"
     ;;
   q)
     quiet=1
@@ -114,6 +114,14 @@ done
 shift $((OPTIND-1))
 
 [ "$1" = "--" ] && shift
+
+if [ -n "$specific_test" ]; then
+  if [[ "$saved_state" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  fi
+
+  filter="^$specific_test$"
+fi
 
 FLOW="${FLOW:-$1}"
 filter="${filter:-$2}"
@@ -635,8 +643,14 @@ if [[ "$list_tests" -eq 1 ]]; then
   for dir in "${dirs[@]}"; do
     dir=${dir%*/}
     name=${dir##*/}
+
     if [[ -z $filter || $name =~ $filter ]]; then
-      echo "$name"
+
+      if [[ "$saved_state" -eq 1 ]]; then
+        echo "$name-saved-state"
+      else
+        echo "$name"
+      fi
     fi
   done
   exit 0
