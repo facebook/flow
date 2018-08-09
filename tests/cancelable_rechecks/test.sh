@@ -23,11 +23,7 @@ assert_ok "$FLOW" stop
 
 printf "\\n\\nRecheck can be canceled\\n"
 # Wait for init
-assert_ok "$FLOW" start . \
-  --all --no-flowlib --wait \
-  --file-watcher "none" \
-  --log-file "$FLOW_LOG_FILE" \
-  --monitor-log-file "$FLOW_MONITOR_LOG_FILE"
+start_flow .
 
 # Kick off a recheck which will hang for 100s
 cp sleep.js.ignored sleep.js

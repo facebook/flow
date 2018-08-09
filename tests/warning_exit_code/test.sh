@@ -16,7 +16,7 @@ printf "\n\n"
 echo "Status (Running Server) With Warnings (zero exit code):"
 assert_ok "$FLOW" stop
 cp warn_flowconfig .flowconfig
-assert_ok "$FLOW" start
+start_flow .
 assert_ok "$FLOW" status --include-warnings
 assert_errors "$FLOW" status --max-warnings 0
 assert_ok "$FLOW" status --max-warnings 1
@@ -25,7 +25,7 @@ printf "\n"
 echo "Status (Running Server) With Errors (nonzero exit code):"
 assert_ok "$FLOW" stop
 cp error_flowconfig .flowconfig
-assert_ok "$FLOW" start
+start_flow .
 assert_errors "$FLOW" status --include-warnings
 printf "\n\n"
 

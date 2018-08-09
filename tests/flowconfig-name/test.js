@@ -1,2 +1,2 @@
-// Important: no flow directive used here, so any check must be using --all
+// @flow
 var x: string = 3;

@@ -3,7 +3,7 @@ printf "\nStop any already-running server.\n"
 assert_ok "$FLOW" stop .
 
 printf "\nQuick start.\n"
-assert_ok "$FLOW" start --lazy --file-watcher none .
+start_flow . --lazy --file-watcher none
 
 printf "\nExpect no errors.\n"
 assert_ok "$FLOW" status --no-auto-start .

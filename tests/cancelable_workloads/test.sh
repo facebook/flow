@@ -7,11 +7,7 @@ cp sleep.js.ignored sleep.js
 
 printf "\\n\\nCommands can be canceled\\n"
 # Wait for init
-assert_ok "$FLOW" start . \
-  --all --no-flowlib --wait --lazy \
-  --file-watcher "none" \
-  --log-file "$FLOW_LOG_FILE" \
-  --monitor-log-file "$FLOW_MONITOR_LOG_FILE"
+start_flow . --lazy
 
 printf "\\n\\nStart a find-refs which will hang:\\n"
 "$FLOW" find-refs --global --no-auto-start --strip-root foo.js 3 16 &

@@ -29,7 +29,7 @@ assert_errors "$FLOW" status --no-auto-start --strip-root .
 printf "\n\n======Start off with the .js files and the .flow file======\n"
 assert_ok "$FLOW" stop .
 use_files "$DECL_FILES"
-assert_ok "$FLOW" start . --all --wait
+start_flow .
 
 assert_errors "$FLOW" status --no-auto-start --strip-root .
 ignore_files "$DECL_FILES"
@@ -42,7 +42,7 @@ assert_errors "$FLOW" status --no-auto-start --strip-root .
 printf "\n\n======Start off without the .js files and with the .flow file======\n"
 assert_ok "$FLOW" stop .
 ignore_files "$IMPL_FILES"
-assert_ok "$FLOW" start . --all --wait
+start_flow .
 
 assert_errors "$FLOW" status --no-auto-start --strip-root .
 use_files "$IMPL_FILES"

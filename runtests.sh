@@ -407,18 +407,34 @@ runtest() {
         else
             # otherwise, run specified flow command, then kill the server
 
-            # start server and wait
-            "$FLOW" start . \
-              $all $flowlib --wait \
-              --file-watcher "$file_watcher" \
-              --log-file "$abs_log_file" \
-              --monitor-log-file "$abs_monitor_log_file" \
-              $start_args \
-              > /dev/null 2>&1
+            # start_flow_unsafe ROOT [OPTIONS]...
+            start_flow_unsafe () {
+              local root=$1; shift
+
+              if [ ! -d "$root" ]; then
+                printf "Invalid root directory '%s'\\n" "$root"
+                return 1
+              fi
+              # start server and wait
+              "$FLOW" start "$root" \
+                $all $flowlib --wait \
+                --file-watcher "$file_watcher" \
+                --log-file "$abs_log_file" \
+                --monitor-log-file "$abs_monitor_log_file" \
+                "$@"
+              return $?
+            }
+
+            # start_flow_unsafe ROOT [OPTIONS]...
+            start_flow () {
+              assert_ok start_flow_unsafe "$@"
+            }
+
+            start_flow_unsafe . $start_args 2>> "$abs_out_file"
             code=$?
             if [ $code -ne 0 ]; then
               # flow failed to start
-              printf "flow start exited code %s\n" "$code" > "$abs_out_file"
+              printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
               # run test script in subshell so it inherits functions
@@ -428,7 +444,7 @@ runtest() {
               ) 1> "$abs_out_file" 2> "$stderr_dest"
               code=$?
               if [ $code -ne 0 ]; then
-                printf "%s exited code %s\n" "$shell" "$code" >> "$abs_out_file"
+                printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
                 return_status=$RUNTEST_ERROR
               fi
             else
