@@ -43,7 +43,7 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
   let should_print_summary = Options.should_profile options in
-  let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~should_print_summary
+  let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary
     begin fun profiling ->
     let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
       Types_js.init ~profiling ~workers options in

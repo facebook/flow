@@ -53,31 +53,9 @@ let update_suppressions map file errsup =
 let update_severity_cover_set map file severity_cover =
   FilenameMap.add file severity_cover map
 
-let with_timer_lwt =
-  let print_timer ?options timer profiling =
-    (* If we're profiling then output timing information to stderr *)
-    (match options with
-    | Some options when Options.should_profile options ->
-        (match Profiling_js.get_finished_timer ~timer profiling with
-        | Some (start_wall_age, wall_duration, cpu_usage, flow_cpu_usage) ->
-            let stats = Printf.sprintf
-              "start_wall_age: %f; wall_duration: %f; cpu_usage: %f; flow_cpu_usage: %f"
-              start_wall_age
-              wall_duration
-              cpu_usage
-              flow_cpu_usage in
-            Hh_logger.info
-              "TimingEvent `%s`: %s"
-              timer
-              stats
-        | _ -> ());
-    | _ -> ());
-  in
-
-  fun ?options timer profiling f ->
-    Lwt.finalize
-      (fun () -> Profiling_js.with_timer_lwt ~timer ~f profiling)
-      (fun () -> print_timer ?options timer profiling; Lwt.return_unit)
+let with_timer_lwt ?options timer profiling f =
+  let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
+  Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling
 
 let collate_parse_results ~options parse_results =
   let { Parsing_service_js.parse_ok; parse_skips; parse_fails; parse_unchanged } = parse_results in
@@ -1166,7 +1144,7 @@ let recheck_with_profiling
 let recheck ~options ~workers ~updates env ~files_to_focus =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders)) =
-    Profiling_js.with_profiling_lwt ~should_print_summary (fun profiling ->
+    Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         Transaction.with_transaction (fun transaction ->
           recheck_with_profiling

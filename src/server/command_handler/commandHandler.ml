@@ -340,7 +340,7 @@ let handle_ephemeral_deferred_unsafe
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
-    Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.AUTOCOMPLETE fn ->
           let%lwt result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
@@ -525,28 +525,30 @@ let handle_ephemeral_immediately_unsafe
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
-    Profiling_js.with_profiling_lwt ~should_print_summary begin fun _profiling ->
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
-          let callback =
-            if profile
-            then
-              (* When the recheck finishes, respond to this request *)
-              Some (fun profiling -> respond (ServerProt.Response.FORCE_RECHECK profiling))
-            else begin
-              (* If we're not profiling the recheck, then respond immediately *)
-              respond (ServerProt.Response.FORCE_RECHECK None);
-              None
-            end
-          in
+        let fileset = SSet.of_list files in
+          let push = ServerMonitorListenerState.(
+            if focus then push_files_to_focus else push_files_to_recheck
+          ) in
 
-          let fileset = SSet.of_list files in
-
-          if focus
-          then ServerMonitorListenerState.push_files_to_focus ?callback fileset
-          else ServerMonitorListenerState.push_files_to_recheck ?callback fileset;
-
-          Lwt.return None
+          if profile
+          then begin
+            let wait_for_recheck_thread, wakener = Lwt.task () in
+            push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
+            let%lwt recheck_profiling = wait_for_recheck_thread in
+            respond (ServerProt.Response.FORCE_RECHECK recheck_profiling);
+            Option.iter recheck_profiling ~f:(fun recheck_profiling ->
+              Profiling_js.merge ~from:recheck_profiling ~into:profiling
+            );
+            Lwt.return None
+          end else begin
+            (* If we're not profiling the recheck, then respond immediately *)
+            respond (ServerProt.Response.FORCE_RECHECK None);
+            push fileset;
+            Lwt.return None
+          end
       | ServerProt.Request.AUTOCOMPLETE _
       | ServerProt.Request.CHECK_FILE _
       | ServerProt.Request.COVERAGE _
@@ -1046,7 +1048,7 @@ let handle_persistent
   let should_print_summary = Options.should_profile genv.options in
   let wall_start = Unix.gettimeofday () in
 
-  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
+  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary
     (fun profiling ->
       try%lwt
         handle_persistent_unsafe genv env client profiling request
