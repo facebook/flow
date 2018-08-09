@@ -26,4 +26,11 @@ val recheck_loop:
   ServerEnv.env ->
   ServerEnv.env Lwt.t
 
+val run_but_cancel_on_file_changes:
+  ServerEnv.genv ->
+  ServerEnv.env ->
+  f:(unit -> 'a Lwt.t) ->
+  on_cancel:(unit -> 'a Lwt.t) ->
+  'a Lwt.t
+
 val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats

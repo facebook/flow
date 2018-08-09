@@ -484,13 +484,14 @@ let merge
     Lwt.return (merge_errors, suppressions, severity_cover_set)
   with
   (* Unrecoverable exceptions *)
+  | Lwt.Canceled
   | SharedMem_js.Out_of_shared_memory
   | SharedMem_js.Heap_full
   | SharedMem_js.Hash_table_full
   | SharedMem_js.Dep_table_full as exn -> raise exn
   (* A catch all suppression is probably a bad idea... *)
-  | exc when not Build_mode.dev ->
-      prerr_endline (Printexc.to_string exc);
+  | exn when not Build_mode.dev ->
+      Hh_logger.error ~exn "Exception in master process during merge";
       Lwt.return (merge_errors, suppressions, severity_cover_set)
   in
 
@@ -670,7 +671,10 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
       | Some (cx, _) -> cx
       | None -> failwith "Couldn't parse file" in
     Lwt.return (Ok (cx, info))
-  with exn ->
+  with
+  | Lwt.Canceled as exn -> raise exn
+  | exn ->
+    Hh_logger.error ~exn "Uncaught exception in basic_check_contents";
     let e = spf "%s\n%s"
       (Printexc.to_string exn)
       (Printexc.get_backtrace ()) in

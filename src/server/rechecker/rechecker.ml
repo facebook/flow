@@ -153,6 +153,31 @@ let recheck genv env ?(files_to_focus=FilenameSet.empty) updates =
   MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
   Lwt.return (profiling, env)
 
+(* Runs a function which should be canceled if we are notified about any file changes. After the
+ * thread is canceled, on_cancel is called and its result returned *)
+let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
+  let process_updates = process_updates genv env in
+  let run_thread = f () in
+  let cancel_thread =
+    let%lwt () =
+      if Options.enable_cancelable_rechecks genv.ServerEnv.options
+      then begin
+        let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
+        Hh_logger.info "Canceling due to new file changes";
+        Lwt.cancel run_thread;
+        Lwt.return_unit
+      end else
+        Lwt.return_unit
+    in
+    Lwt.return_unit
+  in
+  try%lwt
+    let%lwt ret = run_thread in
+    Lwt.cancel cancel_thread;
+    Lwt.return ret
+  with Lwt.Canceled ->
+    on_cancel ()
+
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes *)
@@ -172,26 +197,18 @@ let rec recheck_single
     List.iter (fun callback -> callback None) workload.profiling_callbacks;
     Lwt.return (Error env) (* Nothing to do *)
   end else
-    let recheck_thread = recheck genv env ~files_to_focus all_files in
-    let cancel_thread =
-      if Options.enable_cancelable_rechecks genv.ServerEnv.options
-      then begin
-        let%lwt () = wait_for_updates_for_recheck ~process_updates in
-        Hh_logger.info "Canceling recheck due to new file changes";
-        Lwt.cancel recheck_thread;
-        Lwt.return_unit
-      end else
-        Lwt.return_unit
-    in
-    try%lwt
-      let%lwt (profiling, env) = recheck_thread in
-      Lwt.cancel cancel_thread;
-      List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
-      Lwt.return (Ok (profiling, env))
-    with Lwt.Canceled as exn ->
-      Hh_logger.info ~exn
+    let on_cancel () =
+      Hh_logger.info
         "Recheck successfully canceled. Restarting the recheck to include new file changes";
       recheck_single ~files_to_recheck:all_files ~files_to_focus genv env
+    in
+    let f () =
+      let%lwt profiling, env = recheck genv env ~files_to_focus all_files in
+      List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
+      Lwt.return (Ok (profiling, env))
+    in
+
+    run_but_cancel_on_file_changes genv env ~f ~on_cancel
 
 let rec recheck_loop
     ?(files_to_recheck=FilenameSet.empty)
