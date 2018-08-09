@@ -845,7 +845,7 @@ let recheck_with_profiling
   let%lwt new_or_changed, freshparsed, unparsed, unchanged_parse, new_local_errors =
      reparse ~options ~profiling ~transaction ~workers ~modified ~deleted in
 
-  let new_or_changed, freshparsed =
+  let%lwt new_or_changed, freshparsed =
     if not (FilenameSet.is_empty files_to_focus) then begin
       (* Normally we can ignore files which are unmodified. However, if someone passed force_focus,
        * then we may need to ressurect some unmodified files into the new_or_changed and freshparsed
@@ -859,9 +859,14 @@ let recheck_with_profiling
           (FilenameSet.inter files_to_focus unchanged_parse) (* unchanged files to focus... *)
           (CheckedSet.focused env.ServerEnv.checked_files)   (* ...which aren't already focused *)
       in
-      FilenameSet.union new_or_changed unchanged_files_to_focus,
+      let%lwt () = ensure_parsed ~options ~profiling ~workers
+        (CheckedSet.add ~focused:unchanged_files_to_focus CheckedSet.empty)
+      in
+      Lwt.return (
+        FilenameSet.union new_or_changed unchanged_files_to_focus,
         FilenameSet.union freshparsed unchanged_files_to_focus
-    end else new_or_changed, freshparsed
+      )
+    end else Lwt.return (new_or_changed, freshparsed)
   in
 
   let unparsed_set =

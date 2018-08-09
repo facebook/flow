@@ -416,9 +416,7 @@ let reducer
             not parse_unchanged &&
               (* Let's disable this optimization for .flow files. Sometimes we still want to recheck
                * foo.js.flow file because foo.js changed *)
-              not (File_key.check_suffix file Files.flow_ext) &&
-              (* File hasn't changed. But do we have an AST available? *)
-              Parsing_heaps.has_old_ast file
+              not (File_key.check_suffix file Files.flow_ext)
           | _ ->
             (* The file has changed. Let's record the new hash *)
             worker_mutator.Parsing_heaps.add_hash file new_hash;
