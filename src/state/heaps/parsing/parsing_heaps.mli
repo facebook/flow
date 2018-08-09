@@ -36,3 +36,8 @@ val get_ast_unsafe: File_key.t -> (Loc.t, Loc.t) Ast.program
 val get_docblock_unsafe: File_key.t -> Docblock.t
 val get_file_sig_unsafe: File_key.t -> File_sig.t
 val get_file_hash_unsafe: File_key.t -> Xx.hash
+
+module From_saved_state: sig
+  val add_file_sig: File_key.t -> File_sig.t -> unit
+  val add_file_hash: File_key.t -> Xx.hash -> unit
+end

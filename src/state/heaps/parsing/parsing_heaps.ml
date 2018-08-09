@@ -182,3 +182,11 @@ exception Hash_not_found of string
 let get_file_hash_unsafe file =
   try FileHashHeap.find_unsafe file
   with Not_found -> raise (Hash_not_found (File_key.to_string file))
+
+module From_saved_state: sig
+  val add_file_sig: File_key.t -> File_sig.t -> unit
+  val add_file_hash: File_key.t -> Xx.hash -> unit
+end = struct
+  let add_file_sig = FileSigHeap.add
+  let add_file_hash = FileHashHeap.add
+end

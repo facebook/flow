@@ -148,7 +148,7 @@ end = struct
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-          Some (Module_heaps.ForSavedState.get_package_json_unsafe str)
+          Some (Module_heaps.For_saved_state.get_package_json_unsafe str)
       | _ -> None
     in
 
@@ -272,7 +272,6 @@ exception Invalid_saved_state
  *)
 module Load: sig
   val load:
-    flowconfig_name:string ->
     workers:MultiWorkerLwt.worker list option ->
     saved_state_filename:Path.t ->
     options:Options.t ->
@@ -400,7 +399,7 @@ end = struct
     Errors.ErrorSet.map denormalizer#error normalized_error_set
 
   (* Denormalize all the data *)
-  let denormalize_data ~flowconfig_name~workers ~options ~data =
+  let denormalize_data ~workers ~options ~data =
     let root = Options.root options |> Path.to_string in
 
     let {
@@ -413,6 +412,7 @@ end = struct
     } = data in
 
     let current_flowconfig_hash =
+      let flowconfig_name = Options.flowconfig_name options in
       FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
     in
 
@@ -457,7 +457,7 @@ end = struct
       node_modules_containers;
     }
 
-  let load ~flowconfig_name ~workers ~saved_state_filename ~options =
+  let load ~workers ~saved_state_filename ~options =
     let filename = Path.to_string saved_state_filename in
 
     Hh_logger.info "Reading saved-state file at %S" filename;
@@ -484,7 +484,7 @@ end = struct
 
     Hh_logger.info "Denormalizing saved-state data";
 
-    let%lwt data = denormalize_data ~flowconfig_name ~workers ~options ~data in
+    let%lwt data = denormalize_data ~workers ~options ~data in
 
     Hh_logger.info "Finished loading saved-state";
 

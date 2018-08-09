@@ -852,6 +852,12 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     (FlowConfig.saved_state_load_script flowconfig)
   in
 
+  (* We need cancelable rechecks for saved state. This can be deleted when
+   * experimental.cancelable_rechecks is deleted *)
+  let opt_enable_cancelable_rechecks =
+    FlowConfig.enable_cancelable_rechecks flowconfig || opt_saved_state_load_script <> None
+  in
+
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_flowconfig_name = flowconfig_name;
@@ -880,7 +886,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
-    opt_enable_cancelable_rechecks = FlowConfig.enable_cancelable_rechecks flowconfig;
+    opt_enable_cancelable_rechecks;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enforce_well_formed_exports = FlowConfig.enforce_well_formed_exports flowconfig;

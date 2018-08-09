@@ -37,7 +37,6 @@ val save:
   env:ServerEnv.env ->
   unit Lwt.t
 val load:
-  flowconfig_name:string ->
   workers:MultiWorkerLwt.worker list option ->
   saved_state_filename:Path.t ->
   options:Options.t ->

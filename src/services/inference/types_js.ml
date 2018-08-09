@@ -131,44 +131,52 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
   )
 
 (* commit providers for old and new modules, collect errors. *)
-let commit_modules ~transaction ~all_providers_mutator ~options ~is_init profiling ~workers
-    ~parsed ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted local_errors new_or_changed =
-  (* conservatively approximate set of modules whose providers will change *)
-  (* register providers for modules, warn on dupes etc. *)
-    with_timer_lwt ~options "CommitModules" profiling (fun () ->
-      let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
-      let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
-      let%lwt new_modules =
-        Module_js.introduce_files
-          ~mutator ~all_providers_mutator ~workers ~options ~parsed ~unparsed
-      in
-      let dirty_modules = List.rev_append old_modules new_modules in
-      let%lwt providers, changed_modules, errmap =
-        Module_js.commit_modules
-          ~transaction ~workers ~options ~is_init new_or_changed dirty_modules
-      in
-  (* Providers might be new but not changed. This typically happens when old
-     providers are deleted, and previously duplicate providers become new
-     providers. In such cases, we must clear the old duplicate provider errors
-     for the new providers.
+let commit_modules, commit_modules_from_saved_state =
+  let commit_modules_generic ~introduce_files ~transaction ~all_providers_mutator ~options ~is_init
+      ~profiling ~workers ~parsed ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted
+      ~local_errors ~new_or_changed =
+    (* conservatively approximate set of modules whose providers will change *)
+    (* register providers for modules, warn on dupes etc. *)
+      with_timer_lwt ~options "CommitModules" profiling (fun () ->
+        let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
+        let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
+        let%lwt new_modules =
+          introduce_files
+            ~mutator ~all_providers_mutator ~workers ~options ~parsed ~unparsed
+        in
+        let dirty_modules = List.rev_append old_modules new_modules in
+        let%lwt providers, changed_modules, errmap =
+          Module_js.commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_modules in
+    (* Providers might be new but not changed. This typically happens when old
+      providers are deleted, and previously duplicate providers become new
+      providers. In such cases, we must clear the old duplicate provider errors
+      for the new providers.
 
-     (Note that this is unncessary when the providers are changed, because in
-     that case they are rechecked and *all* their errors are cleared. But we
-     don't care about optimizing that case for now.) *)
-      let errors = List.fold_left filter_duplicate_provider local_errors providers in
-      Lwt.return (
-        changed_modules, FilenameMap.fold (fun file errors acc ->
-          let errset = List.fold_left (fun acc err ->
-            match err with
-            | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
-              let msg = Flow_error.(EDuplicateModuleProvider { module_name; provider; conflict }) in
-              let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
-              Errors.ErrorSet.add error acc
-          ) Errors.ErrorSet.empty errors in
-          update_errset acc file errset
-        ) errmap errors
+      (Note that this is unncessary when the providers are changed, because in
+      that case they are rechecked and *all* their errors are cleared. But we
+      don't care about optimizing that case for now.) *)
+        let errors = List.fold_left filter_duplicate_provider local_errors providers in
+        Lwt.return (
+          changed_modules, FilenameMap.fold (fun file errors acc ->
+            let errset = List.fold_left (fun acc err ->
+              match err with
+              | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
+                let msg = Flow_error.(EDuplicateModuleProvider { module_name; provider; conflict }) in
+                let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
+                Errors.ErrorSet.add error acc
+            ) Errors.ErrorSet.empty errors in
+            update_errset acc file errset
+          ) errmap errors
       )
     )
+  in
+  let commit_modules =
+    commit_modules_generic ~introduce_files:Module_js.introduce_files
+  in
+  let commit_modules_from_saved_state =
+    commit_modules_generic ~introduce_files:Module_js.introduce_files_from_saved_state
+  in
+  commit_modules, commit_modules_from_saved_state
 
 let resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
@@ -210,8 +218,8 @@ let commit_modules_and_resolve_requires
   let parsed = FilenameSet.elements parsed_set in
 
   let%lwt changed_modules, local_errors = commit_modules
-    ~transaction ~all_providers_mutator ~options ~is_init profiling ~workers ~parsed ~parsed_set
-    ~unparsed ~unparsed_set ~old_modules ~deleted local_errors new_or_changed
+    ~transaction ~all_providers_mutator ~options ~is_init ~profiling ~workers ~parsed ~parsed_set
+    ~unparsed ~unparsed_set ~old_modules ~deleted ~local_errors ~new_or_changed
   in
 
   let%lwt resolve_errors =
@@ -1259,6 +1267,139 @@ let make_next_files ~libs ~file_options root =
     |> List.map (Files.filename_from_string ~options:file_options)
     |> Bucket.of_list
 
+let init_from_saved_state ~profiling ~workers ~saved_state options =
+  Transaction.with_transaction @@ fun transaction ->
+
+  let file_options = Options.file_options options in
+  (* We don't want to walk the file system for the checked in files. But we still need to find the
+   * flowlibs *)
+  let ordered_flowlib_libs, _ = Files.init ~flowlibs_only:true file_options in
+
+  let { Saved_state.
+    flowconfig_hash=_;
+    parsed_heaps;
+    unparsed_heaps;
+    ordered_non_flowlib_libs;
+    local_errors;
+    node_modules_containers;
+  } = saved_state in
+
+  Files.node_modules_containers := node_modules_containers;
+
+  Hh_logger.info "Restoring heaps";
+  let%lwt () = with_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+    let%lwt () = MultiWorkerLwt.call workers
+      ~job:(List.fold_left (fun () (fn, parsed_file_data) ->
+        (* Every package.json file should have a Package_json.t. Use those to restore the
+         * PackageHeap and the ReversePackageHeap *)
+        begin match fn with
+        | File_key.JsonFile str when Filename.basename str = "package.json" ->
+          begin match parsed_file_data.Saved_state.package with
+          | None -> failwith (Printf.sprintf "Saved state for `%s` missing Package_json.t data" str)
+          | Some package -> Module_heaps.Package_heap_mutator.add_package_json str package
+          end
+        | _ -> ()
+        end;
+
+        (* Restore the FileSigHeap *)
+        Parsing_heaps.From_saved_state.add_file_sig fn parsed_file_data.Saved_state.file_sig;
+
+        (* Restore the FileHashHeap *)
+        Parsing_heaps.From_saved_state.add_file_hash fn parsed_file_data.Saved_state.hash;
+
+        (* Restore the ResolvedRequiresHeap *)
+        Module_heaps.From_saved_state.add_resolved_requires
+          fn parsed_file_data.Saved_state.resolved_requires
+      ))
+      ~merge:(fun () () -> ())
+      ~neutral:()
+      ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings parsed_heaps))
+    in
+
+    MultiWorkerLwt.call workers
+      ~job:(List.fold_left (fun () (fn, unparsed_file_data) ->
+        (* Restore the FileHashHeap *)
+        let hash = unparsed_file_data.Saved_state.unparsed_hash in
+        Parsing_heaps.From_saved_state.add_file_hash fn hash;
+      ))
+      ~merge:(fun () () -> ())
+      ~neutral:()
+      ~next:(MultiWorkerLwt.next workers (FilenameMap.bindings unparsed_heaps))
+  ) in
+
+  Hh_logger.info "Loading libraries";
+  (* We actually parse and typecheck the libraries, even though we're loading from saved state.
+   * We'd need to check them anyway, as soon as any file is checked, since we don't track
+   * dependents for libraries. And we don't really support incrementally checking libraries
+   *
+   * The order of libraries is significant. If two libraries define the same thing, the one
+   * merged later wins. For this reason, the saved state stores the order in which the non-flowlib
+   * libraries were merged. So all we need to guarantee here is:
+   *
+   * 1. The builtin libraries are merged first
+   * 2. The non-builtin libraries are merged in the same order as before
+   *)
+  let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
+  let libs = SSet.of_list ordered_libs in
+
+  let%lwt libs_ok, local_errors, suppressions, severity_cover_set =
+    let suppressions = FilenameMap.empty in
+    let severity_cover_set = FilenameMap.empty in
+    init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs
+  in
+
+  Hh_logger.info "Resolving dependencies";
+  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+
+  let%lwt parsed_set, unparsed_set, all_files, parsed, unparsed =
+    with_timer_lwt ~options "PrepareCommitModules" profiling (fun () ->
+      let parsed_set = parsed_heaps |> FilenameMap.keys |> FilenameSet.of_list in
+      let unparsed_set = unparsed_heaps |> FilenameMap.keys |> FilenameSet.of_list in
+      let all_files = FilenameSet.union parsed_set unparsed_set in
+      let parsed = FilenameMap.fold
+        (fun fn data acc -> (fn, data.Saved_state.info)::acc) parsed_heaps []
+      in
+      let unparsed = FilenameMap.fold
+        (fun fn data acc -> (fn, data.Saved_state.unparsed_info)::acc) unparsed_heaps []
+      in
+      Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed)
+    )
+  in
+
+  let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
+
+  (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
+  let%lwt _ =
+    commit_modules_from_saved_state
+      ~transaction
+      ~all_providers_mutator
+      ~options
+      ~is_init:true
+      ~profiling
+      ~workers
+      ~parsed
+      ~parsed_set
+      ~unparsed
+      ~unparsed_set
+      ~old_modules:[]
+      ~deleted:FilenameSet.empty
+      ~local_errors
+      ~new_or_changed:all_files
+  in
+
+  let errors = { ServerEnv.
+    local_errors;
+    merge_errors = FilenameMap.empty;
+    suppressions;
+    severity_cover_set;
+  } in
+
+  let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    Dep_service.calc_dependency_graph workers ~parsed:parsed_set
+  ) in
+
+  Lwt.return (parsed_set, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
+
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
 
@@ -1328,6 +1469,56 @@ let init ~profiling ~workers options =
     Dep_service.calc_dependency_graph workers ~parsed
   ) in
   Lwt.return (parsed, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
+
+(* Does a best-effort job to load a saved state. If it fails, returns None *)
+let load_saved_state ~profiling ~workers options =
+  match Options.saved_state_load_script options with
+  | None ->
+    Hh_logger.debug "No saved state load script specified";
+    Lwt.return_none
+  | Some _ when Options.no_saved_state options ->
+    Hh_logger.debug "Ignoring saved state load script due to --no-saved-state option";
+    Lwt.return_none
+  | Some script ->
+    let%lwt saved_state_filename =
+      try%lwt
+        let script = if Filename.is_relative script
+          then Filename.concat (Path.to_string @@ Options.root options) script
+          else script
+        in
+        Hh_logger.debug "Calling saved state load script %S" script;
+        (* I suppose this script may download saved state and decompress it. So it may take some
+         * time to run. But at a certain point, it's just faster to init from scratch. A 30s
+         * timeout seems reasonable *)
+        let%lwt raw = Lwt_unix.with_timeout 30.0 @@ fun () -> LwtSysUtils.exec_read script [] in
+        let json = Hh_json.json_of_string raw in
+        let saved_state_path = Hh_json_helpers.AdhocJsonHelpers.get_string_val "path" json in
+        Lwt.return_some (Path.make saved_state_path)
+      with exn ->
+        Hh_logger.error
+          ~exn
+          "Failed to get saved state path from saved state load script %S"
+          script;
+        Lwt.return_none
+    in
+    match saved_state_filename with
+    | None -> Lwt.return_none
+    | Some saved_state_filename ->
+      with_timer_lwt ~options "LoadSavedState" profiling (fun () ->
+        try%lwt
+          let%lwt saved_state = Saved_state.load ~workers ~saved_state_filename ~options in
+          Lwt.return_some saved_state
+        with Saved_state.Invalid_saved_state -> Lwt.return_none
+      )
+
+let init ~profiling ~workers options =
+  match%lwt load_saved_state ~profiling ~workers options with
+  | None ->
+    (* Either there is no saved state or we failed to load it for some reason *)
+    init ~profiling ~workers options
+  | Some saved_state ->
+    (* We loaded a saved state successfully! We are awesome! *)
+    init_from_saved_state ~profiling ~workers ~saved_state options
 
 let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
   let%lwt (checked, _, errors) = Transaction.with_transaction (fun transaction ->

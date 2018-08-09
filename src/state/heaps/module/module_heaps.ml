@@ -264,11 +264,11 @@ end
 
 (******************** APIs for saving/loading saved state *********************)
 
-module FromSavedState = struct
+module From_saved_state = struct
   let add_resolved_requires = ResolvedRequiresHeap.add
 end
 
-module ForSavedState = struct
+module For_saved_state = struct
   exception Package_not_found of string
   let get_package_json_unsafe file =
     try PackageHeap.find_unsafe file
