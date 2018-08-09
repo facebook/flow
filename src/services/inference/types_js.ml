@@ -1495,11 +1495,11 @@ let load_saved_state ~profiling ~workers options =
         let saved_state_path = Hh_json_helpers.AdhocJsonHelpers.get_string_val "path" json in
         Lwt.return_some (Path.make saved_state_path)
       with exn ->
-        Hh_logger.error
-          ~exn
-          "Failed to get saved state path from saved state load script %S"
-          script;
-        Lwt.return_none
+        let msg = spf "Failed to get saved state path from saved state load script %S" script in
+        Hh_logger.error ~exn "%s" msg;
+        if Options.saved_state_no_fallback options
+        then FlowExitStatus.exit ~msg FlowExitStatus.Invalid_saved_state
+        else Lwt.return_none
     in
     match saved_state_filename with
     | None -> Lwt.return_none
@@ -1508,7 +1508,11 @@ let load_saved_state ~profiling ~workers options =
         try%lwt
           let%lwt saved_state = Saved_state.load ~workers ~saved_state_filename ~options in
           Lwt.return_some saved_state
-        with Saved_state.Invalid_saved_state -> Lwt.return_none
+        with Saved_state.Invalid_saved_state ->
+          if Options.saved_state_no_fallback options
+          then
+            FlowExitStatus.exit ~msg:"Failed to load saved state" FlowExitStatus.Invalid_saved_state
+          else Lwt.return_none
       )
 
 let init ~profiling ~workers options =
