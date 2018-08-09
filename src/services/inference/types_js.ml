@@ -58,7 +58,11 @@ let with_timer_lwt ?options timer profiling f =
   Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling
 
 let collate_parse_results ~options parse_results =
-  let { Parsing_service_js.parse_ok; parse_skips; parse_fails; parse_unchanged } = parse_results in
+  let { Parsing_service_js.
+    parse_ok; parse_skips; parse_hash_mismatch_skips; parse_fails; parse_unchanged
+  } = parse_results in
+  (* No one who is calling collate_parse_results is skipping files with hash mismatches *)
+  assert (FilenameSet.is_empty parse_hash_mismatch_skips);
   let local_errors = List.fold_left (fun errors (file, _, fail) ->
     let errset = match fail with
     | Parsing_service_js.Parse_error err ->
@@ -505,6 +509,25 @@ let merge
     |> List.filter (fun (_, member_count) -> member_count > 1) in
   Lwt.return (checked, cycle_leaders, errors)
 
+let ensure_parsed ~options ~profiling ~workers files =
+  with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
+    let%lwt parse_hash_mismatch_skips =
+      Parsing_service_js.ensure_parsed options workers (CheckedSet.all files)
+    in
+
+    if FilenameSet.is_empty parse_hash_mismatch_skips
+    then Lwt.return_unit
+    else begin
+      let files_to_recheck = FilenameSet.fold
+        (fun f acc -> SSet.add (File_key.to_string f) acc)
+        parse_hash_mismatch_skips
+        SSet.empty
+      in
+      ServerMonitorListenerState.push_files_to_recheck files_to_recheck;
+      raise Lwt.Canceled
+    end
+  )
+
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility.
    TODO(ljw) CARE! This function calls "typecheck" which may emit errors over the
@@ -552,6 +575,9 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig 
         ~options ~profiling ~unchanged_checked ~infer_input ~dependency_graph ~all_dependent_files
         ~direct_dependent_files
     in
+
+    let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
+
     let%lwt checked, _cycle_leaders, errors = Transaction.with_transaction (fun transaction ->
       merge
         ~transaction ~options ~profiling ~workers ~errors
@@ -1122,6 +1148,8 @@ let recheck_with_profiling
       ~direct_dependent_files
   in
 
+  let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
+
   (* recheck *)
   let%lwt checked, cycle_leaders, errors = merge
     ~transaction
@@ -1316,6 +1344,8 @@ let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_gra
         ~all_dependent_files:FilenameSet.empty
         ~direct_dependent_files:FilenameSet.empty
     in
+
+    let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
 
     merge
       ~transaction

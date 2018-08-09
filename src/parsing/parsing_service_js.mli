@@ -41,6 +41,9 @@ type results = {
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
 
+  (* list of files skipped due to an out of date hash *)
+  parse_hash_mismatch_skips: FilenameSet.t;
+
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
 
@@ -70,6 +73,12 @@ val reparse_with_defaults:
   deleted: FilenameSet.t ->
   Options.t ->
   (FilenameSet.t * results) Lwt.t
+
+val ensure_parsed:
+  Options.t ->
+  MultiWorkerLwt.worker list option ->
+  FilenameSet.t ->
+  FilenameSet.t Lwt.t
 
 val parse_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
