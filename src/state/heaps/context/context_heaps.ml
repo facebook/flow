@@ -122,7 +122,7 @@ end = struct
     let rollback () = rollback (!master_mutator) in
 
     oldify_merge_batch files;
-    Transaction.add ~commit ~rollback transaction;
+    Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
 
     master_mutator, worker_mutator
 

@@ -138,7 +138,7 @@ end = struct
 
     let commit () = commit (!master_mutator) in
     let rollback () = rollback (!master_mutator) in
-    Transaction.add ~commit ~rollback transaction;
+    Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
 
     master_mutator, worker_mutator
 
