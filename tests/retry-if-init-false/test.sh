@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 # Stop the initialized server
 assert_ok "$FLOW" stop;
 

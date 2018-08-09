@@ -1,6 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 
 assert_ok "$FLOW" stop
 
@@ -27,7 +25,15 @@ printf "\\n\\nTrigger a recheck to fix the hung find-refs\\n"
 cp sleep.js.fixed sleep.js
 assert_ok "$FLOW" force-recheck --no-auto-start sleep.js
 
-assert_ok wait "$COMMAND_PID"
+# assert_ok runs commands in a subshell, but you can't wait from a subshell.
+# So we need to manually check that find-refs exited with 0
+wait "$COMMAND_PID"
+FIND_REFS_RET=$?
+if [[ $FIND_REFS_RET != 0 ]]; then
+  echo \
+    "\`find-refs\` expected to exit code 0 but got $FIND_REFS_RET"
+  exit 1
+fi
 
 printf "\\n\\nAnd flow status should work\\n"
 assert_errors "$FLOW" status --no-auto-start --strip-root

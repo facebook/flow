@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "After start:\n"
 assert_ok "$FLOW" status .
 

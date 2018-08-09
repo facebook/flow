@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 cp lib/lib.js lib/lib.js.orig
 
 # This should not cause the Flow server to die

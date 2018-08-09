@@ -1,7 +1,4 @@
 #!/bin/sh
-. ../assert.sh
-FLOW=$1
-
 
 
 printf "EMPTY FLOWCONFIG\n"

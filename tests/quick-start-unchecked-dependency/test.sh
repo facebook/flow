@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nStop any already-running server.\n"
 assert_ok "$FLOW" stop .
 

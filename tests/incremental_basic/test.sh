@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 mkdir tmp
 cp ./*.js tmp/
 assert_errors "$FLOW" status .

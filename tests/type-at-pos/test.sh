@@ -2,9 +2,6 @@
 
 ## To avoid regression ensure that all of these do not return (unknown)
 
-. ../assert.sh
-FLOW=$1
-
 # annot_t.js
 printf "annot_t.js:9:21 = "
 assert_ok "$FLOW" type-at-pos annot_t.js 9 21 --strip-root --pretty

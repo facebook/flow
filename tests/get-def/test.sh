@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 assert_ok "$FLOW" get-def example.js 12 10 --strip-root --json
 
 # import thing from "./exports_default.js";

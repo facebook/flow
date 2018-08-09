@@ -1,5 +1,44 @@
 #!/bin/bash
 
+
+# Use the assert functions below to expect specific exit codes.
+
+assert_exit_on_line() {
+  # Run all this in a subshell, so we can set -e without affecting the caller
+  (
+    set -e
+    _assert_exit__line=$1; shift
+    _assert_exit__ret=0
+    _assert_exit__code=$1; shift
+    "$@" ||  _assert_exit__ret=$?
+    eval "$SAVED_OPTION" # Undo the `set -e` if necessary
+    if [ "$_assert_exit__ret" -eq "$_assert_exit__code" ]; then
+      return 0
+    else
+      echo \
+        "\`$(basename "$1") ${*:2}\` expected to exit code $_assert_exit__code" \
+        "but got $_assert_exit__ret (line $_assert_exit__line)"
+      return 1
+    fi
+  )
+  return $?
+}
+
+export EXIT_OK=0
+export EXIT_ERRS=2
+export EXIT_COULD_NOT_FIND_FLOWCONFIG=12
+export EXIT_USAGE=64
+
+assert_exit() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$@"
+}
+assert_ok() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_OK" "$@"
+}
+assert_errors() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
+}
+
 show_help() {
   printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
@@ -246,7 +285,6 @@ runtest() {
         # from there. the . in "$dir/." copies the entire directory, including
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
-        cp "$dir/../assert.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
         cp "$dir/../fs.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
         mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
 
@@ -383,8 +421,11 @@ runtest() {
               printf "flow start exited code %s\n" "$code" > "$abs_out_file"
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
-              # run test script
-              /bin/bash -e "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+              # run test script in subshell so it inherits functions
+              (
+                set -e # The script should probably use this option
+                source "$shell" "$FLOW"
+              ) 1> "$abs_out_file" 2> "$stderr_dest"
               code=$?
               if [ $code -ne 0 ]; then
                 printf "%s exited code %s\n" "$shell" "$code" >> "$abs_out_file"

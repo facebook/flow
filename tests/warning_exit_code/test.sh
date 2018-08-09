@@ -1,6 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 
 echo "Check Existing Server With Warnings (zero exit code):"
 assert_ok "$FLOW" check --include-warnings --lints "sketchy-null=warn"

@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 IMPL_FILES="
   A.js
   node_modules/B.js

@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 OVERLAPPING_FILES="
   A.js
   ExplicitProvidesModuleSameName.js

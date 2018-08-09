@@ -1,6 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 
 "$FLOW" stop
 
