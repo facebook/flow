@@ -415,7 +415,7 @@ runtest() {
 
         if [ $return_status -eq $RUNTEST_SUCCESS ]; then
           pushd "$OUT_PARENT_DIR" >/dev/null
-          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
+          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file" 2>&1
           popd >/dev/null
         fi
 
