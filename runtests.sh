@@ -56,6 +56,8 @@ show_help() {
   echo "        re-record failing tests to update expected output"
   echo "    -q"
   echo "        quiet output (hides status, just prints results)"
+  echo "    -s"
+  echo "        test saved state"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -67,11 +69,12 @@ export FLOW_LOG_LEVEL=debug
 
 OPTIND=1
 record=0
+saved_state=0
 verbose=0
 quiet=0
 relative="$(dirname "${BASH_SOURCE[0]}")"
 list_tests=0
-while getopts "b:d:f:lqrt:vh?" opt; do
+while getopts "b:d:f:lqrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -93,6 +96,10 @@ while getopts "b:d:f:lqrt:vh?" opt; do
     ;;
   r)
     record=1
+    ;;
+  s)
+    saved_state=1
+    printf "Testing saved state by running all tests using saved state\\n"
     ;;
   v)
     verbose=1
@@ -269,9 +276,13 @@ runtest() {
         OUT_DIR="$OUT_PARENT_DIR/$name"
         mkdir "$OUT_DIR"
 
+        # Make these now so that we can clean them up if necessary
+        SAVED_STATE_DIR=$(mktemp -d /tmp/flow_saved_state_XXXXXX)
+
         # deletes the temp directory
         function cleanup {
           rm -rf "$OUT_PARENT_DIR"
+          rm -rf "$SAVED_STATE_DIR"
         }
         function force_cleanup {
           "$FLOW" stop "$OUT_DIR" 1> /dev/null 2>&1
@@ -382,6 +393,12 @@ runtest() {
             then
                 cmd="$config_cmd"
             fi
+
+            if [[ "$saved_state" -eq 1 ]] && \
+              [ "$(awk '$1=="skip_saved_state:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
@@ -393,15 +410,63 @@ runtest() {
             flowlib=""
         fi
 
+        # Helper function to generate saved state. If anything goes wrong, it
+        # will fail
+        create_saved_state () {
+          local root="$1"
+          local flowconfig_name="$2"
+          local SAVED_STATE_LOAD_SCRIPT
+          SAVED_STATE_LOAD_SCRIPT=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.load_script")
+          (
+            set -e
+            # start lazy server and wait
+            "$FLOW" start "$root" \
+              $all $flowlib --wait --lazy \
+              --file-watcher "$file_watcher" \
+              --flowconfig-name "$flowconfig_name" \
+              --log-file "$abs_log_file" \
+              --monitor-log-file "$abs_monitor_log_file"
+
+            local SAVED_STATE_FILENAME
+            SAVED_STATE_FILENAME=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.saved_state")
+            assert_ok "$FLOW" save-state \
+              --root "$root" \
+              --out "$SAVED_STATE_FILENAME" \
+              --flowconfig-name "$flowconfig_name"
+            assert_ok "$FLOW" stop --flowconfig-name "$flowconfig_name" "$root"
+            echo "echo '{\"path\":\"$SAVED_STATE_FILENAME\"}'" > "$SAVED_STATE_LOAD_SCRIPT"
+            chmod +x "$SAVED_STATE_LOAD_SCRIPT"
+          )  > /dev/null 2>&1
+          local RET=$?
+          echo "$SAVED_STATE_LOAD_SCRIPT"
+          return $RET
+        }
+
         # run test
         if [ "$cmd" == "check" ]
         then
-            # default command is check with configurable --all and --no-flowlib
-            "$FLOW" check . \
-              $all $flowlib --strip-root --show-all-errors \
-               1> "$abs_out_file" 2> "$stderr_dest"
-            st=$?
-            if [ $ignore_stderr = true ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+            if [[ "$saved_state" -eq 1 ]]; then
+              if load_script=$(create_saved_state . ".flowconfig"); then
+                # default command is check with configurable --all and --no-flowlib
+                "$FLOW" check . \
+                  $all $flowlib --strip-root --show-all-errors \
+                  --saved-state-load-script "$load_script" \
+                  --saved-state-no-fallback \
+                   1>> "$abs_out_file" 2>> "$stderr_dest"
+                st=$?
+              else
+                printf "Failed to generate saved state\\n" >> "$stderr_dest"
+                return_status=$RUNTEST_ERROR
+              fi
+            else
+              # default command is check with configurable --all and --no-flowlib
+              "$FLOW" check . \
+                $all $flowlib --strip-root --show-all-errors \
+                 1>> "$abs_out_file" 2>> "$stderr_dest"
+              st=$?
+            fi
+            if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+              printf "flow check return code: %d\\n" "$st" >> "$stderr_dest"
               return_status=$RUNTEST_ERROR
             fi
         else
@@ -412,25 +477,54 @@ runtest() {
               local root=$1; shift
 
               if [ ! -d "$root" ]; then
-                printf "Invalid root directory '%s'\\n" "$root"
+                printf "Invalid root directory '%s'\\n" "$root" >&2
                 return 1
               fi
-              # start server and wait
-              "$FLOW" start "$root" \
-                $all $flowlib --wait \
-                --file-watcher "$file_watcher" \
-                --log-file "$abs_log_file" \
-                --monitor-log-file "$abs_monitor_log_file" \
-                "$@"
-              return $?
+
+              if [[ "$saved_state" -eq 1 ]]; then
+                local flowconfig_name=".flowconfig"
+                for ((i=1; i<=$#; i++)); do
+                  opt="${!i}"
+                  if [ "$opt" = "--flowconfig-name" ]
+                  then
+                    ((i++))
+                    flowconfig_name=${!i}
+                  fi
+                done
+
+                local load_script
+                if load_script=$(create_saved_state "$root" "$flowconfig_name")
+                then
+                  "$FLOW" start "$root" \
+                    $all $flowlib --wait \
+                    --saved-state-load-script "$load_script" \
+                    --saved-state-no-fallback \
+                    --file-watcher "$file_watcher" \
+                    --log-file "$abs_log_file" \
+                    --monitor-log-file "$abs_monitor_log_file" \
+                    "$@"
+                  return $?
+                else
+                    printf "Failed to generate saved state\\n" >&2
+                    return 1
+                fi
+              else
+                # start server and wait
+                "$FLOW" start "$root" \
+                  $all $flowlib --wait \
+                  --file-watcher "$file_watcher" \
+                  --log-file "$abs_log_file" \
+                  --monitor-log-file "$abs_monitor_log_file" \
+                  "$@"
+                return $?
+              fi
             }
 
             # start_flow_unsafe ROOT [OPTIONS]...
             start_flow () {
               assert_ok start_flow_unsafe "$@"
             }
-
-            start_flow_unsafe . $start_args 2>> "$abs_out_file"
+            start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
             code=$?
             if [ $code -ne 0 ]; then
               # flow failed to start
