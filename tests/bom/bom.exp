@@ -794,8 +794,25 @@ References:
                               ^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ URLSearchParams.js:8:19
 
-Found 53 errors
+Cannot assign `params.get(...)` to `b` because null [1] is incompatible with string [2].
+
+   URLSearchParams.js:8:19
+     8| const b: string = params.get('foo'); // incorrect
+                          ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:919:24
+   919|     get(name: string): null | string;
+                               ^^^^ [1]
+   URLSearchParams.js:8:10
+     8| const b: string = params.get('foo'); // incorrect
+                 ^^^^^^ [2]
+
+
+
+Found 54 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
