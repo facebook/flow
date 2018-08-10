@@ -33,8 +33,8 @@ let error ln msg = multi_error [(ln, msg)]
 
 module Opts = struct
   type t = {
+    all: bool;
     emoji: bool;
-    max_literal_length: int;
     enable_cancelable_rechecks: bool;
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
@@ -43,8 +43,8 @@ module Opts = struct
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
-    esproposal_optional_chaining: Options.esproposal_feature_mode;
     esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+    esproposal_optional_chaining: Options.esproposal_feature_mode;
     facebook_fbt: string option;
     file_watcher: Options.file_watcher option;
     haste_name_reducers: (Str.regexp * string) list;
@@ -53,34 +53,34 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
-    module_resolver: Path.t option;
-    module_system: Options.module_system;
-    module_name_mappers: (Str.regexp * string) list;
-    node_resolver_dirnames: string list;
-    merge_timeout: int option;
-    munge_underscores: bool;
-    module_file_exts: SSet.t;
-    module_resource_exts: SSet.t;
-    modules_are_use_strict: bool;
-    suppress_comments: Str.regexp list;
-    suppress_types: SSet.t;
-    traces: int;
-    all: bool;
-    weak: bool;
     log_file: Path.t option;
     max_header_tokens: int;
+    max_literal_length: int;
     max_workers: int;
+    merge_timeout: int option;
+    module_file_exts: SSet.t;
+    module_name_mappers: (Str.regexp * string) list;
+    module_resolver: Path.t option;
+    module_resource_exts: SSet.t;
+    module_system: Options.module_system;
+    modules_are_use_strict: bool;
+    munge_underscores: bool;
     no_flowlib: bool;
-    temp_dir: string;
+    node_resolver_dirnames: string list;
     saved_state_load_script: string option;
-    shm_global_size: int;
-    shm_heap_size: int;
-    shm_dirs: string list;
-    shm_min_avail: int;
     shm_dep_table_pow: int;
+    shm_dirs: string list;
+    shm_global_size: int;
     shm_hash_table_pow: int;
+    shm_heap_size: int;
     shm_log_level: int;
+    shm_min_avail: int;
+    suppress_comments: Str.regexp list;
+    suppress_types: SSet.t;
+    temp_dir: string;
+    traces: int;
     version: string option;
+    weak: bool;
   }
 
   type initializer_ =
@@ -144,8 +144,8 @@ module Opts = struct
     |> SSet.add ".webm"
 
   let default_options = {
+    all = false;
     emoji = false;
-    max_literal_length = 100;
     enable_cancelable_rechecks = false;
     enable_const_params = false;
     enforce_strict_call_arity = true;
@@ -154,8 +154,8 @@ module Opts = struct
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
-    esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
     esproposal_nullish_coalescing = Options.ESPROPOSAL_WARN;
+    esproposal_optional_chaining = Options.ESPROPOSAL_WARN;
     facebook_fbt = None;
     file_watcher = None;
     haste_name_reducers = [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -164,34 +164,34 @@ module Opts = struct
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     include_warnings = false;
-    merge_timeout = Some 100;
-    module_resolver = None;
-    module_system = Options.Node;
-    module_name_mappers = [];
-    node_resolver_dirnames = ["node_modules"];
-    munge_underscores = false;
-    module_file_exts;
-    module_resource_exts;
-    modules_are_use_strict = false;
-    suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
-    suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
-    traces = 0;
-    all = false;
-    weak = false;
     log_file = None;
     max_header_tokens = 10;
+    max_literal_length = 100;
     max_workers = Sys_utils.nbr_procs;
+    merge_timeout = Some 100;
+    module_file_exts;
+    module_name_mappers = [];
+    module_resolver = None;
+    module_resource_exts;
+    module_system = Options.Node;
+    modules_are_use_strict = false;
+    munge_underscores = false;
     no_flowlib = false;
-    temp_dir = default_temp_dir;
+    node_resolver_dirnames = ["node_modules"];
     saved_state_load_script = None;
-    shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
-    shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
-    shm_dirs = default_shm_dirs;
-    shm_min_avail = default_shm_min_avail;
     shm_dep_table_pow = 17;
+    shm_dirs = default_shm_dirs;
+    shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
     shm_hash_table_pow = 19;
+    shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
     shm_log_level = 0;
+    shm_min_avail = default_shm_min_avail;
+    suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
+    suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
+    temp_dir = default_temp_dir;
+    traces = 0;
     version = None;
+    weak = false;
   }
 
   let parse =
