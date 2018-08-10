@@ -14,6 +14,7 @@ Table of contents:
 - [`$Rest<A, B>`](#toc-rest)
 - [`$PropertyType<T, k>`](#toc-propertytype)
 - [`$ElementType<T, K>`](#toc-elementtype)
+- [`$NonMaybeType<T>`](#toc-nonmaybe)
 - [`$ObjMap<T, F>`](#toc-objmap)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F>`](#toc-call)
