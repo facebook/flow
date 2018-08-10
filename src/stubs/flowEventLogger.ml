@@ -10,6 +10,7 @@ type logging_context = {
   command: string option;
   from: string option;
   root: string option;
+  root_name: string option;
   start_time: float;
 }
 
@@ -42,12 +43,14 @@ let get_context _ = {
   command = None;
   from = None;
   root = None;
+  root_name = None;
   start_time = 0.0;
 }
 let restore_context _ = ()
 let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
+let set_root_name _ = ()
 let set_monitor_options ~file_watcher:_  = ()
 let set_server_options ~lazy_mode:_ ~cancelable_rechecks:_ = ()
 

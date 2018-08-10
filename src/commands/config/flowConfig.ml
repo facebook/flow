@@ -65,6 +65,7 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
+    name: string option;
     no_flowlib: bool;
     node_resolver_dirnames: string list;
     saved_state_load_script: string option;
@@ -176,6 +177,7 @@ module Opts = struct
     module_system = Options.Node;
     modules_are_use_strict = false;
     munge_underscores = false;
+    name = None;
     no_flowlib = false;
     node_resolver_dirnames = ["node_modules"];
     saved_state_load_script = None;
@@ -774,6 +776,16 @@ let parse_options config lines =
       );
     }
 
+    |> define_opt "name" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        FlowEventLogger.set_root_name (Some v);
+        Ok {opts with name = Some v;}
+      );
+    }
+
     |> define_opt "server.max_workers" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -1129,6 +1141,7 @@ let module_resource_exts c = c.options.Opts.module_resource_exts
 let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
+let name c = c.options.Opts.name
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 let saved_state_load_script c = c.options.Opts.saved_state_load_script
