@@ -11,15 +11,7 @@ val init:
   profiling:Profiling_js.running ->
   workers:MultiWorkerLwt.worker list option ->
   Options.t ->
-  (
-    FilenameSet.t * (* parsed *)
-    FilenameSet.t * (* unparsed *)
-    FilenameSet.t FilenameMap.t * (* dependency_graph *)
-    string list * (* ordered libs *)
-    SSet.t * (* libs *)
-    bool * (* libs_ok *)
-    ServerEnv.errors (* errors *)
-  ) Lwt.t
+  (bool (* libs_ok *) * ServerEnv.env) Lwt.t
 
 val calc_deps:
   options:Options.t ->
@@ -44,10 +36,8 @@ val full_check:
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   focus_targets:FilenameSet.t option ->
-  FilenameSet.t ->
-  FilenameSet.t FilenameMap.t ->
-  ServerEnv.errors ->
-  (CheckedSet.t * ServerEnv.errors) Lwt.t
+  ServerEnv.env ->
+  ServerEnv.env Lwt.t
 
  val basic_check_contents:
    options: Options.t ->

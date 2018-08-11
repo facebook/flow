@@ -1510,16 +1510,32 @@ let load_saved_state ~profiling ~workers options =
       )
 
 let init ~profiling ~workers options =
-  match%lwt load_saved_state ~profiling ~workers options with
-  | None ->
-    (* Either there is no saved state or we failed to load it for some reason *)
-    init ~profiling ~workers options
-  | Some saved_state ->
-    (* We loaded a saved state successfully! We are awesome! *)
-    init_from_saved_state ~profiling ~workers ~saved_state options
+  let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
+    match%lwt load_saved_state ~profiling ~workers options with
+    | None ->
+      (* Either there is no saved state or we failed to load it for some reason *)
+      init ~profiling ~workers options
+    | Some saved_state ->
+      (* We loaded a saved state successfully! We are awesome! *)
+      init_from_saved_state ~profiling ~workers ~saved_state options
+  in
 
-let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
-  let%lwt (checked, _, errors) = Transaction.with_transaction (fun transaction ->
+  let env = { ServerEnv.
+    files = parsed;
+    unparsed;
+    dependency_graph;
+    checked_files = CheckedSet.empty;
+    ordered_libs;
+    libs;
+    errors;
+    collated_errors = ref None;
+    connections = Persistent_connection.empty;
+  } in
+  Lwt.return (libs_ok, env)
+
+let full_check ~profiling ~options ~workers ~focus_targets env =
+  let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
+  let%lwt (checked_files, _, errors) = Transaction.with_transaction (fun transaction ->
     let%lwt infer_input = files_to_infer
       ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
 
@@ -1551,4 +1567,4 @@ let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_gra
       ~persistent_connections:None
       ~prep_merge:None
   ) in
-  Lwt.return (checked, errors)
+  Lwt.return { env with ServerEnv.checked_files; errors }
