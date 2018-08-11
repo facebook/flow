@@ -67,14 +67,14 @@ References:
    props_boolean.js:7:15
      7| <span hidden={null} />; // Error: Expected DOM boolean
                       ^^^^ [1]
-   <BUILTINS>/react-dom.js:462:5
-   462|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:463:5
-   463|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   463|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:464:5
-   464|   | boolean;
+   464|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:465:5
+   465|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -93,14 +93,14 @@ References:
    props_boolean.js:8:14
      8| <span hidden="true" />; // Error: Expected DOM boolean
                      ^^^^^^ [1]
-   <BUILTINS>/react-dom.js:462:5
-   462|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:463:5
-   463|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   463|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:464:5
-   464|   | boolean;
+   464|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:465:5
+   465|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -119,14 +119,14 @@ References:
    props_boolean.js:9:14
      9| <span hidden="false" />; // Error: Expected DOM boolean
                      ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:462:5
-   462|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:463:5
-   463|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   463|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:464:5
-   464|   | boolean;
+   464|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:465:5
+   465|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -145,14 +145,14 @@ References:
    props_boolean.js:11:14
     11| <span hidden="yes" />; // Error: Expected DOM boolean
                      ^^^^^ [1]
-   <BUILTINS>/react-dom.js:462:5
-   462|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:463:5
-   463|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   463|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:464:5
-   464|   | boolean;
+   464|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:465:5
+   465|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -171,14 +171,14 @@ References:
    props_boolean.js:15:14
     15| <span hidden="Hidden" />; // Currently an error
                      ^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:462:5
-   462|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:463:5
-   463|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   463|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:464:5
-   464|   | boolean;
+   464|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:465:5
+   465|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -197,14 +197,14 @@ References:
    props_booleanish_string.js:7:23
      7| <div contentEditable={null} />; // Error: Expected booleanish string
                               ^^^^ [1]
-   <BUILTINS>/react-dom.js:457:5
-   457|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:458:5
-   458|   | $TODO$CaseInsensitive<"true" | "false">
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   458|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:459:5
-   459|   | boolean;
+   459|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:460:5
+   460|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -223,14 +223,14 @@ References:
    props_booleanish_string.js:11:22
     11| <div contentEditable="yes" />; // Error: Expected booleanish string
                              ^^^^^ [1]
-   <BUILTINS>/react-dom.js:457:5
-   457|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:458:5
-   458|   | $TODO$CaseInsensitive<"true" | "false">
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   458|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:459:5
-   459|   | boolean;
+   459|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:460:5
+   460|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -249,14 +249,14 @@ References:
    props_booleanish_string.js:12:22
     12| <div contentEditable="contentEditable" />; // Error: Expected booleanish string
                              ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:457:5
-   457|   | ""
-            ^^ [2]
    <BUILTINS>/react-dom.js:458:5
-   458|   | $TODO$CaseInsensitive<"true" | "false">
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   458|   | ""
+            ^^ [2]
    <BUILTINS>/react-dom.js:459:5
-   459|   | boolean;
+   459|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:460:5
+   460|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -272,8 +272,8 @@ References:
    props_enum.js:5:9
      5| <header dir />; // Error: Expected enum
                 ^^^ [1]
-   <BUILTINS>/react-dom.js:421:9
-   421|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
+   <BUILTINS>/react-dom.js:422:9
+   422|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -289,8 +289,8 @@ References:
    props_enum.js:11:13
     11| <header dir="Ltr" />; // currently an error
                     ^^^^^ [1]
-   <BUILTINS>/react-dom.js:421:9
-   421|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
+   <BUILTINS>/react-dom.js:422:9
+   422|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -409,8 +409,8 @@ References:
    suppress_warnings.js:10:55
     10| <aside contentEditable suppressContentEditableWarning="false" />; // Error: Expected boolean
                                                               ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:431:36
-   431|   suppressContentEditableWarning?: boolean,
+   <BUILTINS>/react-dom.js:432:36
+   432|   suppressContentEditableWarning?: boolean,
                                            ^^^^^^^ [2]
 
 
