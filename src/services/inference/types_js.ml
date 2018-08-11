@@ -447,7 +447,7 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, suppressions, severity_cover_set = try%lwt
+  let%lwt merge_errors, suppressions, severity_cover_set =
     let intermediate_result_callback results =
       let errors = lazy (
         List.map (fun (file, result) ->
@@ -494,17 +494,6 @@ let merge
     in
     Hh_logger.info "Done";
     Lwt.return (merge_errors, suppressions, severity_cover_set)
-  with
-  (* Unrecoverable exceptions *)
-  | Lwt.Canceled
-  | SharedMem_js.Out_of_shared_memory
-  | SharedMem_js.Heap_full
-  | SharedMem_js.Hash_table_full
-  | SharedMem_js.Dep_table_full as exn -> raise exn
-  (* A catch all suppression is probably a bad idea... *)
-  | exn when not Build_mode.dev ->
-      Hh_logger.error ~exn "Exception in master process during merge";
-      Lwt.return (merge_errors, suppressions, severity_cover_set)
   in
 
   let checked = CheckedSet.union unchanged_checked to_merge in
