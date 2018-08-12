@@ -7,7 +7,7 @@
 
 type t
 
-type default = Loc.t Ast.Expression.t Default.t
+type default = (Loc.t, Loc.t) Ast.Expression.t Default.t
 type binding = string * Loc.t * Type.t * default option
 
 (* build up a params value *)
@@ -15,16 +15,19 @@ val empty: t
 
 val add_simple: Context.t ->
   optional: bool ->
-  ?default: Loc.t Ast.Expression.t ->
+  ?default: (Loc.t, Loc.t) Ast.Expression.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->
   t -> t
 
 val add_complex: Context.t ->
-  expr: (Context.t -> Loc.t Ast.Expression.t -> Type.t * Typed_ast.annot Ast.Expression.t') ->
-  ?default: Loc.t Ast.Expression.t ->
-  Loc.t Ast.Pattern.t -> Type.t ->
+  expr:(
+    Context.t -> (Loc.t, Loc.t) Ast.Expression.t ->
+    (Loc.t, Loc.t * Type.t) Ast.Expression.t
+  ) ->
+  ?default: (Loc.t, Loc.t) Ast.Expression.t ->
+  (Loc.t, Loc.t) Ast.Pattern.t -> Type.t ->
   t ->
-  t * Typed_ast.annot Ast.Pattern.t'
+  t * (Loc.t, Loc.t * Type.t) Ast.Pattern.t
 
 val add_rest: Context.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->

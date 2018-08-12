@@ -68,7 +68,7 @@ let slave_main ic oc =
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
     let stats = Measure.serialize (Measure.pop_global ()) in
     (* If we got so far, just let it finish "naturally" *)
-    SharedMem.set_on_worker_cancelled (fun () -> ());
+    WorkerCancel.set_on_worker_cancelled (fun () -> ());
     let len = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd (data,stats) in
     if len > 30 * 1024 * 1024 (* 30 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
@@ -83,7 +83,7 @@ let slave_main ic oc =
   try
     Measure.push_global ();
     let Request do_process = Marshal_tools.from_fd_with_preamble infd in
-    SharedMem.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
+    WorkerCancel.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
     let tm = Unix.times () in
     let gc = Gc.quick_stat () in
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;

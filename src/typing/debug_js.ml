@@ -395,6 +395,9 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | ReactCloneElement -> "React.cloneElement"
   | ReactElementFactory _ -> "React.createFactory"
   | Idx -> "idx"
+  | TypeAssertIs -> "TypeAssert.is"
+  | TypeAssertThrows -> "TypeAssert.throws"
+  | TypeAssertWraps -> "TypeAssert.wraps"
   | DebugPrint -> "$Flow$DebugPrint"
   | DebugThrow -> "$Flow$DebugThrow"
   | DebugSleep -> "$Flow$DebugSleep"
@@ -1518,7 +1521,7 @@ let json_of_scope = Scope.(
   let open Hh_json in
 
   let json_of_value_impl json_cx { Entry.
-    kind; value_state; value_declare_loc; value_assign_loc; specific; general
+    kind; value_state; value_declare_loc; value_assign_loc; specific; general;
   } =
     JSON_Object [
       "entry_type", JSON_String "Value";
@@ -1704,6 +1707,9 @@ let rec dump_t_ (depth, tvars) cx t =
     | ReactElementFactory _ -> "ReactElementFactory"
     | ReactCreateClass -> "ReactCreateClass"
     | Idx -> "Idx"
+    | TypeAssertIs -> "TypeAssert.is"
+    | TypeAssertThrows -> "TypeAssert.throws"
+    | TypeAssertWraps -> "TypeAssert.wraps"
     | DebugPrint -> "DebugPrint"
     | DebugThrow -> "DebugThrow"
     | DebugSleep -> "DebugSleep"
@@ -2253,7 +2259,7 @@ let dump_tvar ?(depth=3) cx id =
 let string_of_scope_entry = Scope.(
 
   let string_of_value_binding cx { Entry.
-    kind; value_state; value_declare_loc; value_assign_loc; specific; general
+    kind; value_state; value_declare_loc; value_assign_loc; specific; general;
   } =
     spf "{ kind: %s; value_state: %s; value_declare_loc: %S; \
       value_assign_loc: %s; specific: %s; general: %s }"
@@ -2616,6 +2622,10 @@ let dump_flow_error =
           (dump_reason cx reason_tapp)
           (dump_reason cx reason_arity)
           minimum_arity
+    | EInvalidTypeArgs (reason_tapp, reason_arity) ->
+        spf "EInvalidTypeArgs (%s, %s)"
+          (dump_reason cx reason_tapp)
+          (dump_reason cx reason_arity)
     | EPropertyTypeAnnot loc ->
         spf "EPropertyTypeAnnot (%s)" (string_of_loc loc)
     | EExportsAnnot loc ->

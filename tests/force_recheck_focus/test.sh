@@ -1,15 +1,8 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 
 "$FLOW" stop
 
-assert_ok "$FLOW" start . \
-  --all --no-flowlib --wait \
-  --file-watcher "none" \
-  --log-file "$FLOW_LOG_FILE" \
-  --monitor-log-file "$FLOW_MONITOR_LOG_FILE" \
-  --lazy-mode ide
+start_flow . --lazy-mode ide
 
 printf "===== (ide) force-recheck of a unchanged file does nothing: =====\\n"
 assert_ok "$FLOW" force-recheck a.js
@@ -21,12 +14,7 @@ assert_errors "$FLOW" status --no-auto-start
 
 "$FLOW" stop
 
-assert_ok "$FLOW" start . \
-  --all --no-flowlib --wait \
-  --file-watcher "none" \
-  --log-file "$FLOW_LOG_FILE" \
-  --monitor-log-file "$FLOW_MONITOR_LOG_FILE" \
-  --lazy-mode fs
+start_flow . --lazy-mode fs
 
 printf "===== (fs) force-recheck of a unchanged file does nothing: =====\\n"
 assert_ok "$FLOW" force-recheck a.js

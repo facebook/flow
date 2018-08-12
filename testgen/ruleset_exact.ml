@@ -24,7 +24,7 @@ class ruleset_exact = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
     let open T.Object in
     if (o1.exact && o2.exact) then
       o1 = o2

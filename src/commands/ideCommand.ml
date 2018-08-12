@@ -31,6 +31,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_flags
     |> root_flag
     |> from_flag
@@ -366,9 +367,10 @@ end
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
 module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
-let main option_values root from protocol strip_root json_version () =
+let main base_flags option_values root from protocol strip_root json_version () =
   FlowEventLogger.set_from from;
-  let root = CommandUtils.guess_root root in
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = CommandUtils.guess_root flowconfig_name root in
   let strip_root = if strip_root then Some root else None in
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
@@ -378,7 +380,7 @@ let main option_values root from protocol strip_root json_version () =
     client_type = Persistent { logging_context = FlowEventLogger.get_context (); lsp = None; };
   }) in
   Printf.eprintf "Connecting to server...\n%!";
-  let ic, oc = connect ~client_handshake option_values root in
+  let ic, oc = connect ~flowconfig_name ~client_handshake option_values root in
   Printf.eprintf "Connected to server\n%!";
   let buffered_stdin = stdin |> Unix.descr_of_in_channel |> Buffered_line_reader.create in
   let ic_fd = Timeout.descr_of_in_channel ic in

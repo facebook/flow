@@ -24,9 +24,9 @@ open Utils_js
 let regenerate =
   let open Errors in
   let open Error_suppressions in
-  let add_unused_suppression_warnings checked suppressions warnings =
+  let add_unused_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
-    Error_suppressions.unused suppressions
+    Error_suppressions.unused unused
     |> List.fold_left
       (fun warnings loc ->
         let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in
@@ -51,14 +51,14 @@ let regenerate =
       )
       warnings
   in
-  let acc_fun severity_cover filename file_errs
-      (errors, warnings, suppressed_errors, suppressions) =
-    let file_errs, file_warns, file_suppressed_errors, suppressions =
-      filter_suppressed_errors suppressions severity_cover file_errs in
+  let acc_fun suppressions severity_cover filename file_errs
+      (errors, warnings, suppressed, unused) =
+    let file_errs, file_warns, file_suppressed, unused =
+      filter_suppressed_errors suppressions severity_cover file_errs ~unused in
     let errors = ErrorSet.union file_errs errors in
     let warnings = FilenameMap.add filename file_warns warnings in
-    let suppressed_errors = List.rev_append file_suppressed_errors suppressed_errors in
-    (errors, warnings, suppressed_errors, suppressions)
+    let suppressed = List.rev_append file_suppressed suppressed in
+    (errors, warnings, suppressed, unused)
   in
   fun env ->
     MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
@@ -69,15 +69,15 @@ let regenerate =
 
     (* union the errors from all files together, filtering suppressed errors *)
     let severity_cover = ExactCover.union_all severity_cover_set in
-    let acc_fun = acc_fun severity_cover in
-    let collated_errorset, warnings, collated_suppressed_errors, suppressions =
+    let acc_fun = acc_fun suppressions severity_cover in
+    let collated_errorset, warnings, collated_suppressed_errors, unused =
       (ErrorSet.empty, FilenameMap.empty, [], suppressions)
       |> FilenameMap.fold acc_fun local_errors
       |> FilenameMap.fold acc_fun merge_errors
     in
 
     let collated_warning_map =
-      add_unused_suppression_warnings env.ServerEnv.checked_files suppressions warnings in
+      add_unused_suppression_warnings env.ServerEnv.checked_files unused warnings in
     { collated_errorset; collated_warning_map; collated_suppressed_errors }
 
 let get_with_separate_warnings env =

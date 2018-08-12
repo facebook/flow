@@ -337,18 +337,18 @@ end = struct
     let%lwt () = StatusStream.reset file_watcher in
 
     let watcher = match file_watcher with
-    | FileWatcherStatus.NoFileWatcher ->
+    | Options.NoFileWatcher ->
       new FileWatcher.dummy
-    | FileWatcherStatus.DFind ->
+    | Options.DFind ->
       new FileWatcher.dfind monitor_options
-    | FileWatcherStatus.Watchman ->
+    | Options.Watchman ->
       new FileWatcher.watchman monitor_options
     in
     Logger.debug "Initializing file watcher (%s)" watcher#name;
     watcher#start_init;
     let file_watcher_pid = watcher#getpid in
-    let handle = Server.daemonize
-      ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options in
+    let handle = Server.daemonize ~log_file ~shared_mem_config ~argv ~file_watcher_pid
+      server_options in
     let (ic, oc) = handle.Daemon.channels in
     let in_fd =
       ic
@@ -418,7 +418,7 @@ end = struct
 
     let command_loop = CommandLoop.run ~cancel_condition:ExitSignal.signal (watcher, connection) in
     let file_watcher_loop =
-      if file_watcher = FileWatcherStatus.NoFileWatcher
+      if file_watcher = Options.NoFileWatcher
       then Lwt.return_unit (* Don't even bother *)
       else FileWatcherLoop.run ~cancel_condition:ExitSignal.signal watcher
     in
@@ -455,6 +455,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Path_is_not_a_file (* Required a file but privided path was not a file *)
       | Server_client_directory_mismatch (* This is a weird one *)
       | Flowconfig_changed (* We could survive some config changes, but it's too hard to tell *)
+      | Invalid_saved_state (* The saved state file won't automatically recover by restarting *)
       | Unused_server (* The server appears unused for long enough that it decided to just die *)
       | Unknown_error (* Uncaught exn. We probably could survive this, but it's a little risky *)
 

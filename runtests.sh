@@ -1,5 +1,44 @@
 #!/bin/bash
 
+
+# Use the assert functions below to expect specific exit codes.
+
+assert_exit_on_line() {
+  # Run all this in a subshell, so we can set -e without affecting the caller
+  (
+    set -e
+    _assert_exit__line=$1; shift
+    _assert_exit__ret=0
+    _assert_exit__code=$1; shift
+    "$@" ||  _assert_exit__ret=$?
+    eval "$SAVED_OPTION" # Undo the `set -e` if necessary
+    if [ "$_assert_exit__ret" -eq "$_assert_exit__code" ]; then
+      return 0
+    else
+      echo \
+        "\`$(basename "$1") ${*:2}\` expected to exit code $_assert_exit__code" \
+        "but got $_assert_exit__ret (line $_assert_exit__line)"
+      return 1
+    fi
+  )
+  return $?
+}
+
+export EXIT_OK=0
+export EXIT_ERRS=2
+export EXIT_COULD_NOT_FIND_FLOWCONFIG=12
+export EXIT_USAGE=64
+
+assert_exit() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$@"
+}
+assert_ok() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_OK" "$@"
+}
+assert_errors() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
+}
+
 show_help() {
   printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
@@ -17,6 +56,8 @@ show_help() {
   echo "        re-record failing tests to update expected output"
   echo "    -q"
   echo "        quiet output (hides status, just prints results)"
+  echo "    -s"
+  echo "        test saved state"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -28,11 +69,12 @@ export FLOW_LOG_LEVEL=debug
 
 OPTIND=1
 record=0
+saved_state=0
 verbose=0
 quiet=0
 relative="$(dirname "${BASH_SOURCE[0]}")"
 list_tests=0
-while getopts "b:d:f:lqrt:vh?" opt; do
+while getopts "b:d:f:lqrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -47,13 +89,17 @@ while getopts "b:d:f:lqrt:vh?" opt; do
     list_tests=1
     ;;
   t)
-    filter="^$OPTARG$"
+    specific_test="$OPTARG"
     ;;
   q)
     quiet=1
     ;;
   r)
     record=1
+    ;;
+  s)
+    saved_state=1
+    printf "Testing saved state by running all tests using saved state\\n"
     ;;
   v)
     verbose=1
@@ -68,6 +114,14 @@ done
 shift $((OPTIND-1))
 
 [ "$1" = "--" ] && shift
+
+if [ -n "$specific_test" ]; then
+  if [[ "$saved_state" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  fi
+
+  filter="^$specific_test$"
+fi
 
 FLOW="${FLOW:-$1}"
 filter="${filter:-$2}"
@@ -230,9 +284,13 @@ runtest() {
         OUT_DIR="$OUT_PARENT_DIR/$name"
         mkdir "$OUT_DIR"
 
+        # Make these now so that we can clean them up if necessary
+        SAVED_STATE_DIR=$(mktemp -d /tmp/flow_saved_state_XXXXXX)
+
         # deletes the temp directory
         function cleanup {
           rm -rf "$OUT_PARENT_DIR"
+          rm -rf "$SAVED_STATE_DIR"
         }
         function force_cleanup {
           "$FLOW" stop "$OUT_DIR" 1> /dev/null 2>&1
@@ -246,7 +304,6 @@ runtest() {
         # from there. the . in "$dir/." copies the entire directory, including
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
-        cp "$dir/../assert.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
         cp "$dir/../fs.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
         mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
 
@@ -344,6 +401,18 @@ runtest() {
             then
                 cmd="$config_cmd"
             fi
+
+            if [[ "$saved_state" -eq 1 ]] && \
+              [ "$(awk '$1=="skip_saved_state:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "$saved_state" -eq 0 ]] && \
+              [ "$(awk '$1=="saved_state_only:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
@@ -355,39 +424,135 @@ runtest() {
             flowlib=""
         fi
 
+        # Helper function to generate saved state. If anything goes wrong, it
+        # will fail
+        create_saved_state () {
+          local root="$1"
+          local flowconfig_name="$2"
+          local SAVED_STATE_LOAD_SCRIPT
+          SAVED_STATE_LOAD_SCRIPT=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.load_script")
+          (
+            set -e
+            # start lazy server and wait
+            "$FLOW" start "$root" \
+              $all $flowlib --wait --lazy \
+              --file-watcher "$file_watcher" \
+              --flowconfig-name "$flowconfig_name" \
+              --log-file "$abs_log_file" \
+              --monitor-log-file "$abs_monitor_log_file"
+
+            local SAVED_STATE_FILENAME
+            SAVED_STATE_FILENAME=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.saved_state")
+            assert_ok "$FLOW" save-state \
+              --root "$root" \
+              --out "$SAVED_STATE_FILENAME" \
+              --flowconfig-name "$flowconfig_name"
+            assert_ok "$FLOW" stop --flowconfig-name "$flowconfig_name" "$root"
+            echo "echo '{\"path\":\"$SAVED_STATE_FILENAME\"}'" > "$SAVED_STATE_LOAD_SCRIPT"
+            chmod +x "$SAVED_STATE_LOAD_SCRIPT"
+          )  > /dev/null 2>&1
+          local RET=$?
+          echo "$SAVED_STATE_LOAD_SCRIPT"
+          return $RET
+        }
+
         # run test
         if [ "$cmd" == "check" ]
         then
-            # default command is check with configurable --all and --no-flowlib
-            "$FLOW" check . \
-              $all $flowlib --strip-root --show-all-errors \
-               1> "$abs_out_file" 2> "$stderr_dest"
-            st=$?
-            if [ $ignore_stderr = true ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+            if [[ "$saved_state" -eq 1 ]]; then
+              if load_script=$(create_saved_state . ".flowconfig"); then
+                # default command is check with configurable --all and --no-flowlib
+                "$FLOW" check . \
+                  $all $flowlib --strip-root --show-all-errors \
+                  --saved-state-load-script "$load_script" \
+                  --saved-state-no-fallback \
+                   1>> "$abs_out_file" 2>> "$stderr_dest"
+                st=$?
+              else
+                printf "Failed to generate saved state\\n" >> "$stderr_dest"
+                return_status=$RUNTEST_ERROR
+              fi
+            else
+              # default command is check with configurable --all and --no-flowlib
+              "$FLOW" check . \
+                $all $flowlib --strip-root --show-all-errors \
+                 1>> "$abs_out_file" 2>> "$stderr_dest"
+              st=$?
+            fi
+            if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+              printf "flow check return code: %d\\n" "$st" >> "$stderr_dest"
               return_status=$RUNTEST_ERROR
             fi
         else
             # otherwise, run specified flow command, then kill the server
 
-            # start server and wait
-            "$FLOW" start . \
-              $all $flowlib --wait \
-              --file-watcher "$file_watcher" \
-              --log-file "$abs_log_file" \
-              --monitor-log-file "$abs_monitor_log_file" \
-              $start_args \
-              > /dev/null 2>&1
+            # start_flow_unsafe ROOT [OPTIONS]...
+            start_flow_unsafe () {
+              local root=$1; shift
+
+              if [ ! -d "$root" ]; then
+                printf "Invalid root directory '%s'\\n" "$root" >&2
+                return 1
+              fi
+
+              if [[ "$saved_state" -eq 1 ]]; then
+                local flowconfig_name=".flowconfig"
+                for ((i=1; i<=$#; i++)); do
+                  opt="${!i}"
+                  if [ "$opt" = "--flowconfig-name" ]
+                  then
+                    ((i++))
+                    flowconfig_name=${!i}
+                  fi
+                done
+
+                local load_script
+                if load_script=$(create_saved_state "$root" "$flowconfig_name")
+                then
+                  "$FLOW" start "$root" \
+                    $all $flowlib --wait \
+                    --saved-state-load-script "$load_script" \
+                    --saved-state-no-fallback \
+                    --file-watcher "$file_watcher" \
+                    --log-file "$abs_log_file" \
+                    --monitor-log-file "$abs_monitor_log_file" \
+                    "$@"
+                  return $?
+                else
+                    printf "Failed to generate saved state\\n" >&2
+                    return 1
+                fi
+              else
+                # start server and wait
+                "$FLOW" start "$root" \
+                  $all $flowlib --wait \
+                  --file-watcher "$file_watcher" \
+                  --log-file "$abs_log_file" \
+                  --monitor-log-file "$abs_monitor_log_file" \
+                  "$@"
+                return $?
+              fi
+            }
+
+            # start_flow_unsafe ROOT [OPTIONS]...
+            start_flow () {
+              assert_ok start_flow_unsafe "$@"
+            }
+            start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
             code=$?
             if [ $code -ne 0 ]; then
               # flow failed to start
-              printf "flow start exited code %s\n" "$code" > "$abs_out_file"
+              printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
-              # run test script
-              /bin/bash -e "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+              # run test script in subshell so it inherits functions
+              (
+                set -e # The script should probably use this option
+                source "$shell" "$FLOW"
+              ) 1> "$abs_out_file" 2> "$stderr_dest"
               code=$?
               if [ $code -ne 0 ]; then
-                printf "%s exited code %s\n" "$shell" "$code" >> "$abs_out_file"
+                printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
                 return_status=$RUNTEST_ERROR
               fi
             else
@@ -415,7 +580,7 @@ runtest() {
 
         if [ $return_status -eq $RUNTEST_SUCCESS ]; then
           pushd "$OUT_PARENT_DIR" >/dev/null
-          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
+          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file" 2>&1
           popd >/dev/null
         fi
 
@@ -484,8 +649,14 @@ if [[ "$list_tests" -eq 1 ]]; then
   for dir in "${dirs[@]}"; do
     dir=${dir%*/}
     name=${dir##*/}
+
     if [[ -z $filter || $name =~ $filter ]]; then
-      echo "$name"
+
+      if [[ "$saved_state" -eq 1 ]]; then
+        echo "$name-saved-state"
+      else
+        echo "$name"
+      fi
     fi
   done
   exit 0

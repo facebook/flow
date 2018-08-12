@@ -17,7 +17,7 @@ class useless_mapper = object
       {value=Number 5.0; raw="5"}
     | _ -> expr
 
-  method! binary (expr: Loc.t Ast.Expression.Binary.t) =
+  method! binary (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression.Binary in
     let expr = super#binary expr in
     let { operator; _ } = expr in
@@ -75,5 +75,55 @@ let tests = "ast_differ" >::: [
     let source = "5 - rename" in
     let edits = edits_of_source source in
     assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
+  end;
+  "new" >:: begin fun ctxt ->
+    let source = "new rename()" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 10), "gotRenamed")] edits
+  end;
+  "block" >:: begin fun ctxt ->
+    let source = "{ 2; 4; 10; rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((5, 6), "(5)"); ((12, 18), "gotRenamed")] edits
+  end;
+  "if_nochange" >:: begin fun ctxt ->
+    let source = "if (true) { false; } else { true; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [] edits
+  end;
+  "if_noblock" >:: begin fun ctxt ->
+    let source = "if (4) rename;" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 5), "(5)"); ((7, 13), "gotRenamed");] edits
+  end;
+  "if_partial" >:: begin fun ctxt ->
+    let source = "if (4) { rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 5), "(5)"); ((9, 15), "gotRenamed");] edits
+  end;
+  "if_full" >:: begin fun ctxt ->
+    let source = "if (4) { 4; } else { rename }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")] edits
+  end;
+  "function_expression" >:: begin fun ctxt ->
+    let source = "(function() { 4; })" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((14, 15), "(5)")] edits
+  end;
+  "call" >:: begin fun ctxt ->
+    let source = "rename()" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((0, 6), "gotRenamed")] edits
+  end;
+  "for" >:: begin fun ctxt ->
+    let source = "for(i = 7; i < rename; i++){}" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(15, 21) , "gotRenamed"] edits
+  end;
+  "for_body" >:: begin fun ctxt ->
+    let source = "for(i = 7; i < top; i++){ rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(26, 32) , "gotRenamed"] edits
   end;
 ]

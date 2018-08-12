@@ -7,6 +7,10 @@
  *
  *)
 
+let report_canceled_callback = ref (fun ~total:_ ~finished:_ -> ())
+let set_report_canceled_callback callback = report_canceled_callback := callback
+let report_canceled ~total ~finished = (!report_canceled_callback) ~total ~finished
+
 include MultiWorker.CallFunctor (struct
   type 'a result = 'a Lwt.t
 
@@ -67,12 +71,20 @@ include MultiWorker.CallFunctor (struct
       let worker_threads = List.map run_worker workers in
       try%lwt
         LwtUtils.iter_all worker_threads
-      with Lwt.Canceled as exn ->
-        Hh_logger.info ~exn "Cancelling MultiWorkerLwt.multi_threaded_call";
+      with Lwt.Canceled ->
+        let total = List.length worker_threads in
+        let finished = ref 0 in
+        let worker_threads = List.map (fun thread ->
+          (thread) [%lwt.finally
+            incr finished;
+            report_canceled ~total ~finished:(!finished);
+            Lwt.return_unit
+          ]
+        ) worker_threads in
         (* For most exceptions, we want to propagate the exception as soon as one worker throws.
          * However, for Canceled we want to wait for all the workers to process the Canceled.
          * Lwt.join will wait for every thread to finish or fail *)
-        (Lwt.join worker_threads) [%lwt.finally SharedMem.resume_workers (); Lwt.return_unit]
+        (Lwt.join worker_threads) [%lwt.finally WorkerCancel.resume_workers (); Lwt.return_unit]
     in
 
     Lwt.return (!acc)

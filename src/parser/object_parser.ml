@@ -17,12 +17,12 @@ open Parser_common
  * and classes *)
 
 module type OBJECT = sig
-  val key : ?class_body: bool -> env -> Loc.t * Loc.t Ast.Expression.Object.Property.key
-  val _initializer : env -> Loc.t * Loc.t Ast.Expression.Object.t * pattern_errors
-  val class_declaration : env -> Loc.t Ast.Class.Decorator.t list -> Loc.t Ast.Statement.t
-  val class_expression : env -> Loc.t Ast.Expression.t
-  val class_implements : env -> Loc.t Ast.Class.Implements.t list -> Loc.t Ast.Class.Implements.t list
-  val decorator_list : env -> Loc.t Ast.Class.Decorator.t list
+  val key : ?class_body: bool -> env -> Loc.t * (Loc.t, Loc.t) Ast.Expression.Object.Property.key
+  val _initializer : env -> Loc.t * (Loc.t, Loc.t) Ast.Expression.Object.t * pattern_errors
+  val class_declaration : env -> (Loc.t, Loc.t) Ast.Class.Decorator.t list -> (Loc.t, Loc.t) Ast.Statement.t
+  val class_expression : env -> (Loc.t, Loc.t) Ast.Expression.t
+  val class_implements : env -> (Loc.t, Loc.t) Ast.Class.Implements.t list -> (Loc.t, Loc.t) Ast.Class.Implements.t list
+  val decorator_list : env -> (Loc.t, Loc.t) Ast.Class.Decorator.t list
 end
 
 module Object

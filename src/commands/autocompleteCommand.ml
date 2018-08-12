@@ -31,6 +31,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_and_json_flags
     |> root_flag
     |> strip_root_flag
@@ -67,17 +68,18 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values json pretty root strip_root from args () =
+let main base_flags option_values json pretty root strip_root from args () =
   FlowEventLogger.set_from from;
   let file = parse_args args in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
   let request = ServerProt.Request.AUTOCOMPLETE file in
-  let results = match connect_and_make_request option_values root request with
+  let results = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.AUTOCOMPLETE response -> response
   | response -> failwith_bad_response ~request ~response
   in

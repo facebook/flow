@@ -10,11 +10,11 @@ val compute_docblock: File_key.t -> string (* content *) -> Docblock.t
 val compute_ast_result:
   File_key.t ->
   string (* content *) ->
-  (Loc.t Ast.program * File_sig.t * Docblock.t, string) result
+  ((Loc.t, Loc.t) Ast.program * File_sig.t * Docblock.t, string) result
 
 val get_ast_result:
   File_key.t ->
-  (Loc.t Ast.program * File_sig.t * Docblock.t, string) result
+  ((Loc.t, Loc.t) Ast.program * File_sig.t * Docblock.t, string) result
 
 val get_dependents:
   Options.t ->

@@ -350,6 +350,21 @@ function getProp<O: {+[string]: mixed}, P: $Keys<O>>(o: O, p: P): $ElementType<O
 getProp({a: 42}, 'b'); // Error: `b` does not exist
 ```
 
+## `$NonMaybeType<T>` <a class="toc" id="toc-nonmaybe" href="#toc-nonmaybe"></a>
+
+`$NonMaybeType<T>` converts a type `T` to a non-maybe type. In other words, the values of `$NonMaybeType<T>` are the values of `T` except for `null` and `undefined`.
+
+```js
+// @flow
+type MaybeName = ?string;
+type Name = $NonMaybeType<MaybeName>;
+
+('Gabriel': MaybeName); // Ok
+(null: MaybeName); // Ok
+('Gabriel': Name); // Ok
+(null: Name); // Error! null can't be annotated as Name because Name is not a maybe type
+```
+
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
 
 `ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
@@ -562,6 +577,23 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<number>);
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
+
+## `Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+Copies the shape of the type supplied, but marks every field optional.
+
+```js
+type Person = {
+  age: number,
+  name: string,
+}
+type PersonDetails = $Shape<Person>;
+
+const person1: Person = {age: 28}; // Error due to incorrect type of Person.
+const person2: Person = {name: 'a'}; // Error due to incorrect type of Person.
+const person3: PersonDetails = {age: 28}; // Ok
+const person4: PersonDetails = {name: 'a'}; // Ok
+const person5: PersonDetails = {age: 28, name: 'a'}; // Ok
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 

@@ -31,6 +31,7 @@ type 'a merge_result = (File_key.t * 'a) list
 type 'a merge_stream = {
   next: unit -> element list Bucket.bucket;
   merge:
+    master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
     (* merged *)
     'a merge_result ->
     (* accumulator *)
@@ -193,19 +194,18 @@ let make
         ) else skipped
       ) (FilenameMap.find_unsafe leader_f !dependents) skipped
     in
-    fun merged merged_acc ->
+    fun ~master_mutator merged merged_acc ->
       let () = intermediate_result_callback (lazy merged) in
       let skipped = List.fold_left (fun skipped (leader_f, _) ->
-        let diff = Context_cache.sig_hash_changed leader_f in
+        let diff = Context_heaps.sig_hash_changed leader_f in
         let () =
           let fs =
             FilenameMap.find_unsafe leader_f !components
             |> Nel.to_list
             |> FilenameSet.of_list
           in
-          if diff
-          then Context_cache.remove_old_merge_batch fs
-          else Context_cache.revive_merge_batch fs
+          if not diff
+          then Context_heaps.Merge_context_mutator.revive_files master_mutator fs
         in
         push skipped leader_f diff
       ) [] merged in
@@ -215,7 +215,7 @@ let make
           |> Nel.to_list
           |> FilenameSet.of_list
         in
-        Context_cache.revive_merge_batch fs;
+        Context_heaps.Merge_context_mutator.revive_files master_mutator fs;
         FilenameSet.cardinal fs + acc
       ) 0 skipped in
       if skipped_length > 0 then begin

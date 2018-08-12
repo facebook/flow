@@ -22,6 +22,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> connect_flags
     |> root_flag
     |> from_flag
@@ -30,8 +31,9 @@ let spec = {
   )
 }
 
-let main option_values root _from out () =
-  let root = guess_root root in
+let main base_flags option_values root _from out () =
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name root in
 
   let out = Path.make @@ CommandUtils.imaginary_realpath out in
 
@@ -39,7 +41,7 @@ let main option_values root _from out () =
   Printf.printf "Asking server to create a saved-state file at `%s`\n%!" out_str;
 
   let request = ServerProt.Request.SAVE_STATE out in
-  match connect_and_make_request option_values root request with
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.SAVE_STATE (Error err) ->
     Printf.printf "Failed to create saved-state file `%s`:\n%s\n%!" out_str err
   | ServerProt.Response.SAVE_STATE (Ok ()) ->

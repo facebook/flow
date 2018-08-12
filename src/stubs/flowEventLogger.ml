@@ -48,6 +48,8 @@ let restore_context _ = ()
 let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
+let set_monitor_options ~file_watcher:_  = ()
+let set_server_options ~lazy_mode:_ ~cancelable_rechecks:_ = ()
 
 let status_response ~num_errors:_ = ()
 let init_done ~profiling:_ = ()
@@ -66,10 +68,10 @@ let recheck
 let murdered_by_oom_killer _ = ()
 let ephemeral_command_success ?json_data:_ ~client_context:_ ~profiling:_ = ()
 let ephemeral_command_failure ?json_data:_ ~client_context:_ = ()
-let persistent_command_success ~request:_ ~extra_data:_
+let persistent_command_success ~server_logging_context:_ ~request:_ ~extra_data:_
   ~client_context:_ ~persistent_context:_ ~persistent_delay:_
   ~server_profiling:_ ~client_duration:_ ~wall_start:_ ~error:_ = ()
-let persistent_command_failure ~request:_ ~extra_data:_
+let persistent_command_failure ~server_logging_context:_ ~request:_ ~extra_data:_
   ~client_context:_ ~persistent_context:_ ~persistent_delay:_
   ~server_profiling:_ ~client_duration:_ ~wall_start:_ ~error:_ = ()
 let persistent_expected_error ~client_context:_ ~error:_ = ()

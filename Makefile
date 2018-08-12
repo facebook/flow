@@ -72,10 +72,12 @@ MODULES=\
   src/common/errors\
   src/common/lints\
   src/common/lwt\
+  src/common/modulename\
   src/common/monad\
   src/common/profiling\
   src/common/span\
   src/common/tarjan\
+  src/common/transaction\
   src/common/ty\
   src/common/utils\
   src/common/xx\
@@ -90,10 +92,12 @@ MODULES=\
   src/parser_utils/output/printers\
   src/parsing\
   src/server\
+  src/server/command_handler\
   src/server/env\
   src/server/error_collator\
   src/server/find_refs\
   src/server/lazy_mode_utils\
+  src/server/monitor_listener\
   src/server/persistent_connection\
   src/server/protocol\
   src/server/rechecker\
@@ -107,6 +111,10 @@ MODULES=\
   src/services/port\
   src/services/saved_state\
   src/services/type_info\
+  src/state/heaps/context\
+  src/state/heaps/module\
+  src/state/heaps/parsing\
+  src/state/locals/module\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\

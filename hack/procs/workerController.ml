@@ -511,7 +511,7 @@ let wait_for_cancel d =
   | _ -> ()
 
 let cancel handles =
-  SharedMem.stop_workers ();
+  WorkerCancel.stop_workers ();
   List.iter handles ~f:(fun x -> wait_for_cancel x);
-  SharedMem.resume_workers ();
+  WorkerCancel.resume_workers ();
   ()

@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nTrace \`ParentFoo\` back to its def\n"
 assert_ok "$FLOW" get-def --strip-root main.js 8 1
 assert_ok "$FLOW" get-def --strip-root main.js 7 3

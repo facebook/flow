@@ -14,7 +14,7 @@ type jsx_pragma =
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
-  | Jsx_pragma of (string * Loc.t Ast.Expression.t)
+  | Jsx_pragma of (string * (Loc.t, Loc.t) Ast.Expression.t)
 
   (**
    * Alternate mode for interpreting JSX syntax. The element name is treated
@@ -25,6 +25,7 @@ type jsx_pragma =
 
 type t = {
   flow: flow_mode option;
+  typeAssert: bool;
   preventMunge: bool option;
   providesModule: string option;
   isDeclarationFile: bool;
@@ -33,6 +34,7 @@ type t = {
 
 let default_info = {
   flow = None;
+  typeAssert = false;
   preventMunge = None;
   providesModule = None;
   isDeclarationFile = false;
@@ -41,6 +43,7 @@ let default_info = {
 
 (* accessors *)
 let flow info = info.flow
+let typeAssert info = info.typeAssert
 let preventMunge info = info.preventMunge
 let providesModule info = info.providesModule
 let isDeclarationFile info = info.isDeclarationFile
@@ -98,8 +101,11 @@ let json_of_docblock info =
 
   let isDeclarationFile = JSON_Bool (isDeclarationFile info) in
 
+  let typeAssert = JSON_Bool (typeAssert info) in
+
   JSON_Object [
     "flow", flow;
+    "typeAssert", typeAssert;
     "preventMunge", preventsMunge;
     "providesModule", providesModule;
     "isDeclarationFile", isDeclarationFile;

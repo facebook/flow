@@ -22,8 +22,8 @@ class ruleset_optional = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
-    let get_prop_set (o : Loc.t T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
 
       (* hash table for storing optional properties *)

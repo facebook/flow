@@ -219,3 +219,13 @@ let unwrap_snd (a, b_opt) =
   match b_opt with
   | None -> None
   | Some b -> Some (a, b)
+
+let memoize_naive f =
+  let m = ref None in
+  fun () ->
+    match !m with
+    | None ->
+        let res = f () in
+        m := Some res ;
+        res
+    | Some s -> s

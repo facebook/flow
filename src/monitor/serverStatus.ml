@@ -37,6 +37,7 @@ type event =
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
+| Canceling_progress of progress
 | Finishing_up of summary (* Server's finishing up typechecking or other work *)
 | Recheck_start (* The server is starting to recheck *)
 | Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
@@ -51,6 +52,7 @@ type typecheck_status =
 | Resolving_dependencies
 | Calculating_dependencies
 | Merging of progress
+| Canceling of progress
 | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
 | Collating_errors (* We sometimes collate errors during typecheck *)
 | Finishing_typecheck of summary (* haven't reached free state yet *)
@@ -81,6 +83,7 @@ type emoji =
 | Ghost
 | Open_book
 | Panda_face
+| Recycling_symbol
 | Sleeping_face
 | Smiling_face_with_mouth_open
 | Taco
@@ -94,6 +97,7 @@ let string_of_emoji = function
 | Ghost -> "\xF0\x9F\x91\xBB"
 | Open_book -> "\xF0\x9F\x93\x96"
 | Panda_face -> "\xF0\x9F\x90\xBC"
+| Recycling_symbol -> "\xE2\x99\xBB"
 | Sleeping_face -> "\xF0\x9F\x98\xB4"
 | Smiling_face_with_mouth_open -> "\xF0\x9F\x98\x83"
 | Taco -> "\xF0\x9F\x8C\xAE"
@@ -124,6 +128,8 @@ let string_of_event = function
 | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
 | Merging_progress progress ->
   spf "Merging_progress %s" (string_of_progress progress)
+| Canceling_progress progress ->
+  spf "Canceling_progress %s" (string_of_progress progress)
 | Finishing_up _ -> "Finishing_up"
 | Recheck_start -> "Recheck_start"
 | Handling_request_start -> "Handling_request_start"
@@ -145,6 +151,9 @@ let string_of_typecheck_status ~use_emoji = function
   spf "%scalculating dependencies" (render_emoji ~use_emoji Taco)
 | Merging progress ->
   spf "%smerged files %s" (render_emoji ~use_emoji Bicyclist) (string_of_progress progress)
+| Canceling progress ->
+  spf "%scanceling workers %s"
+    (render_emoji ~use_emoji Recycling_symbol) (string_of_progress progress)
 | Garbage_collecting_typecheck ->
   spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
 | Collating_errors ->
@@ -190,6 +199,7 @@ let update ~event ~status =
   | Calculating_dependencies_progress, Typechecking (mode, _) ->
       Typechecking (mode, Calculating_dependencies)
   | Merging_progress progress, Typechecking (mode, _) -> Typechecking (mode, Merging progress)
+  | Canceling_progress progress, Typechecking (mode, _) -> Typechecking (mode, Canceling progress)
   | GC_start, Typechecking (mode, _) -> Typechecking (mode, Garbage_collecting_typecheck)
   | Collating_errors_start, Typechecking (mode, _) -> Typechecking (mode, Collating_errors)
   | Finishing_up summary, Typechecking (mode, _) -> Typechecking (mode, Finishing_typecheck summary)
@@ -222,9 +232,10 @@ let is_significant_transition old_status new_status =
   | Typechecking (old_mode, old_tc_status), Typechecking (new_mode, new_tc_status) ->
     (* A change in mode is always signifcant *)
     old_mode <> new_mode || begin match old_tc_status, new_tc_status with
-    (* Making progress within parsing or merging is not significant *)
+    (* Making progress within parsing, merging or canceling is not significant *)
     | Parsing _, Parsing _
-    | Merging _, Merging _ -> false
+    | Merging _, Merging _
+    | Canceling _, Canceling _ -> false
     (* But changing typechecking status always is significant *)
     | _, Starting_typecheck
     | _, Reading_saved_state
@@ -233,6 +244,7 @@ let is_significant_transition old_status new_status =
     | _, Resolving_dependencies
     | _, Calculating_dependencies
     | _, Merging _
+    | _, Canceling _
     | _, Garbage_collecting_typecheck
     | _, Collating_errors
     | _, Finishing_typecheck _ -> true
@@ -253,7 +265,8 @@ let get_progress status =
       Some (Printf.sprintf "%d/%d" finished total), Some finished, Some total in
   match status with
   | Typechecking (_, Parsing progress)
-  | Typechecking (_, Merging progress) -> print progress
+  | Typechecking (_, Merging progress)
+  | Typechecking (_, Canceling progress) -> print progress
   | _ -> None, None, None
 
 

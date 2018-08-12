@@ -340,7 +340,7 @@ let scan_for_lint_suppressions =
     in
     let severity_cover = ExactCover.bake severity_cover_builder in
     Context.add_severity_cover cx severity_cover;
-    Context.add_unused_lint_suppressions cx suppression_locs
+    Context.add_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx lint_severities file_options comments =
   let filename = File_key.to_string (Context.file cx) in

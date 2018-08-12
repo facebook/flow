@@ -25,7 +25,7 @@ class rename_mapper refs new_name = object(this)
     else
       expr
 
-  method! object_property_type (opt: Loc.t Ast.Type.Object.Property.t) =
+  method! object_property_type (opt: (Loc.t, Loc.t) Ast.Type.Object.Property.t) =
     let open Ast.Type.Object.Property in
     let opt = super#object_property_type opt in
     let loc, ({key; _} as property) = opt in
@@ -39,7 +39,7 @@ class rename_mapper refs new_name = object(this)
     in
     if key == key' then opt else (loc, { property with key=key' })
 
-  method! pattern_object_property ?kind (prop: Loc.t Ast.Pattern.Object.Property.t') =
+  method! pattern_object_property ?kind (prop: (Loc.t, Loc.t) Ast.Pattern.Object.Property.t') =
     let open Ast.Pattern.Object.Property in
     let { key; pattern; shorthand } = prop in
     if not shorthand then
@@ -68,7 +68,7 @@ class rename_mapper refs new_name = object(this)
         { key = key'; pattern = pattern'; shorthand = false }
     end
 
-  method! object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
+  method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
     let open Ast.Expression.Object.Property in
     match prop with
     | loc, Init { key; value; shorthand; } ->
@@ -100,7 +100,7 @@ class rename_mapper refs new_name = object(this)
     | _ -> super#object_property prop
 end
 
-let mapper_to_edits (ast_mapper: Flow_ast_mapper.mapper) (ast: Loc.t Ast.program) =
+let mapper_to_edits (ast_mapper: Flow_ast_mapper.mapper) (ast: (Loc.t, Loc.t) Ast.program) =
   let new_ast = ast_mapper#program ast in
   let changes = Flow_ast_differ.program ast new_ast in
   Ast_diff_printer.edits_of_changes changes

@@ -15,7 +15,7 @@ class property_access_searcher name = object(this)
       | _ -> ()
     end;
     super#member expr
-  method! object_key (key: Loc.t Ast.Expression.Object.Property.key) =
+  method! object_key (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in
     begin match key with
     | Identifier (_, x) when x = name ->
@@ -23,7 +23,7 @@ class property_access_searcher name = object(this)
     | _ -> ()
     end;
     super#object_key key
-  method! pattern_object_property ?kind (prop: Loc.t Ast.Pattern.Object.Property.t') =
+  method! pattern_object_property ?kind (prop: (Loc.t, Loc.t) Ast.Pattern.Object.Property.t') =
     let open Ast.Pattern.Object.Property in
     let { key; _ } = prop in
     begin match key with
@@ -32,12 +32,12 @@ class property_access_searcher name = object(this)
     | _ -> ()
     end;
     super#pattern_object_property ?kind prop
-  method! export_default_declaration loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
+  method! export_default_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t) =
     if name = "default" then begin
       this#set_acc true
     end;
     super#export_default_declaration loc decl
-  method! export_named_declaration loc (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
+  method! export_named_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.t) =
     let open Ast.Statement.ExportNamedDeclaration in
     let { declaration; _ } = decl in
     let open Ast.Statement in

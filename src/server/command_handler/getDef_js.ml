@@ -134,7 +134,7 @@ let getdef_get_result_from_hooks ~options cx state =
       let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
-        let filename = Module_js.get_file Expensive.warn (
+        let filename = Module_heaps.get_file Expensive.warn (
           Module_js.imported_module ~options
             ~node_modules_containers:!Files.node_modules_containers
             (Context.file cx) (Nel.one require_loc) name
@@ -187,41 +187,38 @@ let getdef_unset_hooks () =
   Type_inference_hooks_js.reset_hooks ()
 
 let rec get_def ~options ~workers ~env ~profiling ~depth (file_input, line, col) =
-  (* Since we may call check contents repeatedly, we must prefix our timing keys *)
-  Profiling_js.with_timer_prefix_lwt profiling ~prefix:(spf "GetDef%d_" depth) ~f:(fun () ->
-    let filename = File_input.filename_of_file_input file_input in
-    let file = File_key.SourceFile filename in
-    let loc = Loc.make file line col in
-    let state = getdef_set_hooks loc in
-    let%lwt check_result =
-      File_input.content_of_file_input file_input
-      %>>= (fun content ->
-        Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+  let filename = File_input.filename_of_file_input file_input in
+  let file = File_key.SourceFile filename in
+  let loc = Loc.make file line col in
+  let state = getdef_set_hooks loc in
+  let%lwt check_result =
+    File_input.content_of_file_input file_input
+    %>>= (fun content ->
+      Types_js.basic_check_contents ~options ~workers ~env ~profiling content file
+    )
+  in
+  let%lwt getdef_result =
+    map_error ~f:(fun str -> str, None) check_result
+    %>>= (fun (cx, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
+      try_with_json (fun () -> Lwt.return (getdef_get_result ~options cx state loc))
+    ))
+  in
+  let result, json_object = split_result getdef_result in
+  getdef_unset_hooks ();
+  match result with
+  | Error e -> Lwt.return (Error e, json_object)
+  | Ok ok -> (match ok with
+    | Done loc -> Lwt.return (Ok loc, json_object)
+    | Chain (line, col) ->
+      let%lwt result, chain_json_object =
+        get_def ~options ~workers ~env ~profiling ~depth:(depth+1) (file_input, line, col) in
+      Lwt.return (match result with
+      | Error e -> Error e, json_object
+      | Ok loc' ->
+        (* Chaining can sometimes lead to a dead end, due to lack of type
+           information. In that case, fall back to the previous location. *)
+        if loc' = Loc.none
+        then (Ok loc, json_object)
+        else (Ok loc', chain_json_object)
       )
-    in
-    let%lwt getdef_result =
-      map_error ~f:(fun str -> str, None) check_result
-      %>>= (fun (cx, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-        try_with_json (fun () -> Lwt.return (getdef_get_result ~options cx state loc))
-      ))
-    in
-    let result, json_object = split_result getdef_result in
-    getdef_unset_hooks ();
-    match result with
-    | Error e -> Lwt.return (Error e, json_object)
-    | Ok ok -> (match ok with
-      | Done loc -> Lwt.return (Ok loc, json_object)
-      | Chain (line, col) ->
-        let%lwt result, chain_json_object =
-          get_def ~options ~workers ~env ~profiling ~depth:(depth+1) (file_input, line, col) in
-        Lwt.return (match result with
-        | Error e -> Error e, json_object
-        | Ok loc' ->
-          (* Chaining can sometimes lead to a dead end, due to lack of type
-             information. In that case, fall back to the previous location. *)
-          if loc' = Loc.none
-          then (Ok loc, json_object)
-          else (Ok loc', chain_json_object)
-        )
-      )
-  )
+    )

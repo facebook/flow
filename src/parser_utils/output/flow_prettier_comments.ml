@@ -16,9 +16,9 @@ module LocMap = Utils_js.LocMap
 
 module CommentAttachCandidate = struct
   type 'M t =
-    { preceding: 'M Ast.Statement.t option
-    ; enclosing: 'M Ast.Statement.t option
-    ; following: 'M Ast.Statement.t option }
+    { preceding: ('M, 'M) Ast.Statement.t option
+    ; enclosing: ('M, 'M) Ast.Statement.t option
+    ; following: ('M, 'M) Ast.Statement.t option }
 end
 
 let node_list_of_option ~f = Option.value_map ~default:[] ~f
@@ -38,7 +38,7 @@ let find_expression_index_for_node quasis ({Loc.start= {Loc.offset; _}; _}, _) =
 
 (* / comments.js#findExpressionIndexForComment *)
 (* comments.js#attach *)
-let rec attach_comments ((_, ss, cs): Loc.t Ast.program) :
+let rec attach_comments ((_, ss, cs): (Loc.t, Loc.t) Ast.program) :
     Js_layout_generator.comment_map =
   let comment_list, comment_ties =
     List.fold_left (attach_comment ss) ([], []) cs
@@ -57,7 +57,7 @@ let rec attach_comments ((_, ss, cs): Loc.t Ast.program) :
       LocMap.add loc comments_at_loc map )
     LocMap.empty comment_list
 
-and attach_comment (statements: Loc.t Ast.Statement.t list) (comments, ties)
+and attach_comment (statements: (Loc.t, Loc.t) Ast.Statement.t list) (comments, ties)
     comment =
   let attach_candidate = find_comment_attach statements comment in
   let attach_candidate_fixed =
@@ -94,7 +94,7 @@ and find_comment_attach statements (comment_pos, _) =
     {CommentAttachCandidate.preceding= None; enclosing= None; following= None}
 
 (* comments.js#getSortedChildNodes *)
-and get_children_nodes (statement: Loc.t Ast.Statement.t) =
+and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
   let _loc, stmt = statement in
   let open Ast.Statement in
   match stmt with
@@ -367,7 +367,7 @@ and get_children_nodes_member {Ast.Expression.Member._object; property; _} =
   @ get_children_nodes_expr _object
 
 and get_children_nodes_comprehension_block_list
-    (blocks: Loc.t Ast.Expression.Comprehension.Block.t list) =
+    (blocks: (Loc.t, Loc.t) Ast.Expression.Comprehension.Block.t list) =
   let open Ast.Expression.Comprehension in
   blocks
   |> List.map (fun (_, {Block.left; right; _}) ->
@@ -411,13 +411,13 @@ and get_children_nodes_jsx_child_list children =
          | Text _ -> [] )
   |> List.flatten
 
-and statement_of_expression (expression: Loc.t Ast.Expression.t) :
-    Loc.t Ast.Statement.t =
+and statement_of_expression (expression: (Loc.t, Loc.t) Ast.Expression.t) :
+    (Loc.t, Loc.t) Ast.Statement.t =
   let pos, _ = expression in
   Ast.Statement.(pos, Expression {Expression.expression; directive= None})
 
-and statement_list_of_expression (expression: Loc.t Ast.Expression.t) :
-    Loc.t Ast.Statement.t list =
+and statement_list_of_expression (expression: (Loc.t, Loc.t) Ast.Expression.t) :
+    (Loc.t, Loc.t) Ast.Statement.t list =
   [statement_of_expression expression]
 
 and statement_list_of_option = function Some x -> [x] | None -> []

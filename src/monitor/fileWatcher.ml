@@ -221,7 +221,8 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.server_options; file_watcher_debug; _; } = monitor_options in
+        let { FlowServerMonitorOptions.server_options; file_watcher_debug; _} =
+            monitor_options in
         let file_options = Options.file_options server_options in
 
         let watchman_expression_terms =
@@ -250,7 +251,9 @@ end = struct
            * watching all .flowconfigs instead of just our .flowconfig is fine *)
           let absolute_paths =
             (* Config file *)
-            let paths = [Server_files_js.config_file @@ Options.root server_options] in
+            let flowconfig_name = Options.flowconfig_name server_options in
+            let paths = [Server_files_js.config_file flowconfig_name @@ Options.root server_options]
+            in
             (* Module resolver *)
             Option.value_map (Options.module_resolver server_options)
               ~default:paths ~f:(fun module_resolver -> Path.to_string module_resolver :: paths)
@@ -285,7 +288,7 @@ end = struct
           subscription_prefix = "flow_watcher";
           roots = Files.watched_paths file_options;
           debug_logging = file_watcher_debug;
-        })
+        } ())
 
       method wait_for_init =
         let%lwt watchman = Option.value_exn init_thread in

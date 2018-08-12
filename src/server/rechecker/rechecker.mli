@@ -12,11 +12,25 @@ val process_updates :
   SSet.t ->
   Utils_js.FilenameSet.t
 
-val recheck:
+val recheck_single:
+  ?files_to_recheck:Utils_js.FilenameSet.t ->
+  ?files_to_focus:Utils_js.FilenameSet.t ->
   ServerEnv.genv ->
   ServerEnv.env ->
-  ?force_focus:bool ->
-  Utils_js.FilenameSet.t ->
-  (Profiling_js.finished option * ServerEnv.env) Lwt.t
+  (Profiling_js.finished * ServerEnv.env, ServerEnv.env) result Lwt.t
+
+val recheck_loop:
+  ?files_to_recheck:Utils_js.FilenameSet.t ->
+  ?files_to_focus:Utils_js.FilenameSet.t ->
+  ServerEnv.genv ->
+  ServerEnv.env ->
+  ServerEnv.env Lwt.t
+
+val run_but_cancel_on_file_changes:
+  ServerEnv.genv ->
+  ServerEnv.env ->
+  f:(unit -> 'a Lwt.t) ->
+  on_cancel:(unit -> 'a Lwt.t) ->
+  'a Lwt.t
 
 val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats

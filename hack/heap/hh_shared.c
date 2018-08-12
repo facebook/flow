@@ -553,6 +553,8 @@ CAMLprim value hh_stop_workers(void);
 
 CAMLprim value hh_resume_workers(void);
 
+CAMLprim value hh_check_should_exit(void);
+
 void check_should_exit(void);
 
 void hh_shared_store(value data);
@@ -1403,6 +1405,12 @@ void check_should_exit(void) {
     if (!exn) exn = caml_named_value("worker_should_exit");
     caml_raise_constant(*exn);
   }
+}
+
+CAMLprim value hh_check_should_exit (void) {
+  CAMLparam0();
+  check_should_exit();
+  CAMLreturn(Val_unit);
 }
 
 /*****************************************************************************/

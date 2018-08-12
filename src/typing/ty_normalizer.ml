@@ -1280,6 +1280,33 @@ end = struct
       in
       return (mk_fun ~tparams ~params (Ty.mk_maybe idxResult))
 
+    (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
+    | TypeAssertIs ->
+      let tparams = [ mk_tparam "TypeAssertT" ] in
+      let params = [ (Some "value", Ty.Top, non_opt_param) ] in
+      return (mk_fun ~tparams ~params Ty.Bool)
+
+    (*  var TypeAssertThrows: <TypeAssertT>(value: mixed) => TypeAssertT *)
+    | TypeAssertThrows ->
+      let tparams = [ mk_tparam "TypeAssertT" ] in
+      let params = [ (Some "value", Ty.Top, non_opt_param) ] in
+      let ret = Ty.builtin_t "TypeAssertT" in
+      return (mk_fun ~tparams ~params ret)
+
+    (* Result<T> = {success: true, value: T} | {success: false, error: string}
+      var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
+    | TypeAssertWraps ->
+      let tparams = [ mk_tparam "TypeAssertT" ] in
+      let params = [ (Some "value", Ty.Top, non_opt_param) ] in
+      let result_fail_ty = Ty.mk_object (Ty.mk_field_props [
+        ("success", Ty.BoolLit false, false); ("error", Ty.Str, false)
+      ]) in
+      let result_succ_ty = Ty.mk_object (Ty.mk_field_props [
+        ("success", Ty.BoolLit true, false); ("value", Ty.builtin_t "TypeAssertT", false)
+      ]) in
+      let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
+      return (mk_fun ~tparams ~params ret)
+
     (* debugPrint: (_: any[]) => void *)
     | DebugPrint -> return Ty.(
         mk_fun ~params:[
@@ -1359,6 +1386,33 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.generic_builtin_t "React$ElementFactory" [t]
     | Idx -> return (Ty.builtin_t "$Facebookism$Idx")
+    (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
+    | TypeAssertIs ->
+      let tparams = [ mk_tparam "TypeAssertT" ] in
+      let params = [ (Some "value", Ty.Top, non_opt_param) ] in
+      return (mk_fun ~tparams ~params Ty.Bool)
+
+    (*  var TypeAssertThrows: <TypeAssertT>(value: mixed) => TypeAssertT *)
+    | TypeAssertThrows ->
+      let tparams = [ mk_tparam "TypeAssertT" ] in
+      let params = [ (Some "value", Ty.Top, non_opt_param) ] in
+      let ret = Ty.builtin_t "TypeAssertT" in
+      return (mk_fun ~tparams ~params ret)
+
+    (* Result<T> = {success: true, value: T} | {success: false, error: string}
+      var TypeAssertWraps: <TypeAssertT>(value: mixed) => Result<TypeAssertT> *)
+    | TypeAssertWraps ->
+      let tparams = [ mk_tparam "TypeAssertT" ] in
+      let params = [ (Some "value", Ty.Top, non_opt_param) ] in
+      let result_fail_ty = Ty.mk_object (Ty.mk_field_props [
+        ("success", Ty.BoolLit false, false); ("error", Ty.Str, false)
+      ]) in
+      let result_succ_ty = Ty.mk_object (Ty.mk_field_props [
+        ("success", Ty.BoolLit true, false); ("value", Ty.builtin_t "TypeAssertT", false)
+      ]) in
+      let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
+      return (mk_fun ~tparams ~params ret)
+
     | DebugPrint -> return (Ty.builtin_t "$Flow$DebugPrint")
     | DebugThrow -> return (Ty.builtin_t "$Flow$DebugThrow")
     | DebugSleep -> return (Ty.builtin_t "$Flow$DebugSleep")

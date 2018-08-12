@@ -72,7 +72,7 @@ open Utils_js
        the value is the subset of files which require that module directly
    (3) a subset of those files that phantom depend on root_fileset
  *)
-let dependent_calc_utils workers fileset root_fileset = Module_js.(
+let dependent_calc_utils workers fileset root_fileset = Module_heaps.(
   let root_fileset = FilenameSet.fold (fun f root_fileset ->
     match f with
       | File_key.SourceFile s
@@ -84,7 +84,9 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun utils f ->
     let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
-    let required = Modulename.Set.of_list (SMap.values resolved_requires.resolved_modules) in
+    let required = Modulename.Set.of_list
+      (SMap.values resolved_requires.resolved_modules)
+    in
     let info = get_info_unsafe ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
        in calc_all_dependents.
@@ -207,31 +209,30 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
    savings in init and recheck times). *)
 
 
-let checked_module ~audit m = Module_js.(
-  m |> get_file_unsafe ~audit |> checked_file ~audit
-)
+let checked_module ~audit m =
+  m |> Module_heaps.get_file_unsafe ~audit |> Module_js.checked_file ~audit
 
 (* A file is considered to implement a required module r only if the file is
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~audit r = Module_js.(
-  if module_exists r && checked_module ~audit r
-  then Some (get_file_unsafe ~audit r)
+let implementation_file ~audit r =
+  if Module_heaps.module_exists r && checked_module ~audit r
+  then Some (Module_heaps.get_file_unsafe ~audit r)
   else None
-)
 
-let file_dependencies ~audit file = Module_js.(
-  let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+let file_dependencies ~audit file =
+  let file_sig = Parsing_heaps.get_file_sig_unsafe file in
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
-  let { resolved_modules; _ } = get_resolved_requires_unsafe ~audit file in
+  let { Module_heaps.resolved_modules; _ } =
+    Module_heaps.get_resolved_requires_unsafe ~audit file
+  in
   SMap.fold (fun mref _ files ->
     let m = SMap.find_unsafe mref resolved_modules in
     match implementation_file m ~audit:Expensive.ok with
     | Some f -> FilenameSet.add f files
     | None -> files
   ) require_loc FilenameSet.empty
-)
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)

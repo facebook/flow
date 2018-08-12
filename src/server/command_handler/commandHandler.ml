@@ -193,7 +193,7 @@ let find_module ~options (moduleref, filename) =
   let module_name = Module_js.imported_module
     ~options ~node_modules_containers:!Files.node_modules_containers
     file (Nel.one loc) moduleref in
-  Module_js.get_file ~audit:Expensive.warn module_name
+  Module_heaps.get_file ~audit:Expensive.warn module_name
 
 let gen_flow_files ~options env files =
   let errors, warnings, _ = ErrorCollator.get env in
@@ -216,7 +216,7 @@ let gen_flow_files ~options env files =
           | File_input.FileName fn ->
             let file = File_key.SourceFile fn in
             let checked =
-              let open Module_js in
+              let open Module_heaps in
               match get_info file ~audit:Expensive.warn with
               | Some info -> info.checked
               | None -> false
@@ -290,19 +290,19 @@ let module_name_of_string ~options module_name_str =
 let get_imports ~options module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Module_js.get_file ~audit:Expensive.warn module_name with
+    match Module_heaps.get_file ~audit:Expensive.warn module_name with
     | Some file ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
        * are not kept track of. To avoid confusing results we notify the
        * client that these modules have not been processed.
        *)
-      let { Module_js.checked; _ } =
-        Module_js.get_info_unsafe ~audit:Expensive.warn file in
+      let { Module_heaps.checked; _ } =
+        Module_heaps.get_info_unsafe ~audit:Expensive.warn file in
       if checked then
-        let { Module_js.resolved_modules; _ } =
-          Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
-        let fsig = Parsing_service_js.get_file_sig_unsafe file in
+        let { Module_heaps.resolved_modules; _ } =
+          Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.warn file in
+        let fsig = Parsing_heaps.get_file_sig_unsafe file in
         let requires = File_sig.(require_loc_map fsig.module_sig) in
         let mlocs = SMap.fold (fun mref locs acc ->
           let m = SMap.find_unsafe mref resolved_modules in
@@ -327,7 +327,7 @@ let save_state ~saved_state_filename ~genv ~env =
     Lwt.return (Ok ())
   )
 
-let handle_ephemeral_unsafe
+let handle_ephemeral_deferred_unsafe
   genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
   let env = ref env in
   let respond msg =
@@ -340,7 +340,7 @@ let handle_ephemeral_unsafe
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
-    Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.AUTOCOMPLETE fn ->
           let%lwt result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
@@ -383,14 +383,8 @@ let handle_ephemeral_unsafe
             find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
           ServerProt.Response.FIND_REFS result |> respond;
           Lwt.return json_data
-      | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
-          (* If we're not profiling the recheck, then respond immediately *)
-          if not profile then respond (ServerProt.Response.FORCE_RECHECK None);
-          let updates = Rechecker.process_updates genv !env (SSet.of_list files) in
-          let%lwt profiling, new_env = Rechecker.recheck genv !env ~force_focus:focus updates in
-          env := new_env;
-          if profile then respond (ServerProt.Response.FORCE_RECHECK profiling);
-          Lwt.return None
+      | ServerProt.Request.FORCE_RECHECK _ ->
+          failwith "force-recheck cannot be deferred"
       | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
           let options = { options with Options.
             opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
@@ -470,14 +464,14 @@ let handle_ephemeral_unsafe
   MonitorRPC.status_update ~event;
   Lwt.return (!env, profiling, json_data)
 
-let handle_ephemeral genv env (request_id, command) =
+let wrap_ephemeral_handler handler genv arg (request_id, command) =
   try%lwt
-    let%lwt env, profiling, json_data = handle_ephemeral_unsafe genv env (request_id, command) in
+    let%lwt ret, profiling, json_data = handler genv arg (request_id, command) in
     FlowEventLogger.ephemeral_command_success
       ?json_data
       ~client_context:command.ServerProt.Request.client_logging_context
       ~profiling;
-    Lwt.return env
+    Lwt.return ret
   with exn ->
     let backtrace = String.trim (Printexc.get_backtrace ()) in
     let exn_str = Printf.sprintf
@@ -493,9 +487,103 @@ let handle_ephemeral genv env (request_id, command) =
       ~client_context:command.ServerProt.Request.client_logging_context
       ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
     MonitorRPC.request_failed ~request_id ~exn_str;
-    Lwt.return env
+    Lwt.return arg
+let handle_ephemeral_deferred = wrap_ephemeral_handler handle_ephemeral_deferred_unsafe
 
+let should_handle_immediately { ServerProt.Request.client_logging_context=_; command; } =
+  match command with
+    | ServerProt.Request.FORCE_RECHECK _ ->
+      true
 
+    | ServerProt.Request.AUTOCOMPLETE _
+    | ServerProt.Request.CHECK_FILE _
+    | ServerProt.Request.COVERAGE _
+    | ServerProt.Request.CYCLE _
+    | ServerProt.Request.DUMP_TYPES _
+    | ServerProt.Request.FIND_MODULE _
+    | ServerProt.Request.FIND_REFS _
+    | ServerProt.Request.GEN_FLOW_FILES _
+    | ServerProt.Request.GET_DEF _
+    | ServerProt.Request.GET_IMPORTS _
+    | ServerProt.Request.INFER_TYPE _
+    | ServerProt.Request.PORT _
+    | ServerProt.Request.REFACTOR _
+    | ServerProt.Request.STATUS _
+    | ServerProt.Request.SUGGEST _
+    | ServerProt.Request.SAVE_STATE _ ->
+      false
+
+(* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
+ * `env` is NOT available, since we don't have the server's full attention *)
+let handle_ephemeral_immediately_unsafe
+    genv () (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
+  let respond msg =
+    MonitorRPC.respond_to_request ~request_id ~response:msg
+
+  in
+  Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
+  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+  let should_print_summary = Options.should_profile genv.options in
+  let%lwt profiling, json_data =
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
+      match command with
+      | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
+        let fileset = SSet.of_list files in
+          let push = ServerMonitorListenerState.(
+            if focus then push_files_to_focus else push_files_to_recheck
+          ) in
+
+          if profile
+          then begin
+            let wait_for_recheck_thread, wakener = Lwt.task () in
+            push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
+            let%lwt recheck_profiling = wait_for_recheck_thread in
+            respond (ServerProt.Response.FORCE_RECHECK recheck_profiling);
+            Option.iter recheck_profiling ~f:(fun recheck_profiling ->
+              Profiling_js.merge ~from:recheck_profiling ~into:profiling
+            );
+            Lwt.return None
+          end else begin
+            (* If we're not profiling the recheck, then respond immediately *)
+            respond (ServerProt.Response.FORCE_RECHECK None);
+            push fileset;
+            Lwt.return None
+          end
+      | ServerProt.Request.AUTOCOMPLETE _
+      | ServerProt.Request.CHECK_FILE _
+      | ServerProt.Request.COVERAGE _
+      | ServerProt.Request.CYCLE _
+      | ServerProt.Request.DUMP_TYPES _
+      | ServerProt.Request.FIND_MODULE _
+      | ServerProt.Request.FIND_REFS _
+      | ServerProt.Request.GEN_FLOW_FILES _
+      | ServerProt.Request.GET_DEF _
+      | ServerProt.Request.GET_IMPORTS _
+      | ServerProt.Request.INFER_TYPE _
+      | ServerProt.Request.PORT _
+      | ServerProt.Request.REFACTOR _
+      | ServerProt.Request.STATUS _
+      | ServerProt.Request.SUGGEST _
+      | ServerProt.Request.SAVE_STATE _ ->
+          failwith (spf "Command %s must be deferred" (ServerProt.Request.to_string command))
+    end
+  in
+  let event = ServerStatus.(Finishing_up {
+    duration = Profiling_js.get_profiling_duration profiling;
+    info = CommandSummary (ServerProt.Request.to_string command)}) in
+  MonitorRPC.status_update ~event;
+  Lwt.return ((), profiling, json_data)
+
+let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
+
+let handle_ephemeral genv (request_id, command) =
+  if should_handle_immediately command
+  then handle_ephemeral_immediately genv () (request_id, command)
+  else begin
+    ServerMonitorListenerState.push_new_workload
+      (fun env -> handle_ephemeral_deferred genv env (request_id, command));
+    Lwt.return_unit
+  end
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   begin match Persistent_connection.client_did_open env.connections client ~files with
@@ -695,7 +783,8 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
 
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
     let env = ref env in
-    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
+    let open Completion in
+    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc ~client in
     let fn_content = match file with
       | File_input.FileContent (fn, content) ->
         Ok (fn, content)
@@ -959,7 +1048,7 @@ let handle_persistent
   let should_print_summary = Options.should_profile genv.options in
   let wall_start = Unix.gettimeofday () in
 
-  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
+  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary
     (fun profiling ->
       try%lwt
         handle_persistent_unsafe genv env client profiling request
@@ -981,17 +1070,18 @@ let handle_persistent
     info = CommandSummary (string_of_request request)}) in
 
   let server_profiling = Some profiling in
+  let server_logging_context = Some (FlowEventLogger.get_context ()) in
 
   match result with
   | LspResponse (Ok (env, lsp_response, metadata)) ->
-    let metadata = {metadata with server_profiling} in
+    let metadata = {metadata with server_profiling; server_logging_context; } in
     let response = LspFromServer (lsp_response, metadata) in
     Persistent_connection.send_message response client;
     MonitorRPC.status_update ~event;
     Lwt.return env
 
   | LspResponse (Error (env, metadata)) ->
-    let metadata = {metadata with server_profiling} in
+    let metadata = {metadata with server_profiling; server_logging_context; } in
     let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
     let e = Failure reason in
     let lsp_response = match request with
@@ -1012,7 +1102,8 @@ let handle_persistent
   | IdeResponse (Ok (env, extra_data)) ->
     let request = json_of_request request |> Hh_json.json_to_string in
     let extra_data = keyvals_of_json extra_data in
-    FlowEventLogger.persistent_command_success ~extra_data
+    FlowEventLogger.persistent_command_success
+      ~server_logging_context:None ~extra_data
       ~persistent_context:None ~persistent_delay:None ~request ~client_context
       ~server_profiling ~client_duration:None ~wall_start ~error:None;
     MonitorRPC.status_update ~event;
@@ -1020,7 +1111,8 @@ let handle_persistent
 
   | IdeResponse (Error (env, (ExpectedError, reason, stack))) ->
     let request = json_of_request request |> Hh_json.json_to_string in
-    FlowEventLogger.persistent_command_success ~extra_data:[]
+    FlowEventLogger.persistent_command_success
+      ~server_logging_context:None ~extra_data:[]
       ~persistent_context:None ~persistent_delay:None ~request ~client_context
       ~server_profiling ~client_duration:None ~wall_start ~error:(Some (reason, stack));
     MonitorRPC.status_update ~event;
@@ -1028,7 +1120,8 @@ let handle_persistent
 
   | IdeResponse (Error (env, (UnexpectedError, reason, stack))) ->
     let request = json_of_request request |> Hh_json.json_to_string in
-    FlowEventLogger.persistent_command_failure ~extra_data:[]
+    FlowEventLogger.persistent_command_failure
+      ~server_logging_context:None ~extra_data:[]
       ~persistent_context:None ~persistent_delay:None ~request ~client_context
       ~server_profiling ~client_duration:None ~wall_start ~error:(reason, stack);
     Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request reason;

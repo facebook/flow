@@ -1025,6 +1025,9 @@ module rec TypeTerm : sig
 
   (* Facebookisms *)
   | Idx
+  | TypeAssertIs
+  | TypeAssertThrows
+  | TypeAssertWraps
 
   (* Internal tools *)
   | DebugPrint
@@ -2632,6 +2635,16 @@ end)
 module NullProtoT = Primitive (struct
   let desc = RNull
   let make r = NullProtoT r
+end)
+
+module AnyObjT = Primitive (struct
+  let desc = RAnyObject
+  let make r = DefT (r, AnyObjT)
+end)
+
+module AnyFunT = Primitive (struct
+  let desc = RAnyFunction
+  let make r = DefT (r, AnyFunT)
 end)
 
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise

@@ -7,16 +7,7 @@
 
 open Utils_js
 
-type resolved_requires = {
-  resolved_modules: Modulename.t SMap.t;
-  phantom_dependents: SSet.t;
-}
 
-type info = {
-  module_name: Modulename.t;
-  checked: bool;            (* in flow? *)
-  parsed: bool;             (* if false, it's a tracking record only *)
-}
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
@@ -47,28 +38,14 @@ val imported_module:
 val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t
 
-val module_exists: Modulename.t -> bool
-
-val get_file_unsafe: (Modulename.t -> File_key.t) Expensive.t
-
-(* given a module name, returns either (Some filename) or None *)
-val get_file: (Modulename.t -> File_key.t option) Expensive.t
-
-val is_tracked_file: File_key.t -> bool
-
-(* given a filename, returns resolved requires. unsafe *)
-val get_resolved_requires_unsafe: (File_key.t -> resolved_requires) Expensive.t
-
-(* given a filename, returns module info *)
-val get_info_unsafe: (File_key.t -> info) Expensive.t
-val get_info: (File_key.t -> info option) Expensive.t
-
 val checked_file: (File_key.t -> bool) Expensive.t
 
 (* add module records for given files;
    returns the set of modules added
 *)
 val introduce_files:
+  mutator:Module_heaps.Introduce_files_mutator.t ->
+  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
   parsed:File_key.t list ->
@@ -78,16 +55,19 @@ val introduce_files:
 (* remove module records being tracked for given files;
    returns the set of modules removed
 *)
-val clear_files:
+val calc_old_modules:
   MultiWorkerLwt.worker list option ->
+  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   options:Options.t ->
   FilenameSet.t ->
     (Modulename.t * File_key.t option) list Lwt.t
 
 (* repick providers for old and new modules *)
 val commit_modules:
-  MultiWorkerLwt.worker list option ->
+  transaction: Transaction.t ->
+  workers: MultiWorkerLwt.worker list option ->
   options: Options.t ->
+  is_init: bool ->
   FilenameSet.t ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)
     (File_key.t list *                   (* providers *)
@@ -95,31 +75,27 @@ val commit_modules:
     error list FilenameMap.t) Lwt.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires: (
+val add_parsed_resolved_requires:
+  mutator:Module_heaps.Resolved_requires_mutator.t ->
   options:Options.t ->
   node_modules_containers: SSet.t ->
   File_key.t ->
   Errors.ErrorSet.t
-) Expensive.t
 
-(* remove resolved requires from store *)
-val remove_batch_resolved_requires: FilenameSet.t -> unit
+val add_package: string -> (Loc.t, Loc.t) Ast.program -> unit
 
-val add_package: string -> Loc.t Ast.program -> unit
-
-val package_incompatible: string -> Loc.t Ast.program -> bool
+val package_incompatible: string -> (Loc.t, Loc.t) Ast.program -> bool
 
 (***************************************************)
 
 val clear_filename_cache: unit -> unit
 
 (* APIs mainly intended for saving and loading saved state *)
-val get_package_json_for_saved_state_unsafe: string -> Package_json.t
-val add_package_from_saved_state: string -> Package_json.t -> unit
-val add_resolved_requires_from_saved_state: (File_key.t -> resolved_requires -> unit) Expensive.t
 val introduce_files_from_saved_state:
+  mutator:Module_heaps.Introduce_files_mutator.t ->
+  all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   workers:MultiWorkerLwt.worker list option ->
   options: Options.t ->
-  parsed:(File_key.t * info) list ->
-  unparsed:(File_key.t * info) list ->
+  parsed:(File_key.t * Module_heaps.info) list ->
+  unparsed:(File_key.t * Module_heaps.info) list ->
     (Modulename.t * File_key.t option) list Lwt.t

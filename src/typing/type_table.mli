@@ -54,14 +54,18 @@ type t
 val create: unit -> t
 val set: t -> Loc.t -> Type.t -> unit
 val set_info: ?extra_tparams:tparam_env -> Loc.t -> type_entry -> t -> unit
+val set_targ: t -> Loc.t -> Type.t -> unit
 val fold_coverage: (Loc.t -> type_scheme -> 'a -> 'a) -> t -> 'a -> 'a
 val find_unsafe_coverage: t -> Loc.t -> type_scheme
 val find_unsafe_coverage_type: t -> Loc.t -> Type.t
+val find_unsafe_targ: t -> Loc.t -> type_scheme
 val reset: t -> unit
 val copy: t -> t
 val with_typeparams: Type.typeparam list -> t -> (unit -> 'a) -> 'a
 val find_type_info: pred:(Loc.t -> bool) -> t -> (Loc.t * scheme_entry) option
 val function_decl_loc : (Loc.t * 'a) option -> Loc.t -> Loc.t
 val coverage_to_list: t -> (Loc.t * type_scheme) list
+val targs_to_list: t -> (Loc.t * type_scheme) list
+val targs_hashtbl: t -> (Loc.t, type_scheme) Hashtbl.t
 val coverage_hashtbl: t -> (Loc.t, type_scheme) Hashtbl.t
 val type_info_hashtbl: t -> (Loc.t, scheme_entry) Hashtbl.t

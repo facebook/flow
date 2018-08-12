@@ -15,9 +15,9 @@ open Flow_ast_visitor
  *)
 
 type export_values =
-  | ExportFunction of { line_loc: Loc.t; func: (Loc.t * Loc.t Ast.Function.t) }
-  | ExportClass of { line_loc: Loc.t; class_: (Loc.t * Loc.t Ast.Class.t) }
-  | ExportExpression of { line_loc: Loc.t; expr: Loc.t Ast.Expression.t }
+  | ExportFunction of { line_loc: Loc.t; func: (Loc.t * (Loc.t, Loc.t) Ast.Function.t) }
+  | ExportClass of { line_loc: Loc.t; class_: (Loc.t * (Loc.t, Loc.t) Ast.Class.t) }
+  | ExportExpression of { line_loc: Loc.t; expr: (Loc.t, Loc.t) Ast.Expression.t }
 
 type module_exports = {
   default: export_values option;
@@ -34,9 +34,9 @@ type non_resolveable_export_reason =
   | ClobberedExport of { line_loc: Loc.t; }
 
 type ast_node =
-  | DefFunction of { line_loc: Loc.t; func: (Loc.t * Loc.t Ast.Function.t) }
-  | DefClass of { line_loc: Loc.t; class_: (Loc.t * Loc.t Ast.Class.t) }
-  | DefExpression of { line_loc: Loc.t; expr: Loc.t Ast.Expression.t }
+  | DefFunction of { line_loc: Loc.t; func: (Loc.t * (Loc.t, Loc.t) Ast.Function.t) }
+  | DefClass of { line_loc: Loc.t; class_: (Loc.t * (Loc.t, Loc.t) Ast.Class.t) }
+  | DefExpression of { line_loc: Loc.t; expr: (Loc.t, Loc.t) Ast.Expression.t }
 
 let empty_module_exports = {
   default = None;
@@ -111,11 +111,11 @@ class exports_resolver ~ast = object(this)
   (* TODO: Report non-resolvable exports, currently they are dropped *)
     ()
 
-  method! declare_module _loc (m: Loc.t Ast.Statement.DeclareModule.t) =
+  method! declare_module _loc (m: (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) =
     (* Don't walk into declare modules since they can define their own exports *)
     m
 
-  method! statement (stmt: Loc.t Ast.Statement.t) =
+  method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     let open Ast.Statement in
     match stmt with
     | loc, Expression { Expression.
@@ -127,7 +127,7 @@ class exports_resolver ~ast = object(this)
     (* No need to walk anything else *)
     | _ -> stmt
 
-  method private assignment_with_loc (line_loc: Loc.t) (expr: Loc.t Ast.Expression.Assignment.t) =
+  method private assignment_with_loc (line_loc: Loc.t) (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
     let open Ast.Expression in
     let { Assignment.operator; left; right } = expr in
 
@@ -181,7 +181,7 @@ class exports_resolver ~ast = object(this)
 
     | _ -> ()
 
-  method private process_default_export (line_loc: Loc.t) (expr: Loc.t Ast.Expression.t) =
+  method private process_default_export (line_loc: Loc.t) (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     match expr with
     | _, Identifier (loc, _) ->
@@ -216,7 +216,7 @@ class exports_resolver ~ast = object(this)
     | _ ->
       this#set_cjs_default_export (ExportExpression { line_loc; expr })
 
-  method private process_named_export (line_loc: Loc.t) (name: string option) (expr: Loc.t Ast.Expression.t) =
+  method private process_named_export (line_loc: Loc.t) (name: string option) (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     match expr with
     | _, Identifier (loc, _) ->
@@ -245,7 +245,7 @@ class exports_resolver ~ast = object(this)
     | _ ->
       this#add_cjs_named_export name (ExportExpression { line_loc; expr })
 
-  method private process_object_property_export (prop: Loc.t Ast.Expression.Object.property) =
+  method private process_object_property_export (prop: (Loc.t, Loc.t) Ast.Expression.Object.property) =
     let open Ast.Expression.Object in
     match prop with
     | Property (line_loc, Property.Init { key; value; shorthand = _ }) ->
@@ -268,7 +268,7 @@ class exports_resolver ~ast = object(this)
     | SpreadProperty (line_loc, _) ->
       this#add_non_resolveable_export (DynamicExport { line_loc; name = None })
 
-  method private process_class_static_property_export (el: Loc.t Ast.Class.Body.element) =
+  method private process_class_static_property_export (el: (Loc.t, Loc.t) Ast.Class.Body.element) =
     let open Ast.Class in
     match el with
     | Body.Method (line_loc, { Method.static = true; key; value = func; kind = Method.Method; _ }) ->
@@ -288,7 +288,7 @@ class exports_resolver ~ast = object(this)
 
     | _ -> ()
 
-  method private get_object_property_key_name (key: Loc.t Ast.Expression.Object.Property.key) =
+  method private get_object_property_key_name (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in
     match key with
     (* Normal key *)
@@ -305,7 +305,7 @@ class exports_resolver ~ast = object(this)
     (* Anything else *)
     | _ -> None
 
-  method private get_member_property_name (key: Loc.t Ast.Expression.Member.property) =
+  method private get_member_property_name (key: (Loc.t, Loc.t) Ast.Expression.Member.property) =
     let open Ast.Expression.Member in
     match key with
     (* Normal key *)

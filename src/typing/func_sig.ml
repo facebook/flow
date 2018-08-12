@@ -15,7 +15,7 @@ type kind =
   | Async
   | Generator
   | AsyncGenerator
-  | FieldInit of Loc.t Ast.Expression.t
+  | FieldInit of (Loc.t, Loc.t) Ast.Expression.t
   | Predicate
   | Ctor
 
@@ -25,7 +25,7 @@ type t = {
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
-  body: Loc.t Ast.Function.body option;
+  body: (Loc.t, Loc.t) Ast.Function.body option;
   return_t: Type.t;
 }
 
@@ -191,7 +191,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
     (* add default value as lower bound, if provided *)
     Option.iter ~f:(fun default ->
       let default_t = Flow.mk_default cx reason default
-        ~expr:(fun cx e -> fst (expr cx e)) in
+        ~expr:(fun cx e -> snd (fst (expr cx e))) in
       Flow.flow_t cx (default_t, t)
     ) default;
     (* add to scope *)
@@ -237,8 +237,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
   let statements, reconstruct_body = Ast.Statement.(
     match body with
     | None -> [], Fn.const None
-    | Some (Ast.Function.BodyBlock (_, { Block.body })) ->
-      body, (fun body -> Some (Ast.Function.BodyBlock ((), { Block.body })))
+    | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
+      body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body })))
     | Some (Ast.Function.BodyExpression expr) ->
       [fst expr, Return {Return.argument = Some expr}],
       (function
@@ -314,8 +314,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let use_op = Frame (ImplicitTypeParam (loc_of_t return_t), use_op) in
       use_op, t, None
     | FieldInit e ->
-      let t, ast = expr cx e in
-      unknown_use, t, Some ((), ast)
+      let (_, t), _ as ast = expr cx e in
+      unknown_use, t, Some ast
     | Predicate ->
       let loc = loc_of_reason reason in
       Flow_js.add_output cx

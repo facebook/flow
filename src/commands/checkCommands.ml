@@ -57,6 +57,7 @@ module CheckCommand = struct
     doc = "Does a full Flow check and prints the results";
     args = CommandSpec.ArgSpec.(
         empty
+        |> base_flags
         |> error_flags
         |> flag "--include-suppressed" no_arg
           ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
@@ -76,22 +77,23 @@ module CheckCommand = struct
   }
 
   let main
-      error_flags include_suppressed options_flags json pretty json_version
+      base_flags error_flags include_suppressed options_flags json pretty json_version
       shm_flags ignore_version from path_opt
       () =
 
-    let root = CommandUtils.guess_root path_opt in
-    let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
+    let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+    let root = CommandUtils.guess_root flowconfig_name path_opt in
+    let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+    let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode:None ~root options_flags in
 
-    if Options.should_profile options
+    if Options.should_profile options && not Sys.win32
     then begin
       Flow_server_profile.init ();
       let rec sample_processor_info () =
         Flow_server_profile.processor_sample ();
         Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
       in
-      sample_processor_info ()
+      sample_processor_info ();
     end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
@@ -127,6 +129,7 @@ module FocusCheckCommand = struct
       "and prints the results";
     args = CommandSpec.ArgSpec.(
         empty
+        |> base_flags
         |> error_flags
         |> flag "--include-suppressed" no_arg
           ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
@@ -151,20 +154,21 @@ module FocusCheckCommand = struct
   }
 
   let main
-      error_flags include_suppressed options_flags json pretty json_version
+      base_flags error_flags include_suppressed options_flags json pretty json_version
       shm_flags ignore_version from root input_file filenames
       () =
 
     let filenames = get_filenames_from_input input_file filenames in
 
+    let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     (* If --root is explicitly set, then use that as the root. Otherwise, use the first file *)
-    let root = CommandUtils.guess_root (
+    let root = CommandUtils.guess_root flowconfig_name (
       if root <> None
       then root
       else match filenames with [] -> None | x::_ -> Some x
     ) in
-    let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
+    let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+    let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode:None ~root options_flags in
 
     (* initialize loggers before doing too much, especially anything that might exit *)
     LoggingUtils.init_loggers ~from ~options ();

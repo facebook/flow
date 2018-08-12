@@ -8,10 +8,10 @@
 exception Combine_inconsistency
 
 type node =
-  | Statement of Loc.t Ast.Statement.t * Loc.t Ast.Statement.t
-  | Expression of Loc.t Ast.Expression.t * Loc.t Ast.Expression.t
-  | ClassElement of Loc.t Ast.Class.Body.element * Loc.t Ast.Class.Body.element
-  | Type of Loc.t Ast.Type.t * Loc.t Ast.Type.t
+  | Statement of (Loc.t, Loc.t) Ast.Statement.t * (Loc.t, Loc.t) Ast.Statement.t
+  | Expression of (Loc.t, Loc.t) Ast.Expression.t * (Loc.t, Loc.t) Ast.Expression.t
+  | ClassElement of (Loc.t, Loc.t) Ast.Class.Body.element * (Loc.t, Loc.t) Ast.Class.Body.element
+  | Type of (Loc.t, Loc.t) Ast.Type.t * (Loc.t, Loc.t) Ast.Type.t
 
 type t = node Utils_js.LocMap.t
 
@@ -22,7 +22,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
   object (_this)
     inherit Flow_ast_mapper.mapper as super
     val m = m
-    method! statement (stmt: Loc.t Ast.Statement.t) =
+    method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
       let stmt = super#statement stmt in
       let (loc_pre, _) = stmt in
       let size_pre = L.cardinal !s in
@@ -31,7 +31,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (Statement (stmt, mapped)) !s ;
         mapped )
       else stmt
-    method! expression (expr: Loc.t Ast.Expression.t) =
+    method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
       let expr = super#expression expr in
       let (loc_pre, _) = expr in
       let size_pre = L.cardinal !s in
@@ -40,7 +40,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (Expression (expr, mapped)) !s ;
         mapped )
       else expr
-    method! class_element (elem: Loc.t Ast.Class.Body.element) =
+    method! class_element (elem: (Loc.t, Loc.t) Ast.Class.Body.element) =
       let elem = super#class_element elem in
       let loc_pre = match elem with
         | B.Method (loc, _) -> loc
@@ -53,7 +53,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (ClassElement (elem, mapped)) !s ;
         mapped )
       else elem
-    method! type_ (t: Loc.t Ast.Type.t) =
+    method! type_ (t: (Loc.t, Loc.t) Ast.Type.t) =
       let t = super#type_ t in
       let (loc_pre, _) = t in
       let size_pre = L.cardinal !s in

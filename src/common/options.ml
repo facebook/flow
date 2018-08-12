@@ -10,6 +10,11 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
+type file_watcher =
+| NoFileWatcher
+| DFind
+| Watchman
+
 type module_system =
   | Node
   | Haste
@@ -27,7 +32,7 @@ type jsx_mode =
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
-  | Jsx_pragma of (string * Loc.t Ast.Expression.t)
+  | Jsx_pragma of (string * (Loc.t, Loc.t) Ast.Expression.t)
 
   (**
    * Alternate mode for interpreting JSX syntax. The element name is treated
@@ -40,6 +45,7 @@ type t = {
   opt_all : bool;
   opt_debug : bool;
   opt_max_literal_length: int;
+  opt_enable_cancelable_rechecks: bool;
   opt_enable_const_params: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
@@ -50,6 +56,7 @@ type t = {
   opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
   opt_facebook_fbt: string option;
+  opt_flowconfig_name: string;
   opt_file_options: Files.options;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
@@ -70,6 +77,7 @@ type t = {
   opt_quiet : bool;
   opt_root : Path.t;
   opt_saved_state_load_script: string option;
+  opt_saved_state_no_fallback: bool;
   opt_strip_root : bool;
   opt_suppress_comments : Str.regexp list;
   opt_suppress_types : SSet.t;
@@ -84,6 +92,7 @@ type t = {
 
 let all opts = opts.opt_all
 let max_literal_length opts = opts.opt_max_literal_length
+let enable_cancelable_rechecks opts = opts.opt_enable_cancelable_rechecks
 let enable_const_params opts = opts.opt_enable_const_params
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
@@ -99,6 +108,7 @@ let haste_name_reducers opts = opts.opt_haste_name_reducers
 let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
 let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
+let flowconfig_name opts = opts.opt_flowconfig_name
 let file_options opts = opts.opt_file_options
 let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy_mode <> None
@@ -116,6 +126,8 @@ let no_saved_state opts = opts.opt_no_saved_state
 let root opts = opts.opt_root
 let facebook_fbt opts = opts.opt_facebook_fbt
 let saved_state_load_script opts = opts.opt_saved_state_load_script
+
+let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_include_warnings opts = opts.opt_include_warnings

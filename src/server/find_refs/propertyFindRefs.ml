@@ -21,7 +21,7 @@ let add_ref_kind kind = List.map (fun loc -> (kind, loc))
 class ['acc] object_key_visitor ~init = object(this)
   inherit ['acc] Flow_ast_visitor.visitor ~init as super
 
-  method! expression (exp: Loc.t Ast.Expression.t) =
+  method! expression (exp: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     begin match exp with
     | loc, Object x ->
@@ -30,7 +30,7 @@ class ['acc] object_key_visitor ~init = object(this)
     end;
     super#expression exp
 
-  method private visit_object_literal (loc: Loc.t) (obj: Loc.t Ast.Expression.Object.t) =
+  method private visit_object_literal (loc: Loc.t) (obj: (Loc.t, Loc.t) Ast.Expression.Object.t) =
     let open Ast.Expression.Object in
     let get_prop_key =
       let open Property in
@@ -45,7 +45,7 @@ class ['acc] object_key_visitor ~init = object(this)
 
   method private visit_object_key
       (_literal_loc: Loc.t)
-      (_key: Loc.t Ast.Expression.Object.Property.key) =
+      (_key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
     ()
 end
 
@@ -55,13 +55,13 @@ module ObjectKeyAtLoc : sig
    * enclosing object literal. This is because later, we need to figure out which types are related
    * to this object literal which is easier to do when we have the location of the actual object
    * literal than if we only had the location of a single key. *)
-  val get: Loc.t Ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
+  val get: (Loc.t, Loc.t) Ast.program -> Loc.t -> (Loc.t * Loc.t * string) option
 end = struct
   class object_key_finder target_loc = object(this)
     inherit [(Loc.t * Loc.t * string) option] object_key_visitor ~init:None
     method! private visit_object_key
         (literal_loc: Loc.t)
-        (key: Loc.t Ast.Expression.Object.Property.key) =
+        (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object in
       match key with
       | Property.Identifier (prop_loc, name) when Loc.contains prop_loc target_loc ->
@@ -77,13 +77,13 @@ end
 module LiteralToPropLoc : sig
   (* Returns a map from object_literal_loc to prop_loc, for all object literals which contain the
    * given property name. *)
-  val make: Loc.t Ast.program -> prop_name: string -> Loc.t LocMap.t
+  val make: (Loc.t, Loc.t) Ast.program -> prop_name: string -> Loc.t LocMap.t
 end = struct
   class locmap_builder prop_name = object(this)
     inherit [Loc.t LocMap.t] object_key_visitor ~init:LocMap.empty
     method! private visit_object_key
         (literal_loc: Loc.t)
-        (key: Loc.t Ast.Expression.Object.Property.key) =
+        (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object in
       match key with
       | Property.Identifier (prop_loc, name) when name = prop_name ->
@@ -255,6 +255,7 @@ type def_loc =
   | FoundClass of Loc.t Nel.t
   (* We found an object property. *)
   | FoundObject of Loc.t
+  | FoundUnion of def_loc Nel.t
   (* This means we resolved the receiver type but did not find the definition. If this happens
    * there must be a type error (which may be suppresssed) *)
   | NoDefFound
@@ -285,9 +286,12 @@ let debug_string_of_def_info = function
   | CJSExport loc ->
     spf "CJSExport (%s)" (Loc.to_string loc)
 
-let debug_string_of_def_loc = function
+let rec debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
   | FoundObject loc -> spf "FoundObject (%s)" (Loc.to_string loc)
+  | FoundUnion def_locs ->
+    Nel.to_list def_locs |> List.map debug_string_of_def_loc |> String.concat ", "
+    |> spf "FoundUnion (%s)"
   | NoDefFound -> "NoDefFound"
   | UnsupportedType -> "UnsupportedType"
   | AnyType -> "AnyType"
@@ -343,6 +347,7 @@ and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, stri
             in
             Ok (FoundClass lst)
         | FoundObject _ -> Error "A superclass should be a class, not an object"
+        | FoundUnion _ -> Error "A superclass should be a class, not a union"
         (* If the superclass does not have a definition for this method, or it is for some reason
          * not a class type, or we don't know its type, just return the location we already know
          * about. *)
@@ -362,6 +367,20 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
           | None -> NoDefFound
           | Some loc -> FoundObject loc
         end
+    | Success (DefT (_, UnionT rep)) ->
+        let union_members =
+          UnionRep.members rep
+          |> List.map (fun member -> extract_def_loc cx member name)
+          |> Result.all
+        in
+        union_members
+        >>= begin fun members ->
+          Nel.of_list members
+          |> Result.of_option ~error:"Union should have at least one member"
+        end
+        >>| begin fun members_nel ->
+          FoundUnion members_nel
+        end
     | Success _
     | FailureNullishType
     | FailureUnhandledType _ ->
@@ -371,24 +390,30 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
 
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
 let type_matches_locs cx ty prop_def_info name =
-  extract_def_loc cx ty name >>| function
-    | FoundClass ty_def_locs ->
-      prop_def_info |> Nel.exists begin function
-        | Object _ -> false
-        | Class loc ->
-          (* Only take the first extracted def loc -- that is, the one for the actual definition
-           * and not overridden implementations, and compare it to the list of def locs we are
-           * interested in *)
-          loc = Nel.hd ty_def_locs
-      end
-    | FoundObject loc ->
-      prop_def_info |> Nel.exists begin function
-      | Class _ -> false
-      | Object def_loc -> loc = def_loc
-      end
-    (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
-     * are references or not. For now we'll leave them out. *)
-    | NoDefFound | UnsupportedType | AnyType -> false
+  let rec def_loc_matches_locs = function
+  | FoundClass ty_def_locs ->
+    prop_def_info |> Nel.exists begin function
+      | Object _ -> false
+      | Class loc ->
+        (* Only take the first extracted def loc -- that is, the one for the actual definition
+         * and not overridden implementations, and compare it to the list of def locs we are
+         * interested in *)
+        loc = Nel.hd ty_def_locs
+    end
+  | FoundObject loc ->
+    prop_def_info |> Nel.exists begin function
+    | Class _ -> false
+    | Object def_loc -> loc = def_loc
+    end
+  | FoundUnion def_locs ->
+    def_locs
+    |> Nel.map def_loc_matches_locs
+    |> Nel.fold_left ( || ) false
+  (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
+   * are references or not. For now we'll leave them out. *)
+  | NoDefFound | UnsupportedType | AnyType -> false
+  in
+  extract_def_loc cx ty name >>| def_loc_matches_locs
 
 (* Takes the file key where the module reference appeared, as well as the module reference, and
  * returns the file name for the module that the module reference refers to. *)
@@ -398,7 +423,7 @@ let file_key_of_module_ref file_key module_ref =
     file_key
     module_ref
   in
-  Module_js.get_file ~audit:Expensive.warn resolved
+  Module_heaps.get_file ~audit:Expensive.warn resolved
 
 let process_prop_refs cx potential_refs file_key prop_def_info name =
   potential_refs |>
@@ -437,7 +462,7 @@ let property_find_refs_in_file options ast_info file_key def_info name =
     Ok local_defs
   else begin
     set_get_refs_hook potential_refs potential_matching_literals name;
-    let cx = Merge_service.merge_contents_context_without_ensure_checked_dependencies
+    let cx = Merge_service.merge_contents_context
       options file_key ast info file_sig
     in
     unset_hooks ();
@@ -612,6 +637,7 @@ let find_related_defs_in_file options name file =
       |> Nel.to_list
       |> List.map (fun class_loc -> (Class class_loc, Object obj_loc))
     | _ -> []
+    (* TODO union types *)
     end
   in
   let related_types: (Type.t * Type.t) list ref = ref [] in
@@ -622,7 +648,7 @@ let find_related_defs_in_file options name file =
   Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
     get_ast_result file >>| fun (ast, file_sig, docblock) ->
-    Merge_service.merge_contents_context_without_ensure_checked_dependencies
+    Merge_service.merge_contents_context
       options file ast docblock file_sig
   in
   unset_hooks ();
@@ -723,12 +749,19 @@ let def_info_of_typecheck_results cx props_access_info =
     Nel.map (fun loc -> Class loc) locs
   in
   let def_info_of_type name ty =
-    extract_def_loc cx ty name >>| function
-      | FoundClass locs -> Some (def_info_of_class_member_locs locs)
-      | FoundObject loc -> Some (Nel.one (Object loc))
-      | NoDefFound
-      | UnsupportedType
-      | AnyType -> None
+    let rec def_info_of_def_loc = function
+    | FoundClass locs -> Some (def_info_of_class_member_locs locs)
+    | FoundObject loc -> Some (Nel.one (Object loc))
+    | FoundUnion def_locs ->
+      def_locs
+      |> Nel.map def_info_of_def_loc
+      |> Nel.cat_maybes
+      |> Option.map ~f:Nel.concat
+    | NoDefFound
+    | UnsupportedType
+    | AnyType -> None
+    in
+    extract_def_loc cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
     | None -> Ok None
@@ -746,6 +779,7 @@ let def_info_of_typecheck_results cx props_access_info =
           extract_instancet cx ty >>= fun ty ->
           begin extract_def_loc_resolved cx ty name >>= function
             | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
+            | FoundUnion _
             | FoundObject _ -> Error "Expected to extract class def info from a class"
             | _ -> Error "Unexpectedly failed to extract definition from known type"
           end
@@ -792,9 +826,11 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
   let%lwt cx =
     set_def_loc_hook props_access_info literal_key_info loc;
     let%lwt cx = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
-      let ensure_checked =
-        Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env in
-      Merge_service.merge_contents_context options file_key ast info file_sig ensure_checked
+      let%lwt () =
+        Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env file_key file_sig
+      in
+      Lwt.return @@
+        Merge_service.merge_contents_context options file_key ast info file_sig
     ) in
     Lwt.return cx
   in
@@ -817,7 +853,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
         | Ok None ->
           let external_file_sig =
             let filename = file_key_of_module_ref file_key module_ref in
-            Option.bind filename Parsing_service_js.get_file_sig
+            Option.bind filename Parsing_heaps.get_file_sig
           in
           Result.return @@ Option.bind external_file_sig begin fun external_file_sig ->
             match external_file_sig.module_sig.module_kind with

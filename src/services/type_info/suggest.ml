@@ -55,7 +55,7 @@ class visitor ~cxs = object(this)
     | Some (Error err) -> this#warn loc (NormalizerError err)
     | None -> this#warn loc MissingFromTypeTables
 
-  method! expression (expr: Loc.t Ast.Expression.t) =
+  method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     match super#expression expr with
     | loc, Function x ->
@@ -64,14 +64,14 @@ class visitor ~cxs = object(this)
       Flow_ast_mapper.id (this#arrow_return loc) x expr  (fun x -> loc, ArrowFunction x)
     | expr -> expr
 
-  method! statement (stmt: Loc.t Ast.Statement.t) =
+  method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     let open Ast.Statement in
     match super#statement stmt with
     | (loc, FunctionDeclaration x) ->
       Flow_ast_mapper.id (this#function_return loc) x stmt (fun x -> loc, FunctionDeclaration x)
     | stmt -> stmt
 
-  method! object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
+  method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
     let open Ast.Expression.Object.Property in
     let prop = super#object_property prop in
     match prop with
@@ -88,7 +88,7 @@ class visitor ~cxs = object(this)
       else (loc, Method { meth with value = (fn_loc, fn') })
     | _ -> prop
 
-  method! class_method (meth: Loc.t Ast.Class.Method.t') =
+  method! class_method (meth: (Loc.t, Loc.t) Ast.Class.Method.t') =
     let open Ast.Class.Method in
     let open Ast.Expression.Object.Property in
     let meth = super#class_method meth in
@@ -99,7 +99,7 @@ class visitor ~cxs = object(this)
       { meth with value = (loc, func') }
     | _ -> meth
 
-  method! function_param_pattern (expr: Loc.t Ast.Pattern.t) =
+  method! function_param_pattern (expr: (Loc.t, Loc.t) Ast.Pattern.t) =
     let open Ast.Pattern in
     let (loc, patt) = expr in
     let patt' = match patt with

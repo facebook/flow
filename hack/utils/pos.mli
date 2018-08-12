@@ -63,6 +63,8 @@ val json : absolute -> Hh_json.json
 (* This returns a half-open interval. *)
 val multiline_json : absolute -> Hh_json.json
 
+val line_beg_offset : t -> int * int * int
+
 val inside : 'a pos -> int -> int -> bool
 
 val exactly_matches_range :
@@ -93,6 +95,8 @@ val last_char : t -> t
 val first_char_of_line : t -> t
 
 val to_absolute : t -> absolute
+
+val to_relative: absolute -> t
 
 val to_relative_string : t -> string pos
 

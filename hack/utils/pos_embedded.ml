@@ -70,12 +70,24 @@ let info_pos p =
     let start = start_minus1 + 1 in
     let end_offset = File_pos_small.offset pos_end in
     let end_ = end_offset - bol in
+    (* To represent the empty interval, pos_start and pos_end are equal because
+      end_offset is exclusive. Here, it's best for error messages to the user if
+      we print characters N to N (highlighting a single character) rather than characters
+      N to (N-1), which is very unintuitive.
+    *)
+    let end_ = if start = end_ + 1 then start else end_ in
     line, start, end_
   | Pos_large { pos_start; pos_end; _ } ->
     let line, start_minus1, bol = File_pos_large.line_column_beg pos_start in
     let start = start_minus1 + 1 in
     let end_offset = File_pos_large.offset pos_end in
     let end_ = end_offset - bol in
+    (* To represent the empty interval, pos_start and pos_end are equal because
+      end_offset is exclusive. Here, it's best for error messages to the user if
+      we print characters N to N (highlighting a single character) rather than characters
+      N to (N-1), which is very unintuitive.
+    *)
+    let end_ = if start = end_ + 1 then start else end_ in
     line, start, end_
 
 (* This returns a closed interval. *)
@@ -245,6 +257,8 @@ let set_file pos_file pos =
 let to_absolute p =
   set_file (Relative_path.to_absolute (filename p)) p
 
+let to_relative p =
+  set_file (Relative_path.create_detect_prefix (filename p)) p
 
 let btw x1 x2 =
   if filename x1 <> filename x2

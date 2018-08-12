@@ -556,9 +556,7 @@ let bind_declare_fun =
       let scope = peek_scope () in
       match Scope.get_entry name scope with
       | None ->
-        let entry =
-          Entry.new_var t ~loc ~state:State.Initialized
-        in
+        let entry = Entry.new_var t ~loc ~state:State.Initialized in
         Scope.add_entry name entry scope
 
       | Some prev ->
@@ -569,7 +567,7 @@ let bind_declare_fun =
           let entry = Value { v with
             value_state = State.Initialized;
             specific = update_type v.specific t;
-            general = update_type v.general t
+            general = update_type v.general t;
           } in
           Scope.add_entry name entry scope
 

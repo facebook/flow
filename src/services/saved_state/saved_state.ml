@@ -12,14 +12,16 @@ open Utils_js
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
-  info: Module_js.info;
+  info: Module_heaps.info;
   file_sig: File_sig.t;
-  resolved_requires: Module_js.resolved_requires;
+  resolved_requires: Module_heaps.resolved_requires;
+  hash: Xx.hash;
 }
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
-  unparsed_info: Module_js.info;
+  unparsed_info: Module_heaps.info;
+  unparsed_hash: Xx.hash;
 }
 
 (* This is the complete saved state data representation *)
@@ -113,9 +115,9 @@ end = struct
 
   let normalize_info ~root info =
     let module_name =
-      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_js.module_name
+      modulename_map_fn ~f:(normalize_file_key ~root) info.Module_heaps.module_name
     in
-    { info with Module_js.module_name }
+    { info with Module_heaps.module_name }
 
   let normalize_parsed_data ~root parsed_file_data =
     (* info *)
@@ -125,28 +127,37 @@ end = struct
     let file_sig = (new file_sig_normalizer root)#file_sig parsed_file_data.file_sig in
 
     (* resolved_requires *)
-    let { Module_js.resolved_modules; phantom_dependents } = parsed_file_data.resolved_requires in
+    let { Module_heaps.resolved_modules; phantom_dependents } =
+      parsed_file_data.resolved_requires
+    in
     let phantom_dependents = SSet.map (Files.relative_path root) phantom_dependents in
     let resolved_modules = SMap.map
       (modulename_map_fn ~f:(normalize_file_key ~root)) resolved_modules in
-    let resolved_requires = { Module_js.resolved_modules; phantom_dependents } in
+    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
-    { package = parsed_file_data.package; info; file_sig; resolved_requires }
+    {
+      package = parsed_file_data.package;
+      info;
+      file_sig;
+      resolved_requires;
+      hash = parsed_file_data.hash;
+    }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~root parsed_heaps fn =
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-          Some (Module_js.get_package_json_for_saved_state_unsafe str)
+          Some (Module_heaps.For_saved_state.get_package_json_unsafe str)
       | _ -> None
     in
 
     let file_data = {
       package;
-      info = Module_js.get_info_unsafe ~audit:Expensive.ok fn;
-      file_sig = Parsing_service_js.get_file_sig_unsafe fn;
-      resolved_requires = Module_js.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
+      info = Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
+      file_sig = Parsing_heaps.get_file_sig_unsafe fn;
+      resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
+      hash = Parsing_heaps.get_file_hash_unsafe fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -158,7 +169,8 @@ end = struct
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~root unparsed_heaps fn  =
     let relative_file_data = {
-      unparsed_info = normalize_info ~root @@ Module_js.get_info_unsafe ~audit:Expensive.ok fn;
+      unparsed_info = normalize_info ~root @@ Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
+      unparsed_hash = Parsing_heaps.get_file_hash_unsafe fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -208,7 +220,8 @@ end = struct
       SSet.map (Files.relative_path root) !Files.node_modules_containers
     in
     let flowconfig_hash =
-      FlowConfig.get_hash @@ Server_files_js.config_file @@ Options.root options
+      FlowConfig.get_hash @@ Server_files_js.config_file (Options.flowconfig_name options)
+      @@ Options.root options
     in
     Lwt.return {
       flowconfig_hash;
@@ -317,9 +330,9 @@ end = struct
 
   let denormalize_info ~root info =
     let module_name =
-      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_js.module_name
+      modulename_map_fn ~f:(denormalize_file_key ~root) info.Module_heaps.module_name
     in
-    { info with Module_js.module_name }
+    { info with Module_heaps.module_name }
 
   (* Turns all the relative paths in a file's data back into absolute paths.
    *
@@ -332,13 +345,19 @@ end = struct
     let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
 
     (* resolved_requires *)
-    let { Module_js.resolved_modules; phantom_dependents } = file_data.resolved_requires in
+    let { Module_heaps.resolved_modules; phantom_dependents } = file_data.resolved_requires in
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules = SMap.map
       (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules in
-    let resolved_requires = { Module_js.resolved_modules; phantom_dependents } in
+    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
-    { package = file_data.package; info; file_sig; resolved_requires }
+    {
+      package = file_data.package;
+      info;
+      file_sig;
+      resolved_requires;
+      hash = file_data.hash;
+    }
 
   let progress_fn real_total offset ~total:_ ~start ~length:_ =
     let finished = start + offset in
@@ -369,7 +388,7 @@ end = struct
       ~job:(List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
         let unparsed_info = denormalize_info ~root unparsed_file_data.unparsed_info in
         let fn = denormalize_file_key ~root relative_fn in
-        FilenameMap.add fn { unparsed_info } acc
+        FilenameMap.add fn { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash; } acc
       ))
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
@@ -393,7 +412,8 @@ end = struct
     } = data in
 
     let current_flowconfig_hash =
-      FlowConfig.get_hash @@ Server_files_js.config_file @@ Options.root options
+      let flowconfig_name = Options.flowconfig_name options in
+      FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
     in
 
     if flowconfig_hash <> current_flowconfig_hash

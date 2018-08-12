@@ -35,7 +35,7 @@ val recheck:
   workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
   ServerEnv.env ->
-  force_focus:bool ->
+  files_to_focus:FilenameSet.t ->
   (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
@@ -67,7 +67,7 @@ val typecheck_contents:
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
   File_key.t ->                             (* fake file-/module name *)
-  ((Context.t * Loc.t Ast.program) option *
+  ((Context.t * (Loc.t, Loc.t) Ast.program) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 
@@ -76,5 +76,6 @@ val ensure_checked_dependencies:
   profiling: Profiling_js.running ->
   workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
-  Modulename.Set.t ->
+  File_key.t ->
+  File_sig.t ->
   unit Lwt.t

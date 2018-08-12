@@ -54,6 +54,8 @@ type test_prop_hit_or_miss =
   | Hit
   | Miss of string option * (Reason.t * Reason.t) * Type.use_op
 
+type type_assert_kind = Is | Throws | Wraps
+
 type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -81,6 +83,9 @@ type sig_t = {
 
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
+
+  (* map from TypeAssert assertion locations to the type being asserted *)
+  mutable type_asserts: (type_assert_kind * Loc.t) LocMap.t;
 
   mutable errors: Errors.ErrorSet.t;
 
@@ -179,6 +184,7 @@ let make_sig () = {
   all_unresolved = IMap.empty;
   envs = IMap.empty;
   module_map = SMap.empty;
+  type_asserts = LocMap.empty;
   errors = Errors.ErrorSet.empty;
   error_suppressions = Error_suppressions.empty;
   severity_cover = ExactCover.empty;
@@ -296,6 +302,8 @@ let should_munge_underscores cx  = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
 let suppress_comments cx = cx.metadata.suppress_comments
 let suppress_types cx = cx.metadata.suppress_types
+
+let type_asserts cx = cx.sig_cx.type_asserts
 let type_graph cx = cx.sig_cx.type_graph
 let type_table cx = cx.type_table
 let verbose cx = cx.metadata.verbose
@@ -331,8 +339,8 @@ let add_error_suppression cx loc =
     Error_suppressions.add loc cx.sig_cx.error_suppressions
 let add_severity_cover cx severity_cover =
   cx.sig_cx.severity_cover <- ExactCover.union severity_cover cx.sig_cx.severity_cover
-let add_unused_lint_suppressions cx suppressions = cx.sig_cx.error_suppressions <-
-  Error_suppressions.add_unused_lint_suppressions suppressions cx.sig_cx.error_suppressions
+let add_lint_suppressions cx suppressions = cx.sig_cx.error_suppressions <-
+  Error_suppressions.add_lint_suppressions suppressions cx.sig_cx.error_suppressions
 let add_import_stmt cx stmt =
   cx.import_stmts <- stmt::cx.import_stmts
 let add_imported_t cx name t =
@@ -351,6 +359,8 @@ let add_tvar cx id bounds =
   cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.graph
 let add_nominal_id cx id =
   cx.nominal_ids <- ISet.add id cx.nominal_ids
+let add_type_assert cx k v =
+  cx.sig_cx.type_asserts <- LocMap.add k v cx.sig_cx.type_asserts
 let remove_all_errors cx =
   cx.sig_cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -503,6 +513,7 @@ let merge_into cx cx_other =
   cx.evaluated <- IMap.union cx_other.evaluated cx.evaluated;
   cx.type_graph <- Graph_explorer.union cx_other.type_graph cx.type_graph;
   cx.graph <- IMap.union cx_other.graph cx.graph;
+  cx.type_asserts <- LocMap.union cx.type_asserts cx_other.type_asserts;
 
   (* These entries are intermediates, and will be cleared from dep_cxs before
      merge. However, initializing builtins is a bit different, and actually copy

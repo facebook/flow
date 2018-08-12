@@ -32,7 +32,7 @@ open Type
 
 let destructuring cx ~expr ~f = Ast.Pattern.(
   let rec recurse ?parent_pattern_t curr_t init default = function
-  | _, Array { Array.elements; _; } -> Array.(
+  | top_loc, Array { Array.elements; _; } -> Array.(
       let elements = elements |> List.mapi (fun i -> function
         | Some (Element ((loc, _) as p)) ->
             let key = DefT (mk_reason RNumber loc, NumT (
@@ -62,25 +62,25 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 EvalT (curr_t, DestructuringT (reason, Elem key), mk_id())
             ) in
             let default = Option.map default (Default.elem key reason) in
-            Some (Element ((), recurse ~parent_pattern_t tvar init default p))
+            Some (Element (recurse ~parent_pattern_t tvar init default p))
         | Some (RestElement (loc, { RestElement.argument = p })) ->
             let reason = mk_reason RArrayPatternRestProp loc in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())
             in
             let default = Option.map default (Default.arr_rest i reason) in
-            Some (RestElement ((), {
-              RestElement.argument = (), recurse ~parent_pattern_t:curr_t tvar init default p
+            Some (RestElement (loc, {
+              RestElement.argument = recurse ~parent_pattern_t:curr_t tvar init default p
             }))
         | None -> None
       )
       in
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      Array { elements; annot; }
+      top_loc, Array { elements; annot; }
     )
 
-  | _, Object { Object.properties; _; } -> Object.(
+  | top_loc, Object { Object.properties; _; } -> Object.(
       let _, rev_props = List.fold_left (fun (xs, rev_props) -> function
         | Property (loc, prop) ->
             begin match prop with
@@ -125,16 +125,15 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   name
                   loc
                   (Type_inference_hooks_js.Parent parent_pattern_t);
-                let pattern = (), recurse ~parent_pattern_t tvar init default p in
+                let pattern = recurse ~parent_pattern_t tvar init default p in
                 let key = match prop.Property.key with
-                  | Property.Literal (_, lit) -> Property.Literal ((), lit)
-                  | Property.Identifier (_, name) -> Property.Identifier ((), name)
+                  | (Property.Literal _ | Property.Identifier _) as key -> key
                   | Property.Computed _ -> assert_false "precondition not met"
                 in
                 name :: xs,
-                Property ((), { prop with Property.key; pattern; }) :: rev_props
+                Property (loc, { prop with Property.key; pattern; }) :: rev_props
             | { Property.key = Property.Computed key; pattern = p; _; } ->
-                let key_t, key_ast = expr cx key in
+                let (_, key_t), _ as key_ast = expr cx key in
                 let loc = fst key in
                 let reason = mk_reason (RProperty None) loc in
                 let init = Option.map init (fun init ->
@@ -151,12 +150,12 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 | Some refined_t -> refined_t, refined_t
                 | None ->
                     curr_t,
-                    EvalT (curr_t, DestructuringT (reason, Elem key_t), mk_id())
+                    EvalT (curr_t, DestructuringT (reason, Elem key_t), mk_id ())
                 ) in
                 let default = Option.map default (Default.elem key_t reason) in
-                let pattern = (), recurse ~parent_pattern_t tvar init default p in
-                xs, Property ((), {
-                  prop with Property.key = Property.Computed ((), key_ast); pattern;
+                let pattern = recurse ~parent_pattern_t tvar init default p in
+                xs, Property (loc, {
+                  prop with Property.key = Property.Computed key_ast; pattern;
                 }) :: rev_props
             | { Property.key = Property.Literal _; _ } ->
                 Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
@@ -170,14 +169,14 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
               EvalT (curr_t, DestructuringT (reason, ObjRest xs), mk_id())
             in
             let default = Option.map default (Default.obj_rest xs reason) in
-            let argument = (), recurse ~parent_pattern_t:curr_t tvar init default p in
-            xs, RestProperty ((), { RestProperty.argument }) :: rev_props
+            let argument = recurse ~parent_pattern_t:curr_t tvar init default p in
+            xs, RestProperty (loc, { RestProperty.argument }) :: rev_props
       ) ([], []) properties
       in
       let properties = List.rev rev_props in
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      Object { Object.properties; annot }
+      top_loc, Object { Object.properties; annot }
     )
 
   | loc, Identifier { Identifier.name = (id_loc, name); optional; _ } ->
@@ -210,7 +209,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       f ~use_op loc name default curr_t;
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      Identifier { Identifier.name = ((), name); optional; annot; }
+      loc, Identifier { Identifier.name = (id_loc, name); optional; annot; }
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
@@ -218,13 +217,16 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       let tvar =
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in
-      let left = (), recurse ?parent_pattern_t tvar init default left in
-      Assignment { Assignment.left; right = (), Typed_ast.Expression.unimplemented }
+      let left = recurse ?parent_pattern_t tvar init default left in
+      loc, Assignment { Assignment.
+        left;
+        right = Typed_ast.error_annot, Typed_ast.Expression.unimplemented
+      }
 
   | loc, Expression _ ->
       Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
         (loc, DestructuringExpressionPattern));
-      Expression ((), Typed_ast.Expression.error)
+      loc, Expression (Typed_ast.error_annot, Typed_ast.Expression.error)
 
   in fun t init default pattern -> recurse t init default pattern
 )

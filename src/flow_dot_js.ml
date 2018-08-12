@@ -116,6 +116,7 @@ let load_lib_files ~master_cx ~metadata files
 
 let stub_docblock = { Docblock.
   flow = None;
+  typeAssert = false;
   preventMunge = None;
   providesModule = None;
   isDeclarationFile = false;
@@ -218,8 +219,9 @@ let check_content ~filename ~content =
   let errors, warnings = match parse_content filename content with
   | Ok (ast, file_sig) ->
     let cx = infer_and_merge ~root filename ast file_sig in
+    let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (Context.severity_cover cx) (Context.errors cx)
+      suppressions (Context.severity_cover cx) (Context.errors cx) ~unused:suppressions
     in errors, warnings
   | Error parse_errors ->
     parse_errors, Errors.ErrorSet.empty

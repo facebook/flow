@@ -24,6 +24,7 @@ type t =
   | Missing_flowlib
   | Autostop
   | Killed_by_monitor
+  | Invalid_saved_state
   | Socket_error
   | Dfind_died
   | Dfind_unresponsive

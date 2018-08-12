@@ -10,8 +10,8 @@
 type t
 
 type set_asts =
-  Typed_ast.annot Ast.Function.body option *
-  Typed_ast.annot Ast.Expression.t option
+  (Loc.t, Loc.t * Type.t) Ast.Function.body option *
+  (Loc.t, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
 type field = Loc.t option * Type.polarity * field'
@@ -156,11 +156,11 @@ val generate_tests: Context.t ->
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Loc.t Ast.Statement.t list ->
-                      Typed_ast.annot Ast.Statement.t list) ->
-  expr:(Context.t -> Loc.t Ast.Expression.t ->
-                      Type.t * Typed_ast.annot Ast.Expression.t') ->
+  decls:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list ->
+                      (Loc.t, Loc.t * Type.t) Ast.Statement.t list) ->
+  expr:(Context.t -> (Loc.t, Loc.t) Ast.Expression.t ->
+                      (Loc.t, Loc.t * Type.t) Ast.Expression.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
@@ -174,7 +174,7 @@ val classtype: Context.t ->
 
 module This: sig
   val is_bound_to_empty: t -> bool
-  val in_class: Loc.t Ast.Class.t -> bool
+  val in_class: (Loc.t, Loc.t) Ast.Class.t -> bool
 end
 
 val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a

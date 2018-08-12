@@ -121,7 +121,7 @@ module Entry = struct
       value_declare_loc;
       value_assign_loc = value_declare_loc;
       specific;
-      general
+      general;
     }
 
   let new_const ~loc ?(state=State.Undeclared) ?(kind=ConstVarBinding) t =
@@ -270,11 +270,20 @@ type refi_binding = {
 (* scopes are tagged by id, which are shared by clones. function
    types hold the id of their activation scopes. *)
 (* TODO add in-scope type variable binding table *)
+(* when the typechecker is constructing the typed AST, declare functions are
+   processed separately from (before) when most statements are processed. To
+   be able to put the typed ASTs of the type annotations that were on the
+   declare functions into the spots where they go in the typed AST, we put
+   the declare functions' type annotations' typed ASTs in the scope during the
+   earlier pass when the declare functions are processed, then during the
+   second pass when the full typed AST is being constructed, we get them from
+   the scope and put them where they belong in the typed AST. *)
 type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
   mutable refis: refi_binding Key_map.t;
+  mutable declare_func_annots: (Loc.t, Loc.t * Type.t) Ast.Type.annotation SMap.t;
 }
 
 (* ctor helper *)
@@ -283,6 +292,7 @@ let fresh_impl kind = {
   kind;
   entries = SMap.empty;
   refis = Key_map.empty;
+  declare_func_annots = SMap.empty;
 }
 
 (* return a fresh scope of the most common kind (var) *)
@@ -295,8 +305,8 @@ let fresh_lex () = fresh_impl LexScope
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
  *)
-let clone { id; kind; entries; refis } =
-  { id; kind; entries; refis }
+let clone { id; kind; entries; refis; declare_func_annots } =
+  { id; kind; entries; refis; declare_func_annots }
 
 (* use passed f to iterate over all scope entries *)
 let iter_entries f scope =
@@ -382,6 +392,12 @@ let havoc scope =
 let reset loc scope =
   havoc_all_refis scope;
   update_entries (Entry.reset loc) scope
+
+let add_declare_func_annot name annot scope =
+  scope.declare_func_annots <- SMap.add name annot scope.declare_func_annots
+
+let get_declare_func_annot name scope =
+  SMap.get name scope.declare_func_annots
 
 let is_lex scope =
   match scope.kind with

@@ -47,16 +47,20 @@ and 'a t = {
 }
 
 let rec to_absolute x = {
-  kind = x.kind;
-  name = x.name;
-  full_name = x.full_name;
-  id = x.id;
+  x with
   pos = Pos.to_absolute x.pos;
   span = Pos.to_absolute x.span;
-  modifiers = x.modifiers;
   children = Option.map x.children (fun x -> List.map x to_absolute);
   params = Option.map x.params (fun x -> List.map x to_absolute);
   docblock = x.docblock;
+}
+
+let rec to_relative x = {
+  x with
+  pos = Pos.to_relative x.pos;
+  span = Pos.to_relative x.span;
+  children = Option.map x.children (fun x -> List.map x to_relative);
+  params = Option.map x.params (fun x -> List.map x to_relative);
 }
 
 let string_of_kind = function

@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nVariable defs and uses:\n"
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 4 5
 assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 5 2
@@ -153,3 +150,8 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 6 4
 assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 12 25
 assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 7 6
 assert_ok "$FLOW" find-refs --json --pretty --strip-root idx.js 12 29
+
+printf "Unions:\\n"
+assert_ok "$FLOW" find-refs --json --pretty --strip-root unions.js 7 3
+assert_ok "$FLOW" find-refs --json --pretty --strip-root unions.js 10 30
+assert_ok "$FLOW" find-refs --json --pretty --strip-root unions.js 17 10

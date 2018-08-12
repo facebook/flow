@@ -88,7 +88,8 @@ let register_entry_point
       let tmp_dir = Options.temp_dir options in
 
       (* Create the pid log and record all the processes that already exist *)
-      PidLog.init (Server_files_js.pids_file ~tmp_dir root);
+      let flowconfig_name = Options.flowconfig_name options in
+      PidLog.init (Server_files_js.pids_file ~flowconfig_name ~tmp_dir root);
       PidLog.log ~reason:"monitor" parent_pid;
       Option.iter parent_logger_pid ~f:(PidLog.log ~reason:"monitor_logger");
       Option.iter file_watcher_pid ~f:(PidLog.log ~reason:"file_watcher");
@@ -97,11 +98,13 @@ let register_entry_point
 
       main ~monitor_channels ~shared_mem_config options)
 
-let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid main_entry =
+let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid
+  main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
-  let lock = Server_files.lock_file ~tmp_dir root in
+  let flowconfig_name = Options.flowconfig_name options in
+  let lock = Server_files.lock_file ~flowconfig_name ~tmp_dir root in
   if not (Lock.check lock)
   then begin
     let msg = spf

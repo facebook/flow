@@ -309,7 +309,7 @@ class requires_calculator ~ast = object(this)
         { fsig with tolerable_errors=err::fsig.tolerable_errors }
     ))
 
-  method! expression (expr: Loc.t Ast.Expression.t) =
+  method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
     (* Disallow expressions consisting of `module` or `exports`. These are dangerous because they
@@ -321,7 +321,7 @@ class requires_calculator ~ast = object(this)
     end;
     super#expression expr
 
-  method! binary (expr: Loc.t Ast.Expression.Binary.t) =
+  method! binary (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression in
     let open Ast.Expression.Binary in
     let is_module_or_exports = function
@@ -346,7 +346,7 @@ class requires_calculator ~ast = object(this)
     end else
       super#binary expr
 
-  method! member (expr: Loc.t Ast.Expression.Member.t) =
+  method! member (expr: (Loc.t, Loc.t) Ast.Expression.Member.t) =
     let open Ast.Expression in
     let open Ast.Expression.Member in
     let { _object; property; computed = _ } = expr in
@@ -377,13 +377,13 @@ class requires_calculator ~ast = object(this)
     end;
     expr
 
-  method! call call_loc (expr: Loc.t Ast.Expression.Call.t) =
+  method! call call_loc (expr: (Loc.t, Loc.t) Ast.Expression.Call.t) =
     let open Ast.Expression in
     let { Call.callee; targs = _; arguments } = expr in
     this#handle_call call_loc callee arguments None;
     super#call call_loc expr
 
-  method! import import_loc (expr: Loc.t Ast.Expression.t) =
+  method! import import_loc (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
     | loc, (
@@ -459,7 +459,7 @@ class requires_calculator ~ast = object(this)
     this#add_require import;
     super#import_declaration stmt_loc decl
 
-  method! export_default_declaration stmt_loc (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.t) =
+  method! export_default_declaration stmt_loc (decl: (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t) =
     let open Ast.Statement in
     let open Ast.Statement.ExportDefaultDeclaration in
     let { default = default_loc; declaration } = decl in
@@ -474,7 +474,7 @@ class requires_calculator ~ast = object(this)
     this#add_exports stmt_loc ExportValue [export, "default"] [];
     super#export_default_declaration stmt_loc decl
 
-  method! export_named_declaration stmt_loc (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
+  method! export_named_declaration stmt_loc (decl: (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.t) =
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration} = decl in
     let source = match source with
@@ -512,11 +512,11 @@ class requires_calculator ~ast = object(this)
     end;
     super#export_named_declaration stmt_loc decl
 
-  method! declare_module_exports loc (annot: Loc.t Ast.Type.annotation) =
+  method! declare_module_exports loc (annot: (Loc.t, Loc.t) Ast.Type.annotation) =
     this#set_cjs_exports loc;
     super#declare_module_exports loc annot
 
-  method! declare_export_declaration stmt_loc (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
+  method! declare_export_declaration stmt_loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.t) =
     let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
     let source = match source with
@@ -566,11 +566,11 @@ class requires_calculator ~ast = object(this)
     end;
     super#declare_export_declaration stmt_loc decl
 
-  method! assignment (expr: Loc.t Ast.Expression.Assignment.t) =
+  method! assignment (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
     this#handle_assignment ~is_toplevel:false expr;
     expr
 
-  method handle_assignment ~(is_toplevel: bool) (expr: Loc.t Ast.Expression.Assignment.t) =
+  method handle_assignment ~(is_toplevel: bool) (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
     let open Ast.Expression in
     let open Ast.Expression.Assignment in
     let { operator; left; right } = expr in
@@ -629,7 +629,7 @@ class requires_calculator ~ast = object(this)
     if not (Scope_api.is_local_use scope_info module_loc)
     then this#set_cjs_exports mod_exp_loc
 
-  method! variable_declarator ~kind (decl: Loc.t Ast.Statement.VariableDeclaration.Declarator.t) =
+  method! variable_declarator ~kind (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) =
     begin match decl with
     | _, { Ast.Statement.VariableDeclaration.Declarator.id; init = Some init } ->
       this#handle_require id init
@@ -637,7 +637,7 @@ class requires_calculator ~ast = object(this)
     end;
     super#variable_declarator ~kind decl
 
-  method private handle_require (left: Loc.t Ast.Pattern.t) (right: Loc.t Ast.Expression.t) =
+  method private handle_require (left: (Loc.t, Loc.t) Ast.Pattern.t) (right: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     let bindings = begin match left with
     | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
@@ -697,7 +697,7 @@ class requires_calculator ~ast = object(this)
       | _ -> ()
     end
 
-  method! declare_module loc (m: Loc.t Ast.Statement.DeclareModule.t) =
+  method! declare_module loc (m: (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) =
     let name = Ast.Statement.DeclareModule.(match m.id with
     | Identifier (_, name) -> name
     | Literal (_, { Ast.StringLiteral.value; _ }) -> value
@@ -743,10 +743,10 @@ class requires_calculator ~ast = object(this)
       ) [] specs in
       this#add_exports stmt_loc kind bindings []
 
-  method! toplevel_statement_list (stmts: Loc.t Ast.Statement.t list) =
+  method! toplevel_statement_list (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
     let open Ast in
     let id = Flow_ast_mapper.id in
-    let map_expression (expr: Loc.t Expression.t) =
+    let map_expression (expr: (Loc.t, Loc.t) Expression.t) =
       let open Expression in
       match expr with
       | _, Assignment assg ->
@@ -754,12 +754,12 @@ class requires_calculator ~ast = object(this)
           expr
       | _ -> this#expression expr
     in
-    let map_expression_statement (stmt: Loc.t Statement.Expression.t) =
+    let map_expression_statement (stmt: (Loc.t, Loc.t) Statement.Expression.t) =
       let open Statement.Expression in
       let {expression; _} = stmt in
       id map_expression expression stmt (fun expr -> { stmt with expression=expr })
     in
-    let map_statement (stmt: Loc.t Statement.t) =
+    let map_statement (stmt: (Loc.t, Loc.t) Statement.t) =
       let open Statement in
       match stmt with
       | loc, Expression expr ->

@@ -29,6 +29,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> CommandUtils.base_flags
     |> CommandUtils.from_flag
     |> CommandUtils.flowconfig_flags
     |> flag "--options" (optional string)
@@ -37,7 +38,7 @@ let spec = {
   )
 }
 
-let main from flowconfig_flags options root () =
+let main base_flags from flowconfig_flags options root () =
   FlowEventLogger.set_from from;
   let root = match root with
   | None -> Sys.getcwd () |> Path.make
@@ -55,7 +56,7 @@ let main from flowconfig_flags options root () =
   let libs = flowconfig_flags.CommandUtils.libs in
   let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
 
-  let file = Server_files_js.config_file root in
+  let file = Server_files_js.config_file base_flags.CommandUtils.Base_flags.flowconfig_name root in
   if Sys.file_exists file
   then begin
     let msg = Utils_js.spf "Error: \"%s\" already exists!\n%!" file in
