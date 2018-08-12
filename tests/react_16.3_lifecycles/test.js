@@ -9,6 +9,8 @@ class A extends React.Component<{foo: string}, {bar: string}> {
         let str: string;
         str = props.foo; // ok
         str = state.bar; // ok
+
+        return {bar: "baz"}; // ok
     }
 
     getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -19,6 +21,8 @@ class A extends React.Component<{foo: string}, {bar: string}> {
         let str: string;
         str = prevProps.foo; // ok
         str = prevState.bar; // ok
+
+        return null;
     }
 }
 
@@ -45,5 +49,17 @@ class D extends React.Component<{foo: string}, {bar: string}> {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         let x: number = snapshot; // ok
+    }
+}
+
+class E extends React.Component<{foo: string}, {bar: string}> {
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        return undefined; // FIXME: should be an error but isn't
+    }
+}
+
+class F extends React.Component<{foo: string}, {bar: string}> {
+    static getDerivedStateFromProps(props, state) {
+        return undefined; // error: undefined ~> (state shape | null)
     }
 }

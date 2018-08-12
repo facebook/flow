@@ -32,65 +32,94 @@ References:
                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:16:15
+Error ---------------------------------------------------------------------------------------------------- test.js:18:15
 
 Cannot assign `prevProps.foo` to `num` because string [1] is incompatible with number [2].
 
-   test.js:16:15
-   16|         num = prevProps.foo; // error: string ~> number
+   test.js:18:15
+   18|         num = prevProps.foo; // error: string ~> number
                      ^^^^^^^^^^^^^
 
 References:
    test.js:3:39
     3| class A extends React.Component<{foo: string}, {bar: string}> {
                                              ^^^^^^ [1]
-   test.js:15:18
-   15|         let num: number;
+   test.js:17:18
+   17|         let num: number;
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:17:15
+Error ---------------------------------------------------------------------------------------------------- test.js:19:15
 
 Cannot assign `prevState.bar` to `num` because string [1] is incompatible with number [2].
 
-   test.js:17:15
-   17|         num = prevState.bar; // error: string ~> number
+   test.js:19:15
+   19|         num = prevState.bar; // error: string ~> number
                      ^^^^^^^^^^^^^
 
 References:
    test.js:3:54
     3| class A extends React.Component<{foo: string}, {bar: string}> {
                                                             ^^^^^^ [1]
-   test.js:15:18
-   15|         let num: number;
+   test.js:17:18
+   17|         let num: number;
                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+Error ----------------------------------------------------------------------------------------------------- test.js:39:1
 
 Cannot extend property `Component` [1] with `C` because string [2] is incompatible with number [3] in property `foo` of
 the return value of property `getDerivedStateFromProps`.
 
-   test.js:35:1
+   test.js:39:1
        v------------------------------------------------------------------
-   35| class C extends React.Component<void, {foo: number, bar: string}> {
-   36|     static getDerivedStateFromProps(props, state) {
-   37|         return {foo: "nope"}; // error: string ~> number
-   38|     }
-   39| }
+   39| class C extends React.Component<void, {foo: number, bar: string}> {
+   40|     static getDerivedStateFromProps(props, state) {
+   41|         return {foo: "nope"}; // error: string ~> number
+   42|     }
+   43| }
        ^
 
 References:
-   test.js:35:17
-   35| class C extends React.Component<void, {foo: number, bar: string}> {
+   test.js:39:17
+   39| class C extends React.Component<void, {foo: number, bar: string}> {
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:37:22
-   37|         return {foo: "nope"}; // error: string ~> number
+   test.js:41:22
+   41|         return {foo: "nope"}; // error: string ~> number
                             ^^^^^^ [2]
-   test.js:35:45
-   35| class C extends React.Component<void, {foo: number, bar: string}> {
+   test.js:39:45
+   39| class C extends React.Component<void, {foo: number, bar: string}> {
                                                    ^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:61:1
 
-Found 5 errors
+Cannot extend property `Component` [1] with `F` because undefined [2] is incompatible with null [3] in the return value
+of property `getDerivedStateFromProps`.
+
+   test.js:61:1
+       v--------------------------------------------------------------
+   61| class F extends React.Component<{foo: string}, {bar: string}> {
+   62|     static getDerivedStateFromProps(props, state) {
+   63|         return undefined; // error: undefined ~> (state shape | null)
+   64|     }
+   65| }
+       ^
+
+References:
+   test.js:61:17
+   61| class F extends React.Component<{foo: string}, {bar: string}> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:13:24
+   13| declare var undefined: void;
+                              ^^^^ [2]
+   <BUILTINS>/react.js:77:103
+   77|   static getDerivedStateFromProps(props: Props, state: State): $FIXME$NonMaybeObject<$Shape<State>> | null;
+                                                                                                             ^^^^ [3]
+
+
+
+Found 6 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
