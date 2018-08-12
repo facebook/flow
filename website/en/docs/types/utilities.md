@@ -145,7 +145,7 @@ type Obj = {
 type MappedObj = $ReadOnly<$ObjMap<Obj, TypeFn>> // Still read-only
 ```
 
-> Note: $ReadOnly is only for making read-only object types. See the Array docs for [how to type read-only arrays](../arrays/#toc-readonlyarray).
+> Note: $ReadOnly is only for making read-only object types. See the Array docs for [how to type read-only arrays](../arrays/#toc-readonlyarray) with `$ReadOnlyArray`.
 
 ## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
 

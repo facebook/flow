@@ -119,17 +119,18 @@ problem, but for now you should be aware of it.
 
 ## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
 
-Similar to `$ReadOnly<T>`, it is the supertype of all arrays and all tuples and
-represents an immutable array. It does not contain any methods that will allow an
-object of this type to be mutated (no `push()`, `pop()`, etc.)
+Similar to [`$ReadOnly<T>`](../utilities/#toc-readonly), it is the supertype 
+of all arrays and all tuples and represents an immutable array. It does not
+contain any methods that will allow an object of this type to be mutated 
+(no `push()`, `pop()`, etc.).
 
 ```js
 // @flow
 const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
 
-const first = readonlyArray[0] // Ok to read
-readonlyArray[1] = 20          // Error
-readonlyArray.push(4)          // Error
+const first = readonlyArray[0] // OK to read
+readonlyArray[1] = 20          // Error!
+readonlyArray.push(4)          // Error!
 ```
 
 Note that an array of type `$ReadOnlyArray<T>` can still have mutable _elements_:
@@ -137,6 +138,35 @@ Note that an array of type `$ReadOnlyArray<T>` can still have mutable _elements_
 ```js
 // @flow
 const readonlyArray: $ReadOnlyArray<{x: number}> = [{x: 1}];
-readonlyArray[0] = {x: 42}; // error
-readonlyArray[0].x = 42; // ok
+readonlyArray[0] = {x: 42}; // Error!
+readonlyArray[0].x = 42; // OK
+```
+
+For mutable arrays of generic types that are set to arrays of specific types there's the
+possibility of adding values to it that don't match the type of the specifically-typed array.
+Take for instance, the following scenario:
+
+```js
+// @flow
+const someOperation = (arr: Array<number | string>) => {
+  // Here we could do `arr.push('a string')`
+}
+
+const array: Array<number> = [1]
+someOperation(array) // Error!
+```
+
+Since the generic array parameter `arr` of the `someOperation` function is mutable,
+pushing a string into it would be possible inside that scope, which would then break
+the type contract of the outside `array` variable. By anotating the parameter as `$ReadOnlyArray`
+instead in this case, Flow can be sure this won't happen and no errors will occur:
+
+```js
+// @flow
+const someOperation = (arr: $ReadOnlyArray<number | string>) => {
+  // Nothing can be added to `arr`
+}
+
+const array: Array<number> = [1]
+someOperation(array) // Works!
 ```
