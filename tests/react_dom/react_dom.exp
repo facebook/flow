@@ -11,8 +11,8 @@ References:
    dangerouslySetInnerHTML.js:5:10
      5| <article dangerouslySetInnerHTML />; // Error: Expected object
                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:413:29
-   413|   dangerouslySetInnerHTML?: { __html: string },
+   <BUILTINS>/react-dom.js:578:29
+   578|   dangerouslySetInnerHTML?: { __html: string },
                                     ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -29,8 +29,8 @@ References:
    dangerouslySetInnerHTML.js:6:34
      6| <article dangerouslySetInnerHTML="<blink>Hello</blink>" />; // Error: Expected object
                                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:413:29
-   413|   dangerouslySetInnerHTML?: { __html: string },
+   <BUILTINS>/react-dom.js:578:29
+   578|   dangerouslySetInnerHTML?: { __html: string },
                                     ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -47,9 +47,61 @@ References:
    dangerouslySetInnerHTML.js:8:35
      8| <article dangerouslySetInnerHTML={{ html: "<blink>Hello</blink>" }} />; // Error: Missing __html
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:413:29
-   413|   dangerouslySetInnerHTML?: { __html: string },
+   <BUILTINS>/react-dom.js:578:29
+   578|   dangerouslySetInnerHTML?: { __html: string },
                                     ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- events.js:6:1
+
+Cannot create `input` element because string [1] is incompatible with function type [2] in property `onChange`.
+
+   events.js:6:1
+     6| <input onChange="foo" />; // Error: Expected function
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   events.js:6:17
+     6| <input onChange="foo" />; // Error: Expected function
+                        ^^^^^ [1]
+   <BUILTINS>/react-dom.js:427:14
+   427|   onChange?: (SyntheticEvent<E>) => void,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- events.js:8:1
+
+Cannot create `textarea` element because `SyntheticKeyboardEvent` [1] is incompatible with `SyntheticMouseEvent` [2] in
+the first argument of property `onKeyDown`.
+
+   events.js:8:1
+     8| <textarea onKeyDown={(event: SyntheticMouseEvent<HTMLElement>) => {}} />; // Error: Wrong event type
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:481:16
+   481|   onKeyDown?: (SyntheticKeyboardEvent<E>) => void,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   events.js:8:30
+     8| <textarea onKeyDown={(event: SyntheticMouseEvent<HTMLElement>) => {}} />; // Error: Wrong event type
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- events.js:18:29
+
+Cannot assign `event.buttons` to `buttons` because number [1] is incompatible with string [2].
+
+   events.js:18:29
+    18|     const buttons: string = event.buttons; // Error: number ~> string
+                                    ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:198:12
+   198|   buttons: number;
+                   ^^^^^^ [1]
+   events.js:18:20
+    18|     const buttons: string = event.buttons; // Error: number ~> string
+                           ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- props_boolean.js:7:1
@@ -67,14 +119,14 @@ References:
    props_boolean.js:7:15
      7| <span hidden={null} />; // Error: Expected DOM boolean
                       ^^^^ [1]
-   <BUILTINS>/react-dom.js:478:5
-   478|   | ""
+   <BUILTINS>/react-dom.js:641:5
+   641|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:479:5
-   479|   | $TODO$CaseInsensitive<AttributeName>
+   <BUILTINS>/react-dom.js:642:5
+   642|   | $TODO$CaseInsensitive<AttributeName>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:480:5
-   480|   | boolean;
+   <BUILTINS>/react-dom.js:643:5
+   643|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -93,14 +145,14 @@ References:
    props_boolean.js:8:14
      8| <span hidden="true" />; // Error: Expected DOM boolean
                      ^^^^^^ [1]
-   <BUILTINS>/react-dom.js:478:5
-   478|   | ""
+   <BUILTINS>/react-dom.js:641:5
+   641|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:479:5
-   479|   | $TODO$CaseInsensitive<AttributeName>
+   <BUILTINS>/react-dom.js:642:5
+   642|   | $TODO$CaseInsensitive<AttributeName>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:480:5
-   480|   | boolean;
+   <BUILTINS>/react-dom.js:643:5
+   643|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -119,14 +171,14 @@ References:
    props_boolean.js:9:14
      9| <span hidden="false" />; // Error: Expected DOM boolean
                      ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:478:5
-   478|   | ""
+   <BUILTINS>/react-dom.js:641:5
+   641|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:479:5
-   479|   | $TODO$CaseInsensitive<AttributeName>
+   <BUILTINS>/react-dom.js:642:5
+   642|   | $TODO$CaseInsensitive<AttributeName>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:480:5
-   480|   | boolean;
+   <BUILTINS>/react-dom.js:643:5
+   643|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -145,14 +197,14 @@ References:
    props_boolean.js:11:14
     11| <span hidden="yes" />; // Error: Expected DOM boolean
                      ^^^^^ [1]
-   <BUILTINS>/react-dom.js:478:5
-   478|   | ""
+   <BUILTINS>/react-dom.js:641:5
+   641|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:479:5
-   479|   | $TODO$CaseInsensitive<AttributeName>
+   <BUILTINS>/react-dom.js:642:5
+   642|   | $TODO$CaseInsensitive<AttributeName>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:480:5
-   480|   | boolean;
+   <BUILTINS>/react-dom.js:643:5
+   643|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -171,14 +223,14 @@ References:
    props_boolean.js:15:14
     15| <span hidden="Hidden" />; // Currently an error
                      ^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:478:5
-   478|   | ""
+   <BUILTINS>/react-dom.js:641:5
+   641|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:479:5
-   479|   | $TODO$CaseInsensitive<AttributeName>
+   <BUILTINS>/react-dom.js:642:5
+   642|   | $TODO$CaseInsensitive<AttributeName>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:480:5
-   480|   | boolean;
+   <BUILTINS>/react-dom.js:643:5
+   643|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -197,14 +249,14 @@ References:
    props_booleanish_string.js:7:23
      7| <div contentEditable={null} />; // Error: Expected booleanish string
                               ^^^^ [1]
-   <BUILTINS>/react-dom.js:473:5
-   473|   | ""
+   <BUILTINS>/react-dom.js:636:5
+   636|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:474:5
-   474|   | $TODO$CaseInsensitive<"true" | "false">
+   <BUILTINS>/react-dom.js:637:5
+   637|   | $TODO$CaseInsensitive<"true" | "false">
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:475:5
-   475|   | boolean;
+   <BUILTINS>/react-dom.js:638:5
+   638|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -223,14 +275,14 @@ References:
    props_booleanish_string.js:11:22
     11| <div contentEditable="yes" />; // Error: Expected booleanish string
                              ^^^^^ [1]
-   <BUILTINS>/react-dom.js:473:5
-   473|   | ""
+   <BUILTINS>/react-dom.js:636:5
+   636|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:474:5
-   474|   | $TODO$CaseInsensitive<"true" | "false">
+   <BUILTINS>/react-dom.js:637:5
+   637|   | $TODO$CaseInsensitive<"true" | "false">
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:475:5
-   475|   | boolean;
+   <BUILTINS>/react-dom.js:638:5
+   638|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -249,14 +301,14 @@ References:
    props_booleanish_string.js:12:22
     12| <div contentEditable="contentEditable" />; // Error: Expected booleanish string
                              ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:473:5
-   473|   | ""
+   <BUILTINS>/react-dom.js:636:5
+   636|   | ""
             ^^ [2]
-   <BUILTINS>/react-dom.js:474:5
-   474|   | $TODO$CaseInsensitive<"true" | "false">
+   <BUILTINS>/react-dom.js:637:5
+   637|   | $TODO$CaseInsensitive<"true" | "false">
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:475:5
-   475|   | boolean;
+   <BUILTINS>/react-dom.js:638:5
+   638|   | boolean;
             ^^^^^^^ [4]
 
 
@@ -272,8 +324,8 @@ References:
    props_enum.js:5:9
      5| <header dir />; // Error: Expected enum
                 ^^^ [1]
-   <BUILTINS>/react-dom.js:437:9
-   437|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
+   <BUILTINS>/react-dom.js:602:9
+   602|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -289,8 +341,8 @@ References:
    props_enum.js:11:13
     11| <header dir="Ltr" />; // currently an error
                     ^^^^^ [1]
-   <BUILTINS>/react-dom.js:437:9
-   437|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
+   <BUILTINS>/react-dom.js:602:9
+   602|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -306,8 +358,8 @@ References:
    props_number.js:5:5
      5| <h1 tabIndex />; // Error: Expected number
             ^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:418:14
-   418|   tabIndex?: ReactDOM$Number,
+   <BUILTINS>/react-dom.js:583:14
+   583|   tabIndex?: ReactDOM$Number,
                      ^^^^^^^^^^^^^^^ [2]
 
 
@@ -323,8 +375,8 @@ References:
    props_number.js:10:14
     10| <h1 tabIndex="foo" />; // Error: Expected number
                      ^^^^^ [1]
-   <BUILTINS>/react-dom.js:418:14
-   418|   tabIndex?: ReactDOM$Number,
+   <BUILTINS>/react-dom.js:583:14
+   583|   tabIndex?: ReactDOM$Number,
                      ^^^^^^^^^^^^^^^ [2]
 
 
@@ -340,8 +392,8 @@ References:
    props_number.js:11:14
     11| <h1 tabIndex="1" />; // Error: Expected number
                      ^^^ [1]
-   <BUILTINS>/react-dom.js:418:14
-   418|   tabIndex?: ReactDOM$Number,
+   <BUILTINS>/react-dom.js:583:14
+   583|   tabIndex?: ReactDOM$Number,
                      ^^^^^^^^^^^^^^^ [2]
 
 
@@ -357,8 +409,8 @@ References:
    props_string.js:6:11
      6| <html id={42} />; // Error: Expected string
                   ^^ [1]
-   <BUILTINS>/react-dom.js:414:8
-   414|   id?: string,
+   <BUILTINS>/react-dom.js:579:8
+   579|   id?: string,
                ^^^^^^ [2]
 
 
@@ -374,8 +426,8 @@ References:
    props_style.js:6:15
      6| <footer style="margin-right: 1em;" />; // Error: Expected object
                       ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:416:11
-   416|   style?: ReactDOM$Style,
+   <BUILTINS>/react-dom.js:581:11
+   581|   style?: ReactDOM$Style,
                   ^^^^^^^^^^^^^^ [2]
 
 
@@ -391,8 +443,8 @@ References:
    suppress_warnings.js:6:29
      6| <p suppressHydrationWarning="false" />; // Error: Expected boolean
                                     ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:417:30
-   417|   suppressHydrationWarning?: boolean,
+   <BUILTINS>/react-dom.js:582:30
+   582|   suppressHydrationWarning?: boolean,
                                      ^^^^^^^ [2]
 
 
@@ -409,8 +461,8 @@ References:
    suppress_warnings.js:10:55
     10| <aside contentEditable suppressContentEditableWarning="false" />; // Error: Expected boolean
                                                               ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:447:36
-   447|   suppressContentEditableWarning?: boolean,
+   <BUILTINS>/react-dom.js:612:36
+   612|   suppressContentEditableWarning?: boolean,
                                            ^^^^^^^ [2]
 
 
@@ -427,8 +479,8 @@ References:
    void_element_tags.js:7:36
      7| <menuitem dangerouslySetInnerHTML={{ __html: "Content" }} />; // Error
                                            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:514:30
-   514|   dangerouslySetInnerHTML?: ?void // innerHTML cannot be set on empty elements
+   <BUILTINS>/react-dom.js:677:30
+   677|   dangerouslySetInnerHTML?: ?void // innerHTML cannot be set on empty elements
                                      ^^^^ [2]
 
 
@@ -444,10 +496,10 @@ References:
    void_element_tags.js:8:5
      8| <br>Content</br>; // Error
             ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:513:15
-   513|   children?: ?void, // Empty elements cannot have children
+   <BUILTINS>/react-dom.js:676:15
+   676|   children?: ?void, // Empty elements cannot have children
                       ^^^^ [2]
 
 
 
-Found 22 errors
+Found 25 errors
