@@ -142,9 +142,11 @@ readonlyArray[0] = {x: 42}; // Error!
 readonlyArray[0].x = 42; // OK
 ```
 
-For mutable arrays of generic types that are set to arrays of specific types there's the
-possibility of adding values to it that don't match the type of the specifically-typed array.
-Take for instance, the following scenario:
+If you use `$ReadOnlyArray` instead of `Array` for arrays that are never mutated,
+you can prevent Flow from raising spurious errors. For mutable arrays of generic
+types that are set to arrays of specific types there's the possibility of adding
+values to it that don't match the type of the specifically-typed array.
+Take, for instance, the following scenario:
 
 ```js
 // @flow
@@ -156,10 +158,11 @@ const array: Array<number> = [1]
 someOperation(array) // Error!
 ```
 
-Since the generic array parameter `arr` of the `someOperation` function is mutable,
-pushing a string into it would be possible inside that scope, which would then break
-the type contract of the outside `array` variable. By anotating the parameter as `$ReadOnlyArray`
-instead in this case, Flow can be sure this won't happen and no errors will occur:
+Since the parameter `arr` of the `someOperation` function is typed as a mutable
+`Array`, pushing a string into it would be possible inside that scope, which
+would then break the type contract of the outside `array` variable. By
+annotating the parameter as `$ReadOnlyArray` instead in this case, Flow can be
+sure this won't happen and no errors will occur:
 
 ```js
 // @flow
