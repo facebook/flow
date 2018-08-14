@@ -255,7 +255,7 @@ let tests = "require" >::: [
     let source = "import 'foo'" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Import0 (loc, "foo")] ->
+    | [Import0 {source = (loc, "foo")}] ->
       assert_substring_equal ~ctxt "'foo'" source loc
     | _ -> assert_failure "Unexpected requires"
   end;
@@ -641,11 +641,11 @@ let tests = "require" >::: [
   "export_star" >:: begin fun ctxt ->
     let source = "export * from 'foo'" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_es module_kind ~assert_star:(fun star ->
-      let ExportStar { star_loc; source_loc } =
-        assert_singleton_smap ~ctxt "foo" star in
-      assert_substring_equal ~ctxt "*" source star_loc;
-      assert_substring_equal ~ctxt "'foo'" source source_loc;
+    assert_es module_kind ~assert_star:(function
+      | [ExportStar { star_loc; source = (source_loc, "foo") }] ->
+        assert_substring_equal ~ctxt "*" source star_loc;
+        assert_substring_equal ~ctxt "'foo'" source source_loc;
+      | _ -> assert_failure "Unexpected export"
     )
   end;
 
@@ -770,11 +770,11 @@ let tests = "require" >::: [
   "declare_export_star" >:: begin fun ctxt ->
     let source = "declare export * from 'foo'" in
     let {module_sig = {module_kind; _}; _} = visit source in
-    assert_es module_kind ~assert_star:(fun star ->
-      assert_equal ~ctxt 1 (SMap.cardinal star);
-      let ExportStar { star_loc; source_loc } = SMap.find_unsafe "foo" star in
-      assert_substring_equal ~ctxt "*" source star_loc;
-      assert_substring_equal ~ctxt "'foo'" source source_loc;
+    assert_es module_kind ~assert_star:(function
+      | [ExportStar { star_loc; source = (source_loc, "foo") }] ->
+        assert_substring_equal ~ctxt "*" source star_loc;
+        assert_substring_equal ~ctxt "'foo'" source source_loc;
+      | _ -> assert_failure "Unexpected export"
     )
   end;
 
@@ -807,7 +807,7 @@ let tests = "require" >::: [
     assert_equal ~ctxt 0 (List.length requires);
     assert_cjs module_kind ~assert_export_loc:(assert_equal ~ctxt None);
     assert_equal ~ctxt 0 (SMap.cardinal type_exports_named);
-    assert_equal ~ctxt 0 (SMap.cardinal type_exports_star);
+    assert_equal ~ctxt 0 (List.length type_exports_star);
   end;
 
   "declare_module_export_type" >:: begin function ctxt ->
@@ -873,11 +873,11 @@ let tests = "require" >::: [
     let {declare_modules; _} = visit source in
     assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
     let _, { module_kind; _ } = SMap.find_unsafe "foo" declare_modules in
-    assert_es module_kind ~assert_star:(fun star ->
-      assert_equal ~ctxt 1 (SMap.cardinal star);
-      let ExportStar { star_loc; source_loc } = SMap.find_unsafe "bar" star in
-      assert_substring_equal ~ctxt "*" source star_loc;
-      assert_substring_equal ~ctxt "'bar'" source source_loc
+    assert_es module_kind ~assert_star:(function
+      | [ExportStar { star_loc; source = (source_loc, "bar") }] ->
+        assert_substring_equal ~ctxt "*" source star_loc;
+        assert_substring_equal ~ctxt "'bar'" source source_loc
+      | _ -> assert_failure "Unexpected export"
     )
   end;
 

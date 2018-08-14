@@ -26,7 +26,7 @@ and module_sig = {
   requires: require list;
   module_kind: module_kind;
   type_exports_named: type_export SMap.t; (* export type {A, B as C} [from x] *)
-  type_exports_star: export_star SMap.t; (* export type * from "foo" *)
+  type_exports_star: export_star list; (* export type * from "foo" *)
 }
 
 (* We track information about dependencies for each unique module reference in a
@@ -40,7 +40,7 @@ and require =
   (* require('foo'); *)
   | Require of {
     (* location of module ref *)
-    source: ident;
+    source: source;
 
     require_loc: Loc.t;
 
@@ -51,19 +51,19 @@ and require =
   }
 
   (* import('foo').then(...) *)
-  | ImportDynamic of { source: ident; import_loc: Loc.t }
+  | ImportDynamic of { source: source; import_loc: Loc.t }
 
   (* import declaration without specifiers
    *
    * Note that this is equivalent to the Import variant below with all fields
    * empty, but modeled as a separate variant to ensure use sites handle this
    * case if necessary. *)
-  | Import0 of ident
+  | Import0 of { source: source }
 
   (* import declaration with specifiers *)
   | Import of {
     (* location of module ref *)
-    source: ident;
+    source: source;
 
     (* map from remote name to local names of value imports
      * source: import {A, B as C} from "foo";
@@ -122,7 +122,7 @@ and module_kind =
     (* map from exported name to export data *)
     named: export SMap.t;
     (* map from module reference to location of `export *` *)
-    star: export_star SMap.t;
+    star: export_star list;
   }
 
 and export =
@@ -138,17 +138,17 @@ and export =
     (* may have local name, e.g., `export {foo as bar}` *)
     local: ident option;
     (* module reference for re-exports, e.g., `export {foo} from 'bar'` *)
-    source: ident option;
+    source: source option;
   }
   | ExportNs of {
     (* loc of remote name *)
     loc: Loc.t;
     (* module reference of exported namespace *)
-    source: ident;
+    source: source;
   }
 
 and export_star =
-  | ExportStar of { star_loc: Loc.t; source_loc: Loc.t }
+  | ExportStar of { star_loc: Loc.t; source: source }
 
 and type_export =
   | TypeExportNamed of {
@@ -157,10 +157,12 @@ and type_export =
     (* may have local name, e.g., `export type {T as U}` *)
     local: ident option;
     (* module reference for re-exports, e.g., `export {T} from 'bar'` *)
-    source: ident option;
+    source: source option;
   }
 
 and ident = Loc.t * string
+
+and source = Loc.t * string
 
 and tolerable_error =
   (* e.g. `module.exports.foo = 4` when not at the top level *)
@@ -186,7 +188,8 @@ class mapper : object
   method export: export -> export
   method export_star: export_star -> export_star
   method file_sig: t -> t
-  method ident: ident -> Loc.t * string
+  method ident: ident -> ident
+  method source: source -> source
   method imported_locs: imported_locs -> imported_locs
   method loc: Loc.t -> Loc.t
   method module_kind: module_kind -> module_kind
