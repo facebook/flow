@@ -329,11 +329,8 @@ let tests = "require" >::: [
     let source = "import * as Foo from 'foo'" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Import {source = (_, "foo"); ns; _}] ->
-      ns
-      |> assert_singleton_smap ~ctxt "Foo"
-      |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "* as Foo" source
+    | [Import {source = (_, "foo"); ns = Some (loc, "Foo"); _}] ->
+      assert_substring_equal ~ctxt "* as Foo" source loc
     | _ -> assert_failure "Unexpected requires"
   end;
 
@@ -419,11 +416,8 @@ let tests = "require" >::: [
     let source = "import typeof * as Foo from 'foo'" in
     let {module_sig = {requires; _}; _} = visit source in
     match requires with
-    | [Import {source = (_, "foo"); typesof_ns; _}] ->
-      typesof_ns
-      |> assert_singleton_smap ~ctxt "Foo"
-      |> assert_singleton_nel
-      |> assert_substring_equal ~ctxt "* as Foo" source
+    | [Import {source = (_, "foo"); typesof_ns = Some (loc, "Foo"); _}] ->
+      assert_substring_equal ~ctxt "* as Foo" source loc
     | _ -> assert_failure "Unexpected requires"
   end;
 

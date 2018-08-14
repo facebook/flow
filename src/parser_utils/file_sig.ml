@@ -23,20 +23,20 @@ and module_sig = {
 
 and require =
   | Require of {
-    source: ident;
-    require_loc: Loc.t;
-    bindings: require_bindings option;
-  }
+      source: ident;
+      require_loc: Loc.t;
+      bindings: require_bindings option;
+    }
   | ImportDynamic of { source: ident; import_loc: Loc.t }
   | Import0 of ident
   | Import of {
-    source: ident;
-    named: imported_locs Nel.t SMap.t SMap.t;
-    ns: Loc.t Nel.t SMap.t;
-    types: imported_locs Nel.t SMap.t SMap.t;
-    typesof: imported_locs Nel.t SMap.t SMap.t;
-    typesof_ns: Loc.t Nel.t SMap.t;
-  }
+      source: ident;
+      named: imported_locs Nel.t SMap.t SMap.t;
+      ns: ident option;
+      types: imported_locs Nel.t SMap.t SMap.t;
+      typesof: imported_locs Nel.t SMap.t SMap.t;
+      typesof_ns: ident option;
+    }
 
 and imported_locs = {
   remote_loc: Loc.t;
@@ -49,34 +49,34 @@ and require_bindings =
 
 and module_kind =
   | CommonJS of {
-    mod_exp_loc: Loc.t option;
-  }
+      mod_exp_loc: Loc.t option;
+    }
   | ES of {
-    named: export SMap.t;
-    star: export_star SMap.t;
-  }
+      named: export SMap.t;
+      star: export_star SMap.t;
+    }
 
 and export =
   | ExportDefault of { default_loc: Loc.t; local: ident option }
   | ExportNamed of {
-    loc: Loc.t;
-    local: ident option;
-    source: ident option;
-  }
+      loc: Loc.t;
+      local: ident option;
+      source: ident option;
+    }
   | ExportNs of {
-    loc: Loc.t;
-    source: ident;
-  }
+      loc: Loc.t;
+      source: ident;
+    }
 
 and export_star =
   | ExportStar of { star_loc: Loc.t; source_loc: Loc.t }
 
 and type_export =
   | TypeExportNamed of {
-    loc: Loc.t;
-    local: ident option;
-    source: ident option;
-  }
+      loc: Loc.t;
+      local: ident option;
+      source: ident option;
+    }
 
 and ident = Loc.t * string
 
@@ -412,10 +412,10 @@ class requires_calculator ~ast = object(this)
     | None, None -> Import0 source
     | _ ->
       let named = ref SMap.empty in
-      let ns = ref SMap.empty in
+      let ns = ref None in
       let types = ref SMap.empty in
       let typesof = ref SMap.empty in
-      let typesof_ns = ref SMap.empty in
+      let typesof_ns = ref None in
       let ref_of_kind = function
         | ImportType -> types
         | ImportTypeof -> typesof
@@ -426,9 +426,9 @@ class requires_calculator ~ast = object(this)
         let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
         ref := SMap.add remote locals !ref ~combine:combine_nel_smap
       in
-      let add_ns local loc ref =
-        let locs = Nel.one loc in
-        ref := SMap.add local locs !ref ~combine:Nel.rev_append
+      let set_ns local loc ref =
+        if !ref = None then ref := Some (loc, local)
+        else failwith "unreachable"
       in
       Option.iter ~f:(fun (loc, local) ->
         add_named "default" local {remote_loc=loc; local_loc=loc} (ref_of_kind importKind)
@@ -437,8 +437,8 @@ class requires_calculator ~ast = object(this)
         | ImportNamespaceSpecifier (loc, (_, local)) ->
           (match importKind with
           | ImportType -> failwith "import type * is a parse error"
-          | ImportTypeof -> add_ns local loc typesof_ns
-          | ImportValue -> add_ns local loc ns)
+          | ImportTypeof -> set_ns local loc typesof_ns
+          | ImportValue -> set_ns local loc ns)
         | ImportNamedSpecifiers named_specifiers ->
           List.iter (function {local; remote; kind} ->
             let importKind = match kind with Some k -> k | None -> importKind in
@@ -834,10 +834,10 @@ class mapper = object(this)
     | Import { source; named; ns; types; typesof; typesof_ns; } ->
       let source' = this#ident source in
       let named' = SMap.map (SMap.map (Nel.map this#imported_locs)) named in
-      let ns' = SMap.map (Nel.map this#loc) ns in
+      let ns' = Option.map ~f:this#ident ns in
       let types' = SMap.map (SMap.map (Nel.map this#imported_locs)) types in
       let typesof' = SMap.map (SMap.map (Nel.map this#imported_locs)) typesof in
-      let typesof_ns' = SMap.map (Nel.map this#loc) typesof_ns in
+      let typesof_ns' = Option.map ~f:this#ident typesof_ns in
       if source == source' &&
         named == named' &&
         ns == ns' &&

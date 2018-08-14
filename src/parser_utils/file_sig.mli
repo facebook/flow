@@ -75,10 +75,10 @@ and require =
      *)
     named: imported_locs Nel.t SMap.t SMap.t;
 
-    (* map from local name to location of namespace imports
+    (* optional pair of location of namespace import and local name
      * source: import * as X from "foo";
-     * result: {X:[loc]} *)
-    ns: Loc.t Nel.t SMap.t;
+     * result: loc, X *)
+    ns: ident option;
 
     (* map from remote name to local names of type imports
      * source: import type {A, B as C} from "foo";
@@ -92,10 +92,10 @@ and require =
      * result: {A:{A:{[ImportedLocs {_}]}}, B:{C:{[ImportedLocs {_}]}}} *)
     typesof: imported_locs Nel.t SMap.t SMap.t;
 
-    (* map from local name to location of namespace typeof imports
+    (* optional pair of location of namespace typeof import and local name
      * source: import typeof * as X from "foo";
-     * result: {X:[loc]} *)
-    typesof_ns: Loc.t Nel.t SMap.t;
+     * result: loc, X *)
+    typesof_ns: ident option
   }
 
 and imported_locs = {
