@@ -244,7 +244,7 @@ let detect_invalid_type_assert_calls ~full_cx cxs =
       | Ok ty ->
         Pervasives.ignore ((check_type_visitor wrap)#type_ () ty)
       | Error _ ->
-        let Type_table.Scheme (_, t) = scheme in
+        let { Type.TypeScheme.type_ = t; _ } = scheme in
         wrap (Type.desc_of_t t)
     )
   in

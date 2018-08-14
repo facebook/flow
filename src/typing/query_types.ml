@@ -59,8 +59,7 @@ let query_type ~expand_aliases ?type_table cx loc =
     | Ok ty -> Success (loc, ty)
     | Error err ->
       let msg = Ty_normalizer.error_to_string err in
-      let Type_table.Scheme (_, t) = scheme in
-      FailureUnparseable (loc, t, msg))
+      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
 let query_coverage_type ~expand_aliases ?type_table cx loc =
 
@@ -81,8 +80,7 @@ let query_coverage_type ~expand_aliases ?type_table cx loc =
     | Ok ty -> Success (loc, ty)
     | Error err ->
       let msg = Ty_normalizer.error_to_string err in
-      let Type_table.Scheme (_, t) = scheme in
-      FailureUnparseable (loc, t, msg))
+      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
 module DumpTypeNormalizer = Ty_normalizer.Make(struct
   let opt_fall_through_merged = false

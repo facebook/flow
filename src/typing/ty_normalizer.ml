@@ -122,7 +122,7 @@ module Make(C: Config) : sig
   val from_type: cx:Context.t -> Type.t -> (Ty.t, error) result
 
   (* Takes a context and a type scheme and returns a Ty.t or an error. *)
-  val from_scheme: cx:Context.t -> Type_table.type_scheme -> (Ty.t, error) result
+  val from_scheme: cx:Context.t -> Type.TypeScheme.t -> (Ty.t, error) result
 
   (* Takes a context and a list of types as input and returns a list of a choice
      of a normalized type or an error. It differs from mapping `from_type` on
@@ -135,12 +135,12 @@ module Make(C: Config) : sig
     cx:Context.t -> ('a * Type.t) list -> ('a * (Ty.t, error) result) list
 
   val from_schemes:
-    cx:Context.t -> ('a * Type_table.type_scheme) list -> ('a * (Ty.t, error) result) list
+    cx:Context.t -> ('a * Type.TypeScheme.t) list -> ('a * (Ty.t, error) result) list
 
   val fold_hashtbl:
     cx:Context.t ->
     f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) ->
-    g:('b -> Type_table.type_scheme) ->
+    g:('b -> Type.TypeScheme.t) ->
     htbl: (Loc.t, 'b) Hashtbl.t ->
     'a -> 'a
 
@@ -274,8 +274,32 @@ end = struct
     type t = {
       (* For debugging purposes mostly *)
       depth: int;
-      (* Type parameters in scope *)
+
+      (* Type parameters in scope
+
+         The parameter environment is useful in handling inferred type parameters.
+         During checking, type parameters are expanded to so called generated tests,
+         that hold the `RPolyTest` reason. During normalization we wish to recover the
+         more informative original parameter names, instead of these tests. To do so
+         it's important to know what type parameters were in scope at the location where
+         a type was recorded. The type parameter name is saved with that `RPolyTest`
+         reason. What is not guaranteed, however, is that the parameter is in scope at
+         the point of the query. For example, consider:
+
+           function f<T>(x: T) { return x; }
+           const y = f(1);
+
+         The type for `x` within `f` is reconstructed from the generated bounds (for
+         `T`): Empty and Mixed. From the `RPolyTest` reasons on these types we can
+         recover the name `T` and return that instead of the bounds.
+
+         Due to the lack of a return type for `f`, however, querying `y` returns the
+         exact same answer even outside the context of `f`. The reasons will still point
+         to `T` even though it's now out of scope. In this case we need to fall back to
+         the actual bounds and return those instead. So the normalized type here would
+         be: Empty | Mixed, which simplifies to Mixed. *)
       tparams: Type.typeparam list;
+
       (* File the query originated from *)
       file: File_key.t;
 
@@ -1610,8 +1634,8 @@ end = struct
   (* Exposed API *)
   let from_schemes ~cx schemes =
     let state, imported_names = import_names cx (State.empty ~cx) in
-    snd (ListUtils.fold_map (fun st (a, s) ->
-      let Type_table.Scheme (tparams, t) = s in
+    snd (ListUtils.fold_map (fun st (a, scheme) ->
+      let { Type.TypeScheme.tparams; type_ = t } = scheme in
       match run_type cx st tparams imported_names t with
       | Ok t, st -> (st, (a, Ok t))
       | Error s, st -> (st, (a, Error s))
@@ -1627,7 +1651,7 @@ end = struct
 
   let from_scheme ~cx scheme =
     let state, imported_names = import_names cx (State.empty ~cx) in
-    let Type_table.Scheme (tparams, t) = scheme in
+    let { Type.TypeScheme.tparams; type_ = t } = scheme in
     fst (run_type cx state tparams imported_names t)
 
   let from_type ~cx t =
@@ -1637,7 +1661,7 @@ end = struct
   let fold_hashtbl ~cx ~f ~g ~htbl init =
     let state, imported_names = import_names cx (State.empty ~cx) in
     let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
-      let Type_table.Scheme (tparams, t) = g x in
+      let { Type.TypeScheme.tparams; type_ = t } = g x in
       let env = Env.init cx tparams imported_names in
       let result, st' = run st (type__ ~env t) in
       let acc' = f acc (loc, result) in
