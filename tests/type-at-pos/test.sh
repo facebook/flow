@@ -327,8 +327,10 @@ printf "import-default.js:3:16 = "
 assert_ok "$FLOW" type-at-pos import-default.js 3 16 --strip-root --pretty
 
 # import-typeof-class.js
-printf "import-typeof-class.js:5:16 "
-assert_ok "$FLOW" type-at-pos import-typeof-class.js 5 16 --strip-root --pretty --expand-json-output
+printf "import-typeof-class.js:6:16 "
+assert_ok "$FLOW" type-at-pos import-typeof-class.js 6 16 --strip-root --pretty --expand-json-output
+printf "import-typeof-class.js:7:16 "
+assert_ok "$FLOW" type-at-pos import-typeof-class.js 7 16 --strip-root --pretty --expand-json-output
 
 # object_special_cases.js
 printf "object_special_cases.js:6:32 = "
@@ -471,6 +473,12 @@ printf "refinement.js:7:25 = "
 assert_ok "$FLOW" type-at-pos refinement.js 7 25 --strip-root --pretty
 printf "refinement.js:8:25 = "
 assert_ok "$FLOW" type-at-pos refinement.js 8 25 --strip-root --pretty
+
+# require-class.js
+printf "require-class.js:5:16 = "
+assert_ok "$FLOW" type-at-pos require-class.js 5 16 --strip-root --expand-json-output --pretty
+printf "require-class.js:6:16 = "
+assert_ok "$FLOW" type-at-pos require-class.js 6 16 --strip-root --expand-json-output --pretty
 
 # test.js
 printf "test.js:5:1 = "

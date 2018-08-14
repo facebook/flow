@@ -1765,7 +1765,7 @@ import-default.js:3:16 = {
   "start":13,
   "end":25
 }
-import-typeof-class.js:5:16 {
+import-typeof-class.js:6:16 {
   "expanded_type":{
     "kind":"Class",
     "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
@@ -1777,12 +1777,33 @@ import-typeof-class.js:5:16 {
   "loc":{
     "source":"import-typeof-class.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":16,"offset":69},
-    "end":{"line":5,"column":16,"offset":70}
+    "start":{"line":6,"column":16,"offset":117},
+    "end":{"line":6,"column":16,"offset":118}
   },
   "path":"import-typeof-class.js",
-  "line":5,
-  "endline":5,
+  "line":6,
+  "endline":6,
+  "start":16,
+  "end":16
+}
+import-typeof-class.js:7:16 {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "structural":false,
+    "typeParams":null
+  },
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"import-typeof-class.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":16,"offset":135},
+    "end":{"line":7,"column":16,"offset":136}
+  },
+  "path":"import-typeof-class.js",
+  "line":7,
+  "endline":7,
   "start":16,
   "end":16
 }
@@ -2768,6 +2789,48 @@ refinement.js:8:25 = {
   "endline":8,
   "start":24,
   "end":26
+}
+require-class.js:5:16 = {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{"provenance":{"kind":"Remote","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "structural":false,
+    "typeParams":null
+  },
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"require-class.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":16,"offset":73},
+    "end":{"line":5,"column":16,"offset":74}
+  },
+  "path":"require-class.js",
+  "line":5,
+  "endline":5,
+  "start":16,
+  "end":16
+}
+require-class.js:6:16 = {
+  "expanded_type":{
+    "kind":"Class",
+    "name":{"provenance":{"kind":"Remote","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "structural":false,
+    "typeParams":null
+  },
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"require-class.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":16,"offset":91},
+    "end":{"line":6,"column":16,"offset":92}
+  },
+  "path":"require-class.js",
+  "line":6,
+  "endline":6,
+  "start":16,
+  "end":16
 }
 test.js:5:1 = {
   "type":"number",
