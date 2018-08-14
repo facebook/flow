@@ -7,6 +7,7 @@
 
 val autocomplete_get_results:
   Context.t ->
+  File_sig.t ->
   Autocomplete_js.autocomplete_state option ref ->
   Docblock.t ->
   (ServerProt.Response.complete_autocomplete_result list * Hh_json.json option,

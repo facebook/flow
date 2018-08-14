@@ -225,7 +225,7 @@ let check_type_visitor wrap =
 
   end
 
-let detect_invalid_type_assert_calls ~full_cx cxs =
+let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -252,8 +252,9 @@ let detect_invalid_type_assert_calls ~full_cx cxs =
     let file = Context.file cx in
     let type_table = Context.type_table cx in
     let targs_map = Type_table.targs_hashtbl type_table in
+    let file_sig = FilenameMap.find_unsafe file file_sigs in
     let imported_ts = Context.imported_ts cx in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~imported_ts in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~imported_ts ~file_sig in
     Utils_js.LocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
   ) cxs
 
@@ -430,7 +431,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls ~full_cx:cx (cx::other_cxs);
+  detect_invalid_type_assert_calls ~full_cx:cx file_sigs (cx::other_cxs);
 
   cx, other_cxs
 

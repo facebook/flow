@@ -39,16 +39,17 @@ val full_check:
   ServerEnv.env ->
   ServerEnv.env Lwt.t
 
- val basic_check_contents:
-   options: Options.t ->
-   workers: MultiWorkerLwt.worker list option ->
-   env: ServerEnv.env ref ->
-   profiling: Profiling_js.running ->
-   string ->               (* contents *)
-   File_key.t ->           (* fake file-/module name *)
-   (Context.t *
-    Docblock.t,
-    string) result Lwt.t
+val basic_check_contents:
+  options: Options.t ->
+  workers: MultiWorkerLwt.worker list option ->
+  env: ServerEnv.env ref ->
+  profiling: Profiling_js.running ->
+  string ->               (* contents *)
+  File_key.t ->           (* fake file-/module name *)
+  (Context.t *
+   Docblock.t *
+   File_sig.t,
+   string) result Lwt.t
 
 val typecheck_contents:
   options: Options.t ->
@@ -57,7 +58,7 @@ val typecheck_contents:
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
   File_key.t ->                             (* fake file-/module name *)
-  ((Context.t * (Loc.t, Loc.t) Ast.program) option *
+  ((Context.t * (Loc.t, Loc.t) Ast.program * File_sig.t) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 

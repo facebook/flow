@@ -76,13 +76,21 @@ type genv = {
   (* Full (merged) context *)
   cx: Context.t;
 
+  (* Type table of the current file *)
+  type_table: Type_table.t;
+
+  (* The file_sig of the current file *)
+  file_sig: File_sig.t;
+
   (* Imported types of current file *)
   imported_ts: Type.t SMap.t;
 }
 
-let mk_genv ~full_cx ~file ~imported_ts = {
+let mk_genv ~full_cx ~file ~type_table ~file_sig ~imported_ts = {
   file;
   cx = full_cx;
+  type_table;
+  file_sig;
   imported_ts;
 }
 

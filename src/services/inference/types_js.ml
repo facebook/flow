@@ -656,7 +656,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         else Errors.ErrorSet.empty
       in
 
-      Lwt.return (Some (cx, ast), errors, warnings, info)
+      Lwt.return (Some (cx, ast, file_sig), errors, warnings, info)
 
   | Parsing_service_js.Parse_fail fails ->
       let errors = match fails with
@@ -690,10 +690,10 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
     let%lwt cx_opt, _errors, _warnings, info =
       typecheck_contents_
         ~options ~workers ~env ~check_syntax:false ~profiling contents filename in
-    let cx = match cx_opt with
-      | Some (cx, _) -> cx
+    let cx, file_sig = match cx_opt with
+      | Some (cx, _, file_sig) -> cx, file_sig
       | None -> failwith "Couldn't parse file" in
-    Lwt.return (Ok (cx, info))
+    Lwt.return (Ok (cx, info, file_sig))
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->
