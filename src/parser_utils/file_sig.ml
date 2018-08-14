@@ -779,12 +779,12 @@ class mapper = object(this)
   method file_sig (file_sig: t) =
     let { module_sig; declare_modules; tolerable_errors } = file_sig in
     let module_sig' = this#module_sig module_sig in
-    let declare_modules' = SMap.map (fun (loc, module_sig) ->
+    let declare_modules' = SMapUtils.ident_map (fun (loc, module_sig) ->
       let loc = this#loc loc in
       let module_sig = this#module_sig module_sig in
       (loc, module_sig)
     ) declare_modules in
-    let tolerable_errors' = List.map this#tolerable_error tolerable_errors in
+    let tolerable_errors' = ListUtils.ident_map this#tolerable_error tolerable_errors in
     if module_sig == module_sig' &&
       declare_modules == declare_modules' &&
       tolerable_errors == tolerable_errors'
@@ -797,10 +797,10 @@ class mapper = object(this)
 
   method module_sig (module_sig: module_sig) =
     let { requires; module_kind; type_exports_named; type_exports_star } = module_sig in
-    let requires' = List.map this#require requires in
+    let requires' = ListUtils.ident_map this#require requires in
     let module_kind' = this#module_kind module_kind in
-    let type_exports_named' = SMap.map this#type_export type_exports_named in
-    let type_exports_star' = List.map this#export_star type_exports_star in
+    let type_exports_named' = SMapUtils.ident_map this#type_export type_exports_named in
+    let type_exports_star' = ListUtils.ident_map this#export_star type_exports_star in
     if requires == requires' &&
       module_kind == module_kind' &&
       type_exports_named == type_exports_named' &&
@@ -818,7 +818,7 @@ class mapper = object(this)
     | Require { source; require_loc; bindings; } ->
       let source' = this#source source in
       let require_loc' = this#loc require_loc in
-      let bindings' = Option.map ~f:this#require_bindings bindings in
+      let bindings' = OptionUtils.ident_map this#require_bindings bindings in
       if source == source' && require_loc == require_loc' && bindings == bindings'
       then require
       else Require { source = source'; require_loc = require_loc'; bindings = bindings'; }
@@ -835,11 +835,11 @@ class mapper = object(this)
       else Import0 { source = source' }
     | Import { source; named; ns; types; typesof; typesof_ns; } ->
       let source' = this#source source in
-      let named' = SMap.map (SMap.map (Nel.map this#imported_locs)) named in
-      let ns' = Option.map ~f:this#ident ns in
-      let types' = SMap.map (SMap.map (Nel.map this#imported_locs)) types in
-      let typesof' = SMap.map (SMap.map (Nel.map this#imported_locs)) typesof in
-      let typesof_ns' = Option.map ~f:this#ident typesof_ns in
+      let named' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) named in
+      let ns' = OptionUtils.ident_map this#ident ns in
+      let types' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) types in
+      let typesof' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) typesof in
+      let typesof_ns' = OptionUtils.ident_map this#ident typesof_ns in
       if source == source' &&
         named == named' &&
         ns == ns' &&
@@ -905,8 +905,8 @@ class mapper = object(this)
       else ExportDefault { default_loc = default_loc'; local = local' }
     | ExportNamed { loc; local; source; } ->
       let loc' = this#loc loc in
-      let local' = Option.map ~f:this#ident local in
-      let source' = Option.map ~f:this#source source in
+      let local' = OptionUtils.ident_map this#ident local in
+      let source' = OptionUtils.ident_map this#source source in
       if loc == loc' && local == local' && source == source'
       then export
       else ExportNamed { loc = loc'; local = local'; source = source'; }
@@ -930,8 +930,8 @@ class mapper = object(this)
     match type_export with
     | TypeExportNamed { loc; local; source; } ->
       let loc' = this#loc loc in
-      let local' = Option.map ~f:this#ident local in
-      let source' = Option.map ~f:this#source source in
+      let local' = OptionUtils.ident_map this#ident local in
+      let source' = OptionUtils.ident_map this#source source in
       if loc == loc' && local == local' && source == source'
       then type_export
       else TypeExportNamed { loc = loc'; local = local'; source = source'; }
