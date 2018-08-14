@@ -20,7 +20,11 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
         "loc", Reason.json_of_loc loc;
         "type", ty_json;
       ] in
-      Query_types.(match query_type ~expand_aliases cx loc with
+      Query_types.(
+        let type_table = Context.type_table cx in
+        let imported_ts = Context.imported_ts cx in
+        let file = Context.file cx in
+        match query_type ~full_cx:cx ~file ~expand_aliases ~type_table ~imported_ts loc with
         | FailureNoMatch ->
           Hh_json.JSON_Object [
             "result", Hh_json.JSON_String "FAILURE_NO_MATCH"

@@ -264,8 +264,11 @@ let infer_type filename content line col =
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
+      let type_table = Context.type_table cx in
+      let imported_ts = Context.imported_ts cx in
+      let file = Context.file cx in
       let loc = mk_loc filename line col in Query_types.(
-        match query_type ~expand_aliases:false cx loc with
+        match query_type ~full_cx:cx ~file ~expand_aliases:false ~type_table ~imported_ts loc with
         | FailureNoMatch -> Loc.none, Error "No match"
         | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
         | Success (loc, t) ->
@@ -295,7 +298,7 @@ let dump_types js_file js_content =
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
       let printer = Ty_printer.string_of_t in
-      let types = Query_types.dump_types ~printer cx in
+      let types = Query_types.dump_types cx ~printer in
       let strip_root = None in
       let types_json = types_to_json types ~strip_root in
 

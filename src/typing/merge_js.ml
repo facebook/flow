@@ -18,13 +18,6 @@ end)
 module FilenameMap = Utils_js.FilenameMap
 module LocSet = Utils_js.LocSet
 
-module TypeNormalizer = Ty_normalizer.Make(struct
-  let opt_fall_through_merged = false
-  let opt_expand_internal_types = false
-  let opt_expand_type_aliases = true
-  let opt_flag_shadowed_type_params = false
-end)
-
 module Reqs = struct
   type impl = LocSet.t
   type dep_impl = Context.sig_t * LocSet.t
@@ -233,14 +226,21 @@ let check_type_visitor wrap =
   end
 
 let detect_invalid_type_assert_calls ~full_cx cxs =
-  let check_valid_call targs_map call_loc (_, targ_loc) =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = true;
+    flag_shadowed_type_params = false;
+  } in
+  let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
     Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
       let desc = Reason.RCustom "TypeAssert library function" in
       let reason_main = Reason.mk_reason desc call_loc in
       let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
         reason_main, Reason.mk_reason reason call_loc
       )) in
-      match TypeNormalizer.from_scheme ~cx:full_cx scheme with
+      match Ty_normalizer.from_scheme ~options ~genv scheme with
       | Ok ty ->
         Pervasives.ignore ((check_type_visitor wrap)#type_ () ty)
       | Error _ ->
@@ -249,8 +249,12 @@ let detect_invalid_type_assert_calls ~full_cx cxs =
     )
   in
   List.iter (fun cx ->
-    let targs_map = Type_table.targs_hashtbl (Context.type_table cx) in
-    Utils_js.LocMap.iter (check_valid_call targs_map) (Context.type_asserts cx)
+    let file = Context.file cx in
+    let type_table = Context.type_table cx in
+    let targs_map = Type_table.targs_hashtbl type_table in
+    let imported_ts = Context.imported_ts cx in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~imported_ts in
+    Utils_js.LocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
   ) cxs
 
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =

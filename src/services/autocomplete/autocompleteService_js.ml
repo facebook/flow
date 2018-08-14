@@ -9,13 +9,6 @@ open Autocomplete_js
 open Core_result
 open ServerProt.Response
 
-module AutocompleteTypeNormalizer = Ty_normalizer.Make(struct
-  let opt_fall_through_merged = true
-  let opt_expand_internal_types = true
-  let opt_expand_type_aliases = false
-  let opt_flag_shadowed_type_params = true
-end)
-
 let add_autocomplete_token contents line column =
   let line = line - 1 in
   Line.transform_nth contents line (fun line_str ->
@@ -142,11 +135,21 @@ let autocomplete_member ~ac_type cx this ac_name ac_loc docblock = Flow_js.(
   match Members.to_command_result result with
   | Error error -> Error (error, Some json_data_to_log)
   | Ok result_map ->
+    let options = {
+      Ty_normalizer_env.
+      fall_through_merged = true;
+      expand_internal_types = true;
+      expand_type_aliases = false;
+      flag_shadowed_type_params = true;
+    } in
+    let file = Context.file cx in
+    let imported_ts = Context.imported_ts cx in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~imported_ts in
     let result = result_map
     |> autocomplete_filter_members
     |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t), t))
     |> SMap.values
-    |> AutocompleteTypeNormalizer.from_types ~cx
+    |> Ty_normalizer.from_types ~options ~genv
     |> Core_list.filter_map ~f:(function
      | l, Ok s -> Some (l, s)
      | _ -> None
@@ -174,9 +177,18 @@ let autocomplete_id cx env =
         then (Loc.none, "super")
         else (Scope.Entry.entry_loc entry, name)
       in
-
+      let options = {
+        Ty_normalizer_env.
+        fall_through_merged = true;
+        expand_internal_types = true;
+        expand_type_aliases = false;
+        flag_shadowed_type_params = true;
+      } in
+      let file = Context.file cx in
+      let imported_ts = Context.imported_ts cx in
+      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~imported_ts in
       let type_ = Scope.Entry.actual_type entry in
-      match AutocompleteTypeNormalizer.from_type ~cx type_ with
+      match Ty_normalizer.from_type ~options ~genv type_ with
       | Ok t -> autocomplete_create_result ((name, loc), t) :: acc
       | Error _ -> acc
     )
