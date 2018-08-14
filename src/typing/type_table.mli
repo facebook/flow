@@ -28,6 +28,7 @@ val find_unsafe_targ: t -> Loc.t -> Type.TypeScheme.t
 val reset: t -> unit
 val copy: t -> t
 val with_typeparams: Type.typeparam list -> t -> (unit -> 'a) -> 'a
+val find_type_info: t -> Loc.t -> scheme_entry option
 val find_type_info_with_pred: t -> (Loc.t -> bool) -> (Loc.t * scheme_entry) option
 val function_decl_loc : (Loc.t * 'a) option -> Loc.t -> Loc.t
 val targs_hashtbl: t -> (Loc.t, Type.TypeScheme.t) Hashtbl.t

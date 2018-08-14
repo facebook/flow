@@ -22,11 +22,8 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
       ] in
       Query_types.(
         let type_table = Context.type_table cx in
-        let imported_ts = Context.imported_ts cx in
         let file = Context.file cx in
-        let result = query_type ~full_cx:cx ~file ~file_sig ~expand_aliases
-          ~type_table ~imported_ts loc in
-        match result with
+        match query_type ~full_cx:cx ~file ~file_sig ~expand_aliases ~type_table loc with
         | FailureNoMatch ->
           Hh_json.JSON_Object [
             "result", Hh_json.JSON_String "FAILURE_NO_MATCH"

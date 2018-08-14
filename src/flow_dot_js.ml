@@ -265,10 +265,9 @@ let infer_type filename content line col =
     | Ok (ast, file_sig) ->
       let cx = infer_and_merge ~root filename ast file_sig in
       let type_table = Context.type_table cx in
-      let imported_ts = Context.imported_ts cx in
       let file = Context.file cx in
       let loc = mk_loc filename line col in Query_types.(
-        match query_type ~full_cx:cx ~file ~file_sig ~expand_aliases:false ~type_table ~imported_ts loc with
+        match query_type ~full_cx:cx ~file ~file_sig ~expand_aliases:false ~type_table loc with
         | FailureNoMatch -> Loc.none, Error "No match"
         | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
         | Success (loc, t) ->

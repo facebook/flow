@@ -2793,7 +2793,7 @@ refinement.js:8:25 = {
 require-class.js:5:16 = {
   "expanded_type":{
     "kind":"Class",
-    "name":{"provenance":{"kind":"Remote","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
     "structural":false,
     "typeParams":null
   },
@@ -2814,7 +2814,7 @@ require-class.js:5:16 = {
 require-class.js:6:16 = {
   "expanded_type":{
     "kind":"Class",
-    "name":{"provenance":{"kind":"Remote","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
     "structural":false,
     "typeParams":null
   },

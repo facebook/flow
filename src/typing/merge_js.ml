@@ -253,8 +253,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     let type_table = Context.type_table cx in
     let targs_map = Type_table.targs_hashtbl type_table in
     let file_sig = FilenameMap.find_unsafe file file_sigs in
-    let imported_ts = Context.imported_ts cx in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~imported_ts ~file_sig in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
     Utils_js.LocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
   ) cxs
 

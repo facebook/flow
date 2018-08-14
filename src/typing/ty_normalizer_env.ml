@@ -81,17 +81,13 @@ type genv = {
 
   (* The file_sig of the current file *)
   file_sig: File_sig.t;
-
-  (* Imported types of current file *)
-  imported_ts: Type.t SMap.t;
 }
 
-let mk_genv ~full_cx ~file ~type_table ~file_sig ~imported_ts = {
+let mk_genv ~full_cx ~file ~type_table ~file_sig = {
   file;
   cx = full_cx;
   type_table;
   file_sig;
-  imported_ts;
 }
 
 type t = {

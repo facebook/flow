@@ -91,6 +91,11 @@ let with_typeparams new_tparams x f =
   x.tparams := old_tparams;
   r
 
+let find_type_info t loc =
+  match Hashtbl.find t.type_info loc with
+  | exception Not_found -> None
+  | x -> Some x
+
 let find_type_info_with_pred t pred =
   Hashtbl.fold (fun k v a ->
     if pred k then Some (k, v) else a

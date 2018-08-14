@@ -39,7 +39,7 @@ type result =
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
-let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~imported_ts loc =
+let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -51,14 +51,14 @@ let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~imported_ts
   match Type_table.find_type_info_with_pred type_table pred with
   | None -> FailureNoMatch
   | Some (loc, (_, scheme, _)) ->
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~imported_ts ~type_table in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
     (match Ty_normalizer.from_scheme ~options ~genv scheme with
     | Ok ty -> Success (loc, ty)
     | Error err ->
       let msg = Ty_normalizer.error_to_string err in
       FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
-let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~imported_ts loc =
+let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -69,7 +69,7 @@ let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~im
   match Type_table.find_unsafe_coverage type_table loc with
   | exception Not_found -> FailureNoMatch
   | scheme ->
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig ~imported_ts in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
     (match Ty_normalizer.from_scheme ~options ~genv scheme with
     | Ok ty -> Success (loc, ty)
     | Error err ->
@@ -79,9 +79,8 @@ let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~im
 let dump_types cx file_sig ~printer =
   let options = Ty_normalizer_env.default_opts in
   let file = Context.file cx in
-  let imported_ts = Context.imported_ts cx in
   let type_table = Context.type_table cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig ~imported_ts in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
   let result = Ty_normalizer.from_schemes ~options ~genv
     (Type_table.coverage_to_list (Context.type_table cx)) in
   let print_ok = function
@@ -104,9 +103,8 @@ let covered_types cx file_sig ~should_check =
     flag_shadowed_type_params = false;
   } in
   let file = Context.file cx in
-  let imported_ts = Context.imported_ts cx in
   let type_table = Context.type_table cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~imported_ts ~type_table ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
   let f =
     if should_check then
       fun acc (loc, result) ->
@@ -135,10 +133,9 @@ let suggest_types cx file_sig =
     expand_type_aliases = false;
     flag_shadowed_type_params = true;
   } in
-  let imported_ts = Context.imported_ts cx in
   let type_table = Context.type_table cx in
   let file = Context.file cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~imported_ts ~type_table ~file_sig in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
   let result = Utils_js.LocMap.empty in
   let result = Ty_normalizer.fold_hashtbl
     ~options ~genv

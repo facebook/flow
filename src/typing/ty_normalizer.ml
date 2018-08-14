@@ -1447,25 +1447,98 @@ end = struct
     run state (type__ ~env t)
 
   (* Before we start normalizing the input type we populate our environment with
-     aliases that are in scope due to typed imports. These are already inside the
-     'imported_ts' portion of the context. This step includes the normalization
+     aliases that are in scope due to typed imports. These appear inside
+     File_sig.module_sig.requires. This step includes the normalization
      of all imported types and the creation of a map to hold bindings of imported
      names to location of definition. This map will be used later to determine
      whether a located name (symbol) appearing is part of the file's imports or a
      remote (hidden or non-imported) name.
   *)
+  module Imports = struct
+    open File_sig
+
+    let from_imported_locs local imported_locs acc =
+      let { local_loc; _ } = imported_locs in
+      SMap.add local local_loc acc
+
+    let from_imported_locs_map map acc =
+      SMap.fold (fun _remote remote_map acc ->
+        SMap.fold (fun local imported_locs_nel acc ->
+          Nel.fold_left (fun acc imported_locs  ->
+            from_imported_locs local imported_locs acc
+          ) acc imported_locs_nel
+        ) remote_map acc
+      ) map acc
+
+    let from_binding binding acc =
+      match binding with
+      | BindIdent (loc, x) -> SMap.add x loc acc
+      | BindNamed map -> from_imported_locs_map map acc
+
+    let from_bindings bindings_opt acc =
+      Option.value_map ~default:acc ~f:(fun bs -> from_binding bs acc)
+        bindings_opt
+
+    let from_require require acc =
+      match require with
+      | Require { source=_; require_loc=_; bindings } ->
+        from_bindings bindings acc
+      | Import { source=_; named; ns=_; types; typesof; typesof_ns=_; } ->
+        (* TODO import namespaces (`ns`) as modules that might contain imported types *)
+        acc
+        |> from_imported_locs_map named
+        |> from_imported_locs_map types
+        |> from_imported_locs_map typesof
+      | ImportDynamic _
+      | Import0 _ -> acc
+
+    let from_requires requires =
+      List.fold_left (fun acc require ->
+        from_require require acc
+      ) SMap.empty requires
+
+    let extract_schemes type_table imported_locs =
+      SMap.fold (fun x loc acc ->
+        match Type_table.find_type_info type_table loc with
+        | Some (_, e, _) -> SMap.add x e acc
+        | None -> acc
+      ) imported_locs SMap.empty
+
+    let extract_ident ~options ~genv (x, scheme) = Ty.(
+      let { Type.TypeScheme.tparams; type_ = t } = scheme in
+      let env = Env.init ~options ~genv ~tparams ~imported_names:SMap.empty in
+      type__ ~env t >>| fun ty ->
+      match ty with
+      | TypeAlias { ta_name = Symbol (p, _) ; _ }
+      | Class (Symbol (p, _), _, _) ->
+        Some (x, loc_of_provenance p)
+      | _ -> None
+    )
+
+    let extract_idents ~options ~genv imported_schemes =
+      mapM (extract_ident ~options ~genv) (SMap.bindings imported_schemes) >>|
+      List.fold_left (fun acc x ->
+        match x with
+        | Some (x, id) -> SMap.add x id acc
+        | None -> acc
+      ) SMap.empty
+
+  end
 
   let run_imports ~options ~genv state =
-    let imported_ts = genv.Env.imported_ts in
-    SMap.fold (fun x t (acc, state) -> Ty.(
-      (* 'tparams' ought to be empty at this point *)
-      let env = Env.init ~options ~genv ~tparams:[] ~imported_names:SMap.empty in
-      match run state (type__ ~env t) with
-      | Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), state
-      | Ok (Class (Symbol (Remote loc, _), _, _)), state ->
-        SMap.add x loc acc, state
-      | _, state -> acc, state
-    )) imported_ts (SMap.empty, state)
+    let open Imports in
+    let file_sig = genv.Env.file_sig in
+    let requires = File_sig.(file_sig.module_sig.requires) in
+    let type_table = genv.Env.type_table in
+    let imported_locs = from_requires requires in
+    let imported_schemes = extract_schemes type_table imported_locs in
+    match run state (extract_idents ~options ~genv imported_schemes) with
+    | Ok x, state -> x, state
+    | Error _, state ->
+      (* Fall back to empty imports map.
+       * TODO provide more fine grained handling of errors
+       *)
+      SMap.empty, state
 
 end
 
