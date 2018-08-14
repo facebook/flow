@@ -144,14 +144,36 @@ let to_string t =
       in
       items_to_list_string 2 (List.map string_of_require require_list)
     in
-    let string_of_module_kind _ = "TODO" in
-    let string_of_type_export_map _ = "TODO" in
-    let string_of_export_star_map _ = "TODO" in
+    let string_of_export = function
+      | ExportDefault { local; _ } ->
+        Printf.sprintf "ExportDefault (%s)" @@
+          string_of_option (fun (_, x) -> x) local
+      | ExportNamed { local; _ } ->
+        Printf.sprintf "ExportNamed (%s)" @@
+          string_of_option (fun (_, x) -> x) local
+      | ExportNs _ -> "ExportNs"
+    in
+    let string_of_type_export = function
+      | TypeExportNamed { local; _ } ->
+        Printf.sprintf "TypeExportNamed (%s)" @@
+          string_of_option (fun (_, x) -> x) local
+    in
+    let string_of_export_star = function
+      | ExportStar _ -> "ExportStar"
+    in
+    let string_of_module_kind = function
+      | CommonJS _ -> "CommonJS"
+      | ES { named; star } ->
+        items_to_record_string 2 [
+          "named", items_to_record_string 3 @@ SMap.bindings @@ SMap.map string_of_export named;
+          "star", items_to_list_string 3 @@ List.map string_of_export_star star;
+        ]
+    in
     items_to_record_string 1 [
       "requires", string_of_require_list module_sig.requires;
       "module_kind", string_of_module_kind module_sig.module_kind;
-      "type_exports_named", string_of_type_export_map module_sig.type_exports_named;
-      "type_exports_star", string_of_export_star_map module_sig.type_exports_star;
+      "type_exports_named", items_to_record_string 2 @@ SMap.bindings @@ SMap.map string_of_type_export module_sig.type_exports_named;
+      "type_exports_star", items_to_list_string 2 @@ List.map string_of_export_star module_sig.type_exports_star;
     ]
   in
   let string_of_declare_modules _ = "TODO" in
