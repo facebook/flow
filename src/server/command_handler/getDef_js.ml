@@ -100,7 +100,7 @@ let extract_member_def cx this name =
 let getdef_from_type_table cx loc =
   let typetable = Context.type_table cx in
   let type_info =
-    Type_table.find_type_info typetable ~pred:(fun l -> Loc.contains l loc)
+    Type_table.find_type_info_with_pred typetable (fun l -> Loc.contains l loc)
   in
   Option.bind type_info begin function
     | _, (_, _, Type_table.Import (name, obj_t))

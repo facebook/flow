@@ -47,8 +47,8 @@ let query_type ~full_cx ~file ~expand_aliases ~type_table ~imported_ts loc =
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
   } in
-  let pred = fun range -> Reason.in_range loc range in
-  match Type_table.find_type_info ~pred type_table with
+  let pred range = Reason.in_range loc range in
+  match Type_table.find_type_info_with_pred type_table pred with
   | None -> FailureNoMatch
   | Some (loc, (_, scheme, _)) ->
     let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~imported_ts in
