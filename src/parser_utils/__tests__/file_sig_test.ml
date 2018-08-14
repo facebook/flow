@@ -502,7 +502,7 @@ let tests = "require" >::: [
     let {module_sig = {type_exports_named; _}; _} = visit source in
     let type_export =  assert_singleton_smap ~ctxt "ty" type_exports_named in
     match type_export with
-    | TypeExportNamed { loc; local = None; source = None } ->
+    | TypeExportNamed { loc; kind = NamedDeclaration } ->
       assert_substring_equal ~ctxt "type ty = string" source loc
     | _ -> assert_failure "Unexpected type export"
   end;
@@ -512,7 +512,7 @@ let tests = "require" >::: [
     let {module_sig = {type_exports_named; _}; _} = visit source in
     let type_export =  assert_singleton_smap ~ctxt "ty" type_exports_named in
     match type_export with
-    | TypeExportNamed { loc; local = None; source = None } ->
+    | TypeExportNamed { loc; kind = NamedDeclaration } ->
       assert_substring_equal ~ctxt "opaque type ty = string" source loc
     | _ -> assert_failure "Unexpected type export"
   end;
@@ -522,7 +522,7 @@ let tests = "require" >::: [
     let {module_sig = {type_exports_named; _}; _} = visit source in
     let type_export =  assert_singleton_smap ~ctxt "I" type_exports_named in
     match type_export with
-    | TypeExportNamed { loc; local = None; source = None } ->
+    | TypeExportNamed { loc; kind = NamedDeclaration } ->
       assert_substring_equal ~ctxt "interface I {}" source loc
     | _ -> assert_failure "Unexpected type export"
   end;
@@ -583,7 +583,7 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "foo" named in
       match export with
-      | ExportNamed { loc; local = None; source = None } ->
+      | ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "foo" source loc
       | _ -> assert_failure "Unexpected export"
     )
@@ -595,7 +595,7 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "C" named in
       match export with
-      | ExportNamed { loc; local = None; source = None } ->
+      | ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "C" source loc
       | _ -> assert_failure "Unexpected export"
     )
@@ -607,19 +607,19 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       assert_equal ~ctxt 4 (SMap.cardinal named);
       let x_loc = match SMap.find_unsafe "x" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
       let y_loc = match SMap.find_unsafe "y" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
       let a_loc = match SMap.find_unsafe "a" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
       let p_loc = match SMap.find_unsafe "p" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
       assert_substring_equal ~ctxt "x" source x_loc;
@@ -635,11 +635,12 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       assert_equal ~ctxt 2 (SMap.cardinal named);
       let x_loc = match SMap.find_unsafe "x" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedSpecifier ({local = (x_loc, "x"); source = None }) } when
+          x_loc = loc -> loc
       | _ -> assert_failure "Unexpected export"
       in
       let y_loc, z_loc = match SMap.find_unsafe "z" named with
-      | ExportNamed { loc; local = Some (y_loc, "y"); source = None } -> y_loc, loc
+      | ExportNamed { loc; kind = NamedSpecifier ({local = (y_loc, "y"); source = None }) } -> y_loc, loc
       | _ -> assert_failure "Unexpected export"
       in
       assert_substring_equal ~ctxt "x" source x_loc;
@@ -728,7 +729,7 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "foo" named in
       match export with
-      | ExportNamed { loc; local = None; source = None } ->
+      | ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "foo" source loc;
       | _ -> assert_failure "Unexpected export"
     )
@@ -740,7 +741,7 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "C" named in
       match export with
-      | ExportNamed { loc; local = None; source = None } ->
+      | ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "C" source loc;
       | _ -> assert_failure "Unexpected export"
     )
@@ -752,7 +753,7 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       let export = assert_singleton_smap ~ctxt "foo" named in
       match export with
-      | ExportNamed { loc; local = None; source = None } ->
+      | ExportNamed { loc; kind = NamedDeclaration } ->
         assert_substring_equal ~ctxt "foo" source loc;
       | _ -> assert_failure "Unexpected export"
     )
@@ -764,11 +765,12 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       assert_equal ~ctxt 2 (SMap.cardinal named);
       let x_loc = match SMap.find_unsafe "x" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedSpecifier ({ local = (x_loc, "x"); source = None }) }
+          when x_loc = loc -> loc
       | _ -> assert_failure "Unexpected export"
       in
       let y_loc, z_loc = match SMap.find_unsafe "z" named with
-      | ExportNamed { loc; local = Some (y_loc, "y"); source = None } -> y_loc, loc
+      | ExportNamed { loc; kind = NamedSpecifier ({ local = (y_loc, "y"); source = None }) } -> y_loc, loc
       | _ -> assert_failure "Unexpected export"
       in
       assert_substring_equal ~ctxt "x" source x_loc;
@@ -828,7 +830,7 @@ let tests = "require" >::: [
       SMap.find_unsafe "foo" declare_modules in
     assert_equal ~ctxt 1 (SMap.cardinal type_exports_named);
     let loc = match SMap.find_unsafe "bar" type_exports_named with
-    | TypeExportNamed { loc; local = None; source = None } -> loc
+    | TypeExportNamed { loc; kind = NamedDeclaration } -> loc
     | _ -> assert_failure "Unexpected type export"
     in
     assert_substring_equal ~ctxt "bar" source loc;
@@ -871,7 +873,7 @@ let tests = "require" >::: [
     assert_es module_kind ~assert_named:(fun named ->
       assert_equal ~ctxt 1 (SMap.cardinal named);
       let loc = match SMap.find_unsafe "bar" named with
-      | ExportNamed { loc; local = None; source = None } -> loc
+      | ExportNamed { loc; kind = NamedDeclaration } -> loc
       | _ -> assert_failure "Unexpected export"
       in
       assert_substring_equal ~ctxt "bar" source loc

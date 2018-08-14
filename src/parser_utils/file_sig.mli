@@ -130,21 +130,28 @@ and export =
     (* location of the `default` keyword *)
     default_loc: Loc.t;
     (* may have local name, e.g., `export default function foo {}` *)
+    (** NOTE: local = Some id if and only if id introduces a local binding **)
     local: ident option;
   }
   | ExportNamed of {
     (* loc of remote name *)
     loc: Loc.t;
-    (* may have local name, e.g., `export {foo as bar}` *)
-    local: ident option;
-    (* module reference for re-exports, e.g., `export {foo} from 'bar'` *)
-    source: source option;
+    kind: named_export_kind;
   }
   | ExportNs of {
     (* loc of remote name *)
     loc: Loc.t;
     (* module reference of exported namespace *)
     source: source;
+  }
+
+and named_export_kind =
+  | NamedDeclaration
+  | NamedSpecifier of {
+    (* local name, e.g., `export {foo as bar}`, `export type {T as U}` *)
+    local: ident;
+    (* module reference for re-exports, e.g., `export {foo} from 'bar'`,`export type {T} from 'bar'` *)
+    source: source option
   }
 
 and export_star =
@@ -154,10 +161,7 @@ and type_export =
   | TypeExportNamed of {
     (* loc of remote name *)
     loc: Loc.t;
-    (* may have local name, e.g., `export type {T as U}` *)
-    local: ident option;
-    (* module reference for re-exports, e.g., `export {T} from 'bar'` *)
-    source: source option;
+    kind: named_export_kind;
   }
 
 and ident = Loc.t * string
@@ -190,6 +194,7 @@ class mapper : object
   method file_sig: t -> t
   method ident: ident -> ident
   method source: source -> source
+  method named_export_kind: named_export_kind -> named_export_kind
   method imported_locs: imported_locs -> imported_locs
   method loc: Loc.t -> Loc.t
   method module_kind: module_kind -> module_kind

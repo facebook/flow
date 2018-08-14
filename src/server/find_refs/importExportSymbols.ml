@@ -15,11 +15,12 @@ let if_one_return_other x a b =
 let find_related_symbol_from_export loc = function
   | ExportDefault {default_loc; local=Some(local, _)} ->
     if_one_return_other loc default_loc local
-  | ExportNamed {loc=remote_name_loc; local; _} ->
-    begin match local with
-    | Some (local_loc, _) -> if_one_return_other loc remote_name_loc local_loc
-    | None when loc = remote_name_loc -> Some remote_name_loc
-    | None -> None
+  | ExportNamed {loc=remote_name_loc; kind } ->
+    begin match kind with
+    | NamedSpecifier { local = (local_loc, _); _ } ->
+      if_one_return_other loc remote_name_loc local_loc
+    | NamedDeclaration ->
+      if loc = remote_name_loc then Some remote_name_loc else None
     end
   | _ -> None
 
