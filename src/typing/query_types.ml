@@ -36,6 +36,9 @@ type result =
 | FailureUnparseable of Loc.t * Type.t * string
 | Success of Loc.t * Ty.t
 
+let sort_loc_pairs pair_list =
+  List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
+
 let query_type ~expand_aliases ?type_table cx loc =
 
   let module QueryTypeNormalizer = Ty_normalizer.Make(struct
@@ -95,7 +98,7 @@ let dump_types ~printer cx =
     | l, Ok t -> Some (l, printer t)
     | _ -> None
   )
-  |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
+  |> sort_loc_pairs
 
 let is_covered = function
   | Ty.Any
@@ -120,8 +123,9 @@ let covered_types cx ~should_check =
       fun acc (loc, _) -> (loc, false)::acc
   in
   let htbl = Type_table.coverage_hashtbl (Context.type_table cx) in
-  CoverageTypeNormalizer.fold_hashtbl ~cx ~f ~g:(fun t -> t) ~htbl []
-  |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
+  let coverage =
+    CoverageTypeNormalizer.fold_hashtbl ~cx ~f ~g:(fun t -> t) ~htbl [] in
+  sort_loc_pairs coverage
 
 module SuggestTypeNormalizer = Ty_normalizer.Make(struct
   let opt_fall_through_merged = false
