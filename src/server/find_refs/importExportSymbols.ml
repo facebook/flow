@@ -44,13 +44,16 @@ let find_related_symbol_from_require loc = function
   | Require {bindings=Some bindings; require_loc; _} ->
     begin match bindings with
     | BindIdent (id_loc, _) -> if_one_return_other loc require_loc id_loc
-    | BindNamed map ->
-      SMap.values map
-      |> ListUtils.first_some_map begin fun (local_loc, (remote_loc, _)) ->
-        if loc = remote_loc then
-          Some local_loc
-        else
-          None
+    | BindNamed named ->
+      let loc_records (* list of {remote_loc, local_loc} *) =
+        SMap.fold begin fun _ local_name_to_locs acc ->
+          SMap.fold begin fun _ locs acc ->
+            List.rev_append (Nel.to_list locs) acc
+          end local_name_to_locs acc
+        end named []
+      in
+      loc_records |> ListUtils.first_some_map begin fun {remote_loc; local_loc} ->
+        if_one_return_other loc remote_loc local_loc
       end
     end
   | _ -> None

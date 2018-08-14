@@ -45,7 +45,7 @@ and imported_locs = {
 
 and require_bindings =
   | BindIdent of ident
-  | BindNamed of (Loc.t * ident) SMap.t
+  | BindNamed of imported_locs Nel.t SMap.t SMap.t
 
 and module_kind =
   | CommonJS of {
@@ -644,14 +644,19 @@ class requires_calculator ~ast = object(this)
     let bindings = begin match left with
     | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
     | _, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
+      let add_named remote local loc acc =
+        let locals = SMap.singleton local (Nel.one loc) in
+        let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
+        SMap.add remote locals acc ~combine:combine_nel_smap
+      in
       Some (BindNamed (List.fold_left (fun acc prop ->
         match prop with
         | Ast.Pattern.Object.Property (_, {
-            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier remote;
+            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier (remote_loc, remote_name);
             pattern = _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (local_loc, local_name); _ };
             _
           }) ->
-          SMap.add local_name (local_loc, remote) acc
+          add_named remote_name local_name { local_loc; remote_loc } acc
         | _ -> acc
       ) SMap.empty properties))
     | _ -> None
@@ -871,15 +876,11 @@ class mapper = object(this)
       if ident == ident'
       then require_bindings
       else BindIdent ident'
-    | BindNamed map ->
-      let map' = SMapUtils.ident_map (fun (loc, ident) ->
-        let loc = this#loc loc in
-        let ident = this#ident ident in
-        (loc, ident)
-      ) map in
-      if map == map'
+    | BindNamed named ->
+      let named' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) named in
+      if named == named'
       then require_bindings
-      else BindNamed map'
+      else BindNamed named'
 
   method module_kind (module_kind: module_kind) =
     match module_kind with

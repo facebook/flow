@@ -107,10 +107,10 @@ and require_bindings =
   (* source: const bar = require('./foo');
    * result: bar *)
   | BindIdent of ident
-  (* map from local name to (local_loc, remote name)
+  (* map from remote name to local names of requires
    * source: const {a, b: c} = require('./foo');
-   * result: {a: (a_loc, a), c: (c_loc, b)} *)
-  | BindNamed of (Loc.t * ident) SMap.t
+   * result: {a: {a: [a_loc]}, b: {c: [c_loc]}} *)
+  | BindNamed of imported_locs Nel.t SMap.t SMap.t
 
 (* All modules are assumed to be CommonJS to start with, but if we see an ES
  * module-style export, we switch to ES. *)

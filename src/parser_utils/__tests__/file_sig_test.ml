@@ -153,11 +153,15 @@ let tests = "require" >::: [
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
       assert_equal ~ctxt 2 (SMap.cardinal map);
       let foo_loc, foo_loc' = match SMap.find_unsafe "foo" map with
-      | (loc, (loc', "foo")) -> loc, loc'
+      | locals when SMap.mem "foo" locals ->
+        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "foo" locals in
+        loc, loc'
       | _ -> assert_failure "Unexpected requires"
       in
-      let baz_loc, bar_loc = match SMap.find_unsafe "baz" map with
-      | (loc, (loc', "bar")) -> loc, loc'
+      let baz_loc, bar_loc = match SMap.find_unsafe "bar" map with
+      | locals when SMap.mem "baz" locals ->
+        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "baz" locals in
+        loc, loc'
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "foo" source foo_loc;
@@ -178,13 +182,17 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 2 (SMap.cardinal map);
-      let bar_loc, foo_loc = match SMap.find_unsafe "bar" map with
-      | (loc, (loc', "foo")) -> loc, loc'
+      assert_equal ~ctxt 1 (SMap.cardinal map);
+      let bar_loc, foo_loc = match SMap.find_unsafe "foo" map with
+      | locals when SMap.mem "bar" locals ->
+        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "bar" locals in
+        loc, loc'
       | _ -> assert_failure "Unexpected requires"
       in
-      let baz_loc, foo_loc' = match SMap.find_unsafe "baz" map with
-      | (loc, (loc', "foo")) -> loc, loc'
+      let baz_loc, foo_loc' = match SMap.find_unsafe "foo" map with
+      | locals when SMap.mem "baz" locals ->
+        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "baz" locals in
+        loc, loc'
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "foo" source foo_loc;
@@ -205,9 +213,11 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 1 (SMap.cardinal map);
-      let bar_loc, baz_loc = match SMap.find_unsafe "bar" map with
-      | (loc, (loc', "baz")) -> loc, loc'
+      assert_equal ~ctxt 2 (SMap.cardinal map);
+      let bar_loc, baz_loc = match SMap.find_unsafe "baz" map with
+      | locals when SMap.mem "bar" locals ->
+        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "bar" locals in
+        loc, loc'
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "bar" source bar_loc;
