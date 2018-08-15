@@ -601,10 +601,18 @@ let ensure_parsed options workers files =
       ServerStatus.(Parsing_progress { total = Some total; finished = start })
   in
 
-  (* TODO - fancier next () function which filters as we go (without returning smaller buckets).
-   * But that's likely only a small optimization *)
+  let%lwt files_missing_asts = MultiWorkerLwt.call workers
+    ~job:(List.fold_left (fun acc fn ->
+      if Parsing_heaps.has_ast fn
+      then acc
+      else FilenameSet.add fn acc
+    ))
+    ~merge:FilenameSet.union
+    ~neutral:FilenameSet.empty
+    ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
+  in
+
   let next =
-    let files_missing_asts = FilenameSet.filter (fun f -> not (Parsing_heaps.has_ast f)) files in
     MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts)
   in
 
