@@ -7,5 +7,10 @@
 
 type t
 
-val add: commit:(unit -> unit Lwt.t) -> rollback:(unit -> unit Lwt.t) -> t -> unit
+val add:
+  ?singleton:string ->
+  commit:(unit -> unit Lwt.t) ->
+  rollback:(unit -> unit Lwt.t) ->
+  t ->
+  unit
 val with_transaction: (t -> 'a Lwt.t) -> 'a Lwt.t

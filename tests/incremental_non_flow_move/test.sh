@@ -1,6 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 mkdir tmp
 
 printf "\nInitial status:\n"

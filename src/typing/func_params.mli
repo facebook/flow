@@ -20,11 +20,14 @@ val add_simple: Context.t ->
   t -> t
 
 val add_complex: Context.t ->
-  expr: (Context.t -> (Loc.t, Loc.t) Ast.Expression.t -> Type.t * (unit, unit) Ast.Expression.t') ->
+  expr:(
+    Context.t -> (Loc.t, Loc.t) Ast.Expression.t ->
+    (Loc.t, Loc.t * Type.t) Ast.Expression.t
+  ) ->
   ?default: (Loc.t, Loc.t) Ast.Expression.t ->
   (Loc.t, Loc.t) Ast.Pattern.t -> Type.t ->
   t ->
-  t * (unit, unit) Ast.Pattern.t'
+  t * (Loc.t, Loc.t * Type.t) Ast.Pattern.t
 
 val add_rest: Context.t ->
   Loc.t -> (Loc.t * string) option -> Type.t ->

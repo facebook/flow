@@ -30,6 +30,21 @@
     "end":29
   },
   {
+    "type":"string",
+    "reasons":[],
+    "loc":{
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":2,"column":19,"offset":27},
+      "end":{"line":2,"column":28,"offset":37}
+    },
+    "path":"test.js",
+    "line":2,
+    "endline":2,
+    "start":19,
+    "end":28
+  },
+  {
     "type":"(x: number) => void",
     "reasons":[],
     "loc":{

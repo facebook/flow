@@ -135,6 +135,14 @@ let mk_inter ts =
 let mk_maybe t =
   mk_union [Null; Void; t]
 
+let mk_field_props prop_list =
+  List.map (fun (id, t, opt) -> NamedProp (id,
+    Field (t, { fld_polarity = Neutral; fld_optional = opt })
+  )) prop_list
+
+let mk_object ?(obj_exact=false) ?(obj_frozen=false) obj_props =
+  Obj { obj_exact; obj_frozen; obj_props }
+
 let named_t symbol =
   Generic (symbol, false, None)
 

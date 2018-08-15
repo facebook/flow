@@ -1,6 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 
 printf "\nRename of an object property:\n"
 assert_ok "$FLOW" refactor --pretty --strip-root objects.js 3 21 --rename newName

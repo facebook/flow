@@ -75,12 +75,12 @@ val toplevels:
   Scope.Entry.t -> (* super *)
   decls:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list -> unit) ->
   stmts:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list ->
-                      (unit, unit) Ast.Statement.t list) ->
+                      (Loc.t, Loc.t * Type.t) Ast.Statement.t list) ->
   expr:(Context.t -> (Loc.t, Loc.t) Ast.Expression.t ->
-                      Type.t * (unit, unit) Ast.Expression.t') ->
+                      (Loc.t, Loc.t * Type.t) Ast.Expression.t) ->
   t ->
-  (unit, unit) Ast.Function.body option *
-  (unit, unit) Ast.Expression.t option
+  (Loc.t, Loc.t * Type.t) Ast.Function.body option *
+  (Loc.t, Loc.t * Type.t) Ast.Expression.t option
 
 (** 1. Type Conversion *)
 

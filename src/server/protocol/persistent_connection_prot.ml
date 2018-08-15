@@ -35,6 +35,8 @@ type metadata = {
   client_duration: float option;
   (* Did the handler for this workitem provide any extra data? *)
   extra_data: (string * Hh_json.json) list;
+  (* The logging context for the server *)
+  server_logging_context: FlowEventLogger.logging_context option;
 }
 
 

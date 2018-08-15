@@ -34,6 +34,13 @@ class useless_mapper = object
       (loc, "gotRenamed")
     else
       id
+
+  method! variable_declaration (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
+    let open Ast.Statement.VariableDeclaration in
+    let decl = super#variable_declaration decl in
+    let { declarations; kind } = decl in
+    if kind = Var then { declarations; kind = Const }
+    else decl
 end
 
 let edits_of_source source =
@@ -109,6 +116,41 @@ let tests = "ast_differ" >::: [
   "function_expression" >:: begin fun ctxt ->
     let source = "(function() { 4; })" in
     let edits = edits_of_source source in
-    assert_equal ~msg:(debug_string_of_edits edits) ~ctxt [((14, 15), "(5)")] edits
+    assert_equal ~ctxt [((14, 15), "(5)")] edits
+  end;
+  "call" >:: begin fun ctxt ->
+    let source = "rename()" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((0, 6), "gotRenamed")] edits
+  end;
+  "variable_declaration_kind" >:: begin fun ctxt ->
+    let source = "var x = 5;" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((0, 10), "const x = 5;")] edits
+  end;
+  "variable_declaration_expression" >:: begin fun ctxt ->
+    let source = "let x = 4;" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((8, 9), "(5)")] edits
+  end;
+  "variable_declaration_kind_expression" >:: begin fun ctxt ->
+    let source = "var x = 4;" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [((0, 10), "const x = 5;")] edits
+  end;
+  "for" >:: begin fun ctxt ->
+    let source = "for (i = 7; i < rename; i++) {}" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(16, 22) , "gotRenamed"] edits
+  end;
+  "for_init" >:: begin fun ctxt ->
+    let source = "for (let i = 4; i < 10; i++) {}" in
+    let edits = edits_of_source source in
+    assert_equal ~msg:(debug_string_of_edits edits) ~ctxt [(13, 14), "(5)"] edits
+  end;
+  "for_body" >:: begin fun ctxt ->
+    let source = "for (i = 7; i < top; i++) { rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(28, 34), "gotRenamed"] edits
   end;
 ]

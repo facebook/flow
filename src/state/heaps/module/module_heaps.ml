@@ -146,7 +146,7 @@ end = struct
     let mutator = ref { changed_files = Modulename.Set.empty; is_init; } in
     let commit () = commit (!mutator) in
     let rollback () = rollback (!mutator) in
-    Transaction.add ~commit ~rollback transaction;
+    Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
     mutator
 
   let remove_and_replace mutator ~workers ~to_remove ~to_replace =
@@ -179,7 +179,6 @@ end = struct
       ~next: (MultiWorkerLwt.next workers to_replace)
 end
 
-
 module Resolved_requires_mutator: sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
@@ -187,15 +186,25 @@ module Resolved_requires_mutator: sig
 end = struct
   type t = unit
 
+  (* We actually may have multiple Resolved_requires_mutator's in a single transaction. So we need to
+  * assert that they never interfere with each other *)
+  let active_files = ref Utils_js.FilenameSet.empty
+
   let commit files =
     Hh_logger.debug "Committing ResolvedRequiresHeap";
+    active_files := Utils_js.FilenameSet.diff !active_files files;
     ResolvedRequiresHeap.remove_old_batch files
 
   let rollback files =
     Hh_logger.debug "Rolling back ResolvedRequiresHeap";
+    active_files := Utils_js.FilenameSet.diff !active_files files;
     ResolvedRequiresHeap.revive_batch files
 
   let create transaction oldified_files =
+    if not (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
+    then failwith "Multiple Resolved_requires_mutator's operating on the same files";
+    active_files := Utils_js.FilenameSet.union oldified_files !active_files;
+
     ResolvedRequiresHeap.oldify_batch oldified_files;
     Transaction.add
       ~commit:(fun () -> Lwt.return (commit oldified_files))
@@ -230,7 +239,7 @@ end = struct
     InfoHeap.oldify_batch oldified_files;
     let commit () = commit oldified_files in
     let rollback () = rollback oldified_files in
-    Transaction.add ~commit ~rollback transaction
+    Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction
 
   (* Ideally we'd assert that file is in oldified_files, but passing through the oldified_files set
    * to the worker process which calls add_info is kind of expensive *)
@@ -255,11 +264,11 @@ end
 
 (******************** APIs for saving/loading saved state *********************)
 
-module FromSavedState = struct
+module From_saved_state = struct
   let add_resolved_requires = ResolvedRequiresHeap.add
 end
 
-module ForSavedState = struct
+module For_saved_state = struct
   exception Package_not_found of string
   let get_package_json_unsafe file =
     try PackageHeap.find_unsafe file

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-. ../assert.sh
-FLOW=$1
-
 ## Correct tests
 
 # Dump the generated file in a temporary folder and in the end Flow check them

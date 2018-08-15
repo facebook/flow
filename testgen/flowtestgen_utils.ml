@@ -588,6 +588,7 @@ let flow_check (code : string) : string option =
       let strict_mode = StrictModeSettings.empty in
       let stub_docblock = { Docblock.
                             flow = Docblock.(Some OptIn);
+                            typeAssert = false;
                             preventMunge = None;
                             providesModule = None;
                             isDeclarationFile = false;

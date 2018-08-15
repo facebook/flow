@@ -37,6 +37,9 @@ type results = {
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
 
+  (* list of files skipped due to an out of date hash *)
+  parse_hash_mismatch_skips: FilenameSet.t;
+
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
 
@@ -47,6 +50,7 @@ type results = {
 let empty_result = {
   parse_ok = FilenameMap.empty;
   parse_skips = [];
+  parse_hash_mismatch_skips = FilenameSet.empty;
   parse_fails = [];
   parse_unchanged = FilenameSet.empty;
 }
@@ -196,7 +200,8 @@ let extract_docblock =
                 (expr_loc, InvalidJSXAttribute first_error)::errors, info
           end in
         parse_attributes acc xs
-
+   | (_, "@typeAssert") :: xs ->
+      parse_attributes (errors, { info with typeAssert = true }) xs
     | _ :: xs ->
         parse_attributes (errors, info) xs
     | [] -> (errors, info)
@@ -371,7 +376,8 @@ let does_content_match_file_hash file content =
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~worker_mutator ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
+  ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch
+  ~max_header_tokens ~noflow ~parse_unchanged
   parse_results
   file
 : results =
@@ -392,53 +398,61 @@ let reducer
   match content with
   | Some content ->
       let new_hash = hash_content content in
-      let unchanged =
-        match Parsing_heaps.get_old_file_hash file with
-        | Some old_hash when old_hash = new_hash ->
-          (* If this optimization is turned off then still parse the file, even though it's
-           * unchanged *)
-          not parse_unchanged &&
-            (* Let's disable this optimization for .flow files. Sometimes we still want to recheck
-             * foo.js.flow file because foo.js changed *)
-            not (File_key.check_suffix file Files.flow_ext) &&
-            (* File hasn't changed. But do we have an AST available? *)
-            Parsing_heaps.has_old_ast file
-        | _ ->
-          (* The file has changed. Let's record the new hash *)
-          worker_mutator.Parsing_heaps.add_hash file new_hash;
-          false
-      in
-      if unchanged
+      (* If skip_hash_mismatch is true, then we're currently ensuring some files are parsed. That
+       * means we don't currently have the file's AST but we might have the file's hash in the
+       * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
+      if skip_hash_mismatch && Some new_hash <> Parsing_heaps.get_file_hash file
       then
-        let parse_unchanged = FilenameSet.add file parse_results.parse_unchanged in
-        { parse_results with parse_unchanged; }
-      else begin match parse_docblock ~max_tokens:max_header_tokens file content with
-      | [], info ->
-        let info =
-          if noflow file then { info with Docblock.flow = Some Docblock.OptOut }
-          else info
+        let parse_hash_mismatch_skips =
+          FilenameSet.add file parse_results.parse_hash_mismatch_skips
         in
-        begin match (do_parse ~types_mode ~use_strict ~info content file) with
-        | Parse_ok (ast, file_sig) ->
-            worker_mutator.Parsing_heaps.add_file file ast info file_sig;
-            let parse_ok =
-              FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
-            in
-            { parse_results with parse_ok; }
-        | Parse_fail converted ->
-            let fail = (file, info, converted) in
-            let parse_fails = fail :: parse_results.parse_fails in
-            { parse_results with parse_fails; }
-        | Parse_skip Skip_non_flow_file
-        | Parse_skip Skip_resource_file ->
-            let parse_skips = (file, info) :: parse_results.parse_skips in
-            { parse_results with parse_skips; }
+        { parse_results with parse_hash_mismatch_skips }
+      else
+        let unchanged =
+          match Parsing_heaps.get_old_file_hash file with
+          | Some old_hash when old_hash = new_hash ->
+            (* If this optimization is turned off then still parse the file, even though it's
+             * unchanged *)
+            not parse_unchanged &&
+              (* Let's disable this optimization for .flow files. Sometimes we still want to recheck
+               * foo.js.flow file because foo.js changed *)
+              not (File_key.check_suffix file Files.flow_ext)
+          | _ ->
+            (* The file has changed. Let's record the new hash *)
+            worker_mutator.Parsing_heaps.add_hash file new_hash;
+            false
+        in
+        if unchanged
+        then
+          let parse_unchanged = FilenameSet.add file parse_results.parse_unchanged in
+          { parse_results with parse_unchanged; }
+        else begin match parse_docblock ~max_tokens:max_header_tokens file content with
+        | [], info ->
+          let info =
+            if noflow file then { info with Docblock.flow = Some Docblock.OptOut }
+            else info
+          in
+          begin match (do_parse ~types_mode ~use_strict ~info content file) with
+          | Parse_ok (ast, file_sig) ->
+              worker_mutator.Parsing_heaps.add_file file ast info file_sig;
+              let parse_ok =
+                FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
+              in
+              { parse_results with parse_ok; }
+          | Parse_fail converted ->
+              let fail = (file, info, converted) in
+              let parse_fails = fail :: parse_results.parse_fails in
+              { parse_results with parse_fails; }
+          | Parse_skip Skip_non_flow_file
+          | Parse_skip Skip_resource_file ->
+              let parse_skips = (file, info) :: parse_results.parse_skips in
+              { parse_results with parse_skips; }
+          end
+        | docblock_errors, info ->
+          let fail = (file, info, Docblock_errors docblock_errors) in
+          let parse_fails = fail :: parse_results.parse_fails in
+          { parse_results with parse_fails; }
         end
-      | docblock_errors, info ->
-        let fail = (file, info, Docblock_errors docblock_errors) in
-        let parse_fails = fail :: parse_results.parse_fails in
-        { parse_results with parse_fails; }
-      end
   | None ->
       let info = Docblock.default_info in
       let parse_skips = (file, info) :: parse_results.parse_skips in
@@ -449,6 +463,8 @@ let merge r1 r2 =
   {
     parse_ok = FilenameMap.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
+    parse_hash_mismatch_skips =
+      FilenameSet.union r1.parse_hash_mismatch_skips r2.parse_hash_mismatch_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
     parse_unchanged = FilenameSet.union r1.parse_unchanged r2.parse_unchanged;
   }
@@ -490,12 +506,14 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   then MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements filenames)
   else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
-let parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
-  ~parse_unchanged workers next
+let parse ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch ~profile ~max_header_tokens
+  ~noflow ~parse_unchanged workers next
 : results Lwt.t =
   let t = Unix.gettimeofday () in
   let reducer =
-    reducer ~worker_mutator ~types_mode ~use_strict ~max_header_tokens ~noflow ~parse_unchanged
+    reducer
+      ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch
+       ~max_header_tokens ~noflow ~parse_unchanged
   in
   let%lwt results = MultiWorkerLwt.call
     workers
@@ -508,25 +526,26 @@ let parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~n
     let t2 = Unix.gettimeofday () in
     let ok_count = FilenameMap.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
+    let mismatch_count = FilenameSet.cardinal results.parse_hash_mismatch_skips in
     let fail_count = List.length results.parse_fails in
     let unchanged_count = FilenameSet.cardinal results.parse_unchanged in
-    Hh_logger.info "parsed %d files (%d ok, %d skipped, %d failed, %d unchanged) in %f"
-      (ok_count + skip_count + fail_count)
-      ok_count skip_count fail_count unchanged_count
+    Hh_logger.info "parsed %d files (%d ok, %d skipped, %d bad hashes, %d failed, %d unchanged) in %f"
+      (ok_count + skip_count + mismatch_count + fail_count)
+      ok_count skip_count mismatch_count fail_count unchanged_count
       (t2 -. t)
   else ();
   Lwt.return results
 
 let reparse
-  ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
-  ~with_progress ~workers ~modified:files ~deleted =
+  ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
+  ~parse_unchanged ~with_progress ~workers ~modified:files ~deleted =
   (* save old parsing info for files *)
   let all_files = FilenameSet.union files deleted in
   let master_mutator, worker_mutator = Parsing_heaps.Reparse_mutator.create transaction all_files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
-    parse ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens
-      ~noflow ~parse_unchanged workers next
+    parse ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch:false ~profile
+      ~max_header_tokens ~noflow ~parse_unchanged workers next
   in
   let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
@@ -535,6 +554,7 @@ let reparse
   let modified = List.fold_left (fun acc (skip, _) ->
     FilenameSet.add skip acc
   ) modified results.parse_skips in
+  let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
   SharedMem_js.collect `gentle;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
@@ -548,15 +568,50 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
-    ~worker_mutator ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
+    ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch:false
+    ~profile ~max_header_tokens ~noflow ~parse_unchanged
     workers next
 
 let reparse_with_defaults
-  ~transaction ?types_mode ?use_strict ?with_progress ~workers ~modified ~deleted options =
+  ~transaction ?types_mode ?use_strict ?with_progress
+  ~workers ~modified ~deleted options =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   reparse
-    ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow ~parse_unchanged
-    ~with_progress ~workers ~modified ~deleted
+    ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
+    ~parse_unchanged ~with_progress ~workers ~modified ~deleted
+
+(* ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
+ * Any not-yet-parsed files who's on-disk contents don't match their already-known hash are skipped
+ * and returned to the caller. *)
+let ensure_parsed options workers files =
+  let types_mode, use_strict, profile, max_header_tokens, noflow =
+    get_defaults ~types_mode:None ~use_strict:None options
+  in
+  (* We want to parse unchanged files, since this is our first time parsing them *)
+  let parse_unchanged = true in
+  (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
+   * simle Parse_mutator rather than the rollback-able Reparse_mutator *)
+  let worker_mutator = Parsing_heaps.Parse_mutator.create () in
+
+  let progress_fn ~total ~start ~length:_ =
+    MonitorRPC.status_update
+      ServerStatus.(Parsing_progress { total = Some total; finished = start })
+  in
+
+  (* TODO - fancier next () function which filters as we go (without returning smaller buckets).
+   * But that's likely only a small optimization *)
+  let next =
+    let files_missing_asts = FilenameSet.filter (fun f -> not (Parsing_heaps.has_ast f)) files in
+    MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts)
+  in
+
+  let%lwt results = parse
+    ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch:true
+    ~profile ~max_header_tokens ~noflow ~parse_unchanged
+    workers next
+  in
+
+  Lwt.return results.parse_hash_mismatch_skips

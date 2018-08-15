@@ -15,11 +15,13 @@ type parsed_file_data = {
   info: Module_heaps.info;
   file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
+  hash: Xx.hash;
 }
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {
   unparsed_info: Module_heaps.info;
+  unparsed_hash: Xx.hash;
 }
 
 (* This is the complete saved state data representation *)
@@ -133,14 +135,20 @@ end = struct
       (modulename_map_fn ~f:(normalize_file_key ~root)) resolved_modules in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
-    { package = parsed_file_data.package; info; file_sig; resolved_requires }
+    {
+      package = parsed_file_data.package;
+      info;
+      file_sig;
+      resolved_requires;
+      hash = parsed_file_data.hash;
+    }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~root parsed_heaps fn =
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-          Some (Module_heaps.ForSavedState.get_package_json_unsafe str)
+          Some (Module_heaps.For_saved_state.get_package_json_unsafe str)
       | _ -> None
     in
 
@@ -149,6 +157,7 @@ end = struct
       info = Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
       file_sig = Parsing_heaps.get_file_sig_unsafe fn;
       resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
+      hash = Parsing_heaps.get_file_hash_unsafe fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -161,6 +170,7 @@ end = struct
   let collect_normalized_data_for_unparsed_file ~root unparsed_heaps fn  =
     let relative_file_data = {
       unparsed_info = normalize_info ~root @@ Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
+      unparsed_hash = Parsing_heaps.get_file_hash_unsafe fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -262,7 +272,6 @@ exception Invalid_saved_state
  *)
 module Load: sig
   val load:
-    flowconfig_name:string ->
     workers:MultiWorkerLwt.worker list option ->
     saved_state_filename:Path.t ->
     options:Options.t ->
@@ -342,7 +351,13 @@ end = struct
       (modulename_map_fn ~f:(denormalize_file_key ~root)) resolved_modules in
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
-    { package = file_data.package; info; file_sig; resolved_requires }
+    {
+      package = file_data.package;
+      info;
+      file_sig;
+      resolved_requires;
+      hash = file_data.hash;
+    }
 
   let progress_fn real_total offset ~total:_ ~start ~length:_ =
     let finished = start + offset in
@@ -373,7 +388,7 @@ end = struct
       ~job:(List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
         let unparsed_info = denormalize_info ~root unparsed_file_data.unparsed_info in
         let fn = denormalize_file_key ~root relative_fn in
-        FilenameMap.add fn { unparsed_info } acc
+        FilenameMap.add fn { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash; } acc
       ))
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
@@ -384,7 +399,7 @@ end = struct
     Errors.ErrorSet.map denormalizer#error normalized_error_set
 
   (* Denormalize all the data *)
-  let denormalize_data ~flowconfig_name~workers ~options ~data =
+  let denormalize_data ~workers ~options ~data =
     let root = Options.root options |> Path.to_string in
 
     let {
@@ -397,6 +412,7 @@ end = struct
     } = data in
 
     let current_flowconfig_hash =
+      let flowconfig_name = Options.flowconfig_name options in
       FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
     in
 
@@ -441,7 +457,7 @@ end = struct
       node_modules_containers;
     }
 
-  let load ~flowconfig_name ~workers ~saved_state_filename ~options =
+  let load ~workers ~saved_state_filename ~options =
     let filename = Path.to_string saved_state_filename in
 
     Hh_logger.info "Reading saved-state file at %S" filename;
@@ -468,7 +484,7 @@ end = struct
 
     Hh_logger.info "Denormalizing saved-state data";
 
-    let%lwt data = denormalize_data ~flowconfig_name ~workers ~options ~data in
+    let%lwt data = denormalize_data ~workers ~options ~data in
 
     Hh_logger.info "Finished loading saved-state";
 

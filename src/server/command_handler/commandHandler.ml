@@ -61,10 +61,10 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
   in
   let%lwt autocomplete_result =
     map_error ~f:(fun str -> str, None) check_contents_result
-    %>>= (fun (cx, info) ->
+    %>>= (fun (cx, info, file_sig) ->
       Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json (fun () ->
-          Lwt.return (AutocompleteService_js.autocomplete_get_results cx state info)
+          Lwt.return (AutocompleteService_js.autocomplete_get_results cx file_sig state info)
         )
       )
     )
@@ -340,7 +340,7 @@ let handle_ephemeral_deferred_unsafe
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
-    Profiling_js.with_profiling_lwt ~should_print_summary begin fun profiling ->
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.AUTOCOMPLETE fn ->
           let%lwt result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
@@ -525,28 +525,30 @@ let handle_ephemeral_immediately_unsafe
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
-    Profiling_js.with_profiling_lwt ~should_print_summary begin fun _profiling ->
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
-          let callback =
-            if profile
-            then
-              (* When the recheck finishes, respond to this request *)
-              Some (fun profiling -> respond (ServerProt.Response.FORCE_RECHECK profiling))
-            else begin
-              (* If we're not profiling the recheck, then respond immediately *)
-              respond (ServerProt.Response.FORCE_RECHECK None);
-              None
-            end
-          in
+        let fileset = SSet.of_list files in
+          let push = ServerMonitorListenerState.(
+            if focus then push_files_to_focus else push_files_to_recheck
+          ) in
 
-          let fileset = SSet.of_list files in
-
-          if focus
-          then ServerMonitorListenerState.push_files_to_focus ?callback fileset
-          else ServerMonitorListenerState.push_files_to_recheck ?callback fileset;
-
-          Lwt.return None
+          if profile
+          then begin
+            let wait_for_recheck_thread, wakener = Lwt.task () in
+            push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
+            let%lwt recheck_profiling = wait_for_recheck_thread in
+            respond (ServerProt.Response.FORCE_RECHECK recheck_profiling);
+            Option.iter recheck_profiling ~f:(fun recheck_profiling ->
+              Profiling_js.merge ~from:recheck_profiling ~into:profiling
+            );
+            Lwt.return None
+          end else begin
+            (* If we're not profiling the recheck, then respond immediately *)
+            respond (ServerProt.Response.FORCE_RECHECK None);
+            push fileset;
+            Lwt.return None
+          end
       | ServerProt.Request.AUTOCOMPLETE _
       | ServerProt.Request.CHECK_FILE _
       | ServerProt.Request.COVERAGE _
@@ -1046,7 +1048,7 @@ let handle_persistent
   let should_print_summary = Options.should_profile genv.options in
   let wall_start = Unix.gettimeofday () in
 
-  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~should_print_summary
+  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary
     (fun profiling ->
       try%lwt
         handle_persistent_unsafe genv env client profiling request
@@ -1068,17 +1070,18 @@ let handle_persistent
     info = CommandSummary (string_of_request request)}) in
 
   let server_profiling = Some profiling in
+  let server_logging_context = Some (FlowEventLogger.get_context ()) in
 
   match result with
   | LspResponse (Ok (env, lsp_response, metadata)) ->
-    let metadata = {metadata with server_profiling} in
+    let metadata = {metadata with server_profiling; server_logging_context; } in
     let response = LspFromServer (lsp_response, metadata) in
     Persistent_connection.send_message response client;
     MonitorRPC.status_update ~event;
     Lwt.return env
 
   | LspResponse (Error (env, metadata)) ->
-    let metadata = {metadata with server_profiling} in
+    let metadata = {metadata with server_profiling; server_logging_context; } in
     let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
     let e = Failure reason in
     let lsp_response = match request with
@@ -1099,7 +1102,8 @@ let handle_persistent
   | IdeResponse (Ok (env, extra_data)) ->
     let request = json_of_request request |> Hh_json.json_to_string in
     let extra_data = keyvals_of_json extra_data in
-    FlowEventLogger.persistent_command_success ~extra_data
+    FlowEventLogger.persistent_command_success
+      ~server_logging_context:None ~extra_data
       ~persistent_context:None ~persistent_delay:None ~request ~client_context
       ~server_profiling ~client_duration:None ~wall_start ~error:None;
     MonitorRPC.status_update ~event;
@@ -1107,7 +1111,8 @@ let handle_persistent
 
   | IdeResponse (Error (env, (ExpectedError, reason, stack))) ->
     let request = json_of_request request |> Hh_json.json_to_string in
-    FlowEventLogger.persistent_command_success ~extra_data:[]
+    FlowEventLogger.persistent_command_success
+      ~server_logging_context:None ~extra_data:[]
       ~persistent_context:None ~persistent_delay:None ~request ~client_context
       ~server_profiling ~client_duration:None ~wall_start ~error:(Some (reason, stack));
     MonitorRPC.status_update ~event;
@@ -1115,7 +1120,8 @@ let handle_persistent
 
   | IdeResponse (Error (env, (UnexpectedError, reason, stack))) ->
     let request = json_of_request request |> Hh_json.json_to_string in
-    FlowEventLogger.persistent_command_failure ~extra_data:[]
+    FlowEventLogger.persistent_command_failure
+      ~server_logging_context:None ~extra_data:[]
       ~persistent_context:None ~persistent_delay:None ~request ~client_context
       ~server_profiling ~client_duration:None ~wall_start ~error:(reason, stack);
     Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request reason;

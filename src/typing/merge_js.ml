@@ -182,6 +182,81 @@ let detect_unnecessary_invariants cx =
     Flow_js.add_output cx (Flow_error.EUnnecessaryInvariant (loc, reason))
   ) (Context.unnecessary_invariants cx)
 
+let check_type_visitor wrap =
+  let open Ty in
+  let open Ty_visitor.UnitVisitor in
+  object(self) inherit visitor as super
+
+  method! private prop_t env t =
+    begin match t with
+    | NamedProp (_, p) -> Pervasives.ignore (self#named_prop_t env p)
+    | IndexProp d -> Pervasives.ignore (self#dict_t env d)
+    | CallProp _ -> wrap (Reason.RCustom "object Call Property")
+    end;
+    return t
+
+  method! private named_prop_t env t =
+    begin match t with
+    | Field (t, _) -> Pervasives.ignore (self#type_ env t)
+    | Method _ -> wrap (Reason.RMethod None)
+    | Get _ | Set _ -> wrap (Reason.RGetterSetterProperty)
+    end;
+    return t
+
+  method! type_ env t =
+    begin match t with
+    | TVar _ -> wrap (Reason.RCustom "recursive type")
+    | Fun _ -> wrap Reason.RFunctionType
+    | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
+    | Mu _ -> wrap (Reason.RCustom "recursive type")
+    | Any -> wrap Reason.RAny
+    | AnyObj -> wrap Reason.RAnyObject
+    | AnyFun -> wrap Reason.RAnyFunction
+    | Bound (Symbol (_, id)) -> wrap (Reason.RCustom ("bound type var " ^ id))
+    | Top -> wrap Reason.RMixed
+    | Bot -> wrap Reason.REmpty
+    | Exists -> wrap Reason.RExistential
+    | Module (Symbol (_, x)) -> wrap (Reason.RModule x)
+    | TypeAlias {ta_name = Symbol (_, id); _} -> wrap (Reason.RCustom ("type alias " ^ id))
+    | Obj _ | Arr _ | Tup _ | Union _ | Inter _ -> Pervasives.ignore (super#type_ env t)
+    | (Void|Null|Num|Str|Bool|NumLit _|StrLit _|BoolLit _|TypeOf _|Generic _|Class _) -> ()
+    end;
+    return t
+
+  end
+
+let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = true;
+    flag_shadowed_type_params = false;
+  } in
+  let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
+    Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
+      let desc = Reason.RCustom "TypeAssert library function" in
+      let reason_main = Reason.mk_reason desc call_loc in
+      let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
+        reason_main, Reason.mk_reason reason call_loc
+      )) in
+      match Ty_normalizer.from_scheme ~options ~genv scheme with
+      | Ok ty ->
+        Pervasives.ignore ((check_type_visitor wrap)#type_ () ty)
+      | Error _ ->
+        let { Type.TypeScheme.type_ = t; _ } = scheme in
+        wrap (Type.desc_of_t t)
+    )
+  in
+  List.iter (fun cx ->
+    let file = Context.file cx in
+    let type_table = Context.type_table cx in
+    let targs_map = Type_table.targs_hashtbl type_table in
+    let file_sig = FilenameMap.find_unsafe file file_sigs in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
+    Utils_js.LocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
+  ) cxs
+
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
@@ -355,6 +430,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
+  detect_invalid_type_assert_calls ~full_cx:cx file_sigs (cx::other_cxs);
 
   cx, other_cxs
 

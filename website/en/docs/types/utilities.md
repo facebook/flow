@@ -18,6 +18,7 @@ Table of contents:
 - [`$TupleMap<T, F>`](#toc-tuplemap)
 - [`$Call<F>`](#toc-call)
 - [`Class<T>`](#toc-class)
+- [`$Shape<T>`](#toc-shape)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -576,6 +577,25 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 }
 (makeParamStore(ParamStore, 1): ParamStore<number>);
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
+```
+
+## `$Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+Copies the shape of the type supplied, but marks every field optional.
+
+```js
+// @flow
+type Person = {
+  age: number,
+  name: string,
+}
+type PersonDetails = $Shape<Person>;
+
+const person1: Person = {age: 28};  // Error: missing `name`
+const person2: Person = {name: 'a'};  // Error: missing `age`
+const person3: PersonDetails = {age: 28};  // OK
+const person4: PersonDetails = {name: 'a'};  // OK
+const person5: PersonDetails = {age: 28, name: 'a'};  // OK
 ```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>

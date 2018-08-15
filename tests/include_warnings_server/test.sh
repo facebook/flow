@@ -1,13 +1,10 @@
 #!/bin/sh
-. ../assert.sh
-FLOW=$1
-
 
 
 printf "EMPTY FLOWCONFIG\n"
 assert_ok "$FLOW" stop
 cp empty_flowconfig .flowconfig
-assert_ok "$FLOW" start
+start_flow .
 
 printf "\n\nCheck Without --include-warnings\n"
 assert_errors "$FLOW" check --strip-root
@@ -32,7 +29,7 @@ assert_errors "$FLOW" status --strip-root --include-warnings
 printf "\n\n\n\nINCLUDE_WARNINGS FLOWCONFIG\n"
 assert_ok "$FLOW" stop
 cp include_warnings_flowconfig .flowconfig
-assert_ok "$FLOW" start
+start_flow .
 
 printf "\n\nCheck Without --include-warnings\n"
 assert_errors "$FLOW" check --strip-root

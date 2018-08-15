@@ -262,6 +262,10 @@ struct
     mutable clockspec: string;
   }
 
+  type resume_watches =
+    | Prior_watched_paths of watched_path SMap.t
+    | New_watch_from_clockspec of string
+
   type dead_env = {
     (** Will reuse original settings to reinitializing watchman subscription. *)
     prior_settings : init_settings;
@@ -436,17 +440,22 @@ struct
       >>= get_bool name
       |> project_bool
 
-  let re_init ?prior_watched_paths
+  let re_init ?resume_watches
     { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
 
     (* Dedupe roots *)
-    let roots_with_clockspecs = match prior_watched_paths with
+    let roots_with_clockspecs = match resume_watches with
     | None ->
       (* Dedupe roots & add in that we have no prior clockspec *)
       List.fold_left roots
         ~init:SMap.empty
         ~f:(fun map path -> SMap.add (Path.to_string path) (path, None) map)
-    | Some watched_paths ->
+    | Some (New_watch_from_clockspec clockspec) ->
+      (* Dedupe roots & add clockspec for resuming watch. *)
+      List.fold_left roots
+        ~init:SMap.empty
+        ~f:(fun map path -> SMap.add (Path.to_string path) (path, Some clockspec) map)
+    | Some (Prior_watched_paths watched_paths) ->
       SMap.fold
         (fun _ { path; clockspec; _; } -> SMap.add (Path.to_string path) (path, Some clockspec))
         watched_paths
@@ -515,7 +524,6 @@ struct
       watch_root;
       watched_paths;
     } in
-
     (match subscribe_mode with
     | None -> Watchman_process.return ()
     | Some mode ->
@@ -523,10 +531,11 @@ struct
         Watchman_process.request ~debug_logging ~conn (subscribe ~mode ~watched_path env) >|= ignore
       )
     ) >|= fun () ->
-
     env
 
-  let init settings = re_init settings
+  let init ?since_clockspec settings () =
+    let resume_watches = Option.map since_clockspec ~f:(fun clockspec -> New_watch_from_clockspec clockspec) in
+    re_init ?resume_watches settings
 
   let extract_file_names ~watched_path env json =
     let files = try J.get_array_val "files" json with
@@ -558,7 +567,8 @@ struct
       then
         let () =
           Hh_logger.log "Attemping to reestablish watchman subscription" in
-        re_init ~prior_watched_paths:dead_env.prior_watched_paths dead_env.prior_settings
+        re_init ~resume_watches:(Prior_watched_paths dead_env.prior_watched_paths)
+          dead_env.prior_settings
         >|= function
         | None ->
           Hh_logger.log "Reestablishing watchman subscription failed.";
@@ -680,7 +690,7 @@ struct
       get_string "mergebase" >>= fun (mergebase, keytrace) ->
     let files = set_of_list @@ extract_file_names ~watched_path env data in
     watched_path.clockspec <- clock;
-    let response = Changed_merge_base (mergebase, files) in
+    let response = Changed_merge_base (mergebase, files, clock) in
     Ok ((env, response), keytrace)
 
   let get_watched_path_for_response env data =
@@ -906,7 +916,7 @@ module Watchman_mock = struct
 
   end
 
-  let init _ = !Mocking.init
+  let init ?since_clockspec:_ _ () = !Mocking.init
   let get_changes ?deadline instance =
     let _ = deadline in
     let result = !Mocking.changes in

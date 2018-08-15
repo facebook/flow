@@ -1,7 +1,5 @@
 #!/bin/bash
-. ../assert.sh
 . ../fs.sh
-FLOW=$1
 mkdir -p tmp/node_modules
 printf "\nShould resolve to dir/node_modules/b.js which is number\n"
 assert_errors "$FLOW" status .

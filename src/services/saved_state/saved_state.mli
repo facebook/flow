@@ -12,10 +12,12 @@ type parsed_file_data = {
   info: Module_heaps.info;
   file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
+  hash: Xx.hash;
 }
 
 type unparsed_file_data = {
   unparsed_info: Module_heaps.info;
+  unparsed_hash: Xx.hash;
 }
 
 type saved_state_data = {
@@ -35,7 +37,6 @@ val save:
   env:ServerEnv.env ->
   unit Lwt.t
 val load:
-  flowconfig_name:string ->
   workers:MultiWorkerLwt.worker list option ->
   saved_state_filename:Path.t ->
   options:Options.t ->

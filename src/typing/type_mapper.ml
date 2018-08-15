@@ -418,6 +418,9 @@ class ['a] t = object(self)
     | ReactCreateElement
     | ReactCloneElement
     | Idx
+    | TypeAssertIs
+    | TypeAssertThrows
+    | TypeAssertWraps
     | DebugPrint
     | DebugThrow
     | DebugSleep
