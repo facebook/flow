@@ -7,7 +7,7 @@ import React from "react";
 <span hidden={null} />; // Error: Expected DOM boolean
 <span hidden="true" />; // Error: Expected DOM boolean
 <span hidden="false" />; // Error: Expected DOM boolean
-<span hidden="" />; // OK
+<span hidden="" />; // Error: Expected DOM boolean
 <span hidden="yes" />; // Error: Expected DOM boolean
 <span hidden="hidden" />; // OK
 
