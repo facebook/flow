@@ -95,7 +95,7 @@ You may also optionally leave out the parameter names.
 You might use these functions types for something like a callback.
 
 ```js
-function method(callback: (error: Error | null, value: string | null) => void) {
+function method(callback: (error: Error | null, value?: string) => void) {
   // ...
 }
 ```
