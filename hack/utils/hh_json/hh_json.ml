@@ -138,7 +138,7 @@ let char_code env =
     if len = 0 then acc
     else begin
       env.pos <- env.pos + 1;
-      let c = peek env in
+      let c = Char.lowercase_ascii (peek env) in
       let i =
         if '0' <= c && c <= '9' then (Char.code c) - (Char.code '0')
         else if 'a' <= c && c <= 'f' then 10 + (Char.code c) - (Char.code 'a')

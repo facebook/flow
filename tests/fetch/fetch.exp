@@ -177,9 +177,28 @@ References:
                  ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- headers.js:17:19
+
+Cannot assign `e.get(...)` to `g` because null [1] is incompatible with string [2].
+
+   headers.js:17:19
+    17| const g: string = e.get('Content-Type'); // correct
+                          ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:905:24
+   905|     get(name: string): null | string;
+                               ^^^^ [1]
+   headers.js:17:10
+    17| const g: string = e.get('Content-Type'); // correct
+                 ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- headers.js:18:19
 
-Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+Cannot assign `e.get(...)` to `h` because:
+ - null [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
    headers.js:18:19
     18| const h: number = e.get('Content-Type'); // not correct
@@ -187,11 +206,14 @@ Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number
 
 References:
    <BUILTINS>/bom.js:905:24
-   905|     get(name: string): string;
-                               ^^^^^^ [1]
+   905|     get(name: string): null | string;
+                               ^^^^ [1]
    headers.js:18:10
     18| const h: number = e.get('Content-Type'); // not correct
                  ^^^^^^ [2]
+   <BUILTINS>/bom.js:905:31
+   905|     get(name: string): null | string;
+                                      ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- headers.js:28:1
@@ -665,9 +687,28 @@ References:
                  ^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- urlsearchparams.js:17:19
+
+Cannot assign `e.get(...)` to `g` because null [1] is incompatible with string [2].
+
+   urlsearchparams.js:17:19
+    17| const g: string = e.get('key1'); // correct
+                          ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/bom.js:919:24
+   919|     get(name: string): null | string;
+                               ^^^^ [1]
+   urlsearchparams.js:17:10
+    17| const g: string = e.get('key1'); // correct
+                 ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- urlsearchparams.js:18:19
 
-Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number [2].
+Cannot assign `e.get(...)` to `h` because:
+ - null [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
    urlsearchparams.js:18:19
     18| const h: number = e.get('key1'); // not correct
@@ -675,15 +716,18 @@ Cannot assign `e.get(...)` to `h` because string [1] is incompatible with number
 
 References:
    <BUILTINS>/bom.js:919:24
-   919|     get(name: string): string;
-                               ^^^^^^ [1]
+   919|     get(name: string): null | string;
+                               ^^^^ [1]
    urlsearchparams.js:18:10
     18| const h: number = e.get('key1'); // not correct
                  ^^^^^^ [2]
+   <BUILTINS>/bom.js:919:31
+   919|     get(name: string): null | string;
+                                      ^^^^^^ [3]
 
 
 
-Found 45 errors
+Found 49 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -45,42 +45,29 @@ let init ~focus_targets genv =
   let should_print_summary = Options.should_profile options in
   let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary
     begin fun profiling ->
-    let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
-      Types_js.init ~profiling ~workers options in
+      let%lwt libs_ok, env = Types_js.init ~profiling ~workers options in
 
-    (* If any libs errored, skip typechecking and just show lib errors. Note
-     * that `init` above has done all parsing, not just lib parsing, resolved
-     * and committed modules, etc.
-     *
-     * Furthermore, if we're in lazy mode, we forego typechecking until later,
-     * when it proceeds on an as-needed basis. *)
-    let%lwt checked, errors =
-      if not libs_ok || Options.is_lazy_mode options then
-        Lwt.return (CheckedSet.empty, errors)
-      else
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options
-          parsed dependency_graph errors
-    in
+      (* If any libs errored, skip typechecking and just show lib errors. Note
+       * that `init` above has done all parsing, not just lib parsing, resolved
+       * and committed modules, etc.
+       *
+       * Furthermore, if we're in lazy mode, we forego typechecking until later,
+       * when it proceeds on an as-needed basis. *)
+      let%lwt env =
+        if not libs_ok || Options.is_lazy_mode options
+        then Lwt.return env
+        else Types_js.full_check ~profiling ~workers ~focus_targets ~options env
+      in
 
-    sample_init_memory profiling;
+      sample_init_memory profiling;
 
-    SharedMem_js.init_done();
+      SharedMem_js.init_done();
 
-    (* Return an env that initializes invariants required and maintained by
-       recheck, namely that `files` contains files that parsed successfully, and
-       `errors` contains the current set of errors. *)
-    Lwt.return { ServerEnv.
-      files = parsed;
-      unparsed;
-      dependency_graph;
-      checked_files = checked;
-      ordered_libs;
-      libs;
-      errors;
-      collated_errors = ref None;
-      connections = Persistent_connection.empty;
-    }
-  end in
+      (* Return an env that initializes invariants required and maintained by
+         recheck, namely that `files` contains files that parsed successfully, and
+         `errors` contains the current set of errors. *)
+      Lwt.return env
+    end in
   let event = ServerStatus.(Finishing_up {
     duration = Profiling_js.get_profiling_duration profiling;
     info = InitSummary}) in

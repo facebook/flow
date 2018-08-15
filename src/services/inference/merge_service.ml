@@ -20,6 +20,7 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
+  file_sigs: File_sig.t FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -110,7 +111,7 @@ let merge_strict_context ~options component =
     component file_reqs dep_cxs master_cx
   in
 
-  { cx; other_cxs; master_cx }
+  { cx; other_cxs; master_cx; file_sigs }
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
@@ -168,7 +169,7 @@ let merge_strict_component ~worker_mutator ~options merged_acc component =
   *)
   let info = Module_heaps.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
-    let { cx; other_cxs = _; master_cx } = merge_strict_context ~options component in
+    let { cx; other_cxs = _; master_cx; _ } = merge_strict_context ~options component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in

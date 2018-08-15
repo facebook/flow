@@ -234,8 +234,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3164:45
-   3164|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3165:45
+   3165|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -251,8 +251,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3165:78
-   3165|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3166:78
+   3166|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -265,8 +265,8 @@ Cannot get `form.action` because property `action` is missing in null [1].
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3225:27
-   3225|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3226:27
+   3226|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -279,8 +279,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3243:44
-   3243|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3244:44
+   3244|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -293,8 +293,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3244:48
-   3244|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3245:48
+   3245|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -760,11 +760,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3707:1
+   <BUILTINS>/dom.js:3708:1
          v--------------------------------
-   3707| typeof NodeFilter.FILTER_ACCEPT |
-   3708| typeof NodeFilter.FILTER_REJECT |
-   3709| typeof NodeFilter.FILTER_SKIP;
+   3708| typeof NodeFilter.FILTER_ACCEPT |
+   3709| typeof NodeFilter.FILTER_REJECT |
+   3710| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -781,11 +781,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3707:1
+   <BUILTINS>/dom.js:3708:1
          v--------------------------------
-   3707| typeof NodeFilter.FILTER_ACCEPT |
-   3708| typeof NodeFilter.FILTER_REJECT |
-   3709| typeof NodeFilter.FILTER_SKIP;
+   3708| typeof NodeFilter.FILTER_ACCEPT |
+   3709| typeof NodeFilter.FILTER_REJECT |
+   3710| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -844,11 +844,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3707:1
+   <BUILTINS>/dom.js:3708:1
          v--------------------------------
-   3707| typeof NodeFilter.FILTER_ACCEPT |
-   3708| typeof NodeFilter.FILTER_REJECT |
-   3709| typeof NodeFilter.FILTER_SKIP;
+   3708| typeof NodeFilter.FILTER_ACCEPT |
+   3709| typeof NodeFilter.FILTER_REJECT |
+   3710| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -865,11 +865,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3707:1
+   <BUILTINS>/dom.js:3708:1
          v--------------------------------
-   3707| typeof NodeFilter.FILTER_ACCEPT |
-   3708| typeof NodeFilter.FILTER_REJECT |
-   3709| typeof NodeFilter.FILTER_SKIP;
+   3708| typeof NodeFilter.FILTER_ACCEPT |
+   3709| typeof NodeFilter.FILTER_REJECT |
+   3710| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 

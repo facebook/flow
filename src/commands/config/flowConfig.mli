@@ -38,7 +38,6 @@ val libs: config -> string list
 (* options *)
 val all: config -> bool
 val emoji: config -> bool
-val max_literal_length: config -> int
 val enable_cancelable_rechecks: config -> bool
 val enable_const_params: config -> bool
 val enforce_strict_call_arity: config -> bool
@@ -47,8 +46,8 @@ val esproposal_class_instance_fields: config -> Options.esproposal_feature_mode
 val esproposal_class_static_fields: config -> Options.esproposal_feature_mode
 val esproposal_decorators: config -> Options.esproposal_feature_mode
 val esproposal_export_star_as: config -> Options.esproposal_feature_mode
-val esproposal_optional_chaining: config -> Options.esproposal_feature_mode
 val esproposal_nullish_coalescing: config -> Options.esproposal_feature_mode
+val esproposal_optional_chaining: config -> Options.esproposal_feature_mode
 val facebook_fbt: config -> string option
 val file_watcher: config -> Options.file_watcher option
 val haste_name_reducers: config -> (Str.regexp * string) list
@@ -59,6 +58,7 @@ val ignore_non_literal_requires: config -> bool
 val include_warnings: config -> bool
 val log_file: config -> Path.t option
 val max_header_tokens: config -> int
+val max_literal_length: config -> int
 val max_workers: config -> int
 val merge_timeout: config -> int option
 val module_file_exts: config -> SSet.t
@@ -68,8 +68,10 @@ val module_resource_exts: config -> SSet.t
 val module_system: config -> Options.module_system
 val modules_are_use_strict: config -> bool
 val munge_underscores: config -> bool
+val name: config -> string option
 val no_flowlib: config -> bool
 val node_resolver_dirnames: config -> string list
+val required_version: config -> string option
 val saved_state_load_script: config -> string option
 val shm_dep_table_pow: config -> int
 val shm_dirs: config -> string list
@@ -82,7 +84,6 @@ val suppress_comments: config -> Str.regexp list
 val suppress_types: config -> SSet.t
 val temp_dir: config -> string
 val traces: config -> int
-val required_version: config -> string option
 val weak: config -> bool
 
 (* global defaults for lint suppressions and strict mode *)

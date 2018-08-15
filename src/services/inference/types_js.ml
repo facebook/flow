@@ -447,7 +447,7 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, suppressions, severity_cover_set = try%lwt
+  let%lwt merge_errors, suppressions, severity_cover_set =
     let intermediate_result_callback results =
       let errors = lazy (
         List.map (fun (file, result) ->
@@ -494,17 +494,6 @@ let merge
     in
     Hh_logger.info "Done";
     Lwt.return (merge_errors, suppressions, severity_cover_set)
-  with
-  (* Unrecoverable exceptions *)
-  | Lwt.Canceled
-  | SharedMem_js.Out_of_shared_memory
-  | SharedMem_js.Heap_full
-  | SharedMem_js.Hash_table_full
-  | SharedMem_js.Dep_table_full as exn -> raise exn
-  (* A catch all suppression is probably a bad idea... *)
-  | exn when not Build_mode.dev ->
-      Hh_logger.error ~exn "Exception in master process during merge";
-      Lwt.return (merge_errors, suppressions, severity_cover_set)
   in
 
   let checked = CheckedSet.union unchanged_checked to_merge in
@@ -667,7 +656,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         else Errors.ErrorSet.empty
       in
 
-      Lwt.return (Some (cx, ast), errors, warnings, info)
+      Lwt.return (Some (cx, ast, file_sig), errors, warnings, info)
 
   | Parsing_service_js.Parse_fail fails ->
       let errors = match fails with
@@ -701,10 +690,10 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
     let%lwt cx_opt, _errors, _warnings, info =
       typecheck_contents_
         ~options ~workers ~env ~check_syntax:false ~profiling contents filename in
-    let cx = match cx_opt with
-      | Some (cx, _) -> cx
+    let cx, file_sig = match cx_opt with
+      | Some (cx, _, file_sig) -> cx, file_sig
       | None -> failwith "Couldn't parse file" in
-    Lwt.return (Ok (cx, info))
+    Lwt.return (Ok (cx, info, file_sig))
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->
@@ -1521,16 +1510,32 @@ let load_saved_state ~profiling ~workers options =
       )
 
 let init ~profiling ~workers options =
-  match%lwt load_saved_state ~profiling ~workers options with
-  | None ->
-    (* Either there is no saved state or we failed to load it for some reason *)
-    init ~profiling ~workers options
-  | Some saved_state ->
-    (* We loaded a saved state successfully! We are awesome! *)
-    init_from_saved_state ~profiling ~workers ~saved_state options
+  let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
+    match%lwt load_saved_state ~profiling ~workers options with
+    | None ->
+      (* Either there is no saved state or we failed to load it for some reason *)
+      init ~profiling ~workers options
+    | Some saved_state ->
+      (* We loaded a saved state successfully! We are awesome! *)
+      init_from_saved_state ~profiling ~workers ~saved_state options
+  in
 
-let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_graph errors =
-  let%lwt (checked, _, errors) = Transaction.with_transaction (fun transaction ->
+  let env = { ServerEnv.
+    files = parsed;
+    unparsed;
+    dependency_graph;
+    checked_files = CheckedSet.empty;
+    ordered_libs;
+    libs;
+    errors;
+    collated_errors = ref None;
+    connections = Persistent_connection.empty;
+  } in
+  Lwt.return (libs_ok, env)
+
+let full_check ~profiling ~options ~workers ~focus_targets env =
+  let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
+  let%lwt (checked_files, _, errors) = Transaction.with_transaction (fun transaction ->
     let%lwt infer_input = files_to_infer
       ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
 
@@ -1562,4 +1567,4 @@ let full_check ~profiling ~options ~workers ~focus_targets parsed dependency_gra
       ~persistent_connections:None
       ~prep_merge:None
   ) in
-  Lwt.return (checked, errors)
+  Lwt.return { env with ServerEnv.checked_files; errors }

@@ -74,13 +74,13 @@ let diff_if_changed f x1 x2 =
   if x1 == x2 then [] else f x1 x2
 
 let diff_if_changed_opt f opt1 opt2: node change list option =
-  match (opt1, opt2) with
-    | (Some x1, Some x2) ->
-      if x1 == x2 then Some [] else f x1 x2
-    | (None, None) ->
-      Some []
-    | _ ->
-      None
+  match opt1, opt2 with
+  | Some x1, Some x2 ->
+    if x1 == x2 then Some [] else f x1 x2
+  | None, None ->
+    Some []
+  | _ ->
+    None
 
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
@@ -117,6 +117,8 @@ and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast
     : node change list =
   let open Ast.Statement in
   let changes = match stmt1, stmt2 with
+  | (_, VariableDeclaration var1), (_, VariableDeclaration var2) ->
+    variable_declaration var1 var2
   | (_, FunctionDeclaration func1), (_, FunctionDeclaration func2) ->
     function_declaration func1 func2
   | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
@@ -162,6 +164,29 @@ and function_ (func1: (Loc.t, Loc.t) Ast.Function.t) (func2: (Loc.t, Loc.t) Ast.
       None
     | BodyBlock (_, block1), BodyBlock (_, block2) ->
       block block1 block2
+
+and variable_declarator (decl1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) (decl2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t)
+    : node change list option =
+  let open Ast.Statement.VariableDeclaration.Declarator in
+  let (_, { id = id1; init = init1 }) = decl1 in
+  let (_, { id = id2; init = init2 }) = decl2 in
+  if id1 != id2 then
+    (* TODO recurse into id after patterns are implemented *)
+    None
+  else
+    diff_if_changed_opt (fun x y -> Some (expression x y)) init1 init2
+
+and variable_declaration (var1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) (var2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
+    : node change list option =
+  let open Ast.Statement.VariableDeclaration in
+  let { declarations = declarations1; kind = kind1 } = var1 in
+  let { declarations = declarations2; kind = kind2 } = var2 in
+  if kind1 != kind2 then
+    None
+  else if declarations1 != declarations2 then
+    diff_and_recurse variable_declarator declarations1 declarations2
+  else
+    Some []
 
 and if_statement (if1: (Loc.t, Loc.t) Ast.Statement.If.t) (if2: (Loc.t, Loc.t) Ast.Statement.If.t)
     : node change list option =
@@ -333,9 +358,8 @@ and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
     : node change list option =
   let open Ast.Statement.For in
   match (init1, init2) with
-  | (InitDeclaration(_, _), InitDeclaration(_, _)) ->
-    (* TODO add support for InitDeclaration comparisons *)
-    None
+  | (InitDeclaration(_, decl1), InitDeclaration(_, decl2)) ->
+    variable_declaration decl1 decl2
   | (InitExpression expr1, InitExpression expr2) ->
     Some (diff_if_changed expression expr1 expr2)
   | (InitDeclaration _, InitExpression _)

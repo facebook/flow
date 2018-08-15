@@ -4,4 +4,4 @@ declare var sleep: $Flow$DebugSleep;
 
 sleep(100); // sleep for 100 seconds
 
-const x: string = 123;
+export const x: string = 123;
