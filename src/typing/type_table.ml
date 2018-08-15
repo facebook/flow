@@ -13,27 +13,25 @@ type id_kind =
 
 type name = string
 
-type tparam_env = Type.typeparam list
-
-type type_scheme = Scheme of (tparam_env * Type.t) [@@unboxed]
-
 type 'a entry = name * 'a * id_kind
+
+
 type type_entry = Type.t entry
-type scheme_entry = type_scheme entry
+type scheme_entry = Type.TypeScheme.t entry
 
 type t = {
   (* This stores type information about expressions. Every expression in the program should have a
    * type here. This means that there is some nesting, e.g. in the expression `5 + 4` there will be
    * a type for `5`, a type for `4`, and a type for the entire addition expression. *)
-  coverage: (Loc.t, type_scheme) Hashtbl.t;
+  coverage: (Loc.t, Type.TypeScheme.t) Hashtbl.t;
   (* This stores type information about identifiers only. There should be no overlap or nesting of
    * locations here. *)
-  type_info: (Loc.t, scheme_entry) Hashtbl.t;
+  type_info: (Loc.t, Type.TypeScheme.t entry) Hashtbl.t;
   (* Keep a stack of the type parameters in scope and use it to create type schemes. *)
-  tparams: tparam_env ref;
+  tparams: Type.typeparam list ref;
   (* This stores type information for explicit type arguments to polymorphic
    * functions. TODO once typed AST is available, this won't be necessary anymore. *)
-  targs: (Loc.t, type_scheme) Hashtbl.t;
+  targs: (Loc.t, Type.TypeScheme.t ) Hashtbl.t;
 }
 
 let create () = {
@@ -43,8 +41,8 @@ let create () = {
   targs = Hashtbl.create 0;
 }
 
-let set {coverage; tparams; _} loc t =
-  let scheme = Scheme (!tparams, t) in
+let set {coverage; tparams; _} loc type_ =
+  let scheme = { Type.TypeScheme.tparams = !tparams; type_ } in
   Hashtbl.replace coverage loc scheme
 
 (* Insert a located tuple into the type_info hashtable (intended for type-at-pos).
@@ -56,10 +54,11 @@ let set_info ?extra_tparams loc (name, t, i) x =
   let {type_info; tparams; _} = x in
   let extra_tparams = Option.value ~default:[] extra_tparams in
   let tparams = extra_tparams @ !tparams in
-  Hashtbl.replace type_info loc (name, Scheme (tparams, t), i)
+  let scheme = { Type.TypeScheme.tparams; type_ = t } in
+  Hashtbl.replace type_info loc (name, scheme, i)
 
 let set_targ {targs; tparams; _} loc t =
-  let scheme = Scheme (!tparams, t) in
+  let scheme = { Type.TypeScheme.tparams = !tparams; type_ = t } in
   Hashtbl.replace targs loc scheme
 
 let fold_coverage f t init = Hashtbl.fold f t.coverage init
@@ -67,8 +66,8 @@ let fold_coverage f t init = Hashtbl.fold f t.coverage init
 let find_unsafe_coverage t k = Hashtbl.find t.coverage k
 
 let find_unsafe_coverage_type t k =
-  let Scheme (_, t) = Hashtbl.find t.coverage k in
-  t
+  let s = Hashtbl.find t.coverage k in
+  s.Type.TypeScheme.type_
 
 let find_unsafe_targ t k = Hashtbl.find t.targs k
 
@@ -92,7 +91,12 @@ let with_typeparams new_tparams x f =
   x.tparams := old_tparams;
   r
 
-let find_type_info ~pred t =
+let find_type_info t loc =
+  match Hashtbl.find t.type_info loc with
+  | exception Not_found -> None
+  | x -> Some x
+
+let find_type_info_with_pred t pred =
   Hashtbl.fold (fun k v a ->
     if pred k then Some (k, v) else a
   ) t.type_info None
@@ -109,6 +113,9 @@ let targs_to_list t =
   let r = ref [] in
   Hashtbl.iter (fun l t -> r := (l, t) :: !r) t.targs;
   !r
+
+let targs_hashtbl t =
+  t.targs
 
 let coverage_hashtbl t =
   t.coverage

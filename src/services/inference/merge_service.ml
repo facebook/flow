@@ -20,6 +20,7 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
+  file_sigs: File_sig.t FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -110,66 +111,45 @@ let merge_strict_context ~options component =
     component file_reqs dep_cxs master_cx
   in
 
-  { cx; other_cxs; master_cx }
+  { cx; other_cxs; master_cx; file_sigs }
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context options file ast info file_sig ~ensure_checked_dependencies =
-  let resolved_rs, required =
+let merge_contents_context options file ast info file_sig =
+  let required =
     let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-    SMap.fold (fun r locs (resolved_rs, required) ->
+    SMap.fold (fun r locs required ->
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers
         file locs r in
-      Modulename.Set.add resolved_r resolved_rs,
       (r, locs, resolved_r, file) :: required
-    ) require_loc_map (Modulename.Set.empty, [])
+    ) require_loc_map []
   in
   let file_sigs = FilenameMap.singleton file file_sig in
 
-  ensure_checked_dependencies resolved_rs (fun () ->
+  let component = Nel.one file in
 
-    let component = Nel.one file in
-
-    let master_cx, dep_cxs, file_reqs =
-      begin try reqs_of_component component required with
-        | Key_not_found _  ->
-          failwith "not all dependencies are ready yet, aborting..."
-        | e -> raise e
-      end
-    in
-
-    let metadata = Context.metadata_of_options options in
-    let lint_severities = Options.lint_severities options in
-    let file_options = Some (Options.file_options options) in
-    let strict_mode = Options.strict_mode options in
-    let cx, _ = Merge_js.merge_component_strict
-      ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-      ~get_ast_unsafe:(fun _ -> ast)
-      ~get_docblock_unsafe:(fun _ -> info)
-      component file_reqs dep_cxs master_cx
-    in
-
-    cx
-  )
-
-(* This is a version of merge_contents_context which doesn't call ensure_checked_dependencies.
- * This makes it a little unsafe, so only use it if you're 100% sure all the needed dependencies
- * have already been checked.
- *
- * The advantage to this function is that, since we know all the dependencies have been checked,
- * we never need to call MultiWorkerLwt and this function doesn't return an Lwt.t *)
-let merge_contents_context_without_ensure_checked_dependencies options file ast info file_sig =
-  let ensure_checked_dependencies _resolved_rs callback = callback () in
-  merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
-
-let merge_contents_context options file ast info file_sig ~ensure_checked_dependencies =
-  let ensure_checked_dependencies resolved_rs callback =
-    let%lwt () = ensure_checked_dependencies resolved_rs in
-    Lwt.return (callback ())
+  let master_cx, dep_cxs, file_reqs =
+    begin try reqs_of_component component required with
+      | Key_not_found _  ->
+        failwith "not all dependencies are ready yet, aborting..."
+      | e -> raise e
+    end
   in
-  merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
+
+  let metadata = Context.metadata_of_options options in
+  let lint_severities = Options.lint_severities options in
+  let file_options = Some (Options.file_options options) in
+  let strict_mode = Options.strict_mode options in
+  let cx, _ = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
+    ~get_ast_unsafe:(fun _ -> ast)
+    ~get_docblock_unsafe:(fun _ -> info)
+    component file_reqs dep_cxs master_cx
+  in
+
+  cx
 
 (* Entry point for merging a component *)
 let merge_strict_component ~worker_mutator ~options merged_acc component =
@@ -189,7 +169,7 @@ let merge_strict_component ~worker_mutator ~options merged_acc component =
   *)
   let info = Module_heaps.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
-    let { cx; other_cxs = _; master_cx } = merge_strict_context ~options component in
+    let { cx; other_cxs = _; master_cx; _ } = merge_strict_context ~options component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in

@@ -1,3 +1,27 @@
+Error --------------------------------------------------------------------------------------------------- cycle/a.js:6:1
+
+Cannot use TypeAssert library function [1] with function type [1] argument
+
+   6| TypeAssertIs<(x: number) => string>(8);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- cycle/b.js:6:1
+
+Cannot use TypeAssert library function [1] with function type [1] argument
+
+   6| TypeAssertIs<(x: number) => string>(8);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- cycle/c.js:6:1
+
+Cannot use TypeAssert library function [1] with function type [1] argument
+
+   6| TypeAssertIs<(x: number) => string>(8);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:13:1
 
 Cannot use TypeAssert library function [1] with less than 1 type argument.
@@ -138,4 +162,4 @@ References:
 
 
 
-Found 14 errors
+Found 17 errors

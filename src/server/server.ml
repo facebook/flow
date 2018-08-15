@@ -43,49 +43,45 @@ let init ~focus_targets genv =
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
   let should_print_summary = Options.should_profile options in
-  let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~should_print_summary
+  let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary
     begin fun profiling ->
-    let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
-      Types_js.init ~profiling ~workers options in
+      let%lwt libs_ok, env = Types_js.init ~profiling ~workers options in
 
-    (* If any libs errored, skip typechecking and just show lib errors. Note
-     * that `init` above has done all parsing, not just lib parsing, resolved
-     * and committed modules, etc.
-     *
-     * Furthermore, if we're in lazy mode, we forego typechecking until later,
-     * when it proceeds on an as-needed basis. *)
-    let%lwt checked, errors =
-      if not libs_ok || Options.is_lazy_mode options then
-        Lwt.return (CheckedSet.empty, errors)
-      else
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options
-          parsed dependency_graph errors
-    in
+      (* If any libs errored, skip typechecking and just show lib errors. Note
+       * that `init` above has done all parsing, not just lib parsing, resolved
+       * and committed modules, etc.
+       *
+       * Furthermore, if we're in lazy mode, we forego typechecking until later,
+       * when it proceeds on an as-needed basis. *)
+      let%lwt env =
+        if not libs_ok || Options.is_lazy_mode options
+        then Lwt.return env
+        else Types_js.full_check ~profiling ~workers ~focus_targets ~options env
+      in
 
-    sample_init_memory profiling;
+      sample_init_memory profiling;
 
-    SharedMem_js.init_done();
+      SharedMem_js.init_done();
 
-    (* Return an env that initializes invariants required and maintained by
-       recheck, namely that `files` contains files that parsed successfully, and
-       `errors` contains the current set of errors. *)
-    Lwt.return { ServerEnv.
-      files = parsed;
-      unparsed;
-      dependency_graph;
-      checked_files = checked;
-      ordered_libs;
-      libs;
-      errors;
-      collated_errors = ref None;
-      connections = Persistent_connection.empty;
-    }
-  end in
+      (* Return an env that initializes invariants required and maintained by
+         recheck, namely that `files` contains files that parsed successfully, and
+         `errors` contains the current set of errors. *)
+      Lwt.return env
+    end in
   let event = ServerStatus.(Finishing_up {
     duration = Profiling_js.get_profiling_duration profiling;
     info = InitSummary}) in
   MonitorRPC.status_update ~event;
   Lwt.return (profiling, env)
+
+let rec run_workload genv env workload =
+  let on_cancel () =
+    Hh_logger.info "Workload successfully canceled. Running a recheck to pick up new file changes";
+    let%lwt env = Rechecker.recheck_loop genv env in
+    Hh_logger.info "Now restarting the workload";
+    run_workload genv env workload
+  in
+  Rechecker.run_but_cancel_on_file_changes genv env ~f:(fun () -> workload env) ~on_cancel
 
 let rec serve ~genv ~env =
   Hh_logger.debug "Starting aggressive shared mem GC";
@@ -105,7 +101,7 @@ let rec serve ~genv ~env =
   (* Run a workload (if there is one) *)
   let%lwt env = Option.value_map (ServerMonitorListenerState.pop_next_workload ())
     ~default:(Lwt.return env)
-    ~f:(fun workload -> workload env) in
+    ~f:(run_workload genv env) in
 
   (* Flush the logs asynchronously *)
   Lwt.async EventLoggerLwt.flush;

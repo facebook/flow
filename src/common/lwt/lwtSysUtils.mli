@@ -6,3 +6,5 @@
  *)
 
 val blocking_waitpid: int -> (int * Unix.process_status) Lwt.t
+
+val exec_read: string -> string list -> string Lwt.t

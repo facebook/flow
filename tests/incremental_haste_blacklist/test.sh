@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nInitial status:\n"
 assert_ok $FLOW status --no-auto-start --strip-root .
 

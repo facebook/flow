@@ -57,10 +57,10 @@ module Package_heap_mutator : sig
   val add_package_json: string -> Package_json.t -> unit
 end
 
-module FromSavedState : sig
+module From_saved_state : sig
   val add_resolved_requires: File_key.t -> resolved_requires -> unit
 end
 
-module ForSavedState : sig
+module For_saved_state : sig
   val get_package_json_unsafe: string -> Package_json.t
 end

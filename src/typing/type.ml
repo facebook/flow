@@ -2563,6 +2563,15 @@ end = struct
 
 end
 
+(* Type scheme: a type and an attendant environment of type parameters.
+ * See normalizer for use. *)
+module TypeScheme = struct
+  type t = {
+    tparams: TypeTerm.typeparam list;
+    type_: TypeTerm.t;
+  }
+end
+
 include TypeTerm
 include TypeUtil
 

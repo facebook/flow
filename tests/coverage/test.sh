@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 # coverage of declare module
 assert_ok "$FLOW" coverage --color declare_module.js
 

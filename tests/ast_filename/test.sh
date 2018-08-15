@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-
-FLOW=$1
 
 printf "Reading JS from stdin:\n"
 assert_ok "$FLOW" ast --pretty < foo.js

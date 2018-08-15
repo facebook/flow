@@ -18,25 +18,25 @@ and module_sig = {
   requires: require list;
   module_kind: module_kind;
   type_exports_named: type_export SMap.t;
-  type_exports_star: export_star SMap.t;
+  type_exports_star: export_star list;
 }
 
 and require =
   | Require of {
-    source: ident;
-    require_loc: Loc.t;
-    bindings: require_bindings option;
-  }
-  | ImportDynamic of { source: ident; import_loc: Loc.t }
-  | Import0 of ident
+      source: source;
+      require_loc: Loc.t;
+      bindings: require_bindings option;
+    }
+  | ImportDynamic of { source: source; import_loc: Loc.t }
+  | Import0 of { source: source }
   | Import of {
-    source: ident;
-    named: imported_locs Nel.t SMap.t SMap.t;
-    ns: Loc.t Nel.t SMap.t;
-    types: imported_locs Nel.t SMap.t SMap.t;
-    typesof: imported_locs Nel.t SMap.t SMap.t;
-    typesof_ns: Loc.t Nel.t SMap.t;
-  }
+      source: source;
+      named: imported_locs Nel.t SMap.t SMap.t;
+      ns: ident option;
+      types: imported_locs Nel.t SMap.t SMap.t;
+      typesof: imported_locs Nel.t SMap.t SMap.t;
+      typesof_ns: ident option;
+    }
 
 and imported_locs = {
   remote_loc: Loc.t;
@@ -45,40 +45,44 @@ and imported_locs = {
 
 and require_bindings =
   | BindIdent of ident
-  | BindNamed of (Loc.t * ident) SMap.t
+  | BindNamed of imported_locs Nel.t SMap.t SMap.t
 
 and module_kind =
   | CommonJS of {
-    mod_exp_loc: Loc.t option;
-  }
+      mod_exp_loc: Loc.t option;
+    }
   | ES of {
-    named: export SMap.t;
-    star: export_star SMap.t;
-  }
+      named: export SMap.t;
+      star: export_star list;
+    }
 
 and export =
   | ExportDefault of { default_loc: Loc.t; local: ident option }
   | ExportNamed of {
-    loc: Loc.t;
-    local: ident option;
-    source: ident option;
-  }
+      loc: Loc.t;
+      kind: named_export_kind;
+    }
   | ExportNs of {
-    loc: Loc.t;
-    source: ident;
-  }
+      loc: Loc.t;
+      source: source;
+    }
+
+and named_export_kind =
+  | NamedDeclaration
+  | NamedSpecifier of { local: ident; source: source option }
 
 and export_star =
-  | ExportStar of { star_loc: Loc.t; source_loc: Loc.t }
+  | ExportStar of { star_loc: Loc.t; source: source }
 
 and type_export =
   | TypeExportNamed of {
-    loc: Loc.t;
-    local: ident option;
-    source: ident option;
-  }
+      loc: Loc.t;
+      kind: named_export_kind
+    }
 
 and ident = Loc.t * string
+
+and source = Loc.t * string
 
 and tolerable_error =
   (* e.g. `module.exports.foo = 4` when not at the top level *)
@@ -93,7 +97,7 @@ let empty_module_sig = {
   requires = [];
   module_kind = CommonJS { mod_exp_loc = None };
   type_exports_named = SMap.empty;
-  type_exports_star = SMap.empty;
+  type_exports_star = [];
 }
 
 let empty_file_sig = {
@@ -142,14 +146,42 @@ let to_string t =
       in
       items_to_list_string 2 (List.map string_of_require require_list)
     in
-    let string_of_module_kind _ = "TODO" in
-    let string_of_type_export_map _ = "TODO" in
-    let string_of_export_star_map _ = "TODO" in
+    let string_of_named_export_kind = function
+      | NamedDeclaration -> "NamedDeclaration"
+      | NamedSpecifier { local; _ } ->
+        let _, x = local in
+        Printf.sprintf "NamedSpecifier(%s)" x
+    in
+    let string_of_export = function
+      | ExportDefault { local; _ } ->
+        Printf.sprintf "ExportDefault (%s)" @@
+          string_of_option (fun (_, x) -> x) local
+      | ExportNamed { kind; _ } ->
+        Printf.sprintf "ExportNamed (%s)" @@
+          string_of_named_export_kind kind
+      | ExportNs _ -> "ExportNs"
+    in
+    let string_of_type_export = function
+      | TypeExportNamed { kind; _ } ->
+        Printf.sprintf "TypeExportNamed (%s)" @@
+          string_of_named_export_kind kind
+    in
+    let string_of_export_star = function
+      | ExportStar _ -> "ExportStar"
+    in
+    let string_of_module_kind = function
+      | CommonJS _ -> "CommonJS"
+      | ES { named; star } ->
+        items_to_record_string 2 [
+          "named", items_to_record_string 3 @@ SMap.bindings @@ SMap.map string_of_export named;
+          "star", items_to_list_string 3 @@ List.map string_of_export_star star;
+        ]
+    in
     items_to_record_string 1 [
       "requires", string_of_require_list module_sig.requires;
       "module_kind", string_of_module_kind module_sig.module_kind;
-      "type_exports_named", string_of_type_export_map module_sig.type_exports_named;
-      "type_exports_star", string_of_export_star_map module_sig.type_exports_star;
+      "type_exports_named", items_to_record_string 2 @@ SMap.bindings @@ SMap.map string_of_type_export module_sig.type_exports_named;
+      "type_exports_star", items_to_list_string 2 @@ List.map string_of_export_star module_sig.type_exports_star;
     ]
   in
   let string_of_declare_modules _ = "TODO" in
@@ -169,40 +201,40 @@ let require_loc_map msig =
     match require with
     | Require { source = (loc, mref); _ }
     | ImportDynamic { source = (loc, mref); _ }
-    | Import0 (loc, mref)
+    | Import0 { source = (loc, mref) }
     | Import { source = (loc, mref); _ } ->
       SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append
   ) acc msig.requires in
   (* export type {...} from 'foo' *)
   let acc = SMap.fold (fun _ type_export acc ->
     match type_export with
-    | TypeExportNamed { source = Some (loc, mref); _ } ->
+    | TypeExportNamed { kind = NamedSpecifier ({source = Some (loc, mref); _ }); _ } ->
       SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append
     | _ -> acc
   ) msig.type_exports_named acc in
   (* export type * from 'foo' *)
-  let acc = SMap.fold (fun mref export_star acc ->
+  let acc = List.fold_left (fun acc export_star ->
     match export_star with
-    | ExportStar { source_loc; _ } ->
+    | ExportStar { source = (source_loc, mref); _ } ->
       SMap.add mref (Nel.one source_loc) acc ~combine:Nel.rev_append
-  ) msig.type_exports_star acc in
+  ) acc msig.type_exports_star in
   let acc = match msig.module_kind with
   | CommonJS _ -> acc
   | ES { named; star } ->
     (* export {...} from 'foo' *)
     let acc = SMap.fold (fun _ export acc ->
       match export with
-      | ExportNamed { source = Some (loc, mref); _ }
+      | ExportNamed { kind = NamedSpecifier ({source = Some (loc, mref); _ }); _ }
       | ExportNs { source = (loc, mref); _ } ->
         SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append
       | _ -> acc
     ) named acc in
     (* export * from 'foo' *)
-    let acc = SMap.fold (fun mref export_star acc ->
+    let acc = List.fold_left (fun acc export_star ->
       match export_star with
-      | ExportStar { source_loc; _ } ->
+      | ExportStar { source = (source_loc, mref); _ } ->
         SMap.add mref (Nel.one source_loc) acc ~combine:Nel.rev_append
-    ) star acc in
+    ) acc star in
     acc
   in
   acc
@@ -219,21 +251,21 @@ let add_require require msig =
 let add_type_exports named star msig =
   let type_exports_named = List.fold_left (fun acc (export, name) ->
     let type_export = match export with
-    | ExportNamed { loc; local; source } -> TypeExportNamed { loc; local; source }
+    | ExportNamed { loc; kind; } -> TypeExportNamed { loc; kind; }
     | ExportDefault _ -> failwith "export default type"
     | ExportNs _ -> failwith "export type * as X"
     in
     SMap.add name type_export acc
   ) msig.type_exports_named named in
-  let type_exports_star = List.fold_left (fun acc (export_star, mref) ->
-    SMap.add mref export_star acc
-  ) msig.type_exports_star star in
+  let type_exports_star = Option.fold ~f:(fun acc export_star ->
+    export_star :: acc
+  ) ~init:msig.type_exports_star star in
   Ok { msig with type_exports_named; type_exports_star }
 
 let add_es_exports loc named star msig =
   let result = match msig.module_kind with
   | CommonJS { mod_exp_loc = Some _ } -> Error (IndeterminateModuleType loc)
-  | CommonJS { mod_exp_loc = None } -> Ok (SMap.empty, SMap.empty)
+  | CommonJS { mod_exp_loc = None } -> Ok (SMap.empty, [])
   | ES { named; star } -> Ok (named, star)
   in
   match result with
@@ -242,9 +274,9 @@ let add_es_exports loc named star msig =
     let named = List.fold_left (fun acc (export, name) ->
       SMap.add name export acc
     ) named0 named in
-    let star = List.fold_left (fun acc (export_star, mref) ->
-      SMap.add mref export_star acc
-    ) star0 star in
+    let star = Option.fold ~f:(fun acc export_star ->
+      export_star :: acc
+    ) ~init:star0 star in
     let module_kind = ES { named; star } in
     Ok ({ msig with module_kind })
 
@@ -409,13 +441,13 @@ class requires_calculator ~ast = object(this)
     | loc, { Ast.StringLiteral.value = name; _ } -> loc, name
     in
     let import = match default, specifiers with
-    | None, None -> Import0 source
+    | None, None -> Import0 { source }
     | _ ->
       let named = ref SMap.empty in
-      let ns = ref SMap.empty in
+      let ns = ref None in
       let types = ref SMap.empty in
       let typesof = ref SMap.empty in
-      let typesof_ns = ref SMap.empty in
+      let typesof_ns = ref None in
       let ref_of_kind = function
         | ImportType -> types
         | ImportTypeof -> typesof
@@ -426,9 +458,9 @@ class requires_calculator ~ast = object(this)
         let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
         ref := SMap.add remote locals !ref ~combine:combine_nel_smap
       in
-      let add_ns local loc ref =
-        let locs = Nel.one loc in
-        ref := SMap.add local locs !ref ~combine:Nel.rev_append
+      let set_ns local loc ref =
+        if !ref = None then ref := Some (loc, local)
+        else failwith "unreachable"
       in
       Option.iter ~f:(fun (loc, local) ->
         add_named "default" local {remote_loc=loc; local_loc=loc} (ref_of_kind importKind)
@@ -437,8 +469,8 @@ class requires_calculator ~ast = object(this)
         | ImportNamespaceSpecifier (loc, (_, local)) ->
           (match importKind with
           | ImportType -> failwith "import type * is a parse error"
-          | ImportTypeof -> add_ns local loc typesof_ns
-          | ImportValue -> add_ns local loc ns)
+          | ImportTypeof -> set_ns local loc typesof_ns
+          | ImportValue -> set_ns local loc ns)
         | ImportNamedSpecifiers named_specifiers ->
           List.iter (function {local; remote; kind} ->
             let importKind = match kind with Some k -> k | None -> importKind in
@@ -471,7 +503,7 @@ class requires_calculator ~ast = object(this)
     | _ -> None
     in
     let export = ExportDefault { default_loc; local } in
-    this#add_exports stmt_loc ExportValue [export, "default"] [];
+    this#add_exports stmt_loc ExportValue [export, "default"] None;
     super#export_default_declaration stmt_loc decl
 
   method! export_named_declaration stmt_loc (decl: (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.t) =
@@ -486,23 +518,24 @@ class requires_calculator ~ast = object(this)
     | Some (loc, stmt) ->
       let open Ast.Statement in
       assert (source = None);
+      let kind = NamedDeclaration in
       match stmt with
       | FunctionDeclaration { Ast.Function.id = Some (loc, name); _ }
       | ClassDeclaration { Ast.Class.id = Some (loc, name); _ } ->
-        let export = ExportNamed { loc; local = None; source } in
-        this#add_exports stmt_loc ExportValue [export, name] []
+        let export = ExportNamed { loc; kind; } in
+        this#add_exports stmt_loc ExportValue [export, name] None
       | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
         let bindings = Ast_utils.bindings_of_variable_declarations decls in
         let bindings = List.map (fun (loc, name) ->
-          let export = ExportNamed { loc; local = None; source } in
+          let export = ExportNamed { loc; kind } in
           (export, name)
         ) bindings in
-        this#add_exports stmt_loc ExportValue bindings []
+        this#add_exports stmt_loc ExportValue bindings None
       | TypeAlias { TypeAlias.id; _ }
       | OpaqueType { OpaqueType.id; _ }
       | InterfaceDeclaration { Interface.id; _ } ->
-        let export = ExportNamed { loc; local = None; source } in
-        this#add_exports stmt_loc ExportType [export, (snd id)] [];
+        let export = ExportNamed { loc; kind } in
+        this#add_exports stmt_loc ExportType [export, snd id] None;
       | _ -> failwith "unsupported declaration"
     end;
     begin match specifiers with
@@ -530,31 +563,29 @@ class requires_calculator ~ast = object(this)
     | Some declaration ->
       let open Ast.Statement in
       assert (source = None);
+      let kind = NamedDeclaration in
       match declaration with
       | Variable (_, { DeclareVariable.id; _ })
       | Function (_, { DeclareFunction.id; _ })
       | Class (_, { DeclareClass.id; _ }) ->
-        let name, export =
-          match default with
-          | Some default_loc ->
-            "default", ExportDefault { default_loc; local = Some id }
-          | None ->
-            snd id, ExportNamed { loc = fst id; local = None; source }
+        let name, export = match default with
+          | Some default_loc -> "default", ExportDefault { default_loc; local = Some id }
+          | None -> snd id, ExportNamed { loc = fst id; kind }
         in
-        this#add_exports stmt_loc ExportValue [export, name] []
+        this#add_exports stmt_loc ExportValue [export, name] None
       | DefaultType _ ->
         let default_loc = match default with
         | Some loc -> loc
         | None -> failwith "declare export default must have a default loc"
         in
         let export = ExportDefault { default_loc; local = None } in
-        this#add_exports stmt_loc ExportValue [export, "default"] []
+        this#add_exports stmt_loc ExportValue [export, "default"] None
       | NamedType (_, { TypeAlias.id; _ })
       | NamedOpaqueType (_, { OpaqueType.id; _ })
       | Interface (_, { Interface.id; _ }) ->
         assert (Option.is_none default);
-        let export = ExportNamed { loc = fst id; local = None; source } in
-        this#add_exports stmt_loc ExportType [export, snd id] []
+        let export = ExportNamed { loc = fst id; kind } in
+        this#add_exports stmt_loc ExportType [export, snd id] None
     end;
     begin match specifiers with
     | None -> () (* assert declaration <> None *)
@@ -642,14 +673,19 @@ class requires_calculator ~ast = object(this)
     let bindings = begin match left with
     | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
     | _, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
+      let add_named remote local loc acc =
+        let locals = SMap.singleton local (Nel.one loc) in
+        let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
+        SMap.add remote locals acc ~combine:combine_nel_smap
+      in
       Some (BindNamed (List.fold_left (fun acc prop ->
         match prop with
         | Ast.Pattern.Object.Property (_, {
-            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier remote;
+            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier (remote_loc, remote_name);
             pattern = _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (local_loc, local_name); _ };
             _
           }) ->
-          SMap.add local_name (local_loc, remote) acc
+          add_named remote_name local_name { local_loc; remote_loc } acc
         | _ -> acc
       ) SMap.empty properties))
     | _ -> None
@@ -725,23 +761,23 @@ class requires_calculator ~ast = object(this)
       | Some mref -> mref
       | None -> failwith "export batch without source"
       in
-      this#add_exports stmt_loc kind [ExportNs { loc; source = mref }, name] []
+      this#add_exports stmt_loc kind [ExportNs { loc; source = mref }, name] None
     | ExportBatchSpecifier (star_loc, None) ->
-      let source_loc, mref = match source with
-      | Some (source_loc, mref) -> source_loc, mref
+      let mref = match source with
+      | Some mref -> mref
       | _ -> failwith "batch export missing source"
       in
-      this#add_exports stmt_loc kind [] [ExportStar { star_loc; source_loc }, mref]
+      this#add_exports stmt_loc kind [] (Some (ExportStar { star_loc; source = mref }))
     | ExportSpecifiers specs ->
       let bindings = List.fold_left ExportSpecifier.(fun acc (_, spec) ->
-        let name, loc, local = match spec.exported with
-        | None -> snd spec.local, fst spec.local, None
-        | Some remote -> snd remote, fst remote, Some spec.local
+        let name, loc = match spec.exported with
+        | None -> snd spec.local, fst spec.local
+        | Some remote -> snd remote, fst remote
         in
-        let export = ExportNamed { loc; local; source } in
+        let export = ExportNamed { loc; kind = NamedSpecifier { local = spec.local; source } } in
         (export, name) :: acc
       ) [] specs in
-      this#add_exports stmt_loc kind bindings []
+      this#add_exports stmt_loc kind bindings None
 
   method! toplevel_statement_list (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
     let open Ast in
@@ -777,12 +813,12 @@ class mapper = object(this)
   method file_sig (file_sig: t) =
     let { module_sig; declare_modules; tolerable_errors } = file_sig in
     let module_sig' = this#module_sig module_sig in
-    let declare_modules' = SMap.map (fun (loc, module_sig) ->
+    let declare_modules' = SMapUtils.ident_map (fun (loc, module_sig) ->
       let loc = this#loc loc in
       let module_sig = this#module_sig module_sig in
       (loc, module_sig)
     ) declare_modules in
-    let tolerable_errors' = List.map this#tolerable_error tolerable_errors in
+    let tolerable_errors' = ListUtils.ident_map this#tolerable_error tolerable_errors in
     if module_sig == module_sig' &&
       declare_modules == declare_modules' &&
       tolerable_errors == tolerable_errors'
@@ -795,10 +831,10 @@ class mapper = object(this)
 
   method module_sig (module_sig: module_sig) =
     let { requires; module_kind; type_exports_named; type_exports_star } = module_sig in
-    let requires' = List.map this#require requires in
+    let requires' = ListUtils.ident_map this#require requires in
     let module_kind' = this#module_kind module_kind in
-    let type_exports_named' = SMap.map this#type_export type_exports_named in
-    let type_exports_star' = SMap.map this#export_star type_exports_star in
+    let type_exports_named' = SMapUtils.ident_map this#type_export type_exports_named in
+    let type_exports_star' = ListUtils.ident_map this#export_star type_exports_star in
     if requires == requires' &&
       module_kind == module_kind' &&
       type_exports_named == type_exports_named' &&
@@ -814,30 +850,30 @@ class mapper = object(this)
   method require (require: require) =
     match require with
     | Require { source; require_loc; bindings; } ->
-      let source' = this#ident source in
+      let source' = this#source source in
       let require_loc' = this#loc require_loc in
-      let bindings' = Option.map ~f:this#require_bindings bindings in
+      let bindings' = OptionUtils.ident_map this#require_bindings bindings in
       if source == source' && require_loc == require_loc' && bindings == bindings'
       then require
       else Require { source = source'; require_loc = require_loc'; bindings = bindings'; }
     | ImportDynamic { source; import_loc } ->
-      let source' = this#ident source in
+      let source' = this#source source in
       let import_loc' = this#loc import_loc in
       if source == source' && import_loc == import_loc'
       then require
       else ImportDynamic { source = source'; import_loc = import_loc'; }
-    | Import0 ident ->
-      let ident' = this#ident ident in
-      if ident == ident'
+    | Import0 { source } ->
+      let source' = this#source source in
+      if source == source'
       then require
-      else Import0 ident'
+      else Import0 { source = source' }
     | Import { source; named; ns; types; typesof; typesof_ns; } ->
-      let source' = this#ident source in
-      let named' = SMap.map (SMap.map (Nel.map this#imported_locs)) named in
-      let ns' = SMap.map (Nel.map this#loc) ns in
-      let types' = SMap.map (SMap.map (Nel.map this#imported_locs)) types in
-      let typesof' = SMap.map (SMap.map (Nel.map this#imported_locs)) typesof in
-      let typesof_ns' = SMap.map (Nel.map this#loc) typesof_ns in
+      let source' = this#source source in
+      let named' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) named in
+      let ns' = OptionUtils.ident_map this#ident ns in
+      let types' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) types in
+      let typesof' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) typesof in
+      let typesof_ns' = OptionUtils.ident_map this#ident typesof_ns in
       if source == source' &&
         named == named' &&
         ns == ns' &&
@@ -869,15 +905,11 @@ class mapper = object(this)
       if ident == ident'
       then require_bindings
       else BindIdent ident'
-    | BindNamed map ->
-      let map' = SMapUtils.ident_map (fun (loc, ident) ->
-        let loc = this#loc loc in
-        let ident = this#ident ident in
-        (loc, ident)
-      ) map in
-      if map == map'
+    | BindNamed named ->
+      let named' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) named in
+      if named == named'
       then require_bindings
-      else BindNamed map'
+      else BindNamed named'
 
   method module_kind (module_kind: module_kind) =
     match module_kind with
@@ -888,10 +920,20 @@ class mapper = object(this)
       else CommonJS { mod_exp_loc = mod_exp_loc' }
     | ES { named; star } ->
       let named' = SMapUtils.ident_map this#export named in
-      let star' = SMapUtils.ident_map this#export_star star in
+      let star' = ListUtils.ident_map this#export_star star in
       if named == named' && star == star'
       then module_kind
       else ES { named = named'; star = star' }
+
+  method named_export_kind (kind: named_export_kind) =
+    match kind with
+      | NamedDeclaration -> kind
+      | NamedSpecifier { local; source } ->
+        let local' = this#ident local in
+        let source' = OptionUtils.ident_map this#source source in
+        if local == local' && source == source'
+        then kind
+        else NamedSpecifier { local = local'; source = source' }
 
   method export (export: export) =
     match export with
@@ -901,44 +943,49 @@ class mapper = object(this)
       if default_loc == default_loc' && local == local'
       then export
       else ExportDefault { default_loc = default_loc'; local = local' }
-    | ExportNamed { loc; local; source; } ->
+    | ExportNamed { loc; kind } ->
       let loc' = this#loc loc in
-      let local' = Option.map ~f:this#ident local in
-      let source' = Option.map ~f:this#ident source in
-      if loc == loc' && local == local' && source == source'
+      let kind' = this#named_export_kind kind in
+      if loc == loc' && kind == kind'
       then export
-      else ExportNamed { loc = loc'; local = local'; source = source'; }
+      else ExportNamed { loc = loc'; kind = kind' }
     | ExportNs { loc; source; } ->
       let loc' = this#loc loc in
-      let source' = this#ident source in
+      let source' = this#source source in
       if loc == loc' && source == source'
       then export
       else ExportNs { loc = loc'; source = source'; }
 
   method export_star (export_star: export_star) =
     match export_star with
-    | ExportStar { star_loc; source_loc } ->
+    | ExportStar { star_loc; source } ->
       let star_loc' = this#loc star_loc in
-      let source_loc' = this#loc source_loc in
-      if star_loc == star_loc' && source_loc == source_loc'
+      let source' = this#source source in
+      if star_loc == star_loc' && source == source'
       then export_star
-      else ExportStar { star_loc = star_loc'; source_loc = source_loc'; }
+      else ExportStar { star_loc = star_loc'; source = source'; }
 
   method type_export (type_export: type_export) =
     match type_export with
-    | TypeExportNamed { loc; local; source; } ->
+    | TypeExportNamed { loc; kind } ->
       let loc' = this#loc loc in
-      let local' = Option.map ~f:this#ident local in
-      let source' = Option.map ~f:this#ident source in
-      if loc == loc' && local == local' && source == source'
+      let kind' = this#named_export_kind kind in
+      if loc == loc' && kind == kind'
       then type_export
-      else TypeExportNamed { loc = loc'; local = local'; source = source'; }
+      else TypeExportNamed { loc = loc'; kind = kind' }
 
   method ident (ident: ident) =
     let (loc, str) = ident in
     let loc' = this#loc loc in
     if loc == loc'
     then ident
+    else (loc', str)
+
+  method source (source: source) =
+    let (loc, str) = source in
+    let loc' = this#loc loc in
+    if loc == loc'
+    then source
     else (loc', str)
 
   method tolerable_error (tolerable_error: tolerable_error) =

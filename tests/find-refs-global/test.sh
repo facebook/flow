@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 echo "ES6 named export:"
 # export function foo() {
 #                 ^

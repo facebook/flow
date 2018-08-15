@@ -1,7 +1,4 @@
 #!/bin/bash -e
-. ../assert.sh
-FLOW=$1
-
 assert_ok "$FLOW" force-recheck --no-auto-start a.js
 assert_ok "$FLOW" status --no-auto-start .
 

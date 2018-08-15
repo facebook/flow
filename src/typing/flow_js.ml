@@ -12244,7 +12244,7 @@ end = struct
 end
 
 class assert_ground_visitor skip = object (self)
-  inherit [ISet.t] Type_visitor.t as super
+  inherit [Marked.t] Type_visitor.t as super
 
   (* Track prop maps which correspond to object literals. We don't ask for
      annotations for object literals which reach exports. Instead, we walk the
@@ -12277,21 +12277,20 @@ class assert_ground_visitor skip = object (self)
     if id != root_id
     then self#tvar cx pole seen r root_id
     else
-      let seen' = ISet.add id seen in
-      if seen' == seen then seen
-      else if ISet.mem id skip then seen'
-      else if self#skip_reason r then seen'
-      else if
-        not (self#derivable_reason r) &&
-        Polarity.compat (pole, Negative)
-      then (
-        unify_opt cx ~unify_any:true (OpenT (r, id)) Locationless.AnyT.t;
-        add_output cx (FlowError.EMissingAnnotation r);
-        seen'
-      )
-      else
-        let pole = if self#derivable_reason r then Positive else pole in
-        List.fold_left (self#type_ cx pole) seen' (types_of constraints)
+      if ISet.mem id skip then seen else
+      if self#skip_reason r then seen else
+      let pole = if self#derivable_reason r then Positive else pole in
+      match Marked.add id pole seen with
+      | None -> seen
+      | Some (pole, seen) ->
+        if Polarity.compat (pole, Negative)
+        then (
+          unify_opt cx ~unify_any:true (OpenT (r, id)) Locationless.AnyT.t;
+          add_output cx (FlowError.EMissingAnnotation r)
+        );
+        if Polarity.compat (pole, Positive)
+        then List.fold_left (self#type_ cx Positive) seen (types_of constraints)
+        else seen
 
   method! type_ cx pole seen t =
     Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent} ->
@@ -12461,9 +12460,9 @@ let enforce_strict cx id =
   let seen =
     let visitor = new assert_ground_visitor !skip_ids in
     let r = locationless_reason (RCustom "") in
-    visitor#tvar cx Positive ISet.empty r id
+    visitor#tvar cx Positive Marked.empty r id
   in
-  ignore (seen: ISet.t)
+  ignore (seen: Marked.t)
 
 (* Would rather this live elsewhere, but here because module DAG. *)
 let mk_default cx reason ~expr = Default.fold

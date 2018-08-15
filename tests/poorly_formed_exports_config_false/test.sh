@@ -1,8 +1,5 @@
 #!/bin/bash
 
-. ../assert.sh
-FLOW=$1
-
 echo "FLOW STATUS:"
 
 # Has an unrelated error in the lib file

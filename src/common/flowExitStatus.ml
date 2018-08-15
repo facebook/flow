@@ -51,6 +51,8 @@ type t =
   | Autostop
   (* Server exited because the monitor asked it to *)
   | Killed_by_monitor
+  (* The saved state file is invalid and we're running with --saved-state-no-fallback *)
+  | Invalid_saved_state
 
   (* The hack code might throw this *)
   | Socket_error
@@ -96,6 +98,7 @@ let error_code = function
   | Path_is_not_a_file -> 17
   | Autostop -> 18
   | Killed_by_monitor -> 19
+  | Invalid_saved_state -> 20
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -129,6 +132,7 @@ let error_type = function
   | 17 -> Path_is_not_a_file
   | 18 -> Autostop
   | 19 -> Killed_by_monitor
+  | 20 -> Invalid_saved_state
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -178,6 +182,7 @@ let to_string = function
   | Flowconfig_changed -> "Flowconfig_changed"
   | Autostop -> "Autostop"
   | Killed_by_monitor -> "Killed_by_monitor"
+  | Invalid_saved_state -> "Invalid_saved_state"
 
 exception Exit_with of t
 

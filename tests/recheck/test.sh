@@ -1,7 +1,6 @@
 #!/bin/bash
-. ../assert.sh
 . ../fs.sh
-FLOW=$1
+
 mkdir tmp
 cp ./*.js tmp/
 

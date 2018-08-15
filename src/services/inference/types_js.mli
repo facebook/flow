@@ -11,15 +11,7 @@ val init:
   profiling:Profiling_js.running ->
   workers:MultiWorkerLwt.worker list option ->
   Options.t ->
-  (
-    FilenameSet.t * (* parsed *)
-    FilenameSet.t * (* unparsed *)
-    FilenameSet.t FilenameMap.t * (* dependency_graph *)
-    string list * (* ordered libs *)
-    SSet.t * (* libs *)
-    bool * (* libs_ok *)
-    ServerEnv.errors (* errors *)
-  ) Lwt.t
+  (bool (* libs_ok *) * ServerEnv.env) Lwt.t
 
 val calc_deps:
   options:Options.t ->
@@ -44,21 +36,20 @@ val full_check:
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   focus_targets:FilenameSet.t option ->
-  FilenameSet.t ->
-  FilenameSet.t FilenameMap.t ->
-  ServerEnv.errors ->
-  (CheckedSet.t * ServerEnv.errors) Lwt.t
+  ServerEnv.env ->
+  ServerEnv.env Lwt.t
 
- val basic_check_contents:
-   options: Options.t ->
-   workers: MultiWorkerLwt.worker list option ->
-   env: ServerEnv.env ref ->
-   profiling: Profiling_js.running ->
-   string ->               (* contents *)
-   File_key.t ->           (* fake file-/module name *)
-   (Context.t *
-    Docblock.t,
-    string) result Lwt.t
+val basic_check_contents:
+  options: Options.t ->
+  workers: MultiWorkerLwt.worker list option ->
+  env: ServerEnv.env ref ->
+  profiling: Profiling_js.running ->
+  string ->               (* contents *)
+  File_key.t ->           (* fake file-/module name *)
+  (Context.t *
+   Docblock.t *
+   File_sig.t,
+   string) result Lwt.t
 
 val typecheck_contents:
   options: Options.t ->
@@ -67,7 +58,7 @@ val typecheck_contents:
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
   File_key.t ->                             (* fake file-/module name *)
-  ((Context.t * (Loc.t, Loc.t) Ast.program) option *
+  ((Context.t * (Loc.t, Loc.t) Ast.program * File_sig.t) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 
@@ -76,5 +67,6 @@ val ensure_checked_dependencies:
   profiling: Profiling_js.running ->
   workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
-  Modulename.Set.t ->
+  File_key.t ->
+  File_sig.t ->
   unit Lwt.t

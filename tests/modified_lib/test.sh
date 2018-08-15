@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 cp lib/lib.js lib/lib.js.orig
 
 # This should not cause the Flow server to die
@@ -25,7 +22,7 @@ assert_errors "$FLOW" status --no-auto-start 2>/dev/null
 
 assert_ok "$FLOW" stop
 # Start the server back up but turn off the restarting behavior
-assert_ok "$FLOW" start --no-auto-restart --wait .
+start_flow . --no-auto-restart
 
 # This should cause the flow server and monitor to die, due to --no-auto-restart
 cp lib/lib.js.orig lib/lib.js
