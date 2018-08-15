@@ -41,6 +41,10 @@ new DateTimeFormat().format() // correct
 new DateTimeFormat().format(1) // correct
 new DateTimeFormat().format(new Date(2018, 3, 17)) // correct
 
+new DateTimeFormat().formatToParts();
+new DateTimeFormat().formatToParts(1) // correct
+new DateTimeFormat().formatToParts(new Date(2018, 3, 17)) // correct
+
 new DateTimeFormat().resolvedOptions() // correct
 
 DateTimeFormat.getCanonicalLocales() // incorrect
