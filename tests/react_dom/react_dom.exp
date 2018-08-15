@@ -107,9 +107,8 @@ References:
 Error --------------------------------------------------------------------------------------------- props_boolean.js:7:1
 
 Cannot create `span` element because in property `hidden`:
- - Either null [1] is incompatible with empty string [2].
- - Or null [1] is incompatible with string literal `hidden` [3].
- - Or null [1] is incompatible with boolean [4].
+ - Either null [1] is incompatible with string literal `hidden` [2].
+ - Or null [1] is incompatible with boolean [3].
 
    props_boolean.js:7:1
      7| <span hidden={null} />; // Error: Expected DOM boolean
@@ -119,23 +118,19 @@ References:
    props_boolean.js:7:15
      7| <span hidden={null} />; // Error: Expected DOM boolean
                       ^^^^ [1]
+   <BUILTINS>/react-dom.js:640:5
+   640|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:641:5
-   641|   | ""
-            ^^ [2]
-   <BUILTINS>/react-dom.js:642:5
-   642|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:643:5
-   643|   | boolean;
-            ^^^^^^^ [4]
+   641|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- props_boolean.js:8:1
 
 Cannot create `span` element because in property `hidden`:
- - Either string [1] is incompatible with empty string [2].
- - Or string [1] is incompatible with string literal `hidden` [3].
- - Or string [1] is incompatible with boolean [4].
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
 
    props_boolean.js:8:1
      8| <span hidden="true" />; // Error: Expected DOM boolean
@@ -145,23 +140,19 @@ References:
    props_boolean.js:8:14
      8| <span hidden="true" />; // Error: Expected DOM boolean
                      ^^^^^^ [1]
+   <BUILTINS>/react-dom.js:640:5
+   640|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:641:5
-   641|   | ""
-            ^^ [2]
-   <BUILTINS>/react-dom.js:642:5
-   642|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:643:5
-   643|   | boolean;
-            ^^^^^^^ [4]
+   641|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- props_boolean.js:9:1
 
 Cannot create `span` element because in property `hidden`:
- - Either string [1] is incompatible with empty string [2].
- - Or string [1] is incompatible with string literal `hidden` [3].
- - Or string [1] is incompatible with boolean [4].
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
 
    props_boolean.js:9:1
      9| <span hidden="false" />; // Error: Expected DOM boolean
@@ -171,23 +162,41 @@ References:
    props_boolean.js:9:14
      9| <span hidden="false" />; // Error: Expected DOM boolean
                      ^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:640:5
+   640|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:641:5
-   641|   | ""
-            ^^ [2]
-   <BUILTINS>/react-dom.js:642:5
-   642|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:643:5
-   643|   | boolean;
-            ^^^^^^^ [4]
+   641|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- props_boolean.js:10:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_boolean.js:10:1
+    10| <span hidden="" />; // Error: Expected DOM boolean
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:10:14
+    10| <span hidden="" />; // Error: Expected DOM boolean
+                     ^^ [1]
+   <BUILTINS>/react-dom.js:640:5
+   640|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:641:5
+   641|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- props_boolean.js:11:1
 
 Cannot create `span` element because in property `hidden`:
- - Either string [1] is incompatible with empty string [2].
- - Or string [1] is incompatible with string literal `hidden` [3].
- - Or string [1] is incompatible with boolean [4].
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
 
    props_boolean.js:11:1
     11| <span hidden="yes" />; // Error: Expected DOM boolean
@@ -197,23 +206,19 @@ References:
    props_boolean.js:11:14
     11| <span hidden="yes" />; // Error: Expected DOM boolean
                      ^^^^^ [1]
+   <BUILTINS>/react-dom.js:640:5
+   640|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:641:5
-   641|   | ""
-            ^^ [2]
-   <BUILTINS>/react-dom.js:642:5
-   642|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:643:5
-   643|   | boolean;
-            ^^^^^^^ [4]
+   641|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- props_boolean.js:15:1
 
 Cannot create `span` element because in property `hidden`:
- - Either string [1] is incompatible with empty string [2].
- - Or string [1] is incompatible with string literal `hidden` [3].
- - Or string [1] is incompatible with boolean [4].
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
 
    props_boolean.js:15:1
     15| <span hidden="Hidden" />; // Currently an error
@@ -223,23 +228,19 @@ References:
    props_boolean.js:15:14
     15| <span hidden="Hidden" />; // Currently an error
                      ^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:640:5
+   640|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:641:5
-   641|   | ""
-            ^^ [2]
-   <BUILTINS>/react-dom.js:642:5
-   642|   | $TODO$CaseInsensitive<AttributeName>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:643:5
-   643|   | boolean;
-            ^^^^^^^ [4]
+   641|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- props_booleanish_string.js:7:1
 
 Cannot create `div` element because in property `contentEditable`:
- - Either null [1] is incompatible with empty string [2].
- - Or null [1] is incompatible with enum [3].
- - Or null [1] is incompatible with boolean [4].
+ - Either null [1] is incompatible with enum [2].
+ - Or null [1] is incompatible with boolean [3].
 
    props_booleanish_string.js:7:1
      7| <div contentEditable={null} />; // Error: Expected booleanish string
@@ -250,22 +251,40 @@ References:
      7| <div contentEditable={null} />; // Error: Expected booleanish string
                               ^^^^ [1]
    <BUILTINS>/react-dom.js:636:5
-   636|   | ""
-            ^^ [2]
+   636|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:637:5
-   637|   | $TODO$CaseInsensitive<"true" | "false">
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:638:5
-   638|   | boolean;
-            ^^^^^^^ [4]
+   637|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- props_booleanish_string.js:10:1
+
+Cannot create `div` element because in property `contentEditable`:
+ - Either string [1] is incompatible with enum [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_booleanish_string.js:10:1
+    10| <div contentEditable="" />; // Error: Expected booleanish string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_booleanish_string.js:10:22
+    10| <div contentEditable="" />; // Error: Expected booleanish string
+                             ^^ [1]
+   <BUILTINS>/react-dom.js:636:5
+   636|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:637:5
+   637|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- props_booleanish_string.js:11:1
 
 Cannot create `div` element because in property `contentEditable`:
- - Either string [1] is incompatible with empty string [2].
- - Or string [1] is incompatible with enum [3].
- - Or string [1] is incompatible with boolean [4].
+ - Either string [1] is incompatible with enum [2].
+ - Or string [1] is incompatible with boolean [3].
 
    props_booleanish_string.js:11:1
     11| <div contentEditable="yes" />; // Error: Expected booleanish string
@@ -276,22 +295,18 @@ References:
     11| <div contentEditable="yes" />; // Error: Expected booleanish string
                              ^^^^^ [1]
    <BUILTINS>/react-dom.js:636:5
-   636|   | ""
-            ^^ [2]
+   636|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:637:5
-   637|   | $TODO$CaseInsensitive<"true" | "false">
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:638:5
-   638|   | boolean;
-            ^^^^^^^ [4]
+   637|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- props_booleanish_string.js:12:1
 
 Cannot create `div` element because in property `contentEditable`:
- - Either string [1] is incompatible with empty string [2].
- - Or string [1] is incompatible with enum [3].
- - Or string [1] is incompatible with boolean [4].
+ - Either string [1] is incompatible with enum [2].
+ - Or string [1] is incompatible with boolean [3].
 
    props_booleanish_string.js:12:1
     12| <div contentEditable="contentEditable" />; // Error: Expected booleanish string
@@ -302,14 +317,11 @@ References:
     12| <div contentEditable="contentEditable" />; // Error: Expected booleanish string
                              ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react-dom.js:636:5
-   636|   | ""
-            ^^ [2]
+   636|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:637:5
-   637|   | $TODO$CaseInsensitive<"true" | "false">
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:638:5
-   638|   | boolean;
-            ^^^^^^^ [4]
+   637|   | boolean;
+            ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ props_enum.js:5:1
@@ -479,8 +491,8 @@ References:
    void_element_tags.js:7:36
      7| <menuitem dangerouslySetInnerHTML={{ __html: "Content" }} />; // Error
                                            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:677:30
-   677|   dangerouslySetInnerHTML?: ?void // innerHTML cannot be set on empty elements
+   <BUILTINS>/react-dom.js:675:30
+   675|   dangerouslySetInnerHTML?: ?void // innerHTML cannot be set on empty elements
                                      ^^^^ [2]
 
 
@@ -496,10 +508,10 @@ References:
    void_element_tags.js:8:5
      8| <br>Content</br>; // Error
             ^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:676:15
-   676|   children?: ?void, // Empty elements cannot have children
+   <BUILTINS>/react-dom.js:674:15
+   674|   children?: ?void, // Empty elements cannot have children
                       ^^^^ [2]
 
 
 
-Found 25 errors
+Found 27 errors
