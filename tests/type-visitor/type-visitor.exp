@@ -14,5 +14,13 @@ Missing type annotation for `B`.
                      ^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- testC.js:4:16
 
-Found 2 errors
+Missing type annotation for `T`.
+
+   4| export default test(); // missing annotation error since T appears contravariantly.
+                     ^^^^^^
+
+
+
+Found 3 errors

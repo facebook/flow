@@ -9,6 +9,7 @@ open Pervasives
 open Utils_js
 open Reason
 
+module Env = Ty_normalizer_env
 module T = Type
 module VSet = ISet
 
@@ -22,57 +23,7 @@ module VSet = ISet
    constraints evaluated.
 *)
 
-
-(************)
-(* Config   *)
-(************)
-
-module type Config = sig
-
-  (* MergedT is somewhat unconventional. It introduces UseT's that the
-     normalizer is not intended to handle. If this flag is set to true, all
-     instances of MergedT will fall through and return Top. Otherwise, we
-     attempt to convert the use_t's under the MergedT. This operation only
-     succeeds if the use is a UseT and the underlying type is successfully
-     normalized.
-
-     Pick `true` if the result does not need to be "parseable", e.g. coverage.
-  *)
-  val opt_fall_through_merged: bool
-
-  (* Expand the signatures of built-in functions, such as:
-      Function.prototype.apply: (thisArg: any, argArray?: any): any
-  *)
-  val opt_expand_internal_types: bool
-
-  (* AnnotT is used to hide information of the lower bound flowing in and
-     provides instead a type interface that then flows to the upper bounds.
-     For the normalizer this is good point to cut down on the recursion to
-     AnnotT's lower bounds and instead return a type constructed from the name
-     associated with the annotation. Typically this coincides with types used as
-     annotations, so this is a natural type type to return for type queries.
-  *)
-  val opt_expand_type_aliases: bool
-
-  (* The normalizer keeps a stack of type parameters that are in scope. This stack
-     may contain the same name twice (but with different associated locations).
-     This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
-     we do not wish to allow the generation of type parameters that are shadowed by
-     another definition. For example the inferred type for `z` in:
-
-     function outer<T>(y: T) {
-       function inner<T>(x: T, z) { inner(x, y); }
-     }
-
-    is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
-    This flags toggles this behavior.
-  *)
-  val opt_flag_shadowed_type_params: bool
-
-end
-
-
-(* Errors *)
+(* Error reporting *)
 
 type error_kind =
   | BadMethodType
@@ -111,44 +62,30 @@ let error_kind_to_string = function
 let error_to_string (kind, msg) =
   spf "[%s] %s" (error_kind_to_string kind) msg
 
-(***************)
-(* Normalizer  *)
-(***************)
 
-module Make(C: Config) : sig
+module NormalizerMonad : sig
 
-  (* Takes a context and a single type argument, and returns a Ty.t or an error.
-     This assumes the type parameter environment at that point is empty. *)
-  val from_type: cx:Context.t -> Type.t -> (Ty.t, error) result
+  module State : sig
+    type t
+    val empty: t
+  end
 
-  (* Takes a context and a type scheme and returns a Ty.t or an error. *)
-  val from_scheme: cx:Context.t -> Type_table.type_scheme -> (Ty.t, error) result
+  val run_type :
+    options:Env.options ->
+    genv:Env.genv ->
+    imported_names:Loc.t SMap.t ->
+    tparams:Type.typeparam list ->
+    State.t ->
+    Type.t ->
+    (Ty.t, error) result * State.t
 
-  (* Takes a context and a list of types as input and returns a list of a choice
-     of a normalized type or an error. It differs from mapping `from_type` on
-     each input as it folds over the input elements of the input propagating the
-     state (that crucially includes the type cache) after each transformation to
-     the next element. Again this assumes that there are no type parameters in
-     scope.
-  *)
-  val from_types:
-    cx:Context.t -> ('a * Type.t) list -> ('a * (Ty.t, error) result) list
-
-  val from_schemes:
-    cx:Context.t -> ('a * Type_table.type_scheme) list -> ('a * (Ty.t, error) result) list
-
-  val fold_hashtbl:
-    cx:Context.t ->
-    f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) ->
-    g:('b -> Type_table.type_scheme) ->
-    htbl: (Loc.t, 'b) Hashtbl.t ->
-    'a -> 'a
+  val run_imports:
+    options:Env.options ->
+    genv:Env.genv ->
+    State.t ->
+    Loc.t SMap.t * State.t
 
 end = struct
-
-  (****************)
-  (* State monad  *)
-  (****************)
 
   module State = struct
 
@@ -177,9 +114,6 @@ end = struct
       *)
       eval_t_cache: (Ty.t, error) result IMap.t;
 
-      (* Hide the context in State to avoid clutter *)
-      cx: Context.t;
-
       (* This set is useful for synthesizing recursive types. It holds the set
          of type variables that are encountered "free". We say that a type
          variable is free when it appears in the body of its own definition.
@@ -189,44 +123,28 @@ end = struct
          appears free".
        *)
       free_tvars: VSet.t;
+    }
 
-  }
-
-    let empty ~cx = {
+    let empty = {
       counter = 0;
       tvar_cache = IMap.empty;
       eval_t_cache = IMap.empty;
-      cx;
       free_tvars = VSet.empty;
     }
 
   end
 
-  (* Monad definition *)
-
   include StateResult.Make(State)
 
-
   (* Monadic helper functions *)
-
   let mapM f xs = all (List.map f xs)
-
   let concat_fold_m f xs = mapM f xs >>| List.concat
-
-  let get_cx = get >>| fun st -> State.(st.cx)
-
-  let find_cons i =
-    get_cx >>| fun cx -> Context.find_constraints cx i
 
   let fresh_num =
     let open State in
     get >>= fun st ->
     let n = st.counter in
     put { st with counter = n + 1 } >>| fun _ -> n
-
-
-
-  (* Error reporting *)
 
   let terr ~kind ?msg t =
     let t_str = Option.map t
@@ -236,10 +154,7 @@ end = struct
     error (kind, msg)
 
 
-
-  (***************)
   (* Type caches *)
-  (***************)
 
   let update_tvar_cache i t =
     let open State in
@@ -264,94 +179,40 @@ end = struct
     IMap.get id st.eval_t_cache
 
 
-  (****************)
-  (* Environment  *)
-  (****************)
-
-  (* The environment is passed in a top-down manner during normalization. *)
-
-  module Env = struct
-    type t = {
-      (* For debugging purposes mostly *)
-      depth: int;
-      (* Type parameters in scope *)
-      tparams: Type.typeparam list;
-      (* File the query originated from *)
-      file: File_key.t;
-
-      (* In determining whether a symbol is Local, Imported, Remote, etc, it is
-         useful to keep the list of imported names and the corresponding
-         location available. We can then make this decision by comparing the
-         source file with the current context's file information. *)
-      imported_names: Loc.t SMap.t;
-
-      (* The default behavior with type aliases is to return the name of the alias
-         instead of the expansion of the type. When normalizing type aliases `TypeT t`,
-         however, we proceed by recovering the name of the alias (say A) and then
-         normalizing the body `T` to recover the type "type A = T". So for this case
-         only it is useful to allow a one-off expansion of the contents of TypeT.
-         We do this by setting this property to `Some A`.
-
-         The reason we need the alias name (instead of just the fact that we're expanding
-         an alias) is that the RTypeAlias reason (used to discover aliases) may be
-         repeated across nested types (ExactT and MaybeT -- see statement.ml) and so we
-         need to skip over duplicates until we either encounter another type constructor
-         or a different type alias.
-
-         NOTE: The use of the name might not be robust against aliases with the same name
-         (coming from different scopes for example). Ideally we would use the location
-         or a unique ID of the type alias to make this distinction, but at the moment
-         keeping this information around introduces a small space regression. *)
-      under_type_alias: string option;
-    }
-
-    let init cx tparams imported_names = {
-      depth = 0;
-      tparams;
-      file = Context.file cx;
-      imported_names;
-      under_type_alias = None;
-    }
-
-    let descend e = { e with depth = e.depth + 1 }
-
-    (* Lookup a type parameter T in the current environment. There are three outcomes:
-       1. T appears in env and for its first occurence locations match. This means it
-          is not shadowed by another parameter with the same name. In this case
-          return the type parameter.
-       2. T appears in env but is not the first occurence. This means that some other
-          type parameter shadows it. We split cases depending on the value of
-          Config.opt_flag_shadowed_type_params:
-          - true: flag a warning, since the type is not well-formed in this context.
-          - false: return the type normally ignoring the warning.
-       3. The type parameter is not in env. Do the default action.
-    *)
-    let lookup_tparam ~default env t tp_name tp_loc =
-      let open Type in
-      let pred { name; reason; _ } = (
-        name = tp_name &&
-        Reason.def_loc_of_reason reason = tp_loc
-      ) in
-      match List.find_opt pred env.tparams with
-      | Some _ ->
-        (* If we care about shadowing of type params, then flag an error *)
-        if C.opt_flag_shadowed_type_params then
-          let shadow_pred { name; _ } = (name = tp_name) in
-          match List.find_opt shadow_pred env.tparams with
-          | Some { reason; _ }
-            when Reason.def_loc_of_reason reason <> tp_loc ->
-            terr ~kind:ShadowTypeParam (Some t)
-          | Some _ ->
-            return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
-          | None -> assert false
-        else
+  (* Lookup a type parameter T in the current environment. There are three outcomes:
+     1. T appears in env and for its first occurence locations match. This means it
+        is not shadowed by another parameter with the same name. In this case
+        return the type parameter.
+     2. T appears in env but is not the first occurence. This means that some other
+        type parameter shadows it. We split cases depending on the value of
+        Config.opt_flag_shadowed_type_params:
+        - true: flag a warning, since the type is not well-formed in this context.
+        - false: return the type normally ignoring the warning.
+     3. The type parameter is not in env. Do the default action.
+  *)
+  let lookup_tparam ~default env t tp_name tp_loc =
+    let open Type in
+    let pred { name; reason; _ } = (
+      name = tp_name &&
+      Reason.def_loc_of_reason reason = tp_loc
+    ) in
+    match List.find_opt pred env.Env.tparams with
+    | Some _ ->
+      (* If we care about shadowing of type params, then flag an error *)
+      if Env.flag_shadowed_type_params env then
+        let shadow_pred { name; _ } = (name = tp_name) in
+        match List.find_opt shadow_pred env.Env.tparams with
+        | Some { reason; _ }
+          when Reason.def_loc_of_reason reason <> tp_loc ->
+          terr ~kind:ShadowTypeParam (Some t)
+        | Some _ ->
           return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
-      | None ->
-        default t
+        | None -> assert false
+      else
+        return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+    | None ->
+      default t
 
-    let add_typeparam env typeparam =
-      { env with tparams = typeparam :: env.tparams }
-  end
 
 
   (**************)
@@ -662,7 +523,7 @@ end = struct
       match symbol_source with
       | Some LibFile _ -> Ty.Library loc
       | Some (SourceFile _) ->
-        let current_source = env.Env.file in
+        let current_source = Env.(env.genv.file) in
         (* Locally defined name *)
         if Some current_source = symbol_source
         then Ty.Local loc
@@ -709,12 +570,12 @@ end = struct
     | RPolyTest (name, _) ->
       let loc = Reason.def_loc_of_reason reason in
       let default t = type_with_alias_reason ~env t in
-      Env.lookup_tparam ~default env t name loc
+      lookup_tparam ~default env t name loc
     | _ ->
       type_with_alias_reason ~env t
 
   and type_with_alias_reason ~env t =
-    if C.opt_expand_type_aliases then type_after_reason ~env t else
+    if Env.expand_type_aliases env then type_after_reason ~env t else
     let reason = Type.reason_of_t t in
     let open Type in
     (* These type are treated as transparent when it comes to the type alias
@@ -823,7 +684,7 @@ end = struct
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
-      if C.opt_expand_internal_types then
+      if Env.expand_internal_types env then
         (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
         return Ty.(mk_fun
           ~params:[
@@ -835,7 +696,7 @@ end = struct
         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.apply"))
 
     | FunProtoBindT _ ->
-      if C.opt_expand_internal_types then
+      if Env.expand_internal_types env then
         (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
@@ -845,7 +706,7 @@ end = struct
          return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.bind"))
 
     | FunProtoCallT _ ->
-      if C.opt_expand_internal_types then
+      if Env.expand_internal_types env then
         (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
@@ -877,7 +738,8 @@ end = struct
      Step 3: Start variable resolution.
   *)
   and type_variable ~env id =
-    find_cons id >>= fun (root_id, constraints) ->      (* step 1 *)
+    let root_id, constraints =                          (* step 1 *)
+      Context.find_constraints Env.(env.genv.cx) id in
     find_tvar root_id >>= function                      (* step 2 *)
       | Some (Ok Ty.(TVar (Ty.RVar v, _) as t)) ->      (* step 2a *)
         modify State.(fun st -> { st with
@@ -982,7 +844,7 @@ end = struct
         then call_prop ~env p
         else obj_prop ~env x p
     in
-    get_cx >>= fun cx ->
+    let cx = Env.get_cx env in
     let props = SMap.bindings (Context.find_props cx id) in
     concat_fold_m dispatch props >>= fun obj_props ->
     match dict with
@@ -1181,7 +1043,7 @@ end = struct
     | Ty.Class (name, _, _) ->
       return (Ty.generic_t name targs)
     | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
-      let t = if C.opt_expand_type_aliases then
+      let t = if Env.expand_type_aliases env then
         match ta_tparams, ta_type with
         | Some ps, Some t -> Substitution.run ps targs t
         | None, Some t -> t
@@ -1214,8 +1076,7 @@ end = struct
   and opaque_type_t ~env reason opaque_type ta_tparams =
     let open Type in
     let name = opaque_type.opaque_name in
-    get_cx >>= fun cx ->
-    let current_source = Context.file cx in
+    let current_source = Env.current_file env in
     let opaque_source = Loc.source (def_loc_of_reason reason) in
     let opaque_symbol = symbol_from_reason env reason name in
     (* Compare the current file (of the query) and the file that the opaque
@@ -1417,10 +1278,10 @@ end = struct
     | DebugThrow -> return (Ty.builtin_t "$Flow$DebugThrow")
     | DebugSleep -> return (Ty.builtin_t "$Flow$DebugSleep")
 
-  and custom_fun env t =
-    if C.opt_expand_internal_types
-    then custom_fun_expanded env t
-    else custom_fun_short env t
+  and custom_fun ~env t =
+    if Env.expand_internal_types env
+    then custom_fun_expanded ~env t
+    else custom_fun_short ~env t
 
   and react_prop_type ~env =
     let open T.React.PropType in
@@ -1475,7 +1336,7 @@ end = struct
   (************)
 
   and destructuring_t ~env t id r s =
-    get_cx >>= fun cx ->
+    let cx = Env.get_cx env in
     let result = try
       (* eval_selector may throw for BoundT. Catching here. *)
       Ok (Flow_js.eval_selector cx r t s id)
@@ -1513,7 +1374,7 @@ end = struct
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
 
   and resolve_type_destructor_t ~env t id use_op reason d =
-    get_cx >>= fun cx ->
+    let cx = Env.get_cx env in
     let trace = Trace.dummy_trace in
     let result =
       try
@@ -1529,7 +1390,7 @@ end = struct
     | Error _s -> named_type_destructor_t ~env t d
 
   and evaluate_type_destructor ~env t id use_op reason d =
-    get_cx >>= fun cx ->
+    let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     match IMap.get id evaluated with
     | Some cached_t -> type__ ~env cached_t
@@ -1577,72 +1438,149 @@ end = struct
       terr ~kind:BadUse ~msg None
 
   and merged_t ~env uses =
-    if C.opt_fall_through_merged
+    if Env.fall_through_merged env
     then return Ty.Top
     else mapM (use_t ~env) uses >>| uniq_inter
 
+  let run_type ~options ~genv ~imported_names ~tparams state t =
+    let env = Env.init ~options ~genv ~tparams ~imported_names in
+    run state (type__ ~env t)
 
   (* Before we start normalizing the input type we populate our environment with
-     aliases that are in scope due to typed imports. These are already inside the
-     'imported_ts' portion of the context. This step includes the normalization
+     aliases that are in scope due to typed imports. These appear inside
+     File_sig.module_sig.requires. This step includes the normalization
      of all imported types and the creation of a map to hold bindings of imported
      names to location of definition. This map will be used later to determine
      whether a located name (symbol) appearing is part of the file's imports or a
      remote (hidden or non-imported) name.
   *)
-  let import_names cx state =
-    let imported_ts = Context.imported_ts cx in
-    SMap.fold (fun x t (st, m) -> Ty.(
-      (* 'tparams' ought to be empty at this point *)
-      let env = Env.init cx [] SMap.empty in
-      match run st (type__ ~env t) with
-      | (Ok (TypeAlias { ta_name = Symbol (Remote loc, _); _ }), st)
-      | (Ok (Class (Symbol (Remote loc, _), _, _)), st) ->
-        (st, SMap.add x loc m)
-      | (_, st) ->
-        (st, m)
-    )) imported_ts (state, SMap.empty)
+  module Imports = struct
+    open File_sig
 
-  let run_type cx state tparams imported_names t =
-    let env = Env.init cx tparams imported_names in
-    run state (type__ ~env t)
+    let from_imported_locs local imported_locs acc =
+      let { local_loc; _ } = imported_locs in
+      SMap.add local local_loc acc
 
-  (* Exposed API *)
-  let from_schemes ~cx schemes =
-    let state, imported_names = import_names cx (State.empty ~cx) in
-    snd (ListUtils.fold_map (fun st (a, s) ->
-      let Type_table.Scheme (tparams, t) = s in
-      match run_type cx st tparams imported_names t with
-      | Ok t, st -> (st, (a, Ok t))
-      | Error s, st -> (st, (a, Error s))
-    ) state schemes)
+    let from_imported_locs_map map acc =
+      SMap.fold (fun _remote remote_map acc ->
+        SMap.fold (fun local imported_locs_nel acc ->
+          Nel.fold_left (fun acc imported_locs  ->
+            from_imported_locs local imported_locs acc
+          ) acc imported_locs_nel
+        ) remote_map acc
+      ) map acc
 
-  let from_types ~cx ts =
-    let state, imported_names = import_names cx (State.empty ~cx) in
-    snd (ListUtils.fold_map (fun st (a, t) ->
-      match run_type cx st [] imported_names t with
-      | Ok t, st -> (st, (a, Ok t))
-      | Error s, st -> (st, (a, Error s))
-    ) state ts)
+    let from_binding binding acc =
+      match binding with
+      | BindIdent (loc, x) -> SMap.add x loc acc
+      | BindNamed map -> from_imported_locs_map map acc
 
-  let from_scheme ~cx scheme =
-    let state, imported_names = import_names cx (State.empty ~cx) in
-    let Type_table.Scheme (tparams, t) = scheme in
-    fst (run_type cx state tparams imported_names t)
+    let from_bindings bindings_opt acc =
+      Option.value_map ~default:acc ~f:(fun bs -> from_binding bs acc)
+        bindings_opt
 
-  let from_type ~cx t =
-    let state, imported_names = import_names cx (State.empty ~cx) in
-    fst (run_type cx state [] imported_names t)
+    let from_require require acc =
+      match require with
+      | Require { source=_; require_loc=_; bindings } ->
+        from_bindings bindings acc
+      | Import { source=_; named; ns=_; types; typesof; typesof_ns=_; } ->
+        (* TODO import namespaces (`ns`) as modules that might contain imported types *)
+        acc
+        |> from_imported_locs_map named
+        |> from_imported_locs_map types
+        |> from_imported_locs_map typesof
+      | ImportDynamic _
+      | Import0 _ -> acc
 
-  let fold_hashtbl ~cx ~f ~g ~htbl init =
-    let state, imported_names = import_names cx (State.empty ~cx) in
-    let _, acc = Hashtbl.fold (fun loc x (st, acc) ->
-      let Type_table.Scheme (tparams, t) = g x in
-      let env = Env.init cx tparams imported_names in
-      let result, st' = run st (type__ ~env t) in
-      let acc' = f acc (loc, result) in
-      (st', acc')
-    ) htbl (state, init)
-    in acc
+    let from_requires requires =
+      List.fold_left (fun acc require ->
+        from_require require acc
+      ) SMap.empty requires
+
+    let extract_schemes type_table imported_locs =
+      SMap.fold (fun x loc acc ->
+        match Type_table.find_type_info type_table loc with
+        | Some (_, e, _) -> SMap.add x e acc
+        | None -> acc
+      ) imported_locs SMap.empty
+
+    let extract_ident ~options ~genv (x, scheme) = Ty.(
+      let { Type.TypeScheme.tparams; type_ = t } = scheme in
+      let env = Env.init ~options ~genv ~tparams ~imported_names:SMap.empty in
+      type__ ~env t >>| fun ty ->
+      match ty with
+      | TypeAlias { ta_name = Symbol (p, _) ; _ }
+      | Class (Symbol (p, _), _, _) ->
+        Some (x, loc_of_provenance p)
+      | _ -> None
+    )
+
+    let extract_idents ~options ~genv imported_schemes =
+      mapM (extract_ident ~options ~genv) (SMap.bindings imported_schemes) >>|
+      List.fold_left (fun acc x ->
+        match x with
+        | Some (x, id) -> SMap.add x id acc
+        | None -> acc
+      ) SMap.empty
+
+  end
+
+  let run_imports ~options ~genv state =
+    let open Imports in
+    let file_sig = genv.Env.file_sig in
+    let requires = File_sig.(file_sig.module_sig.requires) in
+    let type_table = genv.Env.type_table in
+    let imported_locs = from_requires requires in
+    let imported_schemes = extract_schemes type_table imported_locs in
+    match run state (extract_idents ~options ~genv imported_schemes) with
+    | Ok x, state -> x, state
+    | Error _, state ->
+      (* Fall back to empty imports map.
+       * TODO provide more fine grained handling of errors
+       *)
+      SMap.empty, state
 
 end
+
+open NormalizerMonad
+
+(* Exposed API *)
+
+let from_schemes ~options ~genv schemes =
+  let imported_names, state = run_imports ~options ~genv State.empty in
+  let _, result = ListUtils.fold_map (fun state (a, scheme) ->
+    let { Type.TypeScheme.tparams; type_ = t } = scheme in
+    match run_type ~options ~genv ~imported_names ~tparams state t with
+    | Ok t, state -> state, (a, Ok t)
+    | Error s, state -> state, (a, Error s)
+  ) state schemes in
+  result
+
+let from_types ~options ~genv ts =
+  let imported_names, state = run_imports ~options ~genv State.empty in
+  let _, result = ListUtils.fold_map (fun state (a, t) ->
+    match run_type ~options ~genv ~imported_names ~tparams:[] state t with
+    | Ok t, state -> state, (a, Ok t)
+    | Error s, state -> state, (a, Error s)
+  ) state ts in
+  result
+
+let from_scheme ~options ~genv scheme =
+  let imported_names, state = run_imports ~options ~genv State.empty in
+  let { Type.TypeScheme.tparams; type_ = t } = scheme in
+  let result, _ = run_type ~options ~genv ~imported_names ~tparams state t in
+  result
+
+let from_type ~options ~genv t =
+  let imported_names, state = run_imports ~options ~genv State.empty in
+  let result, _ = run_type ~options ~genv ~imported_names ~tparams:[] state t in
+  result
+
+let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
+  let imported_names, state = run_imports ~options ~genv State.empty in
+  let result, _ = Hashtbl.fold (fun loc x (acc, state) ->
+    let { Type.TypeScheme.tparams; type_ = t } = g x in
+    let result, state = run_type ~options ~genv ~imported_names ~tparams state t in
+    f acc (loc, result), state
+  ) htbl (init, state) in
+  result

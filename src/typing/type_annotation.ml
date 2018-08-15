@@ -27,8 +27,6 @@ let qualified_name =
 
 let ident_name (_, name) = name
 
-let snd_fst ((_, x), _) = x
-
 let error_type cx loc msg =
   Flow.add_output cx msg;
   (loc, AnyT.at loc), Typed_ast.Type.error
@@ -110,8 +108,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, Union (t0, t1, ts) ->
   let (_, t0), _ as t0_ast = convert cx tparams_map t0 in
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
-  let ts_ast = List.map (convert cx tparams_map) ts in
-  let ts = List.map snd_fst ts_ast in
+  let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = UnionRep.make t0 t1 (ts) in
   (loc, DefT (mk_reason RUnionType loc, UnionT rep)),
   Union (t0_ast, t1_ast, ts_ast)
@@ -119,8 +116,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, Intersection (t0, t1, ts) ->
   let (_, t0), _ as t0_ast = convert cx tparams_map t0 in
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
-  let ts_ast = List.map (convert cx tparams_map) ts in
-  let ts = List.map snd_fst ts_ast in
+  let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = InterRep.make t0 t1 ts in
   (loc, DefT (mk_reason RIntersectionType loc, IntersectionT rep)),
   Intersection (t0_ast, t1_ast, ts_ast)
@@ -142,8 +138,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   end
 
 | loc, Tuple ts ->
-  let ts_ast = List.map (convert cx tparams_map) ts in
-  let tuple_types = List.map snd_fst ts_ast in
+  let tuple_types, ts_ast = convert_list cx tparams_map ts in
   let reason = annot_reason (mk_reason RTupleType loc) in
   let element_reason = mk_reason RTupleElement loc in
   let elemt = match tuple_types with
@@ -215,11 +210,11 @@ let rec convert cx tparams_map = Ast.Type.(function
   } ->
 
   let convert_type_params () =
-    let targs =
-      Option.map ~f:(fun (loc, targs) -> loc, List.map (convert cx tparams_map) targs) targs in
-    let elemts =
-      Option.value_map targs ~default:[] ~f:(Fn.compose (List.map snd_fst) snd) in
-    elemts, targs
+    match targs with
+    | None -> [], None
+    | Some (loc, targs) ->
+      let elemts, targs = convert_list cx tparams_map targs in
+      elemts, Some (loc, targs)
   in
 
   let reconstruct_ast targs = Generic { Generic.id; targs; } in
@@ -1128,6 +1123,16 @@ let rec convert cx tparams_map = Ast.Type.(function
   else (loc, ExistsT reason), Exists
 )
 
+and convert_list =
+  let rec loop (ts, tasts) cx tparams_map = function
+  | [] -> (List.rev ts, List.rev tasts)
+  | ast::asts ->
+    let (_, t), _ as tast = convert cx tparams_map ast in
+    loop (t::ts, tast::tasts) cx tparams_map asts
+  in
+  fun cx tparams_map asts ->
+    loop ([], []) cx tparams_map asts
+
 and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
   = Ast.Type.Generic.Identifier.(function
   | Qualified (loc, { qualification; id; }) as qualified ->
@@ -1257,8 +1262,7 @@ and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
   | None ->
       Flow.mk_instance cx reason ~for_type c, None
   | Some (loc, targs) ->
-      let targs_ast = List.map (convert cx tparams_map) targs in
-      let targs = List.map snd_fst targs_ast in
+      let targs, targs_ast = convert_list cx tparams_map targs in
       typeapp c targs, Some (loc, targs_ast)
 
 (* take a list of AST type param declarations,
@@ -1490,10 +1494,9 @@ let mk_super cx tparams_map c targs = Type.(
       ) in
       this_typeapp c this None, None
   | Some (loc, targs) ->
-      let targ_asts = List.map (convert cx tparams_map) targs in
-      let targs = List.map snd_fst targ_asts in
+      let targs, targs_ast = convert_list cx tparams_map targs in
       this_typeapp c this (Some targs),
-      Some (loc, targ_asts)
+      Some (loc, targs_ast)
 )
 
 let mk_interface_sig cx reason decl =

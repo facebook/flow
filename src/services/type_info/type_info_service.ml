@@ -12,7 +12,7 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
-  | Ok (cx, _info) ->
+  | Ok (cx, _info, file_sig) ->
     let loc = Loc.make file line col in
     let json_data, loc, ty =
       let mk_data result_str loc ty_json = Hh_json.JSON_Object [
@@ -20,7 +20,10 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
         "loc", Reason.json_of_loc loc;
         "type", ty_json;
       ] in
-      Query_types.(match query_type ~expand_aliases cx loc with
+      Query_types.(
+        let type_table = Context.type_table cx in
+        let file = Context.file cx in
+        match query_type ~full_cx:cx ~file ~file_sig ~expand_aliases ~type_table loc with
         | FailureNoMatch ->
           Hh_json.JSON_Object [
             "result", Hh_json.JSON_String "FAILURE_NO_MATCH"
@@ -41,7 +44,7 @@ let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
-  map ~f:(fun (cx, _info) -> Query_types.dump_types ~printer cx)
+  map ~f:(fun (cx, _info, file_sig) -> Query_types.dump_types cx file_sig ~printer)
 
 
 let coverage ~options ~workers ~env ~profiling ~force file content =
@@ -52,13 +55,13 @@ let coverage ~options ~workers ~env ~profiling ~force file content =
       Docblock.is_flow docblock
   in
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
-  map ~f:(fun (cx, _) -> Query_types.covered_types cx ~should_check)
+  map ~f:(fun (cx, _, file_sig) -> Query_types.covered_types cx file_sig ~should_check)
 
 let suggest ~options ~workers ~env ~profiling file content =
   Types_js.typecheck_contents ~options ~workers ~env ~profiling content file >|=
   function
-  | (Some (cx, ast), tc_errors, tc_warnings) ->
-    let cxs = Query_types.suggest_types cx in
+  | (Some (cx, ast, file_sig), tc_errors, tc_warnings) ->
+    let cxs = Query_types.suggest_types cx file_sig in
     let visitor = new Suggest.visitor ~cxs in
     let typed_ast = visitor#program ast in
     let suggest_warnings = visitor#warnings () in

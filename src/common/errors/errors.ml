@@ -701,7 +701,7 @@ let highlight_error_in_line ~severity_style line c0 c1 =
 
 (* 0-indexed
  *
- * If start + len adds to more lines then exist in the file, then the full len
+ * If start + len adds to more lines than exist in the file, then the full len
  * will not be returned. *)
 let get_lines ~start ~len content =
   let rec loop ~start ~len ~acc ~pos content =
@@ -2885,20 +2885,21 @@ module Json_output = struct
 
   let json_of_errors_with_context
     ~strip_root ~stdin_file ~suppressed_errors ?(version=JsonV1) ~errors ~warnings () =
-    let errors = errors
-      |> ErrorSet.elements
-      |> List.map (fun err -> err, Utils_js.LocSet.empty) in
-    let warnings = warnings
-      |> ErrorSet.elements
-      |> List.map (fun warn -> warn, Utils_js.LocSet.empty)
-    in
     let f = json_of_error_with_context ~strip_root ~stdin_file ~version in
-    Hh_json.JSON_Array (
-      List.map (f ~severity:Err) errors @
-      List.map (f ~severity:Warn) warnings @
-      (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
-      List.map (f ~severity:Err) suppressed_errors
-    )
+    let obj_props_rev =
+      []
+      |> ErrorSet.fold (fun error acc ->
+        f ~severity:Err (error, Utils_js.LocSet.empty) :: acc) errors
+      |> ErrorSet.fold (fun warn acc ->
+        f ~severity:Warn (warn, Utils_js.LocSet.empty) :: acc) warnings
+    in
+    (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
+    let obj_props_rev = List.fold_left (fun acc suppressed_error ->
+      f ~severity:Err suppressed_error :: acc
+    ) obj_props_rev suppressed_errors
+    in
+    Hh_json.JSON_Array (List.rev obj_props_rev)
+
 
   let full_status_json_of_errors ~strip_root ~suppressed_errors
     ?(version=JsonV1) ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =

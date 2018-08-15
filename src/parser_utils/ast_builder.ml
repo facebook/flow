@@ -345,3 +345,8 @@ let statement_of_string str =
   match ast_list with
   | [ast] -> ast
   | _ -> failwith "Multiple statements found"
+
+let program_of_string str =
+  let stmts = ast_of_string
+    ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
+  (Loc.none, stmts, [])

@@ -44,39 +44,6 @@ module P = Type.Polarity
    conservative in that any "unknown" or unimplemented polarity is treated as
    Neutral, so we will preserve both lower bounds and upper bounds. *)
 
-module Marked : sig
-  type t
-  val empty: t
-  val add: int -> Type.polarity -> t -> (Type.polarity * t) option
-  val get: int -> t -> Type.polarity option
-  val mem: int -> Type.polarity -> t -> bool
-  val exclude: int -> t -> t
-end = struct
-  type t = Type.polarity IMap.t
-
-  let empty = IMap.empty
-
-  let add id p x =
-    match IMap.get id x with
-    | None -> Some (p, IMap.add id p x)
-    | Some p' ->
-      match p, p' with
-      | Positive, Negative
-      | Negative, Positive -> Some (p, IMap.add id Neutral x)
-      | Neutral, Negative -> Some (Positive, IMap.add id p x)
-      | Neutral, Positive -> Some (Negative, IMap.add id p x)
-      | _ -> None
-
-  let get = IMap.get
-
-  let mem id p x =
-    match IMap.get id x with
-    | None -> false
-    | Some p' -> P.compat (p', p)
-
-  let exclude id x = IMap.add id Neutral x
-end
-
 type state = Marked.t
 
 let gc = object (self)

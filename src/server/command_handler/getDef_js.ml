@@ -100,7 +100,7 @@ let extract_member_def cx this name =
 let getdef_from_type_table cx loc =
   let typetable = Context.type_table cx in
   let type_info =
-    Type_table.find_type_info typetable ~pred:(fun l -> Loc.contains l loc)
+    Type_table.find_type_info_with_pred typetable (fun l -> Loc.contains l loc)
   in
   Option.bind type_info begin function
     | _, (_, _, Type_table.Import (name, obj_t))
@@ -199,7 +199,7 @@ let rec get_def ~options ~workers ~env ~profiling ~depth (file_input, line, col)
   in
   let%lwt getdef_result =
     map_error ~f:(fun str -> str, None) check_result
-    %>>= (fun (cx, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
+    %>>= (fun (cx, _, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json (fun () -> Lwt.return (getdef_get_result ~options cx state loc))
     ))
   in
