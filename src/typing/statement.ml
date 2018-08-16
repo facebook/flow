@@ -5896,9 +5896,9 @@ and mk_class_sig =
         Class_sig.t containing this field, as that is when the initializer expression
         gets checked.
   *)
-  let mk_field cx tparams_map loc ~polarity reason annot init =
+  let mk_field cx tparams_map reason annot init =
     let annot_t, annot_ast = Anno.mk_type_annotation cx tparams_map reason annot in
-    let field', get_init =
+    let field, get_init =
       match init with
       | None -> Annot annot_t, Fn.const None
       | Some expr ->
@@ -5910,7 +5910,7 @@ and mk_class_sig =
         (fun () -> Some (Option.value (!value_ref)
           ~default:(Typed_ast.error_annot, Typed_ast.Expression.error)))
     in
-    (loc, polarity, field'), annot_ast, get_init
+    field, annot_ast, get_init
   in
 
   let mk_method = mk_func_sig in
@@ -6015,11 +6015,7 @@ and mk_class_sig =
   in
 
   (* All classes have a static "name" property. *)
-  let class_sig =
-    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
-    let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) class_sig
-  in
+  let class_sig = add_name_field class_sig in
 
   (* NOTE: We used to mine field declarations from field assignments in a
      constructor as a convenience, but it was not worth it: often, all that did
@@ -6107,8 +6103,7 @@ and mk_class_sig =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field, annot_ast, get_value =
-          mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
+        let field, annot_ast, get_value = mk_field cx tparams_map reason annot value in
         let get_element () = Body.PrivateField (loc, { PrivateField.
           key;
           annot = annot_ast;
@@ -6116,7 +6111,7 @@ and mk_class_sig =
           static;
           variance;
         }) in
-        add_private_field ~static name field c, get_element::rev_elements
+        add_private_field ~static name id_loc polarity field c, get_element::rev_elements
 
     | Body.Property (loc, {
       Property.key = Ast.Expression.Object.Property.Identifier (id_loc, name) as key;
@@ -6132,8 +6127,7 @@ and mk_class_sig =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field, annot, get_value =
-          mk_field cx tparams_map (Some id_loc) ~polarity reason annot value in
+        let field, annot, get_value = mk_field cx tparams_map reason annot value in
         let get_element () = Body.Property (loc, { Property.
           key;
           annot;
@@ -6141,7 +6135,7 @@ and mk_class_sig =
           static;
           variance;
         }) in
-        add_field ~static name field c, get_element::rev_elements
+        add_field ~static name id_loc polarity field c, get_element::rev_elements
 
     (* literal LHS *)
     | Body.Method (loc, {

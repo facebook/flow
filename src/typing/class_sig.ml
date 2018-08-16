@@ -14,18 +14,19 @@ type set_asts =
   (Loc.t, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
-type field = Loc.t option * Type.polarity * field'
-and field' =
+type field =
   | Annot of Type.t
   | Infer of Func_sig.t * set_asts
+
+type field' = Loc.t option * Type.polarity * field
 
 type func_info = Loc.t option * Func_sig.t * set_asts
 
 type signature = {
   reason: reason;
-  fields: field SMap.t;
-  private_fields: field SMap.t;
-  proto_fields: field SMap.t;
+  fields: field' SMap.t;
+  private_fields: field' SMap.t;
+  proto_fields: field' SMap.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
   methods: func_info Nel.t SMap.t;
@@ -95,9 +96,9 @@ let map_sig ~static f s =
 let with_sig ~static f s =
   if static then f s.static else f s.instance
 
-let add_private_field name fld = map_sig (fun s -> {
+let add_private_field name loc polarity field = map_sig (fun s -> {
   s with
-  private_fields = SMap.add name fld s.private_fields;
+  private_fields = SMap.add name (Some loc, polarity, field) s.private_fields;
 })
 
 let add_constructor loc fsig ?(set_asts=ignore) s =
@@ -110,7 +111,7 @@ let add_default_constructor reason s =
 let append_constructor loc fsig ?(set_asts=ignore) s =
   {s with constructor = (loc, Func_sig.to_ctor_sig fsig, set_asts)::s.constructor}
 
-let add_field ~static name fld x =
+let add_field' ~static name fld x =
   let flat = static || structural x in
   map_sig ~static (fun s -> {
     s with
@@ -121,10 +122,24 @@ let add_field ~static name fld x =
     setters = if flat then SMap.remove name s.setters else s.setters;
   }) x
 
-let add_proto_field name fld x =
+let add_field ~static name loc polarity field x =
+  add_field' ~static name (Some loc, polarity, field) x
+
+let add_indexer ~static polarity ~key ~value x =
+  let kloc, k = key in
+  let vloc, v = value in
+  x |> add_field ~static "$key" kloc polarity (Annot k)
+    |> add_field ~static "$value" vloc polarity (Annot v)
+
+let add_name_field x =
+  let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
+  let t = Type.StrT.why r in
+  add_field' ~static:true "name" (None, Type.Neutral, Annot t) x
+
+let add_proto_field name loc polarity field x =
   map_sig ~static:false (fun s -> {
     s with
-    proto_fields = SMap.add name fld s.proto_fields;
+    proto_fields = SMap.add name (Some loc, polarity, field) s.proto_fields;
     methods = SMap.remove name s.methods;
     getters = SMap.remove name s.getters;
     setters = SMap.remove name s.setters;

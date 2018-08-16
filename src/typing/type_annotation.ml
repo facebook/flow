@@ -1355,11 +1355,10 @@ and add_interface_properties cx tparams_map properties s =
       x, Indexer (loc, Typed_ast.Type.Object.Indexer.error)::rev_prop_asts
     | Indexer (loc, indexer) ->
       let { Indexer.key; value; static; variance; _ } = indexer in
-      let (_, k), _ as key = convert cx tparams_map key in
-      let (_, v), _ as value = convert cx tparams_map value in
+      let k, _ as key = convert cx tparams_map key in
+      let v, _ as value = convert cx tparams_map value in
       let polarity = polarity variance in
-      x |> add_field ~static "$key" (None, polarity, Annot k)
-        |> add_field ~static "$value" (None, polarity, Annot v),
+      add_indexer ~static polarity ~key:k ~value:v x,
       Indexer (loc, { indexer with Indexer.key; value; })::rev_prop_asts
     | Property (loc, ({ Property.
         key; value; static; proto; optional; _method; variance;
@@ -1417,7 +1416,7 @@ and add_interface_properties cx tparams_map properties s =
             let (_, t), _ as value_ast = convert cx tparams_map value in
             let t = if optional then Type.optional t else t in
             let add = if proto then add_proto_field else add_field ~static in
-            add name (Some id_loc, polarity, Annot t) x,
+            add name id_loc polarity (Annot t) x,
             Ast.Type.(loc, { prop with Object.Property.
               key;
               value = Object.Property.Init value_ast;
@@ -1533,11 +1532,8 @@ let mk_interface_sig cx reason decl =
     empty id reason tparams tparams_map super, extends_ast
   in
 
-  let iface_sig =
-    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
-    let t = Type.StrT.why reason in
-    add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
-  in
+  (* TODO: interfaces don't have a name field, or even statics *)
+  let iface_sig = add_name_field iface_sig in
 
   let iface_sig, properties = add_interface_properties cx tparams_map properties iface_sig in
 
@@ -1634,11 +1630,8 @@ let mk_declare_class_sig =
       extends_ast, mixins_ast, implements_ast
     in
 
-    let iface_sig =
-      let reason = replace_reason (fun desc -> RNameProperty desc) reason in
-      let t = Type.StrT.why reason in
-      add_field ~static:true "name" (None, Type.Neutral, Annot t) iface_sig
-    in
+    (* All classes have a static "name" property. *)
+    let iface_sig = add_name_field iface_sig in
 
     let iface_sig, properties =
       add_interface_properties cx tparams_map properties iface_sig in

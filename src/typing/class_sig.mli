@@ -14,8 +14,7 @@ type set_asts =
   (Loc.t, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
-type field = Loc.t option * Type.polarity * field'
-and field' =
+type field =
   | Annot of Type.t
   | Infer of Func_sig.t * set_asts
 
@@ -70,13 +69,24 @@ val append_constructor:
   t -> t
 
 (** Add field to signature. *)
-val add_field: static:bool -> string -> field -> t -> t
+val add_field: static:bool -> string -> Loc.t -> Type.polarity -> field -> t -> t
+
+(** Add indexer to signature. *)
+val add_indexer:
+  static:bool ->
+  Type.polarity ->
+  key:(Loc.t * Type.t) ->
+  value:(Loc.t * Type.t) ->
+  t -> t
+
+(** Add static `name` field. *)
+val add_name_field: t -> t
 
 (** Add proto field to signature. *)
-val add_proto_field: string -> field -> t -> t
+val add_proto_field: string -> Loc.t -> Type.polarity -> field -> t -> t
 
 (** Add private field to signature. *)
-val add_private_field: string -> field -> static:bool -> t -> t
+val add_private_field: string -> Loc.t -> Type.polarity -> field -> static:bool -> t -> t
 
 (** Add method to signature.
 
