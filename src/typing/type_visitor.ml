@@ -28,7 +28,7 @@ class ['a] t = object(self)
 
   | TypeDestructorTriggerT (_, _, _, d, t) ->
     let acc = self#destructor cx acc d in
-    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#type_ cx pole acc t in
     acc
 
   | FunProtoT _
