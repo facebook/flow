@@ -85,11 +85,14 @@ module Classes = struct
 
   (* TODO: add method_ and property *)
   let make ?super ?id elements =
+    let extends = match super with
+    | None -> None
+    | Some expr -> Some (Loc.none, { Extends.expr; targs = None })
+    in
     { id;
       body = Loc.none, { Body.body = elements };
       tparams = None;
-      super;
-      super_targs = None;
+      extends;
       implements = [];
       classDecorators = [];
     }

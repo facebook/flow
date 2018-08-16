@@ -1211,6 +1211,14 @@ and Class : sig
     }
     [@@deriving show]
   end
+  module Extends : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+    and ('M, 'T) t' = {
+      expr: ('M, 'T) Expression.t;
+      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+    }
+    [@@deriving show]
+  end
   module Implements : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = {
@@ -1241,8 +1249,7 @@ and Class : sig
     id: 'M Identifier.t option;
     body: ('M, 'T) Class.Body.t;
     tparams: ('M, 'T) Type.ParameterDeclaration.t option;
-    super: ('M, 'T) Expression.t option;
-    super_targs: ('M, 'T) Type.ParameterInstantiation.t option;
+    extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Class.Implements.t list;
     classDecorators: ('M, 'T) Decorator.t list;
   }

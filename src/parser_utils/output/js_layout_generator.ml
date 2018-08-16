@@ -1380,7 +1380,7 @@ and class_body (loc, { Ast.Class.Body.body }) =
   else Atom "{}"
 
 and class_base { Ast.Class.
-  id; body; tparams; super; super_targs;
+  id; body; tparams; extends;
   implements; classDecorators
 } =
   fuse [
@@ -1395,11 +1395,13 @@ and class_base { Ast.Class.
     end;
     begin
       let class_extends = [
-        begin match super with
-        | Some super -> Some (fuse [
+        begin match extends with
+        | Some (loc, { Ast.Class.Extends.expr; targs }) -> Some (fuse [
             Atom "extends"; space;
-            expression super;
-            option type_parameter_instantiation super_targs;
+            source_location_with_comments (loc, fuse [
+              expression expr;
+              option type_parameter_instantiation targs;
+            ])
           ])
         | None -> None
         end;

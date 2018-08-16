@@ -186,7 +186,7 @@ class lexical_hoister = object(this)
     let open Ast.Class in
     let {
       id; body = _; tparams = _;
-      super = _; super_targs = _; implements = _;
+      extends = _; implements = _;
       classDecorators = _;
     } = cls in
     begin match id with

@@ -216,16 +216,15 @@ and if_statement (if1: (Loc.t, Loc.t) Ast.Statement.If.t) (if2: (Loc.t, Loc.t) A
 and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
   let open Ast.Class in
   let {
-    id=id1; body=body1; tparams=tparams1; super=super1; super_targs=super_targs1;
+    id=id1; body=body1; tparams=tparams1; extends=extends1;
     implements=implements1; classDecorators=classDecorators1;
   } = class1 in
   let {
-    id=id2; body=body2; tparams=tparams2; super=super2; super_targs=super_targs2;
+    id=id2; body=body2; tparams=tparams2; extends=extends2;
     implements=implements2; classDecorators=classDecorators2;
   } = class2 in
-  if id1 != id2 || (* body handled below *) tparams1 != tparams2 || super1 != super2 ||
-      super_targs1 != super_targs2 || implements1 != implements2 ||
-      classDecorators1 != classDecorators2
+  if id1 != id2 || (* body handled below *) tparams1 != tparams2 || extends1 != extends2 ||
+      implements1 != implements2 || classDecorators1 != classDecorators2
   then
     None
   else

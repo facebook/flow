@@ -372,16 +372,17 @@ module Object
         class_implements env acc
     | _ -> List.rev acc
 
+  let class_extends = with_loc (fun env ->
+    let expr = Expression.left_hand_side (env |> with_allow_yield false) in
+    let targs = Type.type_parameter_instantiation env in
+    { Class.Extends.expr; targs }
+  )
+
   let rec _class env =
-    let super, super_targs =
-      if Peek.token env = T_EXTENDS
-      then begin
-        Expect.token env T_EXTENDS;
-        let super =
-          Expression.left_hand_side (env |> with_allow_yield false) in
-        let super_targs = Type.type_parameter_instantiation env in
-        Some super, super_targs
-      end else None, None in
+    let extends =
+      if Expect.maybe env T_EXTENDS
+      then Some (class_extends env)
+      else None in
     let implements =
       if Peek.token env = T_IMPLEMENTS
       then begin
@@ -391,7 +392,7 @@ module Object
         class_implements env []
       end else [] in
     let body = class_body env in
-    body, super, super_targs, implements
+    body, extends, implements
 
   and class_body =
     let rec elements env seen_constructor private_names acc =
@@ -644,14 +645,13 @@ module Object
       | _ -> Some(Parse.identifier tmp_env)
     ) in
     let tparams = Type.type_parameter_declaration_with_defaults env in
-    let body, super, super_targs, implements = _class env in
+    let body, extends, implements = _class env in
     let loc = Loc.btwn start_loc (fst body) in
     loc, Ast.Statement.(ClassDeclaration Class.({
       id;
       body;
       tparams;
-      super;
-      super_targs;
+      extends;
       implements;
       classDecorators=decorators;
     }))
@@ -669,13 +669,12 @@ module Object
           let id = Some (Parse.identifier env) in
           let tparams = Type.type_parameter_declaration_with_defaults env in
           id, tparams in
-    let body, super, super_targs, implements = _class env in
+    let body, extends, implements = _class env in
     Ast.Expression.Class { Class.
       id;
       body;
       tparams;
-      super;
-      super_targs;
+      extends;
       implements;
       classDecorators=decorators;
     }

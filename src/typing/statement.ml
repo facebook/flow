@@ -5916,19 +5916,12 @@ and mk_class_sig =
   let mk_method = mk_func_sig in
 
   let mk_extends cx tparams_map = function
-    | None, None -> Implicit { null = false }, None, None
-    | None, _ -> assert false (* type args with no head expr *)
-    | Some e, targs ->
-      let loc = match e, targs with
-      | (e, _), Some (targs, _) -> Loc.btwn e targs
-      | (e, _), _ -> e
-      in
-      let (_, c), _ as e = expression cx e in
+    | None -> Implicit { null = false }, None
+    | Some (loc, { Ast.Class.Extends.expr; targs }) ->
+      let (_, c), _ as expr = expression cx expr in
       let c = Flow.reposition cx loc ~annot_loc:loc c in
-      let targs_t, targs_ast = Anno.mk_super cx tparams_map c targs in
-      Explicit targs_t,
-      Some e,
-      targs_ast
+      let t, targs = Anno.mk_super cx tparams_map c targs in
+      Explicit t, Some (loc, { Ast.Class.Extends.expr; targs })
   in
 
   let warn_or_ignore_decorators cx = function
@@ -5962,8 +5955,7 @@ and mk_class_sig =
     id;
     body = (body_loc, { Ast.Class.Body.body = elements });
     tparams;
-    super;
-    super_targs;
+    extends;
     implements;
     classDecorators;
   } ->
@@ -5978,11 +5970,9 @@ and mk_class_sig =
     add_this self cx reason tparams tparams_map
   in
 
-  let extends, super_ast, super_targs_ast =
-    mk_extends cx tparams_map (super, super_targs)
-  in
-  let class_sig, implements_ast =
+  let class_sig, extends_ast, implements_ast =
     let id = Context.make_nominal cx in
+    let extends, extends_ast = mk_extends cx tparams_map extends in
     let implements, implements_ast = implements |> List.map (fun (i_loc, i) ->
       let { Ast.Class.Implements.id = (loc, name) as id; targs } = i in
       let super_loc = match targs with
@@ -5997,12 +5987,12 @@ and mk_class_sig =
       (i_loc, { Ast.Class.Implements.id; targs = targs_ast})
     ) |> List.split in
     let super = Class { extends; mixins = []; implements } in
-    empty id reason tparams tparams_map super, implements_ast
+    empty id reason tparams tparams_map super, extends_ast, implements_ast
   in
 
   (* In case there is no constructor, pick up a default one. *)
   let class_sig =
-    if super <> None
+    if extends <> None
     then
       (* Subclass default constructors are technically of the form (...args) =>
          { super(...args) }, but we can approximate that using flow's existing
@@ -6172,8 +6162,7 @@ and mk_class_sig =
       body = List.map (fun f -> f ()) elements;
     };
     tparams = tparams_ast;
-    super = super_ast;
-    super_targs = super_targs_ast;
+    extends = extends_ast;
     implements = implements_ast;
     classDecorators = []; (* class decorators not yet supported *)
   })

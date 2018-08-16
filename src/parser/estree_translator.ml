@@ -711,16 +711,24 @@ end with type t = Impl.t) = struct
     ]
   )
 
-  and class_declaration (loc, c) = Class.(
-    node "ClassDeclaration" loc [
+  and class_declaration ast = class_helper "ClassDeclaration" ast
+
+  and class_expression ast = class_helper "ClassExpression" ast
+
+  and class_helper node_type (loc, c) = Class.(
+    let super, super_targs = match c.extends with
+    | Some (_, { Extends.expr; targs }) -> Some expr, targs
+    | None -> None, None
+    in
+    node node_type loc [
       (* estree hasn't come around to the idea that class decls can have
          optional ids, but acorn, babel, espree and esprima all have, so let's
          do it too. see https://github.com/estree/estree/issues/98 *)
       "id", option identifier c.id;
       "body", class_body c.body;
       "typeParameters", option type_parameter_declaration c.tparams;
-      "superClass", option expression c.super;
-      "superTypeParameters", option type_parameter_instantiation c.super_targs;
+      "superClass", option expression super;
+      "superTypeParameters", option type_parameter_instantiation super_targs;
       "implements", array_of_list class_implements c.implements;
       "decorators", array_of_list class_decorator c.classDecorators;
     ]
@@ -730,18 +738,6 @@ end with type t = Impl.t) = struct
     node "Decorator" loc [
       "expression", expression expr;
     ]
-
-  and class_expression (loc, c) = Class.(
-    node "ClassExpression" loc [
-      "id", option identifier c.id;
-      "body", class_body c.body;
-      "typeParameters", option type_parameter_declaration c.tparams;
-      "superClass", option expression c.super;
-      "superTypeParameters", option type_parameter_instantiation c.super_targs;
-      "implements", array_of_list class_implements c.implements;
-      "decorators", array_of_list class_decorator c.classDecorators;
-    ]
-  )
 
   and class_implements (loc, implements) = Class.Implements.(
     node "ClassImplements" loc [

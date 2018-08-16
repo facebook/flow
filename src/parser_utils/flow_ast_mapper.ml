@@ -248,15 +248,22 @@ class mapper = object(this)
     let open Ast.Class in
     let {
       id; body; tparams = _;
-      super; super_targs;
+      extends;
       implements = _; classDecorators = _;
     } = cls in
     let id' = map_opt this#class_identifier id in
     let body' = this#class_body body in
-    let super' = map_opt this#expression super in
-    let super_targs' = map_opt this#type_parameter_instantiation super_targs in
-    if id == id' && body == body' && super' == super && super_targs' == super_targs then cls
-    else { cls with id = id'; body = body'; super = super'; super_targs = super_targs' }
+    let extends' = map_opt (map_loc this#class_extends) extends in
+    if id == id' && body == body' && extends == extends' then cls
+    else { cls with id = id'; body = body'; extends = extends' }
+
+  method class_extends (extends: (Loc.t, Loc.t) Ast.Class.Extends.t') =
+    let open Ast.Class.Extends in
+    let { expr; targs } = extends in
+    let expr' = this#expression expr in
+    let targs' = map_opt this#type_parameter_instantiation targs in
+    if expr == expr' && targs == targs' then extends
+    else { expr = expr'; targs = targs' }
 
   method class_identifier (ident: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident

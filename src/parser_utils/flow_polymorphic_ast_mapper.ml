@@ -217,23 +217,28 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
 
   method class_ (cls: ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
     let open Ast.Class in
-    let { id; body; tparams; super; super_targs; implements; classDecorators; } = cls in
+    let { id; body; tparams; extends; implements; classDecorators; } = cls in
     let id' = Option.map ~f:this#class_identifier id in
     let body' = this#class_body body in
     let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
-    let super' = Option.map ~f:this#expression super in
-    let super_targs' = Option.map ~f:this#type_parameter_instantiation super_targs in
+    let extends' = Option.map ~f:this#class_extends extends in
     let implements' = List.map this#class_implements implements in
     let classDecorators' = List.map this#class_decorator classDecorators in
     {
       id = id';
       body = body';
       tparams = tparams';
-      super = super';
-      super_targs = super_targs';
+      extends = extends';
       implements = implements';
       classDecorators = classDecorators';
     }
+
+  method class_extends (extends : ('M, 'T) Ast.Class.Extends.t) : ('N, 'U) Ast.Class.Extends.t =
+    let open Ast.Class.Extends in
+    let annot, { expr; targs } = extends in
+    let expr' = this#expression expr in
+    let targs' = Option.map ~f:this#type_parameter_instantiation targs in
+    f annot, { expr = expr'; targs = targs' }
 
   method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t =
     let open Ast.Class.Decorator in

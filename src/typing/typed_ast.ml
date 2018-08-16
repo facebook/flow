@@ -209,8 +209,7 @@ module Class = struct
     id = Some (Loc.none, "Unimplemented");
     body = Loc.none, { Ast.Class.Body.body = [] };
     tparams = None;
-    super = None;
-    super_targs = None;
+    extends = None;
     implements = [];
     classDecorators = [];
   }
