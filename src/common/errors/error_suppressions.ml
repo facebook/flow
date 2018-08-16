@@ -46,7 +46,7 @@ let add_lint_suppressions lint_suppressions t = {
 }
 
 let check_loc lint_kind {suppressions; _} severity_cover
-  ((result, used, unused) as acc) loc =
+  ((result, used, unused, is_primary_loc) as acc) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   if SpanMap.mem loc suppressions
@@ -57,7 +57,7 @@ let check_loc lint_kind {suppressions; _} severity_cover
       unused with
       suppressions = SpanMap.remove loc unused.suppressions
     } in
-    Off, used, unused
+    Off, used, unused, false
   else
     Option.value_map lint_kind ~default:acc ~f:(fun some_lint_kind ->
       let lint_settings = ExactCover.find loc severity_cover in
@@ -70,17 +70,21 @@ let check_loc lint_kind {suppressions; _} severity_cover
         | _ -> unused.lint_suppressions
       in
       let unused = {unused with lint_suppressions = unused_lint_suppressions} in
-      severity_min state result, used, unused
+      if (is_primary_loc && state == Off) || LintSettings.is_explicit some_lint_kind lint_settings
+      then severity_min state result, used, unused, false
+      else result, used, unused, false
     )
 
 (* Checks if any of the given locations should be suppressed. *)
 let check_locs locs lint_kind suppressions severity_cover unused =
   (* We need to check every location in order to figure out which suppressions
      are really unused...that's why we don't shortcircuit as soon as we find a
-     matching error suppression *)
+     matching error suppression.
+     If the "primary" location has severity = Off, the error should be
+     suppressed even if it is not explicit. *)
   List.fold_left
     (check_loc lint_kind suppressions severity_cover)
-    (Err, LocSet.empty, unused)
+    (Err, LocSet.empty, unused, true)
     locs
 
 let check err suppressions severity_cover unused =
@@ -100,7 +104,7 @@ let check err suppressions severity_cover unused =
       | _ -> None, false
   in
   if ignore then None else
-  let result, used, unused =
+  let result, used, unused, _ =
     check_locs locs lint_kind suppressions severity_cover unused
   in
   (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
