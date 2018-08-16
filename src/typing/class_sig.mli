@@ -86,7 +86,7 @@ val add_private_field: string -> field -> static:bool -> t -> t
 val add_method:
   static:bool ->
   string ->
-  Loc.t option ->
+  Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   t -> t
@@ -99,7 +99,7 @@ val add_method:
 val append_method:
   static:bool ->
   string ->
-  Loc.t option ->
+  Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   t -> t
@@ -112,7 +112,7 @@ val add_call_deprecated: static:bool -> Type.t -> t -> t
 val add_getter:
   static:bool ->
   string ->
-  Loc.t option ->
+  Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   t -> t
@@ -121,7 +121,7 @@ val add_getter:
 val add_setter:
   static:bool ->
   string ->
-  Loc.t option ->
+  Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   t -> t

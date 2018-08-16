@@ -6086,9 +6086,9 @@ and mk_class_sig =
       in
       let add = match kind with
       | Method.Constructor -> add_constructor (Some id_loc)
-      | Method.Method -> add_method ~static name (Some id_loc)
-      | Method.Get -> add_getter ~static name (Some id_loc)
-      | Method.Set -> add_setter ~static name (Some id_loc)
+      | Method.Method -> add_method ~static name id_loc
+      | Method.Get -> add_getter ~static name id_loc
+      | Method.Set -> add_setter ~static name id_loc
       in
       add method_sig ~set_asts c, get_element::rev_elements
 

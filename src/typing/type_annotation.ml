@@ -1399,7 +1399,7 @@ and add_interface_properties cx tparams_map properties s =
             let ft = Func_sig.methodtype cx fsig in
             let append_method = match static, name with
             | false, "constructor" -> append_constructor (Some id_loc)
-            | _ -> append_method ~static name (Some id_loc)
+            | _ -> append_method ~static name id_loc
             in
             append_method fsig x,
             Ast.Type.(loc, { prop with Object.Property.
@@ -1428,7 +1428,7 @@ and add_interface_properties cx tparams_map properties s =
             Ast.Type.Object.Property.Get (get_loc, func) ->
             Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
-            add_getter ~static name (Some id_loc) fsig x,
+            add_getter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
               key;
               value = Object.Property.Get (get_loc, func_ast);
@@ -1439,7 +1439,7 @@ and add_interface_properties cx tparams_map properties s =
             Ast.Type.Object.Property.Set (set_loc, func) ->
             Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
-            add_setter ~static name (Some id_loc) fsig x,
+            add_setter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
               key;
               value = Object.Property.Set (set_loc, func_ast);

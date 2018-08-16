@@ -132,11 +132,12 @@ let add_proto_field name fld x =
 
 let add_method ~static name loc fsig ?(set_asts=ignore) x =
   let flat = static || structural x in
+  let func_info = Some loc, fsig, set_asts in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
     proto_fields = SMap.remove name s.proto_fields;
-    methods = SMap.add name (Nel.one (loc, fsig, set_asts)) s.methods;
+    methods = SMap.add name (Nel.one func_info) s.methods;
     getters = SMap.remove name s.getters;
     setters = SMap.remove name s.setters;
   }) x
@@ -146,14 +147,15 @@ let add_method ~static name loc fsig ?(set_asts=ignore) x =
    definitions as branches of a single overloaded method. *)
 let append_method ~static name loc fsig ?(set_asts=ignore) x =
   let flat = static || structural x in
+  let func_info = Some loc, fsig, set_asts in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
     proto_fields = SMap.remove name s.proto_fields;
     methods = (
       match SMap.get name s.methods with
-      | Some fsigs -> SMap.add name (Nel.cons (loc, fsig, set_asts) fsigs) s.methods
-      | None -> SMap.add name (Nel.one (loc, fsig, set_asts)) s.methods
+      | Some fsigs -> SMap.add name (Nel.cons func_info fsigs) s.methods
+      | None -> SMap.add name (Nel.one func_info) s.methods
     );
     getters = SMap.remove name s.getters;
     setters = SMap.remove name s.setters;
@@ -177,22 +179,24 @@ let add_call_deprecated ~static t = map_sig ~static (fun s ->
 
 let add_getter ~static name loc fsig ?(set_asts=ignore) x =
   let flat = static || structural x in
+  let func_info = Some loc, fsig, set_asts in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
     proto_fields = SMap.remove name s.proto_fields;
     methods = SMap.remove name s.methods;
-    getters = SMap.add name (loc, fsig, set_asts) s.getters;
+    getters = SMap.add name func_info s.getters;
   }) x
 
 let add_setter ~static name loc fsig ?(set_asts=ignore) x =
   let flat = static || structural x in
+  let func_info = Some loc, fsig, set_asts in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
     proto_fields = SMap.remove name s.proto_fields;
     methods = SMap.remove name s.methods;
-    setters = SMap.add name (loc, fsig, set_asts) s.setters;
+    setters = SMap.add name func_info s.setters;
   }) x
 
 let mem_constructor {constructor; _} = constructor <> []
