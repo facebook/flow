@@ -1,3 +1,52 @@
+### 0.79.0
+
+Likely to cause new Flow errors:
+* A fix in requiring annotations on exports: Flow uses type variables for
+  unannotated program parts. To facilitate inference, these type variables may
+  not appear in input positions of exports. Before, Flow would not complain if a
+  type variable appeared in *both* an output and an input position of an export
+  (in that order), as the first occurrence marked the use of the type variable
+  as legitimate. Now, Flow analyzes exports in a polarity-sensitive way and will
+  require an annotation in the above scenario.
+
+New Features:
+* Saved state:
+  - Added an initialization path, where instead of parsing every file dependency,
+    it loads the expected results for each available file from the saved state.
+  - A hash is stored for each file in the saved state to determine whether it has been
+    modified and therefore needs to be reparsed after the state is loaded. This way,
+    saved state servers can skip parsing files that are unchanged.
+  - If loading saved state fails, Flow falls back to a full initialization, unless
+    `--saved-state-no-fallback` is passed in which case Flow fails.
+  - Saved state tests are included in the automated testing framework.
+* Profiling was refactored to support hierarchical profiling. That is:
+  - Support running timers inside of other timers.
+  - Support merging a finished profiling object (like from a recheck) into the
+    currently running profiling object (like from handling a command).
+* Cancelable workloads (jobs that handle commands). If Flow determines that a file
+  has changed while handling a command, it stops, performs a recheck, and then
+  re-runs the workload from scratch.
+* The Flow diff checker became more fine-grained, by including comparisons at the
+  level of loops and variable declarations.
+* Added a `name` field in the `[options]` portion of `.flowconfig`.
+
+Notable bug fixes:
+* Send the server logging context to the LSP command and use that when logging
+  success and failure events instead of the LSP command's context (which is logged
+  as the client context).
+* Fixed stack overflow when running `flow --json` with a large error output, by
+  moving to a tail-recursive implementation.
+* Fixed string literal printing in `flow suggest`.
+
+Misc:
+* Library definition improvements for `React$Context.Provider` and
+  `CanvasRenderingContext2D.imageSmoothingQuality`.
+* Typed AST: The constraint generation phase returns a version of the AST that
+  includes a type for each program node.
+* Added doc details for `$Shape`.
+* The changes in saved state were followed by code refactorings in various checking
+  modules (`types_js.ml`, `merge_service.ml`, `rechecker.ml`, etc.).
+
 ### 0.78.0
 
 New Features:
