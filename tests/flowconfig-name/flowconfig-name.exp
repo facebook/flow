@@ -59,3 +59,39 @@ Found 1 error
 
 And not check any non @flow files using the .flowconfig config:
 No errors!
+
+We should be able to run status without start:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2].
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+We should be able to run without any command specified:
+Error ----------------------------------------------------------------------------------------------------- test.js:2:17
+
+Cannot assign `3` to `x` because number [1] is incompatible with string [2].
+
+   test.js:2:17
+   2| var x: string = 3;
+                      ^ [1]
+
+References:
+   test.js:2:8
+   2| var x: string = 3;
+             ^^^^^^ [2]
+
+
+
+Found 1 error

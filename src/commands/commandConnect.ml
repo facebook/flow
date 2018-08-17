@@ -24,6 +24,7 @@ type env = {
   ignore_version : bool;
   emoji : bool;
   quiet : bool;
+  flowconfig_name: string;
 }
 
 let arg name value arr = match value with
@@ -51,6 +52,7 @@ let start_flow_server env =
     ignore_version;
     root;
     quiet;
+    flowconfig_name;
     _;
   } = env in
   if not quiet then Utils_js.prerr_endlinef
@@ -70,6 +72,7 @@ let start_flow_server env =
   |> flag "--ignore-version" ignore_version
   |> flag "--quiet" quiet
   |> flag "--autostop" autostop
+  |> arg "--flowconfig-name" (Some flowconfig_name)
   in
   try
     let server_pid =
