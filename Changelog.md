@@ -1,3 +1,11 @@
+### 0.79.1
+
+Notable bug fixes:
+* If a server was not already started, running `flow status --flowconfig-name 'name'`
+  would start a server without taking into account the new flowconfig name. The same
+  is true for running flow without any command specified. This changes this by
+  passing the name to the new server.
+
 ### 0.79.0
 
 Likely to cause new Flow errors:
