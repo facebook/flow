@@ -957,6 +957,7 @@ let make_env flowconfig_name connect_flags root =
     ignore_version = connect_flags.ignore_version;
     emoji = FlowConfig.emoji flowconfig;
     quiet = connect_flags.quiet;
+    flowconfig_name;
   }
 
 let connect ~flowconfig_name ~client_handshake connect_flags root =

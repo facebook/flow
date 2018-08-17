@@ -20,3 +20,16 @@ assert_errors "$FLOW" status --flowconfig-name configure-flow
 
 printf "\\nAnd not check any non @flow files using the .flowconfig config:\\n"
 assert_ok "$FLOW" status
+
+assert_ok "$FLOW" stop
+assert_ok "$FLOW" stop --flowconfig-name configure-flow
+
+printf "\\nWe should be able to run status without start:\\n"
+assert_errors "$FLOW" status --flowconfig-name configure-flow
+
+assert_ok "$FLOW" stop --flowconfig-name configure-flow
+
+printf "\\nWe should be able to run without any command specified:\\n"
+assert_errors "$FLOW" --flowconfig-name configure-flow
+
+assert_ok "$FLOW" stop --flowconfig-name configure-flow
