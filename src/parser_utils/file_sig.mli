@@ -14,19 +14,20 @@
  * This representation is a bit broad, because implementation files generally
  * should not contain declare modules and declaration files (libdefs) are all
  * coalesced into a single module (builtins). *)
-type t = {
-  module_sig: module_sig;
-  declare_modules: (Loc.t * module_sig) SMap.t;
+type 'info t' = {
+  module_sig: 'info module_sig';
+  declare_modules: (Loc.t * 'info module_sig') SMap.t;
   tolerable_errors: tolerable_error list;
 }
 
 (* We can extract the observable interface of a module by extracting information
  * about what it requires and what it exports. *)
-and module_sig = {
+and 'info module_sig' = {
   requires: require list;
   module_kind: module_kind;
   type_exports_named: type_export SMap.t; (* export type {A, B as C} [from x] *)
   type_exports_star: export_star list; (* export type * from "foo" *)
+  info: 'info; (* useful to carry information that might eventually be erased *)
 }
 
 (* We track information about dependencies for each unique module reference in a
@@ -174,18 +175,45 @@ and tolerable_error =
   (* e.g. `foo(module)`, dangerous because `module` is aliased *)
   | BadExportContext of string (* offending identifier *) * Loc.t
 
+type exports_info = {
+  module_kind_info: module_kind_info;
+  type_exports_named_info: es_export_def SMap.t;
+}
+
+and module_kind_info =
+  | CommonJSInfo of cjs_exports_def list
+  | ESInfo of es_export_def SMap.t
+
+and cjs_exports_def =
+  | DeclareModuleExportsDef of (Loc.t, Loc.t) Ast.Type.annotation
+  | SetModuleExportsDef of (Loc.t, Loc.t) Ast.Expression.t
+  | AddModuleExportsDef of ident * (Loc.t, Loc.t) Ast.Expression.t
+
+and es_export_def =
+  | DeclareExportDef of (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration
+  | ExportDefaultDef of (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.declaration
+  | ExportNamedDef of (Loc.t, Loc.t) Ast.Statement.t
+
 type error =
   | IndeterminateModuleType of Loc.t
 
-val empty_file_sig: t
-val empty_module_sig: module_sig
+val program_with_exports_info: ast:(Loc.t, Loc.t) Ast.program -> (exports_info t', error) result
 
-val require_loc_map: module_sig -> Loc.t Nel.t SMap.t
+(* Use for debugging; not for exposing info the the end user *)
+val exports_info_to_string: exports_info -> string
+
+(* Applications may not care about the info carried by signatures. *)
+type module_sig = unit module_sig'
+type t = unit t'
+
+val init: t
 
 val program: ast:(Loc.t, Loc.t) Ast.program -> (t, error) result
 
 (* Use for debugging; not for exposing info the the end user *)
 val to_string: t -> string
+
+val require_loc_map: module_sig -> Loc.t Nel.t SMap.t
 
 class mapper : object
   method error: error -> error

@@ -813,7 +813,7 @@ let tests = "require" >::: [
     let {declare_modules; _} = visit source in
     let modules = declare_modules in
     assert_equal ~ctxt 1 (SMap.cardinal modules);
-    let loc, { requires; module_kind; type_exports_named; type_exports_star } =
+    let loc, { requires; module_kind; type_exports_named; type_exports_star; info = () } =
       SMap.find_unsafe "foo" modules in
     assert_substring_equal ~ctxt source source loc;
     assert_equal ~ctxt 0 (List.length requires);

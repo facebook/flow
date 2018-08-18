@@ -332,7 +332,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     match file with
     | File_key.JsonFile _ ->
       let ast = parse_json_file ~fail content file in
-      Parse_ok (ast, File_sig.empty_file_sig)
+      Parse_ok (ast, File_sig.init)
     | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
@@ -352,7 +352,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
           | Ok file_sig -> Parse_ok (ast, file_sig)
           | Error e -> Parse_fail (File_sig_error e)
         else
-          Parse_ok (ast, File_sig.empty_file_sig))
+          Parse_ok (ast, File_sig.init))
   with
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
