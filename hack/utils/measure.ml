@@ -295,7 +295,7 @@ let rec print_buckets ~low ~high ~bucket_size buckets =
     let count = match FloatMap.get low buckets with
     | None -> 0.0
     | Some count -> count in
-    Printf.eprintf "[%02f: %02f]  " low count;
+    Printf.eprintf "[%s: %s]  " (pretty_num low) (pretty_num count);
     let low = low +. bucket_size in
     print_buckets ~low ~high ~bucket_size buckets
   end

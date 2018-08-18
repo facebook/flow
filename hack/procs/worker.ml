@@ -61,9 +61,16 @@ let slave_main ic oc =
     } = Gc.quick_stat () in
     Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
     Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
+
+    Measure.track_distribution "minor_words" ~bucket_size:(float (100 * 1024 * 1024));
     Measure.sample "minor_words" (end_minor_words -. !start_minor_words);
+
+    Measure.track_distribution "promoted_words" ~bucket_size:(float (25 * 1024 * 1024));
     Measure.sample "promoted_words" (end_promoted_words -. !start_promoted_words);
+
+    Measure.track_distribution "major_words" ~bucket_size:(float (50 * 1024 * 1024));
     Measure.sample "major_words" (end_major_words -. !start_major_words);
+
     Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
     let stats = Measure.serialize (Measure.pop_global ()) in
