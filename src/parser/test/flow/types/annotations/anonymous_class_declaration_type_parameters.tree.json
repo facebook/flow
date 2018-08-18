@@ -1,0 +1,71 @@
+{
+    "type": "Program",
+    "loc": {
+      "source": null,
+      "start": { "line": 1, "column": 0 },
+      "end": { "line": 1, "column": 27 }
+    },
+    "range": [0, 27],
+    "body": [
+      {
+        "type": "ExportDefaultDeclaration",
+        "loc": {
+          "source": null,
+          "start": { "line": 1, "column": 0 },
+          "end": { "line": 1, "column": 27 }
+        },
+        "range": [0, 27],
+        "declaration": {
+          "type": "ClassDeclaration",
+          "loc": {
+            "source": null,
+            "start": { "line": 1, "column": 15 },
+            "end": { "line": 1, "column": 27 }
+          },
+          "range": [15, 27],
+          "id": null,
+          "body": {
+            "type": "ClassBody",
+            "loc": {
+              "source": null,
+              "start": { "line": 1, "column": 25 },
+              "end": { "line": 1, "column": 27 }
+            },
+            "range": [25, 27],
+            "body": []
+          },
+          "typeParameters": {
+            "type": "TypeParameterDeclaration",
+            "loc": {
+              "source": null,
+              "start": { "line": 1, "column": 21 },
+              "end": { "line": 1, "column": 24 }
+            },
+            "range": [21, 24],
+            "params": [
+              {
+                "type": "TypeParameter",
+                "loc": {
+                  "source": null,
+                  "start": { "line": 1, "column": 22 },
+                  "end": { "line": 1, "column": 23 }
+                },
+                "range": [22, 23],
+                "name": "T",
+                "bound": null,
+                "variance": null,
+                "default": null
+              }
+            ]
+          },
+          "superClass": null,
+          "superTypeParameters": null,
+          "implements": [],
+          "decorators": []
+        },
+        "exportKind": "value"
+      }
+    ],
+    "comments": []
+  }
+  

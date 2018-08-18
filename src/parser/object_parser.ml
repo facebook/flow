@@ -378,7 +378,18 @@ module Object
     { Class.Extends.expr; targs }
   )
 
-  let rec _class env =
+  let rec _class ?(decorators=[]) env ~optional_id =
+    (* 10.2.1 says all parts of a class definition are strict *)
+    let env = env |> with_strict true in
+    let decorators = decorators @ (decorator_list env) in
+    Expect.token env T_CLASS;
+    let tmp_env = env |> with_no_let true in
+    let id = (
+      match optional_id, Peek.is_identifier tmp_env with
+      | true, false -> None
+      | _ -> Some(Parse.identifier tmp_env)
+    ) in
+    let tparams = Type.type_parameter_declaration_with_defaults env in
     let extends =
       if Expect.maybe env T_EXTENDS
       then Some (class_extends env)
@@ -392,7 +403,7 @@ module Object
         class_implements env []
       end else [] in
     let body = class_body env in
-    body, extends, implements
+    id, body, extends, implements, tparams, decorators
 
   and class_body =
     let rec elements env seen_constructor private_names acc =
@@ -633,19 +644,9 @@ module Object
           init env start_loc decorators key async generator static variance
 
   let class_declaration env decorators =
-    (* 10.2.1 says all parts of a class definition are strict *)
-    let env = env |> with_strict true in
     let start_loc = Peek.loc env in
-    let decorators = decorators @ (decorator_list env) in
-    Expect.token env T_CLASS;
-    let tmp_env = env |> with_no_let true in
-    let id = (
-      match in_export env, Peek.is_identifier tmp_env with
-      | true, false -> None
-      | _ -> Some(Parse.identifier tmp_env)
-    ) in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
-    let body, extends, implements = _class env in
+    let optional_id = in_export env in
+    let id, body, extends, implements, tparams, decorators = _class env ~decorators ~optional_id in
     let loc = Loc.btwn start_loc (fst body) in
     loc, Ast.Statement.(ClassDeclaration Class.({
       id;
@@ -657,19 +658,7 @@ module Object
     }))
 
   let class_expression = with_loc (fun env ->
-    (* 10.2.1 says all parts of a class expression are strict *)
-    let env = env |> with_strict true in
-    let decorators = decorator_list env in
-    Expect.token env T_CLASS;
-    let id, tparams = match Peek.token env with
-      | T_EXTENDS
-      | T_LESS_THAN
-      | T_LCURLY -> None, None
-      | _ ->
-          let id = Some (Parse.identifier env) in
-          let tparams = Type.type_parameter_declaration_with_defaults env in
-          id, tparams in
-    let body, extends, implements = _class env in
+    let id, body, extends, implements, tparams, decorators = _class env ~optional_id:true in
     Ast.Expression.Class { Class.
       id;
       body;
