@@ -266,7 +266,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "codePointAt",
-               "type": "(index: number) => number | void",
+               "type": "(index: number) => (number | void)",
                "func_details": {
                  "return_type": "number | void",
                  "params": [
@@ -280,7 +280,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 293,
                "endline": 293,
                "start": 5,
-               "end": 46
+               "end": 45
              },
              {
                "name": "concat",
