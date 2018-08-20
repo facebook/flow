@@ -63,9 +63,12 @@ let function_declaration function_declaration =
 let class_ class_ =
   let open Ast.Class in
   let {
-    id; tparams; body; super; super_targs; implements;
+    id; tparams; body; extends; implements;
     classDecorators = _;
   } = class_ in
+  let super, super_targs = match extends with
+  | None -> None, None
+  | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
   id, Kind.ClassDef { tparams; body; super; super_targs; implements }
 
 let declare_variable declare_variable =
