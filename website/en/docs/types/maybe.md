@@ -25,6 +25,21 @@ acceptsMaybeNumber(null);      // Works!
 acceptsMaybeNumber("42");      // Error!
 ```
 
+In the case of objects, a **missing** property is not the same thing as an explicitly `undefined` property.
+
+```js
+// @flow
+function acceptsMaybeProp({ value }: { value: ?number }) {
+  // ...
+}
+
+acceptsMaybeProp({ value: undefined }); // Works!
+acceptsMaybeProp({});                   // Error!
+```
+
+If you want to allow missing properties, use [optional property](../objects/#toc-optional-object-type-properties) syntax, where the `?` is placed _before_ the colon. It is also possible to combine both syntaxes for an optional maybe type, for example `{ value?: ?number }`.
+
+
 ## Refining Maybe types <a class="toc" id="toc-refining-maybe-types" href="#toc-refining-maybe-types"></a>
 
 Imagine we have the type `?number`, if we want to use that value as a `number`
