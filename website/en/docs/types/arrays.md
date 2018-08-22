@@ -120,8 +120,8 @@ problem, but for now you should be aware of it.
 ## `$ReadOnlyArray<T>` <a class="toc" id="toc-readonlyarray" href="#toc-readonlyarray"></a>
 
 Similar to [`$ReadOnly<T>`](../utilities/#toc-readonly), it is the supertype 
-of all arrays and all tuples and represents an immutable array. It does not
-contain any methods that will allow an object of this type to be mutated 
+of all arrays and all tuples and represents a read-only view of an array. It does
+not contain any methods that will allow an object of this type to be mutated 
 (no `push()`, `pop()`, etc.).
 
 ```js
@@ -142,10 +142,11 @@ readonlyArray[0] = {x: 42}; // Error!
 readonlyArray[0].x = 42; // OK
 ```
 
-If you use `$ReadOnlyArray` instead of `Array` for arrays that are never mutated,
-you can prevent Flow from raising spurious errors. For mutable arrays of generic
-types that are set to arrays of specific types there's the possibility of adding
-values to it that don't match the type of the specifically-typed array.
+The main advantage to using `$ReadOnlyArray` instead of `Array` is that `$ReadOnlyArray`'s
+type parameter is *covariant* while `Array`'s type parameter is *invariant*. That means that
+`$ReadOnlyArray<number>` is a subtype of `$ReadOnlyArray<number | string>` while
+`Array<number>` is NOT a subtype of `Array<number | string>`. So it's often useful to use
+`$ReadOnlyArray` as a type annotation to allow various different types of arrays.
 Take, for instance, the following scenario:
 
 ```js
