@@ -14,13 +14,15 @@ type set_asts =
   (Loc.t, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
-type field =
+type set_type = Type.t -> unit
+
+and field =
   | Annot of Type.t
   | Infer of Func_sig.t * set_asts
 
 type field' = Loc.t option * Type.polarity * field
 
-type func_info = Loc.t option * Func_sig.t * set_asts
+type func_info = Loc.t option * Func_sig.t * set_asts * set_type
 
 type signature = {
   reason: reason;
@@ -101,15 +103,15 @@ let add_private_field name loc polarity field = map_sig (fun s -> {
   private_fields = SMap.add name (Some loc, polarity, field) s.private_fields;
 })
 
-let add_constructor loc fsig ?(set_asts=ignore) s =
-  {s with constructor = [loc, Func_sig.to_ctor_sig fsig, set_asts]}
+let add_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
+  {s with constructor = [loc, Func_sig.to_ctor_sig fsig, set_asts, set_type]}
 
 let add_default_constructor reason s =
   let fsig = Func_sig.default_constructor reason in
   add_constructor None fsig s
 
-let append_constructor loc fsig ?(set_asts=ignore) s =
-  {s with constructor = (loc, Func_sig.to_ctor_sig fsig, set_asts)::s.constructor}
+let append_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
+  {s with constructor = (loc, Func_sig.to_ctor_sig fsig, set_asts, set_type)::s.constructor}
 
 let add_field' ~static name fld x =
   let flat = static || structural x in
@@ -145,9 +147,9 @@ let add_proto_field name loc polarity field x =
     setters = SMap.remove name s.setters;
   }) x
 
-let add_method ~static name loc fsig ?(set_asts=ignore) x =
+let add_method ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x =
   let flat = static || structural x in
-  let func_info = Some loc, fsig, set_asts in
+  let func_info = Some loc, fsig, set_asts, set_type in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
@@ -160,9 +162,9 @@ let add_method ~static name loc fsig ?(set_asts=ignore) x =
 (* Appending a method builds a list of function signatures. This implements the
    bahvior of interfaces and declared classes, which interpret duplicate
    definitions as branches of a single overloaded method. *)
-let append_method ~static name loc fsig ?(set_asts=ignore) x =
+let append_method ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x =
   let flat = static || structural x in
-  let func_info = Some loc, fsig, set_asts in
+  let func_info = Some loc, fsig, set_asts, set_type in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
@@ -192,9 +194,9 @@ let add_call_deprecated ~static t = map_sig ~static (fun s ->
   { s with call_deprecated = Some t; calls = [] }
 )
 
-let add_getter ~static name loc fsig ?(set_asts=ignore) x =
+let add_getter ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x =
   let flat = static || structural x in
-  let func_info = Some loc, fsig, set_asts in
+  let func_info = Some loc, fsig, set_asts, set_type in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
@@ -203,9 +205,9 @@ let add_getter ~static name loc fsig ?(set_asts=ignore) x =
     getters = SMap.add name func_info s.getters;
   }) x
 
-let add_setter ~static name loc fsig ?(set_asts=ignore) x =
+let add_setter ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x =
   let flat = static || structural x in
-  let func_info = Some loc, fsig, set_asts in
+  let func_info = Some loc, fsig, set_asts, set_type in
   map_sig ~static (fun s -> {
     s with
     fields = if flat then SMap.remove name s.fields else s.fields;
@@ -230,7 +232,7 @@ let subst_field cx map (loc, polarity, field) =
   | Infer (fsig, set_asts) -> Infer (Func_sig.subst cx map fsig, set_asts)
 
 let subst_sig cx map s =
-  let subst_func_sig (loc, sig_, f) = (loc, Func_sig.subst cx map sig_, f) in
+  let subst_func_sig (loc, sig_, f, g) = (loc, Func_sig.subst cx map sig_, f, g) in
   {
     reason = s.reason;
     fields = SMap.map (subst_field cx map) s.fields;
@@ -266,7 +268,10 @@ let generate_tests cx f x =
     tparams = x.tparams;
     tparams_map = SMap.map (Flow.subst cx map) x.tparams_map;
     super = subst_super cx map x.super;
-    constructor = List.map (fun (loc, sig_, g) -> loc, Func_sig.subst cx map sig_, g) x.constructor;
+    constructor =
+      List.map
+        (fun (loc, sig_, g, h) -> loc, Func_sig.subst cx map sig_, g, h)
+        x.constructor;
     static = subst_sig cx map x.static;
     instance = subst_sig cx map x.instance;
   })
@@ -284,19 +289,21 @@ let elements cx ?constructor s =
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
     SMap.mapi Type.(fun name xs ->
-      let ms = Nel.rev_map (fun (loc, x, _) -> loc, Func_sig.methodtype cx x) xs in
+      let ms =
+        Nel.rev_map (fun (loc, x, _, set_type) -> loc, Func_sig.methodtype cx x, set_type) xs in
       (* Keep track of these before intersections are merged, to enable
        * type information on every member of the intersection. *)
-      ms |> Nel.iter (fun (loc, t) ->
+      ms |> Nel.iter (fun (loc, t, set_type) ->
         Option.iter loc ~f:(fun loc ->
           let id_info = name, t, Type_table.Other in
-          Type_table.set_info loc id_info (Context.type_table cx)
+          Type_table.set_info loc id_info (Context.type_table cx);
+          set_type t
         )
       );
       match ms with
-      | x, [] -> x
-      | (loc0, t0), (_, t1)::ts ->
-          let ts = List.map (fun (_loc, t) -> t) ts in
+      | (loc, t, _), [] -> loc, t
+      | (loc0, t0, _), (_, t1, _)::ts ->
+          let ts = List.map (fun (_loc, t, _) -> t) ts in
           loc0, DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts))
     ) s.methods
   in
@@ -309,14 +316,21 @@ let elements cx ?constructor s =
 
   (* If there is a both a getter and a setter, then flow the setter type to
      the getter. Otherwise just use the getter type or the setter type *)
-  let getters = SMap.map (fun (loc, t, _) -> loc, Func_sig.gettertype t) s.getters in
-  let setters = SMap.map (fun (loc, t, _) -> loc, Func_sig.settertype t) s.setters in
+  let getters =
+    SMap.map
+      (fun (loc, t, _, set_type) -> loc, Func_sig.gettertype t, set_type)
+      s.getters in
+  let setters =
+    SMap.map
+      (fun (loc, t, _, set_type) -> loc, Func_sig.settertype t, set_type)
+      s.setters in
 
   (* Register getters and setters with the type table *)
-  let register_accessors = SMap.iter (fun name (loc, t) ->
+  let register_accessors = SMap.iter (fun name (loc, t, set_type) ->
     Option.iter ~f:(fun loc ->
       let id_info = name, t, Type_table.Other in
-      Type_table.set_info loc id_info (Context.type_table cx)
+      Type_table.set_info loc id_info (Context.type_table cx);
+      set_type t
     ) loc
   ) in
   register_accessors getters;
@@ -324,9 +338,9 @@ let elements cx ?constructor s =
 
   let getters_and_setters = SMap.merge (fun _ getter setter ->
     match getter, setter with
-    | Some (loc1, t1), Some (loc2, t2) -> Some (Type.GetSet (loc1, t1, loc2, t2))
-    | Some (loc, t), None -> Some (Type.Get (loc, t))
-    | None, Some (loc, t) -> Some (Type.Set (loc, t))
+    | Some (loc1, t1, _), Some (loc2, t2, _) -> Some (Type.GetSet (loc1, t1, loc2, t2))
+    | Some (loc, t, _), None -> Some (Type.Get (loc, t))
+    | None, Some (loc, t, _) -> Some (Type.Set (loc, t))
     | _ -> None
   ) getters setters in
 
@@ -420,7 +434,7 @@ let statictype cx x =
 
 let insttype cx ~initialized_static_fields s =
   let constructor =
-    let ts = List.rev_map (fun (loc, t, _) -> loc, Func_sig.methodtype cx t) s.constructor in
+    let ts = List.rev_map (fun (loc, t, _, _) -> loc, Func_sig.methodtype cx t) s.constructor in
     match ts with
     | [] -> None
     | [x] -> Some x
@@ -467,6 +481,7 @@ let add_this self cx reason tparams tparams_map =
     polarity = Type.Positive;
     default = None;
   } in
+  rec_instance_type,
   (* Add the type of `this` to the end of the list of type
      parameters. Remember, order is important, since we don't have recursive
      bounds (aka F-bounds): the bound of This refers to all the other type
@@ -624,7 +639,7 @@ let toplevels cx ~decls ~stmts ~expr x =
     x |> with_sig ~static:true (fun s ->
       (* process static methods and fields *)
       let this, super = new_entry static, new_entry static_super in
-      iter_methods (fun (_loc, f, set_asts) -> method_ this super ~set_asts f) s;
+      iter_methods (fun (_loc, f, set_asts, _) -> method_ this super ~set_asts f) s;
       let config = Context.esproposal_class_static_fields cx in
       SMap.iter (field config this super) s.fields;
       SMap.iter (field config this super) s.private_fields
@@ -655,7 +670,7 @@ let toplevels cx ~decls ~stmts ~expr x =
             new_entry t
         in
         let this, super = new_entry this, new_entry super in
-        x.constructor |> List.iter (fun (_, fsig, set_asts) ->
+        x.constructor |> List.iter (fun (_, fsig, set_asts, _) ->
           method_ this super ~set_asts fsig
         )
       end;
@@ -663,7 +678,7 @@ let toplevels cx ~decls ~stmts ~expr x =
       (* process instance methods and fields *)
       begin
         let this, super = new_entry this, new_entry super in
-        iter_methods (fun (_, msig, set_asts) -> method_ this super ~set_asts msig) s;
+        iter_methods (fun (_, msig, set_asts, _) -> method_ this super ~set_asts msig) s;
         let config = Context.esproposal_class_instance_fields cx in
         SMap.iter (field config this super) s.fields;
         SMap.iter (field config this super) s.private_fields;
@@ -681,7 +696,7 @@ module This = struct
   class detector = object
     inherit Flow_ast_mapper.mapper as super
 
-    method! generic_identifier_type (git: Loc.t Ast.Type.Generic.Identifier.t) =
+    method! generic_identifier_type (git: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in
       match git with
       | Unqualified (_, "this") -> raise FoundInClass

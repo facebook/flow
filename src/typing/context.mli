@@ -86,7 +86,7 @@ val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
 val graph: t -> Constraint.node IMap.t
-val import_stmts: t -> Loc.t Ast.Statement.ImportDeclaration.t list
+val import_stmts: t -> (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
@@ -133,7 +133,7 @@ val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_severity_cover: t -> ExactCover.lint_severity_cover -> unit
 val add_lint_suppressions: t -> LocSet.t -> unit
-val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
+val add_import_stmt: t -> (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_require: t -> Loc.t -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit

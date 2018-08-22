@@ -23,7 +23,7 @@ module Type = struct
   open Ast.Type
   let error =
     Generic { Ast.Type.Generic.
-      id = (Ast.Type.Generic.Identifier.Unqualified (Loc.none, "Error"));
+      id = (Ast.Type.Generic.Identifier.Unqualified (error_annot, "Error"));
       targs = None
     }
 
@@ -50,7 +50,7 @@ module Type = struct
     module Property = struct
       open Property
       let error = {
-        key = Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.
+        key = Ast.Expression.Object.Property.Literal (error_annot, { Ast.Literal.
           value = Ast.Literal.Null;
           raw = "Error";
         });
@@ -106,7 +106,7 @@ module Expression = struct
     open Object
     module Property = struct
       open Property
-      let key_error = Property.Identifier (Loc.none, "Error")
+      let key_error = Property.Identifier (error_annot, "Error")
       let error = Init {
         key = key_error;
         value = error_annot, error;
@@ -142,11 +142,11 @@ module Statement = struct
   end
   module ForIn = struct
     open ForIn
-    let left_error = LeftPattern (Loc.none, Pattern.error)
+    let left_error = LeftPattern (error_annot, Pattern.error)
   end
   module ForOf = struct
     open ForOf
-    let left_error = LeftPattern (Loc.none, Pattern.error)
+    let left_error = LeftPattern (error_annot, Pattern.error)
   end
   module DeclareFunction = struct
     open DeclareFunction
@@ -163,7 +163,7 @@ module Function = struct
   let body_error = BodyExpression (error_annot, Expression.error)
   let body_unimplemented = BodyExpression (error_annot, Expression.unimplemented)
   let unimplemented = {
-      id = Some (Loc.none, "Unimplemented");
+      id = Some (error_annot, "Unimplemented");
       params = Loc.none, { Params.params = []; rest = None; };
       body = body_unimplemented;
       async = false;
@@ -177,7 +177,7 @@ module Function = struct
   module RestElement = struct
     open RestElement
     let error = {
-      argument = Loc.none, Pattern.error
+      argument = error_annot, Pattern.error
     }
   end
 
@@ -190,7 +190,7 @@ module Function = struct
   end
 
   let error = {
-    id = Some (Loc.none, "Error");
+    id = Some (error_annot, "Error");
     params = Loc.none, Params.error;
     body = BodyExpression (error_annot, Expression.error);
     async = false;
@@ -206,8 +206,8 @@ end
 module Class = struct
   open Ast.Class
   let unimplemented = {
-    id = Some (Loc.none, "Unimplemented");
-    body = Loc.none, { Ast.Class.Body.body = [] };
+    id = Some (error_annot, "Unimplemented");
+    body = error_annot, { Ast.Class.Body.body = [] };
     tparams = None;
     extends = None;
     implements = [];

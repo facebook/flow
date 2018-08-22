@@ -14,7 +14,9 @@ type set_asts =
   (Loc.t, Loc.t * Type.t) Ast.Expression.t option
   -> unit
 
-type field =
+type set_type = Type.t -> unit
+
+and field =
   | Annot of Type.t
   | Infer of Func_sig.t * set_asts
 
@@ -53,6 +55,7 @@ val add_constructor:
   Loc.t option ->
   Func_sig.t ->
   ?set_asts:set_asts ->
+  ?set_type:set_type ->
   t -> t
 
 val add_default_constructor: Reason.t -> t -> t
@@ -66,6 +69,7 @@ val append_constructor:
   Loc.t option ->
   Func_sig.t ->
   ?set_asts:set_asts ->
+  ?set_type:set_type ->
   t -> t
 
 (** Add field to signature. *)
@@ -99,6 +103,7 @@ val add_method:
   Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
+  ?set_type:set_type ->
   t -> t
 
 (** Add method override to signature.
@@ -112,6 +117,7 @@ val append_method:
   Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
+  ?set_type:set_type ->
   t -> t
 
 val append_call: static:bool -> Type.t -> t -> t
@@ -125,6 +131,7 @@ val add_getter:
   Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
+  ?set_type:set_type ->
   t -> t
 
 (** Add setter to signature. *)
@@ -134,6 +141,7 @@ val add_setter:
   Loc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
+  ?set_type:set_type ->
   t -> t
 
 (** Check if this signature defines a given field *)
@@ -148,7 +156,7 @@ val add_this:
   Reason.t ->
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
-  Type.typeparam list * Type.t SMap.t
+  Type.t * Type.typeparam list * Type.t SMap.t
 
 (** 1. Manipulation *)
 

@@ -580,7 +580,7 @@ class mapper = object(this)
     if extends' == extends && body' == body then i
     else { extends = extends'; body = body' }
 
-  method generic_identifier_type (git: Loc.t Ast.Type.Generic.Identifier.t) =
+  method generic_identifier_type (git: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t) =
     let open Ast.Type.Generic.Identifier in
     match git with
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
@@ -741,7 +741,7 @@ class mapper = object(this)
     then stmt
     else { test = test'; consequent = consequent'; alternate = alternate' }
 
-  method import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method import_declaration _loc (decl: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     match importKind with
@@ -753,7 +753,7 @@ class mapper = object(this)
       else { importKind; source; specifiers = specifiers'; default = default' }
     | ImportTypeof -> decl (* TODO *)
 
-  method import_specifier (specifier: Loc.t Ast.Statement.ImportDeclaration.specifier) =
+  method import_specifier (specifier: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.specifier) =
     let open Ast.Statement.ImportDeclaration in
     match specifier with
     | ImportNamedSpecifiers named_specifiers ->

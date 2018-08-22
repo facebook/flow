@@ -70,7 +70,7 @@ and Type : sig
     module Param : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
       and ('M, 'T) t' = {
-        name: 'M Identifier.t option;
+        name: 'T Identifier.t option;
         annot: ('M, 'T) Type.t;
         optional: bool;
       }
@@ -101,18 +101,18 @@ and Type : sig
 
   module Generic : sig
     module Identifier : sig
-      type 'M t =
-        | Unqualified of 'M Identifier.t
-        | Qualified of 'M qualified
-      and 'M qualified = 'M * 'M qualified'
-      and 'M qualified' = {
-        qualification: 'M t;
-        id: 'M Identifier.t
+      type ('M, 'T) t =
+        | Unqualified of 'T Identifier.t
+        | Qualified of ('M, 'T) qualified
+      and ('M, 'T) qualified = 'M * ('M, 'T) qualified'
+      and ('M, 'T) qualified' = {
+        qualification: ('M, 'T) t;
+        id: 'T Identifier.t
       }
       [@@deriving show]
     end
     type ('M, 'T) t = {
-      id: 'M Identifier.t;
+      id: ('M, 'T) Identifier.t;
       targs: ('M, 'T) Type.ParameterInstantiation.t option;
     }
     [@@deriving show]
@@ -232,7 +232,7 @@ and Type : sig
 
   module ParameterDeclaration : sig
     module TypeParam : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
+      type ('M, 'T) t = 'T * ('M, 'T) t'
       and ('M, 'T) t' = {
         name: 'M Identifier.t;
         bound: ('M, 'T) Type.annotation option;
@@ -304,7 +304,7 @@ and Statement : sig
   end
   module TypeAlias : sig
     type ('M, 'T) t = {
-      id: 'M Identifier.t;
+      id: 'T Identifier.t;
       tparams: ('M, 'T) Type.ParameterDeclaration.t option;
       right: ('M, 'T) Type.t;
     }
@@ -312,7 +312,7 @@ and Statement : sig
   end
   module OpaqueType: sig
     type ('M, 'T) t = {
-      id: 'M Identifier.t;
+      id: 'T Identifier.t;
       tparams: ('M, 'T) Type.ParameterDeclaration.t option;
       impltype: ('M, 'T) Type.t option;
       supertype: ('M, 'T) Type.t option;
@@ -434,7 +434,7 @@ and Statement : sig
   end
   module Interface : sig
     type ('M, 'T) t = {
-      id: 'M Identifier.t;
+      id: 'T Identifier.t;
       tparams: ('M, 'T) Type.ParameterDeclaration.t option;
       extends: ('M * ('M, 'T) Type.Generic.t) list;
       body: 'M * ('M, 'T) Type.Object.t;
@@ -443,7 +443,7 @@ and Statement : sig
   end
   module DeclareClass : sig
     type ('M, 'T) t = {
-      id: 'M Identifier.t;
+      id: 'T Identifier.t;
       tparams: ('M, 'T) Type.ParameterDeclaration.t option;
       body: 'M * ('M, 'T) Type.Object.t;
       extends: ('M * ('M, 'T) Type.Generic.t) option;
@@ -454,7 +454,7 @@ and Statement : sig
   end
   module DeclareVariable : sig
     type ('M, 'T) t = {
-      id: 'M Identifier.t;
+      id: 'T Identifier.t;
       annot: ('M, 'T) Type.annotation option;
     }
     [@@deriving show]
@@ -468,16 +468,16 @@ and Statement : sig
     [@@deriving show]
   end
   module DeclareModule : sig
-    type 'M id =
-      | Identifier of 'M Identifier.t
-      | Literal of ('M * StringLiteral.t)
+    type 'T id =
+      | Identifier of 'T Identifier.t
+      | Literal of ('T * StringLiteral.t)
 
     and 'M module_kind =
       | CommonJS of 'M
       | ES of 'M
 
     and ('M, 'T) t = {
-      id: 'M id;
+      id: 'T id;
       body: 'M * ('M, 'T) Block.t;
       kind: 'M module_kind;
     }
@@ -549,21 +549,21 @@ and Statement : sig
       | ImportTypeof
       | ImportValue
 
-    and 'M specifier =
-      | ImportNamedSpecifiers of 'M named_specifier list
+    and ('M, 'T) specifier =
+      | ImportNamedSpecifiers of 'T named_specifier list
       | ImportNamespaceSpecifier of ('M * 'M Identifier.t)
 
-    and 'M named_specifier = {
+    and 'T named_specifier = {
       kind: importKind option;
-      local: 'M Identifier.t option;
-      remote: 'M Identifier.t;
+      local: 'T Identifier.t option;
+      remote: 'T Identifier.t;
     }
 
-    and 'M t = {
+    and ('M, 'T) t = {
       importKind: importKind;
       source: ('M * StringLiteral.t);
-      default: 'M Identifier.t option;
-      specifiers: 'M specifier option;
+      default: 'T Identifier.t option;
+      specifiers: ('M, 'T) specifier option;
     }
 
     [@@deriving show]
@@ -606,7 +606,7 @@ and Statement : sig
     | ForOf of ('M, 'T) ForOf.t
     | FunctionDeclaration of ('M, 'T) Function.t
     | If of ('M, 'T) If.t
-    | ImportDeclaration of 'M ImportDeclaration.t
+    | ImportDeclaration of ('M, 'T) ImportDeclaration.t
     | InterfaceDeclaration of ('M, 'T) Interface.t
     | Labeled of ('M, 'T) Labeled.t
     | Return of ('M, 'T) Return.t
@@ -671,8 +671,8 @@ and Expression : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('M * Literal.t)
-        | Identifier of 'M Identifier.t
+        | Literal of ('T * Literal.t)
+        | Identifier of 'T Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of ('M, 'T) Expression.t
       and ('M, 'T) t = 'M * ('M, 'T) t'
@@ -1154,7 +1154,7 @@ and Pattern : sig
     }
     [@@deriving show]
   end
-  type ('M, 'T) t = 'M * ('M, 'T) t'
+  type ('M, 'T) t = 'T * ('M, 'T) t'
   and ('M, 'T) t' =
     | Object of ('M, 'T) Object.t
     | Array of ('M, 'T) Array.t
@@ -1222,13 +1222,14 @@ and Class : sig
   module Implements : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = {
-      id: 'M Identifier.t;
+      id: 'T Identifier.t;
       targs: ('M, 'T) Type.ParameterInstantiation.t option;
     }
     [@@deriving show]
   end
   module Body : sig
-    type ('M, 'T) t = 'M * ('M, 'T) t'
+    (* 'T annotation on class body is used to store class's "this" type *)
+    type ('M, 'T) t = 'T * ('M, 'T) t'
     and ('M, 'T) t' = {
       body: ('M, 'T) element list;
     }
@@ -1246,7 +1247,7 @@ and Class : sig
     [@@deriving show]
   end
   type ('M, 'T) t = {
-    id: 'M Identifier.t option;
+    id: 'T Identifier.t option;
     body: ('M, 'T) Class.Body.t;
     tparams: ('M, 'T) Type.ParameterDeclaration.t option;
     extends: ('M, 'T) Extends.t option;
@@ -1274,7 +1275,7 @@ and Function : sig
   end
 
   type ('M, 'T) t = {
-    id: 'M Identifier.t option;
+    id: 'T Identifier.t option;
     params: ('M, 'T) Params.t;
     body: ('M, 'T) body;
     async: bool;

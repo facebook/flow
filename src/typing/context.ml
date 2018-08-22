@@ -119,7 +119,7 @@ type t = {
 
   mutable module_kind: module_kind;
 
-  mutable import_stmts: Loc.t Ast.Statement.ImportDeclaration.t list;
+  mutable import_stmts: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
 
   (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)

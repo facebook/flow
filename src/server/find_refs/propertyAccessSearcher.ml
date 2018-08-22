@@ -54,7 +54,7 @@ class property_access_searcher name = object(this)
     end;
     (* TODO specifiers *)
     super#export_named_declaration loc decl
-  method! import_declaration loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method! import_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { default; specifiers; _ } = decl in
     if Option.is_some default && name = "default" then begin

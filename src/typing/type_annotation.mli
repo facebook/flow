@@ -14,11 +14,24 @@ val convert: Context.t ->
   (Loc.t, Loc.t) Ast.Type.t ->
   (Loc.t, Loc.t * Type.t) Ast.Type.t
 
+val convert_list :
+  Context.t ->
+  Type.t SMap.t ->
+  (Loc.t, Loc.t) Ast.Type.t list ->
+  Type.t list *
+  (Loc.t, Loc.t * Type.t) Ast.Type.t list
+
+val convert_opt :
+  Context.t ->
+  Type.t SMap.t ->
+  (Loc.t, Loc.t) Ast.Type.t option ->
+  Type.t option * (Loc.t, Loc.t * Type.t) Ast.Type.t option
+
 val convert_qualification: ?lookup_mode:Env.LookupMode.t ->
   Context.t ->
   string ->
-  Loc.t Ast.Type.Generic.Identifier.t ->
-  Type.t * Loc.t Ast.Type.Generic.Identifier.t
+  (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t ->
+  Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.Generic.Identifier.t
 
 val mk_interface_super: Context.t ->
   Type.t SMap.t ->
@@ -63,4 +76,4 @@ val mk_declare_class_sig: Context.t ->
 
 val polarity: Loc.t Ast.Variance.t option -> Type.polarity
 
-val qualified_name: Loc.t Ast.Type.Generic.Identifier.t -> string
+val qualified_name: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t -> string

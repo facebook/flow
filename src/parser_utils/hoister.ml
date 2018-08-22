@@ -90,7 +90,7 @@ class hoister = object(this)
 
   (* Ignore import declarations, since they are lexical bindings (thus not
      hoisted). *)
-  method! import_declaration _loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method! import_declaration _loc (decl: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) =
     decl
 
   (* This is visited by function parameters, variable declarations, and catch patterns (but not

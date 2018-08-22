@@ -77,7 +77,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       in
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      top_loc, Array { elements; annot; }
+      (top_loc, curr_t), Array { elements; annot; }
     )
 
   | top_loc, Object { Object.properties; _; } -> Object.(
@@ -176,7 +176,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       let properties = List.rev rev_props in
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      top_loc, Object { Object.properties; annot }
+      (top_loc, curr_t), Object { Object.properties; annot }
     )
 
   | loc, Identifier { Identifier.name = (id_loc, name); optional; _ } ->
@@ -209,7 +209,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       f ~use_op loc name default curr_t;
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      loc, Identifier { Identifier.name = (id_loc, name); optional; annot; }
+      (loc, curr_t), Identifier { Identifier.name = (id_loc, name); optional; annot; }
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
@@ -218,7 +218,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in
       let left = recurse ?parent_pattern_t tvar init default left in
-      loc, Assignment { Assignment.
+      (loc, curr_t), Assignment { Assignment.
         left;
         right = Typed_ast.error_annot, Typed_ast.Expression.unimplemented
       }
@@ -226,7 +226,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
   | loc, Expression _ ->
       Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
         (loc, DestructuringExpressionPattern));
-      loc, Expression (Typed_ast.error_annot, Typed_ast.Expression.error)
+      (loc, curr_t), Expression (Typed_ast.error_annot, Typed_ast.Expression.error)
 
   in fun t init default pattern -> recurse t init default pattern
 )

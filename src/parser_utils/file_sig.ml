@@ -503,7 +503,7 @@ class requires_exports_calculator ~ast = object(this)
     end;
     super#expression expr
 
-  method! import_declaration stmt_loc (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
+  method! import_declaration stmt_loc (decl: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     let source = match source with

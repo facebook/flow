@@ -23,6 +23,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     ((_ : 'M) : m) ((_ : 'T) : t) ((_ : 'N) : n) ((_ : 'U) : u) = ()
   *)
 
+
   method program (program: ('M, 'T) Ast.program) : ('N, 'U) Ast.program =
     let (annot, statements, comments) = program in
     let annot' = f annot in
@@ -219,9 +220,9 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Class in
     let { id; body; tparams; extends; implements; classDecorators; } = cls in
     let id' = Option.map ~f:this#class_identifier id in
-    let body' = this#class_body body in
     let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     let extends' = Option.map ~f:this#class_extends extends in
+    let body' = this#class_body body in
     let implements' = List.map this#class_implements implements in
     let classDecorators' = List.map this#class_decorator classDecorators in
     {
@@ -246,14 +247,14 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let expression' = this#expression expression in
     f annot, { expression = expression' }
 
-  method class_identifier (ident: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
-    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
+  method class_identifier (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
 
   method class_body (cls_body: ('M, 'T) Ast.Class.Body.t) : ('N, 'U) Ast.Class.Body.t =
     let open Ast.Class.Body in
     let annot, { body } = cls_body in
     let body' = List.map this#class_element body in
-    f annot, { body = body' }
+    g annot, { body = body' }
 
   method class_element (elem: ('M, 'T) Ast.Class.Body.element) : ('N, 'U) Ast.Class.Body.element =
     let open Ast.Class.Body in
@@ -348,7 +349,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                                     : ('N, 'U) Ast.Class.Implements.t =
     let open Ast.Class.Implements in
     let annot, { id = id_; targs } = implements in
-    let id' = (f * id) id_ in
+    let id' = this#t_identifier id_ in
     let targs' = Option.map ~f:this#type_parameter_instantiation targs in
     f annot, { id = id'; targs = targs' }
 
@@ -406,8 +407,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.DeclareModule in
     let { id; body; kind } = m in
     let id' = match id with
-      | Identifier (annot, name) -> Identifier (f annot, name)
-      | Literal (annot, name) -> Literal (f annot, name)
+      | Identifier (annot, name) -> Identifier (g annot, name)
+      | Literal (annot, name) -> Literal (g annot, name)
     in
     let kind' = match kind with
       | CommonJS annot -> CommonJS (f annot)
@@ -428,7 +429,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                               : ('N, 'U) Ast.Statement.DeclareVariable.t =
     let open Ast.Statement.DeclareVariable in
     let { id = ident; annot } = decl in
-    let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
+    let id' = this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
     let annot' = Option.map ~f:this#type_annotation annot in
     { id = id'; annot = annot' }
 
@@ -554,7 +555,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Type.Function.Param in
     let annot, { annot = t_annot; name; optional; } = fpt in
     let t_annot' = this#type_ t_annot in
-    let name' = Option.map ~f:(f * id) name in
+    let name' = Option.map ~f:this#t_identifier name in
     f annot, { annot = t_annot'; name = name'; optional }
 
   method function_rest_param_type (frpt: ('M, 'T) Ast.Type.Function.RestParam.t)
@@ -571,10 +572,10 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       return;
       tparams;
     } = ft in
+    let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     let ps' = List.map this#function_param_type ps in
     let rpo' = Option.map ~f:this#function_rest_param_type rpo in
     let return' = this#type_ return in
-    let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     {
       params = (f params_annot, { Params.params = ps'; rest = rpo' });
       return = return';
@@ -643,14 +644,14 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let body' = (f * this#object_type) body in
     { extends = extends'; body = body' }
 
-  method generic_identifier_type (git: 'M Ast.Type.Generic.Identifier.t)
-                                    : 'N Ast.Type.Generic.Identifier.t =
+  method generic_identifier_type (git: ('M, 'T)  Ast.Type.Generic.Identifier.t)
+                                    : ('N, 'U) Ast.Type.Generic.Identifier.t =
     let open Ast.Type.Generic.Identifier in
     match git with
-    | Unqualified i -> Unqualified (this#identifier i)
+    | Unqualified i -> Unqualified (this#t_identifier i)
     | Qualified (annot, { qualification; id = id_ }) ->
       let qualification' = this#generic_identifier_type qualification in
-      let id' = (f * id) id_ in
+      let id' = this#t_identifier id_ in
       Qualified (f annot, { qualification = qualification'; id = id' })
 
   method type_parameter_instantiation (pi: ('M, 'T) Ast.Type.ParameterInstantiation.t)
@@ -674,7 +675,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let bound' = Option.map ~f:this#type_annotation bound in
     let variance' = Option.map ~f:(f * id) variance in
     let default' = Option.map ~f:this#type_ default in
-    f annot, { name = name'; bound = bound'; variance = variance'; default = default'; }
+    g annot, { name = name'; bound = bound'; variance = variance'; default = default'; }
 
   method generic_type (gt: ('M, 'T) Ast.Type.Generic.t) : ('N, 'U) Ast.Type.Generic.t =
     let open Ast.Type.Generic in
@@ -738,7 +739,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       id = ident; params; body; async; generator; expression;
       predicate; return; tparams;
     } = expr in
-    let ident' = Option.map ~f:this#function_identifier ident in
+    let ident' = Option.map ~f:this#t_function_identifier ident in
+    let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     let params' =
       let annot, { Params.params = params_list; rest } = params in
       let params_list' = List.map this#function_param_pattern params_list in
@@ -752,7 +754,6 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       | BodyExpression expr ->
         BodyExpression (this#expression expr)
     in
-    let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     let predicate' = Option.map ~f:this#type_predicate predicate in
     {
       id = ident'; params = params'; return = return'; body = body';
@@ -764,6 +765,9 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
 
   method function_identifier (ident: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
+
+  method t_function_identifier (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
 
   method function_declaration (stmt: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     this#function_ stmt
@@ -778,6 +782,9 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
 
   method identifier ((annot, name): 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
     f annot, name
+
+  method t_identifier ((annot, name): 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    g annot, name
 
   method interface (interface: ('M, 'T) Ast.Statement.Interface.t)
                             : ('N, 'U) Ast.Statement.Interface.t =
@@ -813,8 +820,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let alternate' = Option.map ~f:this#statement alternate in
     { test = test'; consequent = consequent'; alternate = alternate' }
 
-  method import_declaration _loc (decl: 'M Ast.Statement.ImportDeclaration.t)
-                                      : 'N Ast.Statement.ImportDeclaration.t =
+  method import_declaration _loc (decl: ('M, 'T) Ast.Statement.ImportDeclaration.t)
+                                      : ('N, 'U) Ast.Statement.ImportDeclaration.t =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     let specifiers' = Option.map ~f:this#import_specifier specifiers in
@@ -822,8 +829,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let source' = (f * id) source in
     { importKind; source = source'; specifiers = specifiers'; default = default' }
 
-  method import_specifier (specifier: 'M Ast.Statement.ImportDeclaration.specifier)
-                                    : 'N Ast.Statement.ImportDeclaration.specifier =
+  method import_specifier (specifier: ('M, 'T) Ast.Statement.ImportDeclaration.specifier)
+                                    : ('N, 'U) Ast.Statement.ImportDeclaration.specifier =
     let open Ast.Statement.ImportDeclaration in
     match specifier with
     | ImportNamedSpecifiers named_specifiers ->
@@ -833,16 +840,16 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       let ident' = this#import_namespace_specifier ident in
       ImportNamespaceSpecifier (f annot, ident')
 
-  method import_named_specifier (specifier: 'M Ast.Statement.ImportDeclaration.named_specifier)
-                                          : 'N Ast.Statement.ImportDeclaration.named_specifier =
+  method import_named_specifier (specifier: 'T Ast.Statement.ImportDeclaration.named_specifier)
+                                          : 'U Ast.Statement.ImportDeclaration.named_specifier =
     let open Ast.Statement.ImportDeclaration in
     let { kind; local; remote } = specifier in
-    let local' = Option.map ~f:this#pattern_identifier local in
-    let remote' = this#pattern_identifier remote in
+    let local' = Option.map ~f:this#t_pattern_identifier local in
+    let remote' = this#t_pattern_identifier remote in
     { kind; local = local'; remote = remote' }
 
-  method import_default_specifier (id: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
-    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
+  method import_default_specifier (id: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
   method import_namespace_specifier (id: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
@@ -1079,7 +1086,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Expression.Object.Property in
     match key with
     | Literal (annot, lit) ->
-      Literal (f annot, this#literal lit)
+      Literal (g annot, this#literal lit)
     | Identifier ident ->
       Identifier (this#object_key_identifier ident)
     | PrivateName ident ->
@@ -1087,14 +1094,14 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     | Computed expr ->
       Computed (this#expression expr)
 
-  method object_key_identifier (ident: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
-    this#identifier ident
+  method object_key_identifier (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    this#t_identifier ident
 
   method opaque_type (otype: ('M, 'T) Ast.Statement.OpaqueType.t)
                           : ('N, 'U) Ast.Statement.OpaqueType.t =
     let open Ast.Statement.OpaqueType in
     let { id; tparams; impltype; supertype } = otype in
-    let id' = this#identifier id in
+    let id' = this#t_identifier id in
     let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     let impltype' = Option.map ~f:this#type_ impltype in
     let supertype' = Option.map ~f:this#type_ supertype  in
@@ -1140,7 +1147,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
   method pattern ?kind (expr: ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
     let open Ast.Pattern in
     let annot, patt = expr in
-    f annot,
+    g annot,
     match patt with
     | Object { Object.properties; annot } ->
       let properties' = List.map (this#pattern_object_p ?kind) properties in
@@ -1164,6 +1171,10 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
   method pattern_identifier ?kind (ident: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
     ignore kind;
     this#identifier ident
+
+  method t_pattern_identifier ?kind (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    ignore kind;
+    this#t_identifier ident
 
   method pattern_literal ?kind (expr: Ast.Literal.t) : Ast.Literal.t =
     ignore kind;
@@ -1396,7 +1407,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                           : ('N, 'U) Ast.Statement.TypeAlias.t =
     let open Ast.Statement.TypeAlias in
     let { id; tparams; right } = stuff in
-    let id' = this#identifier id in
+    let id' = this#t_identifier id in
     let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
     let right' = this#type_ right in
     { id = id'; tparams = tparams'; right = right' }
@@ -1408,6 +1419,17 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     { argument = argument'; delegate }
 
 end
+
+(*  Guards against constraints on type parameters.
+    Not sure why we have to do this (or if there's a better way) just to
+    get OCaml to understand that we want this class to be truly polymorphic.
+    If this doesn't typecheck, then go to the top of the class definition above
+    and uncomment the method called "uncomment_when_developing" to see what
+    needs to be fixed in the class definition.
+*)
+let () =
+  ignore (new mapper (fun (_ : m) -> (raise Exit : n)) (fun (_ : t) -> (raise Exit : u)));
+  ignore (new mapper (fun (_ : n) -> (raise Exit : m)) (fun (_ : u) -> (raise Exit : t)))
 
 let fold_program mappers ast =
   List.fold_left (fun ast m -> m#program ast) ast mappers
