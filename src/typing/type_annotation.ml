@@ -1287,7 +1287,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
         Some t, default_ast in
     let polarity = polarity variance in
     let tparam = { reason; name; bound; polarity; default; } in
-    let t = BoundT tparam in
+    let t = BoundT (reason, name, polarity) in
     let id_info = name, t, Type_table.Other in
     let ast = (loc, {
       TypeParam.name = id;

@@ -7313,16 +7313,16 @@ and subst =
       let (map, force, use_op) = map_cx in
       if SMap.is_empty map then t
       else match t with
-      | BoundT typeparam ->
-        begin match SMap.get typeparam.name map with
+      | BoundT (tp_reason, name, _) ->
+        begin match SMap.get name map with
         | None -> t
-        | Some param_t when typeparam.name = "this" ->
-          ReposT (annot_reason typeparam.reason, param_t)
+        | Some param_t when name = "this" ->
+          ReposT (annot_reason tp_reason, param_t)
         | Some param_t ->
           (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
           | RPolyTest _ ->
             mod_reason_of_t (fun reason ->
-              annot_reason (repos_reason (loc_of_reason typeparam.reason) reason)
+              annot_reason (repos_reason (loc_of_reason tp_reason) reason)
             ) param_t
           | _ ->
             param_t
@@ -7536,12 +7536,12 @@ and match_this_binding map f =
 (* TODO: flesh this out *)
 and check_polarity cx ?trace polarity = function
   (* base case *)
-  | BoundT tp ->
-    if not (Polarity.compat (tp.polarity, polarity))
+  | BoundT (reason, name, tp_polarity) ->
+    if not (Polarity.compat (tp_polarity, polarity))
     then add_output cx ?trace (FlowError.EPolarityMismatch {
-      reason = tp.reason;
-      name = tp.name;
-      expected_polarity = tp.polarity;
+      reason = reason;
+      name = name;
+      expected_polarity = tp_polarity;
       actual_polarity = polarity;
     })
 
@@ -7830,7 +7830,9 @@ and canonicalize_imported_type cx trace reason t =
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
   | DefT (_, PolyT (typeparams, ThisClassT _, _)) ->
-    let targs = List.map (fun tp -> BoundT tp) typeparams in
+    let targs = List.map (fun tp ->
+      BoundT (tp.reason, tp.name, tp.polarity)
+    ) typeparams in
     Some (poly_type (mk_id ()) typeparams (class_type (typeapp t targs)))
 
   | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->

@@ -71,7 +71,7 @@ module rec TypeTerm : sig
     | EvalT of t * defer_use_t * int
 
     (* bound type variable *)
-    | BoundT of typeparam
+    | BoundT of reason * string * polarity
     (* existential type variable *)
     | ExistsT of reason
 
@@ -2087,7 +2087,7 @@ end = struct
     | AnyWithLowerBoundT (t) -> reason_of_t t
     | AnyWithUpperBoundT (t) -> reason_of_t t
     | MergedT (reason, _) -> reason
-    | BoundT typeparam -> typeparam.reason
+    | BoundT (reason, _, _) -> reason
     | InternalT (ChoiceKitT (reason, _)) -> reason
     | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
     | CustomFunT (reason, _) -> reason
@@ -2233,8 +2233,7 @@ end = struct
     | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
     | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
     | MergedT (reason, uses) -> MergedT (f reason, uses)
-    | BoundT { reason; name; bound; polarity; default; } ->
-        BoundT { reason = f reason; name; bound; polarity; default; }
+    | BoundT (reason, name, polarity) -> BoundT (f reason, name, polarity)
     | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
     | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
         TypeDestructorTriggerT (use_op, f reason, repos, d, t)

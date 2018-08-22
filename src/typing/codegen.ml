@@ -183,7 +183,7 @@ let rec gen_type t env = Type.(
     add_str "boolean" env
   | DefT (_, BoolT None) ->
     add_str "boolean" env
-  | BoundT {name; _;} -> add_str name env
+  | BoundT (_, name, _) -> add_str name env
   | DefT (_, ClassT t) ->
     add_str "Class<" env
       |> gen_type t

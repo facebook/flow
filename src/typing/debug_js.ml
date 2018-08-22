@@ -212,8 +212,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | BoundT tparam -> [
-      "typeParam", json_of_typeparam json_cx tparam
+  | BoundT (_, name, polarity) -> [
+      "name", JSON_String name;
+      "polarity", json_of_polarity json_cx polarity
     ]
 
   | ExistsT _ ->
@@ -1751,7 +1752,7 @@ let rec dump_t_ (depth, tvars) cx t =
       (String.concat "; " (List.map (fun tp -> tp.name) tps))
       id) t
   | ThisClassT (_, inst) -> p ~extra:(kid inst) t
-  | BoundT param -> p ~extra:param.name t
+  | BoundT (_, name, _) -> p ~extra:name t
   | ExistsT _ -> p t
   | DefT (_, ObjT { props_tmap; _ }) -> p t
       ~extra:(Properties.string_of_id props_tmap)

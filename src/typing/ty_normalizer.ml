@@ -613,7 +613,7 @@ end = struct
     let env = Env.descend env in
     match t with
     | OpenT (_, id) -> type_variable ~env id
-    | BoundT tparam -> bound_t ~env tparam
+    | BoundT (reason, name, _) -> bound_t ~env reason name
     | AnnotT (t, _) -> type__ ~env t
     | EvalT (t, d, id) -> eval_t ~env t id d
     | ExactT (_, t) -> exact_t ~env t
@@ -801,8 +801,7 @@ end = struct
       mapM (type__ ~env) ts >>|
       uniq_union
 
-  and bound_t ~env tparam =
-    let Type.{ reason; name; _ } = tparam in
+  and bound_t ~env reason name =
     let symbol = symbol_from_reason env reason name in
     return (Ty.Bound symbol)
 

@@ -453,12 +453,16 @@ let add_this self cx reason tparams tparams_map =
     | [] ->
       Flow.mk_instance cx reason self
     | _ ->
-      let tparams = List.map (fun tp -> Type.BoundT tp) tparams in
-      Type.typeapp self tparams
+      let targs = List.map (fun tp ->
+        let {Type.reason; name; polarity; _} = tp in
+        Type.BoundT (reason, name, polarity)
+      ) tparams in
+      Type.typeapp self targs
   in
+  let this_reason = replace_reason_const RThisType reason in
   let this_tp = { Type.
     name = "this";
-    reason = replace_reason_const RThisType reason;
+    reason = this_reason;
     bound = rec_instance_type;
     polarity = Type.Positive;
     default = None;
@@ -468,7 +472,7 @@ let add_this self cx reason tparams tparams_map =
      bounds (aka F-bounds): the bound of This refers to all the other type
      parameters! *)
   tparams@[this_tp],
-  SMap.add "this" (Type.BoundT this_tp) tparams_map
+  SMap.add "this" (Type.BoundT (this_reason, "this", Type.Positive)) tparams_map
 
 let remove_this x =
   if structural x then x else {

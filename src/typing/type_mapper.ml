@@ -60,10 +60,7 @@ class ['a] t = object(self)
           let dt' = self#defer_use_type cx map_cx dt in
           if t' == t'' && dt == dt' then t
           else EvalT (t'', dt', Reason.mk_id ())
-      | BoundT t' ->
-          let t'' = self#type_param cx map_cx t' in
-          if t'' == t' then t
-          else BoundT t''
+      | BoundT _ -> t
       | ExistsT _ -> t
       | ThisClassT (r, t') ->
           let t'' = self#type_ cx map_cx t' in

@@ -54,7 +54,7 @@ class ['a] t = object(self)
     in
     acc
 
-  | BoundT typeparam -> self#type_param cx pole acc typeparam
+  | BoundT _ -> acc
 
   | ExistsT _ -> acc
 
