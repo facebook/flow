@@ -229,4 +229,4 @@ let get_opened_files (clients: single_client list) : SSet.t =
   in
   List.fold_left per_client SSet.empty clients
 
-let get_client clients client_id = List.find (fun c -> c.client_id = client_id) clients
+let get_client clients client_id = List.find_opt (fun c -> c.client_id = client_id) clients

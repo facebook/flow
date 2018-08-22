@@ -1043,87 +1043,93 @@ let handle_persistent
   Hh_logger.debug "Persistent request: %s" (string_of_request request);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
-  let client = Persistent_connection.get_client env.connections client_id in
-  let client_context = Persistent_connection.get_logging_context client in
-  let should_print_summary = Options.should_profile genv.options in
-  let wall_start = Unix.gettimeofday () in
-
-  let%lwt profiling, result = Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary
-    (fun profiling ->
-      try%lwt
-        handle_persistent_unsafe genv env client profiling request
-      with e ->
-        let stack = Utils.Callstack (Printexc.get_backtrace ()) in
-        let reason = Printexc.to_string e in
-        let error_info = (UnexpectedError, reason, stack) in
-        begin match request with
-          | LspToServer (_, metadata) ->
-            Lwt.return (LspResponse (Error (env, {metadata with error_info=Some error_info})))
-          | _ ->
-            Lwt.return (IdeResponse (Error (env, error_info)))
-        end)
-  in
-
-  (* we'll send this "Finishing_up" event only after sending the LSP response *)
-  let event = ServerStatus.(Finishing_up {
-    duration = Profiling_js.get_profiling_duration profiling;
-    info = CommandSummary (string_of_request request)}) in
-
-  let server_profiling = Some profiling in
-  let server_logging_context = Some (FlowEventLogger.get_context ()) in
-
-  match result with
-  | LspResponse (Ok (env, lsp_response, metadata)) ->
-    let metadata = {metadata with server_profiling; server_logging_context; } in
-    let response = LspFromServer (lsp_response, metadata) in
-    Persistent_connection.send_message response client;
-    MonitorRPC.status_update ~event;
+  match Persistent_connection.get_client env.connections client_id with
+  | None ->
+    Hh_logger.error "Unknown persistent client %d. Maybe connection went away?" client_id;
     Lwt.return env
+  | Some client -> begin
+    let client_context = Persistent_connection.get_logging_context client in
+    let should_print_summary = Options.should_profile genv.options in
+    let wall_start = Unix.gettimeofday () in
 
-  | LspResponse (Error (env, metadata)) ->
-    let metadata = {metadata with server_profiling; server_logging_context; } in
-    let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
-    let e = Failure reason in
-    let lsp_response = match request with
-      | LspToServer (RequestMessage (id, _), _) ->
-        Some (ResponseMessage (id, ErrorResult (e, stack)))
-      | LspToServer _ ->
-        let open LogMessage in
-        let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
-        let text = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
-        Some (NotificationMessage (TelemetryNotification
-          {type_=MessageType.ErrorMessage; message=text;}))
-      | _ -> None in
-    let response = LspFromServer (lsp_response, metadata) in
-    Persistent_connection.send_message response client;
-    MonitorRPC.status_update ~event;
-    Lwt.return env
+    let%lwt profiling, result = Profiling_js.with_profiling_lwt
+      ~label:"Command" ~should_print_summary
+      (fun profiling ->
+        try%lwt
+          handle_persistent_unsafe genv env client profiling request
+        with e ->
+          let stack = Utils.Callstack (Printexc.get_backtrace ()) in
+          let reason = Printexc.to_string e in
+          let error_info = (UnexpectedError, reason, stack) in
+          begin match request with
+            | LspToServer (_, metadata) ->
+              Lwt.return (LspResponse (Error (env, {metadata with error_info=Some error_info})))
+            | _ ->
+              Lwt.return (IdeResponse (Error (env, error_info)))
+          end)
+    in
 
-  | IdeResponse (Ok (env, extra_data)) ->
-    let request = json_of_request request |> Hh_json.json_to_string in
-    let extra_data = keyvals_of_json extra_data in
-    FlowEventLogger.persistent_command_success
-      ~server_logging_context:None ~extra_data
-      ~persistent_context:None ~persistent_delay:None ~request ~client_context
-      ~server_profiling ~client_duration:None ~wall_start ~error:None;
-    MonitorRPC.status_update ~event;
-    Lwt.return env
+    (* we'll send this "Finishing_up" event only after sending the LSP response *)
+    let event = ServerStatus.(Finishing_up {
+      duration = Profiling_js.get_profiling_duration profiling;
+      info = CommandSummary (string_of_request request)}) in
 
-  | IdeResponse (Error (env, (ExpectedError, reason, stack))) ->
-    let request = json_of_request request |> Hh_json.json_to_string in
-    FlowEventLogger.persistent_command_success
-      ~server_logging_context:None ~extra_data:[]
-      ~persistent_context:None ~persistent_delay:None ~request ~client_context
-      ~server_profiling ~client_duration:None ~wall_start ~error:(Some (reason, stack));
-    MonitorRPC.status_update ~event;
-    Lwt.return env
+    let server_profiling = Some profiling in
+    let server_logging_context = Some (FlowEventLogger.get_context ()) in
 
-  | IdeResponse (Error (env, (UnexpectedError, reason, stack))) ->
-    let request = json_of_request request |> Hh_json.json_to_string in
-    FlowEventLogger.persistent_command_failure
-      ~server_logging_context:None ~extra_data:[]
-      ~persistent_context:None ~persistent_delay:None ~request ~client_context
-      ~server_profiling ~client_duration:None ~wall_start ~error:(reason, stack);
-    Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request reason;
-    MonitorRPC.status_update ~event;
-    Lwt.return env
+    match result with
+    | LspResponse (Ok (env, lsp_response, metadata)) ->
+      let metadata = {metadata with server_profiling; server_logging_context; } in
+      let response = LspFromServer (lsp_response, metadata) in
+      Persistent_connection.send_message response client;
+      MonitorRPC.status_update ~event;
+      Lwt.return env
+
+    | LspResponse (Error (env, metadata)) ->
+      let metadata = {metadata with server_profiling; server_logging_context; } in
+      let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
+      let e = Failure reason in
+      let lsp_response = match request with
+        | LspToServer (RequestMessage (id, _), _) ->
+          Some (ResponseMessage (id, ErrorResult (e, stack)))
+        | LspToServer _ ->
+          let open LogMessage in
+          let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
+          let text = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
+          Some (NotificationMessage (TelemetryNotification
+            {type_=MessageType.ErrorMessage; message=text;}))
+        | _ -> None in
+      let response = LspFromServer (lsp_response, metadata) in
+      Persistent_connection.send_message response client;
+      MonitorRPC.status_update ~event;
+      Lwt.return env
+
+    | IdeResponse (Ok (env, extra_data)) ->
+      let request = json_of_request request |> Hh_json.json_to_string in
+      let extra_data = keyvals_of_json extra_data in
+      FlowEventLogger.persistent_command_success
+        ~server_logging_context:None ~extra_data
+        ~persistent_context:None ~persistent_delay:None ~request ~client_context
+        ~server_profiling ~client_duration:None ~wall_start ~error:None;
+      MonitorRPC.status_update ~event;
+      Lwt.return env
+
+    | IdeResponse (Error (env, (ExpectedError, reason, stack))) ->
+      let request = json_of_request request |> Hh_json.json_to_string in
+      FlowEventLogger.persistent_command_success
+        ~server_logging_context:None ~extra_data:[]
+        ~persistent_context:None ~persistent_delay:None ~request ~client_context
+        ~server_profiling ~client_duration:None ~wall_start ~error:(Some (reason, stack));
+      MonitorRPC.status_update ~event;
+      Lwt.return env
+
+    | IdeResponse (Error (env, (UnexpectedError, reason, stack))) ->
+      let request = json_of_request request |> Hh_json.json_to_string in
+      FlowEventLogger.persistent_command_failure
+        ~server_logging_context:None ~extra_data:[]
+        ~persistent_context:None ~persistent_delay:None ~request ~client_context
+        ~server_profiling ~client_duration:None ~wall_start ~error:(reason, stack);
+      Hh_logger.error "Uncaught exception handling persistent request (%s): %s" request reason;
+      MonitorRPC.status_update ~event;
+      Lwt.return env
+  end

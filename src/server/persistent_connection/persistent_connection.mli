@@ -79,4 +79,4 @@ val get_opened_files: t -> SSet.t
    client, or FileName if it wasn't. *)
 val get_file: single_client -> string -> File_input.t
 
-val get_client: t -> Prot.client_id -> single_client
+val get_client: t -> Prot.client_id -> single_client option
