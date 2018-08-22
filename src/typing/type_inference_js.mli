@@ -13,7 +13,7 @@ val infer_ast:
   Context.t ->
   File_key.t ->
   (Loc.t, Loc.t) Ast.program ->
-  unit
+  (Loc.t, Loc.t * Type.t) Ast.program
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
   exclude_syms: SSet.t ->

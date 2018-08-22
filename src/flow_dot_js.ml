@@ -218,7 +218,7 @@ let check_content ~filename ~content =
   let filename = File_key.SourceFile filename in
   let errors, warnings = match parse_content filename content with
   | Ok (ast, file_sig) ->
-    let cx = infer_and_merge ~root filename ast file_sig in
+    let cx, _ = infer_and_merge ~root filename ast file_sig in
     let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
       suppressions (Context.severity_cover cx) (Context.errors cx) ~unused:suppressions
@@ -263,7 +263,7 @@ let infer_type filename content line col =
     match parse_content filename content with
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
-      let cx = infer_and_merge ~root filename ast file_sig in
+      let cx, _typed_ast = infer_and_merge ~root filename ast file_sig in
       let type_table = Context.type_table cx in
       let file = Context.file cx in
       let loc = mk_loc filename line col in Query_types.(
@@ -295,7 +295,7 @@ let dump_types js_file js_content =
     match parse_content filename content with
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
-      let cx = infer_and_merge ~root filename ast file_sig in
+      let cx, _ = infer_and_merge ~root filename ast file_sig in
       let printer = Ty_printer.string_of_t in
       let types = Query_types.dump_types cx file_sig ~printer in
       let strip_root = None in

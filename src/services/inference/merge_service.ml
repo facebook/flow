@@ -103,7 +103,7 @@ let merge_strict_context ~options component =
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let cx, other_cxs = Merge_js.merge_component_strict
+  let (cx, _), other_cxs = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:Parsing_heaps.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_heaps.get_docblock_unsafe
@@ -111,6 +111,8 @@ let merge_strict_context ~options component =
     component file_reqs dep_cxs master_cx
   in
 
+  (* throw out typed ASTs *)
+  let other_cxs = List.map fst other_cxs in
   { cx; other_cxs; master_cx; file_sigs }
 
 (* Variation of merge_strict_context where requires may not have already been

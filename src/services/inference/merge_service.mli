@@ -33,7 +33,7 @@ val merge_contents_context:
   (Loc.t, Loc.t) Ast.program ->
   Docblock.t ->
   File_sig.t ->
-  Context.t
+  Context.t * (Loc.t, Loc.t * Type.t) Ast.program
 
 val merge_runner:
   job: 'a merge_job ->

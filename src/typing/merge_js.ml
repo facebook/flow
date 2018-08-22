@@ -248,7 +248,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
         wrap (Type.desc_of_t t)
     )
   in
-  List.iter (fun cx ->
+  List.iter (fun (cx, _typed_ast) ->
     let file = Context.file cx in
     let type_table = Context.type_table cx in
     let targs_map = Type_table.targs_hashtbl type_table in
@@ -358,8 +358,10 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
         ) strict_mode lint_severities
       else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
-    Type_inference_js.infer_ast cx filename ast
-      ~lint_severities ~file_options ~file_sig;
+    let typed_ast =
+      Type_inference_js.infer_ast cx filename ast
+        ~lint_severities ~file_options ~file_sig
+    in
 
     let gc_state = Option.map gc_state Gc_js.(fun gc_state ->
       let gc_state = mark cx gc_state in
@@ -367,11 +369,11 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
       gc_state
     ) in
 
-    cx::cxs, FilenameMap.add filename cx impl_cxs, gc_state
+    (cx, typed_ast)::cxs, FilenameMap.add filename cx impl_cxs, gc_state
   ) ([], FilenameMap.empty, init_gc_state) component in
   let cxs = List.rev rev_cxs in
 
-  let cx, other_cxs = List.hd cxs, List.tl cxs in
+  let (cx, typed_ast), other_cxs = List.hd cxs, List.tl cxs in
 
   Flow_js.Cache.clear();
 
@@ -430,9 +432,9 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls ~full_cx:cx file_sigs (cx::other_cxs);
+  detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs;
 
-  cx, other_cxs
+  (cx, typed_ast), other_cxs
 
 let merge_tvar =
   let open Type in

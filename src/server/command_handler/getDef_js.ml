@@ -199,7 +199,7 @@ let rec get_def ~options ~workers ~env ~profiling ~depth (file_input, line, col)
   in
   let%lwt getdef_result =
     map_error ~f:(fun str -> str, None) check_result
-    %>>= (fun (cx, _, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
+    %>>= (fun (cx, _, _, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json (fun () -> Lwt.return (getdef_get_result ~options cx state loc))
     ))
   in

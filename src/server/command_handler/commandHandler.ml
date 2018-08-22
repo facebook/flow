@@ -61,7 +61,7 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
   in
   let%lwt autocomplete_result =
     map_error ~f:(fun str -> str, None) check_contents_result
-    %>>= (fun (cx, info, file_sig) ->
+    %>>= (fun (cx, info, file_sig, _) ->
       Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json (fun () ->
           Lwt.return (AutocompleteService_js.autocomplete_get_results cx file_sig state info)

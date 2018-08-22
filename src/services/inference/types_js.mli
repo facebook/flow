@@ -48,7 +48,8 @@ val basic_check_contents:
   File_key.t ->           (* fake file-/module name *)
   (Context.t *
    Docblock.t *
-   File_sig.t,
+   File_sig.t *
+   (Loc.t, Loc.t * Type.t) Ast.program,
    string) result Lwt.t
 
 val typecheck_contents:
@@ -58,7 +59,10 @@ val typecheck_contents:
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
   File_key.t ->                             (* fake file-/module name *)
-  ((Context.t * (Loc.t, Loc.t) Ast.program * File_sig.t) option *
+  ((Context.t *
+    (Loc.t, Loc.t) Ast.program *
+    File_sig.t *
+    (Loc.t, Loc.t * Type.t) Ast.program) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 

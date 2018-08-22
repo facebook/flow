@@ -12,7 +12,7 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
-  | Ok (cx, _info, file_sig) ->
+  | Ok (cx, _info, file_sig, _typed_ast) ->
     let loc = Loc.make file line col in
     let json_data, loc, ty =
       let mk_data result_str loc ty_json = Hh_json.JSON_Object [
@@ -44,7 +44,7 @@ let dump_types ~options ~workers ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
-  map ~f:(fun (cx, _info, file_sig) -> Query_types.dump_types cx file_sig ~printer)
+  map ~f:(fun (cx, _info, file_sig, _) -> Query_types.dump_types cx file_sig ~printer)
 
 
 let coverage ~options ~workers ~env ~profiling ~force file content =
@@ -55,12 +55,12 @@ let coverage ~options ~workers ~env ~profiling ~force file content =
       Docblock.is_flow docblock
   in
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
-  map ~f:(fun (cx, _, file_sig) -> Query_types.covered_types cx file_sig ~should_check)
+  map ~f:(fun (cx, _, file_sig, _) -> Query_types.covered_types cx file_sig ~should_check)
 
 let suggest ~options ~workers ~env ~profiling file content =
   Types_js.typecheck_contents ~options ~workers ~env ~profiling content file >|=
   function
-  | (Some (cx, ast, file_sig), tc_errors, tc_warnings) ->
+  | (Some (cx, ast, file_sig, _), tc_errors, tc_warnings) ->
     let cxs = Query_types.suggest_types cx file_sig in
     let visitor = new Suggest.visitor ~cxs in
     let typed_ast = visitor#program ast in

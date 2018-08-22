@@ -33,7 +33,7 @@ val merge_component_strict:
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader *)
-  Context.t Nel.t
+  (Context.t * (Loc.t, Loc.t * Type.t) Ast.program) Nel.t
 
 val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 

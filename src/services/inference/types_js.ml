@@ -609,7 +609,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       let info = Docblock.set_flow_mode_for_ide_command info in
 
       (* merge *)
-      let%lwt cx = with_timer_lwt ~options "MergeContents" profiling (fun () ->
+      let%lwt cx, typed_ast = with_timer_lwt ~options "MergeContents" profiling (fun () ->
         let%lwt () =
           ensure_checked_dependencies ~options ~profiling ~workers ~env filename file_sig
         in
@@ -656,7 +656,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         else Errors.ErrorSet.empty
       in
 
-      Lwt.return (Some (cx, ast, file_sig), errors, warnings, info)
+      Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings, info)
 
   | Parsing_service_js.Parse_fail fails ->
       let errors = match fails with
@@ -690,10 +690,10 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
     let%lwt cx_opt, _errors, _warnings, info =
       typecheck_contents_
         ~options ~workers ~env ~check_syntax:false ~profiling contents filename in
-    let cx, file_sig = match cx_opt with
-      | Some (cx, _, file_sig) -> cx, file_sig
+    let cx, file_sig, typed_ast = match cx_opt with
+      | Some (cx, _, file_sig, typed_ast) -> cx, file_sig, typed_ast
       | None -> failwith "Couldn't parse file" in
-    Lwt.return (Ok (cx, info, file_sig))
+    Lwt.return (Ok (cx, info, file_sig, typed_ast))
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->

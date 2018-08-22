@@ -25,15 +25,18 @@ let force_annotations cx =
 let infer_core cx statements =
   try
     statements |> Statement.toplevel_decls cx;
-    statements |> Statement.toplevels cx |> ignore;
+    statements |> Statement.toplevels cx
   with
-  | Abnormal.Exn (_, Abnormal.Throw) ->
+  | Abnormal.Exn (Abnormal.Stmts stmts, Abnormal.Throw) ->
     (* throw is allowed as a top-level statement *)
-    ()
-  | Abnormal.Exn _ ->
+    stmts
+  | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
     (* should never happen *)
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow))
+    Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow));
+    stmts
+  | Abnormal.Exn _ ->
+    failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
   | exc ->
     raise exc
 
@@ -395,7 +398,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
   Flow_js.Cache.clear();
 
-  let _, statements, comments = ast in
+  let prog_loc, statements, comments = ast in
 
   add_require_tvars cx file_sig;
 
@@ -445,7 +448,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
   (* infer *)
   Flow_js.flow_t cx (init_exports, local_exports_var);
-  infer_core cx statements;
+  let typed_statements = infer_core cx statements in
 
   scan_for_suppressions cx lint_severities file_options comments;
 
@@ -471,7 +474,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx;
 
-  ()
+  prog_loc, typed_statements, comments
 
 
 (* infer a parsed library file.
@@ -492,7 +495,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
 
-  infer_core cx statements;
+  ignore (infer_core cx statements : (Loc.t, Loc.t * Type.t) Ast.Statement.t list);
   scan_for_suppressions cx lint_severities file_options comments;
 
   module_scope |> Scope.(iter_entries Entry.(fun name entry ->
