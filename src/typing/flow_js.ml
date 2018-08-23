@@ -4353,16 +4353,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some lp ->
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
-          match up with
-          | Field (_, DefT (_, OptionalT ut), upolarity) ->
-            rec_flow cx trace (l,
-              LookupT (ureason, NonstrictReturning (None, None), [], propref,
-                LookupProp (use_op, Field (None, ut, upolarity))))
-          | _ ->
-            let u =
-              LookupT (ureason, Strict lreason, [], propref,
-                LookupProp (use_op, up)) in
-            rec_flow cx trace (super, ReposLowerT (lreason, false, u))
+          let strict = match up with
+          | Field (_, DefT (_, OptionalT _), _) -> NonstrictReturning (None, None)
+          | _ -> Strict lreason in
+          rec_flow cx trace (super, ReposLowerT (lreason, false,
+            LookupT (ureason, strict, [], propref, LookupProp (use_op, up))))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
