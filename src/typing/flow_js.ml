@@ -3585,75 +3585,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, MakeExactT (ru, _) ->
       add_output cx ~trace (FlowError.EUnsupportedExact (ru, reason_of_t l))
 
-    (**************************************************************************)
-    (* TestPropT is emitted for property reads in the context of branch tests.
-       Such tests are always non-strict, in that we don't immediately report an
-       error if the property is not found not in the object type. Instead, if
-       the property is not found, we control the result type of the read based
-       on the flags on the object type. For exact sealed object types, the
-       result type is `void`; otherwise, it is "unknown". Indeed, if the
-       property is not found in an exact sealed object type, we can be sure it
-       won't exist at run time, so the read will return undefined; but for other
-       object types, the property *might* exist at run time, and since we don't
-       know what the type of the property would be, we set things up so that the
-       result of the read cannot be used in any interesting way. *)
-    (**************************************************************************)
-
-    | DefT (_, NullT), TestPropT (reason_op, _, propref, tout) ->
-      (* The wildcard TestPropT implementation forwards the lower bound to
-         LookupT. This is unfortunate, because LookupT is designed to terminate
-         (successfully) on NullT, but property accesses on null should be type
-         errors. Ideally, we should prevent LookupT constraints from being
-         syntax-driven, in order to preserve the delicate invariants that
-         surround it. *)
-      rec_flow cx trace (l, GetPropT (unknown_use, reason_op, propref, tout))
-
-    | _, TestPropT (reason_op, id, propref, tout) ->
-      (* NonstrictReturning lookups unify their result, but we don't want to
-         unify with the tout tvar directly, so we create an indirection here to
-         ensure we only supply lower bounds to tout. *)
-      let lookup_default = Tvar.mk_where cx reason_op (fun tvar ->
-        rec_flow_t cx trace (tvar, tout)
-      ) in
-      let name = name_of_propref propref in
-      let test_info = Some (id, (reason_op, reason_of_t l)) in
-      let lookup_default = match l with
-        | DefT (_, ObjT { flags; _ })
-            when flags.exact ->
-          if Obj_type.sealed_in_op reason_op flags.sealed then
-            let r = replace_reason_const (RMissingProperty name) reason_op in
-            Some (DefT (r, VoidT), lookup_default)
-          else
-            (* This is an unsealed object. We don't now when (or even if) this
-             * property access will resolve, since reads and writes can happen
-             * in any order.
-             *
-             * Due to this, we never error on property accesses. TODO: Build a
-             * separate mechanism unsealed objects that errors after merge if a
-             * shadow prop is read but never written.
-             *
-             * We also should not return a default type on lookup failure,
-             * because a later write could make the lookup succeed.
-             *)
-            let () = Context.test_prop_hit cx id in
-            None
-        | _ ->
-          (* Note: a lot of other types could in principle be considered
-             "exact". For example, new instances of classes could have exact
-             types; so could `super` references (since they are statically
-             rather than dynamically bound). However, currently we don't support
-             any other exact types. Considering exact types inexact is sound, so
-             there is no problem falling back to the same conservative
-             approximation we use for inexact types in those cases. *)
-          let r = replace_reason_const (RUnknownProperty name) reason_op in
-          Some (DefT (r, MixedT Mixed_everything), lookup_default)
-      in
-      let lookup_kind = NonstrictReturning (lookup_default, test_info) in
-      rec_flow cx trace (l,
-        LookupT (reason_op, lookup_kind, [], propref,
-          RWProp (unknown_use, l, tout, Read)))
-
-
     (*******************************************)
     (* Refinement based on function predicates *)
     (*******************************************)
@@ -6132,6 +6063,74 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (instance, GetStaticsT (reason, statics));
       rec_flow cx trace (statics, u)
 
+    (**************************************************************************)
+    (* TestPropT is emitted for property reads in the context of branch tests.
+       Such tests are always non-strict, in that we don't immediately report an
+       error if the property is not found not in the object type. Instead, if
+       the property is not found, we control the result type of the read based
+       on the flags on the object type. For exact sealed object types, the
+       result type is `void`; otherwise, it is "unknown". Indeed, if the
+       property is not found in an exact sealed object type, we can be sure it
+       won't exist at run time, so the read will return undefined; but for other
+       object types, the property *might* exist at run time, and since we don't
+       know what the type of the property would be, we set things up so that the
+       result of the read cannot be used in any interesting way. *)
+    (**************************************************************************)
+
+    | DefT (_, NullT), TestPropT (reason_op, _, propref, tout) ->
+      (* The wildcard TestPropT implementation forwards the lower bound to
+         LookupT. This is unfortunate, because LookupT is designed to terminate
+         (successfully) on NullT, but property accesses on null should be type
+         errors. Ideally, we should prevent LookupT constraints from being
+         syntax-driven, in order to preserve the delicate invariants that
+         surround it. *)
+      rec_flow cx trace (l, GetPropT (unknown_use, reason_op, propref, tout))
+
+    | _, TestPropT (reason_op, id, propref, tout) ->
+      (* NonstrictReturning lookups unify their result, but we don't want to
+         unify with the tout tvar directly, so we create an indirection here to
+         ensure we only supply lower bounds to tout. *)
+      let lookup_default = Tvar.mk_where cx reason_op (fun tvar ->
+        rec_flow_t cx trace (tvar, tout)
+      ) in
+      let name = name_of_propref propref in
+      let test_info = Some (id, (reason_op, reason_of_t l)) in
+      let lookup_default = match l with
+        | DefT (_, ObjT { flags; _ })
+            when flags.exact ->
+          if Obj_type.sealed_in_op reason_op flags.sealed then
+            let r = replace_reason_const (RMissingProperty name) reason_op in
+            Some (DefT (r, VoidT), lookup_default)
+          else
+            (* This is an unsealed object. We don't now when (or even if) this
+             * property access will resolve, since reads and writes can happen
+             * in any order.
+             *
+             * Due to this, we never error on property accesses. TODO: Build a
+             * separate mechanism unsealed objects that errors after merge if a
+             * shadow prop is read but never written.
+             *
+             * We also should not return a default type on lookup failure,
+             * because a later write could make the lookup succeed.
+             *)
+            let () = Context.test_prop_hit cx id in
+            None
+        | _ ->
+          (* Note: a lot of other types could in principle be considered
+             "exact". For example, new instances of classes could have exact
+             types; so could `super` references (since they are statically
+             rather than dynamically bound). However, currently we don't support
+             any other exact types. Considering exact types inexact is sound, so
+             there is no problem falling back to the same conservative
+             approximation we use for inexact types in those cases. *)
+          let r = replace_reason_const (RUnknownProperty name) reason_op in
+          Some (DefT (r, MixedT Mixed_everything), lookup_default)
+      in
+      let lookup_kind = NonstrictReturning (lookup_default, test_info) in
+      rec_flow cx trace (l,
+        LookupT (reason_op, lookup_kind, [], propref,
+          RWProp (unknown_use, l, tout, Read)))
+
     (************)
     (* indexing *)
     (************)
@@ -7042,7 +7041,7 @@ and object_use = function
   | _ -> false
 
 and object_like_op = function
-  | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
+  | SetPropT _ | GetPropT _ | TestPropT _ | MethodT _ | LookupT _
   | GetProtoT _ | SetProtoT _
   | SuperT _
   | GetKeysT _ | HasOwnPropT _ | GetValuesT _
