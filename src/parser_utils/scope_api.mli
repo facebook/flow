@@ -47,3 +47,5 @@ val fold_scope_chain: info -> (scope -> Scope.t -> 'a -> 'a) -> scope -> 'a -> '
 
 val build_scope_tree: info -> Scope.t Tree.t
 val compute_free_and_bound_variables: Scope.t Tree.t -> (Def.t SMap.t * SSet.t * SSet.t) Tree.t
+
+val toplevel_names: info -> SSet.t
