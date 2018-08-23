@@ -1,8 +1,16 @@
-should_fail_without_weak.js:9
-  9:   return returns_a_string() * 10;
-              ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  9:   return returns_a_string() * 10;
-              ^^^^^^^^^^^^^^^^^^^^^^^ number
+Error --------------------------------------------------------------------------------- should_fail_without_weak.js:9:10
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   should_fail_without_weak.js:9:10
+   9|   return returns_a_string() * 10;
+               ^^^^^^^^^^^^^^^^^^
+
+References:
+   should_fail_without_weak.js:5:10
+   5|   return "Hello";
+               ^^^^^^^ [1]
+
 
 
 Found 1 error

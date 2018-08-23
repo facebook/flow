@@ -2,15 +2,14 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
 (*****************************************************************************)
 (* Module implementing a global storage system, an efficient way for the
- * master to communicate data with the workers (cf hh_shared.c for the 
+ * master to communicate data with the workers (cf hh_shared.c for the
  * underlying C implementation).
  *
  * The master can store data in the global storage, after that, the data
@@ -45,7 +44,7 @@ module Make:
     external hh_shared_load  : unit   -> string = "hh_shared_load"
     external hh_shared_clear : unit   -> unit   = "hh_shared_clear"
 
-    let store x  = hh_shared_store (Marshal.to_string x [])
-    let load ()  = Marshal.from_string (hh_shared_load()) 0
+    let store (x: Value.t)  = hh_shared_store (Marshal.to_string x [])
+    let load () = (Marshal.from_string (hh_shared_load()) 0 : Value.t)
     let clear () = hh_shared_clear()
 end

@@ -1,6 +1,5 @@
-FLOW=$1
-
+#!/bin/bash
 mv bar.js _bar.js
-$FLOW force-recheck --root . bar.js _bar.js
-$FLOW status --old-output-format .
+assert_ok $FLOW force-recheck --root . bar.js _bar.js
+assert_errors $FLOW status .
 mv _bar.js bar.js

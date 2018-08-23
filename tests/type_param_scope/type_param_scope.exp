@@ -1,64 +1,109 @@
-class.js:4
-  4:     this.b(a); // error: A ~> incompatible instance of T
-         ^^^^^^^^^ call of method `b`
-  4:     this.b(a); // error: A ~> incompatible instance of T
-                ^ A. This type is incompatible with
-  1: class C<T> {
-           ^ some incompatible instantiation of `T`
+Error ---------------------------------------------------------------------------------------------------- class.js:4:12
 
-default_params.js:6
-  6:     h(c); // err, T ~> U
-         ^^^^ function call
-  6:     h(c); // err, T ~> U
-           ^ T. This type is incompatible with
-  3:     function h(d:U = b) {}
-                      ^ some incompatible instantiation of `U`
+Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2].
 
-default_params.js:10
- 10:   g(0,0); // error: number ~> T
-       ^^^^^^ function call
- 10:   g(0,0); // error: number ~> T
-           ^ number. This type is incompatible with
-  2:   function g<U>(b:U, c:T = a) {
-                            ^ some incompatible instantiation of `T`
+   class.js:4:12
+   4|     this.b(a); // error: A ~> incompatible instance of T
+                 ^
 
-method_shadow.js:42
- 42: g.m(true); // err, bool ~> number|string
-     ^^^^^^^^^ call of method `m`
- 42: g.m(true); // err, bool ~> number|string
-         ^^^^ boolean. This type is incompatible with
- 40: declare var g: G<number|string>;
-                      ^^^^^^^^^^^^^ union: number | string
-  Member 1:
-   40: declare var g: G<number|string>;
-                        ^^^^^^ number
-  Error:
-   42: g.m(true); // err, bool ~> number|string
-           ^^^^ boolean. This type is incompatible with
-   40: declare var g: G<number|string>;
-                        ^^^^^^ number
-  Member 2:
-   40: declare var g: G<number|string>;
-                               ^^^^^^ string
-  Error:
-   42: g.m(true); // err, bool ~> number|string
-           ^^^^ boolean. This type is incompatible with
-   40: declare var g: G<number|string>;
-                               ^^^^^^ string
+References:
+   class.js:2:15
+   2|   a<A>(x:T, a:A) {
+                    ^ [1]
+   class.js:1:9
+   1| class C<T> {
+              ^ [2]
 
-method_shadow.js:43
- 43: (g.m(""): G<number>); // err, string ~> number
-          ^^ string. This type is incompatible with
- 43: (g.m(""): G<number>); // err, string ~> number
-                 ^^^^^^ number
 
-method_shadow.js:51
- 51:         this.x = x; // err, m's T != H's T
-             ^^^^^^ assignment of property `x`
- 51:         this.x = x; // err, m's T != H's T
-                      ^ T. This type is incompatible with
- 48: class H<T> {
-           ^ some incompatible instantiation of `T`
+Error -------------------------------------------------------------------------------------------- default_params.js:6:7
+
+Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2].
+
+   default_params.js:6:7
+   6|     h(c); // err, T ~> U
+            ^
+
+References:
+   default_params.js:2:24
+   2|   function g<U>(b:U, c:T = a) {
+                             ^ [1]
+   default_params.js:3:18
+   3|     function h(d:U = b) {}
+                       ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- default_params.js:10:7
+
+Cannot call `g` with `0` bound to `c` because number [1] is incompatible with `T` [2].
+
+   default_params.js:10:7
+   10|   g(0,0); // error: number ~> T
+             ^ [1]
+
+References:
+   default_params.js:2:24
+    2|   function g<U>(b:U, c:T = a) {
+                              ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- method_shadow.js:42:1
+
+Cannot call `g.m` because in type argument `T`:
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   method_shadow.js:42:1
+   42| g.m(true); // err, bool ~> number|string
+       ^^^^^^^^^
+
+References:
+   method_shadow.js:42:5
+   42| g.m(true); // err, bool ~> number|string
+           ^^^^ [1]
+   method_shadow.js:40:18
+   40| declare var g: G<number|string>;
+                        ^^^^^^ [2]
+   method_shadow.js:40:25
+   40| declare var g: G<number|string>;
+                               ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- method_shadow.js:43:2
+
+Cannot cast `g.m(...)` to `G` because string [1] is incompatible with number [2] in type argument `T` [3].
+
+   method_shadow.js:43:2
+   43| (g.m(""): G<number>); // err, string ~> number
+        ^^^^^^^
+
+References:
+   method_shadow.js:43:6
+   43| (g.m(""): G<number>); // err, string ~> number
+            ^^ [1]
+   method_shadow.js:43:13
+   43| (g.m(""): G<number>); // err, string ~> number
+                   ^^^^^^ [2]
+   method_shadow.js:34:9
+   34| class G<T> {
+               ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18
+
+Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2].
+
+   method_shadow.js:51:18
+   51|         this.x = x; // err, m's T != H's T
+                        ^
+
+References:
+   method_shadow.js:50:12
+   50|     m<T>(x:T) {
+                  ^ [1]
+   method_shadow.js:49:7
+   49|     x:T;
+             ^ [2]
+
 
 
 Found 6 errors

@@ -1,18 +1,33 @@
-cli2.js:5
-  5: f("...");
-     ^^^^^^^^ function call
-  5: f("...");
-       ^^^^^ string. This type is incompatible with
-  7: function f(x:number):number { g(x); return x; }
-                  ^^^^^^ number. See: lib.js:7
+Error ------------------------------------------------------------------------------------------------------ cli2.js:5:3
 
-lib.js:7
-  7: function f(x:number):number { g(x); return x; }
-                                   ^^^^ function call
-  7: function f(x:number):number { g(x); return x; }
-                                     ^ number. This type is incompatible with
-  3: function g(x:string) { }
-                  ^^^^^^ string
+Cannot call `f` with `"..."` bound to `x` because string [1] is incompatible with number [2].
+
+   cli2.js:5:3
+   5| f("...");
+        ^^^^^ [1]
+
+References:
+   lib.js:7:14
+   7| function f(x:number):number { g(x); return x; }
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ lib.js:7:33
+
+Cannot call `g` with `x` bound to `x` because number [1] is incompatible with string [2].
+
+   lib.js:7:33
+   7| function f(x:number):number { g(x); return x; }
+                                      ^
+
+References:
+   lib.js:7:14
+   7| function f(x:number):number { g(x); return x; }
+                   ^^^^^^ [1]
+   lib.js:3:14
+   3| function g(x:string) { }
+                   ^^^^^^ [2]
+
 
 
 Found 2 errors

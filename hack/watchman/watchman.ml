@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  **)
 
-open Core
+open Hh_core
 open Utils
 
 (*
@@ -21,559 +20,933 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-exception Watchman_error of string
-exception Timeout
-
-(** Throw this exception when we know there is something to read from
- * the watchman channel, but reading took too long. *)
-exception Read_payload_too_long
-
-let debug = false
-
-(** This number is totally arbitrary. Just need some cap. *)
-let max_reinit_attempts = 8
-
-let sync_file_extension = "tmp_sync"
-
-let crash_marker_path root =
-  let root_name = Path.slash_escaped_string_of_path root in
-  Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
-
-type init_settings = {
-  subscribe_to_changes: bool;
-  (** Seconds used for init timeout - will be reused for reinitialization. *)
-  init_timeout: int;
-  sync_directory: string;
-  root: Path.t;
-}
-
-type dead_env = {
-  (** Will reuse original settings to reinitializing watchman subscription. *)
-  prior_settings : init_settings;
-  reinit_attempts: int;
-  dead_since: float;
-}
-
-type env = {
-  settings : init_settings;
-  socket: Timeout.in_channel * out_channel;
-  watch_root: string;
-  relative_path: string;
-  (* See https://facebook.github.io/watchman/docs/clockspec.html *)
-  mutable clockspec: string;
-}
-
-let dead_env_from_alive env =
-  {
-    prior_settings = env.settings;
-    dead_since = Unix.time ();
-    reinit_attempts = 0;
+(** Stuff shared between Actual and Mocked implementations. *)
+module Testing_common = struct
+  open Watchman_sig.Types
+  let test_settings = {
+    subscribe_mode = Some Defer_changes;
+    init_timeout = 0;
+    expression_terms = [];
+    debug_logging = false;
+    roots = [Path.dummy_path];
+    subscription_prefix = "dummy_prefix"
   }
-
-type 'a changes =
-  | Watchman_unavailable
-  | Watchman_pushed of 'a
-  | Watchman_synchronous of 'a
-
-type watchman_instance =
-  (** Indicates a dead watchman instance (most likely due to chef upgrading,
-   * reconfiguration, or a user terminating watchman) detected by,
-   * for example, a pipe error.
-   *
-   * TODO: Currently fallback to a Watchman_dead is only handled in calls
-   * wrapped by the with_crash_record. Pipe errors elsewhere (for example
-   * during exec) will still result in Hack exiting. Need to cover those
-   * cases too. *)
-  | Watchman_dead of dead_env
-  | Watchman_alive of env
-
-let get_root_path instance = match instance with
-  | Watchman_dead dead_env -> dead_env.prior_settings.root
-  | Watchman_alive env -> env.settings.root
-
-let get_sync_dir instance = match instance with
-  | Watchman_dead dead_env -> dead_env.prior_settings.sync_directory
-  | Watchman_alive env -> env.settings.sync_directory
-
-(* Some JSON processing helpers *)
-module J = struct
-  let try_get_val key json =
-    let obj = Hh_json.get_object_exn json in
-    List.Assoc.find obj key
-
-  let get_string_val key ?default json =
-    let v = try_get_val key json in
-    match v, default with
-    | Some v, _ -> Hh_json.get_string_exn v
-    | None, Some def -> def
-    | None, None -> raise Not_found
-
-  let get_array_val key ?default json =
-    let v = try_get_val key json in
-    match v, default with
-    | Some v, _ -> Hh_json.get_array_exn v
-    | None, Some def -> def
-    | None, None -> raise Not_found
-
-  let strlist args =
-    Hh_json.JSON_Array begin
-      List.map args (fun arg -> Hh_json.JSON_String arg)
-    end
-
-  (* Prepend a string to a JSON array of strings. pred stands for predicate,
-   * because that's how they are typically represented in watchman. See e.g.
-   * https://facebook.github.io/watchman/docs/expr/allof.html *)
-  let pred name args =
-    let open Hh_json in
-    JSON_Array (JSON_String name :: args)
 end
 
-(*****************************************************************************)
-(* JSON methods. *)
-(*****************************************************************************)
+module Watchman_process_helpers = struct
+  include Watchman_sig.Types
+  module J = Hh_json_helpers.AdhocJsonHelpers
 
-let clock root = J.strlist ["clock"; root]
+  let debug = false
 
-type watch_command = Subscribe | Query
+  (** Throw this exception when we know there is something to read from
+   * the watchman channel, but reading took too long. *)
+  exception Read_payload_too_long
 
-let request_json
-    ?(extra_kv=[]) ?(extra_expressions=[]) watchman_command env =
-  let open Hh_json in
-  let command = begin match watchman_command with
-    | Subscribe -> "subscribe"
-    | Query -> "query" end in
-  let header =
-    [JSON_String command ; JSON_String env.watch_root] @
-      begin
-        match watchman_command with
-        | Subscribe -> [JSON_String "hh_type_check_watcher"]
-        | _ -> []
-      end in
-  let directives = [
-    JSON_Object (extra_kv @ [
-      "fields", J.strlist ["name"];
-      "relative_root", JSON_String env.relative_path;
-      "expression", J.pred "allof" @@ (extra_expressions @ [
-        J.strlist ["type"; "f"];
-        J.pred "anyof" @@ [
-          J.strlist ["name"; ".hhconfig"];
-          J.pred "anyof" @@ [
-            J.strlist ["suffix"; "php"];
-            J.strlist ["suffix"; "phpt"];
-            J.strlist ["suffix"; "hh"];
-            J.strlist ["suffix"; "hhi"];
-            J.strlist ["suffix"; sync_file_extension];
-            J.strlist ["suffix"; "xhp"];
-            (* FIXME: This is clearly wrong, but we do it to match the
-             * behavior on the server-side. We need to investigate if
-             * tracking js files is truly necessary.
-             *)
-            J.strlist ["suffix"; "js"];
-          ];
-        ];
-        J.pred "not" @@ [
-          J.pred "anyof" @@ [
-            (** We don't exclude the .hg directory, because we touch unique
-             * files there to support synchronous queries. *)
-            J.strlist ["dirname"; ".git"];
-            J.strlist ["dirname"; ".svn"];
-          ]
-        ]
-      ])
-    ])
-  ] in
-  let request = JSON_Array (header @ directives) in
-  request
+  (* Looks for common errors in watchman responses *)
+  let assert_no_error obj =
+    (try
+      let warning = J.get_string_val "warning" obj in
+      EventLogger.watchman_warning warning;
+      Hh_logger.log "Watchman warning: %s\n" warning
+    with Not_found -> ());
+    (try
+      let error = J.get_string_val "error" obj in
+      EventLogger.watchman_error error;
+      raise @@ Watchman_error error
+    with Not_found -> ());
+    (try
+      let canceled = J.get_bool_val "canceled" obj in
+      if canceled then begin
+      EventLogger.watchman_error "Subscription canceled by watchman";
+      raise @@ Subscription_canceled_by_watchman
+      end else ()
+    with Not_found -> ())
 
-let all_query env =
-  request_json
-    ~extra_expressions:([Hh_json.JSON_String "exists"])
-    Query env
-
-let since_query env =
-  request_json
-    ~extra_kv: ["since", Hh_json.JSON_String env.clockspec]
-    Query env
-
-let subscribe env = request_json
-                      ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
-                                 "defer", J.strlist ["hg.update"]]
-                      Subscribe env
-
-let watch_project root = J.strlist ["watch-project"; root]
-
-(* See https://facebook.github.io/watchman/docs/cmd/version.html *)
-let capability_check ?(optional=[]) required =
-  let open Hh_json in
-  JSON_Array begin
-    [JSON_String "version"] @ [
-      JSON_Object [
-        "optional", J.strlist optional;
-        "required", J.strlist required;
-      ]
-    ]
-  end
-
-(*****************************************************************************)
-(* Handling requests and responses. *)
-(*****************************************************************************)
-
-let read_with_timeout timeout ic =
-  let fd = Timeout.descr_of_in_channel ic in
-  let deadline = Unix.gettimeofday () +. timeout in
-  match Unix.select [fd] [] [] timeout with
-    | [ready_fd], _, _ when ready_fd = fd -> begin
-     Timeout.with_timeout
-       ~timeout:(max 1 (int_of_float (deadline -. Unix.gettimeofday ())))
-       ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
-       ~on_timeout:begin fun _ ->
-                     EventLogger.watchman_timeout ();
-                     raise Read_payload_too_long
-                   end
-    end
-    | _, _, _ ->
-      EventLogger.watchman_timeout ();
-      raise Timeout
-
-let assert_no_error obj =
-  (try
-     let warning = J.get_string_val "warning" obj in
-     EventLogger.watchman_warning warning;
-     Hh_logger.log "Watchman warning: %s\n" warning
-   with Not_found -> ());
-  (try
-     let error = J.get_string_val "error" obj in
-     EventLogger.watchman_error error;
-     raise @@ Watchman_error error
-   with Not_found -> ())
-
-let sanitize_watchman_response output =
-  if debug then Printf.eprintf "Watchman response: %s\n%!" output;
-  let response =
+  (* Verifies that a watchman response is valid JSON and free from common errors *)
+  let sanitize_watchman_response ~debug_logging output =
+    if debug_logging then Hh_logger.info "Watchman response: %s" output;
+    let response =
     try Hh_json.json_of_string output
     with e ->
-      Printf.eprintf "Failed to parse string as JSON: %s\n%!" output;
+      Hh_logger.error ~exn:e "Failed to parse string as JSON: %s" output;
       raise e
-  in
-  assert_no_error response;
-  response
+    in
+    assert_no_error response;
+    response
+end
 
-let exec ?(timeout=120.0) (ic, oc) json =
-  let json_str = Hh_json.(json_to_string json) in
-  if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
-  output_string oc json_str;
-  output_string oc "\n";
-  flush oc ;
-  sanitize_watchman_response (read_with_timeout timeout ic)
+module Regular_watchman_process: sig
+  include Watchman_sig.WATCHMAN_PROCESS with type 'a result = 'a
 
-(*****************************************************************************)
-(* Initialization, reinitialization, and crash-tracking. *)
-(*****************************************************************************)
+  val get_reader: conn -> Buffered_line_reader.t
+end = struct
+  include Watchman_process_helpers
 
-exception Watchman_sync_directory_error
+  type 'a result = 'a
+  type conn = Buffered_line_reader.t * out_channel
 
-let get_sockname timeout =
-  let ic =
-    Timeout.open_process_in "watchman"
-    [| "watchman"; "get-sockname"; "--no-pretty" |] in
-  let output = read_with_timeout (float_of_int timeout) ic in
-  assert (Timeout.close_process_in ic = Unix.WEXITED 0);
-  let json = Hh_json.json_of_string output in
-  J.get_string_val "sockname" json
+  let (>>=) a f = f a
+  let (>|=) a f = f a
+  let return x = x
 
-let assert_sync_dir_exists path =
-  let stats = try Unix.stat path with
-    | Unix.Unix_error (Unix.ENOENT, _, _) ->
-      Hh_logger.log "Watchman sync directory doesn't exist: %s" path;
-      raise Watchman_sync_directory_error
-  in
-  let () = if stats.Unix.st_kind <> Unix.S_DIR then begin
-    Hh_logger.log "Watchman sync directory is not a directory: %s" path;
-    raise Watchman_sync_directory_error
-  end
-  else () in
-  try Unix.access path [Unix.R_OK; Unix.W_OK] with
-  | Unix.Unix_error (Unix.EACCES, _, _) ->
-    Hh_logger.log "Dont have read-write access to watchman sync directory: %s" path;
-    raise Watchman_sync_directory_error
+  let catch ~f ~catch = try f () with exn -> catch exn
 
-let with_crash_record_exn root source f =
-  try f ()
-  with e ->
-    close_out @@ open_out @@ crash_marker_path root;
-    Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") e;
-    raise e
+  let map_fold_values map ~init ~f = SMap.fold (fun _ v acc -> f v acc) map init
+  let map_iter_values_s map ~f = SMap.iter (fun _ v -> f v) map
 
-let with_crash_record_opt root source f =
-  Option.try_with (fun () -> with_crash_record_exn root source f)
+  (* Send a request to the watchman process *)
+  let send_request ~debug_logging oc json =
+    let json_str = Hh_json.(json_to_string json) in
+    if debug_logging then Hh_logger.info "Watchman request: %s" json_str ;
+    output_string oc json_str;
+    output_string oc "\n";
+    flush oc
 
-let init { init_timeout; subscribe_to_changes; sync_directory; root } =
-  with_crash_record_opt root "init" @@ fun () ->
-  let root_s = Path.to_string root in
-  let sockname = get_sockname init_timeout in
-  assert_sync_dir_exists (Filename.concat root_s sync_directory);
-  let socket = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
-  ignore @@ exec socket (capability_check ["relative_root"]);
-  let response = exec socket (watch_project root_s) in
-  let watch_root = J.get_string_val "watch" response in
-  let relative_path = J.get_string_val "relative_path" ~default:"" response in
+  (***************************************************************************)
+  (* Handling requests and responses. *)
+  (***************************************************************************)
 
-  let clockspec =
-    exec socket (clock watch_root) |> J.get_string_val "clock" in
-  let env = {
-    settings = {
-      init_timeout;
-      subscribe_to_changes;
-      sync_directory;
-      root;
-    };
-    socket;
-    watch_root;
-    relative_path;
-    clockspec;
-  } in
-  if subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
-  env
+  let has_input timeout reader =
+    if Buffered_line_reader.has_buffered_content reader
+    then true
+    else
+      match Sys_utils.select_non_intr [Buffered_line_reader.get_fd reader] [] [] timeout with
+      | [], _, _ -> false
+      | _ -> true
 
-let has_input timeout (in_channel, _) =
-  let fd = Timeout.descr_of_in_channel in_channel in
-  match Unix.select [fd] [] [] timeout with
-    | [_], _, _ -> true
-    | _ -> false
-
-let no_updates_response clockspec =
-  let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
-  Hh_json.json_of_string timeout_str
-
-let poll_for_updates ?timeout env =
-  let timeout = Option.value timeout ~default:0.0 in
-  let ready = has_input timeout env.socket in
-  if not ready then
-    if timeout = 0.0 then no_updates_response env.clockspec
-    else raise Timeout
-  else
-  let timeout = 20 in
-  try
-    let output = begin
-      let in_channel, _  = env.socket in
-      (* Use the timeout mechanism to limit maximum time to read payload (cap
-       * data size). *)
+  let read_with_timeout timeout reader =
+    let start_t = Unix.time () in
+    if not (has_input timeout reader)
+    then
+      raise Timeout
+    else
+      let remaining = start_t +. timeout -. Unix.time () in
+      let timeout = int_of_float remaining in
+      let timeout = max timeout 10 in
       Timeout.with_timeout
-        ~do_: (fun t -> Timeout.input_line ~timeout:t in_channel)
+        ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
         ~timeout
-        ~on_timeout:begin fun _ -> () end
-    end in
-    sanitize_watchman_response output
-  with
-  | Timeout.Timeout ->
-    let () = Hh_logger.log "Watchman.poll_for_updates timed out" in
-    raise Read_payload_too_long
-  | _ as e ->
-    raise e
+        ~on_timeout:(fun () ->
+          let () = EventLogger.watchman_timeout () in
+          raise Read_payload_too_long
+        )
 
-let extract_file_names env json =
-  let files = J.get_array_val "files" json in
-  let files = List.map files begin fun json ->
-    let s = Hh_json.get_string_exn json in
-    let abs =
-      Filename.concat env.watch_root @@
-      Filename.concat env.relative_path s in
-    abs
-  end in
-  files
+  (* Asks watchman for the path to the socket file *)
+  let get_sockname timeout =
+    let ic =
+      Timeout.open_process_in "watchman"
+      [| "watchman"; "get-sockname"; "--no-pretty" |] in
+    let reader = Buffered_line_reader.create @@
+      Timeout.descr_of_in_channel ic in
+    let output = read_with_timeout timeout reader in
+    assert (Timeout.close_process_in ic = Unix.WEXITED 0);
+    let json = Hh_json.json_of_string output in
+    J.get_string_val "sockname" json
 
-let within_backoff_time attempts time =
-  let offset = 4.0 *. (2.0 ** float (if attempts > 3 then 3 else attempts)) in
-  (Unix.time ()) >= time +. offset
+  (* Opens a connection to the watchman process through the socket *)
+  let open_connection ~timeout =
+    let sockname = get_sockname timeout in
+    let (tic, oc) = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
+    let reader = Buffered_line_reader.create
+      @@ Timeout.descr_of_in_channel @@ tic in
+    reader, oc
 
-let maybe_restart_instance instance = match instance with
-  | Watchman_alive _ -> instance
-  | Watchman_dead dead_env ->
-    if dead_env.reinit_attempts >= max_reinit_attempts then
-      let () = Hh_logger.log "Ran out of watchman reinit attempts. Exiting." in
-      Exit_status.(exit Watchman_failed)
-    else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then
-      let () =
-        Hh_logger.log "Attemping to reestablish watchman subscription" in
-      match init dead_env.prior_settings with
-      | None ->
-        Hh_logger.log "Reestablishing watchman subscription failed.";
-        EventLogger.watchman_connection_reestablishment_failed ();
-        Watchman_dead { dead_env with
-          reinit_attempts = dead_env.reinit_attempts + 1 }
-      | Some env ->
-        Hh_logger.log "Watchman connection reestablished.";
-        EventLogger.watchman_connection_reestablished ();
-        Watchman_alive env
-    else
-      instance
+  let close_connection conn =
+    let reader, _ = conn in
+    Unix.close @@ Buffered_line_reader.get_fd reader
 
-let close_channel_on_instance env =
-  let ic, _ = env.socket in
-  Timeout.close_in ic;
-  EventLogger.watchman_died_caught ();
-  Watchman_dead (dead_env_from_alive env), Watchman_unavailable
-
-(** Calls f on the instance, maybe restarting it if its dead and maybe
- * reverting it to a dead state if things go south. For example, if watchman
- * shuts the connection on us, or shuts down, or crashes, we revert to a dead
- * instance, upon which a restart will be attempted down the road.
- * Alternatively, we also proactively revert to a dead instance if it appears
- * to be unresponsive (Timeout), and if reading the payload from it is
- * taking too long. *)
-let call_on_instance instance source f =
-  let instance = maybe_restart_instance instance in
-  match instance with
-  | Watchman_dead _ ->
-    instance, Watchman_unavailable
-  | Watchman_alive env -> begin
-    try
-      instance, with_crash_record_exn env.settings.root source (fun () -> f env)
-    with
-      | Sys_error("Broken pipe") ->
-        Hh_logger.log "Watchman Pipe broken.";
-        close_channel_on_instance env
-      | Sys_error("Connection reset by peer") ->
-        Hh_logger.log "Watchman connection reset by peer.";
-        close_channel_on_instance env
-      | Sys_error("Bad file descriptor") ->
-        (** This happens when watchman is tearing itself down after we
-         * retrieved a sock address and connected to the sock address. That's
-         * because Unix.open_connection (via Timeout.open_connection) doesn't
-         * error even when the sock adddress is no longer valid and actually -
-         * it returns a channel that will error at some later time when you
-         * actually try to do anything with it (write to it, or even get the
-         * file descriptor of it). I'm pretty sure we don't need to close the
-         * channel when that happens since we never had a useable channel
-         * to start with. *)
-        Hh_logger.log "Watchman bad file descriptor.";
-        EventLogger.watchman_died_caught ();
-        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
-      | End_of_file ->
-        Hh_logger.log "Watchman connection End_of_file. Closing channel";
-        close_channel_on_instance env
-      | Read_payload_too_long ->
-        Hh_logger.log "Watchman reading payload too long. Closing channel";
-        close_channel_on_instance env
-      | Timeout ->
-        Hh_logger.log "Watchman reading Timeout. Closing channel";
-        close_channel_on_instance env
-      | Watchman_error msg ->
-        Hh_logger.log "Watchman error: %s. Closing channel" msg;
-        close_channel_on_instance env
+  (** Open a connection to the watchman socket, call the continuation, then
+    * close. *)
+  let with_watchman_conn ~timeout f =
+    let conn = open_connection ~timeout in
+    let result = try f conn with
       | e ->
-        let msg = Printexc.to_string e in
-        EventLogger.watchman_uncaught_failure msg;
-        Exit_status.(exit Watchman_failed)
-  end
-
-let get_all_files env =
-  try with_crash_record_exn env.settings.root "get_all_files"  @@ fun () ->
-    let response = exec env.socket (all_query env) in
-    env.clockspec <- J.get_string_val "clock" response;
-    extract_file_names env response with
-    | _ ->
-      Exit_status.(exit Watchman_failed)
-
-let transform_changes_response env data =
-    env.clockspec <- J.get_string_val "clock" data;
-    set_of_list @@ extract_file_names env data
-
-let random_filepath root sync_dir =
-  let root_name = Path.to_string root in
-  let dir = Filename.concat root_name sync_dir in
-  let name = Random_id.(short_string_with_alphabet alphanumeric_alphabet) in
-  Filename.concat dir (spf ".%s.%s" name sync_file_extension)
-
-let get_changes ?deadline instance =
-  let timeout = Option.map deadline ~f:(fun deadline ->
-    let timeout = deadline -. (Unix.time ()) in
-    max timeout 0.0
-  ) in
-  call_on_instance instance "get_changes" @@ fun env ->
-    let response = begin
-        if env.settings.subscribe_to_changes
-        then Watchman_pushed (poll_for_updates ?timeout env)
-        else Watchman_synchronous (exec ?timeout env.socket (since_query env))
-    end in
-    match response with
-    | Watchman_unavailable -> Watchman_unavailable
-    | Watchman_pushed data ->
-      Watchman_pushed (transform_changes_response env data)
-    | Watchman_synchronous data ->
-      Watchman_synchronous (transform_changes_response env data)
-
-let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
-  if Unix.time () >= deadline then raise Timeout else ();
-  let instance, changes = get_changes ~deadline instance in
-  match changes with
-  | Watchman_unavailable ->
-    (** We don't need to use Retry_with_backoff_exception because there is
-     * exponential backoff built into get_changes to restart the watchman
-     * instance. *)
-    get_changes_until_file_sync
-      deadline syncfile instance acc_changes (** Not in 4.01 yet [@tailcall] *)
-  | Watchman_synchronous changes
-  | Watchman_pushed changes ->
-    let acc_changes = SSet.union acc_changes changes in
-    if SSet.mem syncfile changes then
-      instance, acc_changes
-    else
-      get_changes_until_file_sync deadline syncfile instance acc_changes
-
-(** Raise this exception together with a with_retries_until_deadline call to
- * make use of its exponential backoff machinery. *)
-exception Retry_with_backoff_exception
-
-(** Call "f instance temp_file_name" with a random temporary file created
- * before f and deleted after f. *)
-let with_random_temp_file instance f =
-  let root = get_root_path instance in
-  let temp_file = random_filepath root (get_sync_dir instance) in
-  let fd = try Some (
-    Unix.openfile temp_file [Unix.O_CREAT; Unix.O_EXCL] 555)
-    with
-    | e ->
-      let () = Hh_logger.log "Creating watchman sync file failed: %s"
-        (Printexc.to_string e) in
-      None
-  in
-  match fd with
-  | None ->
-    (** Failed to create temp file. Retry with exponential backoff. *)
-    raise Retry_with_backoff_exception
-  | Some fd ->
-    let () = Unix.close fd in
-    let result = f instance temp_file in
-    let () = Sys.remove temp_file in
+        Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
+        raise e
+    in
+    Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
     result
 
-(** Call f with retries if it throws Retry_with_backoff_exception,
- * using exponential backoff between attempts.
- *
- * Raise Timeout if deadline arrives. *)
-let rec with_retries_until_deadline ~attempt instance deadline f =
-  if Unix.time () > deadline then raise Timeout else ();
-  let max_wait_time = 10.0 in
-  try f instance with
-    | Retry_with_backoff_exception ->
-      let () = if Unix.time () > deadline then raise Timeout else () in
-      let wait_time = min max_wait_time (2.0 ** (float_of_int attempt)) in
-      let () = ignore @@ Unix.select [] [] [] wait_time in
-      with_retries_until_deadline ~attempt:(attempt + 1) instance deadline f
+  (* Sends a request to watchman and returns the response. If we don't have a connection,
+   * a new connection will be created before the request and destroyed after the response *)
+  let rec request ~debug_logging ?conn ?(timeout=120.0) json =
+    match conn with
+    | None ->
+      with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
+    | Some (reader, oc) -> begin
+      send_request ~debug_logging oc json;
+      sanitize_watchman_response ~debug_logging (read_with_timeout timeout reader)
+    end
 
-let get_changes_synchronously ~(timeout:int) instance =
-  (** Reading uses Timeout.with_timeout, which is not re-entrant. So
-   * we can't use that out here. *)
-  let deadline = Unix.time () +. (float_of_int timeout) in
-  with_retries_until_deadline ~attempt:0 instance deadline begin
-    (** Lambda here must take an instance to avoid capturing the one in the
-     * outer scope, which is the wrong one since it doesn't change between
-     * restart attempts. *)
-    fun instance ->
-      with_random_temp_file instance begin fun instance sync_file ->
-        let result =
-          get_changes_until_file_sync deadline sync_file instance SSet.empty in
-        result
-      end
+  let send_request_and_do_not_wait_for_response ~debug_logging ~conn:(_, oc) json =
+    send_request ~debug_logging oc json
+
+  let blocking_read ~debug_logging ?timeout ~conn =
+    let timeout = Option.value timeout ~default:0.0 in
+    let ready = has_input timeout @@ fst conn in
+    if not ready then
+      if timeout = 0.0 then None
+      else raise Timeout
+    else
+      (* Use the timeout mechanism to limit maximum time to read payload (cap
+       * data size) so we don't freeze if watchman sends an inordinate amount of
+       * data, or if it is malformed (i.e. doesn't end in a newline). *)
+      let timeout = 40 in
+      let output = Timeout.with_timeout
+        ~do_: (fun _ -> Buffered_line_reader.get_next_line @@ fst conn)
+        ~timeout
+        ~on_timeout:begin fun () ->
+          let () = Hh_logger.log "Regular_watchman_process.blocking_read timed out" in
+          raise Read_payload_too_long
+        end
+      in
+      Some (sanitize_watchman_response ~debug_logging output)
+
+  let get_reader (reader, _) = reader
+
+  module Testing = struct
+    let get_test_conn () = (Buffered_line_reader.get_null_reader (), open_out "/dev/null")
   end
+end
+
+module Functor (Watchman_process: Watchman_sig.WATCHMAN_PROCESS): Watchman_sig.S
+  with type 'a result = 'a Watchman_process.result and type conn = Watchman_process.conn =
+struct
+  let (>>=) = Watchman_process.(>>=)
+  let (>|=) = Watchman_process.(>|=)
+
+  type 'a result = 'a Watchman_process.result
+  type conn = Watchman_process.conn
+
+  (**
+   * Ocaml module signatures are static. This means since mocking
+   * functionality is exposed in the mli, it must be implemented for
+   * both actual builds as well as testing/mocked builds.
+   *
+   * For actual builds, we just raise exceptions for the
+   * setters.
+   *)
+  module Mocking = struct
+    exception Cannot_set_when_mocks_disabled
+
+    let print_env _ =
+      raise Cannot_set_when_mocks_disabled
+    let get_changes_returns _ =
+      raise Cannot_set_when_mocks_disabled
+    let init_returns _ =
+      raise Cannot_set_when_mocks_disabled
+  end
+
+  (** This number is totally arbitrary. Just need some cap. *)
+  let max_reinit_attempts = 8
+
+  (**
+   * Triggers watchman to flush buffered updates on this subscription.
+   * See watchman/docs/cmd/flush-subscriptions.html
+   *)
+  let flush_subscriptions_cmd = "cmd-flush-subscriptions"
+
+  include Watchman_sig.Types
+
+  type watched_path = {
+    subscription_name: string;
+    path: Path.t;
+    relative_path: string;
+    (* See https://facebook.github.io/watchman/docs/clockspec.html
+     *
+     * This is also used to reliably detect a crashed watchman. Watchman has a
+     * facility to detect watchman process crashes between two "since" queries
+     *
+     * See also assert_no_fresh_instance *)
+    mutable clockspec: string;
+  }
+
+  type resume_watches =
+    | Prior_watched_paths of watched_path SMap.t
+    | New_watch_from_clockspec of string
+
+  type dead_env = {
+    (** Will reuse original settings to reinitializing watchman subscription. *)
+    prior_settings : init_settings;
+    reinit_attempts: int;
+    dead_since: float;
+    prior_watched_paths: watched_path SMap.t;
+  }
+
+  type env = {
+    settings : init_settings;
+    conn: Watchman_process.conn;
+    watch_root: string;
+    watched_paths: watched_path SMap.t;
+  }
+
+  let dead_env_from_alive env =
+    {
+      prior_settings = env.settings;
+      dead_since = Unix.time ();
+      reinit_attempts = 0;
+      (** When we start a new watchman connection, we continue to use the prior
+       * clockspec for each watched root. If the same watchman server is still alive, then all is
+       * good. If not, the clockspec allows us to detect whether a new watchman
+       * server had to be started. See also "is_fresh_instance" on watchman's
+       * "since" response. *)
+      prior_watched_paths = env.watched_paths;
+    }
+
+  type watchman_instance =
+    (** Indicates a dead watchman instance (most likely due to chef upgrading,
+     * reconfiguration, or a user terminating watchman, or a timeout reading
+     * from the connection) detected by, for example, a pipe error or a timeout.
+     *
+     * TODO: Currently fallback to a Watchman_dead is only handled in calls
+     * wrapped by the with_crash_record. Pipe errors elsewhere (for example
+     * during request) will still result in Hack exiting. Need to cover those
+     * cases too. *)
+    | Watchman_dead of dead_env
+    | Watchman_alive of env
+
+  module J = Hh_json_helpers.AdhocJsonHelpers
+
+  (****************************************************************************)
+  (* JSON methods. *)
+  (****************************************************************************)
+
+  let clock root = J.strlist ["clock"; root]
+
+  type watch_command = Subscribe | Query
+
+  (** Conjunction of extra_expressions and expression_terms. *)
+  let request_json
+      ?(extra_kv=[]) ?(extra_expressions=[]) ~watched_path watchman_command env =
+    let open Hh_json in
+    let command = begin match watchman_command with
+      | Subscribe -> "subscribe"
+      | Query -> "query" end in
+    let header =
+      [JSON_String command ; JSON_String env.watch_root] @
+        begin
+          match watchman_command with
+          | Subscribe -> [JSON_String watched_path.subscription_name]
+          | _ -> []
+        end in
+    let expressions = extra_expressions @ (env.settings.expression_terms) in
+    let directives = [
+      JSON_Object (extra_kv
+      @ [
+        "fields", J.strlist ["name"];
+        "relative_root", JSON_String watched_path.relative_path;]
+      (** Watchman doesn't allow an empty allof expression. Omit if empty. *)
+      @ if expressions = [] then [] else [
+        "expression", J.pred "allof" expressions
+      ])
+    ] in
+    let request = JSON_Array (header @ directives) in
+    request
+
+  let all_query ~watched_path env =
+    request_json
+      ~extra_expressions:([Hh_json.JSON_String "exists"])
+      ~watched_path
+      Query env
+
+  let since_query ~watched_path env =
+    request_json
+      ~extra_kv: ["since", Hh_json.JSON_String watched_path.clockspec;
+                  "empty_on_fresh_instance", Hh_json.JSON_Bool true]
+      ~watched_path
+      Query env
+
+  let subscribe ~mode ~watched_path env =
+    let since, mode = match mode with
+    | All_changes -> Hh_json.JSON_String watched_path.clockspec, []
+    | Defer_changes ->
+      Hh_json.JSON_String watched_path.clockspec, ["defer", J.strlist ["hg.update"]]
+    | Drop_changes -> Hh_json.JSON_String watched_path.clockspec, ["drop", J.strlist ["hg.update"]]
+    | Scm_aware ->
+        Hh_logger.log "Making Scm_aware subscription";
+        let scm = Hh_json.JSON_Object
+          [("mergebase-with", Hh_json.JSON_String "master")] in
+        let since = Hh_json.JSON_Object
+          [("scm", scm); ("drop", J.strlist ["hg.update"]);] in
+        since, []
+    in
+    request_json
+      ~extra_kv:((["since", since] @ mode) @
+                 ["empty_on_fresh_instance",
+                 Hh_json.JSON_Bool true])
+      ~watched_path
+      Subscribe env
+
+  let watch_project root = J.strlist ["watch-project"; root]
+
+  (* See https://facebook.github.io/watchman/docs/cmd/version.html *)
+  let capability_check ?(optional=[]) required =
+    let open Hh_json in
+    JSON_Array begin
+      [JSON_String "version"] @ [
+        JSON_Object [
+          "optional", J.strlist optional;
+          "required", J.strlist required;
+        ]
+      ]
+    end
+
+  (** We filter all responses from get_changes through this. This is to detect
+   * Watchman server crashes.
+   *
+   * See also Watchman docs on "since" query parameter. *)
+  let assert_no_fresh_instance obj =
+    let open Hh_json.Access in
+    let _ = (return obj)
+      >>= get_bool "is_fresh_instance"
+      >>= (fun (is_fresh, trace) ->
+       if is_fresh then begin
+         Hh_logger.log "Watchman server is fresh instance. Exiting.";
+         raise Exit_status.(Exit_with Watchman_fresh_instance)
+       end
+       else
+         Ok ((), trace)
+      ) in
+    ()
+
+  (****************************************************************************)
+  (* Initialization, reinitialization, and crash-tracking. *)
+  (****************************************************************************)
+
+  let with_crash_record_exn source f =
+    Watchman_process.catch ~f ~catch:(fun e ->
+      Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") e;
+      raise e
+    )
+
+  let with_crash_record_opt source f =
+    Watchman_process.catch
+      ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
+      ~catch:(fun _ -> Watchman_process.return None)
+
+  let has_capability name capabilities =
+    (** Projects down from the boolean error monad into booleans.
+     * Error states go to false, values are projected directly. *)
+    let project_bool m = match m with
+      | Ok (v, _) ->
+        v
+      | Error _ ->
+        false
+    in
+    let open Hh_json.Access in
+    (return capabilities)
+      >>= get_obj "capabilities"
+      >>= get_bool name
+      |> project_bool
+
+  let re_init ?resume_watches
+    { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
+
+    (* Dedupe roots *)
+    let roots_with_clockspecs = match resume_watches with
+    | None ->
+      (* Dedupe roots & add in that we have no prior clockspec *)
+      List.fold_left roots
+        ~init:SMap.empty
+        ~f:(fun map path -> SMap.add (Path.to_string path) (path, None) map)
+    | Some (New_watch_from_clockspec clockspec) ->
+      (* Dedupe roots & add clockspec for resuming watch. *)
+      List.fold_left roots
+        ~init:SMap.empty
+        ~f:(fun map path -> SMap.add (Path.to_string path) (path, Some clockspec) map)
+    | Some (Prior_watched_paths watched_paths) ->
+      SMap.fold
+        (fun _ { path; clockspec; _; } -> SMap.add (Path.to_string path) (path, Some clockspec))
+        watched_paths
+        SMap.empty
+    in
+    if SMap.cardinal roots_with_clockspecs = 0
+    then failwith "Cannot run watchman with fewer than 1 root";
+
+    with_crash_record_opt "init" @@ fun () ->
+    Watchman_process.open_connection ~timeout:(float_of_int init_timeout) >>= fun conn ->
+    Watchman_process.request ~debug_logging ~conn
+      (capability_check ~optional:[ flush_subscriptions_cmd ]
+      ["relative_root"]) >>= fun capabilities ->
+    let supports_flush = has_capability flush_subscriptions_cmd capabilities in
+    (** Disable subscribe if Watchman flush feature isn't supported. *)
+    let subscribe_mode = if supports_flush then subscribe_mode else None in
+
+    Watchman_process.map_fold_values roots_with_clockspecs
+      ~init:(SMap.empty, SSet.empty)
+      ~f: (fun (path, prior_clockspec) (watched_paths, watch_roots) ->
+        (* Watch this root *)
+        Watchman_process.request
+          ~debug_logging ~conn (watch_project (Path.to_string path)) >>= fun response ->
+        let watch_root = J.get_string_val "watch" response in
+        let relative_path = J.get_string_val "relative_path" ~default:"" response in
+
+        (* If we don't have a prior clockspec, grab the current clock *)
+        (match prior_clockspec with
+          | Some s -> Watchman_process.return s
+          | None ->
+            Watchman_process.request ~debug_logging ~conn (clock watch_root)
+            >|= J.get_string_val "clock"
+        ) >|= fun clockspec ->
+
+        (* We may not end up subscribing, but if we do this will be the name *)
+        let subscription_name = spf "%s:%s" subscription_prefix relative_path in
+        let watched_path = { subscription_name; path; relative_path; clockspec } in
+        let watched_paths = SMap.add subscription_name watched_path watched_paths in
+
+        let watch_roots = SSet.add watch_root watch_roots in
+        watched_paths, watch_roots
+      )
+    >>= fun (watched_paths, watch_roots) ->
+
+    (* All of our watched paths should have the same watch root. Let's assert that *)
+    let watch_root = match SSet.elements watch_roots with
+    | [] -> failwith "Unreachable - we already asserted at least 1 root"
+    | [watch_root] -> watch_root
+    | _ ->
+      failwith (
+        spf "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
+          (SSet.cardinal watch_roots)
+      )
+    in
+
+    let env = {
+      settings = {
+        init_timeout;
+        debug_logging;
+        subscribe_mode;
+        expression_terms;
+        roots;
+        subscription_prefix;
+      };
+      conn;
+      watch_root;
+      watched_paths;
+    } in
+    (match subscribe_mode with
+    | None -> Watchman_process.return ()
+    | Some mode ->
+      Watchman_process.map_iter_values_s env.watched_paths ~f:(fun watched_path ->
+        Watchman_process.request ~debug_logging ~conn (subscribe ~mode ~watched_path env) >|= ignore
+      )
+    ) >|= fun () ->
+    env
+
+  let init ?since_clockspec settings () =
+    let resume_watches = Option.map since_clockspec ~f:(fun clockspec -> New_watch_from_clockspec clockspec) in
+    re_init ?resume_watches settings
+
+  let extract_file_names ~watched_path env json =
+    let files = try J.get_array_val "files" json with
+      (** When an hg.update happens, it shows up in the watchman subscription
+       * as a notification with no files key present. *)
+      | Not_found -> []
+    in
+    let files = List.map files begin fun json ->
+      let s = Hh_json.get_string_exn json in
+      let abs =
+        Filename.concat env.watch_root @@
+        Filename.concat watched_path.relative_path s in
+      abs
+    end in
+    files
+
+  let within_backoff_time attempts time =
+    let offset = 4.0 *. (2.0 ** float (if attempts > 3 then 3 else attempts)) in
+    (Unix.time ()) >= time +. offset
+
+  let maybe_restart_instance instance = match instance with
+    | Watchman_alive _ -> Watchman_process.return instance
+    | Watchman_dead dead_env ->
+      if dead_env.reinit_attempts >= max_reinit_attempts then
+        let () = Hh_logger.log
+          "Ran out of watchman reinit attempts. Exiting." in
+        raise Exit_status.(Exit_with Watchman_failed)
+      else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since
+      then
+        let () =
+          Hh_logger.log "Attemping to reestablish watchman subscription" in
+        re_init ~resume_watches:(Prior_watched_paths dead_env.prior_watched_paths)
+          dead_env.prior_settings
+        >|= function
+        | None ->
+          Hh_logger.log "Reestablishing watchman subscription failed.";
+          EventLogger.watchman_connection_reestablishment_failed ();
+          Watchman_dead { dead_env with
+            reinit_attempts = dead_env.reinit_attempts + 1 }
+        | Some env ->
+          Hh_logger.log "Watchman connection reestablished.";
+          EventLogger.watchman_connection_reestablished ();
+          Watchman_alive env
+      else
+        Watchman_process.return instance
+
+  let close_channel_on_instance env =
+    Watchman_process.close_connection env.conn >|= fun () ->
+    EventLogger.watchman_died_caught ();
+    Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+
+  (** Calls f on the instance, maybe restarting it if its dead and maybe
+   * reverting it to a dead state if things go south. For example, if watchman
+   * shuts the connection on us, or shuts down, or crashes, we revert to a dead
+   * instance, upon which a restart will be attempted down the road.
+   * Alternatively, we also proactively revert to a dead instance if it appears
+   * to be unresponsive (Timeout), and if reading the payload from it is
+   * taking too long. *)
+  let call_on_instance instance source f =
+    maybe_restart_instance instance >>= fun instance ->
+    match instance with
+    | Watchman_dead _ ->
+      Watchman_process.return (instance, Watchman_unavailable)
+    | Watchman_alive env -> begin
+      Watchman_process.catch
+        ~f:(fun () ->
+          with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
+          Watchman_alive env, result
+        )
+        ~catch:(function
+          | Sys_error msg when msg = "Broken pipe" ->
+            Hh_logger.log "Watchman Pipe broken.";
+            close_channel_on_instance env
+          | Sys_error msg when msg = "Connection reset by peer" ->
+            Hh_logger.log "Watchman connection reset by peer.";
+            close_channel_on_instance env
+          | Sys_error msg when msg = "Bad file descriptor" ->
+            (** This happens when watchman is tearing itself down after we
+             * retrieved a sock address and connected to the sock address. That's
+             * because Unix.open_connection (via Timeout.open_connection) doesn't
+             * error even when the sock adddress is no longer valid and actually -
+             * it returns a channel that will error at some later time when you
+             * actually try to do anything with it (write to it, or even get the
+             * file descriptor of it). I'm pretty sure we don't need to close the
+             * channel when that happens since we never had a useable channel
+             * to start with. *)
+            Hh_logger.log "Watchman bad file descriptor.";
+            EventLogger.watchman_died_caught ();
+            Watchman_process.return (Watchman_dead (dead_env_from_alive env), Watchman_unavailable)
+          | End_of_file ->
+            Hh_logger.log "Watchman connection End_of_file. Closing channel";
+            close_channel_on_instance env
+          | Watchman_process.Read_payload_too_long ->
+            Hh_logger.log "Watchman reading payload too long. Closing channel";
+            close_channel_on_instance env
+          | Timeout ->
+            Hh_logger.log "Watchman reading Timeout. Closing channel";
+            close_channel_on_instance env
+          | Watchman_error msg ->
+            Hh_logger.log "Watchman error: %s. Closing channel" msg;
+            close_channel_on_instance env
+          | e ->
+            let msg = Printexc.to_string e in
+            EventLogger.watchman_uncaught_failure msg;
+            raise Exit_status.(Exit_with Watchman_failed)
+        )
+    end
+
+  (** This is a large >50MB payload, which could longer than 2 minutes for
+   * Watchman to generate and push down the channel. *)
+  let get_all_files env =
+    Watchman_process.catch
+      ~f:(fun () ->
+        with_crash_record_exn "get_all_files" @@ fun () ->
+          Watchman_process.map_fold_values
+            env.watched_paths
+            ~init:SSet.empty
+            ~f:(fun watched_path set ->
+              Watchman_process.request
+                ~debug_logging:env.settings.debug_logging
+                (all_query ~watched_path env)
+              >|= fun response ->
+                watched_path.clockspec <- J.get_string_val "clock" response;
+                extract_file_names ~watched_path env response
+                |> List.fold ~init:set ~f:(fun set file -> SSet.add file set)
+            )
+          >|= SSet.elements
+      )
+      ~catch:(fun _ -> raise Exit_status.(Exit_with Watchman_failed))
+
+  let transform_synchronous_get_changes_response ~watched_path env data =
+    watched_path.clockspec <- J.get_string_val "clock" data;
+    assert_no_fresh_instance data;
+    env, set_of_list @@ extract_file_names ~watched_path env data
+
+  let make_state_change_response state name data =
+    let metadata = J.try_get_val "metadata" data in
+    match state with
+    | `Enter ->
+      State_enter (name, metadata)
+    | `Leave ->
+      State_leave (name, metadata)
+
+  let make_mergebase_changed_response ~watched_path env data =
+    let open Hh_json.Access in
+    let accessor = return data in
+    accessor >>=
+      get_obj "clock" >>=
+      get_string "clock" >>= fun (clock, _) ->
+    accessor >>= get_obj "clock" >>=
+      get_obj "scm" >>=
+      get_string "mergebase" >>= fun (mergebase, keytrace) ->
+    let files = set_of_list @@ extract_file_names ~watched_path env data in
+    watched_path.clockspec <- clock;
+    let response = Changed_merge_base (mergebase, files, clock) in
+    Ok ((env, response), keytrace)
+
+  let get_watched_path_for_response env data =
+    let subscription_name =
+      try J.get_string_val "subscription" data
+      with Not_found ->
+        failwith (
+          spf
+            "Malformed response from watchman missing 'subscription' field:\n%s"
+            (Hh_json.json_to_string ~pretty:true data)
+        )
+    in
+    try SMap.find_unsafe subscription_name env.watched_paths
+    with Not_found -> failwith (spf "Unknown watchman subscription '%s'" subscription_name)
+
+  let transform_asynchronous_get_changes_response env data = match data with
+    | None ->
+      env, Files_changed (SSet.empty)
+    | Some data -> begin
+      let watched_path = get_watched_path_for_response env data in
+
+      match make_mergebase_changed_response ~watched_path env data with
+      | Ok ((env, response), _) -> env, response
+      | Error _ ->
+        watched_path.clockspec <- J.get_string_val "clock" data;
+        assert_no_fresh_instance data;
+        try env, make_state_change_response `Enter
+          (J.get_string_val "state-enter" data) data with
+        | Not_found ->
+        try env, make_state_change_response `Leave
+          (J.get_string_val "state-leave" data) data with
+        | Not_found ->
+          env, Files_changed (set_of_list @@ extract_file_names ~watched_path env data)
+    end
+
+  let get_changes ?deadline instance =
+    let timeout = Option.map deadline ~f:(fun deadline ->
+      let timeout = deadline -. (Unix.time ()) in
+      max timeout 0.0
+    ) in
+    call_on_instance instance "get_changes" @@ fun env ->
+      let debug_logging = env.settings.debug_logging in
+      if env.settings.subscribe_mode <> None
+      then
+        Watchman_process.blocking_read ~debug_logging ?timeout ~conn:env.conn >|= fun response ->
+        let env, result = transform_asynchronous_get_changes_response env response in
+        env, Watchman_pushed result
+      else
+        Watchman_process.map_fold_values
+          env.watched_paths
+          ~init:(env, SSet.empty)
+          ~f:(fun watched_path (env, files) ->
+            let query = since_query ~watched_path env in
+            Watchman_process.request
+              ~debug_logging ~conn:env.conn ?timeout query
+            >|= fun response ->
+              let env, files' =
+                transform_synchronous_get_changes_response ~watched_path env response
+              in
+              env, SSet.union files files'
+          )
+        >|= fun (env, result) -> env, Watchman_synchronous result
+
+  let flush_request ~(timeout:int) watch_root =
+    let open Hh_json in
+    let directive = JSON_Object [
+      (** Watchman expects timeout milliseconds. *)
+      ("sync_timeout", (JSON_Number (string_of_int @@ timeout * 1000))) ] in
+    JSON_Array [
+      JSON_String "flush-subscriptions";
+      JSON_String watch_root;
+      directive;
+    ]
+
+  let rec poll_until_sync ~deadline env acc =
+    let is_finished_flush_response json = match json with
+      | None -> false
+      | Some json -> begin
+        let open Hh_json.Access in
+        let synced = (return json) >>= get_array "synced" |> function
+          | Error _ -> SSet.empty
+          | Ok (vs, _) -> List.map vs ~f:Hh_json.get_string_exn |> SSet.of_list
+        in
+        let not_needed = (return json) >>= get_array "no_sync_needed" |> function
+          | Error _ -> SSet.empty
+          | Ok (vs, _) -> List.map vs ~f:Hh_json.get_string_exn |> SSet.of_list
+        in
+        (* All the subscriptions which we need to sync *)
+        let to_sync = env.watched_paths |> SMap.bindings |> List.map ~f:fst |> SSet.of_list in
+        (* Return true if all subs have been sync'd or don't need to be sync'd *)
+        SSet.diff (SSet.diff to_sync synced) not_needed |> SSet.is_empty
+      end
+    in
+    let timeout = deadline -. Unix.time () in
+    if timeout < 0.0 then raise Timeout else ();
+
+    let debug_logging = env.settings.debug_logging in
+    Watchman_process.blocking_read ~debug_logging ~timeout ~conn:env.conn >>= fun json ->
+
+    if is_finished_flush_response json
+    then Watchman_process.return (env, acc)
+    else
+      let env, result = match json with
+      | None -> env, SSet.empty
+      | Some json ->
+        let watched_path = get_watched_path_for_response env json in
+        transform_synchronous_get_changes_response ~watched_path env json
+      in
+      poll_until_sync ~deadline env (SSet.union result acc)
+
+  let poll_until_sync ~deadline env =
+    poll_until_sync ~deadline env SSet.empty
+
+  let get_changes_synchronously ~(timeout:int) instance =
+    call_on_instance instance "get_changes_synchronously"
+      @@ (fun env ->
+        if env.settings.subscribe_mode = None
+        then
+          Watchman_process.map_fold_values
+            env.watched_paths
+            ~init:(env, SSet.empty)
+            ~f:(fun watched_path (env, files) ->
+              let timeout = float_of_int timeout in
+              let query = since_query ~watched_path env in
+              Watchman_process.request
+                ~debug_logging:env.settings.debug_logging
+                ~conn:env.conn ~timeout query
+              >|= fun response ->
+                let env, files' =
+                  transform_synchronous_get_changes_response ~watched_path env response
+                in
+                env, SSet.union files files'
+            )
+          >|= fun (env, files) -> env, Watchman_synchronous files
+        else
+          let request = flush_request ~timeout env.watch_root in
+          let conn = env.conn in
+          Watchman_process.send_request_and_do_not_wait_for_response
+            ~debug_logging:env.settings.debug_logging ~conn request >>= fun () ->
+          let deadline = Unix.time () +. (float_of_int timeout) in
+          poll_until_sync ~deadline env >|= fun (env, files) ->
+          env, Watchman_synchronous files
+      )
+    >|= function
+    | _, Watchman_unavailable ->
+      raise (Watchman_error "Watchman unavailable for synchronous response")
+    | _, Watchman_pushed _ ->
+      raise (Watchman_error "Wtf? pushed response from synchronous request")
+    | instance, Watchman_synchronous files ->
+      instance, files
+
+  let conn_of_instance = function
+    | Watchman_dead _ -> None
+    | Watchman_alive {conn; _} -> Some conn
+
+  module Testing = struct
+    include Testing_common
+
+    let get_test_env () =
+      Watchman_process.Testing.get_test_conn () >|= fun conn ->
+      {
+        settings = test_settings;
+        conn;
+        watch_root = "/path/to/root";
+        watched_paths =
+          SMap.add "mysubscriptionname" {
+            subscription_name = "mysubscriptionname";
+            path = Path.dummy_path;
+            relative_path = "";
+            clockspec = "";
+          } SMap.empty
+      }
+
+    let transform_asynchronous_get_changes_response env json =
+      transform_asynchronous_get_changes_response env json
+  end
+
+end;;
+
+module Watchman_actual = struct
+  include Functor (Regular_watchman_process)
+
+  let get_reader instance =
+    Option.map (conn_of_instance instance) ~f:Regular_watchman_process.get_reader
+end
+
+module Watchman_mock = struct
+
+  exception Not_available_in_mocking
+
+  type 'a result = 'a
+  type conn
+
+  include Watchman_sig.Types
+  type env = string
+  type dead_env = unit
+  type watchman_instance =
+    | Watchman_dead of dead_env
+    | Watchman_alive of env
+
+  module Mocking = struct
+    let print_env env = env
+
+    let init = ref None
+    let init_returns v =
+      init := v
+
+    let changes = ref Watchman_unavailable
+    let get_changes_returns v =
+      changes := v
+
+    let changes_synchronously = ref SSet.empty
+
+    let all_files = ref []
+
+  end
+
+  module Testing = struct
+    include Testing_common
+    let get_test_env () = "test_env"
+    let transform_asynchronous_get_changes_response _ _ =
+      raise Not_available_in_mocking
+
+  end
+
+  let init ?since_clockspec:_ _ () = !Mocking.init
+  let get_changes ?deadline instance =
+    let _ = deadline in
+    let result = !Mocking.changes in
+    Mocking.changes := Watchman_unavailable;
+    instance, result
+
+  let get_changes_synchronously ~timeout instance =
+    let _ = timeout in
+    let result = !Mocking.changes_synchronously in
+    Mocking.changes_synchronously := SSet.empty;
+    instance, result
+
+  let get_reader _ = None
+
+  let conn_of_instance _ = None
+
+  let get_all_files _ =
+    let result = !Mocking.all_files in
+    Mocking.all_files := [];
+    result
+
+end
+
+module type S = sig
+  include Watchman_sig.S with type 'a result = 'a
+
+  val get_reader: watchman_instance -> Buffered_line_reader.t option
+end
+
+include (val (if Injector_config.use_test_stubbing
+  then (module Watchman_mock : S)
+  else (module Watchman_actual : S)
+))

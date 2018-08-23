@@ -1,32 +1,126 @@
-test.js:19
- 19: (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. Expected string literal `ffffff`, got `ff0000` instead
- 19: (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
-                                    ^^^^^^^^ string literal `ffffff`
+Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
-test.js:21
- 21: ColorIdToNumber.XXX; // oops
-                     ^^^ property `XXX`. Property not found in
- 21: ColorIdToNumber.XXX; // oops
-     ^^^^^^^^^^^^^^^ object literal
+Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because string [1] is incompatible with string
+literal `ffffff` [2].
 
-test2.js:8
-  8: (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. Expected string literal `ffffff`, got `00ff00` instead
-  8: (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
-                                      ^^^^^^^^ string literal `ffffff`
+   test.js:19:2
+   19| (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-test3.js:4
-  4: (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. Expected string literal `ffffff`, got `0000ff` instead
-  4: (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
-                                     ^^^^^^^^ string literal `ffffff`
-
-test6.js:2
-  2: (o.hello: 'nothing'); // oops
-      ^^^^^^^ string. Expected string literal `nothing`, got `world` instead
-  2: (o.hello: 'nothing'); // oops
-               ^^^^^^^^^ string literal `nothing`
+References:
+   test.js:8:8
+    8|   RED: 'ff0000',
+              ^^^^^^^^ [1]
+   test.js:19:32
+   19| (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
+                                      ^^^^^^^^ [2]
 
 
-Found 5 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+
+Cannot get `ColorIdToNumber.XXX` because property `XXX` is missing in object literal [1].
+
+   test.js:21:1
+   21| ColorIdToNumber.XXX; // oops
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:13:23
+                             v
+   13| var ColorIdToNumber = {
+   14|   [ColorId.RED]: ColorNumber.RED,
+   15|   [ColorId.GREEN]: ColorNumber.GREEN,
+   16|   [ColorId.BLUE]: ColorNumber.BLUE,
+   17| };
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test2.js:8:2
+
+Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because string [1] is incompatible with string
+literal `ffffff` [2].
+
+   test2.js:8:2
+   8| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:9:10
+   9|   GREEN: '00ff00',
+               ^^^^^^^^ [1]
+   test2.js:8:34
+   8| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
+                                       ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:4:2
+
+Cannot cast `ColorIdToNumber[ColorId.BLUE]` to string literal `ffffff` because string [1] is incompatible with string
+literal `ffffff` [2].
+
+   test3.js:4:2
+    4| (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:10:9
+   10|   BLUE: '0000ff',
+               ^^^^^^^^ [1]
+   test3.js:4:33
+    4| (ColorIdToNumber[ColorId.BLUE]: 'ffffff'); // oops
+                                       ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test6.js:2:2
+
+Cannot cast `o.hello` to string literal `nothing` because string [1] is incompatible with string literal `nothing` [2].
+
+   test6.js:2:2
+   2| (o.hello: 'nothing'); // oops
+       ^^^^^^^
+
+References:
+   test5.js:5:12
+   5|   [hello]: 'world',
+                 ^^^^^^^ [1]
+   test6.js:2:11
+   2| (o.hello: 'nothing'); // oops
+                ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test7.js:2:17
+
+Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string [2].
+
+   test7.js:2:17
+   2| var x: string = obj['m'](); // error, number ~> string
+                      ^^^^^^^^^^
+
+References:
+   test7.js:1:15
+   1| var obj = {x: 0, m() { return this.x }}
+                    ^ [1]
+   test7.js:2:8
+   2| var x: string = obj['m'](); // error, number ~> string
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test7.js:5:17
+
+Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2].
+
+   test7.js:5:17
+     5| var y: string = arr[0](); // error: number ~> string
+                        ^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:276:13
+   276|     length: number;
+                    ^^^^^^ [1]
+   test7.js:5:8
+     5| var y: string = arr[0](); // error: number ~> string
+               ^^^^^^ [2]
+
+
+
+Found 7 errors

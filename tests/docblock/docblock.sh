@@ -1,6 +1,4 @@
-#!/bin/sh -e
-
-FLOW="$1"
+#!/bin/bash -e
 
 printf "/**\r\n * @providesModule crlf\r\n */\r\n" > crlf.js
 printf "/**\r\n * @providesModule foo\r\n */\r\nrequire('crlf');\r\n" > foo.js

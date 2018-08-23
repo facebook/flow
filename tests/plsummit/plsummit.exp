@@ -1,28 +1,67 @@
-generics.js:4
-  4: function foo<X>(x: X): X { r = x; return x; }
-                                    ^ X. This type is incompatible with
-  3: var r: number = 0;
-            ^^^^^^ number
+Error ------------------------------------------------------------------------------------------------- generics.js:4:32
 
-import_class.js:3
-  3: var c = new C("");
-             ^^^^^^^^^ constructor call
-  3: var c = new C("");
-                   ^^ string. This type is incompatible with
-  3:     constructor(x: number) { this.x = x; }
-                        ^^^^^^ number. See: export_class.js:3
+Cannot assign `x` to `r` because `X` [1] is incompatible with number [2].
 
-objects.js:5
-  5: var x: string = c.foo();
-                     ^^^^^^^ number. This type is incompatible with
-  5: var x: string = c.foo();
-            ^^^^^^ string
+   generics.js:4:32
+   4| function foo<X>(x: X): X { r = x; return x; }
+                                     ^
 
-objects.js:13
- 13: var y: number = o2.bar();
-                     ^^^^^^^^ string. This type is incompatible with
- 13: var y: number = o2.bar();
-            ^^^^^^ number
+References:
+   generics.js:4:20
+   4| function foo<X>(x: X): X { r = x; return x; }
+                         ^ [1]
+   generics.js:3:8
+   3| var r: number = 0;
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import_class.js:3:15
+
+Cannot call `C` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   import_class.js:3:15
+   3| var c = new C("");
+                    ^^ [1]
+
+References:
+   export_class.js:3:20
+   3|     constructor(x: number) { this.x = x; }
+                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:5:17
+
+Cannot assign `c.foo()` to `x` because number [1] is incompatible with string [2].
+
+   objects.js:5:17
+   5| var x: string = c.foo();
+                      ^^^^^^^
+
+References:
+   objects.js:1:25
+   1| function C() { this.x = 0; }
+                              ^ [1]
+   objects.js:5:8
+   5| var x: string = c.foo();
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:13:17
+
+Cannot assign `o2.bar()` to `y` because string [1] is incompatible with number [2].
+
+   objects.js:13:17
+   13| var y: number = o2.bar();
+                       ^^^^^^^^
+
+References:
+   objects.js:9:14
+    9| var o = { y: "", foo: foo, bar: bar };
+                    ^^ [1]
+   objects.js:13:8
+   13| var y: number = o2.bar();
+              ^^^^^^ [2]
+
 
 
 Found 4 errors

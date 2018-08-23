@@ -42,3 +42,12 @@ module Jekyll
 end
 
 Liquid::Template.register_tag "asset_name", Jekyll::Assets::Liquid::AssetNameTag
+
+
+module StripExtensionFilter
+  def strip_extension(input)
+    File.join(File.dirname(input), File.basename(input, File.extname(input)))
+  end
+end
+
+Liquid::Template.register_filter(StripExtensionFilter)

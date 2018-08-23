@@ -1,36 +1,112 @@
 #!/bin/bash
 
+
+# Use the assert functions below to expect specific exit codes.
+
+assert_exit_on_line() {
+  # Run all this in a subshell, so we can set -e without affecting the caller
+  (
+    set -e
+    _assert_exit__line=$1; shift
+    _assert_exit__ret=0
+    _assert_exit__code=$1; shift
+    "$@" ||  _assert_exit__ret=$?
+    eval "$SAVED_OPTION" # Undo the `set -e` if necessary
+    if [ "$_assert_exit__ret" -eq "$_assert_exit__code" ]; then
+      return 0
+    else
+      echo \
+        "\`$(basename "$1") ${*:2}\` expected to exit code $_assert_exit__code" \
+        "but got $_assert_exit__ret (line $_assert_exit__line)"
+      return 1
+    fi
+  )
+  return $?
+}
+
+export EXIT_OK=0
+export EXIT_ERRS=2
+export EXIT_COULD_NOT_FIND_FLOWCONFIG=12
+export EXIT_USAGE=64
+
+assert_exit() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$@"
+}
+assert_ok() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_OK" "$@"
+}
+assert_errors() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
+}
+
 show_help() {
-  printf "Usage: runtests.sh [-h] [-v] FLOW_BINARY [TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
-  echo "    FLOW_BINARY"
-  echo "        path to Flow binary"
-  echo "    TEST_FILTER"
+  echo "    [-b] FLOW_BINARY"
+  echo "        path to Flow binary (the -b is optional)"
+  echo "    [-f] TEST_FILTER"
   echo "        optional regular expression to choose test directories to run"
+  echo "    -l"
+  echo "        lists the tests that will be run"
+  echo "    -d DIR"
+  echo "        run tests in DIR/tests/"
+  echo "    -t TEST"
+  echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
   echo "    -r"
   echo "        re-record failing tests to update expected output"
-  echo "    -h"
-  echo "        display this help and exit"
+  echo "    -q"
+  echo "        quiet output (hides status, just prints results)"
+  echo "    -s"
+  echo "        test saved state"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
+  echo "    -h"
+  echo "        display this help and exit"
 }
 
 export IN_FLOW_TEST=1
+export FLOW_LOG_LEVEL=debug
 
 OPTIND=1
 record=0
+saved_state=0
 verbose=0
-while getopts "rh?v" opt; do
+quiet=0
+relative="$(dirname "${BASH_SOURCE[0]}")"
+list_tests=0
+while getopts "b:d:f:lqrst:vh?" opt; do
   case "$opt" in
+  b)
+    FLOW="$OPTARG"
+    ;;
+  d)
+    relative="$OPTARG"
+    ;;
+  f)
+    filter="$OPTARG"
+    ;;
+  l)
+    list_tests=1
+    ;;
+  t)
+    specific_test="$OPTARG"
+    ;;
+  q)
+    quiet=1
+    ;;
   r)
     record=1
+    ;;
+  s)
+    saved_state=1
+    printf "Testing saved state by running all tests using saved state\\n"
+    ;;
+  v)
+    verbose=1
     ;;
   h|\?)
     show_help
     exit 0
-    ;;
-  v)
-    verbose=1
     ;;
   esac
 done
@@ -39,6 +115,17 @@ shift $((OPTIND-1))
 
 [ "$1" = "--" ] && shift
 
+if [ -n "$specific_test" ]; then
+  if [[ "$saved_state" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  fi
+
+  filter="^$specific_test$"
+fi
+
+FLOW="${FLOW:-$1}"
+filter="${filter:-$2}"
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   _canonicalize_file_path() {
     local dir file
@@ -46,9 +133,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     file=$(basename -- "$1")
     (cd "$dir" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$file")
   }
-  FLOW=$(_canonicalize_file_path "$1")
+  FLOW=$(_canonicalize_file_path "$FLOW")
 else
-  FLOW=$(readlink -f "$1")
+  FLOW=$(readlink -f "$FLOW")
 fi
 if [ -t 1 ]; then
   COLOR_RESET="\x1b[0m"
@@ -102,6 +189,26 @@ print_failure() {
       rm "$diff_file"
     fi
 }
+print_error() {
+    dir=$1
+    name=${dir%*/}
+    name=${name##*/}
+
+    printf "%b[✗] ERRORED:%b %s%b\n" \
+      "$COLOR_RED_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+
+    out_file="${dir}${name}.out"
+    [ -f "$out_file" ] && cat "$out_file"
+
+    err_file="${dir}${name}.err"
+    [ -f "$err_file" ] && printf "\n\nStderr:\n" && cat "$err_file"
+
+    monitor_log_file="${dir}${name}.monitor_log"
+    [ -f "$monitor_log_file" ] && printf "\n\nServer monitor log:\n" && cat "$monitor_log_file"
+
+    log_file="${dir}${name}.log"
+    [ -f "$log_file" ] && printf "\n\nServer log:\n" && cat "$log_file"
+}
 print_skip() {
     name=$1
     name=${name%*/}
@@ -122,7 +229,7 @@ print_success() {
       "$COLOR_GREEN_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
 }
 print_run() {
-    if [ -t 1 ]; then
+    if [[ -t 1 && "$quiet" -eq 0 ]]; then
       name=$1
       name=${name%*/}
       name=${name##*/}
@@ -130,34 +237,30 @@ print_run() {
         "$COLOR_DEFAULT_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
     fi
 }
-kill_server() {
-  trap - SIGINT SIGTERM
-  "$FLOW" stop . 1> /dev/null 2>&1
-  kill "$1" $$
-}
-cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
+
+cd "$relative" || exit 1
 passed=0
 failed=0
 skipped=0
-filter="$2"
+errored=0
 
 RUNTEST_SUCCESS=0
 RUNTEST_FAILURE=1
 RUNTEST_SKIP=2
 RUNTEST_MISSING_FILES=3
+RUNTEST_ERROR=4
 
 # This function runs in the background so it shouldn't output anything to
 # stdout or stderr. It should only communicate through its return value
 runtest() {
-    return_status=$RUNTEST_SKIP
     dir=$1
     dir=${dir%*/}
     name=${dir##*/}
     exp_file="${name}.exp"
     # On Windows we skip some tests as symlinks not available
     if [ "$OSTYPE" = "msys" ]  &&
-      ([ $name = "symlink" ] ||
-       [ $name = "node_tests" ])
+      ([ "$name" = "symlink" ] ||
+       [ "$name" = "node_tests" ])
     then
         return $RUNTEST_SKIP
     elif [[ -z $filter || $name =~ $filter ]]
@@ -165,8 +268,7 @@ runtest() {
         if ([ ! -e "$dir/$exp_file" ] || [[ ! -e "$dir/.flowconfig" && ! -e "$dir/.testconfig" ]])
         then
             if [ "$name" = "auxiliary" ] ||
-               [ "$name" = "callable" ] ||
-               [ "$name" = "suggest" ]
+               [ "$name" = "callable" ]
             then
                 return $RUNTEST_SKIP;
             else
@@ -178,25 +280,49 @@ runtest() {
         # parallel runs of the same test don't stomp on each other (Facebook
         # internally runs a stress test to look for flaky tests). If a test
         # fails, we'll then copy the files back to the source directory.
-        OUT_DIR=$(mktemp -d /tmp/flow_test.XXXXXX)
+        OUT_PARENT_DIR=$(mktemp -d /tmp/flow_test.XXXXXX)
+        OUT_DIR="$OUT_PARENT_DIR/$name"
+        mkdir "$OUT_DIR"
+
+        # Make these now so that we can clean them up if necessary
+        SAVED_STATE_DIR=$(mktemp -d /tmp/flow_saved_state_XXXXXX)
 
         # deletes the temp directory
         function cleanup {
-          rm -rf "$OUT_DIR"
+          rm -rf "$OUT_PARENT_DIR"
+          rm -rf "$SAVED_STATE_DIR"
         }
-        trap cleanup EXIT
+        function force_cleanup {
+          "$FLOW" stop "$OUT_DIR" 1> /dev/null 2>&1
+          cleanup
+          exit 1
+        }
+        trap 'cleanup' RETURN
+        trap 'force_cleanup' EXIT
 
         # Some tests mutate the source directory, so make a copy first and run
         # from there. the . in "$dir/." copies the entire directory, including
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
+        cp "$dir/../fs.sh" "$OUT_PARENT_DIR" 2>/dev/null || :
+        mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
+
+        export FLOW_TEMP_DIR="$OUT_PARENT_DIR"
 
         out_file="$name.out"
+        log_file="$name.log"
+        monitor_log_file="$name.monitor_log"
         err_file="$name.err"
         diff_file="$name.diff"
-        abs_out_file="$OUT_DIR/$name.out"
-        abs_err_file="$OUT_DIR/$name.err"
-        abs_diff_file="$OUT_DIR/$name.diff"
+        abs_out_file="$OUT_PARENT_DIR/$name.out"
+        abs_log_file="$OUT_PARENT_DIR/$name.log"
+        abs_monitor_log_file="$OUT_PARENT_DIR/$name.monitor_log"
+        abs_err_file="$OUT_PARENT_DIR/$name.err"
+        abs_diff_file="$OUT_PARENT_DIR/$name.diff"
+        return_status=$RUNTEST_SUCCESS
+
+        export FLOW_LOG_FILE="$abs_log_file"
+        export FLOW_MONITOR_LOG_FILE="$abs_monitor_log_file"
 
         # run the tests from inside $OUT_DIR
         pushd "$OUT_DIR" >/dev/null
@@ -205,11 +331,11 @@ runtest() {
         # for now this is kind of ad-hoc:
         #
         # 1. The default flow command is check with the --all flag. This flag
-        # can be overriden here with the line "all: false". Anything besides
+        # can be overridden here with the line "all: false". Anything besides
         # "false" is ignored, and the setting itself is ignored if a command
         # besides check is run.
         #
-        # 2. The default flow command can be overriden here by supplying the
+        # 2. The default flow command can be overridden here by supplying the
         # entire command on a line that begins with "cmd:". (Note: for writing
         # incremental tests, use the option below). A line beginning with
         # "stdin:" can additionally supply arguments to pass to the command via
@@ -224,11 +350,15 @@ runtest() {
         # stop the server after the script exits.
         #
         all=" --all"
+        flowlib=" --no-flowlib"
         shell=""
         cmd="check"
         stdin=""
         stderr_dest="$abs_err_file"
+        ignore_stderr=true
         cwd=""
+        start_args=""
+        file_watcher="none"
         if [ -e ".testconfig" ]
         then
             # all
@@ -241,6 +371,7 @@ runtest() {
             # ignore_stderr
             if [ "$(awk '$1=="ignore_stderr:"{print $2}' .testconfig)" == "false" ]
             then
+                ignore_stderr=false
                 stderr_dest="$abs_out_file"
             fi
             # stdin
@@ -252,11 +383,35 @@ runtest() {
                 cmd=""
                 shell="$config_shell"
             fi
+            # file_watcher
+            config_fw="$(awk '$1=="file_watcher:"{print $2}' .testconfig)"
+            if [ "$config_fw" != "" ]
+            then
+              file_watcher="$config_fw"
+            fi
+            # start_args
+            config_start_args="$(awk '$1=="start_args:"{$1="";print}' .testconfig)"
+            if [ "$config_start_args" != "" ]
+            then
+                start_args="$config_start_args"
+            fi
             # cmd
             config_cmd="$(awk '$1=="cmd:"{$1="";print}' .testconfig)"
             if [ "$config_cmd" != "" ]
             then
                 cmd="$config_cmd"
+            fi
+
+            if [[ "$saved_state" -eq 1 ]] && \
+              [ "$(awk '$1=="skip_saved_state:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "$saved_state" -eq 0 ]] && \
+              [ "$(awk '$1=="saved_state_only:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
             fi
         fi
 
@@ -264,23 +419,142 @@ runtest() {
             pushd "$cwd" >/dev/null
         fi
 
+        # if .flowconfig sets no_flowlib, don't pass the cli flag
+        if grep -q "no_flowlib" .flowconfig; then
+            flowlib=""
+        fi
+
+        # Helper function to generate saved state. If anything goes wrong, it
+        # will fail
+        create_saved_state () {
+          local root="$1"
+          local flowconfig_name="$2"
+          local SAVED_STATE_LOAD_SCRIPT
+          SAVED_STATE_LOAD_SCRIPT=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.load_script")
+          (
+            set -e
+            # start lazy server and wait
+            "$FLOW" start "$root" \
+              $all $flowlib --wait --lazy \
+              --file-watcher "$file_watcher" \
+              --flowconfig-name "$flowconfig_name" \
+              --log-file "$abs_log_file" \
+              --monitor-log-file "$abs_monitor_log_file"
+
+            local SAVED_STATE_FILENAME
+            SAVED_STATE_FILENAME=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.saved_state")
+            assert_ok "$FLOW" save-state \
+              --root "$root" \
+              --out "$SAVED_STATE_FILENAME" \
+              --flowconfig-name "$flowconfig_name"
+            assert_ok "$FLOW" stop --flowconfig-name "$flowconfig_name" "$root"
+            echo "echo '{\"path\":\"$SAVED_STATE_FILENAME\"}'" > "$SAVED_STATE_LOAD_SCRIPT"
+            chmod +x "$SAVED_STATE_LOAD_SCRIPT"
+          )  > /dev/null 2>&1
+          local RET=$?
+          echo "$SAVED_STATE_LOAD_SCRIPT"
+          return $RET
+        }
+
         # run test
         if [ "$cmd" == "check" ]
         then
-            # default command is check with configurable --all
-            "$FLOW" check . $all --strip-root --show-all-errors 1> "$abs_out_file" 2> "$stderr_dest"
+            if [[ "$saved_state" -eq 1 ]]; then
+              if load_script=$(create_saved_state . ".flowconfig"); then
+                # default command is check with configurable --all and --no-flowlib
+                "$FLOW" check . \
+                  $all $flowlib --strip-root --show-all-errors \
+                  --saved-state-load-script "$load_script" \
+                  --saved-state-no-fallback \
+                   1>> "$abs_out_file" 2>> "$stderr_dest"
+                st=$?
+              else
+                printf "Failed to generate saved state\\n" >> "$stderr_dest"
+                return_status=$RUNTEST_ERROR
+              fi
+            else
+              # default command is check with configurable --all and --no-flowlib
+              "$FLOW" check . \
+                $all $flowlib --strip-root --show-all-errors \
+                 1>> "$abs_out_file" 2>> "$stderr_dest"
+              st=$?
+            fi
+            if [ $ignore_stderr = true ] && [ -n "$st" ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+              printf "flow check return code: %d\\n" "$st" >> "$stderr_dest"
+              return_status=$RUNTEST_ERROR
+            fi
         else
             # otherwise, run specified flow command, then kill the server
 
-            trap "kill_server -INT" SIGINT
-            trap "kill_server -TERM" SIGTERM
+            # start_flow_unsafe ROOT [OPTIONS]...
+            start_flow_unsafe () {
+              local root=$1; shift
 
-            # start server and wait
-            "$FLOW" start . $all --wait > /dev/null 2>&1
-            if [ "$shell" != "" ]
-            then
-                # run test script
-                sh "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+              if [ ! -d "$root" ]; then
+                printf "Invalid root directory '%s'\\n" "$root" >&2
+                return 1
+              fi
+
+              if [[ "$saved_state" -eq 1 ]]; then
+                local flowconfig_name=".flowconfig"
+                for ((i=1; i<=$#; i++)); do
+                  opt="${!i}"
+                  if [ "$opt" = "--flowconfig-name" ]
+                  then
+                    ((i++))
+                    flowconfig_name=${!i}
+                  fi
+                done
+
+                local load_script
+                if load_script=$(create_saved_state "$root" "$flowconfig_name")
+                then
+                  "$FLOW" start "$root" \
+                    $all $flowlib --wait \
+                    --saved-state-load-script "$load_script" \
+                    --saved-state-no-fallback \
+                    --file-watcher "$file_watcher" \
+                    --log-file "$abs_log_file" \
+                    --monitor-log-file "$abs_monitor_log_file" \
+                    "$@"
+                  return $?
+                else
+                    printf "Failed to generate saved state\\n" >&2
+                    return 1
+                fi
+              else
+                # start server and wait
+                "$FLOW" start "$root" \
+                  $all $flowlib --wait \
+                  --file-watcher "$file_watcher" \
+                  --log-file "$abs_log_file" \
+                  --monitor-log-file "$abs_monitor_log_file" \
+                  "$@"
+                return $?
+              fi
+            }
+
+            # start_flow_unsafe ROOT [OPTIONS]...
+            start_flow () {
+              assert_ok start_flow_unsafe "$@"
+            }
+            start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
+            code=$?
+            if [ $code -ne 0 ]; then
+              # flow failed to start
+              printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
+              return_status=$RUNTEST_ERROR
+            elif [ "$shell" != "" ]; then
+              # run test script in subshell so it inherits functions
+              (
+                set -e # The script should probably use this option
+                source "$shell" "$FLOW"
+              ) 1> "$abs_out_file" 2> "$stderr_dest"
+              code=$?
+              if [ $code -ne 0 ]; then
+                printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
+                return_status=$RUNTEST_ERROR
+              fi
             else
             # If there's stdin, then direct that in
             # cmd should NOT be double quoted...it may contain many commands
@@ -295,49 +569,73 @@ runtest() {
             fi
             # stop server
             "$FLOW" stop . 1> /dev/null 2>&1
-
-            trap - SIGINT SIGTERM
         fi
 
         if [ "$cwd" != "" ]; then
             popd >/dev/null
         fi
 
-        diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
-
         # leave $OUT_DIR
         popd >/dev/null
 
-        if [ -s "$OUT_DIR/$diff_file" ]
-        then
-            mv "$OUT_DIR/$out_file" "$dir"
-            mv "$OUT_DIR/$err_file" "$dir"
-            mv "$OUT_DIR/$diff_file" "$dir"
-            return_status=$RUNTEST_FAILURE
+        if [ $return_status -eq $RUNTEST_SUCCESS ]; then
+          pushd "$OUT_PARENT_DIR" >/dev/null
+          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file" 2>&1
+          popd >/dev/null
+        fi
+
+        if [ $return_status -ne $RUNTEST_SUCCESS ]; then
+            [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir" || rm -f "$dir/$out_file"
+            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir" || rm -f "$dir/$log_file"
+            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir" || rm -f "$dir/$monitor_log_file"
+            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir" || rm -f "$dir/$err_file"
+            return $return_status
+        elif [ -s "$abs_diff_file" ]; then
+            mv "$abs_out_file" "$dir"
+            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir" || rm -f "$dir/$log_file"
+            [ -s "$abs_monitor_log_file" ] && mv "$abs_monitor_log_file" "$dir" || rm -f "$dir/$monitor_log_file"
+            [ -s "$abs_err_file" ] && mv "$abs_err_file" "$dir" || rm -f "$dir/$err_file"
+            mv "$abs_diff_file" "$dir"
+            return $RUNTEST_FAILURE
         else
-            rm -rf "$OUT_DIR"
             rm -f "$dir/$out_file"
+            rm -f "$dir/$log_file"
+            rm -f "$dir/$monitor_log_file"
             rm -f "$dir/$err_file"
             rm -f "$dir/$diff_file"
-            return_status=$RUNTEST_SUCCESS
+            return $RUNTEST_SUCCESS
         fi
     else
-        return_status=$RUNTEST_SKIP
+        return $RUNTEST_SKIP
     fi
-    return $return_status
 }
 
 
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
-printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
+if [[ "$quiet" -eq 0 ]]; then
+  printf "Running up to %d test(s) in parallel\n" "$num_to_run_in_parallel"
+fi
 
 # Index N of pids should correspond to the test at index N of dirs
 dirs=(tests/*/)
 pids=()
+next_test_index=0
+next_test_to_reap=0
+
+function term_tests() {
+  if (( next_test_to_reap < ${#dirs[@]} )); then
+    local to_kill=(${pids[@]:$next_test_to_reap})
+    #printf "Aborting, killing %s\n" "${to_kill[*]}" >&2;
+    printf "\nAborting, killing running tests...\n" >&2
+    kill -TERM "${to_kill[@]}" 2>/dev/null
+    wait "${to_kill[@]}" 2>/dev/null
+    exit 1
+  fi
+}
+trap term_tests TERM SIGINT
 
 # Starts running a test in the background. If there are no more tests then it
 # does nothing
-next_test_index=0
 start_test() {
     if (( next_test_index < ${#dirs[@]} )); then
         test_dir="${dirs[next_test_index]}"
@@ -347,12 +645,28 @@ start_test() {
     ((next_test_index++))
 }
 
+if [[ "$list_tests" -eq 1 ]]; then
+  for dir in "${dirs[@]}"; do
+    dir=${dir%*/}
+    name=${dir##*/}
+
+    if [[ -z $filter || $name =~ $filter ]]; then
+
+      if [[ "$saved_state" -eq 1 ]]; then
+        echo "$name-saved-state"
+      else
+        echo "$name"
+      fi
+    fi
+  done
+  exit 0
+fi
+
 # Kick off a bunch of test runs
 for ignore_me in $(seq $num_to_run_in_parallel); do
   start_test
 done
 
-next_test_to_reap=0
 while (( next_test_to_reap < ${#dirs[@]} )); do
     # We reap the tests in order, so that we can output them in a pretty way.
     testname="${dirs[next_test_to_reap]}"
@@ -370,11 +684,14 @@ while (( next_test_to_reap < ${#dirs[@]} )); do
         (( skipped++ ))
         print_skip "$testname" "$verbose" ;;
       $RUNTEST_MISSING_FILES )
-        (( failed++ ))
-        print_failure "$testname"
+        (( errored++ ))
+        print_error "$testname"
         name=${testname%*/}
         name=${name##*/}
         printf "Missing %s.exp file or .flowconfig file\n" "$name" ;;
+      $RUNTEST_ERROR )
+        (( errored++ ))
+        print_error "$testname" ;;
     esac
 
     ((next_test_to_reap++))
@@ -383,15 +700,25 @@ while (( next_test_to_reap < ${#dirs[@]} )); do
     start_test
 done
 
-echo
 if [ $failed -eq 0 ]; then
-  printf "%bPassed: %d, Failed: %d, Skipped: %d%b\n" \
-    "$COLOR_DEFAULT_BOLD" "$passed" "$failed" "$skipped" "$COLOR_RESET"
+  FAILED_COLOR="$COLOR_DEFAULT_BOLD"
 else
-  printf "%bPassed: %d, %bFailed: %d%b, Skipped: %d%b\n" \
+  FAILED_COLOR="$COLOR_WHITE_ON_RED_BOLD"
+fi
+if [ $errored -eq 0 ]; then
+  ERRORED_COLOR="$COLOR_DEFAULT_BOLD"
+else
+  ERRORED_COLOR="$COLOR_WHITE_ON_RED_BOLD"
+fi
+
+if [[ "$quiet" -eq 0 ]]; then
+  echo
+  printf "%bPassed: %d, %bFailed: %d%b, Skipped: %d, %bErrored: %d%b\n" \
     "$COLOR_DEFAULT_BOLD" "$passed" \
-    "$COLOR_WHITE_ON_RED_BOLD" "$failed" \
+    "$FAILED_COLOR" "$failed" \
     "$COLOR_DEFAULT_BOLD" "$skipped" \
+    "$ERRORED_COLOR" "$errored" \
     "$COLOR_RESET"
 fi
-exit ${failed}
+
+exit $((failed + errored))

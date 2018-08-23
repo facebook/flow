@@ -2,23 +2,25 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
-exception Error of string * int
+exception Error of string * Unix.error
 let wrap f () =
   try
     f ()
   with
-  | Inotify.Error (reason, err) -> raise (Error (reason, err))
+  | Unix.Unix_error (err, func, msg) ->
+      let reason =
+        Printf.sprintf "%s: %s: %s" func msg (Unix.error_message err) in
+      raise (Error (reason, err))
   | e -> raise e
 
-type watch = Inotify.wd
+type watch = Inotify.watch
 
 (* A watch in this case refers to an inotify watch. Inotify watches are used
  * to subscribe to events on files in linux kernel.
@@ -40,7 +42,7 @@ type event = {
 }
 
 let init _roots = {
-  fd     = wrap (Inotify.init) ();
+  fd     = wrap (Inotify.create) ();
   wpaths = WMap.empty;
 }
 
@@ -122,4 +124,6 @@ let _string_of inotify_ev =
   let s = match s with
   | Some s -> s
   | None -> "\"\"" in
-  Printf.sprintf "wd [%u] mask[%s] cookie[%ld] %s" (Inotify.int_of_wd wd) mask cookie s
+  Printf.sprintf
+    "wd [%u] mask[%s] cookie[%ld] %s"
+    (Inotify.int_of_watch wd) mask cookie s

@@ -1,0 +1,11 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+
+[lints]
+all=error
+sketchy-number=off

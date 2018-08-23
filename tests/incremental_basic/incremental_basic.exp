@@ -1,32 +1,104 @@
+Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+Cannot assign `0` to `a` because number [1] is incompatible with string [2].
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+   a.js:2:17
+   2| var a: string = 0;
+                      ^ [1]
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+References:
+   a.js:2:8
+   2| var a: string = 0;
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- b.js:3:17
+
+Cannot assign `a` to `b` because string [1] is incompatible with number [2].
+
+   b.js:3:17
+   3| var b: number = a;
+                      ^
+
+References:
+   a.js:2:8
+   2| var a: string = 0;
+             ^^^^^^ [1]
+   b.js:3:8
+   3| var b: number = a;
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- c.js:3:17
+
+Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+
+   c.js:3:17
+   3| var c: string = b;
+                      ^
+
+References:
+   b.js:3:8
+   3| var b: number = a;
+             ^^^^^^ [1]
+   c.js:3:8
+   3| var c: string = b;
+             ^^^^^^ [2]
+
+
 
 Found 3 errors
+Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+Cannot assign `0` to `a` because number [1] is incompatible with string [2].
+
+   a.js:2:17
+   2| var a: string = 0;
+                      ^ [1]
+
+References:
+   a.js:2:8
+   2| var a: string = 0;
+             ^^^^^^ [2]
+
+
 
 Found 1 error
+Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+
+   c.js:3:17
+   3| var c: string = b;
+                      ^
+
+References:
+   a.js:2:9
+   2| var a = 0;
+              ^ [1]
+   c.js:3:8
+   3| var c: string = b;
+             ^^^^^^ [2]
+
+
 
 Found 1 error
+Error -------------------------------------------------------------------------------------------------------- c.js:3:17
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+Cannot assign `b` to `c` because number [1] is incompatible with string [2].
+
+   c.js:3:17
+   3| var c: string = b;
+                      ^
+
+References:
+   b.js:3:8
+   3| var b: number = a;
+             ^^^^^^ [1]
+   c.js:3:8
+   3| var c: string = b;
+             ^^^^^^ [2]
+
+
 
 Found 1 error

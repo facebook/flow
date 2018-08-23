@@ -2,10 +2,20 @@ After start:
 No errors!
 
 After introducing an error:
+Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-test.js:3:2,4: number
-This type is incompatible with
-test.js:3:7,12: string
+Cannot cast `123` to string because number [1] is incompatible with string [2].
+
+   test.js:3:2
+   3| (123: string); // error
+       ^^^ [1]
+
+References:
+   test.js:3:7
+   3| (123: string); // error
+            ^^^^^^ [2]
+
+
 
 Found 1 error
 
@@ -13,11 +23,16 @@ After suppressing the error:
 No errors!
 
 After fixing the error, leaving the suppression:
+Warning ---------------------------------------------------------------------------------------------------- test.js:3:1
 
-test.js:3:1,13: Error suppressing comment
-Unused suppression
+Unused suppression comment.
 
-Found 1 error
+   3| // $FlowIssue
+      ^^^^^^^^^^^^^
+
+
+
+Found 1 warning
 
 After removing the unused suppression:
 No errors!

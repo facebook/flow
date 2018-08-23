@@ -1,46 +1,52 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 val mk_id: unit -> int
 
 type reason_desc =
   | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+  | RNullOrVoid
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
+  | RMatchingProp of string * reason_desc
   | RObject
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RInterfaceType
   | RArray
   | RArrayLit
   | REmptyArrayLit
   | RArrayType
+  | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
-  | RArrowFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
-  | RFunctionCall
+  | RFunctionCall of reason_desc
+  | RFunctionCallType
+  | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
+  | RJSXText
+  | RFbt
+  | RUnaryOperator of string * reason_desc
+  | RBinaryOperator of string * reason_desc * reason_desc
+  | RLogical of string * reason_desc * reason_desc
   | RAnyObject
   | RAnyFunction
+  | RTemplateString
   | RUnknownString
-  | RStringEnum
-  | RNumberEnum
-  | RGetterFunction
-  | RSetterFunction
+  | REnum
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -58,10 +64,15 @@ type reason_desc =
   | RAnd
   | RConditional
   | RPrototype
+  | RObjectPrototype
+  | RFunctionPrototype
   | RDestructuring
+  | RDefaultValue
   | RConstructor
-  | RConstructorCall
+  | RDefaultConstructor
+  | RConstructorCall of reason_desc
   | RReturn
+  | RImplicitReturn of reason_desc
   | RRegExp
   | RSuper
   | RNoSuper
@@ -71,26 +82,39 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeParam of string * reason_desc
-  | RMethodCall of string
-  | RParameter of string
-  | RRestParameter of string
+  | RTypeAlias of string * bool * reason_desc
+  | ROpaqueType of string
+  | RTypeParam of string * reason_desc * Loc.t
+  | RTypeof of string
+  | RMethod of string option
+  | RMethodCall of string option
+  | RParameter of string option
+  | RRestParameter of string option
   | RIdentifier of string
   | RIdentifierAssignment of string
-  | RPropertyAssignment of string
-  | RProperty of string
+  | RPropertyAssignment of string option
+  | RProperty of string option
+  | RPrivateProperty of string
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
-  | RMissingProperty of string
-  | RUnknownProperty of string
+  | RMissingProperty of string option
+  | RUnknownProperty of string option
+  | RUndefinedProperty of string
   | RSomeProperty
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
+  | RUntypedModule of string
+  | RNamedImportedType of string * string
+  | RImportStarType of string
+  | RImportStarTypeOf of string
+  | RImportStar of string
+  | RDefaultImportedType of string * string
+  | RCode of string
   | RCustom of string
   | RPolyType of reason_desc
-  | RClassType of reason_desc
+  | RPolyTest of string * reason_desc
   | RExactType of reason_desc
   | ROptional of reason_desc
   | RMaybe of reason_desc
@@ -103,35 +127,31 @@ type reason_desc =
   | RSuperOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
-  | RTypeOf of reason_desc
   | RVarianceCheck of reason_desc
   | RPredicateOf of reason_desc
   | RPredicateCall of reason_desc
   | RPredicateCallNeg of reason_desc
+  | RRefined of reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
+  | RCommonJSExports of string
+  | RModule of string
+  | ROptionalChain
 
+  | RReactProps
   | RReactElement of string option
   | RReactClass
   | RReactComponent
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactComponentProps
-  | RReactElementProps of string
   | RReactPropTypes
-  | RPropTypeArray
-  | RPropTypeFunc
-  | RPropTypeObject
-  | RPropTypeArrayOf
-  | RPropTypeInstanceOf
-  | RPropTypeObjectOf
-  | RPropTypeOneOf
-  | RPropTypeOneOfType
-  | RPropTypeShape
-  | RPropTypeFbt
+  | RReactChildren
+  | RReactChildrenOrType of reason_desc
+  | RReactChildrenOrUndefinedOrType of reason_desc
+  | RReactSFC
 
 and reason_desc_function =
   | RAsync
@@ -143,7 +163,7 @@ type reason
 type t = reason (* convenience *)
 
 module TestID: sig
-  val run: ('a -> unit) -> 'a -> unit
+  val run: ('a -> 'b) -> 'a -> 'b
 end
 
 val lexpos: string -> int -> int -> Lexing.position
@@ -158,24 +178,36 @@ val in_range: Loc.t -> Loc.t -> bool
 val string_of_desc: reason_desc -> string
 
 val string_of_loc_pos: Loc.t -> string
-val string_of_loc: Loc.t -> string
+val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
+val json_of_loc_props: ?strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
 
 val locationless_reason: reason_desc -> reason
+
+val func_reason: (Loc.t, Loc.t) Ast.Function.t -> Loc.t -> reason
 
 val is_internal_name: string -> bool
 val internal_name: string -> string
 
 val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
+val uninternal_module_name: string -> string
 
 val internal_pattern_name: Loc.t -> string
 
 val is_instantiable_reason: reason -> bool
 
-val is_constant_property_reason: reason -> bool
+val is_constant_reason: reason -> bool
 
-val is_method_call_reason: string -> reason -> bool
+val is_typemap_reason: reason -> bool
+val is_calltype_reason: reason -> bool
+
+val is_nullish_reason: reason -> bool
+val is_scalar_reason: reason -> bool
+val is_array_reason: reason -> bool
+
+val is_literal_object_reason: reason -> bool
+val is_literal_array_reason: reason -> bool
 
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
@@ -188,27 +220,32 @@ val is_lib_reason: reason -> bool
 val is_blamable_reason: reason -> bool
 val reasons_overlap: reason -> reason -> bool
 
-val string_of_reason: reason -> string
+val string_of_source: ?strip_root:Path.t option -> File_key.t -> string
+val string_of_reason: ?strip_root:Path.t option -> reason -> string
 val json_of_reason: ?strip_root:Path.t option -> reason -> Hh_json.json
-val dump_reason: reason -> string
+val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
 val loc_of_reason: reason -> Loc.t
-
-val desc_of_reason: reason -> reason_desc
-
-val origin_of_reason: reason -> reason option
+val def_loc_of_reason: reason -> Loc.t
+val annot_loc_of_reason: reason -> Loc.t option
+val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
-val replace_reason: (reason_desc -> reason_desc) -> reason -> reason
-val replace_reason_const: reason_desc -> reason -> reason
+val replace_reason: ?keep_def_loc:bool -> (reason_desc -> reason_desc) -> reason -> reason
+val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
 
-val repos_reason: Loc.t -> reason -> reason
-
-val update_origin_of_reason: reason option -> reason -> reason
+val repos_reason: Loc.t -> ?annot_loc:Loc.t -> reason -> reason
+val annot_reason: reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 
-val strip_root: Path.t -> reason -> reason
-val strip_root_from_loc: Path.t -> Loc.t -> Loc.t
+module ReasonMap : MyMap.S with type key = reason
+
+val mk_expression_reason: (Loc.t, Loc.t) Ast.Expression.t -> reason
+
+val unknown_elem_empty_array_desc: reason_desc
+val inferred_union_elem_array_desc: reason_desc
+
+val invalidate_rtype_alias: reason_desc -> reason_desc

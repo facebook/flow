@@ -1,36 +1,66 @@
-test2.js:7
-  7: var y: I.B = new C();
-                  ^^^^^^^ constructor call
-  7: var y: I.B = new C();
-                  ^^^^^^^ C. This type is incompatible with
-  7: var y: I.B = new C();
-            ^^^ B
+Error ---------------------------------------------------------------------------------------------------- test2.js:7:14
 
-test3.js:2
-  2: class B extends A<string, number, bool> {}
-                                       ^^^^ boolean. This type is incompatible with
-  6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                              ^^^^^^^^^^^ array type
+Cannot assign `new C()` to `y` because `C` [1] is incompatible with `B` [2].
 
-test3.js:6
-  6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
-                              ^^^^^^^^^^^ array type. This type is incompatible with
-  2: class B extends A<string, number, bool> {}
-                                       ^^^^ boolean
+   test2.js:7:14
+   7| var y: I.B = new C();
+                   ^^^^^^^ [1]
 
-test4.js:7
-  7: foo((new C: C<O>), { f_: 0 });
-                   ^ property `f`. Property not found in
-  7: foo((new C: C<O>), { f_: 0 });
-                        ^^^^^^^^^ object literal
-
-test4.js:13
- 13: foo(new D, { f_: 0 });
-     ^^^^^^^^^^^^^^^^^^^^^ function call
-  9: class D extends C<O> {
-                       ^ property `f`. Property not found in
- 13: foo(new D, { f_: 0 });
-                ^^^^^^^^^ object literal
+References:
+   test2.js:7:8
+   7| var y: I.B = new C();
+             ^^^ [2]
 
 
-Found 5 errors
+Error ---------------------------------------------------------------------------------------------------- test3.js:6:41
+
+Cannot assign `c` to `a` because boolean [1] is incompatible with array type [2] in type argument `Z` [3].
+
+   test3.js:6:41
+   6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
+                                              ^
+
+References:
+   test3.js:2:35
+   2| class B extends A<string, number, bool> {}
+                                        ^^^^ [1]
+   test3.js:6:26
+   6| var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
+                               ^^^^^^^^^^^ [2]
+   test3.js:1:15
+   1| class A<X, Y, Z> {}
+                    ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test4.js:7:20
+
+Cannot call `foo` with object literal bound to `x` because property `f` is missing in object literal [1] but exists in
+`O` [2].
+
+   test4.js:7:20
+   7| foo((new C: C<O>), { f_: 0 });
+                         ^^^^^^^^^ [1]
+
+References:
+   test4.js:7:15
+   7| foo((new C: C<O>), { f_: 0 });
+                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test4.js:13:12
+
+Cannot call `foo` with object literal bound to `x` because property `f` is missing in object literal [1] but exists in
+`O` [2].
+
+   test4.js:13:12
+   13| foo(new D, { f_: 0 });
+                  ^^^^^^^^^ [1]
+
+References:
+   test4.js:9:19
+    9| class D extends C<O> {
+                         ^ [2]
+
+
+
+Found 4 errors

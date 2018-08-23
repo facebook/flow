@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------ libs/parse_error.js:8:3
+
+Unexpected identifier
+
+   8|   methodB: () => any
+        ^^^^^^^
+
+
+
+Found 1 error

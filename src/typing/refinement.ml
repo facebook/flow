@@ -1,14 +1,10 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Spider_monkey_ast
 
 (*
  * type refinements on expressions - wraps Env API
@@ -29,13 +25,13 @@ let rec key = Ast.Expression.(function
   (* treat this as a property chain, in terms of refinement lifetime *)
   Some (Reason.internal_name "super", [])
 
-| _, Identifier (_, { Ast.Identifier.name; _ }) when name != "undefined" ->
+| _, Identifier (_, name) when name != "undefined" ->
   Some (name, [])
 
 | _, Member { Member._object;
   (* foo.bar.baz -> Chain [Id baz; Id bar; Id foo] *)
    property = (
-    Member.PropertyIdentifier (_, { Ast.Identifier.name; _ })
+    Member.PropertyIdentifier (_, name)
     | Member.PropertyExpression (_, Ast.Expression.Literal {
         Ast.Literal.value = Ast.Literal.String name;
         _;
@@ -48,6 +44,15 @@ let rec key = Ast.Expression.(function
   match key _object with
   | Some (base, chain) ->
     Some (base, Key.Prop name :: chain)
+  | None -> None
+  )
+
+| _, Member {
+    Member._object; property = Member.PropertyPrivateName (_, (_, name)); _
+  } -> (
+  match key _object with
+  | Some (base, chain) ->
+    Some (base, Key.PrivateField name :: chain)
   | None -> None
   )
 
@@ -71,7 +76,7 @@ let rec key = Ast.Expression.(function
 )
 
 (* get type refinement for expression, if it exists *)
-let get cx expr reason =
+let get cx expr loc =
   match key expr with
-  | Some k -> Env.get_refinement cx k reason
+  | Some k -> Env.get_refinement cx k loc
   | None -> None

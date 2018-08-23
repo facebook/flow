@@ -1,24 +1,25 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
+(* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast:
-  metadata: Context.metadata ->
-  filename: Loc.filename ->
-  module_name: Modulename.t ->
-  Spider_monkey_ast.program ->
-  Context.t
-
+  lint_severities: Severity.severity LintSettings.t ->
+  file_options: Files.options option ->
+  file_sig: File_sig.t ->
+  Context.t ->
+  File_key.t ->
+  (Loc.t, Loc.t) Ast.program ->
+  (Loc.t, Loc.t * Type.t) Ast.program
+(* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
-  metadata: Context.metadata ->
-  exclude_syms:SSet.t ->
-  Utils_js.filename ->
-  Spider_monkey_ast.Statement.t list ->
-  Spider_monkey_ast.Comment.t list ->
-  Context.t * string list
+  exclude_syms: SSet.t ->
+  lint_severities: Severity.severity LintSettings.t ->
+  file_options: Files.options option ->
+  file_sig: File_sig.t ->
+  Context.t ->
+  (Loc.t, Loc.t) Ast.program ->
+  string list

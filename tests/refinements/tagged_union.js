@@ -85,7 +85,9 @@ function nationality(x: Citizen | NonCitizen) {
 let tests = [
   // non-existent props
   function test7(x: A) {
-    if (x.kindTypo === 1) {} // error, kindTypo doesn't exist on A
+    if (x.kindTypo === 1) { // typos are allowed to be tested
+      (x.kindTypo: string); // typos can't be used, though
+    }
   },
 
   // nested objects
@@ -106,17 +108,161 @@ let tests = [
     r: Object, s: Function, t: () => void
   ) {
     if (x.length === 0) {}
-    if (x.legnth === 0) {} // error, typo
+    if (x.legnth === 0) { // Error, typos
+      (x.legnth: number); // inside the block, it's a number
+      (x.legnth: string); // error: number literal 0 !~> string
+    }
     if (y.length === 0) {}
-    if (y.legnth === 0) {} // error, typo
+    if (y.legnth === 0) { // Error, typo
+      (y.legnth: number); // inside the block, it's a number
+      (y.legnth: string); // error: number literal 0 !~> string
+    }
     if (z.toString === 0) {}
-    if (z.toStirng === 0) {} // error, typo
+    if (z.toStirng === 0) { // Error, typo
+      (z.toStirng: number); // inside the block, it's a number
+      (z.toStirng: string); // error: number literal 0 !~> string
+    }
     if (q.valueOf === 0) {}
-    if (q.valeuOf === 0) {} // error, typo
-    if (r.toStirng === 0) {} // ok, AnyObjT
+    if (q.valeuOf === 0) { // Error, typo
+      (q.valeuOf: number); // inside the block, it's a number
+      (q.valeuOf: string); // error: number literal 0 !~> string
+    }
+    if (r.toStirng === 0) { // typos are allowed to be tested
+      (r.toStirng: empty); // props on AnyObjT are `any`
+    }
     if (s.call === 0) {}
-    if (s.calll === 0) {} // error, typo
+    if (s.calll === 0) { // typos are allowed to be tested
+      (t.calll: empty); // ok, props on functions are `any` :/
+    }
     if (t.call === 0) {}
-    if (t.calll === 0) {} // error, typo
+    if (t.calll === 0) { // typos are allowed to be tested
+      (t.calll: empty); // ok, props on functions are `any` :/
+    }
+  },
+
+  // sentinel props become the RHS
+  function(x: { str: string, num: number, bool: boolean }) {
+    if (x.str === 'str') {
+      (x.str: 'not str'); // error: 'str' !~> 'not str'
+    }
+    if (x.num === 123) {
+      (x.num: 456); // error: 123 !~> 456
+    }
+    if (x.bool === true) {
+      (x.bool: false); // error: true !~> false
+    }
+    // even if it doesn't exist...
+    if (x.badStr === 'bad') { // Error, reading unknown property
+      (x.badStr: empty); // error: 'bad' !~> empty
+    }
+    if (x.badNum === 123) { // Error, reading unknown property
+      (x.badNum: empty); // error: 123 !~> empty
+    }
+    if (x.badBool === true) { // Error, reading unknown property
+      (x.badBool: empty); // error: true !~> empty
+    }
+  },
+
+  // type mismatch
+  function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+    if (x.foo === 123) {
+      (x.y: string);
+      x.z; // error
+    } else {
+      (x.z: string);
+      x.y; // error
+    }
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      (x.y: string);
+      x.z; // error
+    }
+  },
+
+  // type mismatch, but one is not a literal
+  function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+    if (x.foo === 123) {
+      (x.y: string); // ok, because 123 !== 'foo'
+      x.z; // error
+    } else {
+      x.y; // error: x.foo could be a string
+      x.z; // error: could still be either case (if foo was a different number)
+    }
+
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      (x.y: string);
+      x.z; // error
+    }
+  },
+
+  // type mismatch, neither is a literal
+  function(x: { foo: number, y: string } | { foo: string, z: string }) {
+    if (x.foo === 123) {
+      (x.y: string); // ok, because 123 !== string
+      x.z; // error
+    } else {
+      x.y; // error: x.foo could be a string
+      x.z; // error: could still be either case (if foo was a different number)
+    }
+
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      x.y; // error: x.foo could be a different string
+      x.z; // error: x.foo could be a number
+    }
+  },
+
+  // type mismatch, neither is a literal, test is not a literal either
+  function(
+    x: { foo: number, y: string } | { foo: string, z: string },
+    num: number
+  ) {
+    if (x.foo === num) {
+      x.y; // error: flow isn't smart enough to figure this out yet
+      x.z; // error
+    }
+  },
+
+  // null
+  function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
+    if (x.foo === null) {
+      (x.y: string);
+      x.z; // error
+    } else {
+      (x.z: string);
+      x.y; // error
+    }
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      (x.y: string);
+      x.z; // error
+    }
+  },
+
+  // void
+  function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
+    if (x.foo === undefined) {
+      (x.y: string);
+      x.z; // error
+    } else {
+      (x.z: string);
+      x.y; // error
+    }
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      (x.y: string);
+      x.z; // error
+    }
   },
 ];

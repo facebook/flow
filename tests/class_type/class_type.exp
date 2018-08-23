@@ -1,34 +1,72 @@
-test2.js:10
- 10: check(B, new A);
-     ^^^^^^^^^^^^^^^ function call
- 10: check(B, new A);
-              ^^^^^ A. This type is incompatible with
-  4: declare function check<X>(cls: $Type<X>, inst: X): void;
-                                    ^^^^^^^^ B
+Error --------------------------------------------------------------------------------------------------- test2.js:10:10
 
-test2.js:12
- 12: check(C, new A);
-     ^^^^^^^^^^^^^^^ function call
- 12: check(C, new A);
-              ^^^^^ A. This type is incompatible with
-  4: declare function check<X>(cls: $Type<X>, inst: X): void;
-                                    ^^^^^^^^ C
+Cannot call `check` with `new A()` bound to `inst` because `A` [1] is incompatible with `B` [2].
 
-test2.js:13
- 13: check(C, new B);
-     ^^^^^^^^^^^^^^^ function call
- 13: check(C, new B);
-              ^^^^^ B. This type is incompatible with
-  4: declare function check<X>(cls: $Type<X>, inst: X): void;
-                                    ^^^^^^^^ C
+   test2.js:10:10
+   10| check(B, new A);
+                ^^^^^ [1]
 
-test2.js:14
- 14: check(B, new C);
-     ^^^^^^^^^^^^^^^ function call
- 14: check(B, new C);
-              ^^^^^ C. This type is incompatible with
-  4: declare function check<X>(cls: $Type<X>, inst: X): void;
-                                    ^^^^^^^^ B
+References:
+   test2.js:7:7
+    7| class B extends A { }
+             ^ [2]
 
 
-Found 4 errors
+Error --------------------------------------------------------------------------------------------------- test2.js:12:10
+
+Cannot call `check` with `new A()` bound to `inst` because `A` [1] is incompatible with `C` [2].
+
+   test2.js:12:10
+   12| check(C, new A);
+                ^^^^^ [1]
+
+References:
+   test2.js:8:7
+    8| class C { }
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test2.js:13:10
+
+Cannot call `check` with `new B()` bound to `inst` because `B` [1] is incompatible with `C` [2].
+
+   test2.js:13:10
+   13| check(C, new B);
+                ^^^^^ [1]
+
+References:
+   test2.js:8:7
+    8| class C { }
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test2.js:14:10
+
+Cannot call `check` with `new C()` bound to `inst` because `C` [1] is incompatible with `B` [2].
+
+   test2.js:14:10
+   14| check(B, new C);
+                ^^^^^ [1]
+
+References:
+   test2.js:7:7
+    7| class B extends A { }
+             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
+
+null [1] is not an instance type.
+
+   test3.js:5:1
+   5| o.p.foo;
+      ^^^
+
+References:
+   test3.js:1:28
+   1| type T = { [string]: Class<null> }
+                                 ^^^^ [1]
+
+
+
+Found 5 errors

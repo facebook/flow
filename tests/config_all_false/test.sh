@@ -1,3 +1,2 @@
 #!/bin/bash
-FLOW=$1
-"$FLOW" check . --strip-root --show-all-errors --old-output-format
+assert_ok "$FLOW" check . --strip-root --show-all-errors

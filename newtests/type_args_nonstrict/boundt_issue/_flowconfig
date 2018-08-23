@@ -1,9 +1,0 @@
-[ignore]
-
-[include]
-
-[libs]
-
-[options]
-all=true
-experimental.strict_type_args=false

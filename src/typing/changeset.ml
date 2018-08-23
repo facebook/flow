@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Utils = Utils_js
@@ -74,8 +71,7 @@ let include_ops ops (vars, refis) =
 
 let include_reads = include_ops [Read]
 let include_writes = include_ops [Write]
-let include_refines = include_ops [Refine]
-let include_type_updates = include_ops [Write; Refine]
+let exclude_refines = include_ops [Read; Write]
 
 let iter ?ops f_vars f_refis changeset =
   let vars, refis = match ops with

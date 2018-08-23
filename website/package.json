@@ -1,8 +1,9 @@
 {
-  "name": "flowtype.org",
+  "name": "flow.org",
   "version": "0.0.0",
-  "license": "BSD-3-Clause",
-  "devDependencies": {
-    "bower": "^1.7.7"
+  "license": "CC-BY-4.0",
+  "dependencies": {
+    "bootstrap": "4.0.0-alpha.5",
+    "jquery": "3.2.0"
   }
 }

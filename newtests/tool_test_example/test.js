@@ -1,7 +1,10 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINEWRAP1
+ */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 // A suite is a function. It takes an empty step and returns a list of tests.
 // For convinience, it's nice to destructure the empty test, since you almost
@@ -20,7 +23,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     // step introduced 0 flow errors
     addCode('var myNum = 123;')
       .addCode('var myStr = "hello";')
-      .noNewErrors(''),
+      .noNewErrors(),
 
     // Here we introduce a flow error but no assertion. This flow error is
     // ignored and won't affect the other assertions.
@@ -36,9 +39,10 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: var boom = myNum * myStr;
-                                  ^^^^^ string. This type is incompatible with
-            9: var boom = myNum * myStr;
-                          ^^^^^^^^^^^^^ number
+                                  ^^^^^ Cannot perform arithmetic operation because string [1] is not a number.
+            References:
+              5: var myStr = "hello";
+                             ^^^^^^^ [1]
         `,
       )
   ]),
@@ -62,7 +66,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     // Directories are automatically created when you add files to them
     addFile('B.js', 'some/dir/E.js')
-      .addCode('import D from "./some/dir/E"')
+      .addCode('import E from "./some/dir/E"')
       .noNewErrors(),
   ]),
 

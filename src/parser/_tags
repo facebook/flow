@@ -1,0 +1,2 @@
+true: package(ppx_gen_rec), package(ppx_deriving.show), package(sedlex), package(wtf8)
+<dist>: -traverse

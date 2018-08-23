@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -52,14 +49,17 @@ let spec = {
   ;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> base_flags
+    |> connect_flags
     |> root_flag
     |> error_flags
     |> strip_root_flag
     |> ignore_flag
     |> include_flag
+    |> untyped_flag
+    |> declaration_flag
+    |> from_flag
     |> anon "src" (required string)
-        ~doc:"The path to a file or directory to generate .js.flow files for"
     |> flag "--out-dir" string
         ~doc:"The path to write the generated .js.flow files into"
   )
@@ -76,7 +76,7 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   print_string (spf "%s -> " printed_src_file_path);
   flush stdout;
   (try (
-    ignore (Unix.single_write fd content 0 (String.length content));
+    ignore (Unix.single_write_substring fd content 0 (String.length content));
     let printed_dest_file_path =
       if strip_root
       then Files.relative_path root_str dest_file_path
@@ -86,9 +86,12 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   ) with exn -> print_endline "ERROR!"; Unix.close fd; raise exn);
   Unix.close fd
 
-let main option_values root error_flags strip_root ignore_flag include_flag src out_dir () = (
+let main base_flags option_values root error_flags strip_root ignore_flag
+  include_flag untyped_flag declaration_flag from src out_dir () = (
+  FlowEventLogger.set_from from;
   let src = expand_path src in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> Some src
@@ -102,7 +105,7 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
 
   let src_is_dir = Sys.is_directory src in
   let filenames =
-    if not src_is_dir then [ServerProt.FileName src] else (
+    if not src_is_dir then [File_input.FileName src] else (
       (* If `src` is a directory, we require that an out_dir was specified *)
       (if out_dir = None then
         let msg =
@@ -111,41 +114,41 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
         FlowExitStatus.exit ~msg FlowExitStatus.Commandline_usage_error
       );
 
-      let (next_files, _options) =
-        LsCommand.get_ls_files
-          ~root
-          ~strip_root
-          ~ignore_flag
-          ~include_flag
-          ~subdir:(Some (Path.make src))
+      let options = LsCommand.make_options ~flowconfig_name ~root ~ignore_flag ~include_flag
+        ~untyped_flag ~declaration_flag in
+      let _, libs = Files.init options in
+      let next_files =
+        LsCommand.get_ls_files ~root ~all:false ~options ~libs ~imaginary:false (Some src)
       in
       let files = Files.get_all next_files in
       let num_files = SSet.cardinal files in
       print_endlinef "Found %d files, generating libdefs..." num_files;
-      List.map (fun f -> ServerProt.FileName f) (SSet.elements files)
+      List.map (fun f -> File_input.FileName f) (SSet.elements files)
     )
   in
 
-  let open ServerProt in
-  let (in_chan, out_chan) = connect option_values root in
-  cmd_to_channel out_chan (GEN_FLOW_FILES filenames);
-  match ((Timeout.input_value in_chan: gen_flow_file_response), out_dir) with
-  | (Err (GenFlowFile_TypecheckError errors), _) ->
-    let errors = Errors.to_list errors in
-    Errors.print_error_summary
+  let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+  let request = ServerProt.Request.GEN_FLOW_FILES (filenames, include_warnings) in
+  let open ServerProt.Response in
+  match connect_and_make_request flowconfig_name option_values root request, out_dir with
+  | GEN_FLOW_FILES (Error (GenFlowFiles_TypecheckError {errors; warnings})), _ ->
+    let strip_root = if strip_root then Some root else None in
+    Errors.Cli_output.print_errors
       ~out_channel:stderr
       ~flags:error_flags
       ~strip_root
-      ~root
-      errors;
+      ~errors
+      ~warnings
+      ~lazy_msg:None
+      ();
     let msg =
       "\nIn order to generate a shadow file there must be no type errors!"
     in
     FlowExitStatus.exit ~msg FlowExitStatus.Type_error;
-  | (Err (GenFlowFile_UnexpectedError error_msg), _) ->
+  | GEN_FLOW_FILES (Error (GenFlowFiles_UnexpectedError error_msg)), _ ->
     let msg = spf "Error: %s" error_msg in
     FlowExitStatus.exit ~msg FlowExitStatus.Unknown_error
-  | (OK results, None) ->
+  | GEN_FLOW_FILES (Ok results), None ->
     (if List.length results <> 1 then (
       let msg =
         "Internal Error: Received multiple results for a single file!"
@@ -154,17 +157,17 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
     ));
     let (_filepath, result) = List.hd results in
     (match result with
-      | GenFlowFile_FlowFile content ->
+      | GenFlowFiles_FlowFile content ->
         print_endline content
-      | GenFlowFile_NonFlowFile ->
+      | GenFlowFiles_NonFlowFile ->
         print_endline "// This file does not have an @flow at the top!"
     )
-  | (OK results, Some out_dir) ->
+  | GEN_FLOW_FILES (Ok results), Some out_dir ->
     let out_dir = expand_path out_dir in
     let src_stat = Unix.stat src in
     results |> List.iter (fun (file_path, result) ->
       match result with
-      | GenFlowFile_FlowFile content when src_is_dir ->
+      | GenFlowFiles_FlowFile content when src_is_dir ->
         let dest_path = file_path
           (* File path relative to the src dir *)
           |> Files.relative_path src
@@ -184,7 +187,7 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
         (try write_file strip_root root content file_path_stat.Unix.st_perm file_path dest_path
         with exn -> prerr_endlinef "Error writing %s:" dest_path; raise exn)
 
-      | GenFlowFile_FlowFile content ->
+      | GenFlowFiles_FlowFile content ->
         let file_name = Filename.basename file_path in
         let dest_path = Filename.concat out_dir file_name in
         let dest_path = dest_path ^ ".flow" in
@@ -193,8 +196,9 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
         (try write_file strip_root root content file_path_stat.Unix.st_perm file_path dest_path
         with exn -> prerr_endlinef "Error writing %s:" dest_path; raise exn)
 
-      | GenFlowFile_NonFlowFile -> ()
+      | GenFlowFiles_NonFlowFile -> ()
     )
+  | response, _ -> failwith_bad_response ~request ~response
 )
 
 let command = CommandSpec.command spec main

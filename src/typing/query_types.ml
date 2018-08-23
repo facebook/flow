@@ -1,22 +1,19 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-(**************)
-(* Query/Fill *)
-(**************)
+(*****************)
+(* Query/Suggest *)
+(*****************)
 
 (* These computations should trigger ground_type calls on the types returned by
-   query_type/fill_types: in general those types may not be ground (the only
+   query_type/suggest_types: in general those types may not be ground (the only
    non-ground parts should be strict_requires).
 
-   1. Look up InfoHeap(Context.file cx) to get strict_reqs.
+   1. Look up ResolvedRequiresHeap(Context.file cx) to get strict_reqs.
 
    2. Look up ContextHeap(NameHeap(strict_req)) to get strict_cxs that cx
    depends on, and so on.
@@ -34,72 +31,120 @@
    necessary.
 *)
 
-open Utils_js
+type result =
+| FailureNoMatch
+| FailureUnparseable of Loc.t * Type.t * string
+| Success of Loc.t * Ty.t
 
-let query_type cx loc =
-  let result = ref (Loc.none, None, []) in
-  let diff = ref (max_int, max_int) in
-  Hashtbl.iter (fun range t ->
-    if Reason.in_range loc range
-    then (
-      let d = Reason.diff_range range in
-      if d < !diff then (
-        diff := d;
-        Type_normalizer.suggested_type_cache := IMap.empty;
-        let ground_t = Type_normalizer.normalize_type cx t in
-        let possible_ts = Flow_js.possible_types_of_type cx t in
-        result := if Type_printer.is_printed_type_parsable cx ground_t
-          then (range, Some ground_t, possible_ts)
-          else (range, None, possible_ts)
-      )
-    )
-  ) (Context.type_table cx);
-  !result
+let sort_loc_pairs pair_list =
+  List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
-let dump_types printer raw_printer cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Hashtbl.fold (fun loc t list ->
-    let ground_t = Type_normalizer.normalize_type cx t in
-    let possible_ts = Flow_js.possible_types_of_type cx t in
-    let possible_reasons = possible_ts
-      |> List.map Type.reason_of_t
-    in
-    let ctor = Type.string_of_ctor ground_t in
-    let pretty = printer cx ground_t in
-    let raw = raw_printer cx ground_t in
-    (loc, ctor, pretty, raw, possible_reasons)::list
-  ) (Context.type_table cx) [] in
-  lst |> List.sort (fun
-    (a_loc, _, _, _, _) (b_loc, _, _, _, _) -> Loc.compare a_loc b_loc
-  )
+let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = expand_aliases;
+    flag_shadowed_type_params = false;
+  } in
+  let pred range = Reason.in_range loc range in
+  match Type_table.find_type_info_with_pred type_table pred with
+  | None -> FailureNoMatch
+  | Some (loc, (_, scheme, _)) ->
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
+    (match Ty_normalizer.from_scheme ~options ~genv scheme with
+    | Ok ty -> Success (loc, ty)
+    | Error err ->
+      let msg = Ty_normalizer.error_to_string err in
+      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
+
+let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = expand_aliases;
+    flag_shadowed_type_params = false;
+  } in
+  match Type_table.find_unsafe_coverage type_table loc with
+  | exception Not_found -> FailureNoMatch
+  | scheme ->
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
+    (match Ty_normalizer.from_scheme ~options ~genv scheme with
+    | Ok ty -> Success (loc, ty)
+    | Error err ->
+      let msg = Ty_normalizer.error_to_string err in
+      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
+
+let dump_types cx file_sig ~printer =
+  let options = Ty_normalizer_env.default_opts in
+  let file = Context.file cx in
+  let type_table = Context.type_table cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+  let result = Ty_normalizer.from_schemes ~options ~genv
+    (Type_table.coverage_to_list (Context.type_table cx)) in
+  let print_ok = function
+    | l, Ok t -> Some (l, printer t)
+    | _ -> None
+  in
+  sort_loc_pairs (Core_list.filter_map result ~f:print_ok)
 
 let is_covered = function
-  | Type.AnyT _
-  | Type.EmptyT _ -> false
+  | Ty.Any
+  | Ty.Bot -> false
   | _ -> true
 
-let covered_types cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Hashtbl.fold (fun loc t list ->
-    let ground_t = Type_normalizer.normalize_type cx t in
-    (loc, is_covered ground_t)::list
-  ) (Context.type_table cx) [] in
-  lst |> List.sort (fun
-    (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc
-  )
+let covered_types cx file_sig ~should_check =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = true;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    flag_shadowed_type_params = false;
+  } in
+  let file = Context.file cx in
+  let type_table = Context.type_table cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+  let f =
+    if should_check then
+      fun acc (loc, result) ->
+        match result with
+        | Ok t -> (loc, is_covered t)::acc
+        | _ -> (loc, false)::acc
+    else
+      fun acc (loc, _) -> (loc, false)::acc
+  in
+  let g x = x in
+  let htbl = Type_table.coverage_hashtbl (Context.type_table cx) in
+  let coverage = Ty_normalizer.fold_hashtbl ~options ~genv ~f ~g ~htbl [] in
+  sort_loc_pairs coverage
 
-
-(********)
-(* Fill *)
-(********)
-
-let fill_types cx =
-  Type_normalizer.suggested_type_cache := IMap.empty;
-  Hashtbl.fold Loc.(fun loc t list ->
-    let line = loc._end.line in
-    let end_ = loc._end.column in
-    let t = Type_normalizer.normalize_type cx t in
-    if Type_printer.is_printed_type_parsable cx t then
-      (line, end_, spf ": %s" (Type_printer.string_of_t cx t))::list
-    else list
-  ) (Context.annot_table cx) []
+(* 'suggest' can use as many types in the type tables as possible, which is why
+   we are querying the tables from both "coverage" and "type_info". Coverage
+   should be enough on its own, but "type_info" stores method types more
+   reliably. On the other hand "type_info" only stores information about
+   identifiers, so anonymous functions and arrows are not captured.
+*)
+let suggest_types cx file_sig =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    flag_shadowed_type_params = true;
+  } in
+  let type_table = Context.type_table cx in
+  let file = Context.file cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+  let result = Utils_js.LocMap.empty in
+  let result = Ty_normalizer.fold_hashtbl
+    ~options ~genv
+    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+    ~g:(fun t -> t)
+    ~htbl:(Type_table.coverage_hashtbl type_table) result in
+  let result = Ty_normalizer.fold_hashtbl
+    ~options ~genv
+    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+    ~g:(fun (_, t, _) -> t)
+    ~htbl:(Type_table.type_info_hashtbl type_table) result in
+  result

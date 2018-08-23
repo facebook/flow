@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -21,12 +20,16 @@ val deserialize: record_data -> record
 
 val track_distribution: ?record:record -> string -> bucket_size:float -> unit
 
-val sample: ?record:record -> string -> float -> unit
+val sample: ?record:record -> ?weight:float -> string -> float -> unit
 val time: ?record:record -> string -> (unit -> 'a) -> 'a
 
 val merge: ?record:record -> from:record -> unit
 
-val print_entry_stats: ?record:record -> string -> unit
-val print_stats: ?record:record -> unit -> unit
+val get_sum: ?record:record -> string -> float option
+val get_mean: ?record:record -> string -> float option
+val get_count: ?record:record -> string -> float option
+
+val print_entry_stats: ?record:record -> ?print_raw:(string -> unit) -> string -> unit
+val print_stats: ?record:record -> ?print_raw:(string -> unit) -> unit -> unit
 val print_entry_distribution: ?record:record -> string -> unit
 val print_distributions: ?record:record -> unit -> unit

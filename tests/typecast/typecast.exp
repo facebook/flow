@@ -1,8 +1,16 @@
-typecast.js:7
-  7:     var n = ("hey" : number);
-                  ^^^^^ string. This type is incompatible with
-  7:     var n = ("hey" : number);
-                          ^^^^^^ number
+Error ------------------------------------------------------------------------------------------------- typecast.js:7:14
+
+Cannot cast `"hey"` to number because string [1] is incompatible with number [2].
+
+   typecast.js:7:14
+   7|     var n = ("hey" : number);
+                   ^^^^^ [1]
+
+References:
+   typecast.js:7:22
+   7|     var n = ("hey" : number);
+                           ^^^^^^ [2]
+
 
 
 Found 1 error

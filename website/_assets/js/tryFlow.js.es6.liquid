@@ -1,0 +1,454 @@
+//= require flow-loader
+//= link tryFlowWorker
+import * as CodeMirror from 'codemirror/lib/codemirror';
+import 'codemirror/addon/lint/lint';
+import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/xml/xml';
+import 'codemirror/mode/jsx/jsx';
+import * as LZString from 'lz-string';
+import {load as initFlowLocally} from 'flow-loader';
+
+CodeMirror.defineOption('flow', null, function(editor) {
+  editor.performLint();
+});
+
+function appendMsg(container, msg, editor) {
+  const clickHandler = (msg) => {
+    editor.getDoc().setSelection(
+      {line: msg.loc.start.line - 1, ch: msg.loc.start.column - 1},
+      {line: msg.loc.end.line - 1, ch: msg.loc.end.column}
+    );
+    editor.focus();
+  };
+
+  if (msg.loc && msg.context != null) {
+    const div = document.createElement('div');
+    const basename = msg.loc.source.replace(/.*\//, '');
+    const filename = basename !== '-' ? `${msg.loc.source}:` : '';
+    const prefix = `${filename}${msg.loc.start.line}: `;
+
+    const before = msg.context.slice(0, msg.loc.start.column - 1);
+    const highlight = (msg.loc.start.line === msg.loc.end.line) ?
+      msg.context.slice(msg.loc.start.column - 1, msg.loc.end.column) :
+      msg.context.slice(msg.loc.start.column - 1);
+    const after = (msg.loc.start.line === msg.loc.end.line) ?
+      msg.context.slice(msg.loc.end.column) :
+      '';
+    div.appendChild(document.createTextNode(prefix + before));
+    const bold = document.createElement('strong');
+    bold.className = "msgHighlight";
+    bold.appendChild(document.createTextNode(highlight));
+    div.appendChild(bold);
+    div.appendChild(document.createTextNode(after));
+    container.appendChild(div);
+
+    const offset = msg.loc.start.column + prefix.length - 1;
+    const arrow = `${(prefix + before).replace(/[^ ]/g, ' ')}^ `;
+    container.appendChild(document.createTextNode(arrow));
+
+    const span = document.createElement('span');
+    span.className = "msgType";
+    span.appendChild(document.createTextNode(msg.descr));
+    container.appendChild(span);
+
+    const handler = clickHandler.bind(null, msg);
+    bold.addEventListener('click', handler);
+    span.addEventListener('click', handler);
+  } else if (msg.type === "Comment") {
+    const descr = `. ${msg.descr}\n`;
+    container.appendChild(document.createTextNode(descr));
+  } else {
+    const descr = `${msg.descr}\n`;
+    container.appendChild(document.createTextNode(descr));
+  }
+};
+
+function printExtra(info, editor) {
+  const list = document.createElement('ul');
+  if (info.message) {
+    const li = document.createElement('li');
+    info.message.forEach(msg => appendMsg(li, msg, editor));
+    list.appendChild(li);
+  }
+  if (info.children) {
+    const li = document.createElement('li');
+    info.children.forEach(info => {
+      li.appendChild(printExtra(info, editor));
+    });
+    list.appendChild(li);
+  }
+  return list;
+}
+
+function printError(err, editor) {
+  const li = document.createElement('li');
+  err.message.forEach(msg => appendMsg(li, msg, editor));
+
+  if (err.extra) {
+    err.extra.forEach(info => {
+      li.appendChild(printExtra(info, editor));
+    });
+  }
+
+  return li;
+}
+
+function printErrors(errors, editor) {
+  const list = document.createElement('ul');
+  errors.forEach(err => {
+    list.appendChild(printError(err, editor));
+  });
+  return list;
+}
+
+function removeChildren(node) {
+  while (node.lastChild) node.removeChild(node.lastChild);
+}
+
+function getAnnotations(text, callback, options, editor) {
+  Promise.resolve(editor.getOption('flow'))
+  .then(flowProxy => flowProxy.checkContent('-', text))
+  .then(errors => {
+    CodeMirror.signal(editor, 'flowErrors', errors);
+
+    var lint = errors.map(function(err) {
+      var messages = err.message;
+      var firstLoc = messages[0].loc;
+      var message = messages.map(function(msg) {
+        return msg.descr;
+      }).join("\n");
+      return {
+        from: CodeMirror.Pos(
+          firstLoc.start.line - 1,
+          firstLoc.start.column - 1
+        ),
+        to: CodeMirror.Pos(firstLoc.end.line - 1, firstLoc.end.column),
+        severity: err.level,
+        message: message
+      };
+    });
+    callback(lint);
+  });
+}
+getAnnotations.async = true;
+
+const lastEditorValue = localStorage.getItem('tryFlowLastContent');
+const defaultValue = (lastEditorValue && getHashedValue(lastEditorValue)) || `/* @flow */
+
+function foo(x: ?number): string {
+  if (x) {
+    return x;
+  }
+  return "default string";
+}
+`;
+
+function getHashedValue(hash) {
+  if (hash[0] !== '#' || hash.length < 2) return null;
+  const version = hash.slice(1, 2);
+  const encoded = hash.slice(2);
+  if (version === '0' && encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
+    return LZString.decompressFromEncodedURIComponent(encoded);
+  }
+  return null;
+}
+
+function removeClass(elem, className) {
+  elem.className = elem.className.split(/\s+/).filter(function(name) {
+    return name !== className;
+  }).join(' ');
+}
+
+class Deferred {
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+}
+
+const workerRegistry = {}
+class FlowWorker {
+  constructor(version) {
+    this._version = version;
+    this._pending = {};
+    this._index = 0;
+
+    const worker = this._worker = new Worker("{% asset_path 'tryFlowWorker' %}");
+    worker.onmessage = ({data}) => {
+      if (data.id && this._pending[data.id]) {
+        if (data.err) {
+          this._pending[data.id].reject(data.err);
+        } else {
+          this._pending[data.id].resolve(data.result);
+        }
+        delete this._pending[data.id];
+      }
+    };
+    worker.onerror = function() {
+      console.log('There is an error with your worker!');
+    };
+
+    // keep a reference to the worker, so that it doesn't get GC'd and killed.
+    workerRegistry[version] = worker;
+  }
+
+  send(data) {
+    const id = ++this._index;
+    const version = this._version;
+    this._pending[id] = new Deferred();
+    this._worker.postMessage({ id, version, ...data });
+    return this._pending[id].promise;
+  }
+}
+
+function initFlowWorker(version) {
+  const worker = new FlowWorker(version);
+  return worker.send({ type: 'init' }).then(() => worker);
+}
+
+class AsyncLocalFlow {
+  constructor(flow) {
+    this._flow = flow;
+  }
+
+  checkContent(filename, body) {
+    return Promise.resolve(this._flow.checkContent(filename, body));
+  }
+
+  typeAtPos(filename, body, line, col) {
+    return Promise.resolve(this._flow.typeAtPos(filename, body, line, col));
+  }
+
+  supportsParse() {
+    return Promise.resolve(this._flow.parse != null);
+  }
+
+  parse(body, options) {
+    return Promise.resolve(this._flow.parse(body, options));
+  }
+}
+
+class AsyncWorkerFlow {
+  constructor(worker) {
+    this._worker = worker;
+  }
+
+  checkContent(filename, body) {
+    return this._worker.send({ type: 'checkContent', filename, body });
+  }
+
+  typeAtPos(filename, body, line, col) {
+    return this._worker.send({ type: 'typeAtPos', filename, body, line, col });
+  }
+
+  supportsParse() {
+    return this._worker.send({ type: 'supportsParse' });
+  }
+
+  parse(body, options) {
+    return this._worker.send({ type: 'parse', body, options });
+  }
+}
+
+function initFlow(version) {
+  const useWorker = localStorage.getItem('tryFlowUseWorker');
+  if (useWorker === 'true') {
+    return initFlowWorker(version).then((flow) => new AsyncWorkerFlow(flow));
+  } else {
+    return initFlowLocally(version).then((flow) => new AsyncLocalFlow(flow));
+  }
+}
+
+function createEditor(
+  flowVersion,
+  domNode,
+  resultsNode,
+  flowVersions
+) {
+  const defaultFlow = initFlow(flowVersion);
+
+  requirejs([
+    'codemirror/addon/lint/lint',
+    'codemirror/mode/javascript/javascript',
+    'codemirror/mode/xml/xml',
+    'codemirror/mode/jsx/jsx'
+  ], function() {
+    const location = window.location;
+
+    defaultFlow.then(function() {
+      removeClass(resultsNode, 'show-loading');
+    });
+
+    const errorsTabNode = document.createElement('li');
+    errorsTabNode.className = "tab errors-tab";
+    errorsTabNode.appendChild(document.createTextNode('Errors'));
+    errorsTabNode.addEventListener('click', function(evt) {
+      removeClass(resultsNode, 'show-json');
+      removeClass(resultsNode, 'show-ast');
+      resultsNode.className += ' show-errors';
+      evt.preventDefault();
+    });
+
+    const jsonTabNode = document.createElement('li');
+    jsonTabNode.className = "tab json-tab";
+    jsonTabNode.appendChild(document.createTextNode('JSON'));
+    jsonTabNode.addEventListener('click', function(evt) {
+      removeClass(resultsNode, 'show-errors');
+      removeClass(resultsNode, 'show-ast');
+      resultsNode.className += ' show-json';
+      evt.preventDefault();
+    });
+
+    const astTabNode = document.createElement('li');
+    astTabNode.className = "tab ast-tab";
+    astTabNode.appendChild(document.createTextNode('AST'));
+    astTabNode.addEventListener('click', function(evt) {
+      removeClass(resultsNode, 'show-errors');
+      removeClass(resultsNode, 'show-json');
+      resultsNode.className += ' show-ast';
+      evt.preventDefault();
+    });
+
+    const versionSelector = document.createElement('select');
+    flowVersions.forEach(
+      function(version) {
+        const option = document.createElement('option');
+        option.value = version;
+        option.text = version;
+        option.selected = version == flowVersion;
+        versionSelector.add(option, null);
+      }
+    );
+    const versionTabNode = document.createElement('li');
+    versionTabNode.className = "version";
+    versionTabNode.appendChild(versionSelector);
+
+    const toolbarNode = document.createElement('ul');
+    toolbarNode.className = "toolbar";
+    toolbarNode.appendChild(errorsTabNode);
+    toolbarNode.appendChild(jsonTabNode);
+    toolbarNode.appendChild(astTabNode);
+    toolbarNode.appendChild(versionTabNode);
+
+    const errorsNode = document.createElement('pre');
+    errorsNode.className = "errors";
+
+    const jsonNode = document.createElement('pre');
+    jsonNode.className = "json";
+
+    const astNode = document.createElement('pre');
+    astNode.className = "ast";
+
+    resultsNode.appendChild(toolbarNode);
+    resultsNode.appendChild(errorsNode);
+    resultsNode.appendChild(jsonNode);
+    resultsNode.appendChild(astNode);
+
+    resultsNode.className += " show-errors";
+
+    const cursorPositionNode = document.querySelector('footer .cursor-position');
+    const typeAtPosNode = document.querySelector('footer .type-at-pos');
+
+    const editor = CodeMirror(domNode, {
+      value: getHashedValue(location.hash) || defaultValue,
+      autofocus: true,
+      lineNumbers: true,
+      showCursorWhenSelecting: true,
+      mode: "jsx",
+      flow: defaultFlow,
+      lint: getAnnotations
+    });
+
+    editor.on('changes', () => {
+      const value = editor.getValue();
+      const encoded = LZString.compressToEncodedURIComponent(value);
+      history.replaceState(undefined, undefined, `#0${encoded}`);
+      localStorage.setItem('tryFlowLastContent', location.hash);
+    });
+
+    editor.on('cursorActivity', () => {
+      const cursor = editor.getCursor();
+      const value = editor.getValue();
+      cursorPositionNode.innerHTML = `${cursor.line + 1}:${cursor.ch + 1}`;
+      editor.getOption('flow')
+      .then(flowProxy => flowProxy.typeAtPos(
+        '-', value, cursor.line + 1, cursor.ch
+      ))
+      .then(typeAtPos => {
+        typeAtPosNode.title = typeAtPos ? typeAtPos.c : '';
+        typeAtPosNode.textContent = typeAtPos ? typeAtPos.c : '';
+      })
+      .catch(() => {
+        typeAtPosNode.title = '';
+        typeAtPosNode.textContent = '';
+      });
+    });
+
+    editor.on('flowErrors', errors => {
+      if (errorsNode) {
+        if (errors.length) {
+          removeChildren(errorsNode);
+          errorsNode.appendChild(printErrors(errors, editor));
+        } else {
+          errorsNode.innerText = 'No errors!';
+        }
+      }
+
+      if (jsonNode) {
+        removeChildren(jsonNode);
+        jsonNode.appendChild(
+          document.createTextNode(JSON.stringify(errors, null, 2))
+        );
+      }
+
+      if (astNode) {
+        editor.getOption('flow')
+        .then((flowProxy) => {
+          flowProxy.supportsParse()
+          .then(supportsParse => {
+            if (supportsParse) {
+              const options = {
+                esproposal_class_instance_fields: true,
+                esproposal_class_static_fields: true,
+                esproposal_decorators: true,
+                esproposal_export_star_as: true,
+                esproposal_optional_chaining: true,
+                esproposal_nullish_coalescing: true,
+                types: true,
+              };
+              flowProxy.parse(editor.getValue(), options).then(ast => {
+                removeChildren(astNode);
+                astNode.appendChild(
+                  document.createTextNode(JSON.stringify(ast, null, 2))
+                );
+                astNode.dataset.disabled = "false";
+              });
+            } else if (astNode.dataset.disabled !== "true") {
+              astNode.dataset.disabled = "true";
+              removeChildren(astNode);
+              astNode.appendChild(
+                document.createTextNode(
+                  "AST output is not supported in this version of Flow."
+                )
+              );
+            }
+          })
+        });
+      }
+    });
+
+    versionTabNode.addEventListener('change', function(evt) {
+      const version = evt.target.value;
+      resultsNode.className += ' show-loading';
+      const flowProxy = initFlow(version);
+      flowProxy.then(function() {
+        removeClass(resultsNode, 'show-loading');
+      });
+      editor.setOption('flow', flowProxy);
+    });
+  });
+}
+
+exports.createEditor = createEditor;

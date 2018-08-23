@@ -1,0 +1,16 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:5:23
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+
+   test.js:5:23
+   5| class B<+T> extends A<T> {} // Error: T used invariantly.
+                            ^
+
+References:
+   test.js:5:10
+   5| class B<+T> extends A<T> {} // Error: T used invariantly.
+               ^ [1]
+
+
+
+Found 1 error

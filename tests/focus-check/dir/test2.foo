@@ -1,0 +1,4 @@
+//@flow
+// There's an error in here, too!
+var x: number = 3;
+x = 3 + "string";

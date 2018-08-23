@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -64,6 +61,8 @@ let trace_depth trace =
 let unit_trace lower upper =
   [lower, upper, Parent [], 1]
 
+let dummy_trace = []
+
 (* Single-step trace with a parent. This corresponds to a
    recursive invocation of the flow function.
    Optimization: only embed when modes.trace > 0,
@@ -106,47 +105,31 @@ let index_trace =
     tmap, imap
 
 
-let spaces n = String.make n ' '
-
-(* string length of printed position, as it would
-   appear in an error *)
-let pos_len ~prep_path r =
-  let r = prep_path r in
-  let loc = loc_of_reason r in
-  let str = Errors.format_info (loc, []) in
-  String.length str
-
-
 (* scan a trace tree, return maximum position length
    of reasons at or above the given depth limit, and
    min of that limit and actual max depth *)
-let max_pos_len_and_depth ~prep_path limit trace =
-  let rec f (len, depth) (lower, upper, parent, _) =
-    let len = max len (pos_len ~prep_path (reason_of_t lower)) in
-    let len = max len (pos_len ~prep_path (reason_of_use_t upper)) in
-    if depth > limit then len, depth
+let max_depth_of_trace limit trace =
+  let rec f depth (_, _, parent, _) =
+    if depth > limit then depth
     else (
       match parent with
-      | Parent [] -> len, depth
-      | Parent trace -> List.fold_left f (len, depth + 1) trace
+      | Parent [] -> depth
+      | Parent trace -> List.fold_left f (depth + 1) trace
     )
-  in List.fold_left f (0, 0) trace
+  in List.fold_left f 0 trace
 
 
 (* reformat a reason's description with
-   - the given left margin
    - the given prefix and suffix: if either is nonempty,
      "desc" becomes "prefix[desc]suffix"
   *)
-let pretty_r ~prep_path margin r prefix suffix =
-  let len = pos_len ~prep_path r in
-  let ind = if margin > len then spaces (margin - len) else "" in
+let pretty_r r prefix suffix =
   replace_reason (fun desc ->
     let desc_str = string_of_desc desc in
     let custom =
       if prefix = "" && suffix = ""
-      then spf "%s%s" ind desc_str
-      else spf "%s%s%s" (ind ^ spf "%s[" prefix) desc_str (spf "]%s" suffix)
+      then desc_str
+      else spf "%s[%s]%s" prefix desc_str suffix
     in
     RCustom custom
   ) r
@@ -163,8 +146,8 @@ let pretty_r ~prep_path margin r prefix suffix =
      if the step was derived from another path, we append a note
      to that effect.
  *)
-let reasons_of_trace ~prep_path ?(level=0) trace =
-  let max_pos_len, max_depth = max_pos_len_and_depth ~prep_path level trace in
+let reasons_of_trace ?(level=0) trace =
+  let max_depth = max_depth_of_trace level trace in
   let level = min level max_depth in
 
   let tmap, imap = index_trace level trace in
@@ -181,11 +164,11 @@ let reasons_of_trace ~prep_path ?(level=0) trace =
     (* omit lower if it's a pipelined tvar *)
     (if is_pipelined_tvar ~steps ~i lower
     then []
-    else [pretty_r ~prep_path max_pos_len (reason_of_t_add_id lower)
+    else [pretty_r (reason_of_t_add_id lower)
       (spf "%s " (string_of_ctor lower)) ""]
     )
     @
-    [pretty_r ~prep_path max_pos_len (reason_of_use_t_add_id upper)
+    [pretty_r (reason_of_use_t_add_id upper)
       (spf "~> %s " (string_of_use_ctor upper))
       (if parent = []
         then ""

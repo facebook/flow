@@ -1,3 +1,10 @@
+(**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
+
 (* Destructuring in the presence of default values gives rise to a list-like
  * structure, which is encapsulated herein. While a destructuring pattern only
  * creates bindings at its leaves, defaults can be provided at every level.

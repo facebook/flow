@@ -55,4 +55,6 @@ var f2_3 = f2.bind({x: ""})();           // error, string -> number
 // TODO make this error blame the call site, rather than the function body
 var f2_4 = f2();                         // error, (global object).x
 
+(this: void);
+
 module.exports = true;

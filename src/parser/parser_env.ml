@@ -1,20 +1,13 @@
-(*
+(**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Spider_monkey_ast
-module Lex_env = Lexer_flow.Lex_env
-module Lex_result = Lexer_flow.Lex_result
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
-module SMap = Map.Make(String)
 
 module Lex_mode = struct
   type t =
@@ -63,14 +56,7 @@ end = struct
   }
 
   let create lex_env mode =
-    let lexbuf = Lex_env.lexbuf lex_env in
-    (* copy all the mutable things so that we have a distinct lexing environment
-     * that does not interfere with ordinary lexer operations *)
-    (* lex_buffer has type bytes, which is itself mutable, but the lexer
-     * promises not to change it so a shallow copy should be fine *)
-    (* I don't know how to do a copy without an update *)
-    let lexbuf = Lexing.({ lexbuf with lex_buffer = lexbuf.lex_buffer }) in
-    let lex_env = Lex_env.with_lexbuf ~lexbuf lex_env in
+    let lex_env = Lex_env.clone lex_env in
     {
       la_results = [||];
       la_num_lexed = 0;
@@ -104,20 +90,14 @@ end = struct
     let lex_env = t.la_lex_env in
     let lex_env, lex_result =
       match t.la_lex_mode with
-      | Lex_mode.NORMAL -> Lexer_flow.token lex_env
-      | Lex_mode.TYPE -> Lexer_flow.type_token lex_env
-      | Lex_mode.JSX_TAG -> Lexer_flow.jsx_tag lex_env
-      | Lex_mode.JSX_CHILD -> Lexer_flow.jsx_child lex_env
-      | Lex_mode.TEMPLATE -> Lexer_flow.template_tail lex_env
-      | Lex_mode.REGEXP -> Lexer_flow.regexp lex_env
+      | Lex_mode.NORMAL -> Lexer.token lex_env
+      | Lex_mode.TYPE -> Lexer.type_token lex_env
+      | Lex_mode.JSX_TAG -> Lexer.jsx_tag lex_env
+      | Lex_mode.JSX_CHILD -> Lexer.jsx_child lex_env
+      | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
+      | Lex_mode.REGEXP -> Lexer.regexp lex_env
     in
-    let cloned_env =
-      let lexbuf =
-        let lexbuf = Lex_env.lexbuf lex_env in
-        Lexing.({ lexbuf with lex_buffer = lexbuf.lex_buffer })
-      in
-      Lex_env.with_lexbuf ~lexbuf lex_env
-    in
+    let cloned_env = Lex_env.clone lex_env in
     t.la_lex_env <- lex_env;
     t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
     t.la_num_lexed <- t.la_num_lexed + 1
@@ -153,9 +133,8 @@ end
 
 type token_sink_result = {
   token_loc: Loc.t;
-  token: Lexer_flow.Token.t;
+  token: Token.t;
   token_context: Lex_mode.t;
-  token_value: string;
 }
 
 type parse_options = {
@@ -163,6 +142,8 @@ type parse_options = {
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
+  esproposal_optional_chaining: bool;
+  esproposal_nullish_coalescing: bool;
   types: bool;
   use_strict: bool;
 }
@@ -171,20 +152,28 @@ let default_parse_options = {
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
   esproposal_export_star_as = false;
+  esproposal_optional_chaining = false;
+  esproposal_nullish_coalescing = false;
   types = true;
   use_strict = false;
 }
 
+type allowed_super =
+  | No_super
+  | Super_prop
+  | Super_prop_or_call
+
 type env = {
   errors                : (Loc.t * Error.t) list ref;
-  comments              : Comment.t list ref;
+  comments              : Loc.t Comment.t list ref;
   labels                : SSet.t;
   exports               : SSet.t ref;
-  last_loc              : Loc.t option ref;
+  last_lex_result       : Lex_result.t option ref;
   in_strict_mode        : bool;
   in_export             : bool;
   in_loop               : bool;
   in_switch             : bool;
+  in_formal_parameters  : bool;
   in_function           : bool;
   no_in                 : bool;
   no_call               : bool;
@@ -193,6 +182,8 @@ type env = {
   no_new                : bool;
   allow_yield           : bool;
   allow_await           : bool;
+  allow_directive       : bool;
+  allow_super           : allowed_super;
   error_callback        : (env -> Error.t -> unit) option;
   lex_mode_stack        : Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
@@ -201,22 +192,21 @@ type env = {
   lookahead             : Lookahead.t ref;
   token_sink            : (token_sink_result -> unit) option ref;
   parse_options         : parse_options;
-  source               : Loc.filename option;
+  source                : File_key.t option;
+  (* It is a syntax error to reference private fields not in scope. In order to enforce this,
+   * we keep track of the privates we've seen declared and used. *)
+  privates              : (SSet.t * ((string * Loc.t) list)) list ref;
 }
 
 (* constructor *)
 let init_env ?(token_sink=None) ?(parse_options=None) source content =
-  let lb = Lexing.from_string content in
-  (match source with
-    | None
-    | Some Loc.Builtins -> ()
-    | Some Loc.LibFile fn
-    | Some Loc.SourceFile fn
-    | Some Loc.JsonFile fn
-    | Some Loc.ResourceFile fn ->
-      lb.Lexing.lex_curr_p <- {
-        lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
-      });
+  (* let lb = Sedlexing.Utf16.from_string
+    content (Some Sedlexing.Utf16.Little_endian) in *)
+  let lb, errors = try Sedlexing.Utf8.from_string content, []
+  with Sedlexing.MalFormed ->
+    Sedlexing.Utf8.from_string "",
+    [ { Loc.none with Loc.source; }, Parse_error.MalformedUnicode ]
+  in
 
   let parse_options =
     match parse_options with
@@ -226,23 +216,26 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
   let enable_types_in_comments = parse_options.types in
   let lex_env = Lex_env.new_lex_env source lb ~enable_types_in_comments in
   {
-    errors = ref [];
+    errors = ref errors;
     comments = ref [];
     labels = SSet.empty;
     exports = ref SSet.empty;
-    last_loc = ref None;
+    last_lex_result = ref None;
     in_strict_mode = parse_options.use_strict;
     in_export = false;
     in_loop = false;
     in_switch = false;
+    in_formal_parameters = false;
     in_function = false;
     no_in = false;
     no_call = false;
     no_let = false;
     no_anon_function_type = false;
     no_new = false;
-    allow_yield = true;
+    allow_yield = false;
     allow_await = false;
+    allow_directive = false;
+    allow_super = No_super;
     error_callback = None;
     lex_mode_stack = ref [Lex_mode.NORMAL];
     lex_env = ref lex_env;
@@ -250,6 +243,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     token_sink = ref token_sink;
     parse_options;
     source;
+    privates = ref [];
   }
 
 (* getters: *)
@@ -260,9 +254,12 @@ let comments env = !(env.comments)
 let labels env = env.labels
 let in_loop env = env.in_loop
 let in_switch env = env.in_switch
+let in_formal_parameters env = env.in_formal_parameters
 let in_function env = env.in_function
 let allow_yield env = env.allow_yield
 let allow_await env = env.allow_await
+let allow_directive env = env.allow_directive
+let allow_super env = env.allow_super
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
@@ -279,24 +276,66 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-let comment_list env =
-  List.iter (fun c -> env.comments := c :: !(env.comments))
 let record_export env (loc, export_name) =
+  if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
   if SSet.mem export_name exports
   then error_at env (loc, Error.DuplicateExport export_name)
   else env.exports := SSet.add export_name !(env.exports)
 
+(* Since private fields out of scope are a parse error, we keep track of the declared and used
+ * private fields.
+ *
+ * Whenever we enter a class, we push new empty lists of declared and used privates.
+ * When we encounter a new declared private, we add it to the top of the declared_privates list
+ * via add_declared_private. We do the same with used_privates via add_used_private.
+ *
+ * When we exit a class, we look for all the unbound private variables. Since class fields
+ * are hoisted to the scope of the class, we may need to look further before we conclude that
+ * a field is out of scope. To do that, we add all of the unbound private fields to the
+ * next used_private list. Once we run out of declared private lists, any leftover used_privates
+ * are unbound private variables. *)
+let enter_class env = env.privates := (SSet.empty, []) :: !(env.privates)
+
+let exit_class env =
+
+  let get_unbound_privates declared_privates used_privates =
+    List.filter (fun x -> not (SSet.mem (fst x) declared_privates)) used_privates in
+
+  match !(env.privates) with
+  | [declared_privates, used_privates] ->
+      let unbound_privates = get_unbound_privates declared_privates used_privates in
+      List.iter (fun (name, loc) -> error_at env (loc, Error.UnboundPrivate name)) unbound_privates;
+      env.privates := []
+  | (loc_declared_privates, loc_used_privates) :: privates ->
+      let unbound_privates = get_unbound_privates loc_declared_privates loc_used_privates in
+      let decl_head, used_head = List.hd privates in
+      env.privates := (decl_head, used_head @ unbound_privates) :: (List.tl privates)
+  | _ -> failwith "Internal Error: `exit_class` called before a matching `enter_class`"
+
+let add_declared_private env name =
+  match !(env.privates) with
+  | [] -> failwith "Internal Error: Tried to add_declared_private with outside of class scope."
+  | (declared, used)::xs -> env.privates := ((SSet.add name declared, used) :: xs)
+
+let add_used_private env name loc =
+  match !(env.privates) with
+  | [] -> error_at env (loc, Error.PrivateNotInClass)
+  | (declared, used)::xs -> env.privates := ((declared, (name, loc) :: used) :: xs)
+
 (* lookahead: *)
-let lookahead ?(i=0) env =
+let lookahead ~i env =
   assert (i < maximum_lookahead);
   Lookahead.peek !(env.lookahead) i
 
 (* functional operations: *)
 let with_strict in_strict_mode env = { env with in_strict_mode }
+let with_in_formal_parameters in_formal_parameters env = { env with in_formal_parameters }
 let with_in_function in_function env = { env with in_function }
 let with_allow_yield allow_yield env = { env with allow_yield }
 let with_allow_await allow_await env = { env with allow_await }
+let with_allow_directive allow_directive env = { env with allow_directive }
+let with_allow_super allow_super env = { env with allow_super }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }
@@ -311,12 +350,19 @@ let with_error_callback error_callback env =
 
 (* other helper functions: *)
 let error_list env = List.iter (error_at env)
-let last_loc env = !(env.last_loc)
+let last_loc env = match !(env.last_lex_result) with
+| Some lex_result -> Some (Lex_result.loc lex_result)
+| None -> None
+
+let last_token env = match !(env.last_lex_result) with
+| Some lex_result -> Some (Lex_result.token lex_result)
+| None -> None
 
 let without_error_callback env = { env with error_callback = None }
 
 let add_label env label = { env with labels = SSet.add label env.labels }
 let enter_function env ~async ~generator = { env with
+    in_formal_parameters = false;
     in_function = true;
     in_loop = false;
     in_switch = false;
@@ -325,10 +371,27 @@ let enter_function env ~async ~generator = { env with
     allow_yield = generator;
   }
 
+(* #sec-keywords *)
+let is_keyword = function
+  | "await" | "break" | "case" | "catch" | "class" | "const" | "continue"
+  | "debugger" | "default" | "delete" | "do" | "else" | "export" | "extends"
+  | "finally" | "for" | "function" | "if" | "import" | "in" | "instanceof"
+  | "new" | "return" | "super" | "switch" | "this" | "throw" | "try"
+  | "typeof" | "var" | "void" | "while" | "with" | "yield" -> true
+  | _ -> false
+
+(* #sec-future-reserved-words *)
 let is_future_reserved = function
   | "enum" -> true
   | _ -> false
 
+let token_is_future_reserved = Token.(function
+  | T_IDENTIFIER { raw; _ } when is_future_reserved raw -> true
+  | T_ENUM -> true
+  | _ -> false
+)
+
+(* #sec-strict-mode-of-ecmascript *)
 let is_strict_reserved = function
   | "interface"
   | "implements"
@@ -340,22 +403,63 @@ let is_strict_reserved = function
   | "yield" -> true
   | _ -> false
 
+let token_is_strict_reserved = Token.(function
+  | T_IDENTIFIER { raw; _ } when is_strict_reserved raw -> true
+  | T_INTERFACE
+  | T_IMPLEMENTS
+  | T_PACKAGE
+  | T_PRIVATE
+  | T_PROTECTED
+  | T_PUBLIC
+  | T_STATIC
+  | T_YIELD
+    -> true
+  | _
+    -> false
+)
+
+(* #sec-strict-mode-of-ecmascript *)
 let is_restricted = function
   | "eval"
   | "arguments" -> true
   | _ -> false
 
+let token_is_restricted = Token.(function
+  | T_IDENTIFIER { raw; _ } when is_restricted raw -> true
+  | _ -> false
+)
+
+(* #sec-reserved-words *)
+let is_reserved str_val =
+  is_keyword str_val ||
+  is_future_reserved str_val ||
+  match str_val with
+  | "null" | "true" | "false" -> true
+  | _ -> false
+
+let is_reserved_type str_val =
+  match str_val with
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
+  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends"
+    -> true
+  | _ -> false
+
 (* Answer questions about what comes next *)
 module Peek = struct
   open Loc
-  open Lexer_flow.Token
+  open Token
 
-  let token ?(i=0) env = Lex_result.token (lookahead ~i env)
-  let value ?(i=0) env = Lex_result.value (lookahead ~i env)
-  let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
-  let errors ?(i=0) env = Lex_result.errors (lookahead ~i env)
-  let comments ?(i=0) env = Lex_result.comments (lookahead ~i env)
-  let lex_env ?(i=0) env = Lookahead.lex_env !(env.lookahead) i
+  let ith_token ~i env = Lex_result.token (lookahead ~i env)
+  let ith_loc ~i env = Lex_result.loc (lookahead ~i env)
+  let ith_errors ~i env = Lex_result.errors (lookahead ~i env)
+  let ith_comments ~i env = Lex_result.comments (lookahead ~i env)
+  let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
+
+  let token env = ith_token ~i:0 env
+  let loc env = ith_loc ~i:0 env
+  let errors env = ith_errors ~i:0 env
+  let comments env = ith_comments ~i:0 env
+  let lex_env env = ith_lex_env ~i:0 env
 
   (* True if there is a line terminator before the next token *)
   let is_line_terminator env =
@@ -370,41 +474,201 @@ module Peek = struct
     | T_SEMICOLON -> false
     | _ -> is_line_terminator env
 
-  let semicolon_loc ?(i=0) env =
-    if token ~i env = T_SEMICOLON
-    then Some (loc ~i env)
-    else None
-
-  (* This returns true if the next token is identifier-ish (even if it is an
-   * error) *)
-  let is_identifier ?(i=0) env =
-    let name = value ~i env in
-    match token ~i env with
-    | _ when
-      is_strict_reserved name ||
-      is_restricted name ||
-      is_future_reserved name-> true
+  let ith_is_identifier ~i env =
+    match ith_token ~i env with
+    | t when token_is_strict_reserved t -> true
+    | t when token_is_future_reserved t -> true
+    | t when token_is_restricted t -> true
     | T_LET
     | T_TYPE
+    | T_OPAQUE
     | T_OF
     | T_DECLARE
     | T_ASYNC
     | T_AWAIT
-    | T_IDENTIFIER -> true
+    | T_POUND
+    | T_IDENTIFIER _ -> true
     | _ -> false
 
-  let is_literal_property_name ?(i=0) env =
-    is_identifier ~i env || match token ~i env with
-    | T_STRING _
-    | T_NUMBER _ -> true
-    | _ -> false
+  let ith_is_type_identifier ~i env =
+    match lex_mode env with
+    | Lex_mode.TYPE ->
+      begin match ith_token ~i env with
+      | T_IDENTIFIER _ -> true
+      | _ -> false
+      end
+    | Lex_mode.NORMAL ->
+      (* Sometimes we peek at type identifiers while in normal lex mode. For
+         example, when deciding whether a `type` token is an identifier or the
+         start of a type declaration, based on whether the following token
+         `is_type_identifier`. *)
+      begin match ith_token ~i env with
+      | T_IDENTIFIER { raw; _ } when is_reserved_type raw -> false
 
-  let is_function ?(i=0) env =
-    token ~i env = T_FUNCTION ||
-    (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
+      (* reserved type identifiers, but these don't appear in NORMAL mode *)
+      | T_ANY_TYPE
+      | T_MIXED_TYPE
+      | T_EMPTY_TYPE
+      | T_NUMBER_TYPE
+      | T_STRING_TYPE
+      | T_VOID_TYPE
+      | T_BOOLEAN_TYPE _
+      | T_NUMBER_SINGLETON_TYPE _
 
-  let is_class ?(i=0) env =
-    match token ~i env with
+      (* identifier-ish *)
+      | T_ASYNC
+      | T_AWAIT
+      | T_BREAK
+      | T_CASE
+      | T_CATCH
+      | T_CLASS
+      | T_CONST
+      | T_CONTINUE
+      | T_DEBUGGER
+      | T_DECLARE
+      | T_DEFAULT
+      | T_DELETE
+      | T_DO
+      | T_ELSE
+      | T_ENUM
+      | T_EXPORT
+      | T_EXTENDS
+      | T_FALSE
+      | T_FINALLY
+      | T_FOR
+      | T_FUNCTION
+      | T_IDENTIFIER _
+      | T_IF
+      | T_IMPLEMENTS
+      | T_IMPORT
+      | T_IN
+      | T_INSTANCEOF
+      | T_INTERFACE
+      | T_LET
+      | T_NEW
+      | T_NULL
+      | T_OF
+      | T_OPAQUE
+      | T_PACKAGE
+      | T_PRIVATE
+      | T_PROTECTED
+      | T_PUBLIC
+      | T_RETURN
+      | T_SUPER
+      | T_SWITCH
+      | T_THIS
+      | T_THROW
+      | T_TRUE
+      | T_TRY
+      | T_TYPE
+      | T_VAR
+      | T_WHILE
+      | T_WITH
+      | T_YIELD -> true
+
+      (* identifier-ish, but not valid types *)
+      | T_STATIC
+      | T_TYPEOF
+      | T_VOID
+        -> false
+
+      (* syntax *)
+      | T_LCURLY
+      | T_RCURLY
+      | T_LCURLYBAR
+      | T_RCURLYBAR
+      | T_LPAREN
+      | T_RPAREN
+      | T_LBRACKET
+      | T_RBRACKET
+      | T_SEMICOLON
+      | T_COMMA
+      | T_PERIOD
+      | T_ARROW
+      | T_ELLIPSIS
+      | T_AT
+      | T_POUND
+      | T_CHECKS
+      | T_RSHIFT3_ASSIGN
+      | T_RSHIFT_ASSIGN
+      | T_LSHIFT_ASSIGN
+      | T_BIT_XOR_ASSIGN
+      | T_BIT_OR_ASSIGN
+      | T_BIT_AND_ASSIGN
+      | T_MOD_ASSIGN
+      | T_DIV_ASSIGN
+      | T_MULT_ASSIGN
+      | T_EXP_ASSIGN
+      | T_MINUS_ASSIGN
+      | T_PLUS_ASSIGN
+      | T_ASSIGN
+      | T_PLING_PERIOD
+      | T_PLING_PLING
+      | T_PLING
+      | T_COLON
+      | T_OR
+      | T_AND
+      | T_BIT_OR
+      | T_BIT_XOR
+      | T_BIT_AND
+      | T_EQUAL
+      | T_NOT_EQUAL
+      | T_STRICT_EQUAL
+      | T_STRICT_NOT_EQUAL
+      | T_LESS_THAN_EQUAL
+      | T_GREATER_THAN_EQUAL
+      | T_LESS_THAN
+      | T_GREATER_THAN
+      | T_LSHIFT
+      | T_RSHIFT
+      | T_RSHIFT3
+      | T_PLUS
+      | T_MINUS
+      | T_DIV
+      | T_MULT
+      | T_EXP
+      | T_MOD
+      | T_NOT
+      | T_BIT_NOT
+      | T_INCR
+      | T_DECR
+      | T_EOF
+        -> false
+
+      (* literals *)
+      | T_NUMBER _
+      | T_STRING _
+      | T_TEMPLATE_PART _
+      | T_REGEXP _
+
+      (* misc that shouldn't appear in NORMAL mode *)
+      | T_JSX_IDENTIFIER _
+      | T_JSX_TEXT _
+      | T_ERROR _
+        -> false
+      end
+    | Lex_mode.JSX_TAG
+    | Lex_mode.JSX_CHILD
+    | Lex_mode.TEMPLATE
+    | Lex_mode.REGEXP -> false
+
+  let ith_is_identifier_name ~i env =
+    ith_is_identifier ~i env || ith_is_type_identifier ~i env
+
+  (* This returns true if the next token is identifier-ish (even if it is an
+     error) *)
+  let is_identifier env = ith_is_identifier ~i:0 env
+
+  let is_identifier_name env = ith_is_identifier_name ~i:0 env
+
+  let is_type_identifier env = ith_is_type_identifier ~i:0 env
+
+  let is_function env =
+    token env = T_FUNCTION ||
+    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION)
+
+  let is_class env =
+    match token env with
     | T_CLASS
     | T_AT -> true
     | _ -> false
@@ -420,16 +684,17 @@ let error env e =
   let loc = Peek.loc env in
   error_at env (loc, e)
 
-let get_unexpected_error = Lexer_flow.Token.(function
-  | T_EOF, _ -> Error.UnexpectedEOS
-  | T_NUMBER _, _ -> Error.UnexpectedNumber
-  | T_JSX_TEXT _, _
-  | T_STRING _, _ -> Error.UnexpectedString
-  | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
-  | _, word when is_future_reserved word -> Error.UnexpectedReserved
-  | _, word when is_strict_reserved word -> Error.StrictReservedWord
-  | _, value -> Error.UnexpectedToken value
-)
+let get_unexpected_error token =
+  let open Token in
+  match token with
+  | T_EOF -> Error.UnexpectedEOS
+  | T_NUMBER _ -> Error.UnexpectedNumber
+  | T_JSX_TEXT _
+  | T_STRING _ -> Error.UnexpectedString
+  | T_IDENTIFIER _ -> Error.UnexpectedIdentifier
+  | t when token_is_future_reserved t -> Error.UnexpectedReserved
+  | t when token_is_strict_reserved t -> Error.StrictReservedWord
+  | _ -> Error.UnexpectedToken (value_of_token token)
 
 let error_unexpected env =
   (* So normally we consume the lookahead lex result when Eat.token calls
@@ -438,7 +703,7 @@ let error_unexpected env =
    * consuming that token, so we should process any lexing errors before
    * complaining about the unexpected token *)
   error_list env (Peek.errors env);
-  error env (get_unexpected_error (Peek.token env, Peek.value env))
+  error env (get_unexpected_error (Peek.token env))
 
 let error_on_decorators env = List.iter
   (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
@@ -447,6 +712,10 @@ let strict_error env e = if in_strict_mode env then error env e
 let strict_error_at env (loc, e) =
   if in_strict_mode env then error_at env (loc, e)
 
+let function_as_statement_error_at env loc =
+  error_at env (loc, Error.FunctionAsStatement {
+    in_strict_mode = in_strict_mode env
+  })
 
 (* Consume zero or more tokens *)
 module Eat = struct
@@ -456,12 +725,9 @@ module Eat = struct
     (match !(env.token_sink) with
       | None -> ()
       | Some token_sink ->
-          let token_loc = Peek.loc env in
-          let token = Peek.token env in
-          let token_value = Peek.value env in
           token_sink {
-            token_loc;
-            token;
+            token_loc = Peek.loc env;
+            token = Peek.token env;
             (**
              * The lex mode is useful because it gives context to some
              * context-sensitive tokens.
@@ -473,15 +739,14 @@ module Eat = struct
              * ...etc...
              *)
             token_context=(lex_mode env);
-            token_value;
           }
     );
 
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
-    comment_list env (Peek.comments env);
-    env.last_loc := Some (Peek.loc env);
+    env.comments := List.rev_append (Peek.comments env) !(env.comments);
+    env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
 
@@ -510,7 +775,7 @@ module Eat = struct
   let semicolon env =
     if not (Peek.is_implicit_semicolon env)
     then
-      if Peek.token env = Lexer_flow.Token.T_SEMICOLON
+      if Peek.token env = Token.T_SEMICOLON
       then token env
       else error_unexpected env
 end
@@ -518,6 +783,13 @@ end
 module Expect = struct
   let token env t =
     if Peek.token env <> t then error_unexpected env;
+    Eat.token env
+
+  let identifier env name =
+    begin match Peek.token env with
+    | Token.T_IDENTIFIER { raw; _ } when raw = name -> ()
+    | _ -> error_unexpected env
+    end;
     Eat.token env
 
   (* If the next token is t, then eat it and return true
@@ -528,11 +800,6 @@ module Expect = struct
       Eat.token env;
       true
     end else false
-
-  let contextual env str =
-    if Peek.value env <> str
-    then error_unexpected env;
-    Eat.token env
 end
 
 (* This module allows you to try parsing and rollback if you need. This is not
@@ -545,12 +812,12 @@ module Try = struct
   exception Rollback
 
   type saved_state = {
-    saved_errors         : (Loc.t * Error.t) list;
-    saved_comments       : Ast.Comment.t list;
-    saved_last_loc       : Loc.t option;
-    saved_lex_mode_stack : Lex_mode.t list;
-    saved_lex_env        : Lex_env.t;
-    token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
+    saved_errors          : (Loc.t * Error.t) list;
+    saved_comments        : Loc.t Ast.Comment.t list;
+    saved_last_lex_result : Lex_result.t option;
+    saved_lex_mode_stack  : Lex_mode.t list;
+    saved_lex_env         : Lex_env.t;
+    token_buffer          : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }
 
   let save_state env =
@@ -565,11 +832,11 @@ module Try = struct
           Some(orig_token_sink, buffer)
     in
     {
-      saved_errors         = !(env.errors);
-      saved_comments       = !(env.comments);
-      saved_last_loc       = !(env.last_loc);
-      saved_lex_mode_stack = !(env.lex_mode_stack);
-      saved_lex_env        = !(env.lex_env);
+      saved_errors          = !(env.errors);
+      saved_comments        = !(env.comments);
+      saved_last_lex_result = !(env.last_lex_result);
+      saved_lex_mode_stack  = !(env.lex_mode_stack);
+      saved_lex_env         = !(env.lex_env);
       token_buffer;
     }
 
@@ -584,7 +851,7 @@ module Try = struct
     reset_token_sink ~flush:false env saved_state.token_buffer;
     env.errors := saved_state.saved_errors;
     env.comments := saved_state.saved_comments;
-    env.last_loc := saved_state.saved_last_loc;
+    env.last_lex_result := saved_state.saved_last_lex_result;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env);
@@ -599,4 +866,9 @@ module Try = struct
     let saved_state = save_state env in
     try success env saved_state (parse env)
     with Rollback -> rollback_state env saved_state
+
+  let or_else env ~fallback parse =
+    match to_parse env parse with
+    | ParsedSuccessfully result -> result
+    | FailedToParse -> fallback
 end

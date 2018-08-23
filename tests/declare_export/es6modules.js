@@ -24,7 +24,7 @@ import DefaultD from "./D"; // Error: No such module
 // == CommonJS Clobbering Literal Exports -> ES6 == //
 // ================================================ //
 
-import {doesntExist} from "CommonJS_Clobbering_Lit"; // Error: Not an exported binding
+import {doesntExist1} from "CommonJS_Clobbering_Lit"; // Error: Not an exported binding
 
 import {numberValue1} from "CommonJS_Clobbering_Lit";
 var c1: number = numberValue1;
@@ -50,7 +50,7 @@ var f4: string = CJS_Clobb_Lit_NS.default.numberValue5; // Error: number ~> stri
 // == CommonJS Clobbering Class Exports -> ES6 == //
 // ============================================== //
 
-import {doesntExist} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
+import {doesntExist2} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
 
 // The following import should error because class statics are not turned into
 // named exports for now. This avoids complexities with polymorphic static
@@ -76,7 +76,7 @@ var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: numbe
 // == CommonJS Named Exports -> ES6 == //
 // =================================== //
 
-import {doesntExist} from "CommonJS_Named"; // Error: Not an exported binding
+import {doesntExist3} from "CommonJS_Named"; // Error: Not an exported binding
 
 import {numberValue2} from "CommonJS_Named";
 var j1: number = numberValue2;
@@ -100,7 +100,7 @@ var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
 // == ES6 Default -> ES6 == //
 //////////////////////////////
 
-import {doesntExist} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
+import {doesntExist4} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
 
 import ES6_Def_AnonFunc1 from "ES6_Default_AnonFunction1";
 var n1: number = ES6_Def_AnonFunc1();
@@ -122,11 +122,11 @@ var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> stri
 // == ES6 Named -> ES6 == //
 ////////////////////////////
 
-import doesntExist from "ES6_Named1"; // Error: Not an exported binding
+import doesntExist5 from "ES6_Named1"; // Error: Not an exported binding
 
-import {specifierNumber1} from "ES6_Named1";
-var r1: number = specifierNumber1;
-var r2: string = specifierNumber1; // Error: number ~> string
+import {specifierNumber1 as specifierNumber1_1} from "ES6_Named1";
+var r1: number = specifierNumber1_1;
+var r2: string = specifierNumber1_1; // Error: number ~> string
 
 import {specifierNumber2Renamed} from "ES6_Named1";
 var s1: number = specifierNumber2Renamed;

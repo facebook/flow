@@ -10,8 +10,8 @@ test.call("", "", 0);
 // wrong this is an error
 test.call(0, "", 0); // error: lookup `length` on Number
 
-// not enough arguments is an error (via incompatible RestT)
-test.call("", ""); // error: string ~> number
+// not enough arguments is an error
+test.call("", ""); // error: void ~> number
 
 // mistyped arguments is an error
 test.call("", "", ""); // error: string ~> number (2nd arg)
@@ -33,3 +33,29 @@ f([0, 0]); // error: number ~> string (1st arg)
 function test2(): number { return 0; }
 (test2.call(): number);
 (test2.call(""): number);
+
+// callable objects
+function test3(x: { (a: string, b: string): void }) {
+  x.call(x, 'foo', 'bar'); // ok
+  x.call(x, 'foo', 123); // error, number !~> string
+}
+
+let tests = [
+  // string literal errors track use ops
+  function() {
+    function f(y: { x: "bar" }): void {}
+    f({x: "foo"}); // error, "foo" !~> "bar"
+  },
+
+  // num literal errors track use ops
+  function() {
+    function f(y: { x: 123 }): void {}
+    f({x: 234}); // error, 234 !~> 123
+  },
+
+  // bool literal errors track use ops
+  function() {
+    function f(y: { x: false }): void {}
+    f({x: true}); // error, true !~> false
+  },
+];

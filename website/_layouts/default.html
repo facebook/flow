@@ -1,13 +1,92 @@
-{% include header.html %}
+{% include vars.html %}
+{% include meta.html page=page %}
+<!doctype html>
+<html lang="{% if lang.tag %}{{lang.tag}}{% else %}en{% endif %}"{% if page.fullscreen %} class="site-fullscreen"{% endif %}>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{meta_title}}</title>
+    <meta name="description" content="{{meta_description}}">
+    <meta property="og:url" content="https://flow.org{{ page.url }}">
+    <meta property="og:title" content="{{meta_title}}">
+    <meta property="og:site_name" content="Flow">
+    <meta property="og:description" content="{{meta_description}}">
+    <meta property="og:image" content="http://flow.org/static/ogp-1200x630-1.png">
+    <meta property="og:image:secure_url" content="https://flow.org/static/ogp-1200x630-1.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <link rel="canonical" href="{{meta_canonical}}">
+    <link rel="alternate" type="application/rss+xml" title="{{site.title}}" href="{{site.url}}/blog/feed.xml" />
+    <link rel="shortcut icon" href="/static/favicon.png?t={{site.time | date_to_xmlschema}}">
+    <link rel="stylesheet" href="{% asset_path 'main.scss' %}?t={{site.time | date_to_xmlschema}}">
+    {% if page.search or layout.search %}
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min.css" integrity="sha256-qtayAfor6DgK7swJ/RmRl5Cbo9XUAhuJzGjNfqQLHDU=" crossorigin="anonymous"/>
+    {% endif %}
+    {% if page.codemirror or layout.codemirror %}
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min.css" integrity="sha256-MdzaXfGXzZdeHw/XEV2LNNycipsLk4uZ0FYzO3hbuvI=" crossorigin="anonymous"/>
+    {% endif %}
+    <script type="text/javascript" src="{% asset_path 'require_2_3_3.js' %}"></script>
+    <script type="text/javascript">
+      requirejs.config({
+        baseUrl: '/assets',
+        waitSeconds: 30,
+        shim: {
+          'bootstrap': { 'deps': ['jquery', 'tether'] }
+        },
+        paths: {
+          {% for script in page.scripts %}
+          '{% asset_name {{script}} %}': '{{ script | asset_path | strip_extension }}',
+          {% endfor %}
+          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.0/jquery.min',
+          'tether-min': 'https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min',
+          'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.5/js/bootstrap.min',
+          'docsearch': 'https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min',
+          'codemirror/lib/codemirror': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min',
+          'codemirror/addon/lint/lint': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/addon/lint/lint.min',
+          'codemirror/mode/javascript/javascript': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/javascript/javascript.min',
+          'codemirror/mode/xml/xml': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/xml/xml.min',
+          'codemirror/mode/jsx/jsx': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/mode/jsx/jsx.min',
+          'lz-string': 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min'
+        }
+      });
+    </script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-<section class='content'><div class='width'>
+      ga('create', 'UA-49208336-4', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    {% include navbar.html %}
+    <div class="content">
+      {{content}}
+    </div>
+    {% if page.footer %}
+      {% include footer.html %}
+    {% endif %}
 
-<article>
+    {% js 'prelude' %}
+    <script type="text/javascript">
+      define('tether', ['tether-min'], function(tether) {
+        window.Tether = tether;
+        return tether;
+      });
 
-{{ content }}
-
-</article>
-
-</div></section>
-
-{% include footer.html %}
+      requirejs([
+        'bootstrap',
+        {% if page.search or layout.search %}'{% asset_name "search" %}',{% endif %}
+      ]);
+      {% if page.editor or layout.editor %}
+      requirejs(['{% asset_name "editor" %}'], function(Editor) {
+        Editor.init();
+      });
+      {% endif %}
+    </script>
+  </body>
+</html>

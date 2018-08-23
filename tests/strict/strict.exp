@@ -1,22 +1,52 @@
-annot.js:1
-  1: var A = require('./unknown_class');
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ ./unknown_class. Required module not found
+Error ---------------------------------------------------------------------------------------------------- annot.js:1:17
 
-annot.js:5
-  5:   bar(x) { }
-           ^ parameter `x`. Missing annotation
+Cannot resolve module `./unknown_class`.
 
-fun.js:11
- 11: var x:string = f(0);
-                    ^^^^ number. This type is incompatible with
- 11: var x:string = f(0);
-           ^^^^^^ string
+   1| var A = require('./unknown_class');
+                      ^^^^^^^^^^^^^^^^^
 
-obj.js:10
- 10: var x:string = o.x;
-                    ^^^ number. This type is incompatible with
- 10: var x:string = o.x;
-           ^^^^^^ string
+
+Error ----------------------------------------------------------------------------------------------------- annot.js:5:7
+
+Missing type annotation for `x`.
+
+   5|   bar(x) { }
+            ^
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:11:16
+
+Cannot assign `f(...)` to `x` because number [1] is incompatible with string [2].
+
+   fun.js:11:16
+   11| var x:string = f(0);
+                      ^^^^
+
+References:
+   fun.js:8:14
+    8| function f(x:number) { return x; }
+                    ^^^^^^ [1]
+   fun.js:11:7
+   11| var x:string = f(0);
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- obj.js:10:16
+
+Cannot assign `o.x` to `x` because number [1] is incompatible with string [2].
+
+   obj.js:10:16
+   10| var x:string = o.x;
+                      ^^^
+
+References:
+   obj.js:7:14
+    7| var o = { x: 0 }
+                    ^ [1]
+   obj.js:10:7
+   10| var x:string = o.x;
+             ^^^^^^ [2]
+
 
 
 Found 4 errors

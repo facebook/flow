@@ -1,80 +1,168 @@
-import_typeof.js:13
- 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
-                          ^^^^^^^^^^^^^^^ constructor call
- 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
-                          ^^^^^^^^^^^^^^^ ClassFoo1. This type is incompatible with
- 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
-             ^^^^^^^^^^ class type: ClassFoo1
+Error ------------------------------------------------------------------------------------------- import_typeof.js:13:22
 
-import_typeof.js:14
- 14: new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
-         ^^^^^^^^^^ ClassFoo1T. type referenced from value position
-  9: import typeof ClassFoo1T from "./ExportDefault_Class";
-                   ^^^^^^^^^^ type ClassFoo1T
+Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible with statics of `ClassFoo1` [2].
 
-import_typeof.js:24
- 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
-                          ^^^^^^^^^^^^^^^ constructor call
- 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
-                          ^^^^^^^^^^^^^^^ ClassFoo2. This type is incompatible with
- 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
-             ^^^^^^^^^^ class type: ClassFoo2
+   import_typeof.js:13:22
+   13| var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
+                            ^^^^^^^^^^^^^^^ [1]
 
-import_typeof.js:25
- 25: new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
-         ^^^^^^^^^^ ClassFoo2T. type referenced from value position
- 20: import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
-                    ^^^^^^^^^^^^^^^^^^^^^^^ type ClassFoo2T
+References:
+   import_typeof.js:13:9
+   13| var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
+               ^^^^^^^^^^ [2]
 
-import_typeof.js:35
- 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
-                          ^^^^^^^^^^^^^^^ constructor call
- 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
-                          ^^^^^^^^^^^^^^^ ClassFoo3. This type is incompatible with
- 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
-             ^^^^^^^^^^ class type: ClassFoo3
 
-import_typeof.js:45
- 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
-                          ^^^^^^^^^^^^^^^ constructor call
- 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
-                          ^^^^^^^^^^^^^^^ ClassFoo4. This type is incompatible with
- 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
-             ^^^^^^^^^^ class type: ClassFoo4
+Error -------------------------------------------------------------------------------------------- import_typeof.js:14:5
 
-import_typeof.js:51
- 51: import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
-                    ^^^^^^^^^ Named import from module `./ExportNamed_Alias`. The `AliasFoo3` export is a type, but not a value. `import typeof` only works on value exports like classes, vars, lets, etc. If you intended to import a type alias or interface, please use `import type` instead.
+Cannot reference type `ClassFoo1T` [1] from a value position.
 
-import_typeof.js:68
- 68: var f2: num_default = 'asdf'; // Error: string ~> number
-                           ^^^^^^ string. This type is incompatible with
- 68: var f2: num_default = 'asdf'; // Error: string ~> number
-             ^^^^^^^^^^^ number
+   import_typeof.js:14:5
+   14| new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
+           ^^^^^^^^^^
 
-import_typeof.js:77
- 77: var g2: num_named = 'asdf'; // Error: string ~> number
-                         ^^^^^^ string. This type is incompatible with
- 77: var g2: num_named = 'asdf'; // Error: string ~> number
-             ^^^^^^^^^ number
+References:
+   import_typeof.js:9:15
+    9| import typeof ClassFoo1T from "./ExportDefault_Class";
+                     ^^^^^^^^^^ [1]
 
-import_typeof.js:86
- 86: var h2: num_cjs_default = 'asdf'; // Error: string ~> number
-                               ^^^^^^ string. This type is incompatible with
- 86: var h2: num_cjs_default = 'asdf'; // Error: string ~> number
-             ^^^^^^^^^^^^^^^ number
 
-import_typeof.js:95
- 95: var i2: num_cjs_named = 'asdf'; // Error: string ~> number
-                             ^^^^^^ string. This type is incompatible with
- 95: var i2: num_cjs_named = 'asdf'; // Error: string ~> number
-             ^^^^^^^^^^^^^ number
+Error ------------------------------------------------------------------------------------------- import_typeof.js:24:22
 
-import_typeof.js:103
-103: var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
-                                           ^^ number. This type is incompatible with
-  4: export var str = 'asdf';
-                ^^^ string. See: ExportNamed_Multi.js:4
+Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` [1] is incompatible with statics of `ClassFoo2` [2].
+
+   import_typeof.js:24:22
+   24| var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
+                            ^^^^^^^^^^^^^^^ [1]
+
+References:
+   import_typeof.js:24:9
+   24| var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
+               ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_typeof.js:25:5
+
+Cannot reference type `ClassFoo2T` [1] from a value position.
+
+   import_typeof.js:25:5
+   25| new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
+           ^^^^^^^^^^
+
+References:
+   import_typeof.js:20:16
+   20| import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
+                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:35:22
+
+Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` [1] is incompatible with statics of `ClassFoo3` [2].
+
+   import_typeof.js:35:22
+   35| var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
+                            ^^^^^^^^^^^^^^^ [1]
+
+References:
+   import_typeof.js:35:9
+   35| var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
+               ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:45:22
+
+Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible with statics of `ClassFoo4` [2].
+
+   import_typeof.js:45:22
+   45| var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
+                            ^^^^^^^^^^^^^^^ [1]
+
+References:
+   import_typeof.js:45:9
+   45| var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
+               ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:51:16
+
+Cannot import the type `AliasFoo3` as a type. `import typeof` only works on value exports. Like variables, functions,
+and classes. If you intended to import a type use `import type` instead.
+
+   51| import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
+                      ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:68:23
+
+Cannot assign `'asdf'` to `f2` because string [1] is incompatible with number [2].
+
+   import_typeof.js:68:23
+   68| var f2: num_default = 'asdf'; // Error: string ~> number
+                             ^^^^^^ [1]
+
+References:
+   import_typeof.js:68:9
+   68| var f2: num_default = 'asdf'; // Error: string ~> number
+               ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:77:21
+
+Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number [2].
+
+   import_typeof.js:77:21
+   77| var g2: num_named = 'asdf'; // Error: string ~> number
+                           ^^^^^^ [1]
+
+References:
+   import_typeof.js:77:9
+   77| var g2: num_named = 'asdf'; // Error: string ~> number
+               ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:86:27
+
+Cannot assign `'asdf'` to `h2` because string [1] is incompatible with number [2].
+
+   import_typeof.js:86:27
+   86| var h2: num_cjs_default = 'asdf'; // Error: string ~> number
+                                 ^^^^^^ [1]
+
+References:
+   import_typeof.js:86:9
+   86| var h2: num_cjs_default = 'asdf'; // Error: string ~> number
+               ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- import_typeof.js:95:25
+
+Cannot assign `'asdf'` to `i2` because string [1] is incompatible with number [2].
+
+   import_typeof.js:95:25
+   95| var i2: num_cjs_named = 'asdf'; // Error: string ~> number
+                               ^^^^^^ [1]
+
+References:
+   import_typeof.js:95:9
+   95| var i2: num_cjs_named = 'asdf'; // Error: string ~> number
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ import_typeof.js:103:24
+
+Cannot assign object literal to `j2` because number [1] is incompatible with string [2] in property `str`.
+
+   import_typeof.js:103:24
+   103| var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
+                               ^^^^^^^^^^^^^^^^^^
+
+References:
+   import_typeof.js:103:39
+   103| var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
+                                              ^^ [1]
+   ExportNamed_Multi.js:4:18
+     4| export var str = 'asdf';
+                         ^^^^^^ [2]
+
 
 
 Found 12 errors

@@ -1,7 +1,10 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINEWRAP1
+ */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('new.target is not supported yet', [
@@ -11,7 +14,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:4
             4:       function x() { new.target(); }
-                                    ^^^^^^^^^^ not (sup)ported
+                                    ^^^^^^^^^^ Not supported.
         `,
       ),
   ]),

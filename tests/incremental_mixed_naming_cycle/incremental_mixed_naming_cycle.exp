@@ -1,52 +1,208 @@
+Error --------------------------------------------------------------------------------------------------------- a.js:6:2
 
-a.js:6:2,15: string
-This type is incompatible with
-a.js:6:18,21: undefined
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
 
-a.js:7:2,13: string
-This type is incompatible with
-a.js:7:16,19: undefined
+   a.js:6:2
+   6| (require('./b'): void);
+       ^^^^^^^^^^^^^^
 
-b.js:6:2,13: string
-This type is incompatible with
-b.js:6:16,19: undefined
+References:
+   b.js:9:18
+   9| module.exports = 'B';
+                       ^^^ [1]
+   a.js:6:18
+   6| (require('./b'): void);
+                       ^^^^ [2]
 
-b.js:7:2,13: string
-This type is incompatible with
-b.js:7:16,19: undefined
 
-c.js:7:2,15: string
-This type is incompatible with
-c.js:7:18,21: undefined
+Error --------------------------------------------------------------------------------------------------------- a.js:7:2
 
-d.js:6:2,15: string
-This type is incompatible with
-d.js:6:18,21: undefined
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   a.js:7:2
+   7| (require('C'): void);
+       ^^^^^^^^^^^^
+
+References:
+   c.js:9:18
+   9| module.exports = 'C';
+                       ^^^ [1]
+   a.js:7:16
+   7| (require('C'): void);
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- b.js:6:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   b.js:6:2
+   6| (require('A'): void);
+       ^^^^^^^^^^^^
+
+References:
+   a.js:9:18
+   9| module.exports = 'A';
+                       ^^^ [1]
+   b.js:6:16
+   6| (require('A'): void);
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- b.js:7:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   b.js:7:2
+   7| (require('D'): void);
+       ^^^^^^^^^^^^
+
+References:
+   d.js:8:18
+   8| module.exports = 'D';
+                       ^^^ [1]
+   b.js:7:16
+   7| (require('D'): void);
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- c.js:7:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   c.js:7:2
+   7| (require('./b'): void);
+       ^^^^^^^^^^^^^^
+
+References:
+   b.js:9:18
+   9| module.exports = 'B';
+                       ^^^ [1]
+   c.js:7:18
+   7| (require('./b'): void);
+                       ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- d.js:6:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   d.js:6:2
+   6| (require('./b'): void);
+       ^^^^^^^^^^^^^^
+
+References:
+   b.js:9:18
+   9| module.exports = 'B';
+                       ^^^ [1]
+   d.js:6:18
+   6| (require('./b'): void);
+                       ^^^^ [2]
+
+
 
 Found 6 errors
+Error --------------------------------------------------------------------------------------------------------- a.js:6:2
 
-a.js:6:2,15: string
-This type is incompatible with
-a.js:6:18,21: undefined
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
 
-a.js:7:2,13: string
-This type is incompatible with
-a.js:7:16,19: undefined
+   a.js:6:2
+   6| (require('./b'): void);
+       ^^^^^^^^^^^^^^
 
-b.js:6:2,13: string
-This type is incompatible with
-b.js:6:16,19: undefined
+References:
+   b.js:9:18
+   9| module.exports = 'B';
+                       ^^^ [1]
+   a.js:6:18
+   6| (require('./b'): void);
+                       ^^^^ [2]
 
-b.js:7:2,13: string
-This type is incompatible with
-b.js:7:16,19: undefined
 
-c.js:7:2,15: string
-This type is incompatible with
-c.js:7:18,21: undefined
+Error --------------------------------------------------------------------------------------------------------- a.js:7:2
 
-d.js:6:2,15: string
-This type is incompatible with
-d.js:6:18,21: undefined
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   a.js:7:2
+   7| (require('C'): void);
+       ^^^^^^^^^^^^
+
+References:
+   c.js:9:18
+   9| module.exports = 'C';
+                       ^^^ [1]
+   a.js:7:16
+   7| (require('C'): void);
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- b.js:6:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   b.js:6:2
+   6| (require('A'): void);
+       ^^^^^^^^^^^^
+
+References:
+   a.js:9:18
+   9| module.exports = 'A';
+                       ^^^ [1]
+   b.js:6:16
+   6| (require('A'): void);
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- b.js:7:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   b.js:7:2
+   7| (require('D'): void);
+       ^^^^^^^^^^^^
+
+References:
+   d.js:8:18
+   8| module.exports = 'D';
+                       ^^^ [1]
+   b.js:7:16
+   7| (require('D'): void);
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- c.js:7:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   c.js:7:2
+   7| (require('./b'): void);
+       ^^^^^^^^^^^^^^
+
+References:
+   b.js:9:18
+   9| module.exports = 'B';
+                       ^^^ [1]
+   c.js:7:18
+   7| (require('./b'): void);
+                       ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- d.js:6:2
+
+Cannot cast `require(...)` to undefined because string [1] is incompatible with undefined [2].
+
+   d.js:6:2
+   6| (require('./b'): void);
+       ^^^^^^^^^^^^^^
+
+References:
+   b.js:9:18
+   9| module.exports = 'B';
+                       ^^^ [1]
+   d.js:6:18
+   6| (require('./b'): void);
+                       ^^^^ [2]
+
+
 
 Found 6 errors

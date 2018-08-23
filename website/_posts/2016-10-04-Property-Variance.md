@@ -1,7 +1,7 @@
 ---
-title: Property Variance and Other Upcoming Changes
-short-title: Property Variance
-author: samwgoldman
+title: "Property Variance and Other Upcoming Changes"
+short-title: "Property Variance"
+author: "Sam Goldman"
 ---
 
 The next release of Flow, 0.34, will include a few important changes to object
@@ -14,14 +14,14 @@ types:
 
 <!--truncate-->
 
-## What is Variance?
+### What is Variance?
 
-Defining the subtype relationship between types is a core resposibility of Flow
+Defining the subtype relationship between types is a core responsibility of Flow
 as a type system. These relationships are determined either directly for
 simple types or, for complex types, defined in terms of their parts.
 
-Variance describes the subtyping relationship for complex types as it relates to
-the subtyping relationships of their parts.
+Variance describes the subtyping relationship for complex types as it relates
+to the subtyping relationships of their parts.
 
 For example, Flow directly encodes the knowledge that `string` is a subtype of
 `?string`. Intuitively, a `string` type contains string values while a `?string`
@@ -40,8 +40,8 @@ type F2 = (x: P2) => R2;
 ```
 
 Whether `F2` is a subtype of `F1` depends on the relationships between `P1` and
-`P2` and `R1` and `R2`. Let's use the notation `B <: A` to mean `B` is a subtype
-of `A`.
+`P2` and `R1` and `R2`. Let's use the notation `B <: A` to mean `B` is a
+subtype of `A`.
 
 It turns out that `F2 <: F1` if `P1 <: P2` and `R2 <: R1`. Notice that the
 relationship for parameters is reversed? In technical terms, we can say that
@@ -62,7 +62,7 @@ whose return type is a subtype of `?number`.
 
 ```js
 function g(x: ?string): number {
-  return x ? x.length || 0;
+  return x ? x.length : 0;
 }
 f(g);
 ```
@@ -72,7 +72,7 @@ because `g` takes at least `string` by taking `?string`. Conversely, `g` will
 only ever return `number` values to `f`, which is safe because `f` handles at
 least `number` by handling `?number`.
 
-### Input and Output
+#### Input and Output
 
 One convenient way to remember when something is covariant vs. contravariant is
 to think about "input" and "output."
@@ -87,7 +87,8 @@ types are covariant in their output positions.
 
 Just as function types are composed of parameter and return types, so too are
 object types composed of property types. Thus, the subtyping relationship
-between objects is derived from the subtyping relationships of their properties.
+between objects is derived from the subtyping relationships of their
+properties.
 
 However, unlike functions which have input parameters and an output return,
 object properties can be read and written. That is, properties are *both* input
@@ -123,8 +124,8 @@ function f(o: {p: ?string}): void {
 }
 ```
 
-What kinds of objects can we pass into `f`, then? If we try to pass in an object
-with a subtype property, we get an error:
+What kinds of objects can we pass into `f`, then? If we try to pass in an
+object with a subtype property, we get an error:
 
 ```js
 var o1: {p: string} = {p: ""};
@@ -159,10 +160,10 @@ function f(o: {p: ?string}) {}
                    ^ string
 ```
 
-Again, Flow correctly identifies an error, because if `f` tried to read `p` from
-`o`, it would find a number.
+Again, Flow correctly identifies an error, because if `f` tried to read `p`
+from `o`, it would find a number.
 
-## Property Variance
+### Property Variance
 
 So objects have to be invariant with respect to their property types because
 properties can be read from and written to. But just because you *can* read and
@@ -236,15 +237,15 @@ o.p.length;
 ^ property `p`
 ```
 
-## Invariant-by-default Dictionary Types
+### Invariant-by-default Dictionary Types
 
 The object type `{[key: string]: ?number}` describes an object that can be used
 as a map. We can read any property and Flow will infer the result type as
 `?number`. We can also write `null` or `undefined` or `number` into any
 property.
 
-In Flow 0.33 and earlier, these dictionary types were treated covariantly by the
-type system. For example, Flow accepted the following code:
+In Flow 0.33 and earlier, these dictionary types were treated covariantly by
+the type system. For example, Flow accepted the following code:
 
 ```js
 function f(o: {[key: string]: ?number}) {
@@ -279,7 +280,7 @@ declare var o: {p: number};
 f(o); // no type error!
 ```
 
-## Covariant-by-default Method Types
+### Covariant-by-default Method Types
 
 ES6 gave us a shorthand way to write object properties which are functions.
 
@@ -304,7 +305,7 @@ var o = {
 }
 ```
 
-## More Flexible Getters and Setters
+### More Flexible Getters and Setters
 
 In Flow 0.33 and earlier, getters and setters had to agree exactly on their
 return type and parameter type, respectively. Flow 0.34 lifts that restriction.
@@ -312,8 +313,7 @@ return type and parameter type, respectively. Flow 0.34 lifts that restriction.
 This means you can write code like the following:
 
 ```js
-/* @flow */
-
+// @flow
 declare var x: string;
 
 var o = {

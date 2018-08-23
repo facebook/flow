@@ -1,0 +1,86 @@
+---
+layout: default
+search: true
+editor: true
+---
+
+{% include vars.html %}
+
+<div class="py-3 mb-2 bg-faded">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-9">
+        <h1>
+          {% if title %}
+            {{title}}
+          {% else %}
+            {{page.title}}
+          {% endif %}
+        </h1>
+
+        <p class="lead mb-0 text-muted">
+          {% if layout.post %}
+            Posted {{ page.date | date: "%b %-d, %Y" }} by {{ page.author }}
+          {% elsif description and description != "" %}
+            {{description}}
+          {% elsif page.description %}
+            {{page.description}}
+          {% else %}
+            &nbsp;
+          {% endif %}
+        </p>
+      </div>
+
+      {% if layout.search %}
+        {% include search-docs.html %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container mb-3">
+  {% if layout.post or page.include_nav_posts %}
+    <div class="row">
+      <div class="col-md-9">
+        <div class="article">
+          {{content}}
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <hr class="hidden-md-up">
+        {% include nav-posts.html %}
+      </div>
+    </div>
+  {% elsif layout.guide %}
+    <div class="row">
+      <div class="col-md-9">
+        <div class="article">
+          {{content}}
+        </div>
+
+        {% include guide-controls.html %}
+        {% include guide-upsell.html %}
+      </div>
+
+      <div class="col-md-3">
+        <hr class="hidden-md-up"/>
+        {% include nav-guide.html %}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-9">
+        {% if guide_current.additional_reading %}
+          {% include additional-reading.html items=guide_current.additional_reading %}
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    {{content}}
+  {% endif %}
+</div>
+
+<div class="container debug">
+  {% include debug/page.html page=page %}
+</div>

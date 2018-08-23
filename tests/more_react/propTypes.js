@@ -1,4 +1,4 @@
-var React = require('React');
+var React = require('react');
 
 var C = React.createClass({
   propTypes: {
@@ -12,7 +12,4 @@ var D = React.createClass({
   }
 });
 
-<D
-  namee='foo' // error (as usual)
-  titlee='bar' // OK (error ignored when spread is used)
-/>;
+<D />; // errors: properties `name` and `title` not found

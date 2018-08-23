@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -16,33 +13,45 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors.ErrorSet.t
+  | Parse_ok of (Loc.t, Loc.t) Ast.program * File_sig.t
+  | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_failure =
+  | Docblock_errors of docblock_error list
+  | Parse_error of (Loc.t * Parse_error.t)
+  | File_sig_error of File_sig.error
+
+and docblock_error = Loc.t * docblock_error_kind
+and docblock_error_kind =
+  | MultipleFlowAttributes
+  | MultipleProvidesModuleAttributes
+  | MultipleJSXAttributes
+  | InvalidJSXAttribute of string option
+
 (* results of parse job, returned by parse and reparse *)
 type results = {
-  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
-  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
-  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
-  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
-  parse_resource_files: FilenameSet.t;       (* resource files *)
+  (* successfully parsed files *)
+  parse_ok: (File_sig.tolerable_error list) FilenameMap.t;
+
+  (* list of skipped files *)
+  parse_skips: (File_key.t * Docblock.t) list;
+
+  (* list of files skipped due to an out of date hash *)
+  parse_hash_mismatch_skips: FilenameSet.t;
+
+  (* list of failed files *)
+  parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+
+  (* set of unchanged files *)
+  parse_unchanged: FilenameSet.t;
 }
 
-(* initial parsing pass: success/failure info is returned,
- * asts are made available via get_ast_unsafe. *)
-val parse:
-  types_mode: types_mode ->
-  use_strict: bool ->
-  profile: bool ->
-  max_header_tokens: int ->
-  Worker.t list option ->       (* Some=parallel, None=serial *)
-  (unit -> filename list) ->    (* delivers buckets of filenames *)
-  results                       (* job results, not asts *)
+val docblock_max_tokens: int
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
 individually *)
@@ -50,51 +59,38 @@ val parse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   Options.t ->
-  Worker.t list option ->
-  (unit -> filename list) ->
-  results
-
-(* for non-initial passes: updates asts for passed file set. *)
-val reparse:
-  types_mode: types_mode ->
-  use_strict: bool ->
-  profile: bool ->
-  max_header_tokens: int ->
-  Worker.t list option ->   (* Some=parallel, None=serial *)
-  FilenameSet.t ->          (* filenames to reparse *)
-  FilenameSet.t * results   (* modified files and job results *)
+  MultiWorkerLwt.worker list option ->
+  File_key.t list Bucket.next ->
+  results Lwt.t
 
 val reparse_with_defaults:
+  transaction: Transaction.t ->
+  ?types_mode: types_mode ->
+  ?use_strict: bool ->
+  ?with_progress: bool ->
+  workers: MultiWorkerLwt.worker list option ->
+  modified: FilenameSet.t ->
+  deleted: FilenameSet.t ->
   Options.t ->
-  Worker.t list option ->
+  (FilenameSet.t * results) Lwt.t
+
+val ensure_parsed:
+  Options.t ->
+  MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
-  FilenameSet.t * results
+  FilenameSet.t Lwt.t
 
-val has_ast: filename -> bool
-
-(* after parsing, retrieves ast by filename (unsafe) *)
-val get_ast_unsafe: filename -> Spider_monkey_ast.program
-val get_ast_and_info_unsafe:
-  filename -> Spider_monkey_ast.program * Docblock.t
-
-val get_ast: filename -> Spider_monkey_ast.program option
-
-(* remove asts for given file set. *)
-val remove_asts: FilenameSet.t -> unit
-
-(* Adds a hook that is called every time a file has been processed.
- * When a file fails to parse, is deleted or is skipped because it isn't a Flow
- * file, the AST is None.
- *)
-val register_hook:
-  (filename -> Spider_monkey_ast.program option -> unit) ->
-  unit
-
-val get_docblock:
+val parse_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
-  filename ->
+  File_key.t ->
   string ->
-  Errors.ErrorSet.t option * Docblock.t
+  docblock_error list * Docblock.t
+
+val parse_json_file :
+  fail:bool ->
+  string ->
+  File_key.t ->
+  Loc.t * (Loc.t * (Loc.t, Loc.t) Ast.Statement.t') list * Loc.t Ast.Comment.t list
 
 (* parse contents of a file *)
 val do_parse:
@@ -103,11 +99,14 @@ val do_parse:
   use_strict: bool ->
   info: Docblock.t ->
   string ->                 (* contents of the file *)
-  filename ->               (* filename *)
+  File_key.t ->               (* filename *)
   result
 
 (* Utility to create the `next` parameter that `parse` requires *)
 val next_of_filename_set:
-  Worker.t list option ->
+  ?with_progress:bool ->
+  MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
-  (unit -> filename list)
+  File_key.t list Bucket.next
+
+val does_content_match_file_hash: File_key.t -> string -> bool

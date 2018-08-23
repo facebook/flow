@@ -1,0 +1,202 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Cannot call `foo` because no arguments are expected by function [1].
+
+   test.js:4:1
+   4| foo(1, 2); // error
+      ^^^^^^^^^
+
+References:
+   test.js:1:1
+   1| function foo() {}
+      ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
+
+Cannot call `foo` because no arguments are expected by function [1].
+
+   test.js:5:1
+      v---
+   5| foo(
+   6|   1, // error
+   7|   2,
+   8| );
+      ^
+
+References:
+   test.js:1:1
+   1| function foo() {}
+      ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot call `foo` because no arguments are expected by function [1].
+
+   test.js:9:1
+   9| foo(...args); // error
+      ^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+   1| function foo() {}
+      ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:1
+
+Cannot call `foo.call` because no arguments are expected by function [1].
+
+   test.js:11:1
+   11| foo.call(null, 1, 2); // error
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:1
+
+Cannot call `foo.call` because no arguments are expected by function [1].
+
+   test.js:12:1
+   12| foo.call(null, ...args); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Cannot call `foo.call` because no arguments are expected by function [1].
+
+   test.js:13:1
+   13| foo.call(null, 1, 2, ...args); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:1
+
+Cannot call `foo.apply` because no arguments are expected by function [1].
+
+   test.js:15:1
+   15| foo.apply(null, [1, 2]); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
+
+Cannot call `foo.apply` because no arguments are expected by function [1].
+
+   test.js:16:1
+   16| foo.apply(null, args); // error
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+Cannot call `foo.bind` because no arguments are expected by function [1].
+
+   test.js:18:1
+   18| foo.bind(null, 1, 2); // error
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
+
+Cannot call `foo.bind` because no arguments are expected by function [1].
+
+   test.js:19:1
+   19| foo.bind(null, ...args); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
+
+Cannot call `foo.bind` because no arguments are expected by function [1].
+
+   test.js:20:1
+   20| foo.bind(null, 1, 2, ...args); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:1
+
+Cannot call `foo` because no arguments are expected by function [1].
+
+   test.js:22:1
+   22| new foo(1, 2); // error
+       ^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
+
+Cannot call `foo` because no arguments are expected by function [1].
+
+   test.js:23:1
+   23| new foo(...args); // error
+       ^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:1
+
+Cannot call `foo` because no arguments are expected by function [1].
+
+   test.js:24:1
+   24| new foo(1, 2, ...args); // error
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:1
+    1| function foo() {}
+       ^^^^^^^^^^^^^^ [1]
+
+
+
+Found 14 errors

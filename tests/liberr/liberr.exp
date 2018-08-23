@@ -1,12 +1,24 @@
+Error ------------------------------------------------------------------------------------------ libs/type_error.js:2:34
 
-[LIB] libs/parse_error.js:8:3,9: Library parse error:
-[LIB] libs/parse_error.js:8:3,9: Unexpected identifier
+Cannot use type without exactly 1 type argument.
 
-[LIB] libs/type_error.js:2:34,38: Library type error:
-[LIB] libs/type_error.js:2:34,38: Incorrect number of type parameters (expected 1)
+   2| declare function foo(x: number): Array;
+                                       ^^^^^
 
-a.js:5:17,17: number
-This type is incompatible with
-a.js:5:8,13: string
 
-Found 3 errors
+Error -------------------------------------------------------------------------------------------------------- a.js:5:17
+
+Cannot assign `0` to `x` because number [1] is incompatible with string [2].
+
+   a.js:5:17
+   5| var x: string = 0;
+                      ^ [1]
+
+References:
+   a.js:5:8
+   5| var x: string = 0;
+             ^^^^^^ [2]
+
+
+
+Found 2 errors

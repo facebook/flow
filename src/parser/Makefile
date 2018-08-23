@@ -1,21 +1,22 @@
 # Copyright (c) 2013-present, Facebook, Inc.
-# All rights reserved.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOP=$(DIR)/../..
 REL_DIR=src/parser
 
-JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
-JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
-JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
+OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
-	hack/utils/files.o\
-	hack/utils/nproc.o\
-	hack/utils/realpath.o\
-	hack/utils/sysinfo.o\
-	hack/utils/priorities.o\
-	hack/utils/win32_support.o
+	hack/utils/sys/files.o\
+	hack/utils/sys/getrusage.o\
+	hack/utils/sys/nproc.o\
+	hack/utils/sys/realpath.o\
+	hack/utils/sys/sysinfo.o\
+	hack/utils/sys/processor_info.o\
+	hack/utils/sys/priorities.o
 
 RUNNER_DEPS=\
 	hack/heap\
@@ -24,82 +25,104 @@ RUNNER_DEPS=\
 	hack/utils/collections\
 	hack/utils/disk\
 	hack/utils/hh_json\
+	hack/utils/sys\
 	hack/third-party/core\
-	src/common\
-	src/parser
+	src/common/utils\
+	src/parser\
+	src/parser_utils
+
+OCAML_PATH=$(shell ocamlc -where)
+OCAML_HEADERS=\
+	$(sort $(patsubst $(OCAML_PATH)/%,dist/libflowparser/include/%, \
+		$(filter $(OCAML_PATH)/%,$(shell \
+			$(CC) -I $(OCAML_PATH) -MM -MT deps libflowparser.h \
+	))))
 
 all: build-parser
 
 clean:
+	$(OCB) -clean; \
 	cd $(TOP); \
-	ocamlbuild -clean; \
-	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files
+	$(OCB) -clean; \
+	rm -f $(REL_DIR)/flow_parser.js; \
+	rm -rf $(REL_DIR)/dist
 
 build-parser:
 	cd $(TOP); \
-	ocamlbuild -no-links $(REL_DIR)/parser_flow.cmxa
+	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
+
+.PHONY: libflowparser.native.o
+libflowparser.native.o:
+	cd $(TOP) && $(OCB) -no-links -tag "runtime_variant(_pic)" \
+		$(REL_DIR)/libflowparser.native.o
+
+dist/libflowparser/lib/libflowparser.a: libflowparser.native.o
+	@mkdir -p "$(@D)"
+	if [ ! -e "$@" -o "$(OCAML_PATH)/libasmrun_pic.a" -nt "$@" -o  "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o" -nt "$@" ]; then \
+		echo "Rebuilding $@"; \
+		cp "$(OCAML_PATH)/libasmrun_pic.a" "$@"; \
+		ar rcs "$@" "$(TOP)/_build/$(REL_DIR)/libflowparser.native.o"; \
+	else \
+		echo "Not rebuilding $@, already up to date"; \
+	fi
+	test -e "$@" || exit 1
+
+$(OCAML_HEADERS): dist/libflowparser/include/%: $(OCAML_PATH)/%
+	@mkdir -p "$(@D)"
+	cp "$<" "$@"
+
+dist/libflowparser/include/flowparser/libflowparser.h: libflowparser.h
+	@mkdir -p "$(@D)"
+	cp "$<" "$@"
+
+dist/libflowparser.zip: \
+		$(OCAML_HEADERS) \
+		dist/libflowparser/include/flowparser/libflowparser.h \
+		dist/libflowparser/lib/libflowparser.a
+	cd dist && zip -r $(@F) libflowparser
 
 js:
 	cd $(TOP); \
-	ocamlbuild -use-ocamlfind -pkgs js_of_ocaml $(REL_DIR)/flow_parser_js.byte; \
-	\
-	if [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; then \
-	    js_of_ocaml --opt 3 -o $(REL_DIR)/flow_parser.js _build/$(REL_DIR)/flow_parser_js.byte; \
-	else \
-	    js_of_ocaml --opt 3 -o $(REL_DIR)/flow_parser.js $(TOP)/js/optional/caml_hexstring_of_float.js _build/$(REL_DIR)/flow_parser_js.byte; \
-	fi; \
-	\
-	rm flow_parser_js.byte
+	$(OCB) -no-links -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
+	[ -e "$(REL_DIR)/flow_parser.js" -a "$(REL_DIR)/flow_parser.js" -nt "_build/$(REL_DIR)/flow_parser_dot_js.byte" ] || \
+		js_of_ocaml --opt 3 \
+			-o $(REL_DIR)/flow_parser.js \
+			_build/$(REL_DIR)/flow_parser_dot_js.byte
 
-test-js: build-parser js
-	npm test
+test-js: js
+	cd $(TOP)/packages/flow-parser; npm test
 
-../../_build/$(REL_DIR)/test/run_esprima_tests.native: build-parser
+../../_build/$(REL_DIR)/test/run_tests.native: build-parser
 	cd $(TOP); \
-	ocamlbuild \
+	$(OCB) -no-links \
 		-ocamlc "ocamlopt" \
 		$(NATIVE_OBJECT_FILES); \
-	ocamlbuild \
+	$(OCB) -no-links \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
-		$(REL_DIR)/test/run_esprima_tests.native; \
-	rm run_esprima_tests.native
+		$(REL_DIR)/test/run_tests.native
 
-../../_build/$(REL_DIR)/test/run_hardcoded_tests.native: build-parser
+test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_tests.native
 	cd $(TOP); \
-	ocamlbuild \
-		-ocamlc "ocamlopt" \
-		$(NATIVE_OBJECT_FILES); \
-	ocamlbuild \
-		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
-	 	-lib unix -lib str \
-	 	-lflags "$(NATIVE_OBJECT_FILES)" \
-		$(REL_DIR)/test/run_hardcoded_tests.native; \
-	rm run_hardcoded_tests.native
+	_build/$(REL_DIR)/test/run_tests.native $(REL_DIR)/test/esprima/
 
-test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
+test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_tests.native
 	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_esprima_tests.native $(REL_DIR)/test/esprima/
+	_build/$(REL_DIR)/test/run_tests.native $(REL_DIR)/test/flow/
 
-test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native
-	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_hardcoded_tests.native $(REL_DIR)/test/hardcoded_tests.js
-
-test-ocaml: test-hardcoded-ocaml
+test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
 test: test-js test-ocaml
 
-tools: native_test_files
-
-native_test_files:
+ocamlfind-install:
 	cd $(TOP); \
-	ocamlbuild $(REL_DIR)/tools/native_test_files.native; \
-	mv native_test_files.native $(REL_DIR)/tools/native_test_files
+	$(OCB) $(REL_DIR)/parser_flow.cma $(REL_DIR)/parser_flow.cmxa; \
+	ocamlfind install flow_parser $(REL_DIR)/META \
+		_build/$(REL_DIR)/parser_flow.a \
+		_build/$(REL_DIR)/parser_flow.cma \
+		_build/$(REL_DIR)/parser_flow.cmxa \
+		_build/$(REL_DIR)/*.cmi
 
-npm-publish:
-	mv README.md README-backup.md
-	mv README-npm.md README.md
-	-npm publish
-	mv README.md README-npm.md
-	mv README-backup.md README.md
+lexer.native: lexer.ml
+	$(OCB) $@

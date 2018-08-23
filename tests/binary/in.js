@@ -44,5 +44,11 @@ let tests = [
     if ('foo' in 123) {} // error
     if (!'foo' in {}) {} // error, !'foo' is a boolean
     if (!('foo' in {})) {}
-  }
+  },
+
+  // annotations on RHS
+  function(x: Object, y: mixed) {
+    ('foo' in x); // ok
+    ('foo' in y); // error
+  },
 ]

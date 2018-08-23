@@ -1,48 +1,123 @@
+Error --------------------------------------------------------------------------------------------------------- B.js:5:1
 
-A.js:4:6,11: number
-This type is incompatible with
-C.js:6:6,6: B
+Cannot extend `A` [1] with `B` because `C` [2] is incompatible with string [3] in property `c`.
 
-A.js:5:6,11: string
-This type is incompatible with
-B.js:6:6,6: C
+   B.js:5:1
+      v------------------
+   5| class B extends A {
+   6|   c: C;
+   7| }
+      ^
 
-B.js:6:6,6: C
-This type is incompatible with
-A.js:5:6,11: string
+References:
+   B.js:5:17
+   5| class B extends A {
+                      ^ [1]
+   B.js:6:6
+   6|   c: C;
+           ^ [2]
+   A.js:5:6
+   5|   c: string;
+           ^^^^^^ [3]
 
-C.js:6:6,6: B
-This type is incompatible with
-A.js:4:6,11: number
 
-Found 4 errors
+Error --------------------------------------------------------------------------------------------------------- C.js:5:1
 
-A.js:4:6,11: number
-This type is incompatible with
-C.js:6:6,6: string
+Cannot extend `A` [1] with `C` because `B` [2] is incompatible with number [3] in property `b`.
 
-C.js:6:6,6: string
-This type is incompatible with
-A.js:4:6,11: number
+   C.js:5:1
+      v------------------
+   5| class C extends A {
+   6|   b: B;
+   7| }
+      ^
+
+References:
+   C.js:5:17
+   5| class C extends A {
+                      ^ [1]
+   C.js:6:6
+   6|   b: B;
+           ^ [2]
+   A.js:4:6
+   4|   b: number;
+           ^^^^^^ [3]
+
+
 
 Found 2 errors
+Error --------------------------------------------------------------------------------------------------------- C.js:5:1
 
-A.js:4:6,11: number
-This type is incompatible with
-C.js:6:6,6: string
+Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`.
 
-C.js:6:6,6: string
-This type is incompatible with
-A.js:4:6,11: number
+   C.js:5:1
+      v------------------
+   5| class C extends A {
+   6|   b: B;
+   7| }
+      ^
 
-Found 2 errors
+References:
+   C.js:5:17
+   5| class C extends A {
+                      ^ [1]
+   C.js:6:6
+   6|   b: B;
+           ^ [2]
+   A.js:4:6
+   4|   b: number;
+           ^^^^^^ [3]
 
-A.js:4:6,11: number
-This type is incompatible with
-C.js:6:6,6: string
 
-C.js:6:6,6: string
-This type is incompatible with
-A.js:4:6,11: number
 
-Found 2 errors
+Found 1 error
+Error --------------------------------------------------------------------------------------------------------- C.js:5:1
+
+Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`.
+
+   C.js:5:1
+      v------------------
+   5| class C extends A {
+   6|   b: B;
+   7| }
+      ^
+
+References:
+   C.js:5:17
+   5| class C extends A {
+                      ^ [1]
+   C.js:6:6
+   6|   b: B;
+           ^ [2]
+   A.js:4:6
+   4|   b: number;
+           ^^^^^^ [3]
+
+
+
+Found 1 error
+Error --------------------------------------------------------------------------------------------------------- C.js:5:1
+
+Cannot extend `A` [1] with `C` because string [2] is incompatible with number [3] in property `b`.
+
+   C.js:5:1
+      v------------------
+   5| class C extends A {
+   6|   b: B;
+   7| }
+      ^
+
+References:
+   C.js:5:17
+   5| class C extends A {
+                      ^ [1]
+   C.js:6:6
+   6|   b: B;
+           ^ [2]
+   A.js:4:6
+   4|   b: number;
+           ^^^^^^ [3]
+
+
+
+Found 1 error

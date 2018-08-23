@@ -1,0 +1,446 @@
+site_title: "Flow"
+site_description: "A Static Type Checker for JavaScript"
+blog_title: "Flow Blog"
+site_license: "Distributed under MIT License"
+site_code_of_conduct: "Code of Conduct"
+site_edit_this_page: "Edit this page"
+
+site_flow_version_stable: "Current Version:"
+
+homepage_hero_title: "[Flow is] | a static type | checker for | [JavaScript.]"
+homepage_get_started: "Get Started"
+homepage_install_flow: "Install Flow"
+homepage_github_stars: "GitHub Stars"
+
+homepage_code_faster_title: "Code Faster."
+homepage_code_faster_img_alt: ""
+homepage_code_faster_description: >
+  Tired of having to run your code to find bugs? Flow identifies problems as you
+  code. Stop wasting your time guessing and checking.
+
+homepage_code_smarter_title: "Code Smarter."
+homepage_code_smarter_img_alt: ""
+homepage_code_smarter_description: >
+  It's hard to build smart tools for dynamic languages like JavaScript. Flow
+  understands your code and makes its knowledge available, enabling other smart
+  tools to be built on top of Flow.
+
+homepage_code_confidently_title: "Code Confidently."
+homepage_code_confidently_img_alt: ""
+homepage_code_confidently_description: >
+  Making major changes to large codebases can be scary. Flow helps you refactor
+  safely, so you can focus on the changes you want to make, and stop worrying
+  about what you might break.
+
+homepage_code_bigger_title: "Code Bigger."
+homepage_code_bigger_img_alt: ""
+homepage_code_bigger_description: >
+  Working in a codebase with lots of developers can make it difficult to keep
+  your master branch working. Flow can help prevent bad rebases. Flow can help
+  protect your carefully designed library from misuse and misinterpretation.
+  And Flow can help you understand the code you wrote six months ago.
+
+homepage_featurettes:
+  - title: "Type Inference"
+    description: >
+      Using data flow analysis, Flow infers types and tracks data as it moves
+      through your code. You don't need to fully annotate your code before Flow
+      can start to find bugs.
+  - title: "JavaScript, Your Way"
+    description: >
+      Flow is designed to understand idiomatic JavaScript. It understands common
+      JavaScript patterns and many of the weird things we JavaScript developers
+      love to do.
+  - title: "Realtime Feedback"
+    description: >
+      Flow gives you fast feedback while you code by incrementally rechecking
+      your code as you make changes.
+  - title: "Easy Integration"
+    description: >
+      Flow integrates well with many tools, making it easy to insert into your
+      existing workflow and toolchain.
+
+homepage_ready_to_get_going: "Ready to get going?"
+
+navbar_getting_started: "Getting Started"
+navbar_documentation: "Docs"
+navbar_definitions: "Definitions"
+navbar_try: "Try"
+navbar_blog: "Blog"
+
+navbar_discord: "Discord"
+navbar_twitter: "Twitter"
+navbar_facebook: "Facebook"
+navbar_github: "GitHub"
+navbar_stackoverflow: "StackOverflow"
+
+docs_read_more: "Read more"
+docs_additional_reading: "Additional Reading"
+
+"/blog/":
+  title: "Flow Blog"
+  description: "Flow articles and announcements"
+"/docs/":
+  title: "Documentation"
+  description: "Guides and references for all you need to know about Flow"
+"/docs/getting-started/":
+  title: "Getting Started"
+  description: "Introduction to type checking with Flow"
+"/docs/install/":
+  title: "Installation"
+  description: "Installing and setting up Flow for a project"
+"/docs/usage/":
+  title: "Usage"
+  description: "How to start using Flow"
+"/docs/cli/ast/":
+  title: "flow ast"
+  description: ""
+"/docs/cli/autocomplete/":
+  title: "flow autocomplete"
+  description: ""
+"/docs/cli/check-contents/":
+  title: "flow check-contents"
+  description: ""
+"/docs/cli/check/":
+  title: "flow check"
+  description: ""
+"/docs/cli/coverage/":
+  title: "flow coverage"
+  description: ""
+"/docs/cli/find-module/":
+  title: "flow find-module"
+  description: ""
+"/docs/cli/get-def/":
+  title: "flow get-def"
+  description: ""
+"/docs/cli/get-importers/":
+  title: "flow get-importers"
+  description: ""
+"/docs/cli/get-imports/":
+  title: "flow  get-imports"
+  description: ""
+"/docs/cli/init/":
+  title: "flow init"
+  description: ""
+"/docs/cli/":
+  title: "Flow CLI"
+  description: "Additional detail around individual commands."
+"/docs/cli/port/":
+  title: "flow port"
+  description: ""
+"/docs/cli/server/":
+  title: "flow server"
+  description: ""
+"/docs/cli/start/":
+  title: "flow start"
+  description: ""
+"/docs/cli/status/":
+  title: "flow status"
+  description: ""
+"/docs/cli/stop/":
+  title: "flow stop"
+  description: ""
+"/docs/cli/suggest/":
+  title: "flow suggest"
+  description: ""
+"/docs/cli/type-at-pos/":
+  title: "flow type-at-pos"
+  description: ""
+"/docs/cli/version/":
+  title: "flow version"
+  description: ""
+"/docs/config/":
+  title: ".flowconfig"
+  description: "How to configure Flow"
+"/docs/config/ignore/":
+  title: ".flowconfig [ignore]"
+  description: "How to configure Flow to ignore certain files"
+"/docs/config/include/":
+  title: ".flowconfig [include]"
+  description: "How to configure Flow to include certain files"
+"/docs/config/libs/":
+  title: ".flowconfig [libs]"
+  description: "How to configure Flow to include your lib files"
+"/docs/config/lints/":
+  title: ".flowconfig [lints]"
+  description: "How to configure the Flow linter"
+"/docs/config/options/":
+  title: ".flowconfig [options]"
+  description: "How to configure Flow's various options"
+"/docs/config/version/":
+  title: ".flowconfig [version]"
+  description: "How to pin your project to a specific version of Flow"
+"/docs/errors/":
+  title: "Debugging Errors"
+  description: ""
+"/docs/lang/":
+  title: "Type System"
+  description: "Why and how we built Flow for JavaScript"
+"/docs/lang/types-and-expressions/":
+  title: "Types & Expressions"
+  description: ""
+"/docs/lang/subtypes/":
+  title: "Subsets & Subtypes"
+  description: ""
+"/docs/lang/refinements/":
+  title: "Type Refinements"
+  description: ""
+"/docs/lang/sealing/":
+  title: "Sealed & Unsealed Types"
+  description: ""
+"/docs/lang/variance/":
+  title: "Type Variance"
+  description: ""
+"/docs/lang/nominal-structural/":
+  title: "Nominal & Structural Typing"
+  description: "Differences between nominal and structural typing"
+"/docs/lang/depth-subtyping/":
+  title: "Depth Subtyping"
+  description: ""
+"/docs/lang/width-subtyping/":
+  title: "Width Subtyping"
+  description: ""
+"/docs/lang/lazy-modes/":
+  title: "Lazy Modes"
+  description: "Explanation of Flow's lazy mode"
+"/docs/libdefs/":
+  title: "Library Definitions"
+  description: "Typing third-party libraries"
+"/docs/libdefs/creation/":
+  title: "Creating Library Definitions"
+  description: ""
+"/docs/libdefs/usage/":
+  title: "Using Library Definitions"
+  description: ""
+"/docs/modules/":
+  title: "Modules"
+  description: ""
+"/docs/resources/":
+  title: "Resources"
+  description: "Additional resources on Flow and type-checking"
+"/docs/types/aliases/":
+  title: "Type Aliases"
+  description: "Aliasing types for reuse"
+"/docs/types/opaque-types/":
+  title: "Opaque Type Aliases"
+  description: "Enforcing abstraction through the type system"
+"/docs/types/arrays/":
+  title: "Array Types"
+  description: "Typing arrays and the elements inside of them"
+"/docs/types/casting/":
+  title: "Type Casting Expressions"
+  description: "Asserting and casting values to different types"
+"/docs/types/classes/":
+  title: "Class Types"
+  description: "Typing classes and using classes as types"
+"/docs/types/functions/":
+  title: "Function Types"
+  description: "Typing function declarations and values"
+"/docs/types/generics/":
+  title: "Generic Types"
+  description: "Adding abstract (polymorphic) types using generics"
+"/docs/types/interfaces/":
+  title: "Interface Types"
+  description: ""
+"/docs/types/intersections/":
+  title: "Intersection Types"
+  description: "Typing values that are all of many different types"
+"/docs/types/":
+  title: "Type Annotations"
+  description: "Learn how to add type annotations to your code"
+"/docs/types/literals/":
+  title: "Literal Types"
+  description: "Using literal values as types"
+"/docs/types/maybe/":
+  title: "Maybe Types"
+  description: "Typing values that may or may not exist"
+"/docs/types/objects/":
+  title: "Object Types"
+  description: "Typing different kinds of objects"
+"/docs/types/primitives/":
+  title: "Primitive Types"
+  description: "Types for JavaScript's primitive values"
+"/docs/types/tuples/":
+  title: "Tuple Types"
+  description: "Typing tuple-like array values"
+"/docs/types/typeof/":
+  title: "Typeof Types"
+  description: "Getting the internal type of a value"
+"/docs/types/unions/":
+  title: "Union Types"
+  description: "Typing values that may be one of many different types"
+"/docs/types/utilities/":
+  title: "Utility Types"
+  description: "Creating complex types with utility types"
+"/docs/types/mixed/":
+  title: "Mixed Types"
+  description: "Typing unknown types with mixed"
+"/docs/types/any/":
+  title: "Any Types"
+  description: "Opting out of the type system with any"
+"/docs/types/variables/":
+  title: "Variable Types"
+  description: "Adding types to variable declarations"
+"/docs/types/declarations/":
+  title: "Declaration Types"
+  description: ""
+"/docs/types/modules/":
+  title: "Module Types"
+  description: ""
+"/docs/types/comments/":
+  title: "Comment Types"
+  description: "Flow with plain JavaScript code by using a special comment syntax"
+
+"/docs/react/":
+  title: "Getting Started"
+  description: "Learn how to setup React with Flow"
+"/docs/react/components/":
+  title: "Components"
+  description: "Learn how to type React class components and stateless functional components with Flow"
+"/docs/react/events/":
+  title: "Event Handling"
+  description: "The types and best practices for typing React event handlers with Flow"
+"/docs/react/refs/":
+  title: "ref functions"
+  description: "How to use Flow's typed React ref functions"
+"/docs/react/children/":
+  title: "Children"
+  description: "Learn how to use Flow to strictly type the children of your React components"
+"/docs/react/hoc/":
+  title: "Higher-order Components"
+  description: "Learn how to use Flow to type React higher-order components"
+"/docs/react/context/":
+  title: "Context"
+  description: "Learn how to use Flow with the React context API"
+"/docs/react/redux/":
+  title: "Redux"
+  description: "Learn how to use Flow with Redux"
+"/docs/react/types/":
+  title: "Type Reference"
+  description: "A reference for all the utility Flow types exported by the React module"
+
+"/docs/frameworks/":
+  title: "Frameworks"
+  description: "Learn how to use Flow with various frameworks"
+"/docs/frameworks/react/":
+  title: "Flow + React"
+  description: "Learn how to use Flow with React"
+"/docs/frameworks/redux/":
+  title: "Flow + Redux"
+  description: "Learn how to use Flow with Redux"
+
+"/docs/tools/":
+  title: "Tools"
+  description: "Learn how to use Flow with various tools"
+"/docs/tools/babel/":
+  title: "Babel"
+  description: "Learn how to use Flow with Babel"
+"/docs/tools/flow-remove-types/":
+  title: "flow-remove-types"
+  description: "Learn how to use Flow with flow-remove-types"
+"/docs/tools/create-react-app/":
+  title: "Create React App"
+  description: "Learn how to use Flow with Create React App"
+
+"/docs/editors/":
+  title: "Editors"
+  description: "Flow integrations for code editors"
+"/docs/editors/atom/":
+  title: "Atom"
+  description: "Flow integration for the Atom editor"
+"/docs/editors/sublime-text/":
+  title: "Sublime Text"
+  description: "Flow integration for the Sublime Text editor"
+"/docs/editors/vim/":
+  title: "Vim"
+  description: "Flow integration for the Vim editor"
+"/docs/editors/emacs/":
+  title: "Emacs"
+  description: "Flow integration for the Emacs editor"
+"/docs/editors/vscode/":
+  title: "Visual Studio Code"
+  description: "Flow integration for the Visual Studio Code editor"
+"/docs/editors/webstorm/":
+  title: "WebStorm"
+  description: "Flow integration for the WebStorm editor"
+
+"/docs/linting/":
+  title: "Linting Overview"
+  description: "An introduction to linting in Flow"
+"/docs/linting/flowlint-comments/":
+  title: "Flowlint Comments"
+  description: "Fine-grained control"
+"/docs/linting/ide-integration/":
+  title: "IDE Integration"
+  description: "Warnings in your IDE"
+"/docs/linting/rule-reference/":
+  title: "Lint Rule Reference"
+  description: "More information"
+
+"/docs/strict/":
+  title: "Flow Strict"
+  description: "Enable stricter type checking on a file-by-file basis"
+
+"/try/":
+  title: "Try Flow"
+  description: "Interactive Flow REPL"
+
+guides:
+  getting_started:
+    title: "Getting Started"
+    description: >
+      Never used a type system before or just new to Flow? Let's get you up and
+      running in a few minutes.
+  types:
+    title: "Type Annotations"
+    description: >
+      Learn how to add Flow type annotations to your code: Primitives, Objects,
+      Functions, Classes, and more.
+  lang:
+    title: "Type System"
+    description: >
+      Learn how the type system in Flow works: Subtyping, Variance,
+      Refinements, and more.
+  cli:
+    title: "CLI Commands"
+    description: >
+      How to use Flow from the command line. Including how to manage the Flow
+      background process.
+  config:
+    title: "Configuration"
+    description: >
+      Flow tries to work out of the box as much as possible, but can be configured
+      to work with any codebase.
+  libdefs:
+    title: "Library Definitions"
+    description: >
+      Learn how to create and use library definitions for the third-party code
+      your code depends on.
+  # errors:
+  #   title: "Debugging Errors"
+  #   description: >
+  #     Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+  #     tempor incididunt ut labore et dolore.
+  react:
+    title: "React"
+    description: >
+      Learn how to use Flow to effectively type common and advanced React
+      patterns.
+  tools:
+    title: "Tools"
+    description: >
+      Detailed guides, tips, and resources on how to integrate Flow with
+      different JavaScript tools.
+  editors:
+    title: "Editors"
+    description: >
+      Detailed guides, tips, and resources on how to integrate Flow with
+      different code editors.
+  linting:
+    title: "Linting"
+    description: >
+      Learn how to configure Flow's linter to find potentially harmful code.
+  strict:
+    title: "Flow Strict"
+    description: >
+      Learn how to enable stricter type checking on a file-by-file basis.

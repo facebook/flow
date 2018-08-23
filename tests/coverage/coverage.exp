@@ -15,8 +15,6 @@ declare module foo {
 declare module bar {
 }
 
-// TODO
-
 Covered: 100.00% (2 of 2 expressions)
 
 // This file triggers a violation of the "disjoint-or-nested ranges invariant"
@@ -29,10 +27,16 @@ declare module foo {
 declare module bar {
 }
 
-// TODO
-
 declare class qux {
 }
 
 Covered: 100.00% (3 of 3 expressions)
+
+Covered: 75.00% (3 of 4 expressions)
+
+Covered: 75.00% (3 of 4 expressions)
+
+Covered: 0.00% (0 of 4 expressions)
+
+Covered: 75.00% (3 of 4 expressions)
 

@@ -1,5 +1,0 @@
-version="1.0"
-description="Linux inotify"
-requires="unix"
-archive(byte)="inotify.cma"
-archive(native)="inotify.cmxa"

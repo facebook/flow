@@ -1,76 +1,81 @@
-issue-198.js:9
-  9:         return str.toFixed();
-                        ^^^^^^^ property `toFixed`. Property not found in
-  9:         return str.toFixed();
-                    ^^^ String
+Error ------------------------------------------------------------------------------------------------ issue-198.js:9:16
 
-issue-324.js:8
-  8: foostr = barstr;
-              ^^^^^^ Bar. This type is incompatible with
-  5: var foostr: Foo | string = new Foo();
-                 ^^^^^^^^^^^^ union: Foo | string
-  Member 1:
-    5: var foostr: Foo | string = new Foo();
-                   ^^^ Foo
-  Error:
-    8: foostr = barstr;
-                ^^^^^^ Bar. This type is incompatible with
-    5: var foostr: Foo | string = new Foo();
-                   ^^^ Foo
-  Member 2:
-    5: var foostr: Foo | string = new Foo();
-                         ^^^^^^ string
-  Error:
-    8: foostr = barstr;
-                ^^^^^^ Bar. This type is incompatible with
-    5: var foostr: Foo | string = new Foo();
-                         ^^^^^^ string
+Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
 
-union.js:2
-  2: bar(0);
-         ^ number. This type is incompatible with
-  1: function bar(x: Document | string): void { }
-                     ^^^^^^^^^^^^^^^^^ union: Document | string
-  Member 1:
-    1: function bar(x: Document | string): void { }
-                       ^^^^^^^^ Document
-  Error:
-    2: bar(0);
-           ^ number. This type is incompatible with
-    1: function bar(x: Document | string): void { }
-                       ^^^^^^^^ Document
-  Member 2:
-    1: function bar(x: Document | string): void { }
-                                  ^^^^^^ string
-  Error:
-    2: bar(0);
-           ^ number. This type is incompatible with
-    1: function bar(x: Document | string): void { }
-                                  ^^^^^^ string
+   issue-198.js:9:16
+     9|         return str.toFixed();
+                       ^^^^^^^^^^^^^
 
-union.js:8
-  8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
-                 ^^^^^^^ D. This type is incompatible with
-  8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
-             ^ C
-
-union.js:9
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ C. This type is incompatible with
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ D
-
-union.js:9
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ D. This type is incompatible with
-  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
-                       ^ C
-
-yuge.js:23
- 23:     ("": ErrorCode);  // also, error pos omits this line completely
-          ^^ string. This type is incompatible with
- 23:     ("": ErrorCode);  // also, error pos omits this line completely
-              ^^^^^^^^^ number enum
+References:
+   <BUILTINS>/core.js:142:39
+   142|     toFixed(fractionDigits?: number): string;
+                                              ^^^^^^ [1]
 
 
-Found 7 errors
+Error ------------------------------------------------------------------------------------------------ issue-324.js:8:10
+
+Cannot assign `barstr` to `foostr` because `Bar` [1] is incompatible with `Foo` [2].
+
+   issue-324.js:8:10
+   8| foostr = barstr;
+               ^^^^^^
+
+References:
+   issue-324.js:6:13
+   6| var barstr: Bar | string = new Bar();
+                  ^^^ [1]
+   issue-324.js:5:13
+   5| var foostr: Foo | string = new Foo();
+                  ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:2:5
+
+Cannot call `bar` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   union.js:2:5
+   2| bar(0);
+          ^ [1]
+
+References:
+   union.js:1:28
+   1| function bar(x: Document | string): void { }
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:8:13
+
+Cannot assign `new E()` to `c` because `D` [1] is incompatible with `C` [2].
+
+   union.js:8:13
+   8|   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+                  ^^^^^^^ [1]
+
+References:
+   union.js:8:9
+   8|   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:9:19
+
+`D` [1] is incompatible with `C` [2].
+
+   union.js:9:19
+   9|   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+                        ^
+
+References:
+   union.js:5:7
+   5| class D { }
+            ^ [1]
+   union.js:4:7
+   4| class C { }
+            ^ [2]
+
+
+
+Found 5 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

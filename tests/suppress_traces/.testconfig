@@ -1,1 +1,1 @@
-cmd: check --all --strip-root --old-output-format --show-all-errors --traces 10
+cmd: check --all --strip-root --show-all-errors --traces 10

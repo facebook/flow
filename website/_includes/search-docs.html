@@ -1,0 +1,14 @@
+<div class="col-md-3{% unless page.mobile_search or layout.mobile_search %} hidden-sm-down{% endunless %}">
+  <div class="search">
+    <label class="search-label sr-only" for="algolia-doc-search">
+      Search docs
+    </label>
+
+    {% include svg/icon-search.svg %}
+
+    <input type="search"
+      class="search-input form-control"
+      id="algolia-doc-search"
+      placeholder="Search docs"/>
+  </div>
+</div>

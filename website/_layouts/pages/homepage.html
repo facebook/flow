@@ -1,0 +1,162 @@
+---
+layout: default
+---
+
+{% include vars.html %}
+
+<div class="feature feature-hero">
+  <div class="container">
+    <h1 class="feature-heading">
+      {{i18n.homepage_hero_title | replace: '|', '<br class="hidden-lg-up">' | replace: '[', '<span>' | replace: ']', '</span>'}}
+    </h1>
+
+    <a class="feature-btn hidden-sm-down" href="{{url_base}}/docs/getting-started/"><span>{{i18n.homepage_get_started}}</span></a>
+    <a class="feature-btn hidden-sm-down" href="{{url_base}}/docs/install/"><span>{{i18n.homepage_install_flow}}</span></a>
+
+    <iframe class="gh-btn"
+      src="https://ghbtns.com/github-btn.html?user=facebook&repo=flow&type=star&count=true&size=large"
+      frameborder="0"
+      scrolling="0"
+      width="160px"
+      height="30px"
+      title="{{i18n.homepage_github_stars}}">
+    </iframe>
+
+    <div class="feature-hero-text mt-2">
+      {{i18n.site_flow_version_stable}}
+      <strong class="navbar-text">
+        <a href="{{site.latest_release.html_url}}">
+          {{site.latest_release.name}}
+        </a>
+      </strong>
+    </div>
+  </div>
+</div>
+
+<div class="feature feature-light">
+  <div class="feature-decoration feature-decoration-drop"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-7">
+        <h2 class="feature-heading feature-heading-center">
+          {{i18n.homepage_code_faster_title}}
+        </h2>
+        <p class="feature-text">
+          {{i18n.homepage_code_faster_description}}
+        </p>
+      </div>
+
+      <div class="col-lg-5">
+        <img class="img-fluid rounded"
+          width="890"
+          height="564"
+          src="{% asset_path 'featurette-faster.gif' %}"
+          alt="{{i18n.homepage_code_faster_img_alt}}"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="feature feature-gray">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-7 push-lg-5">
+        <h2 class="feature-heading feature-heading-center">
+          {{i18n.homepage_code_smarter_title}}
+        </h2>
+        <p class="feature-text">
+          {{i18n.homepage_code_smarter_description}}
+        </p>
+      </div>
+
+      <div class="col-lg-5 pull-lg-7">
+        <img class="img-fluid rounded"
+          width="890"
+          height="564"
+          src="{% asset_path 'featurette-smarter.gif' %}"
+          alt="{{i18n.homepage_code_smarter_img_alt}}"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="feature feature-dark">
+  <div class="feature-decoration feature-decoration-drop"></div>
+  <div class="feature-decoration feature-decoration-rise"></div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-7">
+        <h2 class="feature-heading feature-heading-center">
+          {{i18n.homepage_code_confidently_title}}
+        </h2>
+        <p class="feature-text">
+          {{i18n.homepage_code_confidently_description}}
+        </p>
+      </div>
+
+      <div class="col-lg-5">
+        <img class="img-fluid rounded"
+          width="890"
+          height="564"
+          src="{% asset_path 'featurette-confidently.gif' %}"
+          alt="{{i18n.homepage_code_confidently_img_alt}}"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="feature feature-light">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-7 push-lg-5">
+        <h2 class="feature-heading feature-heading-center">
+          {{i18n.homepage_code_bigger_title}}
+        </h2>
+        <p class="feature-text">
+          {{i18n.homepage_code_bigger_description}}
+        </p>
+      </div>
+
+      <div class="col-lg-5 pull-lg-7">
+        <img class="img-fluid rounded"
+          width="890"
+          height="564"
+          src="{% asset_path 'featurette-bigger.gif' %}"
+          alt="{{i18n.homepage_code_bigger_img_alt}}"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="feature feature-yellow feature-small">
+  <div class="feature-decoration feature-decoration-rise"></div>
+  <div class="feature-decoration feature-decoration-drop"></div>
+
+  <div class="container text-xs-center">
+    <h2 class="feature-heading">
+      {{i18n.homepage_ready_to_get_going}}
+    </h2>
+    <div class="mt-2">
+      <a class="feature-btn" href="{{url_base}}/docs/getting-started/"><span>{{i18n.homepage_get_started}}</span></a>
+      <a class="feature-btn mr-0 hidden-sm-down" href="{{url_base}}/docs/install/"><span>{{i18n.homepage_install_flow}}</span></a>
+    </div>
+  </div>
+</div>
+
+<div class="feature feature-light feature-small">
+  <div class="container">
+    <div class="row">
+      {% for featurette in i18n.homepage_featurettes %}
+        <div class="col-md-6 featurette">
+          <h2 class="featurette-heading">
+            {{featurette.title}}
+          </h2>
+          <p class="featurette-text">
+            {{featurette.description}}
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>

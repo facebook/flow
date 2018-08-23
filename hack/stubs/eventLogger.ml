@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -20,9 +19,13 @@ type init_mode =
   | Event_logger_fake
   | Event_logger_real of init_settings
 
-let init ?log_pid:_ ?init_id:_ _ _ = ()
+let init ?exit_on_parent_exit:_ ?log_pid:_ ?init_id:_ _ _ = ()
+let disable_logging _ = ()
+let log _ = ()
+let logger_pid () = None
+let set_init_type _ = ()
 let log_if_initialized _ = ()
-let master_exception _ = ()
+let master_exception _ _ = ()
 let worker_exception _ = ()
 let sharedmem_gc_ran _ _ _ _ = ()
 let sharedmem_init_done _ = ()

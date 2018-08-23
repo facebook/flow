@@ -1,5 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------- foo.js:2:9
 
-foo.js:2:1,16: ./bar
-Required module not found
+Cannot resolve module `./bar`.
+
+   2| require('./bar');
+              ^^^^^^^
+
+
 
 Found 1 error

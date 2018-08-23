@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -33,13 +32,13 @@ let (>>=) x f =
 let return x = Some x
 
 let handle_file_exn path = function
-  | Fsnotify.Error (reason, 2) -> ()
+  | Fsnotify.Error (_, Unix.ENOENT) -> ()
       (* The file got deleted in the mean time ... we don't care *)
-  | Fsnotify.Error (reason, errno) -> 
+  | Fsnotify.Error (reason, _) ->
       (* This is bad ... *)
-      Printf.fprintf !log 
-        "Error: could not add watch to %s [%s, %d]\n" path reason errno
-  | e when Sys.file_exists path ->
+      Printf.fprintf !log
+        "Error: could not add watch to %s [%s]\n" path reason
+  | _ when Sys.file_exists path ->
       (* Logging this makes the system very noisy. There are too many
        * cases where a file has been removed etc ...
        *)
@@ -47,9 +46,8 @@ let handle_file_exn path = function
   | _ -> ()
 
 (* Calls (f path), never fails, logs the nasty exceptions *)
-let call f path = 
+let call f path =
   try f path
   with e -> handle_file_exn path e; None
 
 let wrap f = fun x -> return (f x)
-

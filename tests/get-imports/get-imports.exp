@@ -1,0 +1,78 @@
+{"a.js":{"not_flow":false,"requirements":[]}}
+{
+  "b":{
+    "not_flow":false,
+    "requirements":[
+      {
+        "import":"a.js",
+        "loc":{
+          "source":"b.js",
+          "type":"SourceFile",
+          "start":{"line":5,"column":9,"offset":46},
+          "end":{"line":5,"column":13,"offset":51}
+        },
+        "path":"b.js",
+        "line":5,
+        "endline":5,
+        "start":9,
+        "end":13
+      }
+    ]
+  }
+}
+{
+  "b.js":{
+    "not_flow":false,
+    "requirements":[
+      {
+        "import":"a.js",
+        "loc":{
+          "source":"b.js",
+          "type":"SourceFile",
+          "start":{"line":5,"column":9,"offset":46},
+          "end":{"line":5,"column":13,"offset":51}
+        },
+        "path":"b.js",
+        "line":5,
+        "endline":5,
+        "start":9,
+        "end":13
+      }
+    ]
+  }
+}
+{
+  "c.js":{
+    "not_flow":false,
+    "requirements":[
+      {
+        "import":"b",
+        "loc":{
+          "source":"c.js",
+          "type":"SourceFile",
+          "start":{"line":3,"column":9,"offset":36},
+          "end":{"line":3,"column":11,"offset":39}
+        },
+        "path":"c.js",
+        "line":3,
+        "endline":3,
+        "start":9,
+        "end":11
+      },
+      {
+        "import":"a.js",
+        "loc":{
+          "source":"c.js",
+          "type":"SourceFile",
+          "start":{"line":2,"column":9,"offset":17},
+          "end":{"line":2,"column":16,"offset":25}
+        },
+        "path":"c.js",
+        "line":2,
+        "endline":2,
+        "start":9,
+        "end":16
+      }
+    ]
+  }
+}

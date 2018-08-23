@@ -1,10 +1,12 @@
-FLOW=$1
-mkdir tmp
-$FLOW status . --old-output-format
-mv dir/node_modules tmp/
-$FLOW force-recheck dir/node_modules/*.js
-$FLOW status . --old-output-format
-mv tmp/node_modules dir/
-$FLOW force-recheck dir/node_modules/*.js
-$FLOW status . --old-output-format
-rmdir tmp
+#!/bin/bash
+. ../fs.sh
+mkdir -p tmp/node_modules
+printf "\nShould resolve to dir/node_modules/b.js which is number\n"
+assert_errors "$FLOW" status .
+printf "\nShould resolve to node_modules/b.js which is a string\n"
+move dir/node_modules/b.js tmp/node_modules/b.js
+assert_errors "$FLOW" status .
+printf "\nShould resolve to dir/node_modules/b.js which is number\n"
+move tmp/node_modules/b.js dir/node_modules/b.js
+assert_errors "$FLOW" status .
+rm -r tmp

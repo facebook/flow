@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
 let () = Random.self_init ()
 let debug = ref false
@@ -44,6 +43,8 @@ let opt f env = function
 let opt_fold f env = function
   | None -> env
   | Some x -> f env x
+
+let singleton_if cond x = if cond then [x] else []
 
 let smap_inter m1 m2 =
   SMap.fold (
@@ -120,10 +121,10 @@ let try_with_channel oc f1 f2 =
 
 let iter_n_acc n f acc =
   let acc = ref acc in
-  for i = 1 to n do
-    acc := f !acc
+  for i = 1 to n-1 do
+    acc := fst (f !acc)
   done;
-  !acc
+  f !acc
 
 let map_of_list list =
   List.fold_left ~f:(fun m (k, v) -> SMap.add k v m) ~init:SMap.empty list
@@ -158,6 +159,18 @@ let fold_fun_list acc fl =
   List.fold_left fl ~f:(|>) ~init:acc
 
 let compose f g x = f (g x)
+
+module With_complete_flag = struct
+  type 'a t = {
+    is_complete : bool;
+    value : 'a;
+  }
+end
+
+let try_finally ~f ~(finally: unit -> unit) =
+  let res = try f () with e -> finally (); raise e in
+  finally ();
+  res
 
 let with_context ~enter ~exit ~do_ =
   enter ();
@@ -198,3 +211,21 @@ let infimum (arr : 'a array)
     end
   end in
   binary_search 0 ((Array.length arr) - 1)
+
+(** Callstack is simply a typed way to indicate that a string is a callstack *)
+type callstack = Callstack of string
+
+let unwrap_snd (a, b_opt) =
+  match b_opt with
+  | None -> None
+  | Some b -> Some (a, b)
+
+let memoize_naive f =
+  let m = ref None in
+  fun () ->
+    match !m with
+    | None ->
+        let res = f () in
+        m := Some res ;
+        res
+    | Some s -> s

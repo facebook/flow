@@ -1,0 +1,134 @@
+{% include vars.html %}
+
+{% if jekyll.environment == "development" or include.render %}
+  {% include utils/page-vars.html page=include.page %}
+
+  {% capture vars %}
+page              : {{page              | inspect}}
+layout            : {{layout            | inspect}}
+page.layout       : {{page.layout       | inspect}}
+page.dir          : {{page.dir          | inspect}}
+page.name         : {{page.name         | inspect}}
+page.path         : {{page.path         | inspect}}
+page.url          : {{page.url          | inspect}}
+page:lang         : {{page_lang         | inspect}}
+page:url_base     : {{page_url_base     | inspect}}
+page:url_lang     : {{page_url_lang     | inspect}}
+page:url_relative : {{page_url_relative | inspect}}
+page:title        : {{page_title        | inspect}}
+page:description  : {{page_description  | inspect}}
+page:guide        : {{page_guide        | inspect}}
+  {% endcapture %}
+
+  {% if page.layout == "guide" %}
+    <h4 class="mb-1">
+      {% if include.title %}
+        <a href="{{include.page.url}}">
+          {{include.page.url}} - {{i18n[page_url_relative].title}}
+        </a>
+      {% endif %}
+
+      <a class="btn btn-sm btn-secondary{% if include.title %} float-md-right{% endif %}"
+        data-toggle="collapse"
+        href="#vars-{{page_url_relative | slugify}}"
+        aria-controls="exCollapsingNavbar"
+        aria-expanded="false"
+        aria-label="Toggle navigation">Debug</a>
+    </h4>
+
+    <div class="collapse" id="vars-{{page_url_relative | slugify}}">
+      <pre><code>{{vars | strip}}</code></pre>
+    </div>
+
+    {% unless page_title and page_title != "" %}
+      <div class="alert alert-danger">
+        <h5 class="alert-heading">Internal Developer Warning: Missing Page Title</h5>
+        <p>This page needs a <code>title</code> within the <code>_data/i18n/:lang.yml</code> file, like this:</p>
+        <pre><code>"{{page_url_relative}}":
+  title: "Example Title"
+  description: "Example Description"</code></pre>
+      </div>
+    {% endunless %}
+
+    {% unless page_description and page_description != "" %}
+      <div class="alert alert-danger">
+        <h5 class="alert-heading">Internal Developer Warning: Missing Page Description</h5>
+        <p>This page needs a <code>description</code> within the <code>_data/i18n/:lang.yml</code> file, like this:</p>
+        <pre><code>"{{page_url_relative}}":
+  title: "Example Title"
+  description: "Example Description"</code></pre>
+      </div>
+    {% endunless %}
+  {% endif %}
+
+  {% if include.page.content contains '[TODO' %}
+    {% if include.page.content %}
+      <div class="alert alert-info">
+        <h5 class="alert-heading">Internal Developer Info: [TODO] on page</h5>
+        <p>This page contains some <code>[TODO]</code>'s, if you have time, please complete them</p>
+
+        {% assign lines = include.page.content | newline_to_br | strip_newlines | split: '<br />' %}
+        {% assign total = lines | size %}
+
+        {% for i in (0..total) %}
+          {% assign line = lines[i] %}
+
+          {% if line contains '[TODO' %}
+            {% assign message = '' %}
+
+            {% assign start = i | minus: 3 %}
+            {% assign end = i | plus: 3 %}
+
+            {% if start < 0 %}{% assign start = 0 %}{% endif %}
+            {% if end > total %}{% assign end = total %}{% endif %}
+
+            <pre><code>{% for n in (start..end) %}{{n}}: {{lines[n] | escape}}
+{% endfor %}</code></pre>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {% if lang.tag == 'en' %}
+    {% assign lines = include.page.content | newline_to_br | strip_newlines | split: '<br />' %}
+
+    {% assign insideCodeBlock = false %}
+
+    {% for line in lines %}
+      {% assign threeChar = line | slice: 0, 3 %}
+      {% assign firstChar = line | slice: 0, 1 %}
+
+      {% if threeChar == '```' %}
+        {% if insideCodeBlock %}
+          {% assign insideCodeBlock = false %}
+        {% else %}
+          {% assign insideCodeBlock = true %}
+        {% endif %}
+      {% endif %}
+
+      {% unless insideCodeBlock %}
+        {% if firstChar == '#' %}
+          {% assign stripped = line | strip_liquid_tags | strip_html %}
+          {% assign slug = stripped | slugify | prepend: 'toc-' %}
+          {% assign link = '<a class="toc" id="' | append: slug | append: '" href="#' | append: slug | append: '"></a>' %}
+          {% assign full = stripped | append: ' ' | append: link %}
+
+          {% unless line contains link %}
+            <div class="alert alert-danger">
+              <h4>Internal Developer Warning: Invalid TOC</h4>
+              <p>This page contains this heading:</p>
+              <pre><code>{{line | escape}}</code></pre>
+              <p>
+                All headings need a table of contents "toc" link, please use
+                this exact one:
+              </p>
+              <pre><code>{{link | escape}}</code></pre>
+            </div>
+          {% endunless %}
+        {% endif %}
+      {% endunless %}
+    {% endfor %}
+  {% endif %}
+
+{% endif %}

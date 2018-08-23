@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+/* @flow */
+
+// Manually resolving the plugins and presets now lets us require test
+// files from outside flow-dev-tools, and still use the babel config from
+// flow-dev-tools.
+var resolvePlugin = require('babel-core/lib/helpers/resolve-plugin');
+var resolvePreset = require('babel-core/lib/helpers/resolve-preset');
+var babelConfig = require('../package.json').babel;
+babelConfig.plugins = babelConfig.plugins.map(function(p) {
+  return resolvePlugin(p, __dirname);
+});
+babelConfig.presets = babelConfig.presets.map(function(p) {
+  return resolvePreset(p, __dirname);
+});
+
+require("babel-register")(babelConfig);
+require("../src/main.js").run();

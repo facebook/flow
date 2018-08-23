@@ -1,10 +1,14 @@
 source 'https://rubygems.org'
+ruby '~> 2.3.0'
 
-gem 'jekyll', '~>3.1'
+gem 'jekyll', '~>3.2.1'
+gem 'jekyll-redirect-from'
 gem 'jekyll-paginate'
-gem 'octokit'
+gem 'crowdin-cli'
 gem 'kramdown', '~>1.11' # _plugins/jekyll_ext.rb messes with internals
 gem 'rouge', '<2' # rouge2 will require changes in _plugins/jekyll_ext.rb
-gem 's3_website'
-gem 'sprockets-es6'
+gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 gem 'jekyll-assets', '~>2.2'
+gem 'sprockets-es6'
+gem 's3_website', '~>3.4.0'
+gem 'octokit'

@@ -1,0 +1,11 @@
+[ignore]
+<PROJECT_ROOT>/explicitly_ignored.js
+
+[include]
+../other/explicitly_included.js
+
+[libs]
+explicit_lib.js
+
+[options]
+all=true

@@ -73,13 +73,13 @@ let tests = [
     }
   },
 
-  function(str: number, obj: { foo: number }) {
-    if (str === obj.bar) { // error, no such property
+  function(num: number, obj: { foo: number }) {
+    if (num === obj.bar) { // Error, accessing unknown property
     }
   },
 
-  function(str: number, obj: {[key: string]: number}) {
-    if (str === obj.bar) { // ok
+  function(num: number, obj: {[key: string]: number}) {
+    if (num === obj.bar) { // ok
     }
   },
 

@@ -1,0 +1,144 @@
+- id: getting_started
+  pages:
+    - path: "/docs/getting-started/"
+    - path: "/docs/install/"
+    - path: "/docs/usage/"
+      additional_reading:
+        - guide: types
+        - guide: lang
+
+- id: types
+  pages:
+    - path: "/docs/types/"
+
+    - path: "/docs/types/primitives/"
+    - path: "/docs/types/literals/"
+
+    - path: "/docs/types/mixed/"
+    - path: "/docs/types/any/"
+
+    - path: "/docs/types/maybe/"
+
+    - path: "/docs/types/variables/"
+    - path: "/docs/types/functions/"
+
+    - path: "/docs/types/objects/"
+
+    - path: "/docs/types/arrays/"
+    - path: "/docs/types/tuples/"
+
+    - path: "/docs/types/classes/"
+
+    - path: "/docs/types/aliases/"
+    - path: "/docs/types/opaque-types/"
+    - path: "/docs/types/interfaces/"
+
+    - path: "/docs/types/generics/"
+
+    - path: "/docs/types/unions/"
+    - path: "/docs/types/intersections/"
+
+    - path: "/docs/types/typeof/"
+    - path: "/docs/types/casting/"
+    - path: "/docs/types/utilities/"
+
+    - path: "/docs/types/modules/"
+
+    - path: "/docs/types/comments/"
+
+- id: lang
+  pages:
+    - path: "/docs/lang/"
+    - path: "/docs/lang/types-and-expressions/"
+    - path: "/docs/lang/subtypes/"
+    - path: "/docs/lang/variance/"
+
+    - path: "/docs/lang/nominal-structural/"
+    - path: "/docs/lang/depth-subtyping/"
+    - path: "/docs/lang/width-subtyping/"
+
+    - path: "/docs/lang/refinements/"
+    - path: "/docs/lang/lazy-modes/"
+    # - path: "/docs/lang/sealing/"
+
+- id: cli
+  pages:
+    - path: "/docs/cli/"
+    # - path: "/docs/cli/ast/"
+    # - path: "/docs/cli/autocomplete/"
+    # - path: "/docs/cli/check-contents/"
+    # - path: "/docs/cli/check/"
+    # - path: "/docs/cli/coverage/"
+    # - path: "/docs/cli/find-module/"
+    # - path: "/docs/cli/get-def/"
+    # - path: "/docs/cli/get-importers/"
+    # - path: "/docs/cli/get-imports/"
+    # - path: "/docs/cli/init/"
+    # - path: "/docs/cli/port/"
+    # - path: "/docs/cli/server/"
+    # - path: "/docs/cli/start/"
+    # - path: "/docs/cli/status/"
+    # - path: "/docs/cli/stop/"
+    # - path: "/docs/cli/suggest/"
+    # - path: "/docs/cli/type-at-pos/"
+    # - path: "/docs/cli/version/"
+
+- id: config
+  pages:
+    - path: "/docs/config/"
+    - path: "/docs/config/include/"
+    - path: "/docs/config/ignore/"
+    - path: "/docs/config/libs/"
+    - path: "/docs/config/lints/"
+    - path: "/docs/config/options/"
+    - path: "/docs/config/version/"
+
+- id: libdefs
+  pages:
+    - path: "/docs/libdefs/"
+    # - path: "/docs/libdefs/usage/"
+    - path: "/docs/libdefs/creation/"
+
+# - id: errors
+#   pages:
+#     - path: "/docs/errors/"
+
+- id: react
+  pages:
+    - path: "/docs/react/"
+    - path: "/docs/react/components/"
+    - path: "/docs/react/events/"
+    - path: "/docs/react/refs/"
+    - path: "/docs/react/children/"
+    - path: "/docs/react/hoc/"
+    - path: "/docs/react/context/"
+    - path: "/docs/react/redux/"
+    - path: "/docs/react/types/"
+
+- id: tools
+  pages:
+    - path: "/docs/tools/"
+    - path: "/docs/tools/babel/"
+    - path: "/docs/tools/flow-remove-types/"
+    - path: "/docs/tools/create-react-app/"
+
+- id: editors
+  pages:
+    - path: "/docs/editors/"
+    - path: "/docs/editors/atom/"
+    - path: "/docs/editors/sublime-text/"
+    - path: "/docs/editors/vim/"
+    - path: "/docs/editors/emacs/"
+    - path: "/docs/editors/vscode/"
+    - path: "/docs/editors/webstorm/"
+
+- id: linting
+  pages:
+    - path: "/docs/linting/"
+    - path: "/docs/linting/flowlint-comments/"
+    - path: "/docs/linting/ide-integration/"
+    - path: "/docs/linting/rule-reference/"
+
+- id: strict
+  pages:
+    - path: "/docs/strict/"

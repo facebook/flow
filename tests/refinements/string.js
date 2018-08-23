@@ -74,7 +74,7 @@ let tests = [
   },
 
   function(str: string, obj: { foo: string }) {
-    if (str === obj.bar) { // error, no such property
+    if (str === obj.bar) { // Error, testing for unknown property
     }
   },
 

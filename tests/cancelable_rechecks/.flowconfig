@@ -1,0 +1,2 @@
+[options]
+experimental.cancelable_rechecks=true

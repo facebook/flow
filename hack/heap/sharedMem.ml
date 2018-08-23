@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
 (* Don't change the ordering of this record without updating hh_shared_init in
  * hh_shared.c, which indexes into config objects *)
@@ -29,10 +28,26 @@ type handle = private {
   h_heap_size: int;
 }
 
+(* note: types are in the same kind as classes *)
+let int_of_kind kind = match kind with
+  | `ConstantK -> 0
+  | `ClassK -> 1
+  | `FuncK -> 2
+
+let kind_of_int x = match x with
+  | 0 -> `ConstantK
+  | 1 -> `ClassK
+  | 2 -> `FuncK
+  | _ when x < 0 -> failwith "kind_of_int: attempted to convert from negative int"
+  | _ -> assert (x > 0); failwith "kind_of_int: int too large, no corresponding kind"
+let _kind_of_int = kind_of_int
+
+
 exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
 exception Heap_full
+exception Sql_assertion_failure of int
 exception Failed_anonymous_memfd_init
 exception Less_than_minimum_available of int
 exception Failed_to_use_shm_dir of string
@@ -42,8 +57,15 @@ let () =
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "dep_table_full" Dep_table_full;
   Callback.register_exception "heap_full" Heap_full;
-  Callback.register_exception "failed_anonymous_memfd_init" Failed_anonymous_memfd_init;
-  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0);
+  Callback.register_exception
+    "sql_assertion_failure"
+    (Sql_assertion_failure 0);
+  Callback.register_exception
+    "failed_anonymous_memfd_init"
+    Failed_anonymous_memfd_init;
+  Callback.register_exception
+    "less_than_minimum_available"
+    (Less_than_minimum_available 0);
   Callback.register_exception
     "c_assertion_failure" (C_assertion_failure "dummy string")
 
@@ -127,6 +149,11 @@ let init config =
     then Hh_logger.log "Failed to use anonymous memfd init";
     shm_dir_init config config.shm_dirs
 
+external allow_removes : bool -> unit = "hh_allow_removes"
+
+external allow_hashtable_writes_by_current_process : bool -> unit
+  = "hh_allow_hashtable_writes_by_current_process"
+
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
 (*****************************************************************************)
@@ -134,17 +161,90 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
+external hh_should_collect: bool -> bool = "hh_should_collect"
+
 external hh_collect: bool -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
 (*****************************************************************************)
-external save_dep_table: string -> unit = "hh_save_dep_table"
+
+external loaded_dep_table_filename_c: unit -> string = "hh_get_loaded_dep_table_filename"
+
+external get_in_memory_dep_table_entry_count: unit -> int =
+  "hh_get_in_memory_dep_table_entry_count"
+
+let loaded_dep_table_filename () =
+  let fn = loaded_dep_table_filename_c () in
+  if String.equal "" fn then
+    None
+  else
+    Some fn
+
+(** Returns number of dependency edges added. *)
+external save_dep_table_sqlite_c: string -> string -> int = "hh_save_dep_table_sqlite"
+
+(** Returns number of dependency edges added. *)
+external update_dep_table_sqlite_c: string -> string -> int ="hh_update_dep_table_sqlite"
+
+let save_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
+  if (loaded_dep_table_filename ()) <> None then
+    failwith "save_dep_table_sqlite not supported when server is loaded from a saved state";
+  Hh_logger.log "Dumping a saved state deptable.";
+  save_dep_table_sqlite_c fn build_revision
+
+let update_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
+  Hh_logger.log "Updating given saved state deptable.";
+  update_dep_table_sqlite_c fn build_revision
+
+(*****************************************************************************)
+(* Serializes the dependency table and writes it to a file *)
+(*****************************************************************************)
+external hh_save_file_info_sqlite: string -> string -> int -> string -> unit =
+  "hh_save_file_info_sqlite"
+let save_file_info_sqlite ~hash ~name kind filespec =
+  Hh_logger.log "save_file_info_sqlite\n";
+  hh_save_file_info_sqlite hash name (int_of_kind kind) filespec
+
+external hh_save_file_info_init : string -> unit =
+  "hh_save_file_info_init"
+let save_file_info_init path = hh_save_file_info_init path
+
+external hh_save_file_info_free : unit -> unit =
+  "hh_save_file_info_free"
+let save_file_info_free = hh_save_file_info_free
 
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
-external load_dep_table: string -> int = "hh_load_dep_table"
+
+external load_dep_table_sqlite_c: string -> bool -> int = "hh_load_dep_table_sqlite"
+
+let load_dep_table_sqlite : string -> bool -> int = fun fn ignore_hh_version ->
+  load_dep_table_sqlite_c fn ignore_hh_version
+
+(*****************************************************************************)
+(* Serializes the hash table to sqlite *)
+(*****************************************************************************)
+
+external hh_save_table_sqlite: string -> int = "hh_save_table_sqlite"
+let save_table_sqlite filename = hh_save_table_sqlite filename
+
+external hh_save_table_keys_sqlite: string -> string array -> int =
+  "hh_save_table_keys_sqlite"
+let save_table_keys_sqlite filename keys = hh_save_table_keys_sqlite filename keys
+
+(*****************************************************************************)
+(* Loads the hash table by reading from a file *)
+(*****************************************************************************)
+
+external hh_load_table_sqlite: string -> bool -> int = "hh_load_table_sqlite"
+let load_table_sqlite filename verify = hh_load_table_sqlite filename verify
+
+(*****************************************************************************)
+(* Cleans up the artifacts generated by SQL *)
+(*****************************************************************************)
+external cleanup_sqlite: unit -> unit = "hh_cleanup_sqlite"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
@@ -182,13 +282,25 @@ external dep_slots : unit -> int = "hh_dep_slots"
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
+
+external hh_removed_count : unit -> int = "hh_removed_count"
+
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
 external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
 
+external get_file_info_on_disk : unit -> bool = "get_file_info_on_disk"
+
+external get_file_info_on_disk_path : unit -> string =
+  "get_file_info_on_disk_path"
+
+external set_file_info_on_disk_path : string -> unit =
+  "set_file_info_on_disk_path"
+
+external open_file_info_db : unit -> unit = "open_file_info_db"
+
 let init_done () =
   hh_init_done ();
-  Measure.print_stats ();
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
@@ -213,10 +325,14 @@ let hash_stats () =
     slots = hash_slots ();
   }
 
+let should_collect (effort : [ `gentle | `aggressive ]) =
+  hh_should_collect (effort = `aggressive)
+
 let collect (effort : [ `gentle | `aggressive ]) =
   let old_size = heap_size () in
   Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
+  (* The wrapper is used to run the function in a worker instead of master. *)
   hh_collect (effort = `aggressive);
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
@@ -280,28 +396,21 @@ module type Key = sig
   (* The type of old keys that get stored in the C hashtable *)
   type old
 
-  (* The type of temporary keys that get stored in the C hashtable *)
-  type tmp
-
   (* The md5 of an old or a new key *)
   type md5
 
   (* Creation/conversion primitives *)
   val make     : Prefix.t -> userkey -> t
   val make_old : Prefix.t -> userkey -> old
-  val make_tmp : Prefix.t -> userkey -> tmp
 
   val to_old   : t -> old
-  val to_tmp   : t -> tmp
 
   val new_from_old : old -> t
-  val new_from_tmp : tmp -> t
 
   (* Md5 primitives *)
   val md5     : t -> md5
   val md5_old : old -> md5
-  val md5_tmp : tmp -> md5
-
+  val string_of_md5 : md5 -> string
 end
 
 module KeyFunctor (UserKeyType : sig
@@ -312,7 +421,6 @@ end) : Key with type userkey = UserKeyType.t = struct
   type userkey = UserKeyType.t
   type t       = string
   type old     = string
-  type tmp     = string
   type md5     = string
 
   (* The prefix we use for old keys. The prefix guarantees that we never
@@ -320,30 +428,21 @@ end) : Key with type userkey = UserKeyType.t = struct
    * "old_", it always starts with a number (cf Prefix.make()).
    *)
   let old_prefix = "old_"
-  (* Similar to old_prefix, but used for temporarily shelving data in heap *)
-  let tmp_prefix = "tmp_"
 
   let make prefix x = Prefix.make_key prefix (UserKeyType.to_string x)
   let make_old prefix x =
     old_prefix^Prefix.make_key prefix (UserKeyType.to_string x)
-  let make_tmp prefix x =
-    tmp_prefix^Prefix.make_key prefix (UserKeyType.to_string x)
 
   let to_old x = old_prefix^x
-  let to_tmp x = tmp_prefix^x
 
   let new_from_old x =
     let module S = String in
     S.sub x (S.length old_prefix) (S.length x - S.length old_prefix)
 
-  let new_from_tmp x =
-    let module S = String in
-    S.sub x (S.length tmp_prefix) (S.length x - S.length tmp_prefix)
-
   let md5 = Digest.string
   let md5_old = Digest.string
-  let md5_tmp = Digest.string
 
+  let string_of_md5 x = x
 end
 
 (*****************************************************************************)
@@ -357,22 +456,50 @@ module Raw (Key: Key) (Value:Value.Type): sig
   val get    : Key.md5 -> Value.t
   val remove : Key.md5 -> unit
   val move   : Key.md5 -> Key.md5 -> unit
-end = struct
 
+  module LocalChanges : sig
+    val has_local_changes : unit -> bool
+    val push_stack : unit -> unit
+    val pop_stack : unit -> unit
+    val revert : Key.md5 -> unit
+    val commit : Key.md5 -> unit
+    val revert_all : unit -> unit
+    val commit_all : unit -> unit
+  end
+end = struct
   (* Returns the number of bytes allocated in the heap, or a negative number
    * if no new memory was allocated *)
-  external hh_add    : Key.md5 -> Value.t -> int = "hh_add"
-  external mem         : Key.md5 -> bool            = "hh_mem"
+  external hh_add    : Key.md5 -> Value.t -> int * int = "hh_add"
+  external hh_mem         : Key.md5 -> bool            = "hh_mem"
+  external hh_mem_status  : Key.md5 -> int             = "hh_mem_status"
   external hh_get_size    : Key.md5 -> int             = "hh_get_size"
   external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
-  external remove      : Key.md5 -> unit            = "hh_remove"
-  external move        : Key.md5 -> Key.md5 -> unit = "hh_move"
+  external hh_remove      : Key.md5 -> unit            = "hh_remove"
+  external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
 
-  let log_serialize n =
-    let sharedheap = float n in
+  let hh_mem_status x = WorkerCancel.with_worker_exit (fun () -> hh_mem_status x)
+
+  let _ = hh_mem_status
+
+  let hh_mem x = WorkerCancel.with_worker_exit (fun () -> hh_mem x)
+  let hh_add x y = WorkerCancel.with_worker_exit (fun () -> hh_add x y)
+  let hh_get_and_deserialize x =
+    WorkerCancel.with_worker_exit (fun () -> hh_get_and_deserialize x)
+
+  let log_serialize compressed original =
+    let compressed = float compressed in
+    let original = float original in
+    let saved = original -. compressed in
+    let ratio = compressed /. original in
     Measure.sample (Value.description
-      ^ " (bytes serialized into shared heap)") sharedheap;
-    Measure.sample ("ALL bytes serialized into shared heap") sharedheap
+      ^ " (bytes serialized into shared heap)") compressed;
+    Measure.sample ("ALL bytes serialized into shared heap") compressed;
+    Measure.sample (Value.description
+      ^ " (bytes saved in shared heap due to compression)") saved;
+    Measure.sample ("ALL bytes saved in shared heap due to compression") saved;
+    Measure.sample (Value.description
+      ^ " (shared heap compression ratio)") ratio;
+    Measure.sample ("ALL bytes shared heap compression ratio") ratio
 
   let log_deserialize l r =
     let sharedheap = float l in
@@ -386,16 +513,193 @@ end = struct
       Measure.sample ("ALL bytes allocated for deserialized value") localheap
     end
 
-  let add key v =
-    let size = hh_add key v in
-    if hh_log_level() > 0 && size > 0
-    then log_serialize size
+  (**
+   * Represents a set of local changes to the view of the shared memory heap
+   * WITHOUT materializing to the changes in the actual heap. This allows us to
+   * make speculative changes to the view of the world that can be reverted
+   * quickly and correctly.
+   *
+   * A LocalChanges maintains the same invariants as the shared heap. Except
+   * add are allowed to overwrite filled keys. This is for convenience so we
+   * do not need to remove filled keys upfront.
+   *
+   * LocalChanges can be committed. This will apply the changes to the previous
+   * stack, or directly to shared memory if there are no other active stacks.
+   * Since changes are kept local to the process, this is NOT compatible with
+   * the parallelism provided by MultiWorker.ml
+   *)
+  module LocalChanges = struct
 
-  let get key =
-    let v = hh_get_and_deserialize key in
-    if hh_log_level() > 0
-    then (log_deserialize (hh_get_size key) (Obj.repr v));
-    v
+    type action =
+      (* The value does not exist in the current stack. When committed this
+       * action will invoke remove on the previous stack.
+       *)
+      | Remove
+      (* The value is added to a previously empty slot. When committed this
+       * action will invoke add on the previous stack.
+       *)
+      | Add of Value.t
+      (* The value is replacing a value already associated with a key in the
+       * previous stack. When committed this action will invoke remove then
+       * add on the previous stack.
+       *)
+      | Replace of Value.t
+
+    type t = {
+      current : (Key.md5, action) Hashtbl.t;
+      prev    : t option;
+    }
+
+    let stack: t option ref = ref None
+
+    let has_local_changes () = Option.is_some (!stack)
+
+    let rec mem stack_opt key =
+      match stack_opt with
+      | None -> hh_mem key
+      | Some stack ->
+        try Hashtbl.find stack.current key <> Remove
+        with Not_found -> mem stack.prev key
+
+    let rec get stack_opt key =
+      match stack_opt with
+      | None ->
+        let v = hh_get_and_deserialize key in
+        if hh_log_level() > 0
+        then (log_deserialize (hh_get_size key) (Obj.repr v));
+        v
+      | Some stack ->
+        try match Hashtbl.find stack.current key with
+          | Remove -> failwith "Trying to get a non-existent value"
+          | Replace value
+          | Add value -> value
+        with Not_found ->
+          get stack.prev key
+
+    (**
+     * For remove/add it is best to think of them in terms of a state machine.
+     * A key can be in the following states:
+     *
+     *  Remove:
+     *    Local changeset removes a key from the previous stack
+     *  Replace:
+     *    Local changeset replaces value of a key in previous stack
+     *  Add:
+     *    Local changeset associates a value with a key. The key is not
+     *    present in the previous stacks
+     *  Empty:
+     *    No local changes and key is not present in previous stack
+     *  Filled:
+     *    No local changes and key has an associated value in previous stack
+     *  *Error*:
+     *    This means an exception will occur
+     **)
+    (**
+     * Transitions table:
+     *   Remove  -> *Error*
+     *   Replace -> Remove
+     *   Add     -> Empty
+     *   Empty   -> *Error*
+     *   Filled  -> Remove
+     *)
+    let remove stack_opt key =
+      match stack_opt with
+      | None -> hh_remove key
+      | Some stack ->
+        try match Hashtbl.find stack.current key with
+          | Remove -> failwith "Trying to remove a non-existent value"
+          | Replace _ -> Hashtbl.replace stack.current key Remove
+          | Add _ -> Hashtbl.remove stack.current key
+        with Not_found ->
+          if mem stack.prev key then
+            Hashtbl.replace stack.current key Remove
+          else
+            failwith "Trying to remove a non-existent value"
+
+    (**
+     * Transitions table:
+     *   Remove  -> Replace
+     *   Replace -> Replace
+     *   Add     -> Add
+     *   Empty   -> Add
+     *   Filled  -> Replace
+     *)
+    let add stack_opt key value =
+      match stack_opt with
+      | None ->
+        let compressed_size, original_size = hh_add key value in
+        if hh_log_level() > 0 && compressed_size > 0
+        then log_serialize compressed_size original_size
+      | Some stack ->
+        try match Hashtbl.find stack.current key with
+          | Remove
+          | Replace _ -> Hashtbl.replace stack.current key (Replace value)
+          | Add _ -> Hashtbl.replace stack.current key (Add value)
+        with Not_found ->
+          if mem stack.prev key then
+            Hashtbl.replace stack.current key (Replace value)
+          else
+            Hashtbl.replace stack.current key (Add value)
+
+    let move stack_opt from_key to_key =
+      match stack_opt with
+      | None -> hh_move from_key to_key
+      | Some _stack ->
+        assert (mem stack_opt from_key);
+        assert (not @@ mem stack_opt to_key);
+        let value = get stack_opt from_key in
+        remove stack_opt from_key;
+        add stack_opt to_key value
+
+    let commit_action changeset key elem =
+      match elem with
+      | Remove -> remove changeset key
+      | Add value -> add changeset key value
+      | Replace value ->
+        remove changeset key;
+        add changeset key value
+
+    (** Public API **)
+    let push_stack () =
+      stack := Some ({ current = Hashtbl.create 128; prev = !stack; })
+
+    let pop_stack () =
+      match !stack with
+      | None ->
+        failwith "There are no active local change stacks. Nothing to pop!"
+      | Some { prev; _ } -> stack := prev
+
+    let revert key =
+      match !stack with
+      | None -> ()
+      | Some changeset -> Hashtbl.remove changeset.current key
+
+    let commit key =
+      match !stack with
+      | None -> ()
+      | Some changeset ->
+        try
+          commit_action
+            changeset.prev key @@ Hashtbl.find changeset.current key
+        with Not_found -> ()
+
+    let revert_all () =
+      match !stack with
+      | None -> ()
+      | Some changeset -> Hashtbl.clear changeset.current
+
+    let commit_all () =
+      match !stack with
+      | None -> ()
+      | Some changeset ->
+        Hashtbl.iter (commit_action changeset.prev) changeset.current
+  end
+
+  let add key value = LocalChanges.(add !stack key value)
+  let mem key = LocalChanges.(mem !stack key)
+  let get key = LocalChanges.(get !stack key)
+  let remove key = LocalChanges.(remove !stack key)
+  let move from_key to_key = LocalChanges.(move !stack from_key to_key)
 end
 
 (*****************************************************************************)
@@ -429,8 +733,6 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
    *)
   val oldify      : Key.t -> unit
 
-  (* Same as oldify, but uses a different (logical) area of the heap *)
-  val shelve      : Key.t -> unit
   module Raw: module type of Raw (Key) (Value)
 
 end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
@@ -465,13 +767,6 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
     then
       let old_key = Key.to_old key in
       Raw.move (Key.md5 key) (Key.md5_old old_key)
-    else ()
-
-  let shelve key =
-    if mem key
-    then
-      let tmp_key = Key.to_tmp key in
-      Raw.move (Key.md5 key) (Key.md5_tmp tmp_key)
     else ()
 end
 
@@ -511,43 +806,6 @@ end = functor (Key : Key) -> functor (Value: Value.Type) ->
     Raw.move old_key new_key
 end
 
-(* Same as new, but for temporary values *)
-module Tmp : functor (Key : Key) -> functor (Value : Value.Type) ->
-  functor (Raw : module type of Raw (Key) (Value)) -> sig
-
-  val get         : Key.tmp -> Value.t option
-  val remove      : Key.tmp -> unit
-  val mem         : Key.tmp -> bool
-
-  (* Takes a temporary value and moves it back to a "new" one *)
-  val unshelve      : Key.tmp -> unit
-
-end = functor (Key : Key) -> functor (Value: Value.Type) ->
-  functor (Raw : module type of Raw (Key) (Value)) -> struct
-
-  let get key =
-    let key = Key.md5_tmp key in
-    if Raw.mem key
-    then Some (Raw.get key)
-    else None
-
-  let mem key = Raw.mem (Key.md5_tmp key)
-
-  let remove key =
-    if mem key
-    then Raw.remove (Key.md5_tmp key)
-
-  let unshelve key =
-    if mem key
-    then
-      let new_key = Key.new_from_tmp key in
-      let new_key = Key.md5 new_key in
-      let tmp_key = Key.md5_tmp key in
-      if Raw.mem new_key
-      then Raw.remove new_key;
-      Raw.move tmp_key new_key
-end
-
 (*****************************************************************************)
 (* The signatures of what we are actually going to expose to the user *)
 (*****************************************************************************)
@@ -566,18 +824,27 @@ module type NoCache = sig
   val find_unsafe      : key -> t
   val get_batch        : KeySet.t -> t option KeyMap.t
   val remove_batch     : KeySet.t -> unit
+  val string_of_key    : key -> string
   val mem              : key -> bool
+  val mem_old          : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
-  val shelve_batch     : KeySet.t -> unit
-  val get_shelved      : key -> t option
-  val unshelve_batch   : KeySet.t -> unit
-  val remove_shelved_batch : KeySet.t -> unit
+
+  module LocalChanges : sig
+    val has_local_changes : unit -> bool
+    val push_stack : unit -> unit
+    val pop_stack : unit -> unit
+    val revert_batch : KeySet.t -> unit
+    val commit_batch : KeySet.t -> unit
+    val revert_all : unit -> unit
+    val commit_all : unit -> unit
+  end
 end
 
 module type WithCache = sig
   include NoCache
   val write_through : key -> t -> unit
+  val get_no_cache : key -> t option
 end
 
 (*****************************************************************************)
@@ -598,13 +865,15 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
-  module Tmp = Tmp (Key) (Value) (New.Raw)
   module Old = Old (Key) (Value) (New.Raw)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = MyMap.Make (UserKeyType)
 
   type key = UserKeyType.t
   type t = Value.t
+
+  let string_of_key key =
+    key |> Key.make Value.prefix |> Key.md5 |> Key.string_of_md5;;
 
   let add x y = New.add (Key.make Value.prefix x) y
   let find_unsafe x = New.find_unsafe (Key.make Value.prefix x)
@@ -660,43 +929,28 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   let mem x = New.mem (Key.make Value.prefix x)
 
+  let mem_old x = Old.mem (Key.make_old Value.prefix x)
+
   let remove_old_batch xs =
     KeySet.iter begin fun str_key ->
       let key = Key.make_old Value.prefix str_key in
       Old.remove key
     end xs
 
-  let shelve_batch xs =
-    KeySet.iter begin fun str_key ->
-      let key = Key.make Value.prefix str_key in
-      if New.mem key
-      then
-        New.shelve key
-      else
-        let key = Key.make_tmp Value.prefix str_key in
-        Tmp.remove key
-    end xs
-
-  let get_shelved x =
-    let key = Key.make_tmp Value.prefix x in
-    Tmp.get key
-
-  let unshelve_batch xs =
-    KeySet.iter begin fun str_key ->
-      let tmp_key = Key.make_tmp Value.prefix str_key in
-      if Tmp.mem tmp_key
-      then
-        Tmp.unshelve tmp_key
-      else
+  module LocalChanges = struct
+    include New.Raw.LocalChanges
+    let revert_batch keys =
+      KeySet.iter begin fun str_key ->
         let key = Key.make Value.prefix str_key in
-        New.remove key
-    end xs
+        revert (Key.md5 key)
+      end keys
 
-  let remove_shelved_batch xs =
-    KeySet.iter begin fun str_key ->
-      let key = Key.make_tmp Value.prefix str_key in
-      Tmp.remove key
-    end xs
+    let commit_batch keys =
+      KeySet.iter begin fun str_key ->
+        let key = Key.make Value.prefix str_key in
+        commit (Key.md5 key)
+      end keys
+  end
 end
 
 (*****************************************************************************)
@@ -726,6 +980,9 @@ module type CacheType = sig
   val get: key -> value option
   val remove: key -> unit
   val clear: unit -> unit
+
+  val string_of_key : key -> string
+  val get_size : unit -> int
 end
 
 (*****************************************************************************)
@@ -737,20 +994,25 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
 
   type value = Config.value
 
+  let string_of_key  _key =
+    failwith "FreqCache does not support 'string_of_key'"
+
 (* The cache itself *)
-  let (cache: (Key.t, int ref * Config.value) Hashtbl.t)
+  let (cache: (Key.t, int ref * value) Hashtbl.t)
       = Hashtbl.create (2 * Config.capacity)
   let size = ref 0
+  let get_size () =
+    !size
 
   let clear() =
     Hashtbl.clear cache;
     size := 0
 
-(* The collection function is called when we reach twice original capacity
- * in size. When the collection is triggered, we only keep the most recent
- * object.
+(* The collection function is called when we reach twice original
+ * capacity in size. When the collection is triggered, we only keep
+ * the most frequently used objects.
  * So before collection: size = 2 * capacity
- * After collection: size = capacity (with the most recent objects)
+ * After collection: size = capacity (with the most frequently used objects)
  *)
   let collect() =
     if !size < 2 * Config.capacity then () else
@@ -764,7 +1026,7 @@ module FreqCache (Key : sig type t end) (Config:ConfigType) :
     while !i < Config.capacity do
       match !l with
       | [] -> i := Config.capacity
-      | (k, freq, v) :: rl ->
+      | (k, _freq, v) :: rl ->
           Hashtbl.replace cache k (ref 0, v);
           l := rl;
           incr i;
@@ -807,11 +1069,16 @@ end
 module OrderedCache (Key : sig type t end) (Config:ConfigType):
   CacheType with type key := Key.t and type value := Config.value = struct
 
+  let string_of_key _key =
+    failwith "OrderedCache does not support 'string_of_key'"
+
   let (cache: (Key.t, Config.value) Hashtbl.t) =
     Hashtbl.create Config.capacity
 
   let queue = Queue.create()
   let size = ref 0
+  let get_size () =
+    !size
 
   let clear() =
     Hashtbl.clear cache;
@@ -820,18 +1087,21 @@ module OrderedCache (Key : sig type t end) (Config:ConfigType):
     ()
 
   let add x y =
-    if !size < Config.capacity
+    if !size >= Config.capacity
     then begin
-      incr size;
-      let () = Queue.push x queue in
-      ()
-    end
-    else begin
+      (* Remove oldest element - if it's still around. *)
       let elt = Queue.pop queue in
-      Hashtbl.remove cache elt;
-      Queue.push x queue;
-      Hashtbl.replace cache x y
-    end
+      if Hashtbl.mem cache elt
+      then begin
+        decr size;
+        Hashtbl.remove cache elt
+      end;
+    end;
+    (* Add the new element, but bump the size only if it's a new addition. *)
+    Queue.push x queue;
+    if not (Hashtbl.mem cache x)
+    then incr size;
+    Hashtbl.replace cache x y
 
   let find x = Hashtbl.find cache x
   let get x = try Some (find x) with Not_found -> None
@@ -869,6 +1139,9 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   module L1 = OrderedCache (UserKeyType) (ConfValue)
   (* Frequent values cache *)
   module L2 = FreqCache (UserKeyType) (ConfValue)
+
+  let string_of_key _key =
+    failwith "LocalCache does not support 'string_of_key'"
 
   let add x y =
     L1.add x y;
@@ -921,9 +1194,14 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module Cache = LocalCache (UserKeyType) (Value)
 
+  let string_of_key key =
+    Direct.string_of_key key
+
   let add x y =
     Direct.add x y;
     Cache.add x y
+
+  let get_no_cache = Direct.get
 
   let write_through x y =
     (* Note that we do not need to do any cache invalidation here because
@@ -939,13 +1217,13 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
          Cache.add x v;
          result
       )
-    | Some v as result ->
+    | Some _ as result ->
       result
 
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
   let get_old_batch = Direct.get_old_batch
-  let get_shelved = Direct.get_shelved
+  let mem_old = Direct.mem_old
 
   let find_unsafe x =
     match get x with
@@ -981,17 +1259,33 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   let remove_old_batch = Direct.remove_old_batch
 
-  let shelve_batch keys =
-    Direct.shelve_batch keys;
-    KeySet.iter begin fun key ->
-      Cache.remove key
-    end keys
+  module LocalChanges = struct
 
-  let unshelve_batch keys =
-    Direct.unshelve_batch keys;
-    KeySet.iter begin fun x ->
-      Cache.remove x
-    end keys
+    let push_stack () =
+      Direct.LocalChanges.push_stack ();
+      Cache.clear ()
 
-  let remove_shelved_batch = Direct.remove_shelved_batch
+    let pop_stack () =
+      Direct.LocalChanges.pop_stack ();
+      Cache.clear ()
+
+    let revert_batch keys =
+      Direct.LocalChanges.revert_batch keys;
+      KeySet.iter Cache.remove keys
+
+    let commit_batch keys =
+      Direct.LocalChanges.commit_batch keys;
+      KeySet.iter Cache.remove keys
+
+    let revert_all () =
+      Direct.LocalChanges.revert_all ();
+      Cache.clear ()
+
+    let commit_all () =
+      Direct.LocalChanges.commit_all ();
+      Cache.clear ()
+
+    let has_local_changes () =
+      Direct.LocalChanges.has_local_changes ()
+  end
 end

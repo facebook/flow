@@ -1,0 +1,110 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":25}},
+      "message":"Unexpected token export"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":33}},
+      "message":"Unexpected token default"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":42}},
+      "message":"Unexpected token function"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
+      "message":"Unexpected identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
+      "message":"Unexpected token ("
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":47},"end":{"line":1,"column":48}},
+      "message":"Unexpected token )"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":50}},
+      "message":"Unexpected token {"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":50},"end":{"line":1,"column":51}},
+      "message":"Unexpected token }"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":52},"end":{"line":1,"column":53}},
+      "message":"Unexpected token }"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input"
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
+  "range":[0,54],
+  "body":[
+    {
+      "type":"DeclareModule",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
+      "range":[0,54],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
+        "range":[15,16],
+        "name":"A",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":2,"column":0}},
+        "range":[17,54],
+        "body":[
+          {
+            "type":"DeclareVariable",
+            "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":42}},
+            "range":[19,42],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":42}},
+              "range":[34,42],
+              "name":"function",
+              "typeAnnotation":null,
+              "optional":false
+            }
+          },
+          {
+            "type":"DeclareVariable",
+            "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":48}},
+            "range":[43,48],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":1,"column":47},"end":{"line":1,"column":48}},
+              "range":[47,48],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            }
+          },
+          {
+            "type":"DeclareVariable",
+            "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":53}},
+            "range":[49,53],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":1,"column":52},"end":{"line":1,"column":53}},
+              "range":[52,53],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            }
+          }
+        ]
+      },
+      "kind":"CommonJS"
+    }
+  ],
+  "comments":[]
+}

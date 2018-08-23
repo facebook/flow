@@ -1,6 +1,4 @@
-#!/bin/sh
-FLOW=$1
-
+#!/bin/bash
 IMPL_FILES="
   A.js
   node_modules/B.js
@@ -24,39 +22,39 @@ use_files() {
 }
 
 printf "======Start off with the .js files but without the .flow file======\n"
-"$FLOW" status --old-output-format .
+assert_errors "$FLOW" status .
 use_files "$DECL_FILES"
-"$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+assert_ok "$FLOW" force-recheck $DECL_FILES
+assert_errors "$FLOW" status .
 ignore_files "$DECL_FILES"
-"$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+assert_ok "$FLOW" force-recheck $DECL_FILES
+assert_errors "$FLOW" status .
 
 printf "\n\n======Start off with the .js files and the .flow file======\n"
-"$FLOW" stop .
+assert_ok "$FLOW" stop .
 use_files "$DECL_FILES"
-"$FLOW" start . --all --wait
+start_flow .
 
-"$FLOW" status --old-output-format .
+assert_errors "$FLOW" status .
 ignore_files "$DECL_FILES"
-"$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+assert_ok "$FLOW" force-recheck $DECL_FILES
+assert_errors "$FLOW" status .
 use_files "$DECL_FILES"
-"$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+assert_ok "$FLOW" force-recheck $DECL_FILES
+assert_errors "$FLOW" status .
 
 printf "\n\n======Start off without the .js files and with the .flow file======\n"
-"$FLOW" stop .
+assert_ok "$FLOW" stop .
 ignore_files "$IMPL_FILES"
-"$FLOW" start . --all --wait
+start_flow .
 
-"$FLOW" status --old-output-format .
+assert_errors "$FLOW" status .
 use_files "$IMPL_FILES"
-"$FLOW" force-recheck $IMPL_FILES
-"$FLOW" status --old-output-format .
+assert_ok "$FLOW" force-recheck $IMPL_FILES
+assert_errors "$FLOW" status .
 ignore_files "$IMPL_FILES"
-"$FLOW" force-recheck $IMPL_FILES
-"$FLOW" status --old-output-format .
+assert_ok "$FLOW" force-recheck $IMPL_FILES
+assert_errors "$FLOW" status .
 
 # reset
 use_files "$IMPL_FILES"

@@ -4,35 +4,41 @@ os: Visual Studio 2015
 platform: x64
 environment:
   matrix:
-    - ocaml_version: 4.02.1
-      ocpwin_version: 4.02.1+ocp1-full-mingw64-20160113
-      ocpwin_zip: C:\ocpwin64-20160113-4.02.1+ocp1-full-mingw64.zip
-      ocpwin_uri: https://s3.amazonaws.com/ci-cache.flowtype.org/master/ocpwin/ocpwin64-20160113-4.02.1%2Bocp1-full-mingw64.zip
-#    - ocaml_version: 4.01.0
-#      ocpwin_version: 4.01.0+ocp1-full-mingw64-20160113
-#      ocpwin_zip: C:\ocpwin64-20160113-4.01.0+ocp1-full-mingw64.zip
-#      ocpwin_uri: http://www.ocamlpro.com/pub/ocpwin/ocpwin-builds/ocpwin64/20160113/ocpwin64-20160113-4.01.0+ocp1-full-mingw64.zip
+    - OPAM_SWITCH: 4.05.0+mingw64c
+      FORK_USER: ocaml
+      FORK_BRANCH: master
+      CYG_ROOT: C:\cygwin64
+      TESTS: false
+      INSTALL: false
+      DEPOPTS: false
+      REVDEPS: false
 
 install:
 - ps: C:\projects\flow\resources\appveyor\install.ps1
+- ps: iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/$env:FORK_USER/ocaml-ci-scripts/$env:FORK_BRANCH/appveyor-install.ps1"))
 
 build_script:
-- ps: C:\projects\flow\resources\appveyor\build.ps1
+- call %CYG_ROOT%\bin\bash.exe -l %APPVEYOR_BUILD_FOLDER%\appveyor-opam.sh
+- call %CYG_ROOT%\bin\bash.exe -l %APPVEYOR_BUILD_FOLDER%\resources\appveyor\build.sh
+#- ps: C:\projects\flow\resources\appveyor\build.ps1
+
+after_build:
+- ps: C:\projects\flow\resources\appveyor\after_build.ps1
 
 test_script:
 - ps: C:\projects\flow\resources\appveyor\test.ps1
 
-after_build:
-- ps: C:\projects\flow\resources\appveyor\after_build.ps1
+cache:
+- "%LOCALAPPDATA%\\Yarn"
 
 artifacts:
   - path: bin\*.zip
 
 deploy:
   provider: GitHub
-  # facebook-github-bot-0
+  # flow-bot
   auth_token:
-    secure: 7w+yFWgdWo0nKEj2HtEodyqEUDU1VvmJH+sa/bBCTdS6g69w+7GtM7o1fq3PvqHU
-  artifact: bin\*.zip
+    secure: f1YgYz9csZ8QokY6+aXF10toZtXlFxicbm7uTcylqq+ILoRE6y5GUaf1TfoUalx5
+  artifact: /.*\.zip/
   on:
     appveyor_repo_tag: true

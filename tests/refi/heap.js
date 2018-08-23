@@ -183,6 +183,16 @@ var tests =
     (x.y : string);
   },
 
+  function(x: string) {
+    if (x === 'a') {}
+    (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+  },
+
+  function(x: mixed) {
+    if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
+    (x: string & number);
+  },
+
   // --- nested conditionals ---
   // after a branch, the current scope may have changed. this causes the
   // subsequent assignment to refine the new scope. these tests make sure that

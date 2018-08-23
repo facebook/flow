@@ -1,60 +1,83 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
-
-type error_flags = {
-  color: Tty.color_mode;
-  one_line: bool;
-  show_all_errors: bool;
-  old_output_format: bool;
-}
 
 type esproposal_feature_mode =
   | ESPROPOSAL_ENABLE
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
+type file_watcher =
+| NoFileWatcher
+| DFind
+| Watchman
+
+type module_system =
+  | Node
+  | Haste
+
+type lazy_mode =
+| LAZY_MODE_FILESYSTEM
+| LAZY_MODE_IDE
+
+type jsx_mode =
+  (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
+  | Jsx_react
+
+  (**
+   * Specifies a function that should be invoked instead of React.createElement
+   * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
+   * followed: children are varargs after a props argument.
+   *)
+  | Jsx_pragma of (string * (Loc.t, Loc.t) Ast.Expression.t)
+
+  (**
+   * Alternate mode for interpreting JSX syntax. The element name is treated
+   * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
+   * Children are part of props instead of a separate argument.
+   *)
+  | Jsx_csx
+
 type t = {
   opt_all : bool;
-  opt_check_mode: bool;
   opt_debug : bool;
-  opt_default_lib_dir: Path.t option;
+  opt_max_literal_length: int;
+  opt_enable_cancelable_rechecks: bool;
   opt_enable_const_params: bool;
-  opt_enable_unsafe_getters_and_setters: bool;
-  opt_enforce_strict_type_args: bool;
-  opt_error_flags: error_flags;
+  opt_enforce_strict_call_arity: bool;
+  opt_enforce_well_formed_exports: bool;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
+  opt_esproposal_optional_chaining: esproposal_feature_mode;
+  opt_esproposal_nullish_coalescing: esproposal_feature_mode;
   opt_facebook_fbt: string option;
+  opt_flowconfig_name: string;
+  opt_file_options: Files.options;
+  opt_haste_name_reducers: (Str.regexp * string) list;
+  opt_haste_paths_blacklist: string list;
+  opt_haste_paths_whitelist: string list;
+  opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
-  opt_ignores: (string * Str.regexp) list;
-  opt_includes: Path_matcher.t;
-  opt_json : bool;
-  opt_libs: Path.t list;
-  opt_log_file: Path.t;
+  opt_include_warnings: bool;
   opt_max_workers: int;
-  opt_module: string;
-  opt_module_file_exts: SSet.t;
+  opt_merge_timeout: float option;
+  opt_module: module_system;
   opt_module_name_mappers: (Str.regexp * string) list;
-  opt_module_resource_exts: SSet.t;
+  opt_module_resolver: Path.t option;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_node_resolver_dirnames: string list;
-  opt_output_graphml: bool;
+  opt_no_saved_state: bool;
   opt_profile : bool;
+  opt_lazy_mode: lazy_mode option;
   opt_quiet : bool;
   opt_root : Path.t;
-  opt_server_mode: bool;
-  opt_should_detach : bool;
-  opt_should_wait : bool;
+  opt_saved_state_load_script: string option;
+  opt_saved_state_no_fallback: bool;
   opt_strip_root : bool;
   opt_suppress_comments : Str.regexp list;
   opt_suppress_types : SSet.t;
@@ -62,73 +85,66 @@ type t = {
   opt_traces : int;
   opt_verbose : Verbose.t option;
   opt_weak : bool;
-  opt_shm_global_size: int;
-  opt_shm_heap_size: int;
-  opt_shm_dirs: string list;
-  opt_shm_min_avail: int;
-  opt_shm_dep_table_pow: int;
-  opt_shm_hash_table_pow: int;
-  opt_shm_log_level: int;
   opt_max_header_tokens: int;
-}
-
-let default_error_flags = {
-  color = Tty.Color_Auto;
-  one_line = false;
-  show_all_errors = false;
-  old_output_format = false;
+  opt_lint_severities: Severity.severity LintSettings.t;
+  opt_strict_mode: StrictModeSettings.t;
 }
 
 let all opts = opts.opt_all
-let default_lib_dir opts = opts.opt_default_lib_dir
+let max_literal_length opts = opts.opt_max_literal_length
+let enable_cancelable_rechecks opts = opts.opt_enable_cancelable_rechecks
 let enable_const_params opts = opts.opt_enable_const_params
-let enable_unsafe_getters_and_setters opts =
-  opts.opt_enable_unsafe_getters_and_setters
-let enforce_strict_type_args opts = opts.opt_enforce_strict_type_args
-let error_flags opts = opts.opt_error_flags
+let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
+let enforce_well_formed_exports opts = opts.opt_enforce_well_formed_exports
 let esproposal_class_static_fields opts =
   opts.opt_esproposal_class_static_fields
 let esproposal_class_instance_fields opts =
   opts.opt_esproposal_class_instance_fields
 let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
-let ignores opts = opts.opt_ignores
-let includes opts = opts.opt_includes
-let is_check_mode opts = opts.opt_check_mode
+let esproposal_optional_chaining opts = opts.opt_esproposal_optional_chaining
+let esproposal_nullish_coalescing opts = opts.opt_esproposal_nullish_coalescing
+let haste_name_reducers opts = opts.opt_haste_name_reducers
+let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
+let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
+let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
+let flowconfig_name opts = opts.opt_flowconfig_name
+let file_options opts = opts.opt_file_options
 let is_debug_mode opts = opts.opt_debug
-let is_server_mode opts = opts.opt_server_mode
+let is_lazy_mode opts = opts.opt_lazy_mode <> None
+let lazy_mode opts = opts.opt_lazy_mode
 let is_quiet opts = opts.opt_quiet
-let lib_paths opts = opts.opt_libs
-let log_file opts = opts.opt_log_file
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
-let module_file_exts opts = opts.opt_module_file_exts
+let merge_timeout opts = opts.opt_merge_timeout
 let module_name_mappers opts = opts.opt_module_name_mappers
-let module_resource_exts opts = opts.opt_module_resource_exts
+let module_resolver opts = opts.opt_module_resolver
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
-let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
-let output_graphml opts = opts.opt_output_graphml
+let no_saved_state opts = opts.opt_no_saved_state
 let root opts = opts.opt_root
-let should_detach opts = opts.opt_should_detach
 let facebook_fbt opts = opts.opt_facebook_fbt
+let saved_state_load_script opts = opts.opt_saved_state_load_script
+
+let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
+let should_include_warnings opts = opts.opt_include_warnings
 let should_munge_underscores opts = opts.opt_munge_underscores
-let should_output_json opts = opts.opt_json
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
-let should_wait opts = opts.opt_should_wait
 let suppress_comments opts = opts.opt_suppress_comments
 let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
-let shm_global_size opts = opts.opt_shm_global_size
-let shm_heap_size opts = opts.opt_shm_heap_size
-let shm_dirs opts = opts.opt_shm_dirs
-let shm_min_avail opts = opts.opt_shm_min_avail
-let shm_dep_table_pow opts = opts.opt_shm_dep_table_pow
-let shm_hash_table_pow opts = opts.opt_shm_hash_table_pow
-let shm_log_level opts = opts.opt_shm_log_level
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
+
+let lint_severities opts = opts.opt_lint_severities
+let strict_mode opts = opts.opt_strict_mode
+
+
+let lazy_mode_to_string lazy_mode =
+  match lazy_mode with
+  | LAZY_MODE_FILESYSTEM -> "fs"
+  | LAZY_MODE_IDE -> "ide"

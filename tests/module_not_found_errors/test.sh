@@ -1,5 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
-FLOW=$1
 cd src || exit
-$FLOW check --strip-root --old-output-format
+assert_errors "$FLOW" check --strip-root

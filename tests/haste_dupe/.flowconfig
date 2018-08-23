@@ -1,4 +1,3 @@
 [options]
-strip_root=true
 
 module.system=haste

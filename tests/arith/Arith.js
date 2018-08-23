@@ -14,12 +14,6 @@ function foo() {
   str(x+y);
   str(x+x); // error
   str(z+y); // error
-
-  // 3 errors: x+z is a string, but
-  //   1) num !~> string
-  //   2) object !~> string
-  //   3) string ~> num (function call)
-  num(x+z);
 }
 
 // test MaybeT(NumT)
@@ -75,5 +69,28 @@ let tests = [
     ("" + x); // error
     (x + {}); // error
     ({} + x); // error
+  },
+
+  // when one side is a string or number and the other is invalid, we
+  // assume you are expecting a string or number (respectively), rather than
+  // erroring twice saying number !~> string and obj !~> string.
+  function() {
+    ((1 + {}): number); // error: object !~> number
+    (({} + 1): number); // error: object !~> number
+    (("1" + {}): string); // error: object !~> string
+    (({} + "1"): string); // error: object !~> string
+  },
+
+  function(x: any, y: number, z: string) {
+    (x + y: string); // ok
+    (y + x: string); // ok
+
+    (x + z: empty); // error, string ~> empty
+    (z + x: empty); // error, string ~> empty
+  },
+
+  function(x: number, y: number) {
+    (x + y).length; // error
+    (1 + 2).length; // error
   },
 ];

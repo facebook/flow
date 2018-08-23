@@ -1,36 +1,142 @@
-API.react.js:4
-  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
-         ^^^^^^^^ property `setProps`. Property not found in
-  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
-     ^^^ React$Element
+Error ------------------------------------------------------------------------------------------------- API.react.js:4:1
 
-API.react.js:5
-  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
-         ^^^^^^^^ property `setState`. Property not found in
-  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
-     ^^^ React$Element
+Cannot call `app.setProps` because property `setProps` is missing in `React.Element` [1].
 
-App.react.js:36
- 36:         {foo(z,x)} // error, since z: number
-                  ^ number. This type is incompatible with
- 10: function foo(p:string,q:string):string { return p+q; }
-                    ^^^^^^ string
+   API.react.js:4:1
+    4| app.setProps({y:42}); // error, y:number but foo expects string in App.react
+       ^^^^^^^^^^^^^^^^^^^^
 
-JSX.js:8
-  8:   <App y={42}> // error, y: number but foo expects string in App.react
-       ^^^^^^^^^^^^ props of React element `App`
-  8:   <App y={42}> // error, y: number but foo expects string in App.react
-               ^^ number. This type is incompatible with
- 14:   getDefaultProps: function(): { y: string } {
-                                         ^^^^^^ string. See: App.react.js:14
-
-propTypes.js:15
- 15: <D
-     ^ React element `D`
-  9:   propTypes: {
-       ^^^^^^^^^ property `name`. Property not found in
- 15: <D
-     ^ props of React element `D`
+References:
+   JSX.js:8:3
+         v-------------------------------------------------------------------
+    8|   <App y={42}> // error, y: number but foo expects string in App.react
+    9|     Some text.
+   10|   </App>;
+         -----^ [1]
 
 
-Found 5 errors
+Error ------------------------------------------------------------------------------------------------- API.react.js:5:1
+
+Cannot call `app.setState` because property `setState` is missing in `React.Element` [1].
+
+   API.react.js:5:1
+    5| app.setState({z:42}); // error, z:number but foo expects string in App.react
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   JSX.js:8:3
+         v-------------------------------------------------------------------
+    8|   <App y={42}> // error, y: number but foo expects string in App.react
+    9|     Some text.
+   10|   </App>;
+         -----^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- App.react.js:36:14
+
+Cannot call `foo` with `z` bound to `p` because number [1] is incompatible with string [2].
+
+   App.react.js:36:14
+   36|         {foo(z,x)} // error, since z: number
+                    ^
+
+References:
+   App.react.js:19:15
+   19|     return {z:0}; // infer state.z: number
+                     ^ [1]
+   App.react.js:10:16
+   10| function foo(p:string,q:string):string { return p+q; }
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- checkPropTypes.js:7:1
+
+Cannot call `checkPropTypes` because function [1] requires another argument.
+
+   checkPropTypes.js:7:1
+     7| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:214:41
+                                                v---
+   214|   declare export function checkPropTypes<V>(
+   215|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+   216|     values: V,
+   217|     location: string,
+   218|     componentName: string,
+   219|     getStack: ?(() => ?string)
+   220|   ) : void;
+          -------^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- checkPropTypes.js:8:1
+
+Cannot call `checkPropTypes` because function [1] requires another argument.
+
+   checkPropTypes.js:8:1
+     8| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:214:41
+                                                v---
+   214|   declare export function checkPropTypes<V>(
+   215|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+   216|     values: V,
+   217|     location: string,
+   218|     componentName: string,
+   219|     getStack: ?(() => ?string)
+   220|   ) : void;
+          -------^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ checkPropTypes.js:10:43
+
+Cannot call `checkPropTypes` with object literal bound to `values` because property `bar` is missing in object
+literal [1].
+
+   10| checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
+                                                 ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ checkPropTypes.js:12:85
+
+Cannot call `checkPropTypes` with function bound to `getStack` because number [1] is incompatible with string [2] in the
+return value.
+
+   checkPropTypes.js:12:85
+    12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
+                                                                                            ^^^^^^^^^
+
+References:
+   checkPropTypes.js:12:91
+    12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
+                                                                                                  ^^^ [1]
+   <BUILTINS>/react.js:219:24
+   219|     getStack: ?(() => ?string)
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ propTypes.js:15:1
+
+Cannot create `D` element because:
+ - property `name` is missing in props [1] but exists in propTypes of React component [2].
+ - property `title` is missing in props [1] but exists in propTypes of React component [2].
+
+   propTypes.js:15:1
+   15| <D />; // errors: properties `name` and `title` not found
+       ^^^^^ [1]
+
+References:
+   propTypes.js:9:14
+                    v
+    9|   propTypes: {
+   10|     name: React.PropTypes.string.isRequired,
+   11|     ...C.propTypes,
+   12|   }
+         ^ [2]
+
+
+
+Found 9 errors

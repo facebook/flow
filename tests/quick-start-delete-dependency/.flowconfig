@@ -1,0 +1,6 @@
+[ignore]
+<PROJECT_ROOT>/tmp*
+
+[options]
+module.system=haste
+no_flowlib=false

@@ -1,0 +1,40 @@
+---
+layout: page
+mobile_search: true
+---
+
+{% include vars.html %}
+
+<div class="row">
+  {% for guide in site.data.guides %}
+    {% assign mod = forloop.index0 | modulo: 3 %}
+
+    {% if mod == 0 %}
+      <div class="row">
+      {% comment %} special handling for centering the last row {% endcomment %}
+      {% if forloop.rindex == 1 %}
+        <div class="col-lg-4"></div>
+      {% elsif forloop.rindex == 2 %}
+        <div class="col-lg-2"></div>
+      {% endif %}
+    {% endif %}
+
+    <div class="col-lg-4">
+      <a class="card guide-card" href="{{url_base}}{{guide.pages[0].path}}">
+        <div class="card-block">
+          <h4 class="card-title">{{i18n.guides[guide.id].title}}</h4>
+          <p class="card-text text-muted">
+            {{i18n.guides[guide.id].description}}
+            <span class="float-xs-right text-primary">
+              {{i18n.docs_read_more}}
+            </span>
+          </p>
+        </div>
+      </a>
+    </div>
+
+    {% if mod == 2 or forloop.last %}
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>

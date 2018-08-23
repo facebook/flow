@@ -1,0 +1,51 @@
+{% capture ________ %}
+{% assign page_lang = site.data.languages[0] %}
+{% assign page_url_lang = "/" | append: page_lang.tag %}
+{% assign page_url_relative = include.page.url %}
+
+{% for _lang in site.data.languages %}
+  {% assign _page_url_lang_root = "/" | append: _lang.tag %}
+  {% assign _page_url_lang_root_size = _page_url_lang_root | size %}
+  {% assign _page_url_lang_match = _page_url_lang_root | append: "/" %}
+  {% assign _page_url_lang_match_size = _page_url_lang_match | size %}
+  {% assign _page_url_starts_with = include.page.url | slice: 0, _page_url_lang_match_size %}
+
+  {% if include.page.url == _page_url_lang_root or _page_url_starts_with == _page_url_lang_match %}
+    {% assign page_lang = _lang %}
+    {% assign page_url_lang = _page_url_lang_root %}
+    {% assign page_url_relative = include.page.url | slice: _page_url_lang_root_size, 10000000 %}
+    {% break %}
+  {% endif %}
+{% endfor %}
+
+{% assign page_i18n = site.data.i18n[page_lang.tag] %}
+
+{% if jekyll.environment == "development" %}
+  {% assign page_url_base = site.baseurl | append: page_url_lang %}
+{% else %}
+  {% assign page_url_base = site.baseurl | append: page_url_lang %}
+{% endif %}
+
+{% assign page_title = page_i18n[page_url_relative].title %}
+{% assign page_description = page_i18n[page_url_relative].description %}
+
+{% for _guide in site.data.guides %}
+  {% assign _guide_pages_size = _guide.pages | size %}
+  {% for i in (0.._guide_pages_size) %}
+    {% assign _guide_page = _guide.pages[i] %}
+    {% if _guide_page.path == page_url_relative %}
+      {% assign page_guide = _guide %}
+      {% assign page_guide_current = _guide_page %}
+
+      {% assign _page_guide_prev_index = i | minus: 1 %}
+      {% assign _page_guide_next_index = i | plus: 1 %}
+
+      {% if _page_guide_prev_index > -1 %}
+        {% assign page_guide_prev = _guide.pages[_page_guide_prev_index] %}
+      {% endif %}
+      {% assign page_guide_next = _guide.pages[_page_guide_next_index] %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+{% endcapture %}

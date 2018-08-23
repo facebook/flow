@@ -1,54 +1,50 @@
-# Contributing to flowtype.org
+# Flow Documentation & Website
 
-The Flow website is built using [Jekyll](https://jekyllrb.com/).
+We use [Jekyll](http://jekyllrb.com/) to build the site.
 
-## Running locally
+## Installation
 
-### Install Flow
+If you are working on the site, you will want to install and run a local copy
+of it.
 
-Many of our docs are written as JS files, in which comments are converted to markdown and JS is typechecked by Flow and shown as syntax-highlighted code blocks with any Flow errors displayed inline. We use a [custom plugin](https://github.com/facebook/flow/blob/master/website/_plugins/jekyll_flowdoc.rb) to build these `.doc.js` files.
+Start by cloning the website recursively to pull in all submodules:
 
-So, Flow must be installed and on your path. See [the instructions](https://github.com/facebook/flow) on GitHub.
-
-### Install Ruby
-
-Many systems ship with a fairly old version; we use 2.2 to build and deploy the site. One way to get a recent version is to use [rvm](https://rvm.io/):
-
-```
-gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
-\curl -sSL https://get.rvm.io | bash -s stable --ruby=2.2
+```sh
+git clone git@github.com:facebook/flow.git
 ```
 
-### Install Jekyll and its dependencies
+### Dependencies
 
+In order to use Jekyll, you will need to have Ruby installed. macOS comes
+pre-installed with Ruby, but you may need to update RubyGems (via
+`gem update --system`). Otherwise, [RVM](https://rvm.io/) and
+[rbenv](https://github.com/sstephenson/rbenv) are popular ways to install Ruby.
+
+- [Ruby](http://www.ruby-lang.org/) (version >= 1.8.7)
+- [RubyGems](http://rubygems.org/) (version >= 1.3.7)
+- [Bundler](http://bundler.io/)
+
+The version of the Pygment syntax highlighter used by Jekyll requires Python
+2.7.x (not 3.x). macOS comes pre-installed with Python 2.7, but you may need to
+install it on other OSs.
+
+- [Python](https://www.python.org) (version 2.7.x)
+
+Once you have RubyGems and installed Bundler (via `gem install bundler`), use
+it to install the dependencies:
+
+```sh
+$ cd website
+$ bundle install
 ```
-# from this directory (website/)
-gem install bundler
-bundle install
+
+### Instructions
+
+Use Jekyll to serve the website locally (by default, at
+`http://localhost:8080`):
+
+```sh
+$ cd website
+$ make
+$ open http://127.0.0.1:8080/
 ```
-
-### Install JS dependencies
-
-```
-npm install
-node_modules/.bin/bower install
-rm -f "_assets/gen" "static/flowlib"
-mkdir -p "_assets/gen"
-ln -sf "../../../bin/flow.js" "_assets/gen/flow.js"
-ln -sf "../../lib" "static/flowlib"
-```
-
-### Build and Run
-
-```
-(cd ..; make js)
-bundle exec jekyll serve -w
-```
-
-This will fire up a web server at http://localhost:8000 by default. To access it from other machines, add `--host ::` (all interfaces, including IPv6).
-
-The `-w` flag watches the filesystem for changes, so pages will rebuild on save. It takes a few seconds, but just refresh the page to see changes.
-
-## Publishing the Website
-
-On each commit, [Travis](https://travis-ci.org/facebook/flow) builds the site and then [pushes the results to S3](https://github.com/facebook/flow/blob/master/resources/travis/deploy.sh).

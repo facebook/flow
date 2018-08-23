@@ -1,54 +1,173 @@
-test.js:2
-  2:   foo(x: Out): Out { return x; }
-              ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
+Error ----------------------------------------------------------------------------------------------------- test.js:2:10
 
-test.js:3
-  3:   bar(y: In): In { return y; }
-                   ^^ In. covariant position (expected `In` to occur only contravariantly)
+Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
 
-test.js:10
- 10:   v1: Variance<A,B>,
-                    ^ A. This type is incompatible with
- 13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                     ^ B
+   test.js:2:10
+   2|   foo(x: Out): Out { return x; }
+               ^^^
 
-test.js:13
- 13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                       ^ A. This type is incompatible with
- 10:   v1: Variance<A,B>,
-                      ^ B
+References:
+   test.js:1:17
+   1| class Variance<+Out,-In> {
+                      ^^^ [1]
 
-test.js:18
- 18:   inv1: Out; // error
-             ^^^ Out. invariant position (expected `Out` to occur only covariantly)
 
-test.js:19
- 19:   inv2: In; // error
-             ^^ In. invariant position (expected `In` to occur only contravariantly)
+Error ----------------------------------------------------------------------------------------------------- test.js:3:15
 
-test.js:20
- 20:   -co1: Out; // error
-             ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
+Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
 
-test.js:23
- 23:   +con2: In; // error
-              ^^ In. covariant position (expected `In` to occur only contravariantly)
+   test.js:3:15
+   3|   bar(y: In): In { return y; }
+                    ^^
 
-test.js:25
- 25:   inv_dict1: {[k:string]: Out}; // error
-                               ^^^ Out. invariant position (expected `Out` to occur only covariantly)
+References:
+   test.js:1:22
+   1| class Variance<+Out,-In> {
+                           ^^ [1]
 
-test.js:26
- 26:   inv_dict2: {[k:string]: In}; // error
-                               ^^ In. invariant position (expected `In` to occur only contravariantly)
 
-test.js:28
- 28:   co_dict2: {+[k:string]: In}; // error
-                               ^^ In. covariant position (expected `In` to occur only contravariantly)
+Error ----------------------------------------------------------------------------------------------------- test.js:13:4
 
-test.js:29
- 29:   con_dict1: {-[k:string]: Out}; // error
-                                ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
+Cannot cast `v1` to `Variance` because:
+ - `A` [1] is incompatible with `B` [2] in type argument `Out` [3].
+ - `B` [4] is incompatible with `A` [5] in type argument `In` [6].
+
+   test.js:13:4
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+          ^^
+
+References:
+   test.js:10:16
+   10|   v1: Variance<A,B>,
+                      ^ [1]
+   test.js:13:17
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                       ^ [2]
+   test.js:1:17
+    1| class Variance<+Out,-In> {
+                       ^^^ [3]
+   test.js:10:18
+   10|   v1: Variance<A,B>,
+                        ^ [4]
+   test.js:13:19
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                         ^ [5]
+   test.js:1:22
+    1| class Variance<+Out,-In> {
+                            ^^ [6]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:9
+
+Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
+
+   test.js:18:9
+   18|   inv1: Out; // error
+               ^^^
+
+References:
+   test.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:9
+
+Cannot use `In` [1] in an input/output position because `In` [1] is expected to occur only in input positions.
+
+   test.js:19:9
+   19|   inv2: In; // error
+               ^^
+
+References:
+   test.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:9
+
+Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+
+   test.js:20:9
+   20|   -co1: Out; // error
+               ^^^
+
+References:
+   test.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:10
+
+Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+
+   test.js:23:10
+   23|   +con2: In; // error
+                ^^
+
+References:
+   test.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:25:27
+
+Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
+
+   test.js:25:27
+   25|   inv_dict1: {[k:string]: Out}; // error
+                                 ^^^
+
+References:
+   test.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:27
+
+Cannot use `In` [1] in an input/output position because `In` [1] is expected to occur only in input positions.
+
+   test.js:26:27
+   26|   inv_dict2: {[k:string]: In}; // error
+                                 ^^
+
+References:
+   test.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:28:28
+
+Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+
+   test.js:28:28
+   28|   +co_dict2: {+[k:string]: In}; // error
+                                  ^^
+
+References:
+   test.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:29:29
+
+Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+
+   test.js:29:29
+   29|   +con_dict1: {-[k:string]: Out}; // error
+                                   ^^^
+
+References:
+   test.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
 
 
 Found 12 errors

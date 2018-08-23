@@ -1,26 +1,23 @@
-#!/bin/sh
-
-FLOW=$1
-
+#!/bin/bash
 printf "After start:\n"
-$FLOW status . --old-output-format
+assert_ok "$FLOW" status .
 
 cp test1.js.fixture test.js
 printf "\nAfter introducing an error:\n"
-$FLOW force-recheck test.js
-$FLOW status . --old-output-format
+assert_ok "$FLOW" force-recheck test.js
+assert_errors "$FLOW" status .
 
 cp test2.js.fixture test.js
 printf "\nAfter suppressing the error:\n"
-$FLOW force-recheck test.js
-$FLOW status . --old-output-format
+assert_ok "$FLOW" force-recheck test.js
+assert_ok "$FLOW" status .
 
 cp test3.js.fixture test.js
 printf "\nAfter fixing the error, leaving the suppression:\n"
-$FLOW force-recheck test.js
-$FLOW status . --old-output-format
+assert_ok "$FLOW" force-recheck test.js
+assert_ok "$FLOW" status . # 0 errors & 1 warning is ok
 
 cp test4.js.fixture test.js
 printf "\nAfter removing the unused suppression:\n"
-$FLOW force-recheck test.js
-$FLOW status . --old-output-format
+assert_ok "$FLOW" force-recheck test.js
+assert_ok "$FLOW" status .

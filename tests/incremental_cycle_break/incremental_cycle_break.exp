@@ -1,0 +1,20 @@
+
+Initial status:
+No errors!
+
+Clear A.js:
+Error --------------------------------------------------------------------------------------------------------- B.js:5:9
+
+Cannot resolve module `A`.
+
+   5| require('A');
+              ^^^
+
+
+
+Found 1 error
+
+Restore A.js:
+No errors!
+
+Done!
