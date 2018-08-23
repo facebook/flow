@@ -130,8 +130,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     } ->
       let valtype, qualification_ast = convert_qualification
         ~lookup_mode:ForTypeof cx "typeof-annotation" qualification in
-      let reason = mk_reason (RTypeof (qualified_name qualification)) loc in
-      let valtype = mod_reason_of_t (fun _ -> reason) valtype in
+      let desc = RTypeof (qualified_name qualification) in
+      let reason = mk_reason desc loc in
       (loc, Flow.mk_typeof_annotation cx reason valtype),
       Typeof ((q_loc, valtype), Generic { Generic.id = qualification_ast; targs = None })
   | loc, _ ->

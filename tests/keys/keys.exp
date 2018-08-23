@@ -16,7 +16,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:10:2
 
-Cannot cast `'c'` to `K` because property `c` is missing in `typeof O` [1].
+Cannot cast `'c'` to `K` because property `c` is missing in object literal [1].
 
    errors.js:10:2
    10| ('c': K);

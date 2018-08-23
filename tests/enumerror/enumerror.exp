@@ -52,8 +52,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- enumerror.js:20:11
 
-Cannot call `isActive2` with object literal bound to `ad` because property `PAUSE` is missing in `typeof MyStates` [1]
-in property `state`.
+Cannot call `isActive2` with object literal bound to `ad` because property `PAUSE` is missing in object literal [1] in
+property `state`.
 
    enumerror.js:20:11
    20| isActive2({state: 'PAUSE'});

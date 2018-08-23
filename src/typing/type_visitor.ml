@@ -72,7 +72,7 @@ class ['a] t = object(self)
 
   | KeysT (_, t) -> self#type_ cx Positive acc t
 
-  | AnnotT (t, _) -> self#type_ cx Positive acc t
+  | AnnotT (_, t, _) -> self#type_ cx Positive acc t
 
   | OpaqueT (_, ot) ->
     let {

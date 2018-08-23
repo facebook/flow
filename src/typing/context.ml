@@ -569,5 +569,5 @@ let rec find_resolved cx = function
       | Constraint.Resolved t -> Some t
       | Constraint.Unresolved _ -> None
     end
-  | Type.AnnotT (t, _) -> find_resolved cx t
+  | Type.AnnotT (_, t, _) -> find_resolved cx t
   | t -> Some t

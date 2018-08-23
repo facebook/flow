@@ -31,7 +31,7 @@ let union_flatten =
         | Constraint.Resolved t' -> flatten cx seen t'
         | _ -> [t]
       end
-    | AnnotT (t, _) -> flatten cx seen t
+    | AnnotT (_, t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t
     | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
     | DefT (r, MaybeT t) -> (DefT (r, NullT))::(DefT (r, VoidT))::(flatten cx seen t)
@@ -106,10 +106,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else KeysT (r, t'')
-      | AnnotT (t', use_desc) ->
+      | AnnotT (r, t', use_desc) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else AnnotT (t'', use_desc)
+          else AnnotT (r, t'', use_desc)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in

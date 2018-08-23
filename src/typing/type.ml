@@ -149,7 +149,7 @@ module rec TypeTerm : sig
         as the wrapped tvars are 0->1. If instead the possible types of a
         wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
         upper bounds, and would flow lower bounds to T1 & T2. **)
-    | AnnotT of t * bool (* use_desc *)
+    | AnnotT of reason * t * bool (* use_desc *)
 
     (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
@@ -2085,7 +2085,7 @@ end = struct
 
   let rec reason_of_t = function
     | OpenT (reason,_) -> reason
-    | AnnotT (t, _) -> reason_of_t t
+    | AnnotT (reason, _, _) -> reason
     | AnyWithLowerBoundT (t) -> reason_of_t t
     | AnyWithUpperBoundT (t) -> reason_of_t t
     | MergedT (reason, _) -> reason
@@ -2231,7 +2231,7 @@ end = struct
   (* TODO make a type visitor *)
   let rec mod_reason_of_t f = function
     | OpenT (reason, id) -> OpenT (f reason, id)
-    | AnnotT (t, use_desc) -> AnnotT (mod_reason_of_t f t, use_desc)
+    | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
     | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
     | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
     | MergedT (reason, uses) -> MergedT (f reason, uses)
@@ -3256,7 +3256,7 @@ let this_typeapp t this tparams =
   ThisTypeAppT (reason, t, this, tparams)
 
 let annot use_desc = function
-  | OpenT _ as tvar -> AnnotT (tvar, use_desc)
+  | OpenT (r, _) as t -> AnnotT (r, t, use_desc)
   | t -> t
 
 let unknown_use = Op UnknownUse

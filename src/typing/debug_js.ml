@@ -284,7 +284,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | AnnotT (t, use_desc) -> [
+  | AnnotT (_, t, use_desc) -> [
       "type", _json_of_t json_cx t;
       "useDesc", JSON_Bool use_desc;
     ]
@@ -1770,7 +1770,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT (_, arg)) -> p ~extra:(kid arg) t
-  | AnnotT (arg, use_desc) ->
+  | AnnotT (_, arg, use_desc) ->
     p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
