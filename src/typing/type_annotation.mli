@@ -43,7 +43,7 @@ val mk_super: Context.t ->
   Loc.t ->
   Type.t ->
   (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option ->
-  Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.ParameterInstantiation.t option
+  (Loc.t * Type.t * Type.t list option) * (Loc.t, Loc.t * Type.t) Ast.Type.ParameterInstantiation.t option
 
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->

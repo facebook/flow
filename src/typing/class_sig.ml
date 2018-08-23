@@ -57,13 +57,15 @@ and super =
     }
   | Class of {
       extends: extends;
-      mixins: Type.t list; (* declare class only *)
+      mixins: typeapp list; (* declare class only *)
       implements: Type.t list
     }
 
 and extends =
-  | Explicit of Type.t
+  | Explicit of typeapp
   | Implicit of { null: bool }
+
+and typeapp = Loc.t * Type.t * Type.t list option
 
 let empty id reason tparams tparams_map super =
   let empty_sig reason = {
@@ -245,8 +247,13 @@ let subst_sig cx map s =
     call_deprecated = Option.map ~f:(Flow.subst cx map) s.call_deprecated;
   }
 
+let subst_typeapp cx map (loc, c, targs) =
+  let c = Flow.subst cx map c in
+  let targs = Option.map ~f:(List.map (Flow.subst cx map)) targs in
+  (loc, c, targs)
+
 let subst_extends cx map = function
-  | Explicit t -> Explicit (Flow.subst cx map t)
+  | Explicit tapp -> Explicit (subst_typeapp cx map tapp)
   | Implicit {null=_} as extends -> extends
 
 let subst_super cx map = function
@@ -258,7 +265,7 @@ let subst_super cx map = function
   | Class { extends; mixins; implements } ->
     Class {
       extends = subst_extends cx map extends;
-      mixins = List.map (Flow.subst cx map) mixins;
+      mixins = List.map (subst_typeapp cx map) mixins;
       implements = List.map (Flow.subst cx map) implements;
     }
 
@@ -403,7 +410,14 @@ let arg_polarities x =
     SMap.add tp.name tp.polarity acc
   ) SMap.empty x.tparams
 
-let statictype cx x =
+let specialize cx targs c =
+  let open Type in
+  let reason = reason_of_t c in
+  Tvar.mk_derivable_where cx reason (fun tvar ->
+    Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar))
+  )
+
+let statictype cx tparams_with_this x =
   let s = x.static in
   let inited_fields, fields, methods, call = elements cx s in
   let props = SMap.union fields methods
@@ -417,7 +431,11 @@ let statictype cx x =
   | Class { extends; _ } ->
     match extends with
     (* class B extends A {}; B.__proto__ === A *)
-    | Explicit t -> Type.class_type t
+    | Explicit (annot_loc, c, targs) ->
+      let this = SMap.find_unsafe "this" tparams_with_this in
+      (* Eagerly specialize when there are no targs *)
+      let c = if targs = None then specialize cx targs c else c in
+      Type.(class_type (this_typeapp ~annot_loc c this targs))
     (* class A {}; A.__proto__ === Function.prototype *)
     | Implicit _ -> Type.FunProtoT s.reason
   in
@@ -496,7 +514,7 @@ let remove_this x =
     tparams_map = SMap.remove "this" x.tparams_map;
   }
 
-let supertype _cx x =
+let supertype cx tparams_with_this x =
   let super_reason = replace_reason (fun d -> RSuperOf d) x.instance.reason in
   let open Type in
   match x.super with
@@ -517,33 +535,40 @@ let supertype _cx x =
     | [t] -> t
     | t0::t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts)))
   | Class {extends; mixins; _} ->
+    let this = SMap.find_unsafe "this" tparams_with_this in
     let t = match extends with
-    | Explicit t -> t
+    | Explicit (annot_loc, c, targs) ->
+      (* Eagerly specialize when there are no targs *)
+      let c = if targs = None then specialize cx targs c else c in
+      this_typeapp ~annot_loc c this targs
     | Implicit {null} ->
       if null then NullProtoT super_reason else ObjProtoT super_reason
     in
-    (match mixins with
-    | [] -> t
-    | t0::ts ->
-      let t1, ts = match ts with
-      | [] -> t, []
-      | t1::ts -> t1, ts@[t]
-      in
-      DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts)))
+    let mixins_rev = List.rev_map (fun (annot_loc, c, targs) ->
+      (* Eagerly specialize when there are no targs *)
+      let c = if targs = None then specialize cx targs c else c in
+      this_typeapp ~annot_loc c this targs
+    ) mixins in
+    match List.rev_append mixins_rev [t] with
+    | [] -> failwith "impossible"
+    | [t] -> t
+    | t0::t1::ts ->
+      DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
 
 let thistype cx x =
+  let tparams_with_this = x.tparams_map in
   let x = remove_this x in
   let {
     static = {reason = sreason; _};
     instance = {reason; _};
     _;
   } = x in
-  let super = supertype cx x in
+  let super = supertype cx tparams_with_this x in
   let implements = match x.super with
   | Interface _ -> []
   | Class {implements; _} -> implements
   in
-  let initialized_static_fields, static_objtype = statictype cx x in
+  let initialized_static_fields, static_objtype = statictype cx tparams_with_this x in
   let insttype = insttype cx ~initialized_static_fields x in
   let open Type in
   let static = DefT (sreason, ObjT static_objtype) in
@@ -566,12 +591,13 @@ let check_implements cx def_reason x =
     ) implements
 
 let check_super cx def_reason x =
+  let tparams_with_this = x.tparams_map in
   let x = remove_this x in
   let reason = x.instance.reason in
   let open Type in
-  let initialized_static_fields, static_objtype = statictype cx x in
+  let initialized_static_fields, static_objtype = statictype cx tparams_with_this x in
   let insttype = insttype cx ~initialized_static_fields x in
-  let super = supertype cx x in
+  let super = supertype cx tparams_with_this x in
   let use_op = Op (ClassExtendsCheck {
     def = def_reason;
     name = reason;
@@ -630,7 +656,14 @@ let toplevels cx ~decls ~stmts ~expr x =
       | Interface _ -> failwith "tried to evaluate toplevel of interface"
       | Class {extends; _} ->
         match extends with
-        | Explicit t -> t, Type.class_type t
+        | Explicit (annot_loc, c, targs) ->
+          (* Eagerly specialize when there are no targs *)
+          (* TODO: We can also specialize when there are targs, because this
+             code executes within generate_tests. However, the type normalizer
+             expects a PolyT here. *)
+          let c = if targs = None then specialize cx targs c else c in
+          let t = Type.this_typeapp ~annot_loc c this targs in
+          t, Type.class_type t
         | Implicit {null} ->
           let open Type in
           (if null then NullProtoT super_reason else ObjProtoT super_reason),

@@ -27,13 +27,15 @@ type super =
     }
   | Class of {
       extends: extends;
-      mixins: Type.t list; (* declare class only *)
+      mixins: typeapp list; (* declare class only *)
       implements: Type.t list
     }
 
 and extends =
-  | Explicit of Type.t
+  | Explicit of typeapp
   | Implicit of { null: bool }
+
+and typeapp = Loc.t * Type.t * Type.t list option
 
 (** 1. Constructors **)
 

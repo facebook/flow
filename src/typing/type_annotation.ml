@@ -1471,26 +1471,12 @@ and add_interface_properties cx tparams_map properties s =
   in
   x, List.rev rev_prop_asts
 
-let mk_super cx tparams_map loc c targs = Type.(
-  (* A super class must be parameterized by This, so that it can be
-     specialized to this class and its subclasses when properties are looked
-     up on their instances. *)
-  let this = SMap.find_unsafe "this" tparams_map in
+let mk_super cx tparams_map loc c targs =
   match targs with
-  | None ->
-      (* No type args, but `c` could still be a polymorphic class that must
-         be implicitly instantiated. We need to do this before we try to
-         this-specialize `c`. *)
-      let reason = reason_of_t c in
-      let c = Tvar.mk_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
-      ) in
-      this_typeapp ~annot_loc:loc c this None, None
+  | None -> (loc, c, None), None
   | Some (targs_loc, targs) ->
-      let targs, targs_ast = convert_list cx tparams_map targs in
-      this_typeapp ~annot_loc:loc c this (Some targs),
-      Some (targs_loc, targs_ast)
-)
+    let ts, targs_ast = convert_list cx tparams_map targs in
+    (loc, c, Some ts), Some (targs_loc, targs_ast)
 
 let mk_interface_sig cx reason decl =
   let open Class_sig in
@@ -1616,7 +1602,7 @@ let mk_declare_class_sig =
       let super =
         let extends = match extends with
         | None -> Implicit { null = is_object_builtin_libdef ident }
-        | Some t -> Explicit t
+        | Some extends -> Explicit extends
         in
         Class { extends; mixins; implements }
       in
