@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module LocMap = Utils_js.LocMap
+
 module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
 
@@ -409,11 +411,11 @@ end
         let deps = Deps.join (deps, Eval.object_type tps body) in
         List.fold_left (Deps.reduce_join (Eval.type_ref tps)) deps extends
       | Kind.ImportNamedDef { kind; source; name } ->
-        Deps.unit (Dep.ImportNamed { kind; source; name })
+        Deps.import_named (Kind.Sort.of_import_kind kind) source name
       | Kind.ImportStarDef { kind; source } ->
-        Deps.unit (Dep.ImportStar { kind; source })
+        Deps.import_star (Kind.Sort.of_import_kind kind) source
       | Kind.RequireDef { source } ->
-        Deps.unit (Dep.Require { source })
+        Deps.require source
 
   let cjs_exports = function
     | File_sig.SetModuleExportsDef expr -> Eval.literal_expr expr
@@ -535,16 +537,11 @@ end
         | ExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
           begin match source with
             | None -> Deps.value (snd local)
-            | Some source -> Deps.unit (Dep.ImportNamed {
-                kind = Ast.Statement.ImportDeclaration.ImportValue;
-                source;
-                name = local
-              })
+            | Some source ->
+              Deps.import_named Kind.Sort.Value source local
           end
-        | ExportNs { source; _ }, None -> Deps.unit (Dep.ImportStar {
-            kind = Ast.Statement.ImportDeclaration.ImportValue;
-            source
-          })
+        | ExportNs { source; _ }, None ->
+          Deps.import_star Kind.Sort.Value source
         | _ -> assert false
       )
     ) named Deps.bot
@@ -563,11 +560,8 @@ end
         | TypeExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
           begin match source with
             | None -> Deps.type_ (snd local)
-            | Some source -> Deps.unit (Dep.ImportNamed {
-                kind = Ast.Statement.ImportDeclaration.ImportType;
-                source;
-                name = local
-              })
+            | Some source ->
+              Deps.import_named Kind.Sort.Type source local
           end
         | _ -> assert false
       )
@@ -595,33 +589,23 @@ end
       eval_export_type_bindings type_exports_named type_exports_named_info
     )
 
-  let validator = function
-    | Dep.Type _ -> Kind.is_type
-    | Dep.Value _ -> Kind.is_value
-    | Dep.ImportNamed _ | Dep.ImportStar _ | Dep.Require _ | Dep.GlobalType _ | Dep.GlobalValue _ -> assert false
-
-  let global = function
-    | Dep.Type s -> Deps.global_type s
-    | Dep.Value s -> Deps.global_value s
-    | Dep.ImportNamed _ | Dep.ImportStar _ | Dep.Require _ | Dep.GlobalType _ | Dep.GlobalValue _ -> assert false
-
   let validate_and_eval env dep =
-    match Dep.expectation dep with
-      | None -> Deps.unit dep
-      | Some (s, error) ->
-        begin
-          match SMap.get s env with
+    match dep with
+      | Dep.Local local ->
+        let sort, x = local in
+        begin match SMap.get x env with
           | Some entries ->
-            let validate = validator dep in
+            let validate = Kind.validator sort in
             Utils_js.LocMap.fold (fun loc kind deps ->
               Deps.join (
                 deps,
                 if validate kind then eval (loc, kind)
-                else Deps.top (error loc)
+                else Deps.top (Dep.expectation sort x loc)
               )
             ) entries Deps.bot
-          | None -> global dep
+          | None -> Deps.global local
         end
+      | Dep.Remote _ -> Deps.unit dep
 
   let rec check cache env deps =
     Deps.recurse (check_dep cache env) deps
@@ -636,5 +620,5 @@ end
   let check env deps =
     let cache = ref Deps.DepSet.empty in
     let errors = check cache env deps in
-    let remote_dependencies = Deps.DepSet.filter Deps.Dep.remote !cache in
+    let remote_dependencies = Deps.DepSet.filter Dep.remote !cache in
     errors, remote_dependencies

@@ -7,10 +7,11 @@
 
 let spf = Printf.sprintf
 
+module Sort = Signature_builder_kind.Sort
+
 module Error = struct
   type t =
-    | ExpectedType of string * Loc.t
-    | ExpectedValue of string * Loc.t
+    | ExpectedSort of Sort.t * string * Loc.t
     | ExpectedAnnotation of Loc.t
     | InvalidTypeParamUse of Loc.t
     | UnexpectedObjectKey of Loc.t
@@ -20,8 +21,8 @@ module Error = struct
   let compare = Pervasives.compare
 
   let to_string = function
-    | ExpectedType (x, loc) -> spf "%s @ %s is not a type" x (Loc.to_string loc)
-    | ExpectedValue (x, loc) -> spf "%s @ %s is not a value" x (Loc.to_string loc)
+    | ExpectedSort (sort, x, loc) ->
+      spf "%s @ %s is not a %s" x (Loc.to_string loc) (Sort.to_string sort)
     | ExpectedAnnotation loc -> spf "Expected annotation @ %s" (Loc.to_string loc)
     | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (Loc.to_string loc)
     | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (Loc.to_string loc)
@@ -33,49 +34,50 @@ module ErrorSet = Set.Make (Error)
 
 module Dep = struct
   type t =
-    | Type of string
-    | Value of string
+    | Local of local
+    | Remote of remote
+
+  and local = Sort.t * string
+
+  and remote =
     | ImportNamed of {
-        kind: Ast.Statement.ImportDeclaration.importKind;
-        source: Loc.t * string;
-        name: Loc.t * string
+        sort: Sort.t;
+        source: File_sig.source;
+        name: File_sig.ident;
       }
     | ImportStar of {
-        kind: Ast.Statement.ImportDeclaration.importKind;
-        source: Loc.t * string
+        sort: Sort.t;
+        source: File_sig.source;
       }
     | Require of {
-        source: Loc.t * string
+        source: File_sig.source;
       }
-    | GlobalType of string
-    | GlobalValue of string
+    | Global of local
 
   let compare = Pervasives.compare
 
-  let expectation = function
-    | Type x -> Some (x, fun loc -> Error.ExpectedType (x, loc))
-    | Value x -> Some (x, fun loc -> Error.ExpectedValue (x, loc))
-    | ImportNamed _ | ImportStar _ | Require _ | GlobalType _ | GlobalValue _ -> None
+  let expectation sort x loc = Error.ExpectedSort (sort, x, loc)
 
   let remote = function
-    | Type _ | Value _ -> false
-    | ImportNamed _ | ImportStar _ | Require _ | GlobalType _ | GlobalValue _ -> true
+    | Remote _ -> true
+    | Local _ -> false
 
   let to_string =
-    let string_of_import_kind = function
-      | Ast.Statement.ImportDeclaration.ImportValue -> "import"
-      | Ast.Statement.ImportDeclaration.ImportType -> "import type"
-      | Ast.Statement.ImportDeclaration.ImportTypeof -> "import typeof"
-    in function
-      | Type x -> spf "type: %s" x
-      | Value x -> spf "value: %s" x
-      | ImportNamed { kind; name = (_, n); source = (_, m) } ->
-        spf "%s { %s } from '%s'" (string_of_import_kind kind) n m
-      | ImportStar { kind; source = (_, m) } ->
-        spf "%s * from '%s'" (string_of_import_kind kind) m
+    let string_of_import_sort = function
+      | Sort.Value -> "import"
+      | Sort.Type -> "import type" in
+    let string_of_local (sort, x) =
+      spf "%s: %s" (Sort.to_string sort) x in
+    let string_of_remote = function
+      | ImportNamed { sort; name = (_, n); source = (_, m) } ->
+        spf "%s { %s } from '%s'" (string_of_import_sort sort) n m
+      | ImportStar { sort; source = (_, m) } ->
+        spf "%s * from '%s'" (string_of_import_sort sort) m
       | Require { source = (_, m) } -> spf "require('%s')" m
-      | GlobalType x -> spf "global type: %s" x
-      | GlobalValue x -> spf "global value: %s" x
+      | Global local -> spf "global %s" (string_of_local local)
+    in function
+      | Local local -> string_of_local local
+      | Remote remote -> string_of_remote remote
 end
 
 module DepSet = Set.Make (Dep)
@@ -97,12 +99,13 @@ let todo msg = top (Error.TODO msg)
 
 let unit dep = Known (DepSet.singleton dep)
 
-let type_ atom = unit (Dep.Type atom)
-let value atom = unit (Dep.Value atom)
-let import_named kind source name = unit (Dep.ImportNamed { kind; source; name })
-let import_star kind source = unit (Dep.ImportStar { kind; source })
-let global_type atom = unit (Dep.GlobalType atom)
-let global_value atom = unit (Dep.GlobalValue atom)
+let type_ atom = unit Dep.(Local (Sort.Type, atom))
+let value atom = unit Dep.(Local (Sort.Value, atom))
+
+let import_named sort source name = unit Dep.(Remote (ImportNamed { sort; source; name }))
+let import_star sort source = unit Dep.(Remote (ImportStar { sort; source }))
+let require source = unit Dep.(Remote (Require { source }))
+let global local = unit Dep.(Remote (Global local))
 
 let reduce_join f deps x =
   join (deps, f x)

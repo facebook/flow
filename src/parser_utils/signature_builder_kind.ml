@@ -26,6 +26,31 @@ module Annot_path = struct
       | Some annot_path -> Some (Array (annot_path, i))
 end
 
+module Sort = struct
+  type t = Type | Value
+  let to_string = function
+    | Type -> "type"
+    | Value -> "value"
+
+  let is_import_type =
+    let open Ast.Statement.ImportDeclaration in
+    function
+    | ImportType | ImportTypeof -> true
+    | ImportValue -> true (* conditional *)
+
+  let is_import_value =
+    let open Ast.Statement.ImportDeclaration in
+    function
+    | ImportType | ImportTypeof -> false
+    | ImportValue -> true
+
+  let of_import_kind =
+    let open Ast.Statement.ImportDeclaration in
+    function
+    | ImportValue | ImportTypeof -> Value
+    | ImportType -> Type
+end
+
 type t =
   | VariableDef of {
       annot: Annot_path.t option
@@ -68,15 +93,15 @@ type t =
     }
   | ImportNamedDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: Loc.t * string;
-      name: Loc.t * string;
+      source: File_sig.source;
+      name: File_sig.ident;
     }
   | ImportStarDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: Loc.t * string;
+      source: File_sig.source;
     }
   | RequireDef of {
-      source: Loc.t * string;
+      source: File_sig.source;
     }
 
 let to_string = function
@@ -92,18 +117,6 @@ let to_string = function
   | ImportStarDef _ -> "ImportStarDef"
   | RequireDef _ -> "RequireDef"
 
-let is_import_type =
-  let open Ast.Statement.ImportDeclaration in
-  function
-  | ImportType | ImportTypeof -> true
-  | ImportValue -> true (* conditional *)
-
-let is_import_value =
-  let open Ast.Statement.ImportDeclaration in
-  function
-  | ImportType | ImportTypeof -> false
-  | ImportValue -> true
-
 let is_type = function
   | VariableDef _ -> true (* conditional *)
   | FunctionDef _ -> false
@@ -113,8 +126,8 @@ let is_type = function
   | TypeDef _ -> true
   | OpaqueTypeDef _ -> true
   | InterfaceDef _ -> true
-  | ImportNamedDef { kind; _ } -> is_import_type kind
-  | ImportStarDef { kind; _ } -> is_import_type kind
+  | ImportNamedDef { kind; _ } -> Sort.is_import_type kind
+  | ImportStarDef { kind; _ } -> Sort.is_import_type kind
   | RequireDef _ -> true (* conditional *)
 
 let is_value = function
@@ -126,6 +139,10 @@ let is_value = function
   | TypeDef _ -> false
   | OpaqueTypeDef _ -> false
   | InterfaceDef _ -> false
-  | ImportNamedDef { kind; _ } -> is_import_value kind
-  | ImportStarDef { kind; _ } -> is_import_value kind
+  | ImportNamedDef { kind; _ } -> Sort.is_import_value kind
+  | ImportStarDef { kind; _ } -> Sort.is_import_value kind
   | RequireDef _ -> true
+
+let validator = function
+  | Sort.Type -> is_type
+  | Sort.Value -> is_value
